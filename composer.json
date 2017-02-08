@@ -1,0 +1,7 @@
+{
+  "require": {
+    "smarty/smarty": "~3.1",
+    "php-console/php-console": "*",
+    "vlucas/phpdotenv": "~2.2"
+  }
+}
