@@ -10,7 +10,7 @@ class Constants
     /**
      * Constants constructor.
      */
-    public function __construct()
+    public static function init()
     {
         $dotenv = new \Dotenv\Dotenv($_SERVER['DOCUMENT_ROOT']);
         $dotenv->load();
