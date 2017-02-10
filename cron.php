@@ -136,4 +136,3 @@ foreach ($forum as $tieba) {
 
 $t2 = microtime(true);
 echo '其他耗时' . round($t2 - $t1, 10) . '秒';
-?>
