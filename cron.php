@@ -72,8 +72,8 @@ foreach ($forum as $tieba) {
                     $reply_data = json_decode(htmlspecialchars_decode(strstr($reply, "' >", true)), true);
                     if (empty($reply_data['content']['lzl_num'])) { $reply_data['content']['lzl_num'] = 0; }
                     // 回复内容
-                    preg_match('/<div id="post_content_\d*" class="d_post_content j_d_post_content ">.*?<\/div>/', $reply, $regex_result);
-                    $reply_content = trim(substr(strstr(strstr($regex_result[0], '>'), '</div', true), 1));
+                    preg_match('/<cc>\s*<div id="post_content_\d*" class="d_post_content j_d_post_content ">.*?<\/div><br>\s*<\/cc>/', $reply, $regex_result);
+                    $reply_content = trim(substr(strstr(strstr($regex_result[0], ' ">'), '</div><br>', true), 3));
                     // 回复时间
                     preg_match('/<span class="tail-info">\d{4}-\d{2}-\d{2} \d{2}:\d{2}<\/span>/', $reply, $regex_result);
                     $reply_time = substr(strstr(strstr($regex_result[0], '>'), '</span', true), 1);
