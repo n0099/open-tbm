@@ -2,6 +2,11 @@
 require 'init.php';
 ini_set('display_errors', 'On');
 
+DB::$host = $_ENV['DATABASE_HOST'];
+DB::$user = $_ENV['DATABASE_USER'];
+DB::$password = $_ENV['DATABASE_PASS'];
+DB::$dbName = $_ENV['DATABASE_NAME'];
+
 function tieba_magic_time($time) {
     if (preg_match('/^\d{1,2}-\d{1,2}$/', $time)) {
         return date('Y-m-d H:i:s', strtotime(date('Y') . "-{$time}"));
@@ -25,7 +30,7 @@ foreach ($forum as $tieba) {
     echo 'curl耗时' . round($t2 - $t1, 10) . '秒';
     $t1 = microtime(true);
 
-    $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
+    $sql = new mysqli($_ENV['DATABASE_HOST'], $_ENV['DATABASE_USER'], $_ENV['DATABASE_PASS'], $_ENV['DATABASE_NAME']);
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list".*,"parent/', $response, $regex_result);
     $replace = ['<script>Bigpipe.register("frs-list/pagelet/thread_list", ' => '', ',"parent' => ''];
