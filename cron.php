@@ -1,5 +1,4 @@
 <?php
-require 'init.php';
 ini_set('display_errors', 'On');
 
 DB::$host = $_ENV['DATABASE_HOST'];
@@ -78,34 +77,23 @@ foreach ($forum as $tieba) {
                     $reply_data = json_decode(htmlspecialchars_decode(strstr($reply, "' >", true)), true);
                     if (empty($reply_data['content']['lzl_num'])) { $reply_data['content']['lzl_num'] = 0; }
                     // 回复内容
-                    preg_match('/<div id="post_content_\d*" class="d_post_content j_d_post_content ">.*?<\/div>/', $reply, $regex_result);
-                    $reply_content = trim(substr(strstr(strstr($regex_result[0], '>'), '</div', true), 1));
+                    preg_match('/<cc>\s*<div id="post_content_\d*" class="d_post_content j_d_post_content ">.*?<\/div><br>\s*<\/cc>/', $reply, $regex_result);
+                    $reply_content = trim(substr(strstr(strstr($regex_result[0], ' ">'), '</div><br>', true), 3));
                     // 回复时间
                     preg_match('/<span class="tail-info">\d{4}-\d{2}-\d{2} \d{2}:\d{2}<\/span>/', $reply, $regex_result);
                     $reply_time = substr(strstr(strstr($regex_result[0], '>'), '</span', true), 1);
                     // 判断楼中楼是否有更新
                     $reply_sql = $sql -> query("SELECT lzl_num FROM tbmonitor_reply WHERE pid={$reply_data['content']['post_id']}");
                     $reply_sql_data = mysqli_fetch_array($reply_sql);
-                    /*echo 'postno:'.$reply_data['content']['post_no'].'<br />';
-                    echo 'rows:'.$reply_sql -> num_rows.'<br />';
-                    var_dump($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0);
-                    echo '<br />';
-                    echo 'lzlnum:'.$reply_sql_data['lzl_num'].'<br />';
-                    echo 'commentnum:'.$reply_data['content']['comment_num'].'<br />';
-                    var_dump($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']));
-                    echo '<br />';*/
-                    //if (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']))) {
+                    if (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']))) {
                         curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1");
-                        echo "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1".'<br />';
                         $response = curl_exec($curl);
                         preg_match('/<a href="#\d*">尾页<\/a>/', $response, $regex_result);
-                        $lzl_pages = substr(strstr(strstr($regex_result[0], 'href="#'), '">', true), 7);
-                        if (empty($lzl_pages)) { $lzl_pages = 1; }
-                        for ($j = 1; $i <= $lzl_pages; $i++) {
+                        $lzl_pages = empty($regex_result) ? 1 :substr(strstr(strstr($regex_result[0], 'href="#'), '">', true), 7);
+                        for ($j = 1; $j <= $lzl_pages; $j++) {
                             if ($j != 1) {
                                 curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn={$j}");
                                 $response = curl_exec($curl);
-                                echo "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn={$j}".'<br />';
                             }
                             $explode = explode('<li class="lzl_single_post j_lzl_s_p ', $response);
                             foreach ($explode as $lzl) {
@@ -120,21 +108,18 @@ foreach ($forum as $tieba) {
                                 $lzl_reply_time = substr(strstr(strstr($regex_result[0], '>'), '</span', true), 1);
                                 // 楼中楼数据库
                                 $query = sprintf("INSERT INTO tbmonitor_lzl (forum, tid, pid, spid, author, content, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, {$lzl_date['spid']}, \"%s\", \"%s\", \"{$lzl_reply_time}\")", $sql -> escape_string($lzl_date['user_name']), $sql -> escape_string($lzl_content));
-                                echo $query.'<br />';
                                 $sql -> query($query);
                             }
                         }
-                    //}
+                    }
                     // 回复帖数据库
                     $query = sprintf("INSERT INTO tbmonitor_reply (forum, tid, pid, author, content, floor, lzl_num, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, \"%s\", \"%s\", {$reply_data['content']['post_no']}, {$reply_data['content']['comment_num']}, \"{$reply_time}\") ON DUPLICATE KEY UPDATE lzl_num={$reply_data['content']['comment_num']}", $sql -> escape_string($reply_data['author']['user_name']), $sql -> escape_string($reply_content));
-                    //echo $query . '<br />';
                     $sql -> query($query);
                 }
             }
         }
         // 主题帖数据库
         $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"%s\", \"%s\", {$post_data['reply_num']}, \"{$post_time}\", \"{$latest_replyer}\", %s) ON DUPLICATE KEY UPDATE is_top={$post_data['is_top']}, is_good={$post_data['is_good']}, reply_num={$post_data['reply_num']}, latest_replyer=\"{$latest_replyer}\", latest_reply_time=%s", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"", empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"");
-        //echo $query . '<br />';
         $sql -> query($query);
     }
 }
