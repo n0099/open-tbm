@@ -1,5 +1,6 @@
 <?php
 ini_set('display_errors', 'On');
+$time = microtime(true);
 $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 ?>
 <!DOCTYPE html>
@@ -72,6 +73,9 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                             <?php } ?>
                         </tbody>
                     </table>
+                    <?php
+                    echo '<p>PHP耗时'.round(microtime(true)-$time, 10).'秒，共使用'.round(memory_get_peak_usage()/1024/1024, 2).'MB内存</p>';
+                    ?>
                 </div>
             </div>
         </div>
