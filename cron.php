@@ -1,11 +1,6 @@
 <?php
 ini_set('display_errors', 'On');
 
-DB::$host = $_ENV['DATABASE_HOST'];
-DB::$user = $_ENV['DATABASE_USER'];
-DB::$password = $_ENV['DATABASE_PASS'];
-DB::$dbName = $_ENV['DATABASE_NAME'];
-
 function tieba_magic_time($time) {
     if (preg_match('/^\d{1,2}-\d{1,2}$/', $time)) {
         return date('Y-m-d H:i:s', strtotime(date('Y') . "-{$time}"));
@@ -29,7 +24,7 @@ foreach ($forum as $tieba) {
     echo 'curl耗时' . round($t2 - $t1, 10) . '秒';
     $t1 = microtime(true);
 
-    $sql = new mysqli($_ENV['DATABASE_HOST'], $_ENV['DATABASE_USER'], $_ENV['DATABASE_PASS'], $_ENV['DATABASE_NAME']);
+    $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list".*,"parent/', $response, $regex_result);
     $replace = ['<script>Bigpipe.register("frs-list/pagelet/thread_list", ' => '', ',"parent' => ''];
@@ -57,7 +52,7 @@ foreach ($forum as $tieba) {
         $latest_reply_time = empty($latest_reply_time) ? null : tieba_magic_time($latest_reply_time);
         // 判断主题帖是否有更新
         $post_sql = $sql -> query("SELECT reply_num, latest_replyer, latest_reply_time FROM tbmonitor_post WHERE tid={$post_data['id']}");
-        $post_sql_data = mysqli_fetch_array($post_sql);
+        $post_sql_data = mysqli_fetch_assoc($post_sql);
         if ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && ($post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time)))) {
             // 获取主题帖第一页回复
             curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
@@ -84,7 +79,7 @@ foreach ($forum as $tieba) {
                     $reply_time = substr(strstr(strstr($regex_result[0], '>'), '</span', true), 1);
                     // 判断楼中楼是否有更新
                     $reply_sql = $sql -> query("SELECT lzl_num FROM tbmonitor_reply WHERE pid={$reply_data['content']['post_id']}");
-                    $reply_sql_data = mysqli_fetch_array($reply_sql);
+                    $reply_sql_data = mysqli_fetch_assoc($reply_sql);
                     if (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']))) {
                         curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1");
                         $response = curl_exec($curl);
