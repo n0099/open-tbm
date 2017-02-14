@@ -2,7 +2,9 @@
 ini_set('display_errors', 'On');
 
 function tieba_magic_time($time) {
-    if (preg_match('/^\d{1,2}-\d{1,2}$/', $time)) {
+    if (preg_match('/^\d{4}-\d{1,2}$/', $time)) {
+        return $time.'-01 00:00:00';
+    } elseif (preg_match('/^\d{1,2}-\d{1,2}$/', $time)) {
         return date('Y-m-d H:i:s', strtotime(date('Y') . "-{$time}"));
     } elseif (preg_match('/^\d{1,2}:\d{1,2}$/', $time)) {
         return date('Y-m-d') . " {$time}";
