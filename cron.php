@@ -12,8 +12,9 @@ function tieba_magic_time($time) {
 }
 
 $time = microtime(true);
-
+$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 $forum = ['模拟城市'];
+
 foreach ($forum as $tieba) {
     // curl
     $curl = curl_init();
@@ -21,14 +22,11 @@ foreach ($forum as $tieba) {
     curl_setopt($curl, CURLOPT_HEADER, false);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($curl);
-
-    $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list".*,"parent/', $response, $regex_result);
     $replace = ['<script>Bigpipe.register("frs-list/pagelet/thread_list", ' => '', ',"parent' => ''];
     $return = htmlspecialchars_decode(json_decode(strtr($regex_result[0], $replace) . '}', true)['content']);
     $explode = explode('<li class=" j_thread_list', $return);
-
     foreach ($explode as $post) {
         // 主题帖信息
         $post_data = json_decode(strstr(strstr($post, '{"'), '}', true) . '}', true);
