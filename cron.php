@@ -11,7 +11,7 @@ function tieba_magic_time($time) {
     }
 }
 
-$t1 = microtime(true);
+$time = microtime(true);
 
 $forum = ['模拟城市'];
 foreach ($forum as $tieba) {
@@ -21,10 +21,6 @@ foreach ($forum as $tieba) {
     curl_setopt($curl, CURLOPT_HEADER, false);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($curl);
-
-    $t2 = microtime(true);
-    echo 'curl耗时' . round($t2 - $t1, 10) . '秒';
-    $t1 = microtime(true);
 
     $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
     // 解码解转义
@@ -121,5 +117,4 @@ foreach ($forum as $tieba) {
     }
 }
 
-$t2 = microtime(true);
-echo '其他耗时' . round($t2 - $t1, 10) . '秒';
+echo '耗时' . round(microtime(true) - $time, 10) . '秒';
