@@ -51,6 +51,12 @@ class Post
     private $lastReplyTime;
 
     /**
+     * 贴子类型
+     * @var string
+     */
+    private $type;
+
+    /**
      * @return Forum
      */
     public function getForum()
@@ -158,6 +164,15 @@ class Post
     }
 
     /**
+     * 生成一个发贴时间的字符串.
+     * @return string
+     */
+    public function getPostTimeString()
+    {
+        return $this->getPostTime()->format("Y-m-d H:i:s");
+    }
+
+    /**
      * @param DateTime $postTime
      */
     public function setPostTime($postTime)
@@ -195,5 +210,21 @@ class Post
     public function setLastReplyTime($lastReplyTime)
     {
         $this->lastReplyTime = $lastReplyTime;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
     }
 }
