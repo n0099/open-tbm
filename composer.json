@@ -4,6 +4,7 @@
     "php-console/php-console": "*",
     "vlucas/phpdotenv": "~2.2",
     "sergeytsalkov/meekrodb": "^2.3",
-    "paquettg/php-html-parser": "^1.7"
+    "paquettg/php-html-parser": "^1.7",
+    "apache/log4php": "^2.3"
   }
 }
