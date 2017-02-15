@@ -33,7 +33,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <th>主题贴</th>
                                     <th><?php
                                         echo $post['title'].'<br />';
-                                        echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE pid={$post['first_post_id']}") -> fetch_assoc()['content'].'<br />';
+                                        echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid={$post['tid']} AND floor=1") -> fetch_assoc()['content'].'<br />';
                                         echo "主题贴回复数：{$post['reply_num']} 最后回复人：{$post['latest_replyer']} 最后回复时间：{$post['latest_reply_time']}";
                                     ?></th>
                                     <th><?php echo "<a href=\"http://tieba.baidu.com/p/{$post['tid']}\">传送门</a>"; ?></th>
