@@ -24,11 +24,9 @@ foreach ($forum as $tieba) {
     $response = curl_exec($curl);
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list", (.*),"parent/', $response, $regex_match);
-    //$replace = ['<script>Bigpipe.register("frs-list/pagelet/thread_list", ' => '', ',"parent' => ''];
     $explode = explode('<li class=" j_thread_list', htmlspecialchars_decode(json_decode($regex_match[1] . '}', true)['content']));
     // 话题贴
     preg_match('/<script>Bigpipe.register\("live\/pagelet\/live_thread", (.*),"parent/', $response, $regex_match);
-    //$replace = ['<script>Bigpipe.register("live/pagelet/live_thread", ' => '', ',"parent' => ''];
     $topic = json_decode($regex_match[1] . '}', true);
     if (empty($topic['content']) == false) { $explode['topic'] = htmlspecialchars_decode($topic['content']);}
     unset($explode[0]);
@@ -132,7 +130,7 @@ foreach ($forum as $tieba) {
         if ($index == 'topic') {
             $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, title, author, reply_num) VALUES (\"{$tieba}\", {$post_data['id']}, \"%s\", \"%s\", {$post_data['reply_num']}) ON DUPLICATE KEY UPDATE reply_num={$post_data['reply_num']}", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']));
         } else {
-            $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"%s\", \"%s\", {$post_data['reply_num']}, \"{$post_time}\", \"{$latest_replyer}\", %s) ON DUPLICATE KEY UPDATE is_top={$post_data['is_top']}, is_good={$post_data['is_good']}, reply_num={$post_data['reply_num']}, latest_replyer=\"{$latest_replyer}\", latest_reply_time=%s", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"", empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"");
+            $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"%s\", \"%s\", {$post_data['reply_num']}, \"{$post_time}\", \"%s\", %s) ON DUPLICATE KEY UPDATE first_post_id={$post_data['first_post_id']}, is_top={$post_data['is_top']}, is_good={$post_data['is_good']}, reply_num={$post_data['reply_num']}, post_time={$post_time}, latest_replyer=\"%s\", latest_reply_time=%s", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']), $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"", $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"");
         }
         $sql -> query($query);
     }
