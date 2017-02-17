@@ -1,5 +1,6 @@
 <?php
 ini_set('display_errors', 'On');
+date_default_timezone_set('PRC');
 
 function tieba_magic_time($time) {
     if (preg_match('/^\d{4}-\d{1,2}$/', $time)) {
