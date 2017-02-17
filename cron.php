@@ -14,7 +14,7 @@ function tieba_magic_time($time) {
 
 $time = microtime(true);
 $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
-$forum = ['模拟城市'];
+$forum = ['模拟城市', 'transportfever'];
 
 foreach ($forum as $tieba) {
     // curl
@@ -29,7 +29,7 @@ foreach ($forum as $tieba) {
     // 话题贴
     preg_match('/<script>Bigpipe.register\("live\/pagelet\/live_thread", (.*),"parent/', $response, $regex_match);
     $topic = json_decode($regex_match[1] . '}', true);
-    if (empty($topic['content']) == false) { $explode['topic'] = htmlspecialchars_decode($topic['content']);}
+    if (!empty($topic['content'])) { $explode['topic'] = htmlspecialchars_decode($topic['content']);}
     unset($explode[0]);
     foreach ($explode as $index => $post) {
         if ($index == 'topic') {
@@ -64,10 +64,14 @@ foreach ($forum as $tieba) {
             $latest_reply_time = trim($regex_match[1]);
             $latest_reply_time = empty($latest_reply_time) ? null : tieba_magic_time($latest_reply_time);
         }
-        // 判断主题贴是否有更新
-        $post_sql = $sql -> query("SELECT reply_num, latest_replyer, latest_reply_time FROM tbmonitor_post WHERE tid={$post_data['id']}");
+        $post_sql = $sql -> query("SELECT reply_num, post_time, latest_replyer, latest_reply_time FROM tbmonitor_post WHERE tid = {$post_data['id']}");
         $post_sql_data = mysqli_fetch_assoc($post_sql);
-        if ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && ($post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time))))) {
+        // 避免写入不完整发贴/最后回复时间
+        $post_time = $post_sql_data['post_time'] > $post_time ? $post_sql_data['post_time'] : $post_time;
+        $latest_reply_time = $post_sql_data['latest_reply_time'] > $latest_reply_time ? $post_sql_data['latest_reply_time'] : $latest_reply_time;
+        // 判断主题贴是否有更新
+        $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time));
+        if ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update)) {
             // 获取主题贴第一页回复
             curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
             $response = curl_exec($curl);
@@ -92,7 +96,7 @@ foreach ($forum as $tieba) {
                     preg_match('/<span class="tail-info">(\d{4}-\d{2}-\d{2} \d{2}:\d{2})<\/span>/', $reply, $regex_match);
                     $reply_time = $regex_match[1];
                     // 判断楼中楼是否有更新
-                    $reply_sql = $sql -> query("SELECT lzl_num FROM tbmonitor_reply WHERE pid={$reply_data['content']['post_id']}");
+                    $reply_sql = $sql -> query("SELECT lzl_num FROM tbmonitor_reply WHERE pid = {$reply_data['content']['post_id']}");
                     $reply_sql_data = mysqli_fetch_assoc($reply_sql);
                     if (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']))) {
                         curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1");
@@ -122,7 +126,7 @@ foreach ($forum as $tieba) {
                         }
                     }
                     // 回复贴数据库
-                    $query = sprintf("INSERT INTO tbmonitor_reply (forum, tid, pid, author, content, floor, lzl_num, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, \"%s\", \"%s\", {$reply_data['content']['post_no']}, {$reply_data['content']['comment_num']}, \"{$reply_time}\") ON DUPLICATE KEY UPDATE lzl_num={$reply_data['content']['comment_num']}", $sql -> escape_string($reply_data['author']['user_name']), $sql -> escape_string($reply_content));
+                    $query = sprintf("INSERT INTO tbmonitor_reply (forum, tid, pid, author, content, floor, lzl_num, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, \"%s\", \"%s\", {$reply_data['content']['post_no']}, {$reply_data['content']['comment_num']}, \"{$reply_time}\") ON DUPLICATE KEY UPDATE lzl_num = {$reply_data['content']['comment_num']}", $sql -> escape_string($reply_data['author']['user_name']), $sql -> escape_string($reply_content));
                     $sql -> query($query);
                 }
             }
@@ -131,7 +135,7 @@ foreach ($forum as $tieba) {
         if ($index == 'topic') {
             $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, title, author, reply_num) VALUES (\"{$tieba}\", {$post_data['id']}, \"%s\", \"%s\", {$post_data['reply_num']}) ON DUPLICATE KEY UPDATE reply_num={$post_data['reply_num']}", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']));
         } else {
-            $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"%s\", \"%s\", {$post_data['reply_num']}, \"{$post_time}\", \"%s\", %s) ON DUPLICATE KEY UPDATE first_post_id={$post_data['first_post_id']}, is_top={$post_data['is_top']}, is_good={$post_data['is_good']}, reply_num={$post_data['reply_num']}, post_time={$post_time}, latest_replyer=\"%s\", latest_reply_time=%s", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']), $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"", $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"");
+            $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"%s\", \"%s\", {$post_data['reply_num']}, \"{$post_time}\", \"%s\", %s) ON DUPLICATE KEY UPDATE first_post_id = {$post_data['first_post_id']}, is_top = {$post_data['is_top']}, is_good = {$post_data['is_good']}, reply_num = {$post_data['reply_num']}, post_time = \"{$post_time}\", latest_replyer = \"%s\", latest_reply_time = %s", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']), $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"", $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"");
         }
         $sql -> query($query);
     }
