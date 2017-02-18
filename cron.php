@@ -70,8 +70,8 @@ foreach ($forum as $tieba) {
         $post_time = $post_sql_data['post_time'] > $post_time ? $post_sql_data['post_time'] : $post_time;
         $latest_reply_time = $post_sql_data['latest_reply_time'] > $latest_reply_time ? $post_sql_data['latest_reply_time'] : $latest_reply_time;
         // 判断主题贴是否有更新
-        $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time));
-        if ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update)) {
+        $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time);
+        if ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update))) {
             // 获取主题贴第一页回复
             curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
             $response = curl_exec($curl);
