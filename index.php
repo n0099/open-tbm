@@ -34,7 +34,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                 <th class="col-md-2" onclick="sortTable(2)">内容</th>
                                 <th class="col-md-2" onclick="sortTable(3)">传送门</th>
                                 <th class="col-md-2" onclick="sortTable(4)">发贴人</th>
-                                <th class="col-md-2" onclick="sortTable(5)">发贴/最后回复时间</th>
+                                <th class="col-md-2" onclick="sortTable(5)">发贴时间</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,11 +53,11 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                         <p id=<?php echo "\"collapse_{$post['tid']}\""; ?> class="collapse out">
                                             <?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$post['tid']} AND floor = 1") -> fetch_assoc()['content']; ?>
                                         </p>
-                                        <?php echo "主题贴回复数：{$post['reply_num']} 最后回复人：<a href=\"".get_user_space($post['latest_replyer'])."\" target=\"_blank\">{$post['latest_replyer']}</a> 发贴时间：{$post['post_time']}"; ?>
+                                        <?php echo "主题贴回复数：{$post['reply_num']} 最后回复人：<a href=\"".get_user_space($post['latest_replyer'])."\" target=\"_blank\">{$post['latest_replyer']}</a> 最后回复时间：{$post['latest_reply_time']}"; ?>
                                     </th>
                                     <td><?php echo '<a href="'.get_post_portal($post['tid']).'" target="_blank">传送门</a>'; ?></th>
                                     <td><?php echo '<a href="'.get_user_space($post['author'])."\" target=\"_blank\">{$post['author']}</a>"; ?></th>
-                                    <td><?php echo $post['latest_reply_time']; ?></th>
+                                    <td><?php echo $post['post_time']; ?></th>
                                 </tr>
                             <?php }
                             $sql_result = $sql -> query('SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC LIMIT 50') -> fetch_all(MYSQLI_ASSOC);
