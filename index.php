@@ -22,7 +22,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet" />
     </head>
-    <body onload="sortTable(5)">
+    <body onload="sortTable(5);sortTable(5);">
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
