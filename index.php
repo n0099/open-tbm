@@ -26,6 +26,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
+                    <p>显示最近150条主题贴/回复贴/楼中楼记录</p>
                     <table class="table table-hover table-striped table-condensed" id="main">
                         <thead>
                             <tr>
@@ -39,7 +40,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         </thead>
                         <tbody>
                             <?php
-                            $sql_result = $sql -> query('SELECT * FROM tbmonitor_post ORDER BY latest_reply_time DESC LIMIT 50') -> fetch_all(MYSQLI_ASSOC);
+                            $sql_result = $sql -> query('SELECT * FROM tbmonitor_post ORDER BY post_time DESC LIMIT 50') -> fetch_all(MYSQLI_ASSOC);
                             $post['post_time'] = date('Y-m-d H:i', $post['post_time']);
                             $post['latest_reply_time'] = date('Y-m-d H:i', $post['latest_reply_time']);
                             foreach ($sql_result as $post) { ?>
