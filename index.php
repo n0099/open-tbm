@@ -29,12 +29,12 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                     <table class="table table-hover table-striped table-condensed" id="main">
                         <thead>
                             <tr>
-                                <th class="col-xs-2" onclick="sortTable(0)">贴吧名</th>
-                                <th class="col-md-2" onclick="sortTable(1)">贴子类型</th>
-                                <th class="col-md-2" onclick="sortTable(2)">内容</th>
-                                <th class="col-md-2" onclick="sortTable(3)">传送门</th>
-                                <th class="col-md-2" onclick="sortTable(4)">发贴人</th>
-                                <th class="col-md-2" onclick="sortTable(5)">发贴时间</th>
+                                <th onclick="sortTable(0)">贴吧名</th>
+                                <th onclick="sortTable(1)">贴子类型</th>
+                                <th onclick="sortTable(2)">内容</th>
+                                <th onclick="sortTable(3)">传送门</th>
+                                <th onclick="sortTable(4)">发贴人</th>
+                                <th onclick="sortTable(5)">发贴时间</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -47,10 +47,10 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <td><?php echo $post['forum']; ?></th>
                                     <td>主题贴</th>
                                     <td>
-                                        <a data-toggle="collapse" data-target=<?php echo "\"#collapse_{$post['tid']}\""; ?> href="">
+                                        <a data-toggle="collapse" data-target=<?php echo "\"#post_{$post['tid']}\""; ?> href="">
                                             <?php echo "{$post['title']}（点击展开）"; ?>
                                         </a><br />
-                                        <p id=<?php echo "\"collapse_{$post['tid']}\""; ?> class="collapse out">
+                                        <p id=<?php echo "\"post_{$post['tid']}\""; ?> class="collapse out">
                                             <?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$post['tid']} AND floor = 1") -> fetch_assoc()['content']; ?>
                                         </p>
                                         <?php echo "主题贴回复数：{$post['reply_num']} 最后回复人：<a href=\"".get_user_space($post['latest_replyer'])."\" target=\"_blank\">{$post['latest_replyer']}</a> 最后回复时间：{$post['latest_reply_time']}"; ?>
@@ -66,11 +66,15 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                 <tr>
                                     <td><?php echo $reply['forum']; ?></th>
                                     <td>回复贴</th>
-                                    <td><?php
-                                        echo '所回复主题贴：<a href="'.get_post_portal($reply['tid']).'" target="_blank">'.$sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$reply['tid']}") -> fetch_assoc()['title'].'</a><br />'; 
-                                        echo $reply['content'].'<br />';
-                                        echo "楼层：{$reply['floor']} 楼中楼回复数：{$reply['lzl_num']}"
-                                    ?></th>
+                                    <td><?php echo '所回复主题贴：<a href="'.get_post_portal($reply['tid']).'" target="_blank">'.$sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$reply['tid']}") -> fetch_assoc()['title'].'</a><br />'; ?>
+                                        <a data-toggle="collapse" data-target=<?php echo "\"#reply_{$reply['pid']}\""; ?> href="">
+                                            点击展开回复
+                                        </a><br />
+                                        <p id=<?php echo "\"reply_{$reply['pid']}\""; ?> class="collapse out">
+                                            <?php echo $reply['content'].'<br />'; ?>
+                                        </p>
+                                        <?php echo "楼层：{$reply['floor']} 楼中楼回复数：{$reply['lzl_num']}"; ?>
+                                    </th>
                                     <td><?php echo '<a href="'.get_post_portal($reply['tid'], $reply['pid']).'" target="_blank">传送门</a>'; ?></th>
                                     <td><?php echo '<a href="'.get_user_space($reply['author'])."\" target=\"_blank\">{$reply['author']}</a>"; ?></th>
                                     <td><?php echo $reply['reply_time']; ?></th>
@@ -84,8 +88,8 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <td>楼中楼</th>
                                     <td><?php
                                         echo '所回复主题贴：<a href="'.get_post_portal($lzl['tid']).'" target="_blank">'.$sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$lzl['tid']}") -> fetch_assoc()['title'].'</a>';
-                                        echo ' 所回复楼层：<a href="'.get_post_portal($lzl['tid'], $lzl['pid']).'" target="_blank">'.$sql -> query("SELECT floor FROM tbmonitor_reply WHERE pid = {$lzl['pid']}") -> fetch_assoc()['floor'].'楼</a><br />'; 
-                                        echo $lzl['content']; 
+                                        echo ' 所回复楼层：<a href="'.get_post_portal($lzl['tid'], $lzl['pid']).'" target="_blank">'.$sql -> query("SELECT floor FROM tbmonitor_reply WHERE pid = {$lzl['pid']}") -> fetch_assoc()['floor'].'楼</a><br />';
+                                        echo $lzl['content'];
                                     ?></th>
                                     <td><?php echo '<a href="'.get_post_portal($lzl['tid'], $lzl['pid'], $lzl['spid']).'" target="_blank">传送门</a>'; ?></th>
                                     <td><?php echo '<a href="'.get_user_space($lzl['author'])."\" target=\"_blank\">{$lzl['author']}</a>"; ?></th>
@@ -106,7 +110,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
             table = document.getElementById("main");
             switching = true;
             //Set the sorting direction to ascending:
-            dir = "asc"; 
+            dir = "asc";
             /*Make a loop that will continue until
             no switching has been done:*/
             while (switching) {
@@ -144,7 +148,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                     rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                     switching = true;
                     //Each time a switch is done, increase this count by 1:
-                    switchcount ++;      
+                    switchcount ++;
                 } else {
                     /*If no switching has been done AND the direction is "asc",
                     set the direction to "desc" and run the while loop again.*/
