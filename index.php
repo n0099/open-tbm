@@ -1,5 +1,6 @@
 <?php
 ini_set('display_errors', 'On');
+if (!is_int(intval($_GET['tid']))) { die(); }
 
 function get_post_portal($tid, $pid = null, $spid = null) {
     $return = "http://tieba.baidu.com/p/{$tid}";
@@ -26,7 +27,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
-                    <p>显示最近150条主题贴/回复贴/楼中楼记录</p>
+                    <p><?php echo empty($_GET['tid']) ? '显示最近150条主题贴/回复贴/楼中楼记录' : '显示此<a href="'.get_post_portal($_GET['tid']).'" target="_blank">主题贴</a>所有回复贴楼中楼记录'; ?></p>
                     <table class="table table-hover table-striped table-condensed" id="main">
                         <thead>
                             <tr>
@@ -40,7 +41,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         </thead>
                         <tbody>
                             <?php
-                            $sql_result = $sql -> query('SELECT * FROM tbmonitor_post ORDER BY post_time DESC LIMIT 50') -> fetch_all(MYSQLI_ASSOC);
+                            $sql_result = $sql -> query(empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_post ORDER BY post_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_post WHERE tid = {$_GET['tid']}") -> fetch_all(MYSQLI_ASSOC);
                             $post['post_time'] = date('Y-m-d H:i', $post['post_time']);
                             $post['latest_reply_time'] = date('Y-m-d H:i', $post['latest_reply_time']);
                             foreach ($sql_result as $post) { ?>
@@ -61,7 +62,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <td><?php echo $post['post_time']; ?></th>
                                 </tr>
                             <?php }
-                            $sql_result = $sql -> query('SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC LIMIT 50') -> fetch_all(MYSQLI_ASSOC);
+                            $sql_result = $sql -> query(empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_reply WHERE tid = {$_GET['tid']} AND floor != 1") -> fetch_all(MYSQLI_ASSOC);
                             $reply['reply_time'] = date('Y-m-d H:i', $reply['reply_time']);
                             foreach ($sql_result as $reply) { ?>
                                 <tr>
@@ -81,7 +82,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <td><?php echo $reply['reply_time']; ?></th>
                                 </tr>
                             <?php }
-                            $sql_result = $sql -> query('SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC LIMIT 50') -> fetch_all(MYSQLI_ASSOC);
+                            $sql_result = $sql -> query(empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_lzl WHERE tid = {$_GET['tid']}") -> fetch_all(MYSQLI_ASSOC);
                             $lzl['reply_time'] = date('Y-m-d H:i', $lzl['reply_time']);
                             foreach ($sql_result as $lzl) { ?>
                                 <tr>
@@ -99,9 +100,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                             <?php } ?>
                         </tbody>
                     </table>
-                    <?php
-                    echo '<p>PHP耗时'.round(microtime(true)-$time, 10).'秒，共使用'.round(memory_get_peak_usage()/1024/1024, 2).'MB内存</p>';
-                    ?>
+                    <p><?php echo 'PHP耗时'.round(microtime(true)-$time, 10).'秒，共使用'.round(memory_get_peak_usage()/1024/1024, 2).'MB内存'; ?></p>
                 </div>
             </div>
         </div>
