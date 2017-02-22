@@ -41,10 +41,16 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         </thead>
                         <tbody>
                             <?php
-                            $sql_result = $sql -> query(empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_post ORDER BY post_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_post WHERE tid = {$_GET['tid']}") -> fetch_all(MYSQLI_ASSOC);
-                            $post['post_time'] = date('Y-m-d H:i', $post['post_time']);
-                            $post['latest_reply_time'] = date('Y-m-d H:i', $post['latest_reply_time']);
-                            foreach ($sql_result as $post) { ?>
+                            $sql_posts = empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_post ORDER BY post_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_post WHERE tid = {$_GET['tid']}";
+                            $sql_posts_result = $sql -> query($sql_posts) -> fetch_all(MYSQLI_ASSOC);
+                            $sql_replies = empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_reply WHERE tid = {$_GET['tid']} AND floor != 1";
+                            $sql_replies_result = $sql -> query($sql_replies) -> fetch_all(MYSQLI_ASSOC);
+                            $sql_lzl = empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_lzl WHERE tid = {$_GET['tid']}";
+                            $sql_lzl_result = $sql -> query($sql_lzl) -> fetch_all(MYSQLI_ASSOC);                            
+                            foreach ($sql_posts_result as $post) {
+                                $post['post_time'] = date('Y-m-d H:i', $post['post_time']);
+                                $post['latest_reply_time'] = date('Y-m-d H:i', $post['latest_reply_time']);
+                            ?>
                                 <tr>
                                     <td><?php echo $post['forum']; ?></th>
                                     <td>主题贴</th>
@@ -62,9 +68,9 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <td><?php echo $post['post_time']; ?></th>
                                 </tr>
                             <?php }
-                            $sql_result = $sql -> query(empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_reply WHERE tid = {$_GET['tid']} AND floor != 1") -> fetch_all(MYSQLI_ASSOC);
-                            $reply['reply_time'] = date('Y-m-d H:i', $reply['reply_time']);
-                            foreach ($sql_result as $reply) { ?>
+                            foreach ($sql_replies_result as $reply) {
+                                $reply['reply_time'] = date('Y-m-d H:i', $reply['reply_time']);
+                            ?>
                                 <tr>
                                     <td><?php echo $reply['forum']; ?></th>
                                     <td>回复贴</th>
@@ -82,9 +88,9 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     <td><?php echo $reply['reply_time']; ?></th>
                                 </tr>
                             <?php }
-                            $sql_result = $sql -> query(empty($_GET['tid']) ? 'SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC LIMIT 50' : "SELECT * FROM tbmonitor_lzl WHERE tid = {$_GET['tid']}") -> fetch_all(MYSQLI_ASSOC);
-                            $lzl['reply_time'] = date('Y-m-d H:i', $lzl['reply_time']);
-                            foreach ($sql_result as $lzl) { ?>
+                            foreach ($sql_lzl_result as $lzl) {
+                                $lzl['reply_time'] = date('Y-m-d H:i', $lzl['reply_time']);
+                            ?>
                                 <tr>
                                     <td><?php echo $lzl['forum']; ?></th>
                                     <td>楼中楼</th>
