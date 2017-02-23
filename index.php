@@ -42,15 +42,16 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         </thead>
                         <tbody>
                             <?php
-                            $count = $sql -> query('SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl') -> fetch_all(MYSQLI_NUM);
-                            foreach ($count as $key => $value) {
-                                $pages += $value[0];
-                            }
-                            $pages =  $pages / 30;
+                            $sql_count = $sql -> query('SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl') -> fetch_all(MYSQLI_NUM);
+                            $max_page_num = intval(max($sql_count)[0] / 10);
                             $sql_limit = "LIMIT {$_GET['pn']}, 10";
-                            $sql_posts = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_post WHERE tid = {$_GET['tid']}";
-                            $sql_replies = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_reply WHERE tid = {$_GET['tid']} AND floor != 1";
-                            $sql_lzl = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_lzl WHERE tid = {$_GET['tid']}";
+                            $sql_condition = empty($_GET['tid']) ? '' : "WHERE tid = {$_GET['tid']}";
+                            $sql_posts = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_post {$sql_condition}";
+                            $sql_replies = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_reply {$sql_condition} AND floor != 1";
+                            $sql_lzl = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_lzl {$sql_condition}";
+                            echo $sql_posts;
+                            echo $sql_replies;
+                            echo $sql_lzl;
                             $sql_results = [
                                 'posts' => $sql -> query($sql_posts) -> fetch_all(MYSQLI_ASSOC),
                                 'replies' => $sql -> query($sql_replies) -> fetch_all(MYSQLI_ASSOC),
@@ -125,19 +126,22 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                             <?php
                             $pre_class = $_GET['pn'] == 0 ? '"page-item disabled"' : '"page-item"';
                             $pre_href = $_GET['pn'] == 0 ? '""' : '"https://n0099.cf/tbm/?pn=' . ($_GET['pn'] - 10) . '"';
-                            $next_class = $_GET['pn'] == (intval($pages) + 1) * 10 ? '"page-item disabled"' : '"page-item"';
-                            $next_href = $_GET['pn'] == (intval($pages) + 1) * 10 ? '""' : '"https://n0099.cf/tbm/?pn=' . ($_GET['pn'] + 10) . '"';
+                            $next_class = $_GET['pn'] == $max_page_num * 10 ? '"page-item disabled"' : '"page-item"';
+                            $next_href = $_GET['pn'] == $max_page_num * 10 ? '""' : '"https://n0099.cf/tbm/?pn=' . ($_GET['pn'] + 10) . '"';
                             ?>
                             <li class="page-item"><a class="page-link" href="https://n0099.cf/tbm/">首页</a></li>
                             <li class=<?php echo $pre_class; ?>><a class="page-link" href=<?php echo $pre_href; ?>>上一页</a></li>
                             <?php
-                            for ($i = ($_GET['pn'] / 10 < 10 ? 1 : $_GET['pn'] / 10 - 5); $i <= ($_GET['pn'] / 10 < 10 ? 10 : $_GET['pn'] / 10 + 5); $i++) {
-                                $li_class = $_GET['pn'] == ($i - 1) * 10 ? 'page-item active' : 'page-item';
+                            $pn = $_GET['pn'] / 10 + 1;
+                            $start = $pn <= 5 ? 1 : $pn - 5;
+                            $end = $pn <= 5 ? 10 : ($_GET['pn'] / 10 == $max_page_num + 1 ? $pn : ($_GET['pn'] / 10 >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5));
+                            for ($i = $start; $i <= $end; $i++) {
+                                $li_class = $i == $pn ? 'page-item active' : 'page-item';
                                 echo "<li class=\"{$li_class}\">".'<a class="page-link" href="https://n0099.cf/tbm/?pn=' . (($i - 1) * 10) . '">' . $i . '</a></li>';
                             }
                             ?>
                             <li class=<?php echo $next_class; ?>><a class="page-link" href=<?php echo $next_href; ?>>下一页</a></li>
-                            <li class="page-item"><a class="page-link" href=<?php echo '"https://n0099.cf/tbm/?pn=' . (intval($pages) + 1) * 10 . '"' ; ?>>尾页</a></li>
+                            <li class="page-item"><a class="page-link" href=<?php echo '"https://n0099.cf/tbm/?pn=' . $max_page_num * 10 . '"' ; ?>>尾页</a></li>
                         </ul>
                     </nav>
                     <p><?php echo 'PHP耗时' . round(microtime(true)-$time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
