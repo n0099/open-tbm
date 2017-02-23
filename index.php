@@ -49,9 +49,6 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                             $sql_posts = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_post {$sql_condition}";
                             $sql_replies = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_reply {$sql_condition} AND floor != 1";
                             $sql_lzl = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_lzl {$sql_condition}";
-                            echo $sql_posts;
-                            echo $sql_replies;
-                            echo $sql_lzl;
                             $sql_results = [
                                 'posts' => $sql -> query($sql_posts) -> fetch_all(MYSQLI_ASSOC),
                                 'replies' => $sql -> query($sql_replies) -> fetch_all(MYSQLI_ASSOC),
@@ -59,16 +56,8 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                             ];
                             foreach ($sql_results as $type => $content) {
                                 foreach ($content as $row) {
-                                    if ($type == 'posts') {
-                                        $row_type = '主题贴';
-                                        $post_portal = get_post_portal($row['tid']);
-                                    } elseif ($type == 'replies') {
-                                        $row_type = '回复贴';
-                                        $post_portal = get_post_portal($row['tid'], $row['pid']);
-                                    } elseif ($type == 'lzl') {
-                                        $row_type = '楼中楼';
-                                        $post_portal = get_post_portal($row['tid'], $row['pid'], $row['spid']);
-                                    }
+                                    $row_type = $type == 'posts' ? '主题贴' : ($type == 'replies' ? '回复贴' : ($type == 'lzl' ? '楼中楼' : null));
+                                    $post_portal = $type == 'posts' ? get_post_portal($row['tid']) : ($type == 'replies' ? get_post_portal($row['tid'], $row['pid']) : ($type == 'lzl' ? get_post_portal($row['tid'], $row['pid'], $row['spid']) : null));
                             ?>
                                 <tr>
                                     <td><?php echo $row['forum']; ?></th>
