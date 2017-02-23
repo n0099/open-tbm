@@ -47,7 +47,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                 $pages += $value[0];
                             }
                             $pages =  $pages / 30;
-                            $sql_limit = "LIMIT {$_GET['pn']}, " . ($_GET['pn'] + 10);
+                            $sql_limit = "LIMIT {$_GET['pn']}, 10";
                             $sql_posts = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_post WHERE tid = {$_GET['tid']}";
                             $sql_replies = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_reply WHERE tid = {$_GET['tid']} AND floor != 1";
                             $sql_lzl = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_lzl WHERE tid = {$_GET['tid']}";
@@ -128,18 +128,19 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                             $next_class = $_GET['pn'] == (intval($pages) + 1) * 10 ? '"page-item disabled"' : '"page-item"';
                             $next_href = $_GET['pn'] == (intval($pages) + 1) * 10 ? '""' : '"https://n0099.cf/tbm/?pn=' . ($_GET['pn'] + 10) . '"';
                             ?>
+                            <li class="page-item"><a class="page-link" href="https://n0099.cf/tbm/">首页</a></li>
                             <li class=<?php echo $pre_class; ?>><a class="page-link" href=<?php echo $pre_href; ?>>上一页</a></li>
                             <?php
-                            for ($i = 1; $i <= intval($pages) + 1; $i++) {
-                                if ($i == 10) { break; }
+                            for ($i = ($_GET['pn'] / 10 < 10 ? 1 : $_GET['pn'] / 10 - 5); $i <= ($_GET['pn'] / 10 < 10 ? 10 : $_GET['pn'] / 10 + 5); $i++) {
                                 $li_class = $_GET['pn'] == ($i - 1) * 10 ? 'page-item active' : 'page-item';
                                 echo "<li class=\"{$li_class}\">".'<a class="page-link" href="https://n0099.cf/tbm/?pn=' . (($i - 1) * 10) . '">' . $i . '</a></li>';
                             }
                             ?>
                             <li class=<?php echo $next_class; ?>><a class="page-link" href=<?php echo $next_href; ?>>下一页</a></li>
+                            <li class="page-item"><a class="page-link" href=<?php echo '"https://n0099.cf/tbm/?pn=' . (intval($pages) + 1) * 10 . '"' ; ?>>尾页</a></li>
                         </ul>
                     </nav>
-                    <p><?php echo 'PHP耗时' . round(microtime(true)-$time, 10) . '秒，共使用' . round(memory_get_peak_usage()/1024/1024, 2) . 'MB内存'; ?></p>
+                    <p><?php echo 'PHP耗时' . round(microtime(true)-$time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
                 </div>
             </div>
         </div>
