@@ -1,5 +1,5 @@
 <?php
-class Forum
+class Forum implements JsonSerializable
 {
     /**
      * 贴吧ID
@@ -65,5 +65,14 @@ class Forum
     public function setPosties($posties)
     {
         $this->posties = $posties;
+    }
+
+    public function jsonSerialize()
+    {
+        return array(
+            "id" => $this->id,
+            "name" => $this->name,
+            "posties" => $this->posties
+        );
     }
 }

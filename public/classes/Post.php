@@ -1,5 +1,5 @@
 <?php
-class Post
+class Post implements JsonSerializable
 {
     /**
      * 贴子所在贴吧
@@ -226,5 +226,19 @@ class Post
     public function setType($type)
     {
         $this->type = $type;
+    }
+
+    public function jsonSerialize()
+    {
+        return array(
+            'id' => $this->id,
+            'title' => $this->title,
+            'author' => $this->author,
+            'postTime' => date_timestamp_get($this->postTime),
+            'lastReplier' => $this->lastReplier,
+            'lastReplyTime' => date_timestamp_get($this->lastReplyTime),
+            'type' => $this->type,
+            'replies' => $this->replies
+        );
     }
 }
