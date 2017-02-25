@@ -15,8 +15,8 @@ function get_user_space($username) {
 }
 
 function get_url_arguments($pn = null, $tid = null) {
-    $pn = $pn === null ? $_GET['pn'] : $pn;
-    $tid = $tid === null ? $_GET['tid'] : $tid;
+    $pn = $pn === null & !empty($_GET['pn']) ? $_GET['pn'] : $pn;
+    $tid = $tid === null & !empty($_GET['tid']) ? $_GET['tid'] : $tid;
     $arguments .= $pn === null ? null : "pn={$pn}";
     $arguments .= $tid === null ? null : "&tid={$tid}";
     return "https://n0099.cf/tbm/?{$arguments}";
@@ -50,12 +50,19 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         </thead>
                         <tbody>
                             <?php
-                            $sql_limit = "LIMIT {$_GET['pn']}, 10";
-                            $sql_condition = empty($_GET['tid']) ? '' : "WHERE tid = {$_GET['tid']}";
-                            $sql_posts = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_post {$sql_condition} {$sql_limit}";
-                            $sql_replies = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_reply {$sql_condition} AND floor != 1 {$sql_limit}";
-                            $sql_lzl = empty($_GET['tid']) ? "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}" : "SELECT * FROM tbmonitor_lzl {$sql_condition} {$sql_limit}";
-                            $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post {$sql_condition} UNION ALL SELECT COUNT(*) FROM tbmonitor_reply {$sql_condition} UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl {$sql_condition}") -> fetch_all(MYSQLI_NUM);
+                            $sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * 10) . ', 10';
+                            if (empty($_GET['tid'])) {
+                                $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl") -> fetch_all(MYSQLI_NUM);
+                                $sql_posts = "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}";
+                                $sql_replies = "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}";
+                                $sql_lzl = "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}";
+                            } else {
+                                $sql_condition = "tid = {$_GET['tid']}";
+                                $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post WHERE {$sql_condition} UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE {$sql_condition} AND floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl WHERE {$sql_condition}") -> fetch_all(MYSQLI_NUM);
+                                $sql_posts = "SELECT * FROM tbmonitor_post WHERE {$sql_condition} {$sql_limit}";
+                                $sql_replies = "SELECT * FROM tbmonitor_reply WHERE {$sql_condition} AND floor != 1 {$sql_limit}";
+                                $sql_lzl = "SELECT * FROM tbmonitor_lzl WHERE {$sql_condition} {$sql_limit}";
+                            }
                             $max_page_num = intval(max($sql_count)[0] / 10);
                             $sql_results = [
                                 'posts' => $sql -> query($sql_posts),
@@ -68,8 +75,8 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                     $post_portal = $type == 'posts' ? get_post_portal($row['tid']) : ($type == 'replies' ? get_post_portal($row['tid'], $row['pid']) : ($type == 'lzl' ? get_post_portal($row['tid'], $row['pid'], $row['spid']) : null));
                             ?>
                                 <tr>
-                                    <td><?php echo $row['forum']; ?></th>
-                                    <td><?php echo $row_type; ?></th>
+                                    <td><?php echo $row['forum']; ?></td>
+                                    <td><?php echo $row_type; ?></td>
                                     <td>
                                         <?php
                                         switch ($type) {
@@ -78,7 +85,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                                 $row['latest_reply_time'] = date('Y-m-d H:i', strtotime($row['latest_reply_time']));
                                         ?>
                                                 <a data-toggle="collapse" data-target=<?php echo "\"#post_{$row['tid']}\""; ?> href="">
-                                                    <?php echo "{$row['title']}（点击展开）"; ?>
+                                                    <?php echo "{$row['title']}（点击展开/折叠）"; ?>
                                                 </a><br />
                                                 <p id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse out">
                                                     <?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']; ?>
@@ -91,7 +98,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                                 echo '所回复主题贴：<a href="' . get_post_portal($row['tid']) . '" target="_blank">' . $sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$row['tid']}") -> fetch_assoc()['title'] . '</a><br />';
                                         ?>
                                                 <a data-toggle="collapse" data-target=<?php echo "\"#reply_{$row['pid']}\""; ?> href="">
-                                                    点击展开回复
+                                                    点击展开/折叠回复
                                                 </a><br />
                                                 <p id=<?php echo "\"reply_{$row['pid']}\""; ?> class="collapse out">
                                                     <?php echo $row['content'] . '<br />'; ?>
@@ -107,10 +114,10 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                                                 break;
                                         }
                                         ?>
-                                    </th>
-                                    <td><?php echo "<a href=\"{$post_portal}\" target=\"_blank\">传送门</a>"; ?></th>
-                                    <td><?php echo '<a href="' . get_user_space($row['author']) . "\" target=\"_blank\">{$row['author']}</a>"; ?></th>
-                                    <td><?php echo $type == 'posts' ? $row['post_time'] : $row['reply_time']; ?></th>
+                                    </td>
+                                    <td><?php echo "<a href=\"{$post_portal}\" target=\"_blank\">传送门</a>"; ?></td>
+                                    <td><?php echo '<a href="' . get_user_space($row['author']) . "\" target=\"_blank\">{$row['author']}</a>"; ?></td>
+                                    <td><?php echo $type == 'posts' ? $row['post_time'] : $row['reply_time']; ?></td>
                                 </tr>
                                 <?php
                                 }
@@ -122,23 +129,23 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         <ul class="pagination justify-content-end">
                             <?php
                             $pre_class = $_GET['pn'] == 0 ? '"page-item disabled"' : '"page-item"';
-                            $pre_href = $_GET['pn'] == 0 ? '""' : '"' . get_url_arguments($_GET['pn'] - 10) . '"';
-                            $next_class = $_GET['pn'] == $max_page_num * 10 ? '"page-item disabled"' : '"page-item"';
-                            $next_href = $_GET['pn'] == $max_page_num * 10 ? '""' : '"' . get_url_arguments($_GET['pn'] + 10) . '"';
+                            $pre_href = $_GET['pn'] == 0 ? '""' : '"' . get_url_arguments($_GET['pn'] - 1) . '"';
+                            $next_class = $_GET['pn'] == $max_page_num ? '"page-item disabled"' : '"page-item"';
+                            $next_href = $_GET['pn'] == $max_page_num ? '""' : '"' . get_url_arguments($_GET['pn'] + 1) . '"';
                             ?>
                             <li class="page-item"><a class="page-link" href=<?php echo '"' . get_url_arguments(0) . '"'; ?>>首页</a></li>
                             <li class=<?php echo $pre_class; ?>><a class="page-link" href=<?php echo $pre_href; ?>>上一页</a></li>
                             <?php
-                            $pn = $_GET['pn'] / 10 + 1;
+                            $pn = $_GET['pn'] + 1;
                             $start = $pn <= 5 ? 1 : $pn - 5;
-                            $end = $_GET['pn'] == $max_page_num * 10 ? null : ($pn <= 5 ? 10 : ($_GET['pn'] / 10 == $max_page_num + 1 ? $pn : ($_GET['pn'] / 10 >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5)));
+                            $end = $max_page_num > 10 && $pn <= 5 ? 10 : ($_GET['pn'] == $max_page_num + 1 ? $pn : ($max_page_num < 10 || $_GET['pn'] >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5));
                             for ($i = $start; $i <= $end; $i++) {
                                 $li_class = $i == $pn ? 'page-item active' : 'page-item';
-                                echo "<li class=\"{$li_class}\">".'<a class="page-link" href="' . get_url_arguments(($i - 1) * 10) . '">' . $i . '</a></li>';
+                                echo "<li class=\"{$li_class}\">".'<a class="page-link" href="' . get_url_arguments($i - 1) . '">' . $i . '</a></li>';
                             }
                             ?>
                             <li class=<?php echo $next_class; ?>><a class="page-link" href=<?php echo $next_href; ?>>下一页</a></li>
-                            <li class="page-item"><a class="page-link" href=<?php echo '"' . get_url_arguments($max_page_num * 10) . '"' ; ?>>尾页</a></li>
+                            <li class="page-item"><a class="page-link" href=<?php echo '"' . get_url_arguments($max_page_num) . '"' ; ?>>尾页</a></li>
                         </ul>
                     </nav>
                     <p><?php echo 'PHP耗时' . round(microtime(true) - $time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
