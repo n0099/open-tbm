@@ -1,7 +1,14 @@
 <?php
 ini_set('display_errors', 'On');
-$_GET['tid'] = (int)$_GET['tid'];
+$time = microtime(true);
+$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
+
 $_GET['pn'] = (int)$_GET['pn'];
+$_GET['forum'] = $sql -> escape_string($_GET['forum']);
+$_GET['tid'] = (int)$_GET['tid'];
+$_GET['author'] = $sql -> escape_string($_GET['author']);
+$_GET['start_date'] = empty($_GET['start_date']) ? null : date('Y-m-d', strtotime($_GET['start_date']));
+$_GET['end_date'] = empty($_GET['end_date']) ? null : date('Y-m-d', strtotime($_GET['end_date']));
 
 function get_post_portal($tid, $pid = null, $spid = null) {
     $return = "http://tieba.baidu.com/p/{$tid}";
@@ -14,16 +21,46 @@ function get_user_space($username) {
     return "http://tieba.baidu.com/home/main?un={$username}&ie=utf-8";
 }
 
-function get_url_arguments($pn = null, $tid = null) {
+function get_url_arguments($pn = null, $tid = null, $start_date = null) {
     $pn = $pn === null & !empty($_GET['pn']) ? $_GET['pn'] : $pn;
     $tid = $tid === null & !empty($_GET['tid']) ? $_GET['tid'] : $tid;
+    $start_date = $start_date === null & !empty($_GET['start_date']) ? $_GET['start_date'] : $start_date;
     $arguments .= $pn === null ? null : "pn={$pn}";
     $arguments .= $tid === null ? null : "&tid={$tid}";
+    $arguments .= $start_date === null ? null : "&start_date={$start_date}";
     return "https://n0099.cf/tbm/?{$arguments}";
 }
 
-$time = microtime(true);
-$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
+$sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * 10) . ', 10';
+if (empty($_GET['tid']) & empty($_GET['start_date']) & empty($_GET['end_date'])) {
+    $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl") -> fetch_all(MYSQLI_NUM);
+    $sql_posts = "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}";
+    $sql_replies = "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}";
+    $sql_lzl = "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}";
+} else {
+    $sql_conditions = [
+        'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
+        'date' => !empty($_GET['start_date']) & !empty($_GET['end_date']) ? "post_time BETWEEN \"{$_GET['start_date']}\" AND \"{$_GET['end_date']}\"" : null
+    ];
+    foreach($sql_conditions as $key => $value) {
+        if (empty($value)) {unset($sql_conditions[$key]);}
+    }
+    $sql_condition = implode(' AND ', $sql_conditions);
+    $sql_count = "SELECT COUNT(*) FROM tbmonitor_post WHERE {$sql_condition}";
+    $sql_posts = "SELECT * FROM tbmonitor_post WHERE {$sql_condition} {$sql_limit}";
+    $sql_condition = str_replace('post_time', 'reply_time', $sql_condition);
+
+    $sql_count .= " UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE {$sql_condition} AND floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl WHERE {$sql_condition}";
+    $sql_count = $sql -> query($sql_count) -> fetch_all(MYSQLI_NUM);
+    $sql_replies = "SELECT * FROM tbmonitor_reply WHERE {$sql_condition} AND floor != 1 {$sql_limit}";
+    $sql_lzl = "SELECT * FROM tbmonitor_lzl WHERE {$sql_condition} {$sql_limit}";
+}
+$max_page_num = intval(max($sql_count)[0] / 10);
+$sql_results = [
+    'posts' => $sql -> query($sql_posts),
+    'replies' => $sql -> query($sql_replies),
+    'lzl' => $sql -> query($sql_lzl)
+];
 ?>
 <!DOCTYPE html>
 <html>
@@ -31,6 +68,7 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
         <title>贴吧监控</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
     </head>
     <body onload="sortTable(5);sortTable(5);">
         <div class="container">
@@ -39,54 +77,64 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                     <form class="form-inline" action="https://n0099.cf/tbm/" method="get">
                         <fieldset>
                             <legend>搜索选项</legend>
+                            <p class="form-text text-muted">均为选填</p>
+                            <div class="form-group">
+                                <label for="type">贴子类型：</label>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="post" name="type[]" />主题贴
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="reply" name="type[]" />回复贴
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="lzl" name="type[]" />楼中楼
+                                    </label>
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <label for="forum">查询贴吧：</label>
                                 <select class="form-control" name="forum">
                                     <?php
                                     foreach ($sql -> query("SELECT DISTINCT forum FROM tbmonitor_post") -> fetch_all(MYSQLI_ASSOC) as $tieba) {
-                                        echo "<option>{$tieba['forum']}</option>";
+                                        echo '<option' . ($tieba['forum'] == $_GET['forum'] ? ' selected="selected"' : null) . ">{$tieba['forum']}</option>";
                                     }
                                     ?>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <div class="form-check form-check-inline">
-                                    <label for="type">贴子类型：</label>
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" checked="checked" name="type" value="post" />主题贴
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" checked="checked" name="type" value="reply" />回复贴
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" type="checkbox" checked="checked" name="type" value="lzl" />楼中楼
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label for="tid">主题贴tid：</label>
-                                <input class="form-control" type="number" name="tid" min="1" placeholder="5000000000" />
+                                <div class="input-group-addon">tieba.baidu.com/p/</div>
+                                <input class="form-control" type="number" value=<?php echo empty($_GET['tid']) ? '""' : "\"{$_GET['tid']}\""; ?> name="tid" min="1" placeholder="5000000000" />
                             </div>
                             <div class="form-group">
-                                <label for="tid">发贴人：</label>
-                                <input class="form-control" type="text" name="username" placeholder="n0099" />
+                                <label for="author">发贴人：</label>
+                                <div class="input-group-addon"><i class="fa fa-user-circle" aria-hidden="true"></i></div>
+                                <input class="form-control" type="text" value=<?php echo empty($_GET['author']) ? '""' : "\"{$_GET['author']}\""; ?> name="author" placeholder="n0099" />
                             </div>
                             <div class="form-group">
-                                <label for="start-date">记录起始时间：</label>
-                                <input class="form-control" type="date" value="" name="start-date" />
+                                <label for="start_date">记录起始时间：</label>
+                                <div class="input-group-addon"><i class="fa fa-calendar-minus-o" aria-hidden="true"></i></div>
+                                <input class="form-control" type="date" value=<?php echo empty($_GET['start_date']) ? '"' . date('Y-m-d', strtotime('-1 week')) . '"' : "\"{$_GET['start_date']}\""; ?> name="start_date" />
                             </div>
                             <div class="form-group">
-                                <label for="end-date">记录结束时间：</label>
-                                <input class="form-control" type="date" value="" name="end-date" />
+                                <label for="end_date">记录结束时间：</label>
+                                <div class="input-group-addon"><i class="fa fa-calendar-plus-o" aria-hidden="true"></i></div>
+                                <input class="form-control" type="date" value=<?php echo empty($_GET['end_date']) ? '"' . date('Y-m-d', time()) . '"' : "\"{$_GET['end_date']}\""; ?> name="end_date" />
                             </div>
                             <button type="submit" class="btn btn-primary">查询</button>
                         </fieldset>
                     </form>
-                    <p><?php echo empty($_GET['tid']) ? '最近30条主题贴/回复贴/楼中楼记录' : '显示<a href="' . get_post_portal($_GET['tid']) . '" target="_blank">主题贴</a>中所有回复贴楼中楼记录'; ?></p>
+                    <p><?php
+                    foreach($sql_count as $num) {
+                        $sql_count_rows += $num[0];
+                    }
+                    echo '正在显示第' . ($_GET['pn'] * 30) . '到' . ($_GET['pn'] * 30 + 30) . '条记录 第' . ($_GET['pn'] + 1) . "页 共{$max_page_num}页{$sql_count_rows}条记录"; 
+                    ?></p>
                     <table class="table table-hover table-striped table-condensed" id="main">
                         <thead>
                             <tr>
@@ -100,25 +148,6 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
                         </thead>
                         <tbody>
                             <?php
-                            $sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * 10) . ', 10';
-                            if (empty($_GET['tid'])) {
-                                $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl") -> fetch_all(MYSQLI_NUM);
-                                $sql_posts = "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}";
-                                $sql_replies = "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}";
-                                $sql_lzl = "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}";
-                            } else {
-                                $sql_condition = "tid = {$_GET['tid']}";
-                                $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post WHERE {$sql_condition} UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE {$sql_condition} AND floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl WHERE {$sql_condition}") -> fetch_all(MYSQLI_NUM);
-                                $sql_posts = "SELECT * FROM tbmonitor_post WHERE {$sql_condition} {$sql_limit}";
-                                $sql_replies = "SELECT * FROM tbmonitor_reply WHERE {$sql_condition} AND floor != 1 {$sql_limit}";
-                                $sql_lzl = "SELECT * FROM tbmonitor_lzl WHERE {$sql_condition} {$sql_limit}";
-                            }
-                            $max_page_num = intval(max($sql_count)[0] / 10);
-                            $sql_results = [
-                                'posts' => $sql -> query($sql_posts),
-                                'replies' => $sql -> query($sql_replies),
-                                'lzl' => $sql -> query($sql_lzl)
-                            ];
                             foreach ($sql_results as $type => $sql_result) {
                                 foreach ($sql_result -> fetch_all(MYSQLI_ASSOC) as $row) {
                                     $row_type = $type == 'posts' ? '主题贴' : ($type == 'replies' ? '回复贴' : ($type == 'lzl' ? '楼中楼' : null));
