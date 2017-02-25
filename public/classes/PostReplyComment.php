@@ -1,5 +1,6 @@
 <?php
-class PostReplyComment {
+class PostReplyComment implements JsonSerializable
+{
     /**
      * 楼中楼ID
      * 等价于百度中的spid
@@ -109,5 +110,15 @@ class PostReplyComment {
     public function setReplyTime($replyTime)
     {
         $this->replyTime = $replyTime;
+    }
+
+    public function jsonSerialize()
+    {
+        return array(
+            'id' => $this->id,
+            'author' => $this->author,
+            'text' => $this->text,
+            'replyTime' => date_timestamp_get($this->replyTime)
+        );
     }
 }
