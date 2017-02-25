@@ -36,7 +36,57 @@ $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
-                    <p><?php echo empty($_GET['tid']) ? '显示最近30条主题贴/回复贴/楼中楼记录' : '显示此<a href="' . get_post_portal($_GET['tid']) . '" target="_blank">主题贴</a>所有回复贴楼中楼记录'; ?></p>
+                    <form class="form-inline" action="https://n0099.cf/tbm/" method="get">
+                        <fieldset>
+                            <legend>搜索选项</legend>
+                            <div class="form-group">
+                                <label for="forum">查询贴吧：</label>
+                                <select class="form-control" name="forum">
+                                    <?php
+                                    foreach ($sql -> query("SELECT DISTINCT forum FROM tbmonitor_post") -> fetch_all(MYSQLI_ASSOC) as $tieba) {
+                                        echo "<option>{$tieba['forum']}</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check form-check-inline">
+                                    <label for="type">贴子类型：</label>
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" checked="checked" name="type" value="post" />主题贴
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" checked="checked" name="type" value="reply" />回复贴
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" checked="checked" name="type" value="lzl" />楼中楼
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="tid">主题贴tid：</label>
+                                <input class="form-control" type="number" name="tid" min="1" placeholder="5000000000" />
+                            </div>
+                            <div class="form-group">
+                                <label for="tid">发贴人：</label>
+                                <input class="form-control" type="text" name="username" placeholder="n0099" />
+                            </div>
+                            <div class="form-group">
+                                <label for="start-date">记录起始时间：</label>
+                                <input class="form-control" type="date" value="" name="start-date" />
+                            </div>
+                            <div class="form-group">
+                                <label for="end-date">记录结束时间：</label>
+                                <input class="form-control" type="date" value="" name="end-date" />
+                            </div>
+                            <button type="submit" class="btn btn-primary">查询</button>
+                        </fieldset>
+                    </form>
+                    <p><?php echo empty($_GET['tid']) ? '最近30条主题贴/回复贴/楼中楼记录' : '显示<a href="' . get_post_portal($_GET['tid']) . '" target="_blank">主题贴</a>中所有回复贴楼中楼记录'; ?></p>
                     <table class="table table-hover table-striped table-condensed" id="main">
                         <thead>
                             <tr>
