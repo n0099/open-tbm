@@ -5,7 +5,7 @@ $time = microtime(true);
 $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 
 $_GET['pn'] = (int)$_GET['pn'];
-$_GET['type'] = empty($_GET['type']) ? [] : $_GET['type'];
+$_GET['type'] = empty($_GET['type']) ? ['post', 'reply', 'lzl'] : $_GET['type'];
 $_GET['forum'] = $sql -> escape_string($_GET['forum']);
 $_GET['tid'] = (int)$_GET['tid'];
 $_GET['author'] = $sql -> escape_string($_GET['author']);
@@ -53,38 +53,42 @@ function get_url_arguments($pn = null, $type = null, $forum = null, $tid = null,
 }
 
 $sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * 10) . ', 10';
-if (empty($_GET['type']) & empty($_GET['forum']) & empty($_GET['tid']) & empty($_GET['author']) & empty($_GET['start_date']) & empty($_GET['end_date'])) {
-    $sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl") -> fetch_all(MYSQLI_NUM);
+/*if (empty($_GET['type']) & empty($_GET['forum']) & empty($_GET['tid']) & empty($_GET['author']) & empty($_GET['start_date']) & empty($_GET['end_date'])) {
+    /*$sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl") -> fetch_all(MYSQLI_NUM);
     $sql_posts = "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}";
     $sql_replies = "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}";
     $sql_lzl = "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}";
 } else {
-    $sql_conditions = [
-        'forum' => !empty($_GET['forum']) ? "forum = \"{$_GET['forum']}\"" : null,
-        'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
-        'author' => !empty($_GET['author']) ? "author = \"{$_GET['author']}\"" : null,
-        'date' => !empty($_GET['start_date']) & !empty($_GET['end_date']) ? "post_time BETWEEN \"{$_GET['start_date']}\" AND \"{$_GET['end_date']}\"" : null
-    ];
-    foreach($sql_conditions as $condition => $value) {
-        if (empty($value)) { unset($sql_conditions[$condition]); }
-    }
-    $sql_condition = empty($sql_conditions) ? 'ORDER BY post_time DESC' : 'WHERE ' . implode(' AND ', $sql_conditions);
-    $sql_count_condition = empty($sql_conditions) ? null : 'WHERE ' . implode(' AND ', $sql_conditions);
-    if (in_array('post', $_GET['type'])) {
-        $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_post {$sql_count_condition}";
-        $sql_posts = "SELECT * FROM tbmonitor_post {$sql_condition} {$sql_limit}";
-    }
-    $sql_condition = str_replace('post_time', 'reply_time', $sql_condition);
-    if (in_array('reply', $_GET['type'])) {
-        $sql_count[] = 'SELECT COUNT(*) FROM tbmonitor_reply ' . (empty($sql_count_condition) ? 'WHERE floor != 1' : "{$sql_condition} AND floor != 1");
-        $sql_replies = "SELECT * FROM tbmonitor_reply {$sql_condition} AND floor != 1 {$sql_limit}";
-    }
-    if (in_array('lzl', $_GET['type'])) {
-        $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_lzl {$sql_count_condition}";
-        $sql_lzl = "SELECT * FROM tbmonitor_lzl {$sql_condition} {$sql_limit}";
-    }
-    $sql_count = $sql -> query(implode(' UNION ALL ', $sql_count)) -> fetch_all(MYSQLI_NUM);
+}*/
+$sql_conditions = [
+    'forum' => !empty($_GET['forum']) ? "forum = \"{$_GET['forum']}\"" : null,
+    'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
+    'author' => !empty($_GET['author']) ? "author = \"{$_GET['author']}\"" : null,
+    'date' => !empty($_GET['start_date']) & !empty($_GET['end_date']) ? "post_time BETWEEN \"{$_GET['start_date']}\" AND \"{$_GET['end_date']}\"" : null
+];
+foreach($sql_conditions as $condition => $value) {
+    if (empty($value)) { unset($sql_conditions[$condition]); }
 }
+$sql_condition = empty($sql_conditions) ? null : 'WHERE ' . implode(' AND ', $sql_conditions);
+$sql_order_by = 'ORDER BY post_time DESC';
+
+if (in_array('post', $_GET['type'])) {
+    $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_post {$sql_condition}";
+    $sql_posts = "SELECT * FROM tbmonitor_post {$sql_condition} {$sql_order_by} {$sql_limit}";
+}
+$sql_condition = str_replace('post_time', 'reply_time', $sql_condition);
+$sql_order_by = 'ORDER BY reply_time DESC';
+if (in_array('reply', $_GET['type'])) {
+    $sql_where_floor = empty($sql_condition) ? 'WHERE floor != 1' : "{$sql_condition} AND floor != 1";
+    $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_reply {$sql_where_floor}";
+    $sql_replies = "SELECT * FROM tbmonitor_reply {$sql_where_floor} {$sql_order_by} {$sql_limit}";
+}
+if (in_array('lzl', $_GET['type'])) {
+    $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_lzl {$sql_condition}";
+    $sql_lzl = "SELECT * FROM tbmonitor_lzl {$sql_condition} {$sql_order_by} {$sql_limit}";
+}
+$sql_count = $sql -> query(implode(' UNION ALL ', $sql_count)) -> fetch_all(MYSQLI_NUM);
+
 $max_page_num = intval(max($sql_count)[0] / 10);
 $sql_results = [
     'posts' => empty($sql_posts) ? null : $sql -> query($sql_posts),
@@ -178,10 +182,10 @@ foreach($sql_results as $type => $query) {
                                 <div class="input-group-addon"><i class="fa fa-calendar-plus-o" aria-hidden="true"></i></div>
                                 <input class="form-control" type="date" value=<?php echo empty($_GET['end_date']) ? '""' : "\"{$_GET['end_date']}\""; ?> name="end_date" />
                             </div>
-                            <a href="#" onclick="setDatePicker(0);">今天</a>
-                            <a href="#" onclick="setDatePicker(-1);">昨天</a>
-                            <a href="#" onclick="setDatePicker(-7);">最近一周</a>
-                            <a href="#" onclick="setDatePicker(-30);">最近一月</a>
+                            <a href="#" onclick="setDatePicker(0);return false;">今天</a>
+                            <a href="#" onclick="setDatePicker(-1);return false;">昨天</a>
+                            <a href="#" onclick="setDatePicker(-7);return false;">最近一周</a>
+                            <a href="#" onclick="setDatePicker(-30);return false;">最近一月</a>
                             <br /><br />
                             <button type="submit" class="btn btn-primary">查询</button>
                             <a class="btn btn-secondary" href="https://n0099.cf/tbm" role="button">重置</a>
@@ -299,6 +303,7 @@ foreach($sql_results as $type => $query) {
                         </ul>
                     </nav>
                     <p><?php echo 'PHP耗时' . round(microtime(true) - $time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
+                    <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1261354059'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/stat.php%3Fid%3D1261354059%26online%3D1%26show%3Dline' type='text/javascript'%3E%3C/script%3E"));</script>
                 </div>
             </div>
         </div>
