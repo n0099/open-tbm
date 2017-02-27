@@ -15,13 +15,13 @@ function tieba_magic_time($time) {
 $time = microtime(true);
 $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 $forum = ['模拟城市', 'transportfever'];
+$curl = curl_init();
+curl_setopt($curl, CURLOPT_HEADER, false);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
 foreach ($forum as $tieba) {
-    // curl
-    $curl = curl_init();
+    // 贴吧首页
     curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/f?kw={$tieba}&ie=utf-8&pn=0&pagelets=frs-list%2Fpagelet%2Fthread");
-    curl_setopt($curl, CURLOPT_HEADER, false);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($curl);
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list", (.*),"parent/', $response, $regex_match);
@@ -33,18 +33,38 @@ foreach ($forum as $tieba) {
     unset($explode[0]);
     foreach ($explode as $index => $post) {
         if ($index == 'topic') {
-            // 话题贴id
-            preg_match('/http:\/\/tieba.baidu.com\/p\/(\d*)/', $post, $regex_match);
-            $post_data['id'] = $regex_match[1];
-            // 话题贴标题
-            preg_match('/<a href="http:\/\/tieba.baidu.com\/p\/\d*" target="_blank" title=".*">\s*(.*)<\/a>/', $post, $regex_match);
-            $post_title = trim($regex_match[1]);
-            // 话题贴发贴人
-            preg_match('/<a title="" href="http:\/\/tieba.baidu.com\/home\/main\?un=.*&ie=utf-8&from=live" target="_blank">\s*(.*)<\/a>/', $post, $regex_match);
-            $post_data['author_name'] = trim($regex_match[1]);
-            // 话题贴回复数
-            preg_match('/<span class="listReplyNum inlineBlock" id="interviewReply" title="\d*个回复">(\d*)<\/span>/', $post, $regex_match);
-            $post_data['reply_num'] = $regex_match[1];
+            if (strstr($post, '<div class="interview  ">') != false) {
+                // 文本话题贴id
+                preg_match('/http:\/\/tieba.baidu.com\/p\/(\d*)/', $post, $regex_match);
+                $post_data['id'] = $regex_match[1];
+                // 文本话题贴标题
+                preg_match('/<a href="http:\/\/tieba.baidu.com\/p\/\d*" target="_blank" title=".*">\s*(.*)<\/a>/', $post, $regex_match);
+                $post_title = trim($regex_match[1]);
+                // 文本话题贴发贴人
+                preg_match('/<a title="" href="http:\/\/tieba.baidu.com\/home\/main\?un=.*&ie=utf-8&from=live" target="_blank">\s*(.*)<\/a>/', $post, $regex_match);
+                $post_data['author_name'] = trim($regex_match[1]);
+                // 文本话题贴回复数
+                preg_match('/<span class="listReplyNum inlineBlock" id="interviewReply" title="\d*个回复">(\d*)<\/span>/', $post, $regex_match);
+                $post_data['reply_num'] = $regex_match[1];
+            } elseif (strstr($post, '<ul id="thread_pic"') != false) {
+                // 图片话题贴id
+                preg_match('/<li class="clearfix j_thread_list threadlist_li_gray thread_pic_bright"\n\s*id="pic_theme_list"\n\s*tid="(\d*)">/', $post, $regex_match);
+                $post_data['id'] = $regex_match[1];
+                // curl
+                curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/photo/bw/picture/toplist?kw={$tieba}&tid={$post_data['id']}&ie=utf-8");
+                $response = curl_exec($curl);
+                $pic_topic_data = json_decode($response, true)['data']['thread'];
+                // 图片话题贴标题
+                $post_title = $pic_topic_data['title'];
+                // 图片话题贴发贴人
+                $post_data['author_name'] = $pic_topic_data['name'];
+                // 图片话题贴回复数
+                $post_data['reply_num'] = $pic_topic_data['reply_amount'];
+                // 图片话题贴最后回复人
+                $latest_replyer = $pic_topic_data['last_author'];
+                // 图片话题贴最后回复时间
+                $latest_reply_time = date('Y-m-d H:i', $pic_topic_data['last_time']);
+            }
         } else {
             // 主题贴信息
             $post_data = json_decode(strstr(strstr($post, '{"'), '}', true) . '}', true);
@@ -141,4 +161,5 @@ foreach ($forum as $tieba) {
     }
 }
 
-echo '耗时' . round(microtime(true) - $time, 10) . '秒';
+// 计时
+$sql -> query('INSERT INTO tbmonitor_time (date, type, time) VALUES ("' . date('Y-m-d H:i:s') . '", "cron", ' . round(microtime(true) - $time, 4) . ')');
