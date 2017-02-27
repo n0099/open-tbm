@@ -43,11 +43,13 @@ function get_url_arguments($pn = null, $type = null, $forum = null, $tid = null,
         if ($arg_value === null) { unset($arguments[$arg_name]); }
     }
     unset($arg_value);
-    if (!empty($_GET['type'])) {
+    if (!empty($_GET['type']) & !(in_array('post', $_GET['type']) & in_array('reply', $_GET['type']) & in_array('lzl', $_GET['type']))) {
         foreach ($_GET['type'] as $type) {
             $types[] = "type[]={$type}";
         }
         $arguments['type'] = implode('&', $types);
+    } else {
+        unset($arguments['type']);
     }
     return 'https://n0099.cf/tbm/?' . implode('&', $arguments);
 }
@@ -120,7 +122,7 @@ foreach($sql_results as $type => $query) {
                 <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
                     <li class="nav-item"><a class="nav-link" href="https://n0099.cf">返回主站</a></li>
                     <li class="nav-item"><a class="nav-link" href="https://n0099.cf/tc">贴吧云签到</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf/vtop">模拟城市吧吧务后台公开</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf/vtop">模拟城市吧吧务公开后台</a></li>
                 </ul>
                 <a class="navbar-text my-2 my-lg-0" href="https://jq.qq.com/?_wv=1027&k=41RdoBF">四叶重工QQ群：292311751</a>
             </div>
