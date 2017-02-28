@@ -55,13 +55,6 @@ function get_url_arguments($pn = null, $type = null, $forum = null, $tid = null,
 }
 
 $sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * 10) . ', 10';
-/*if (empty($_GET['type']) & empty($_GET['forum']) & empty($_GET['tid']) & empty($_GET['author']) & empty($_GET['start_date']) & empty($_GET['end_date'])) {
-    /*$sql_count = $sql -> query("SELECT COUNT(*) FROM tbmonitor_post UNION ALL SELECT COUNT(*) FROM tbmonitor_reply WHERE floor != 1 UNION ALL SELECT COUNT(*) FROM tbmonitor_lzl") -> fetch_all(MYSQLI_NUM);
-    $sql_posts = "SELECT * FROM tbmonitor_post ORDER BY post_time DESC {$sql_limit}";
-    $sql_replies = "SELECT * FROM tbmonitor_reply WHERE floor != 1 ORDER BY reply_time DESC {$sql_limit}";
-    $sql_lzl = "SELECT * FROM tbmonitor_lzl ORDER BY reply_time DESC {$sql_limit}";
-} else {
-}*/
 $sql_conditions = [
     'forum' => !empty($_GET['forum']) ? "forum = \"{$_GET['forum']}\"" : null,
     'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
@@ -177,12 +170,12 @@ foreach($sql_results as $type => $query) {
                             <div class="form-group">
                                 <label for="start_date">记录起始时间：</label>
                                 <div class="input-group-addon"><i class="fa fa-calendar-minus-o" aria-hidden="true"></i></div>
-                                <input class="form-control" type="date" value=<?php echo empty($_GET['start_date']) ? '""' : "\"{$_GET['start_date']}\""; ?> name="start_date" />
+                                <input class="form-control" type="date" value=<?php echo empty($_GET['start_date']) ? '""' : "\"{$_GET['start_date']}\""; ?> name="start_date" id="start_date" />
                             </div>
                             <div class="form-group">
                                 <label for="end_date">记录结束时间：</label>
                                 <div class="input-group-addon"><i class="fa fa-calendar-plus-o" aria-hidden="true"></i></div>
-                                <input class="form-control" type="date" value=<?php echo empty($_GET['end_date']) ? '""' : "\"{$_GET['end_date']}\""; ?> name="end_date" />
+                                <input class="form-control" type="date" value=<?php echo empty($_GET['end_date']) ? '""' : "\"{$_GET['end_date']}\""; ?> name="end_date" id="end_date" />
                             </div>
                             <a href="#" onclick="setDatePicker(0);return false;">今天</a>
                             <a href="#" onclick="setDatePicker(-1);return false;">昨天</a>
@@ -316,8 +309,8 @@ foreach($sql_results as $type => $query) {
             start_date.setDate(start_date.getDate() + days);
             start_date.setHours(start_date.getHours() + 8);
             end_date.setHours(end_date.getHours() + 8);
-            document.getElementsByName("start_date")[0].value = start_date.toISOString().slice(0, 10);
-            document.getElementsByName("end_date")[0].value = end_date.toISOString().slice(0, 10);
+            $("#start_date").attr('value', start_date.toISOString().slice(0, 10));
+            $("#end_date").attr('value', end_date.toISOString().slice(0, 10));
         }
 
         function sortTable(n) {
