@@ -31,60 +31,156 @@
             <div class="row clearfix">
                 <div class="col-md-12 column">
                     <div id="cron_chart" style="height: 350px"></div>
+                    <div id="post_count_day_chart" style="height: 350px"></div>
+                    <div id="post_count_hour_chart" style="height: 350px"></div>
                 </div>
             </div>
         </div>
         <script>
-        var ajax = $.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_cron_time', 'days':'30'}, async:false});
-        var ajax_response = eval(ajax.responseText);        
-        var cron_times = new Array();
-        for(var i = 0, l = ajax_response.length; i < l; i++) {
-           cron_times.push(new Array(ajax_response[i]['date'], ajax_response[i]['time']));
-        }
-
-        var myChart = echarts.init(document.getElementById('cron_chart'));
-        var option = {
-            title: {
-                text: 'cron耗时',
-                subtext: '纯属虚构，至于你信不信，反正认真你就输了'
-            },
-            tooltip: { trigger: 'axis' },
-            legend: { data:['耗时'] },
+        var chart_option = {
             toolbox: {
                 feature: {
-                    dataZoom: { yAxisIndex: false },
-                restore: {},
-                saveAsImage: {}
+                    magicType: {},
+                    dataZoom: {yAxisIndex: false},
+                    restore: {},
+                    saveAsImage: {}
                 }
             },
             dataZoom: [
                 {
                     type: 'slider',
-                    start : 90,
-                    xAxisIndex: [0],
+                    xAxisIndex: 0
                 },{
                     type: 'inside',
-                    start : 90,
-                    xAxisIndex: [0],
+                    xAxisIndex: 0
                 }
-            ],
-            xAxis: {
-                type: 'time',
-                name: '时间',
-            },
-            yAxis: {},
-            series: [{
-                name: '耗时',
-                type: 'line',
-                step: 'middle',
-                sampling: 'average',
-                data: cron_times,
-                markLine: {
-                    data: [{type: 'average', name: '平均值'}]
-                },
-            }]
+            ]
         };
-        myChart.setOption(option);
+        var ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_cron_time', 'days':'30'}, async:false}).responseText);        
+        var cron_times = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           cron_times.push(new Array(ajax_response[i]['date'], ajax_response[i]['time']));
+        }
+        chart_option['dataZoom'][0]['start'] = 90;
+        chart_option['dataZoom'][1]['start'] = 90;
+        chart_option['title'] = {
+            text: 'cron耗时',
+            subtext: '纯属虚构，至于你信不信，反正认真你就输了'
+        };
+        chart_option['tooltip'] = {trigger: 'axis'};
+        chart_option['legend'] = {data: ['耗时（秒）']};
+        chart_option['xAxis'] = {type: 'time', name: '时间'};
+        chart_option['yAxis'] = {};
+        chart_option['series'] = {
+            name: '耗时（秒）',
+            type: 'line',
+            step: 'middle',
+            sampling: 'average',
+            data: cron_times,
+            markLine: {
+                data: [{type: 'average', name: '平均值'}]
+            }
+        };
+        echarts.init(document.getElementById('cron_chart')).setOption(chart_option);
+
+        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_day', 'days':'30', 'post':'post', 'forum':'模拟城市'}, async:false}).responseText);
+        var post_count_day = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           post_count_day.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
+        }
+        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_day', 'days':'30', 'post':'reply', 'forum':'模拟城市'}, async:false}).responseText);
+        var reply_count_day = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           reply_count_day.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
+        }
+        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_day', 'days':'30', 'post':'lzl', 'forum':'模拟城市'}, async:false}).responseText);
+        var lzl_count_day = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           lzl_count_day.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
+        }
+
+        chart_option['dataZoom'][0]['start'] = 0;
+        chart_option['dataZoom'][1]['start'] = 0;
+        chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
+        chart_option['title'] = {
+            text: '最近30天贴子数量',
+            subtext: '纯属虚构，至于你信不信，反正认真你就输了'
+        };
+        chart_option['tooltip'] = {trigger: 'axis'};
+        chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
+        chart_option['xAxis'] = {type: 'time', name: '日期'};
+        chart_option['yAxis'] = {};
+        chart_option['series'] = [
+            {
+                name: '主题贴',
+                type: 'line',
+                smooth: true,
+                data: post_count_day,
+                markLine: {data: [{type: 'average', name: '平均值'}]}
+            },{
+                name: '回复贴',
+                type: 'line',
+                smooth: true,
+                data: reply_count_day,
+                markLine: {data: [{type: 'average', name: '平均值'}]}
+            },{
+                name: '楼中楼',
+                type: 'line',
+                smooth: true,
+                data: lzl_count_day,
+                markLine: {data: [{type: 'average', name: '平均值'}]}
+            }
+        ];
+        echarts.init(document.getElementById('post_count_day_chart')).setOption(chart_option);
+
+        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'post', 'forum':'模拟城市'}, async:false}).responseText);
+        var post_count_hour = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           post_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
+        }
+        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'reply', 'forum':'模拟城市'}, async:false}).responseText);
+        var reply_count_hour = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           reply_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
+        }
+        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'lzl', 'forum':'模拟城市'}, async:false}).responseText);
+        var lzl_count_hour = new Array();
+        for(var i = 0, l = ajax_response.length; i < l; i++) {
+           lzl_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
+        }
+
+        chart_option['dataZoom'][0]['start'] = 0;
+        chart_option['dataZoom'][1]['start'] = 0;
+        chart_option['title'] = {
+            text: '最近24小时贴子数量',
+            subtext: '纯属虚构，至于你信不信，反正认真你就输了'
+        };
+        chart_option['tooltip'] = {trigger: 'axis'};
+        chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
+        chart_option['xAxis'] = {type: 'time', name: '日期'};
+        chart_option['yAxis'] = {};
+        chart_option['series'] = [
+            {
+                name: '主题贴',
+                type: 'line',
+                smooth: true,
+                data: post_count_hour,
+                markLine: {data: [{type: 'average', name: '平均值'}]}
+            },{
+                name: '回复贴',
+                type: 'line',
+                smooth: true,
+                data: reply_count_hour,
+                markLine: {data: [{type: 'average', name: '平均值'}]}
+            },{
+                name: '楼中楼',
+                type: 'line',
+                smooth: true,
+                data: lzl_count_hour,
+                markLine: {data: [{type: 'average', name: '平均值'}]}
+            }
+        ];
+        echarts.init(document.getElementById('post_count_hour_chart')).setOption(chart_option);
         </script>
         <script src="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
     </body>
