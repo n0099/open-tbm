@@ -1,3 +1,23 @@
+<?php
+ini_set('display_errors', 'On');
+date_default_timezone_set('PRC');
+$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
+
+function get_cron_time($minutes, $get_value) {
+    $value = round($GLOBALS['sql'] -> query("SELECT AVG(time) FROM tbmonitor_time WHERE date >= DATE_ADD(NOW(), INTERVAL -{$minutes} MINUTE)") -> fetch_all(MYSQLI_ASSOC)[0]['AVG(time)'], 2);
+    if ($get_value == false) { return empty($value) ? '未知' : $value; }
+    switch ($value) {
+        case $value >= 60:
+            return '低';
+        case $value >= 30:
+            return '中';
+        case $value < 30:
+            return '高';
+        default:
+            return '未知';
+    }
+}
+?>
 <!DOCTYPE html>
 <html>
     <head>
@@ -6,7 +26,7 @@
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
         <script src="https://cdn.bootcss.com/echarts/3.4.0/echarts.min.js"></script>
-        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>                
+        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
         <style>
             body {font-family: Microsoft YaHei, Helvetica, Arial, sans-serif !important;}
         </style>
@@ -30,6 +50,18 @@
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://n0099.cf/tbm">记录查询</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="https://n0099.cf/tbm/status.php">统计信息</a>
+                        </li>
+                    </ul>
+                    <div class="alert alert-warning" role="alert">
+                        <h5>目前监控效率：<strong><?php echo get_cron_time(5, true); ?></strong></h5>
+                        <span>最近5/10/15分钟cron耗时：<?php echo get_cron_time(5, false); ?> / <?php echo get_cron_time(10, false); ?> / <?php echo get_cron_time(15, false); ?> 秒</span>
+                    </div>
                     <div id="cron_chart" style="height: 350px"></div>
                     <div id="post_count_day_chart" style="height: 350px"></div>
                     <div id="post_count_hour_chart" style="height: 350px"></div>
@@ -56,7 +88,7 @@
                 }
             ]
         };
-        var ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_cron_time', 'days':'30'}, async:false}).responseText);        
+        var ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_cron_time', 'days':'30'}, async:false}).responseText);
         var cron_times = new Array();
         for(var i = 0, l = ajax_response.length; i < l; i++) {
            cron_times.push(new Array(ajax_response[i]['date'], ajax_response[i]['time']));
@@ -103,7 +135,7 @@
         chart_option['dataZoom'][1]['start'] = 0;
         chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
         chart_option['title'] = {
-            text: '最近30天贴子数量',
+            text: '模拟城市吧最近30天贴子数量',
             subtext: '纯属虚构，至于你信不信，反正认真你就输了'
         };
         chart_option['tooltip'] = {trigger: 'axis'};
@@ -152,7 +184,7 @@
         chart_option['dataZoom'][0]['start'] = 0;
         chart_option['dataZoom'][1]['start'] = 0;
         chart_option['title'] = {
-            text: '最近24小时贴子数量',
+            text: '模拟城市吧最近24小时贴子数量',
             subtext: '纯属虚构，至于你信不信，反正认真你就输了'
         };
         chart_option['tooltip'] = {trigger: 'axis'};
