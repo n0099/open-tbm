@@ -65,6 +65,7 @@ function get_cron_time($minutes, $get_value) {
                     <div id="cron_chart" style="height: 350px"></div>
                     <div id="post_count_day_chart" style="height: 350px"></div>
                     <div id="post_count_hour_chart" style="height: 350px"></div>
+                    <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1261354059'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/stat.php%3Fid%3D1261354059%26online%3D1%26show%3Dline' type='text/javascript'%3E%3C/script%3E"));</script>
                 </div>
             </div>
         </div>
