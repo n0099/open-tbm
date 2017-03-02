@@ -2,6 +2,7 @@
 ini_set('display_errors', 'On');
 date_default_timezone_set('PRC');
 $time = microtime(true);
+$items_per_page = 20;
 $sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 
 $_GET['pn'] = (int)$_GET['pn'];
@@ -54,7 +55,7 @@ function get_url_arguments($pn = null, $type = null, $forum = null, $tid = null,
     return 'https://n0099.cf/tbm/?' . implode('&', $arguments);
 }
 
-$sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * 10) . ', 10';
+$sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * $items_per_page) . ", {$items_per_page}";
 $sql_conditions = [
     'forum' => !empty($_GET['forum']) ? "forum = \"{$_GET['forum']}\"" : null,
     'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
@@ -84,7 +85,7 @@ if (in_array('lzl', $_GET['type'])) {
 }
 $sql_count = $sql -> query(implode(' UNION ALL ', $sql_count)) -> fetch_all(MYSQLI_NUM);
 
-$max_page_num = intval(max($sql_count)[0] / 10);
+$max_page_num = intval(max($sql_count)[0] / $items_per_page);
 $sql_results = [
     'posts' => empty($sql_posts) ? null : $sql -> query($sql_posts),
     'replies' => empty($sql_replies) ? null : $sql -> query($sql_replies),
@@ -193,9 +194,9 @@ foreach($sql_results as $type => $query) {
                             foreach($sql_count as $num) {
                                 $sql_count_rows += $num[0];
                             }
-                            $items += in_array('post', $_GET['type']) ? 10 : 0;
-                            $items += in_array('reply', $_GET['type']) ? 10 : 0;
-                            $items += in_array('lzl', $_GET['type']) ? 10 : 0;
+                            $items += in_array('post', $_GET['type']) ? $items_per_page : 0;
+                            $items += in_array('reply', $_GET['type']) ? $items_per_page : 0;
+                            $items += in_array('lzl', $_GET['type']) ? $items_per_page : 0;
                             echo '正在显示第' . ($_GET['pn'] * $items) . '到' . ($_GET['pn'] * $items + $items) . '条记录 第' . ($_GET['pn'] + 1) . '页 共' . ($max_page_num + 1) . "页{$sql_count_rows}条记录";
                             ?><br />
                             点击表头排序 查询结果不按时间分页
@@ -287,7 +288,7 @@ foreach($sql_results as $type => $query) {
                             <?php
                             $pn = $_GET['pn'] + 1;
                             $start = $pn <= 5 ? 1 : $pn - 5;
-                            $end = $max_page_num > 10 && $pn <= 5 ? 10 : ($_GET['pn'] == $max_page_num + 1 ? $pn : ($max_page_num < 10 || $_GET['pn'] >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5));
+                            $end = $max_page_num > $items_per_page && $pn <= 5 ? $items_per_page : ($_GET['pn'] == $max_page_num + 1 ? $pn : ($max_page_num < $items_per_page || $_GET['pn'] >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5));
                             for ($i = $start; $i <= $end; $i++) {
                                 $li_class = $i == $pn ? 'page-item active' : 'page-item';
                                 echo "<li class=\"{$li_class}\">".'<a class="page-link" href="' . get_url_arguments($i - 1) . '">' . $i . '</a></li>';
