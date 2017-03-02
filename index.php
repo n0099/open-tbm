@@ -315,7 +315,7 @@ foreach($sql_results as $type => $query) {
                             <?php
                             $pn = $_GET['pn'] + 1;
                             $start = $pn <= 5 ? 1 : $pn - 5;
-                            $end = $max_page_num > $items_per_page && $pn <= 5 ? $items_per_page : ($_GET['pn'] == $max_page_num + 1 ? $pn : ($max_page_num < $items_per_page || $_GET['pn'] >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5));
+                            $end = $max_page_num > 10 && $pn <= 5 ? 10 : ($_GET['pn'] == $max_page_num + 1 ? $pn : ($max_page_num < 10 || $_GET['pn'] >= $max_page_num - 4 ? $max_page_num + 1 : $pn + 5));
                             for ($i = $start; $i <= $end; $i++) {
                                 $li_class = $i == $pn ? 'page-item active' : 'page-item';
                                 echo "<li class=\"{$li_class}\">".'<a class="page-link" href="' . get_url_arguments($i - 1) . '">' . $i . '</a></li>';
