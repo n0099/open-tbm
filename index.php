@@ -17,6 +17,21 @@ if (empty($_GET['start_date']) || empty($_GET['end_date'])) {
     $_GET['end_date'] = null;
 }
 
+function get_cron_time($minutes, $get_value) {
+    $value = round($GLOBALS['sql'] -> query("SELECT AVG(time) FROM tbmonitor_time WHERE date >= DATE_ADD(NOW(), INTERVAL -{$minutes} MINUTE)") -> fetch_all(MYSQLI_ASSOC)[0]['AVG(time)'], 2);
+    if ($get_value == false) { return empty($value) ? '未知' : $value; }
+    switch ($value) {
+        case $value >= 60:
+            return '低';
+        case $value >= 30:
+            return '中';
+        case $value < 30:
+            return '高';
+        default:
+            return '未知';
+    }
+}
+
 function get_post_portal($tid, $pid = null, $spid = null) {
     $return = "http://tieba.baidu.com/p/{$tid}";
     $return = $pid != null & $spid == null ? "{$return}?pid={$pid}#{$pid}" : $return;
@@ -125,6 +140,18 @@ foreach($sql_results as $type => $query) {
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="https://n0099.cf/tbm">记录查询</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://n0099.cf/tbm/status.php">统计信息</a>
+                        </li>
+                    </ul>
+                    <div class="alert alert-warning" role="alert">
+                        <h5>目前监控效率：<strong><?php echo get_cron_time(5, true); ?></strong></h5>
+                        <span>最近5/10/15分钟cron耗时：<?php echo get_cron_time(5, false); ?> / <?php echo get_cron_time(10, false); ?> / <?php echo get_cron_time(15, false); ?> 秒</span>
+                    </div>
                     <form class="form-inline form-horizontal" action="https://n0099.cf/tbm/" method="get">
                         <fieldset>
                             <legend>搜索选项</legend>
