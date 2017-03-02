@@ -70,7 +70,7 @@ function get_cron_time($minutes, $get_value) {
             </div>
         </div>
         <script>
-        var chart_option = {
+        var base_chart_option = {
             toolbox: {
                 feature: {
                     magicType: {},
@@ -89,97 +89,133 @@ function get_cron_time($minutes, $get_value) {
                 }
             ]
         };
-        var ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_cron_time', 'days':'30'}, async:false}).responseText);
-        var cron_times = new Array();
-        for(var i = 0, l = ajax_response.length; i < l; i++) {
-           cron_times.push(new Array(ajax_response[i]['date'], ajax_response[i]['time']));
-        }
-        chart_option['dataZoom'][0]['start'] = 90;
-        chart_option['dataZoom'][1]['start'] = 90;
-        chart_option['title'] = {
+        echarts.init(document.getElementById('cron_chart')).showLoading();
+        echarts.init(document.getElementById('post_count_day_chart')).showLoading();
+        echarts.init(document.getElementById('post_count_hour_chart')).showLoading();
+
+        var cron_chart_option = $.extend(true, {}, base_chart_option);
+        cron_chart_option['dataZoom'][0]['start'] = 90;
+        cron_chart_option['dataZoom'][1]['start'] = 90;
+        cron_chart_option['title'] = {
             text: 'cron耗时',
             subtext: '纯属虚构，至于你信不信，反正认真你就输了'
         };
-        chart_option['tooltip'] = {trigger: 'axis'};
-        chart_option['legend'] = {data: ['耗时（秒）']};
-        chart_option['xAxis'] = {type: 'time', name: '时间'};
-        chart_option['yAxis'] = {};
-        chart_option['series'] = {
-            name: '耗时（秒）',
-            type: 'line',
-            step: 'middle',
-            sampling: 'average',
-            data: cron_times,
-            markLine: {
-                data: [{type: 'average', name: '平均值'}]
+        cron_chart_option['tooltip'] = {trigger: 'axis'};
+        cron_chart_option['legend'] = {data: ['耗时（秒）']};
+        cron_chart_option['xAxis'] = {type: 'time', name: '时间'};
+        cron_chart_option['yAxis'] = {};
+        
+        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_cron_time', 'days':'30'}, complete: function(data) {
+            var ajax_response = eval(data.responseText);
+            var cron_times = new Array();
+            for(var i = 0, l = ajax_response.length; i < l; i++) {
+                cron_times.push(new Array(ajax_response[i]['date'], ajax_response[i]['time']));
             }
-        };
-        echarts.init(document.getElementById('cron_chart')).setOption(chart_option);
+            console.log(cron_chart_option);
+            console.log(post_count_day_chart_option);
+            cron_chart_option['series'] = {
+                name: '耗时（秒）',
+                type: 'line',
+                step: 'middle',
+                sampling: 'average',
+                data: cron_times,
+                markLine: {
+                    data: [{type: 'average', name: '平均值'}]
+                }
+            };
+            echarts.init(document.getElementById('cron_chart')).setOption(cron_chart_option);
+        }});
 
-        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_day', 'days':'30', 'post':'post', 'forum':'模拟城市'}, async:false}).responseText);
-        var post_count_day = new Array();
-        for(var i = 0, l = ajax_response.length; i < l; i++) {
-           post_count_day.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
-        }
-        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_day', 'days':'30', 'post':'reply', 'forum':'模拟城市'}, async:false}).responseText);
-        var reply_count_day = new Array();
-        for(var i = 0, l = ajax_response.length; i < l; i++) {
-           reply_count_day.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
-        }
-        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_day', 'days':'30', 'post':'lzl', 'forum':'模拟城市'}, async:false}).responseText);
-        var lzl_count_day = new Array();
-        for(var i = 0, l = ajax_response.length; i < l; i++) {
-           lzl_count_day.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
-        }
-
-        chart_option['dataZoom'][0]['start'] = 0;
-        chart_option['dataZoom'][1]['start'] = 0;
-        chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
-        chart_option['title'] = {
+        var post_count_day_chart_option = $.extend(true, {}, base_chart_option);
+        post_count_day_chart_option['dataZoom'][0]['start'] = 0;
+        post_count_day_chart_option['dataZoom'][1]['start'] = 0;
+        post_count_day_chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
+        post_count_day_chart_option['title'] = {
             text: '模拟城市吧最近30天贴子数量',
             subtext: '纯属虚构，至于你信不信，反正认真你就输了'
         };
-        chart_option['tooltip'] = {trigger: 'axis'};
-        chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
-        chart_option['xAxis'] = {type: 'time', name: '日期'};
-        chart_option['yAxis'] = {};
-        chart_option['series'] = [
-            {
-                name: '主题贴',
-                type: 'line',
-                smooth: true,
-                data: post_count_day,
-                markLine: {data: [{type: 'average', name: '平均值'}]}
-            },{
-                name: '回复贴',
-                type: 'line',
-                smooth: true,
-                data: reply_count_day,
-                markLine: {data: [{type: 'average', name: '平均值'}]}
-            },{
-                name: '楼中楼',
-                type: 'line',
-                smooth: true,
-                data: lzl_count_day,
-                markLine: {data: [{type: 'average', name: '平均值'}]}
-            }
-        ];
-        echarts.init(document.getElementById('post_count_day_chart')).setOption(chart_option);
+        post_count_day_chart_option['tooltip'] = {trigger: 'axis'};
+        post_count_day_chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
+        post_count_day_chart_option['yAxis'] = {};
+        post_count_day_chart_option['series'] = [];
 
-        ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'post', 'forum':'模拟城市'}, async:false}).responseText);
+        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'post','forum':'模拟城市'}, complete: function(data) {
+            var ajax_response = eval(data.responseText);
+            var post_count_day = new Array();
+            var post_count_day_date = new Array();
+            for(var i = 0, l = ajax_response.length; i < l; i++) {
+                post_count_day.push(ajax_response[i]['COUNT(*)']);
+                post_count_day_date.push(ajax_response[i]['DATE']);
+            }
+            post_count_day_chart_option['series'].push(
+                {
+                    name: '主题贴',
+                    type: 'line',
+                    smooth: true,
+                    data: post_count_day,
+                    markLine: {data: [{type: 'average', name: '平均值'}]}
+                }
+            );
+            post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: post_count_day_date};
+            echarts.init(document.getElementById('post_count_day_chart')).setOption(post_count_day_chart_option);
+        }});
+
+        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'reply','forum':'模拟城市'}, complete: function(data) {
+            var ajax_response = eval(data.responseText);
+            var reply_count_day = new Array();
+            var reply_count_day_date = new Array();
+            for(var i = 0, l = ajax_response.length; i < l; i++) {
+                reply_count_day.push(ajax_response[i]['COUNT(*)']);
+                reply_count_day_date.push(ajax_response[i]['DATE']);
+            }
+            post_count_day_chart_option['series'].push(
+                {
+                    name: '回复贴',
+                    type: 'line',
+                    smooth: true,
+                    data: reply_count_day,
+                    markLine: {data: [{type: 'average', name: '平均值'}]}
+                }
+            );
+            post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: reply_count_day_date};
+            echarts.init(document.getElementById('post_count_day_chart')).setOption(post_count_day_chart_option);
+        }});
+
+        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'lzl','forum':'模拟城市'}, complete: function(data) {
+            var ajax_response = eval(data.responseText);
+            var lzl_count_day = new Array();
+            var lzl_count_day_date = new Array();
+            for(var i = 0, l = ajax_response.length; i < l; i++) {
+                lzl_count_day.push(ajax_response[i]['COUNT(*)']);
+                lzl_count_day_date.push(ajax_response[i]['DATE']);
+            }
+            post_count_day_chart_option['series'].push(
+                {
+                    name: '楼中楼',
+                    type: 'line',
+                    smooth: true,
+                    data: lzl_count_day,
+                    markLine: {data: [{type: 'average', name: '平均值'}]}
+                }
+            );
+            post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: lzl_count_day_date};
+            echarts.init(document.getElementById('post_count_day_chart')).setOption(post_count_day_chart_option);
+        }});
+
+        /*ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'post', 'forum':'模拟城市'}, async:false}).responseText);
         var post_count_hour = new Array();
         for(var i = 0, l = ajax_response.length; i < l; i++) {
-           post_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
+            post_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
         }
         ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'reply', 'forum':'模拟城市'}, async:false}).responseText);
         var reply_count_hour = new Array();
         for(var i = 0, l = ajax_response.length; i < l; i++) {
-           reply_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
+            reply_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
         }
         ajax_response = eval($.ajax({url:'https://n0099.cf/tbm/ajax.php', data:{'type':'get_post_count_by_hour', 'days':'1', 'post':'lzl', 'forum':'模拟城市'}, async:false}).responseText);
         var lzl_count_hour = new Array();
         for(var i = 0, l = ajax_response.length; i < l; i++) {
-           lzl_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
+            lzl_count_hour.push(new Array(new Date().toISOString().slice(0, 10) + ' ' + ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
         }
 
         chart_option['dataZoom'][0]['start'] = 0;
@@ -213,7 +249,7 @@ function get_cron_time($minutes, $get_value) {
                 markLine: {data: [{type: 'average', name: '平均值'}]}
             }
         ];
-        echarts.init(document.getElementById('post_count_hour_chart')).setOption(chart_option);
+        echarts.init(document.getElementById('post_count_hour_chart')).setOption(chart_option);*/
         </script>
         <script src="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
     </body>
