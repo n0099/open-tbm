@@ -62,6 +62,20 @@ function get_cron_time($minutes, $get_value) {
                         <h5>目前监控效率：<strong><?php echo get_cron_time(5, true); ?></strong></h5>
                         <span>最近5/10/15分钟cron耗时：<?php echo get_cron_time(5, false); ?> / <?php echo get_cron_time(10, false); ?> / <?php echo get_cron_time(15, false); ?> 秒</span>
                     </div>
+                    <div class="card text-center">
+                        <div class="card-block">
+                            <p class="card-subtitle mb-2 text-muted">贴吧云监控共记录</p>
+                            <p class="card-text">
+                                <?php
+                                $forum_count = count($sql -> query('SELECT DISTINCT forum FROM tbmonitor_post') -> fetch_all(MYSQLI_ASSOC));
+                                $post_count = $sql -> query('SELECT COUNT(*) FROM tbmonitor_post') -> fetch_all(MYSQLI_ASSOC)[0]['COUNT(*)'];
+                                $reply_count = $sql -> query('SELECT COUNT(*) FROM tbmonitor_reply') -> fetch_all(MYSQLI_ASSOC)[0]['COUNT(*)'];
+                                $lzl_count = $sql -> query('SELECT COUNT(*) FROM tbmonitor_lzl') -> fetch_all(MYSQLI_ASSOC)[0]['COUNT(*)'];
+                                echo "{$forum_count}个贴吧 / {$post_count}条主题贴 / {$reply_count}条回复贴 / {$lzl_count}条楼中楼回复";
+                                ?>
+                            </p>
+                        </div>
+                    </div>
                     <div id="cron_chart" style="height: 350px"></div>
                     <div id="模拟城市_post_count_day_chart" style="height: 350px"></div>
                     <div id="transportfever_post_count_day_chart" style="height: 350px"></div>
@@ -91,9 +105,9 @@ function get_cron_time($minutes, $get_value) {
                 }
             ]
         };
-        echarts.init(document.getElementById('cron_chart')).showLoading();
-
+        var cron_chart = echarts.init(document.getElementById('cron_chart'));
         var cron_chart_option = $.extend(true, {}, base_chart_option);
+        cron_chart.showLoading();
         cron_chart_option['dataZoom'][0]['start'] = 90;
         cron_chart_option['dataZoom'][1]['start'] = 90;
         cron_chart_option['title'] = {
@@ -121,7 +135,8 @@ function get_cron_time($minutes, $get_value) {
                     data: [{type: 'average', name: '平均值'}]
                 }
             };
-            echarts.init(document.getElementById('cron_chart')).setOption(cron_chart_option);
+            cron_chart.hideLoading();
+            cron_chart.setOption(cron_chart_option);
         }});
 
         $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_forums'}, complete: function(data) {
@@ -145,14 +160,21 @@ function get_cron_time($minutes, $get_value) {
                 forum_post_count_day_chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
                 forum_post_count_day_chart_option['yAxis'] = {};
                 forum_post_count_day_chart_option['series'] = [];
+                var post_count_day_date = new Array();
+                for (var j = new Date().getDate() - (new Date().getDate() + 30); j <= 0; j++) {
+                    var date = new Date();
+                    date.setDate(date.getDate() + j);
+                    var day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
+                    var month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1;
+                    post_count_day_date.push(date.getFullYear() + '-' + month + '-' + day);
+                }
+                forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: post_count_day_date};
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'post','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
-                    var post_count_day = new Array();
-                    var post_count_day_date = new Array();
+                    var post_count_day_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
-                        post_count_day.push(ajax_response[i]['COUNT(*)']);
-                        post_count_day_date.push(ajax_response[i]['DATE']);
+                        post_count_day_data.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
                     }
                     forum_post_count_day_chart_option['series'].push(
                         {
@@ -160,21 +182,18 @@ function get_cron_time($minutes, $get_value) {
                             type: 'line',
                             stack: 'count',
                             smooth: true,
-                            data: post_count_day,
+                            data: post_count_day_data,
                             markLine: {data: [{type: 'average', name: '平均值'}]}
                         }
                     );
-                    forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: post_count_day_date};
                     forum_post_count_day_chart.setOption(forum_post_count_day_chart_option);
                 }});
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'reply','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
-                    var reply_count_day = new Array();
-                    var reply_count_day_date = new Array();
+                    var reply_count_day_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
-                        reply_count_day.push(ajax_response[i]['COUNT(*)']);
-                        reply_count_day_date.push(ajax_response[i]['DATE']);
+                        reply_count_day_data.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
                     }
                     forum_post_count_day_chart_option['series'].push(
                         {
@@ -182,21 +201,18 @@ function get_cron_time($minutes, $get_value) {
                             type: 'line',
                             stack: 'count',
                             smooth: true,
-                            data: reply_count_day,
+                            data: reply_count_day_data,
                             markLine: {data: [{type: 'average', name: '平均值'}]}
                         }
                     );
-                    forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: reply_count_day_date};
                     forum_post_count_day_chart.setOption(forum_post_count_day_chart_option);
                 }});
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'lzl','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
-                    var lzl_count_day = new Array();
-                    var lzl_count_day_date = new Array();
+                    var lzl_count_day_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
-                        lzl_count_day.push(ajax_response[i]['COUNT(*)']);
-                        lzl_count_day_date.push(ajax_response[i]['DATE']);
+                        lzl_count_day_data.push(new Array(ajax_response[i]['DATE'], ajax_response[i]['COUNT(*)']));
                     }
                     forum_post_count_day_chart_option['series'].push(
                         {
@@ -204,14 +220,13 @@ function get_cron_time($minutes, $get_value) {
                             type: 'line',
                             stack: 'count',
                             smooth: true,
-                            data: lzl_count_day,
+                            data: lzl_count_day_data,
                             markLine: {data: [{type: 'average', name: '平均值'}]}
                         }
                     );
-                    forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: lzl_count_day_date};
+                    forum_post_count_day_chart.hideLoading();
                     forum_post_count_day_chart.setOption(forum_post_count_day_chart_option);
                 }});
-                forum_post_count_day_chart.hideLoading();
 
                 forum_post_count_hour_chart_option = $.extend(true, {}, base_chart_option);
                 forum_post_count_hour_chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
@@ -223,14 +238,19 @@ function get_cron_time($minutes, $get_value) {
                 forum_post_count_hour_chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
                 forum_post_count_hour_chart_option['yAxis'] = {};
                 forum_post_count_hour_chart_option['series'] = [];
+                var post_count_hours = new Array();
+                for (var j = new Date().getHours() - (new Date().getHours() + 24); j <= 0; j++) {
+                    var hour = new Date();
+                    hour.setHours(hour.getHours() + j);
+                    post_count_hours.push((hour.getHours() < 10 ? '0' + hour.getHours() : hour.getHours()) + ':00:00');
+                }
+                forum_post_count_hour_chart_option['xAxis'] = {type: 'category', name: '小时', data: post_count_hours};
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'post','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
-                    var post_count_hour = new Array();
-                    var post_count_hour_time = new Array();
+                    var post_count_hour_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
-                        post_count_hour.push(ajax_response[i]['COUNT(*)']);
-                        post_count_hour_time.push(ajax_response[i]['HOUR'] + ':00:00');
+                        post_count_hour_data.push(new Array(ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
                     }
                     forum_post_count_hour_chart_option['series'].push(
                         {
@@ -238,21 +258,18 @@ function get_cron_time($minutes, $get_value) {
                             type: 'line',
                             stack: 'count',
                             smooth: true,
-                            data: post_count_hour,
+                            data: post_count_hour_data,
                             markLine: {data: [{type: 'average', name: '平均值'}]}
                         }
                     );
-                    forum_post_count_hour_chart_option['xAxis'] = {type: 'category', name: '小时', data: post_count_hour_time};
                     forum_post_count_hour_chart.setOption(forum_post_count_hour_chart_option);
                 }});
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'reply','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
-                    var post_count_hour = new Array();
-                    var post_count_hour_time = new Array();
+                    var reply_count_hour_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
-                        post_count_hour.push(ajax_response[i]['COUNT(*)']);
-                        post_count_hour_time.push(ajax_response[i]['HOUR'] + ':00:00');
+                        reply_count_hour_data.push(new Array(ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
                     }
                     forum_post_count_hour_chart_option['series'].push(
                         {
@@ -260,21 +277,18 @@ function get_cron_time($minutes, $get_value) {
                             type: 'line',
                             stack: 'count',
                             smooth: true,
-                            data: post_count_hour,
+                            data: reply_count_hour_data,
                             markLine: {data: [{type: 'average', name: '平均值'}]}
                         }
                     );
-                    forum_post_count_hour_chart_option['xAxis'] = {type: 'category', name: '小时', data: post_count_hour_time};
                     forum_post_count_hour_chart.setOption(forum_post_count_hour_chart_option);
                 }});
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'lzl','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
-                    var post_count_hour = new Array();
-                    var post_count_hour_time = new Array();
+                    var lzl_count_hour_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
-                        post_count_hour.push(ajax_response[i]['COUNT(*)']);
-                        post_count_hour_time.push(ajax_response[i]['HOUR'] + ':00:00');
+                        lzl_count_hour_data.push(new Array(ajax_response[i]['HOUR'] + ':00:00', ajax_response[i]['COUNT(*)']));
                     }
                     forum_post_count_hour_chart_option['series'].push(
                         {
@@ -282,14 +296,13 @@ function get_cron_time($minutes, $get_value) {
                             type: 'line',
                             stack: 'count',
                             smooth: true,
-                            data: post_count_hour,
+                            data: lzl_count_hour_data,
                             markLine: {data: [{type: 'average', name: '平均值'}]}
                         }
                     );
-                    forum_post_count_hour_chart_option['xAxis'] = {type: 'category', name: '小时', data: post_count_hour_time};
+                    forum_post_count_hour_chart.hideLoading();
                     forum_post_count_hour_chart.setOption(forum_post_count_hour_chart_option);
                 }});
-                forum_post_count_hour_chart.hideLoading();
             }
         }});
         </script>
