@@ -205,18 +205,19 @@ foreach($sql_results as $type => $query) {
                                 <div class="input-group-addon"><i class="fa fa-calendar-plus-o" aria-hidden="true"></i></div>
                                 <input class="form-control" type="date" value=<?php echo empty($_GET['end_date']) ? '""' : "\"{$_GET['end_date']}\""; ?> name="end_date" id="end_date" />
                             </div>
+                            <div>
                             <a href="#" onclick="setDatePicker(0);return false;">今天</a>
                             <a href="#" onclick="setDatePicker(-1);return false;">昨天</a>
                             <a href="#" onclick="setDatePicker(-7);return false;">最近一周</a>
                             <a href="#" onclick="setDatePicker(-30);return false;">最近一月</a>
-                            <br /><br />
+                            </div>
                             <button type="submit" class="btn btn-primary">查询</button>
                             <a class="btn btn-secondary" href="https://n0099.cf/tbm" role="button">重置</a>
                         </fieldset>
                     </form>
                     <br />
                     <div class="alert alert-info" role="alert">
-                        <p>
+                        <span>
                             <?php
                             foreach($sql_count as $num) {
                                 $sql_count_rows += $num[0];
@@ -227,17 +228,17 @@ foreach($sql_results as $type => $query) {
                             echo '正在显示第' . ($_GET['pn'] * $items) . '到' . ($_GET['pn'] * $items + $items) . '条记录 第' . ($_GET['pn'] + 1) . '页 共' . ($max_page_num + 1) . "页{$sql_count_rows}条记录";
                             ?><br />
                             点击表头排序 查询结果不按时间分页
-                        </p>
+                        </span>
                     </div>
-                    <table class="table table-hover table-striped table-condensed" id="main">
+                    <table class="table table-hover table-striped table-condensed table-responsive" id="main">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0);">贴吧名</th>
-                                <th onclick="sortTable(1);">贴子类型</th>
-                                <th onclick="sortTable(2);">内容</th>
-                                <th onclick="sortTable(3);">传送门</th>
-                                <th onclick="sortTable(4);">发贴人</th>
-                                <th onclick="sortTable(5);">发贴时间</th>
+                                <th onclick="sortTable(0);" style="width: 10%">贴吧名</th>
+                                <th onclick="sortTable(1);" style="width: 8%">贴子类型</th>
+                                <th onclick="sortTable(2);" style="width: auto">内容</th>
+                                <th onclick="sortTable(3);" style="width: 8%">传送门</th>
+                                <th onclick="sortTable(4);" style="width: 10%">发贴人</th>
+                                <th onclick="sortTable(5);" style="width: auto">发贴时间</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -257,37 +258,45 @@ foreach($sql_results as $type => $query) {
                                                 $row['post_time'] = date('Y-m-d H:i', strtotime($row['post_time']));
                                                 $row['latest_reply_time'] = date('Y-m-d H:i', strtotime($row['latest_reply_time']));
                                         ?>
-                                                <a data-toggle="collapse" data-target=<?php echo "\"#post_{$row['tid']}\""; ?> href="" aria-expanded="false" aria-controls=<?php echo "\"post_{$row['tid']}\""; ?>>
-                                                    <?php echo "{$row['title']}（点击展开/折叠）"; ?>
-                                                </a><br />
-                                                <div id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse">
-                                                    <p class="card card-block">
-                                                        <span><?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']; ?></span>
-                                                    </p>
+                                                <div>
+                                                    <a data-toggle="collapse" data-target=<?php echo "\"#post_{$row['tid']}\""; ?> href="" aria-expanded="false" aria-controls=<?php echo "\"post_{$row['tid']}\""; ?>>
+                                                        <?php echo "{$row['title']}（点击展开/折叠）"; ?>
+                                                    </a>
                                                 </div>
+                                                <div id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse">
+                                                    <div class="card card-block">
+                                                        <span><?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']; ?></span>
+                                                    </div>
+                                                </div>
+                                                <span>主题贴回复数：<?php echo $row['reply_num']; ?> 最后回复人：<a href=<?php echo '"' . get_user_space($row['latest_replyer']) . '"'; ?> target="_blank"><?php echo $row['latest_replyer']; ?></a> 最后回复时间：<?php echo $row['latest_reply_time']; ?></span>
                                         <?php
-                                                echo "主题贴回复数：{$row['reply_num']} 最后回复人：<a href=\"" . get_user_space($row['latest_replyer']) . "\" target=\"_blank\">{$row['latest_replyer']}</a> 最后回复时间：{$row['latest_reply_time']}";
                                                 break;
                                             case 'replies':
                                                 $row['reply_time'] = date('Y-m-d H:i', strtotime($row['reply_time']));
-                                                echo '所回复主题贴：<a href="' . get_post_portal($row['tid']) . '" target="_blank">' . $sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$row['tid']}") -> fetch_assoc()['title'] . '</a><br />';
                                         ?>
-                                                <a data-toggle="collapse" data-target=<?php echo "\"#reply_{$row['pid']}\""; ?> href="" aria-expanded="false" aria-controls=<?php echo "\"reply_{$row['pid']}\""; ?>>
-                                                    点击展开/折叠回复
-                                                </a><br />
-                                                <div id=<?php echo "\"reply_{$row['pid']}\""; ?> class="collapse show">
-                                                    <p class="card card-block">
-                                                        <span><?php echo $row['content'] . '<br />'; ?></span>
-                                                    </p>
+                                                <div>
+                                                    <span>所回复主题贴：<a href=<?php echo '"' . get_post_portal($row['tid']) . '"'; ?> target="_blank"><?php echo $sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$row['tid']}") -> fetch_assoc()['title']; ?></a></span>
+                                                    <a data-toggle="collapse" data-target=<?php echo "\"#reply_{$row['pid']}\""; ?> href="" aria-expanded="false" aria-controls=<?php echo "\"reply_{$row['pid']}\""; ?>>
+                                                        点击展开/折叠回复
+                                                    </a>
                                                 </div>
+                                                <div id=<?php echo "\"reply_{$row['pid']}\""; ?> class="collapse show">
+                                                    <div class="card card-block">
+                                                        <span><?php echo $row['content']; ?></span>
+                                                    </div>
+                                                </div>
+                                                <span><?php echo "楼层：{$row['floor']} 楼中楼回复数：{$row['lzl_num']}"; ?></span>
                                         <?php
-                                                echo "楼层：{$row['floor']} 楼中楼回复数：{$row['lzl_num']}";
                                                 break;
                                             case 'lzl':
                                                 $row['reply_time'] = date('Y-m-d H:i', strtotime($row['reply_time']));
-                                                echo '所回复主题贴：<a href="' . get_post_portal($row['tid']) . '" target="_blank">' . $sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$row['tid']}") -> fetch_assoc()['title'] . '</a>';
-                                                echo ' 所回复楼层：<a href="' . get_post_portal($row['tid'], $row['pid']) . '" target="_blank">' . $sql -> query("SELECT floor FROM tbmonitor_reply WHERE pid = {$row['pid']}") -> fetch_assoc()['floor'] . '楼</a><br />';
-                                                echo "<span>{$row['content']}</span>";
+                                        ?>
+                                                <span>所回复主题贴：<a href=<?php echo '"' . get_post_portal($row['tid']) . '"'; ?> target="_blank"><?php echo $sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$row['tid']}") -> fetch_assoc()['title']; ?></a>
+                                                 所回复楼层：<a href=<?php echo '"' . get_post_portal($row['tid'], $row['pid']) . '"'; ?> target="_blank"><?php echo $sql -> query("SELECT floor FROM tbmonitor_reply WHERE pid = {$row['pid']}") -> fetch_assoc()['floor']; ?>楼</a></span>
+                                                <div class="card card-block">
+                                                    <span><?php echo $row['content']; ?></span>
+                                                </div>
+                                        <?php
                                                 break;
                                         }
                                         ?>
@@ -325,8 +334,10 @@ foreach($sql_results as $type => $query) {
                             <li class="page-item"><a class="page-link" href=<?php echo '"' . get_url_arguments($max_page_num) . '"' ; ?>>尾页</a></li>
                         </ul>
                     </nav>
-                    <p><?php echo 'PHP耗时' . round(microtime(true) - $time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
-                    <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1261354059'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/stat.php%3Fid%3D1261354059%26online%3D1%26show%3Dline' type='text/javascript'%3E%3C/script%3E"));</script>
+                    <div class="text-center">
+                        <p><?php echo 'PHP耗时' . round(microtime(true) - $time, 10) . '秒，共使用' . round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB内存'; ?></p>
+                        <script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1261354059'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/stat.php%3Fid%3D1261354059%26online%3D1%26show%3Dline' type='text/javascript'%3E%3C/script%3E"));</script>
+                    </div>
                 </div>
             </div>
         </div>
