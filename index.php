@@ -262,7 +262,7 @@ foreach($sql_results as $type => $query) {
                                                 </a><br />
                                                 <div id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse">
                                                     <p class="card card-block">
-                                                        <?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']; ?>
+                                                        <span><?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']; ?></span>
                                                     </p>
                                                 </div>
                                         <?php
@@ -277,7 +277,7 @@ foreach($sql_results as $type => $query) {
                                                 </a><br />
                                                 <div id=<?php echo "\"reply_{$row['pid']}\""; ?> class="collapse show">
                                                     <p class="card card-block">
-                                                    <?php echo $row['content'] . '<br />'; ?>
+                                                        <span><?php echo $row['content'] . '<br />'; ?></span>
                                                     </p>
                                                 </div>
                                         <?php
@@ -287,7 +287,7 @@ foreach($sql_results as $type => $query) {
                                                 $row['reply_time'] = date('Y-m-d H:i', strtotime($row['reply_time']));
                                                 echo '所回复主题贴：<a href="' . get_post_portal($row['tid']) . '" target="_blank">' . $sql -> query("SELECT title FROM tbmonitor_post WHERE tid = {$row['tid']}") -> fetch_assoc()['title'] . '</a>';
                                                 echo ' 所回复楼层：<a href="' . get_post_portal($row['tid'], $row['pid']) . '" target="_blank">' . $sql -> query("SELECT floor FROM tbmonitor_reply WHERE pid = {$row['pid']}") -> fetch_assoc()['floor'] . '楼</a><br />';
-                                                echo $row['content'];
+                                                echo "<span>{$row['content']}</span>";
                                                 break;
                                         }
                                         ?>
