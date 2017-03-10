@@ -79,6 +79,8 @@ function get_cron_time($minutes, $get_value) {
                     <div id="cron_chart" style="height: 350px"></div>
                     <div id="模拟城市_post_count_day_chart" style="height: 350px"></div>
                     <div id="transportfever_post_count_day_chart" style="height: 350px"></div>
+                    <div id="模拟城市_post_count_month_chart" style="height: 350px"></div>
+                    <div id="transportfever_post_count_month_chart" style="height: 350px"></div>
                     <div id="模拟城市_post_count_hour_chart" style="height: 350px"></div>
                     <div id="transportfever_post_count_hour_chart" style="height: 350px"></div>
                     <div class="text-center">
@@ -147,9 +149,12 @@ function get_cron_time($minutes, $get_value) {
                 var forum = ajax_response[i]['forum'];
                 var forum_post_count_day_chart = echarts.init(document.getElementById(forum + '_post_count_day_chart'));
                 var forum_post_count_day_chart_option = window[forum + '_post_count_day_chart_option'];
+                var forum_post_count_month_chart = echarts.init(document.getElementById(forum + '_post_count_month_chart'));
+                var forum_post_count_month_chart_option = window[forum + '_post_count_month_chart_option'];
                 var forum_post_count_hour_chart = echarts.init(document.getElementById(forum + '_post_count_hour_chart'));
                 var forum_post_count_hour_chart_option = window[forum + '_post_count_hour_chart_option'];
                 forum_post_count_day_chart.showLoading();
+                forum_post_count_month_chart.showLoading();
                 forum_post_count_hour_chart.showLoading();
 
                 forum_post_count_day_chart_option = $.extend(true, {}, base_chart_option);
@@ -162,15 +167,15 @@ function get_cron_time($minutes, $get_value) {
                 forum_post_count_day_chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
                 forum_post_count_day_chart_option['yAxis'] = {};
                 forum_post_count_day_chart_option['series'] = [];
-                var post_count_day_date = new Array();
-                for (var j = new Date().getDate() - (new Date().getDate() + 30); j <= 0; j++) {
+                var post_count_days = new Array();
+                for (var j = -30; j <= 0; j++) {
                     var date = new Date();
                     date.setDate(date.getDate() + j);
                     var day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate();
                     var month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1;
-                    post_count_day_date.push(date.getFullYear() + '-' + month + '-' + day);
+                    post_count_days.push(date.getFullYear() + '-' + month + '-' + day);
                 }
-                forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: post_count_day_date};
+                forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: post_count_days};
 
                 $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'post','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
@@ -230,6 +235,86 @@ function get_cron_time($minutes, $get_value) {
                     forum_post_count_day_chart.setOption(forum_post_count_day_chart_option);
                 }});
 
+                forum_post_count_month_chart_option = $.extend(true, {}, base_chart_option);
+                forum_post_count_month_chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
+                forum_post_count_month_chart_option['title'] = {
+                    text: forum + '吧最近24个月贴子数量',
+                    subtext: '纯属虚构，至于你信不信，反正认真你就输了'
+                };
+                forum_post_count_month_chart_option['tooltip'] = {trigger: 'axis'};
+                forum_post_count_month_chart_option['legend'] = {data: ['主题贴', '回复贴', '楼中楼']};
+                forum_post_count_month_chart_option['yAxis'] = {};
+                forum_post_count_month_chart_option['series'] = [];
+                var post_count_months = new Array();
+                for (var j = -24; j <= 0; j++) {
+                    var date = new Date();
+                    date.setMonth(date.getMonth() + j);
+                    var month = (date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1;
+                    post_count_months.push(date.getFullYear() + '-' + month);
+                }
+                forum_post_count_month_chart_option['xAxis'] = {type: 'category', name: '月份', data: post_count_months};
+
+                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'post','forum':forum}, async: false, complete: function(data) {
+                    var ajax_response = eval(data.responseText);
+                    var post_count_month_data = new Array();
+                    for(var i = ajax_response.length - 1, l = 0; i >= l; i--) {
+                        ajax_response[i]['MONTH'] = ajax_response[i]['MONTH'].substr(0, 4) + '-' + ajax_response[i]['MONTH'].substr(-2);
+                        post_count_month_data.push(new Array(ajax_response[i]['MONTH'], ajax_response[i]['COUNT(*)']));
+                    }
+                    forum_post_count_month_chart_option['series'].push(
+                        {
+                            name: '主题贴',
+                            type: 'line',
+                            stack: 'count',
+                            smooth: true,
+                            data: post_count_month_data,
+                            markLine: {data: [{type: 'average', name: '平均值'}]}
+                        }
+                    );
+                    forum_post_count_month_chart.setOption(forum_post_count_month_chart_option);
+                }});
+
+                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'reply','forum':forum}, async: false, complete: function(data) {
+                    var ajax_response = eval(data.responseText);
+                    var reply_count_month_data = new Array();
+                    for(var i = ajax_response.length - 1, l = 0; i >= l; i--) {
+                        ajax_response[i]['MONTH'] = ajax_response[i]['MONTH'].substr(0, 4) + '-' + ajax_response[i]['MONTH'].substr(-2);
+                        reply_count_month_data.push(new Array(ajax_response[i]['MONTH'], ajax_response[i]['COUNT(*)']));
+                    }
+                    forum_post_count_month_chart_option['series'].push(
+                        {
+                            name: '回复贴',
+                            type: 'line',
+                            stack: 'count',
+                            smooth: true,
+                            data: reply_count_month_data,
+                            markLine: {data: [{type: 'average', name: '平均值'}]}
+                        }
+                    );
+                    forum_post_count_month_chart.setOption(forum_post_count_month_chart_option);
+                }});
+
+                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'lzl','forum':forum}, async: false, complete: function(data) {
+                    var ajax_response = eval(data.responseText);
+                    var lzl_count_month_data = new Array();
+                    for(var i = ajax_response.length - 1, l = 0; i >= l; i--) {
+                        ajax_response[i]['MONTH'] = ajax_response[i]['MONTH'].substr(0, 4) + '-' + ajax_response[i]['MONTH'].substr(-2);
+                        lzl_count_month_data.push(new Array(ajax_response[i]['MONTH'], ajax_response[i]['COUNT(*)']));
+                    }
+                    forum_post_count_month_chart_option['series'].push(
+                        {
+                            name: '楼中楼',
+                            type: 'line',
+                            stack: 'count',
+                            smooth: true,
+                            data: lzl_count_month_data,
+                            markLine: {data: [{type: 'average', name: '平均值'}]}
+                        }
+                    );
+                    forum_post_count_month_chart.hideLoading();
+                    forum_post_count_month_chart.setOption(forum_post_count_month_chart_option);
+                }});
+
                 forum_post_count_hour_chart_option = $.extend(true, {}, base_chart_option);
                 forum_post_count_hour_chart_option['toolbox']['feature']['magicType'] = {type: ['stack', 'tiled']};
                 forum_post_count_hour_chart_option['title'] = {
@@ -241,7 +326,7 @@ function get_cron_time($minutes, $get_value) {
                 forum_post_count_hour_chart_option['yAxis'] = {};
                 forum_post_count_hour_chart_option['series'] = [];
                 var post_count_hours = new Array();
-                for (var j = new Date().getHours() - (new Date().getHours() + 24); j <= 0; j++) {
+                for (var j = -24; j <= 0; j++) {
                     var hour = new Date();
                     hour.setHours(hour.getHours() + j);
                     post_count_hours.push((hour.getHours() < 10 ? '0' + hour.getHours() : hour.getHours()) + ':00:00');
