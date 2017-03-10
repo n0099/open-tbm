@@ -8,6 +8,7 @@ $_GET['type'] = $sql -> escape_string($_GET['type']);
 $_GET['forum'] = $sql -> escape_string($_GET['forum']);
 $_GET['post'] = $sql -> escape_string($_GET['post']);
 $_GET['days'] = (int)$_GET['days'];
+$_GET['months'] = (int)$_GET['months'];
 if ($_GET['post'] !== 'post' & $_GET['post'] !== 'reply' & $_GET['post'] !== 'lzl') { $_GET['post'] == null; }
 $time_column_name = $_GET['post'] == 'reply' || $_GET['post'] == 'lzl' ? 'reply_time' : 'post_time';
 
@@ -23,6 +24,9 @@ switch ($_GET['type']) {
         break;
     case 'get_post_count_by_day':
         echo json_encode($sql -> query("SELECT CAST({$time_column_name} AS DATE) AS DATE, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND DATE_SUB(CURDATE(), INTERVAL {$_GET['days']} DAY) <= date({$time_column_name}) GROUP BY CAST({$time_column_name} AS DATE)") -> fetch_all(MYSQLI_ASSOC));
+        break;
+    case 'get_post_count_by_month':
+        echo json_encode($sql -> query("SELECT EXTRACT(YEAR_MONTH FROM {$time_column_name}) AS MONTH, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" GROUP BY EXTRACT(YEAR_MONTH FROM {$time_column_name}) ORDER BY MONTH DESC LIMIT {$_GET['months']}") -> fetch_all(MYSQLI_ASSOC));
         break;
     default:
         die();
