@@ -9,6 +9,8 @@ $_GET['pn'] = (int)$_GET['pn'];
 $_GET['type'] = empty($_GET['type']) ? ['post', 'reply', 'lzl'] : $_GET['type'];
 $_GET['forum'] = $sql -> escape_string($_GET['forum']);
 $_GET['tid'] = (int)$_GET['tid'];
+$_GET['kw'] = $sql -> escape_string($_GET['kw']);
+$_GET['kw_regex'] = $_GET['kw_regex'] == 'true' ? $_GET['kw_regex'] : null;
 $_GET['author'] = $sql -> escape_string($_GET['author']);
 $_GET['start_date'] = empty($_GET['start_date']) ? null : date('Y-m-d', strtotime($_GET['start_date']));
 $_GET['end_date'] = empty($_GET['end_date']) ? null : date('Y-m-d', strtotime($_GET['end_date']));
@@ -48,7 +50,9 @@ function get_url_arguments($pn = null, $type = null, $forum = null, $tid = null,
         'pn' => null,
         'type' => null,
         'forum' => null,
-        'tid'=> null,
+        'tid' => null,
+        'kw' => null,
+        'kw_regex' => null,
         'author' => null,
         'start_date' => null,
         'end_date' => null
@@ -74,6 +78,7 @@ $sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * $items_per_page) .
 $sql_conditions = [
     'forum' => !empty($_GET['forum']) ? "forum = \"{$_GET['forum']}\"" : null,
     'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
+    'kw' => !empty($_GET['kw']) ? ($_GET['kw_regex'] == 'true' ? 'title REGEXP "' . implode('|', explode(' ', $_GET['kw'])) . '"' : 'title LIKE "%' . implode('%" OR content LIKE "%', explode(' ', $_GET['kw'])) . '%"') : null,
     'author' => !empty($_GET['author']) ? "author = \"{$_GET['author']}\"" : null,
     'date' => !empty($_GET['start_date']) & !empty($_GET['end_date']) ? "post_time BETWEEN \"{$_GET['start_date']}\" AND \"{$_GET['end_date']}\"" : null
 ];
@@ -84,21 +89,22 @@ $sql_condition = empty($sql_conditions) ? null : 'WHERE ' . implode(' AND ', $sq
 $sql_order_by = 'ORDER BY post_time DESC';
 
 if (in_array('post', $_GET['type'])) {
-    $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_post {$sql_condition}";
+    $sql_counts[] = "SELECT COUNT(*) FROM tbmonitor_post {$sql_condition}";
     $sql_posts = "SELECT * FROM tbmonitor_post {$sql_condition} {$sql_order_by} {$sql_limit}";
 }
-$sql_condition = str_replace('post_time', 'reply_time', $sql_condition);
+$sql_condition = str_replace('title ' . (empty($_GET['kw_regex']) ? 'LIKE' : 'REGEXP'), 'content ' . (empty($_GET['kw_regex']) ? 'LIKE' : 'REGEXP'), $sql_condition);
+$sql_condition = str_replace('post_time BETWEEN', 'reply_time BETWEEN', $sql_condition);
 $sql_order_by = 'ORDER BY reply_time DESC';
 if (in_array('reply', $_GET['type'])) {
     $sql_where_floor = empty($sql_condition) ? 'WHERE floor != 1' : "{$sql_condition} AND floor != 1";
-    $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_reply {$sql_where_floor}";
+    $sql_counts[] = "SELECT COUNT(*) FROM tbmonitor_reply {$sql_where_floor}";
     $sql_replies = "SELECT * FROM tbmonitor_reply {$sql_where_floor} {$sql_order_by} {$sql_limit}";
 }
 if (in_array('lzl', $_GET['type'])) {
-    $sql_count[] = "SELECT COUNT(*) FROM tbmonitor_lzl {$sql_condition}";
+    $sql_counts[] = "SELECT COUNT(*) FROM tbmonitor_lzl {$sql_condition}";
     $sql_lzl = "SELECT * FROM tbmonitor_lzl {$sql_condition} {$sql_order_by} {$sql_limit}";
 }
-$sql_count = $sql -> query(implode(' UNION ALL ', $sql_count)) -> fetch_all(MYSQLI_NUM);
+$sql_count = $sql -> query(implode(' UNION ALL ', $sql_counts)) -> fetch_all(MYSQLI_NUM);
 
 $max_page_num = intval(max($sql_count)[0] / $items_per_page);
 $sql_results = [
@@ -191,6 +197,16 @@ foreach($sql_results as $type => $query) {
                                 <input class="form-control" type="number" value=<?php echo empty($_GET['tid']) ? '""' : "\"{$_GET['tid']}\""; ?> name="tid" min="1" placeholder="5000000000" />
                             </div>
                             <div class="form-group">
+                                <label for="author">关键词：</label>
+                                <div class="input-group-addon"><i class="fa fa-search" aria-hidden="true"></i></div>
+                                <input class="form-control" type="text" value=<?php echo empty($_GET['kw']) ? '""' : "\"{$_GET['kw']}\""; ?> name="kw" placeholder="空格分割关键词" />
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" type="checkbox" <?php echo empty($_GET['kw_regex']) ? null : 'checked="checked"'; ?> value="true" name="kw_regex" />使用正则表达式
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label for="author">发贴人：</label>
                                 <div class="input-group-addon"><i class="fa fa-user-circle" aria-hidden="true"></i></div>
                                 <input class="form-control" type="text" value=<?php echo empty($_GET['author']) ? '""' : "\"{$_GET['author']}\""; ?> name="author" placeholder="如n0099" />
@@ -206,13 +222,15 @@ foreach($sql_results as $type => $query) {
                                 <input class="form-control" type="date" value=<?php echo empty($_GET['end_date']) ? '""' : "\"{$_GET['end_date']}\""; ?> name="end_date" id="end_date" />
                             </div>
                             <div>
-                            <a href="#" onclick="setDatePicker(0);return false;">今天</a>
-                            <a href="#" onclick="setDatePicker(-1);return false;">昨天</a>
-                            <a href="#" onclick="setDatePicker(-7);return false;">最近一周</a>
-                            <a href="#" onclick="setDatePicker(-30);return false;">最近一月</a>
+                                <a href="#" onclick="setDatePicker(0);return false;">今天</a>
+                                <a href="#" onclick="setDatePicker(-1);return false;">昨天</a>
+                                <a href="#" onclick="setDatePicker(-7);return false;">最近一周</a>
+                                <a href="#" onclick="setDatePicker(-30);return false;">最近一月</a>
                             </div>
-                            <button type="submit" class="btn btn-primary">查询</button>
-                            <a class="btn btn-secondary" href="https://n0099.cf/tbm" role="button">重置</a>
+                            <div>
+                                <button type="submit" class="btn btn-primary">查询</button>
+                                <a class="btn btn-secondary" href="https://n0099.cf/tbm" role="button">重置</a>
+                            </div>
                         </fieldset>
                     </form>
                     <br />
