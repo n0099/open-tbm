@@ -32,7 +32,7 @@ class Constants
         self::$smarty = new Smarty();
         self::$smarty->setCacheDir("public/temp/templates_c");
         self::$smarty->setTemplateDir("public/templates");
-        self::$smarty = Logger::getLogger("Tieba Monitor");
+        self::$logger = Logger::getLogger("Tieba Monitor");
     }
 
     /**

@@ -1,15 +1,16 @@
 {include "header.tpl"}
 <body>
-    <div class="row">
+    {include "navbar.tpl"}
+    <div class="section">
         <div class="container">
             <table class="highlight">
                 <thead>
-                <tr>
+                <tr class="container">
                     <th class="col s1" data-field="id">贴子PID</th>
                     <th class="col s2" data-field="title">贴子标题</th>
                     <th class="col s1" data-field="type">贴子类型</th>
                     <th class="col s4" data-field="text">贴子内容</th>
-                    <th class="col s2" data-field="url">传送门</th>
+                    <th class="col s1" data-field="url">传送门</th>
                     <th class="col s1" data-field="author">发帖人</th>
                     <th class="col s2" data-field="time">发帖时间</th>
                 </tr>
@@ -17,14 +18,14 @@
 
                 <tbody>
                 {foreach $forum->getPosties() as $post}
-                    <tr>
-                        <td>{$post->getId()}</td>
-                        <td>{$post->getTitle()}</td>
-                        <td>{$post->getType()}</td>
-                        <td>{$post->getText()}</td>
-                        <td><a href="http://tieba.baidu.com/p/{$post->getId()}">传送门</a></td>
-                        <td>{$post->getAuthor()}</td>
-                        <td>{$post->getPostTimeString()}</td>
+                    <tr class="container">
+                        <td class="col s1">{$post->getId()}</td>
+                        <td class="col s2">{$post->getTitle()}</td>
+                        <td class="col s1">{$post->getType()}</td>
+                        <td class="col s4">{$post->getText()}</td>
+                        <td class="col s1"><a href="http://tieba.baidu.com/p/{$post->getId()}">传送门</a></td>
+                        <td class="col s1">{$post->getAuthor()}</td>
+                        <td class="col s2">{$post->getPostTimeString()}</td>
                     </tr>
                 {/foreach}
                 </tbody>

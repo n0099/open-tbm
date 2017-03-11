@@ -1,9 +1,9 @@
-<footer class="page-footer blue accent-2">
+<footer class="page-footer purple lighten-1">
     <div class="container">
         <div class="row">
             <div class="col l6 s12">
                 <h5 class="white-text">关于我们</h5>
-                <ul>
+                <ul class="white-text">
                     <li><a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="知识共享许可协议" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />本网站所有内容均采用<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</li>
                 </ul>
                 <!-- JiaThis Button BEGIN -->
