@@ -8,7 +8,7 @@
     <!-- jQuery, Materialize -->
     <script src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
     <link href="//cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.min.css" rel="stylesheet">
-    <link href="//cdn.bootcss.com/fullPage.js/2.9.2/jquery.fullPage.min.css" rel="stylesheet">
+    {*<link href="//cdn.bootcss.com/fullPage.js/2.9.2/jquery.fullPage.min.css" rel="stylesheet">*}
     <link href="//cdn.bootcss.com/materialize/0.98.0/css/materialize.min.css" rel="stylesheet">
     <script src="//cdn.bootcss.com/materialize/0.98.0/js/materialize.min.js"></script>
 

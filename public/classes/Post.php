@@ -228,6 +228,11 @@ class Post implements JsonSerializable
         $this->type = $type;
     }
 
+    public function getText()
+    {
+        return array_values($this->getReplies())[0]->getText();
+    }
+
     public function jsonSerialize()
     {
         return array(
