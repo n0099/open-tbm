@@ -14,7 +14,7 @@ switch ($_GET['type']) {
  * @param $post2 Post
  * @return int
  */
-function sortFunc($post1, $post2) {
+function sortByTime($post1, $post2) {
     if ($post1->getLastReplyTime()->getTimestamp() == $post2->getLastReplyTime()->getTimestamp())
         return 0;
     return $post1->getLastReplyTime()->getTimestamp() < $post2->getLastReplyTime()->getTimestamp() ? -1 : 1;
@@ -30,6 +30,6 @@ function getForumData($forum = "模拟城市", $num = 20) {
     $forumDb = new ForumDb();
     \Db\SyncHelper::fetchSyncable($forumDb);
     $forum = $forumDb->getForum($forum);
-    usort($forum->getPosties(), "sortFunc");
+    usort($forum->getPosties(), "sortByTime");
     return json_encode(array_slice($forum->getPosties(), 0, $num));
 }
