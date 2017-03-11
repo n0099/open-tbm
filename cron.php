@@ -94,7 +94,7 @@ foreach ($forum as $tieba) {
         $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time);
         if ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update))) {
             // 获取主题贴第一页回复
-            curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
+            curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
             $response = curl_exec($curl);
             // 获取主题贴回复页数
             preg_match('/共<span class="red">(\d*)<\/span>页/', $response, $regex_match);
@@ -102,7 +102,7 @@ foreach ($forum as $tieba) {
             // 遍历主题贴所有回复页
             for ($i = 1; $i <= $reply_pages; $i++) {
                 if ($i != 1) {
-                    curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/{$post_data['id']}?pn={$i}&ajax=1");
+                    curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/{$post_data['id']}?pn={$i}&ajax=1");
                     $response = curl_exec($curl);
                 }
                 $explode = explode('<div class="l_post l_post_bright j_l_post clearfix  "  data-field=\'', $response);
@@ -120,13 +120,13 @@ foreach ($forum as $tieba) {
                     $reply_sql = $sql -> query("SELECT lzl_num FROM tbmonitor_reply WHERE pid = {$reply_data['content']['post_id']}");
                     $reply_sql_data = mysqli_fetch_assoc($reply_sql);
                     if (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']))) {
-                        curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1");
+                        curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1");
                         $response = curl_exec($curl);
                         preg_match('/<a href="#(\d*)">尾页<\/a>/', $response, $regex_match);
                         $lzl_pages = empty($regex_match) ? 1 : $regex_match[1];
                         for ($j = 1; $j <= $lzl_pages; $j++) {
                             if ($j != 1) {
-                                curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn={$j}");
+                                curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn={$j}");
                                 $response = curl_exec($curl);
                             }
                             $explode = explode('<li class="lzl_single_post j_lzl_s_p ', $response);
