@@ -16,3 +16,4 @@ $post2->setId(1);
 $forum->setPosties(array($post, $post2));
 Constants::getSmarty()->assign("forum", $forum);
 Constants::getSmarty()->display("index.tpl");
+echo json_encode($forum);
