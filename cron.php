@@ -86,13 +86,15 @@ foreach ($forum as $tieba) {
             $latest_reply_time = empty($latest_reply_time) ? null : tieba_magic_time($latest_reply_time);
         }
         $post_sql = $sql -> query("SELECT reply_num, latest_replyer, latest_reply_time FROM tbmonitor_post WHERE tid = {$post_data['id']}");
-        $post_sql_data = mysqli_fetch_assoc($post_sql);
-        // 避免写入不完整发贴/最后回复时间
-        //$post_time = $post_sql_data['post_time'] > $post_time ? $post_sql_data['post_time'] : $post_time;
-        $latest_reply_time = $post_sql_data['latest_reply_time'] > $latest_reply_time ? $post_sql_data['latest_reply_time'] : $latest_reply_time;
-        // 判断主题贴是否有更新
-        $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time);
-        if ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update))) {
+        $post_sql_data = $post_sql == false ? null : $post_sql -> fetch_assoc();
+        if ($post_sql_data != null) {
+            // 避免写入不完整最后回复时间
+            $latest_reply_time = $post_sql_data['latest_reply_time'] > $latest_reply_time ? $post_sql_data['latest_reply_time'] : $latest_reply_time;
+            // 判断主题贴是否有更新
+            $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time);
+        }
+        if ($post_sql_data != null && ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update)))) {
+            echo 'test';
             // 获取主题贴第一页回复
             curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
             $response = curl_exec($curl);
@@ -118,8 +120,8 @@ foreach ($forum as $tieba) {
                     $reply_time = $regex_match[1];
                     // 判断楼中楼是否有更新
                     $reply_sql = $sql -> query("SELECT lzl_num FROM tbmonitor_reply WHERE pid = {$reply_data['content']['post_id']}");
-                    $reply_sql_data = mysqli_fetch_assoc($reply_sql);
-                    if (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num']))) {
+                    $reply_sql_data = $reply_sql == false ? null : $reply_sql -> fetch_assoc();
+                    if ($reply_sql_data != null && (($reply_data['content']['post_no'] != 1 && $reply_sql -> num_rows == 0) || ($reply_sql -> num_rows != 0 && ($reply_sql_data['lzl_num'] != $reply_data['content']['comment_num'])))) {
                         curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/comment?tid={$post_data['id']}&pid={$reply_data['content']['post_id']}&pn=1");
                         $response = curl_exec($curl);
                         preg_match('/<a href="#(\d*)">尾页<\/a>/', $response, $regex_match);
