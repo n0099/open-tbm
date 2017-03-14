@@ -94,7 +94,6 @@ foreach ($forum as $tieba) {
             $is_post_update = $post_sql_data['reply_num'] != $post_data['reply_num'] || $post_sql_data['latest_replyer'] != $latest_replyer || strtotime($post_sql_data['latest_reply_time']) > strtotime($latest_reply_time);
         }
         if ($post_sql_data != null && ($index == 'topic' || ($post_sql -> num_rows == 0 || ($post_sql -> num_rows != 0 && $is_post_update)))) {
-            echo 'test';
             // 获取主题贴第一页回复
             curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/p/{$post_data['id']}?pn=1&ajax=1");
             $response = curl_exec($curl);
@@ -143,23 +142,37 @@ foreach ($forum as $tieba) {
                                 preg_match('/<span class="lzl_time">(\d{4}-\d{1,2}-\d{1,2} \d{2}:\d{2})<\/span>/', $lzl, $regex_match);
                                 $lzl_reply_time = $regex_match[1];
                                 // 楼中楼数据库
-                                $query = sprintf("INSERT INTO tbmonitor_lzl (forum, tid, pid, spid, author, content, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, {$lzl_date['spid']}, \"%s\", \"%s\", \"{$lzl_reply_time}\")", $sql -> escape_string($lzl_date['user_name']), $sql -> escape_string($lzl_content));
+                                $lzl_date['user_name'] = $sql -> escape_string($lzl_date['user_name']);
+                                $lzl_content = $sql -> escape_string($lzl_content);
+                                $query = "INSERT INTO tbmonitor_lzl (forum, tid, pid, spid, author, content, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, {$lzl_date['spid']}, \"{$lzl_date['user_name']}\", \"{$lzl_content}\", \"{$lzl_reply_time}\")";
+                                echo $query . '
+';
                                 $sql -> query($query);
                             }
                         }
                     }
                     // 回复贴数据库
-                    $query = sprintf("INSERT INTO tbmonitor_reply (forum, tid, pid, author, content, floor, lzl_num, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, \"%s\", \"%s\", {$reply_data['content']['post_no']}, {$reply_data['content']['comment_num']}, \"{$reply_time}\") ON DUPLICATE KEY UPDATE lzl_num = {$reply_data['content']['comment_num']}", $sql -> escape_string($reply_data['author']['user_name']), $sql -> escape_string($reply_content));
+                    $reply_data['author']['user_name'] = $sql -> escape_string($reply_data['author']['user_name']);
+                    $reply_content = $sql -> escape_string($reply_content);
+                    $query = "INSERT INTO tbmonitor_reply (forum, tid, pid, author, content, floor, lzl_num, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, \"{$reply_data['author']['user_name']}\", \"{$reply_content}\", {$reply_data['content']['post_no']}, {$reply_data['content']['comment_num']}, \"{$reply_time}\") ON DUPLICATE KEY UPDATE lzl_num = {$reply_data['content']['comment_num']}";
+                    echo $query . '
+';
                     $sql -> query($query);
                 }
             }
         }
         // 主题贴数据库
+        $post_title = $sql -> escape_string($post_title);
+        $post_data['author_name'] = empty($post_data['author_name']) ? "(SELECT author FROM tbmonitor_reply WHERE pid={$post_data['first_post_id']})" : '"' . $sql -> escape_string($post_data['author_name']) . '"';
+        $latest_replyer = $sql -> escape_string($latest_replyer);
+        $latest_reply_time = empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"";
         if ($index == 'topic') {
-            $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, title, author, reply_num) VALUES (\"{$tieba}\", {$post_data['id']}, \"%s\", \"%s\", {$post_data['reply_num']}) ON DUPLICATE KEY UPDATE reply_num={$post_data['reply_num']}", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']));
+            $query = "INSERT INTO tbmonitor_post (forum, tid, title, author, reply_num) VALUES (\"{$tieba}\", {$post_data['id']}, \"{$post_title}\", \"{$post_data['author_name']}\", {$post_data['reply_num']}) ON DUPLICATE KEY UPDATE reply_num={$post_data['reply_num']}";
         } else {
-            $query = sprintf("INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"%s\", \"%s\", {$post_data['reply_num']}, \"{$post_time}\", \"%s\", %s) ON DUPLICATE KEY UPDATE first_post_id = {$post_data['first_post_id']}, is_top = {$post_data['is_top']}, is_good = {$post_data['is_good']}, reply_num = {$post_data['reply_num']}, post_time = (SELECT reply_time FROM tbmonitor_reply WHERE pid={$post_data['first_post_id']}), latest_replyer = \"%s\", latest_reply_time = %s", $sql -> escape_string($post_title), $sql -> escape_string($post_data['author_name']), $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"", $sql -> escape_string($latest_replyer), empty($latest_reply_time) ? 'null' : "\"{$latest_reply_time}\"");
+            $query = "INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"{$post_title}\", {$post_data['author_name']}, {$post_data['reply_num']}, \"{$post_time}\", \"{$latest_replyer}\", {$latest_reply_time}) ON DUPLICATE KEY UPDATE author = {$post_data['author_name']}, first_post_id = {$post_data['first_post_id']}, is_top = {$post_data['is_top']}, is_good = {$post_data['is_good']}, reply_num = {$post_data['reply_num']}, post_time = (SELECT reply_time FROM tbmonitor_reply WHERE pid={$post_data['first_post_id']}), latest_replyer = \"{$latest_replyer}\", latest_reply_time = {$latest_reply_time}";
         }
+        echo $query . '
+';
         $sql -> query($query);
     }
 }
