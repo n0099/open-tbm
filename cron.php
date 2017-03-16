@@ -145,8 +145,6 @@ foreach ($forum as $tieba) {
                                 $lzl_date['user_name'] = $sql -> escape_string($lzl_date['user_name']);
                                 $lzl_content = $sql -> escape_string($lzl_content);
                                 $query = "INSERT INTO tbmonitor_lzl (forum, tid, pid, spid, author, content, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, {$lzl_date['spid']}, \"{$lzl_date['user_name']}\", \"{$lzl_content}\", \"{$lzl_reply_time}\")";
-                                echo $query . '
-';
                                 $sql -> query($query);
                             }
                         }
@@ -155,8 +153,6 @@ foreach ($forum as $tieba) {
                     $reply_data['author']['user_name'] = $sql -> escape_string($reply_data['author']['user_name']);
                     $reply_content = $sql -> escape_string($reply_content);
                     $query = "INSERT INTO tbmonitor_reply (forum, tid, pid, author, content, floor, lzl_num, reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$reply_data['content']['post_id']}, \"{$reply_data['author']['user_name']}\", \"{$reply_content}\", {$reply_data['content']['post_no']}, {$reply_data['content']['comment_num']}, \"{$reply_time}\") ON DUPLICATE KEY UPDATE lzl_num = {$reply_data['content']['comment_num']}";
-                    echo $query . '
-';
                     $sql -> query($query);
                 }
             }
@@ -171,8 +167,6 @@ foreach ($forum as $tieba) {
         } else {
             $query = "INSERT INTO tbmonitor_post (forum, tid, first_post_id, is_top, is_good, title, author, reply_num, post_time, latest_replyer, latest_reply_time) VALUES (\"{$tieba}\", {$post_data['id']}, {$post_data['first_post_id']}, {$post_data['is_top']}, {$post_data['is_good']}, \"{$post_title}\", {$post_data['author_name']}, {$post_data['reply_num']}, \"{$post_time}\", \"{$latest_replyer}\", {$latest_reply_time}) ON DUPLICATE KEY UPDATE author = {$post_data['author_name']}, first_post_id = {$post_data['first_post_id']}, is_top = {$post_data['is_top']}, is_good = {$post_data['is_good']}, reply_num = {$post_data['reply_num']}, post_time = (SELECT reply_time FROM tbmonitor_reply WHERE pid={$post_data['first_post_id']}), latest_replyer = \"{$latest_replyer}\", latest_reply_time = {$latest_reply_time}";
         }
-        echo $query . '
-';
         $sql -> query($query);
     }
 }
