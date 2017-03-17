@@ -17,16 +17,16 @@ switch ($_GET['type']) {
         echo json_encode($sql -> query('SELECT DISTINCT forum FROM tbmonitor_post') -> fetch_all(MYSQLI_ASSOC));
         break;
     case 'get_cron_time':
-        echo json_encode($sql -> query("SELECT * FROM tbmonitor_time WHERE type = \"cron\" AND date BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE()") -> fetch_all(MYSQLI_ASSOC));
+        echo json_encode($sql -> query("SELECT * FROM tbmonitor_time WHERE type = \"cron\" AND date BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['days']} DAY) AND DATE_ADD(CURDATE(), INTERVAL 1 DAY)") -> fetch_all(MYSQLI_ASSOC));
         break;
     case 'get_post_count_by_hour':
-        echo json_encode($sql -> query("SELECT EXTRACT(HOUR FROM {$time_column_name}) AS HOUR, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND {$time_column_name} BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['days']} DAY) GROUP BY EXTRACT(HOUR FROM {$time_column_name})") -> fetch_all(MYSQLI_ASSOC));
+        echo json_encode($sql -> query("SELECT EXTRACT(HOUR FROM {$time_column_name}) AS HOUR, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND {$time_column_name} BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['days']} DAY) AND DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY EXTRACT(HOUR FROM {$time_column_name})") -> fetch_all(MYSQLI_ASSOC));
         break;
     case 'get_post_count_by_day':
-        echo json_encode($sql -> query("SELECT DATE({$time_column_name}) AS DATE, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND {$time_column_name} BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['days']} DAY) AND CURDATE() GROUP BY DATE({$time_column_name}) ORDER BY DATE DESC") -> fetch_all(MYSQLI_ASSOC));
+        echo json_encode($sql -> query("SELECT DATE({$time_column_name}) AS DATE, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND {$time_column_name} BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['days']} DAY) AND DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY DATE({$time_column_name}) ORDER BY DATE DESC") -> fetch_all(MYSQLI_ASSOC));
         break;
     case 'get_post_count_by_month':
-        echo json_encode($sql -> query("SELECT EXTRACT(YEAR_MONTH FROM {$time_column_name}) AS MONTH, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND {$time_column_name} BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['months']} MONTH) AND CURDATE() GROUP BY EXTRACT(YEAR_MONTH FROM {$time_column_name}) ORDER BY MONTH DESC") -> fetch_all(MYSQLI_ASSOC));
+        echo json_encode($sql -> query("SELECT EXTRACT(YEAR_MONTH FROM {$time_column_name}) AS MONTH, COUNT(*) FROM tbmonitor_{$_GET['post']} WHERE forum = \"{$_GET['forum']}\" AND {$time_column_name} BETWEEN DATE_SUB(CURDATE(), INTERVAL {$_GET['months']} MONTH) AND DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY EXTRACT(YEAR_MONTH FROM {$time_column_name}) ORDER BY MONTH DESC") -> fetch_all(MYSQLI_ASSOC));
         break;
     default:
         die();
