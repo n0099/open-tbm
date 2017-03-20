@@ -265,6 +265,7 @@ foreach($sql_results as $type => $query) {
                                 foreach ($sql_result -> fetch_all(MYSQLI_ASSOC) as $row) {
                                     $row_type = $type == 'posts' ? '主题贴' : ($type == 'replies' ? '回复贴' : ($type == 'lzl' ? '楼中楼' : null));
                                     $post_portal = $type == 'posts' ? get_post_portal($row['tid']) : ($type == 'replies' ? get_post_portal($row['tid'], $row['pid']) : ($type == 'lzl' ? get_post_portal($row['tid'], $row['pid'], $row['spid']) : null));
+                                    $row['content'] = preg_replace('/<img(.*?)src="(https:\/\/imgsa.baidu.com)(.*?)"(.*?)>/', '<img$1src="http://imgsrc.baidu.com$3"$4', $row['content']);
                             ?>
                                 <tr>
                                     <td><?php echo $row['forum']; ?></td>
