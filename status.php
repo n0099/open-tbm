@@ -8,8 +8,6 @@ require 'core.php';
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link href="https://cdn.bootcss.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
-        <script src="https://cdn.bootcss.com/echarts/3.4.0/echarts.min.js"></script>
-        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
         <style>
             body {font-family: Microsoft YaHei, Helvetica, Arial, sans-serif !important;}
         </style>
@@ -72,6 +70,8 @@ require 'core.php';
                 </div>
             </div>
         </div>
+        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>        
+        <script src="https://cdn.bootcss.com/echarts/3.4.0/echarts.min.js"></script>
         <script>
         var base_chart_option = {
             toolbox: {
