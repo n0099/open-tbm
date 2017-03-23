@@ -1,9 +1,8 @@
 <?php
-ini_set('display_errors', 'On');
-date_default_timezone_set('PRC');
+require 'core.php';
+
 $time = microtime(true);
 $items_per_page = 20;
-$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 
 $_GET['pn'] = (int)$_GET['pn'];
 $_GET['type'] = empty($_GET['type']) ? ['post', 'reply', 'lzl'] : $_GET['type'];
@@ -17,32 +16,6 @@ $_GET['end_date'] = empty($_GET['end_date']) ? null : date('Y-m-d', strtotime($_
 if (empty($_GET['start_date']) || empty($_GET['end_date'])) {
     $_GET['start_date'] = null;
     $_GET['end_date'] = null;
-}
-
-function get_cron_time($minutes, $get_value) {
-    $value = round($GLOBALS['sql'] -> query("SELECT AVG(time) FROM tbmonitor_time WHERE date >= DATE_ADD(NOW(), INTERVAL -{$minutes} MINUTE)") -> fetch_all(MYSQLI_ASSOC)[0]['AVG(time)'], 2);
-    if ($get_value == false) { return empty($value) ? '未知' : $value; }
-    switch ($value) {
-        case $value >= 60:
-            return '低';
-        case $value >= 30:
-            return '中';
-        case $value < 30:
-            return '高';
-        default:
-            return '未知';
-    }
-}
-
-function get_post_portal($tid, $pid = null, $spid = null) {
-    $return = "http://tieba.baidu.com/p/{$tid}";
-    $return = $pid != null & $spid == null ? "{$return}?pid={$pid}#{$pid}" : $return;
-    $return = $pid != null & $spid != null ? "{$return}?pid={$pid}&cid={$spid}#{$spid}" : $return;
-    return $return;
-}
-
-function get_user_space($username) {
-    return "http://tieba.baidu.com/home/main?un={$username}&ie=utf-8";
 }
 
 function get_url_arguments($pn = null, $type = null, $forum = null, $tid = null, $author = null, $start_date = null) {
