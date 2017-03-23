@@ -1,8 +1,6 @@
 <?php
-ini_set('display_errors', 'On');
-date_default_timezone_set('PRC');
+require 'core.php';
 header('Content-Type: application/json');
-$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
 
 $_GET['type'] = $sql -> escape_string($_GET['type']);
 $_GET['forum'] = $sql -> escape_string($_GET['forum']);
