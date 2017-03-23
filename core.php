@@ -1,7 +1,7 @@
 <?php
 ini_set('display_errors', 'On');
 date_default_timezone_set('PRC');
-$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
+$sql = new mysqli('localhost', '', '', '');
 $sql -> query("SET collation_connection = utf8mb4_unicode_ci");
 
 function get_cron_time($minutes, $get_value) {
@@ -27,5 +27,5 @@ function get_post_portal($tid, $pid = null, $spid = null) {
 }
 
 function get_user_space($username) {
-    return "http://tieba.baidu.com/home/main?un={$username}&ie=utf-8";
+    return "http://tieba.baidu.com/home/main?un={$username}";
 }
