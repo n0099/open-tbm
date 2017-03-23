@@ -1,22 +1,5 @@
 <?php
-ini_set('display_errors', 'On');
-date_default_timezone_set('PRC');
-$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
-
-function get_cron_time($minutes, $get_value) {
-    $value = round($GLOBALS['sql'] -> query("SELECT AVG(time) FROM tbmonitor_time WHERE date >= DATE_ADD(NOW(), INTERVAL -{$minutes} MINUTE)") -> fetch_all(MYSQLI_ASSOC)[0]['AVG(time)'], 2);
-    if ($get_value == false) { return empty($value) ? '未知' : $value; }
-    switch ($value) {
-        case $value >= 60:
-            return '低';
-        case $value >= 30:
-            return '中';
-        case $value < 30:
-            return '高';
-        default:
-            return '未知';
-    }
-}
+require 'core.php';
 ?>
 <!DOCTYPE html>
 <html>
@@ -123,7 +106,7 @@ function get_cron_time($minutes, $get_value) {
         cron_chart_option['xAxis'] = {type: 'time', name: '时间'};
         cron_chart_option['yAxis'] = {};
 
-        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_cron_time', 'days':'30'}, complete: function(data) {
+        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_cron_time', 'days':'7'}, complete: function(data) {
             var ajax_response = eval(data.responseText);
             var cron_times = new Array();
             for(var i = 0, l = ajax_response.length; i < l; i++) {
