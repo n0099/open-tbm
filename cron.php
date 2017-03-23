@@ -1,6 +1,10 @@
 <?php
-ini_set('display_errors', 'On');
-date_default_timezone_set('PRC');
+require 'core.php';
+
+$time = microtime(true);
+$forum = ['模拟城市', 'transportfever'];
+$curl = curl_init();
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
 function tieba_magic_time($time) {
     if (preg_match('/^\d{4}-\d{1,2}$/', $time)) {
@@ -11,14 +15,6 @@ function tieba_magic_time($time) {
         return date('Y-m-d') . " {$time}";
     }
 }
-
-$time = microtime(true);
-$sql = new mysqli('127.0.0.1', 'n0099', 'iloven0099', 'n0099');
-$sql -> query("SET collation_connection = utf8mb4_unicode_ci");
-$forum = ['模拟城市', 'transportfever'];
-$curl = curl_init();
-curl_setopt($curl, CURLOPT_HEADER, false);
-curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
 foreach ($forum as $tieba) {
     // 贴吧首页
