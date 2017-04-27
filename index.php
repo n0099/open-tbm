@@ -51,7 +51,7 @@ $sql_limit = 'LIMIT ' . ($_GET['pn'] == 0 ? 0 : $_GET['pn'] * $items_per_page) .
 $sql_conditions = [
     'forum' => !empty($_GET['forum']) ? "forum = \"{$_GET['forum']}\"" : null,
     'tid' => !empty($_GET['tid']) ? "tid = {$_GET['tid']}" : null,
-    'kw' => !empty($_GET['kw']) ? ($_GET['kw_regex'] == 'true' ? 'title REGEXP "' . implode('|', explode(' ', $_GET['kw'])) . '"' : 'title LIKE "%' . implode('%" OR content LIKE "%', explode(' ', $_GET['kw'])) . '%"') : null,
+    'kw' => !empty($_GET['kw']) ? ($_GET['kw_regex'] == 'true' ? 'title REGEXP "' . implode('|', explode(' ', $_GET['kw'])) . '"' : 'title LIKE "%' . implode('%" OR title LIKE "%', explode(' ', $_GET['kw'])) . '%"') : null,
     'author' => !empty($_GET['author']) ? "author = \"{$_GET['author']}\"" : null,
     'date' => !empty($_GET['start_date']) & !empty($_GET['end_date']) ? "post_time BETWEEN \"{$_GET['start_date']}\" AND \"{$_GET['end_date']}\"" : null
 ];
