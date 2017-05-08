@@ -2,7 +2,7 @@
 require 'core.php';
 
 $time = microtime(true);
-$forum = ['模拟城市', 'transportfever'];
+$forum = ['模拟城市', 'transportfever', '台风吧官方水'];
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
@@ -22,23 +22,23 @@ foreach ($forum as $tieba) {
     $response = curl_exec($curl);
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list", (.*),"parent/', $response, $regex_match);
-    $explode = explode('<li class=" j_thread_list', htmlspecialchars_decode(json_decode($regex_match[1] . '}', true)['content']));
+    $explode = explode('<li class=" j_thread_list', htmlspecialchars_decode(json_decode("{$regex_match[1]}}", true)['content']));
     // 话题贴
     preg_match('/<script>Bigpipe.register\("live\/pagelet\/live_thread", (.*),"parent/', $response, $regex_match);
-    $topic = json_decode($regex_match[1] . '}', true);
+    $topic = json_decode("{$regex_match[1]}}", true);
     if (!empty($topic['content'])) { $explode['topic'] = htmlspecialchars_decode($topic['content']);}
     unset($explode[0]);
     foreach ($explode as $index => $post) {
         if ($index == 'topic') {
             if (strstr($post, '<div class="interview  ">') != false) {
                 // 文本话题贴id
-                preg_match('/http:\/\/tieba.baidu.com\/p\/(\d*)/', $post, $regex_match);
+                preg_match('/\/\/tieba.baidu.com\/p\/(\d*)/', $post, $regex_match);
                 $post_data['id'] = $regex_match[1];
                 // 文本话题贴标题
-                preg_match('/<a href="http:\/\/tieba.baidu.com\/p\/\d*" target="_blank" title=".*">\s*(.*)<\/a>/', $post, $regex_match);
+                preg_match('/<a href="\/\/tieba.baidu.com\/p\/\d*" target="_blank" title=".*">\s*(.*)<\/a>/', $post, $regex_match);
                 $post_title = trim($regex_match[1]);
                 // 文本话题贴发贴人
-                preg_match('/<a title="" href="http:\/\/tieba.baidu.com\/home\/main\?un=.*&ie=utf-8&from=live" target="_blank">\s*(.*)<\/a>/', $post, $regex_match);
+                preg_match('/<a title="" href="\/\/tieba.baidu.com\/home\/main\?un=.*&ie=utf-8&from=live" target="_blank">\s*(.*)<\/a>/', $post, $regex_match);
                 $post_data['author_name'] = trim($regex_match[1]);
                 // 文本话题贴回复数
                 preg_match('/<span class="listReplyNum inlineBlock" id="interviewReply" title="\d*个回复">(\d*)<\/span>/', $post, $regex_match);
