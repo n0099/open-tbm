@@ -18,7 +18,7 @@ function tieba_magic_time($time) {
 
 foreach ($forum as $tieba) {
     // 贴吧首页
-    curl_setopt($curl, CURLOPT_URL, "http://tieba.baidu.com/f?kw={$tieba}&ie=utf-8&pn=0&pagelets=frs-list%2Fpagelet%2Fthread");
+    curl_setopt($curl, CURLOPT_URL, "https://tieba.baidu.com/f?kw={$tieba}&ie=utf-8&pn=0&pagelets=frs-list%2Fpagelet%2Fthread");
     $response = curl_exec($curl);
     // 解码解转义
     preg_match('/<script>Bigpipe.register\("frs-list\/pagelet\/thread_list", (.*),"parent/', $response, $regex_match);
