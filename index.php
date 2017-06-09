@@ -238,7 +238,7 @@ foreach($sql_results as $type => $query) {
                                 foreach ($sql_result -> fetch_all(MYSQLI_ASSOC) as $row) {
                                     $row_type = $type == 'posts' ? '主题贴' : ($type == 'replies' ? '回复贴' : ($type == 'lzl' ? '楼中楼' : null));
                                     $post_portal = $type == 'posts' ? get_post_portal($row['tid']) : ($type == 'replies' ? get_post_portal($row['tid'], $row['pid']) : ($type == 'lzl' ? get_post_portal($row['tid'], $row['pid'], $row['spid']) : null));
-                                    $row['content'] = preg_replace('/<img(.*?)src="(https:\/\/imgsa.baidu.com)(.*?)"(.*?)>/', '<img$1src="http://imgsrc.baidu.com$3"$4', $row['content']);
+                                    $row['content'] = $type != 'posts' ? preg_replace('/<img(.*?)src="(https:\/\/imgsa.baidu.com)(.*?)"(.*?)>/', '<img$1src="http://imgsrc.baidu.com$3"$4', $row['content']) : $row['content'];
                             ?>
                                 <tr>
                                     <td><?php echo $row['forum']; ?></td>
@@ -257,7 +257,7 @@ foreach($sql_results as $type => $query) {
                                                 </div>
                                                 <div id=<?php echo "\"post_{$row['tid']}\""; ?> class="collapse">
                                                     <div class="card card-block">
-                                                        <span><?php echo $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']; ?></span>
+                                                        <span><?php echo preg_replace('/<img(.*?)src="(https:\/\/imgsa.baidu.com)(.*?)"(.*?)>/', '<img$1src="http://imgsrc.baidu.com$3"$4', $sql -> query("SELECT content FROM tbmonitor_reply WHERE tid = {$row['tid']} AND floor = 1") -> fetch_assoc()['content']); ?></span>
                                                     </div>
                                                 </div>
                                                 <span>主题贴回复数：<?php echo $row['reply_num']; ?> 最后回复人：<a href=<?php echo '"' . get_user_space($row['latest_replyer']) . '"'; ?> target="_blank"><?php echo $row['latest_replyer']; ?></a> 最后回复时间：<?php echo $row['latest_reply_time']; ?></span>
