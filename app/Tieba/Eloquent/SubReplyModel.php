@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Eloquent;
+namespace App\Tieba\Eloquent;
 
 class SubReplyModel extends PostModel
 {
@@ -27,5 +27,10 @@ class SubReplyModel extends PostModel
     public function scopeSpid($query, int $spid)
     {
         return $query->where('spid', $spid);
+    }
+
+    public function toPost(): \App\Tieba\Post
+    {
+        return new \App\Tieba\SubReply($this);
     }
 }

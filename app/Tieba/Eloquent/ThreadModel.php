@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Eloquent;
+namespace App\Tieba\Eloquent;
 
 /**
  * Class Post
  * Model for every Tieba thread post
  *
- * @package App\Eloquent
+ * @package App\Tieba\Eloquent
  */
 class ThreadModel extends PostModel
 {
@@ -18,5 +18,10 @@ class ThreadModel extends PostModel
     public function scopeTid($query, int $tid)
     {
         return $query->where('tid', $tid);
+    }
+
+    public function toPost(): \App\Tieba\Post
+    {
+        return new \App\Tieba\Thread($this);
     }
 }

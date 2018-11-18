@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Eloquent;
+namespace App\Tieba\Eloquent;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Model;
  * Class Post
  * Parent abstract class for App\Thread,Reply,SubReply class.
  *
- * @package App\Eloquent
+ * @package App\Tieba\Eloquent
  */
 abstract class PostModel extends Model
 {
+    use InsertOnDuplicateKey;
+
     /**
      * @var string Default table name.
      * @throw SQL:NoSuchTableException
@@ -29,6 +31,8 @@ abstract class PostModel extends Model
     protected $forumId;
 
     abstract public function scopeTid($query, int $tid);
+
+    abstract public function toPost(): \App\Tieba\Post;
 
     /**
      * Override construct method for setting valid forumId and table name.

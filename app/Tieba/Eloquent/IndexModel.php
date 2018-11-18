@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Eloquent;
+namespace App\Tieba\Eloquent;
 
 use Illuminate\Database\Eloquent\Model;
 
 class IndexModel extends Model
 {
-    protected $table = 'tbm_index';
+    use InsertOnDuplicateKey;
+
+    protected $table = 'tbm_postsIndex';
 
     protected $guarded = [];
 }
