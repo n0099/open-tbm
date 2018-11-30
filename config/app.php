@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'locale' => 'zh-cn',
+    'locale' => 'zh',
 
     /*
     |--------------------------------------------------------------------------
@@ -91,7 +91,7 @@ return [
     |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'zh',
 
     /*
     |--------------------------------------------------------------------------
@@ -158,6 +158,7 @@ return [
         App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
+        App\Providers\TelescopeServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
     ],
