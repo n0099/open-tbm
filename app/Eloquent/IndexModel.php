@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent;
 
 use Illuminate\Database\Eloquent\Model;
 

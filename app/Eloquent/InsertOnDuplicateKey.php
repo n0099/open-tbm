@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent;
 
 /**
  * Trait InsertOnDuplicateKey
  *
  * Overriding \Yadakhov\InsertOnDuplicateKey methods to adapted for non-static calling.
- * 
+ *
  * @package App\Tieba\Eloquent
  */
 trait InsertOnDuplicateKey
