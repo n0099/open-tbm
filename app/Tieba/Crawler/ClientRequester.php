@@ -3,10 +3,11 @@
 namespace App\Tieba\Crawler;
 
 /**
- * Class ClientHelper
+ * Class ClientRequester
+ *
  * @package App\Tieba\WebHelper
  */
-class ClientHelper extends \GuzzleHttp\Client
+class ClientRequester extends \GuzzleHttp\Client
 {
     /**
      * @param $method
@@ -23,6 +24,7 @@ class ClientHelper extends \GuzzleHttp\Client
         if ($method != 'post') {
             throw new \BadFunctionCallException('Client request must be HTTP POST');
         }
+
         $clientInfo = [
             '_client_id' => 'wappc_'.mt_rand(1000000000000, 9999999999999).'_'.mt_rand(100, 999),
             '_client_type' => 2, // 0:WAP|1:iPhone|2:Android|3:WindowsPhone|4:Windows8UWP
