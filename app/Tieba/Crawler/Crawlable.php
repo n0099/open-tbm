@@ -10,40 +10,19 @@ abstract class Crawlable
 {
     protected $forumId;
 
-    protected $clientVersion = '6.0.2';
+    protected $clientVersion;
+
+    protected $indexesList;
+
+    protected $usersList = [];
 
     abstract public function doCrawl();
 
-    protected function parseUsersList(array $usersList)
+    abstract public function saveLists();
+
+    protected function getClientHelper() : ClientRequester
     {
-        if (count($usersList) == 0) {
-            throw new \LengthException('Users list is empty');
-        }
-
-        $usersInfo = [];
-        foreach ($usersList as $user) {
-            //debug($user);
-            $usersInfo[] = [
-                'uid' => $user['id'],
-                'name' => $user['name'],
-                'displayName' => $user['name'] == $user['name_show'] ? null : $user['name_show'],
-                'avatarUrl' => $user['portrait'],
-                'gender' => $user['gender'],
-                'fansNickname' => isset($user['fans_nickname']) ? self::valueValidate($user['fans_nickname']) : null,
-                'iconInfo' => self::valueValidate($user['iconinfo'], true),
-                'alaInfo' => ((! isset($user['ala_info'])) || self::valueValidate($user['ala_info']) != null
-                    && $user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0)
-                    ? null
-                    : self::valueValidate($user['ala_info'], true)
-            ];
-        }
-
-        (new Eloquent\UserModel())->insertOnDuplicateKey($usersInfo);
-    }
-
-    protected function getClientHelper() : ClientHelper
-    {
-        $debugBar = resolve('debugbar');
+        /*$debugBar = resolve('debugbar');
 
         $timeline = $debugBar->getCollector('time');
         $profiler = new GuzzleHttp\Profiling\Debugbar\Profiler($timeline);
@@ -53,8 +32,9 @@ abstract class Crawlable
 
         $logger = $debugBar->getCollector('messages');
         $stack->push(GuzzleHttp\Middleware::log($logger, new GuzzleHttp\MessageFormatter()));
+        $stack->push(GuzzleHttp\Middleware::log(\Log::getLogger(), new GuzzleHttp\MessageFormatter('{code} {host}{target} {error}')));*/
 
-        return new ClientHelper(['handler' => $stack, 'client_version' => $this->clientVersion, 'request.options' => [
+        return new ClientRequester([/*'handler' => $stack, */'client_version' => $this->clientVersion, 'request.options' => [
             'timeout' => 5,
             'connect_timeout' => 5
         ]]);
@@ -67,5 +47,101 @@ abstract class Crawlable
         }
 
         return $isJson ? json_encode($value) : $value;
+    }
+
+    protected static function getSubKeyValueByKeys(array $haystack, array $keys) : array
+    {
+        $values = [];
+        foreach ($keys as $key) {
+            $values[$key] = $haystack[$key];
+        }
+        return $values;
+    }
+
+    /**
+     * Sort SQL INSERT data to prevent mutual insert intention gap deadlock.
+     *
+     * @param array $array
+     * @param string $key
+     */
+    /*protected function sortArrayBySubKeyValue(array &$array, string $key)
+    {
+        usort($array, function ($first, $second) use ($key) {
+            return $first[$key] <=> $second[$key];
+        });
+    }*/
+
+    protected function parseUsersList(array $usersList)
+    {
+        if (count($usersList) == 0) {
+            throw new \LengthException('Users list is empty');
+        }
+
+        $usersInfo = [];
+        foreach ($usersList as $user) {
+            if ($user['id'] == '' || $user['id'] < 0) { // TODO: compatible with anonymous user
+                $usersInfo[] = [
+                ];
+            } else {
+                $usersInfo[] = [
+                    'uid' => $user['id'],
+                    'name' => $user['name'],
+                    'displayName' => $user['name'] == $user['name_show'] ? null : $user['name_show'],
+                    'avatarUrl' => $user['portrait'],
+                    'gender' => self::valueValidate($user['gender']),
+                    'fansNickname' => isset($user['fans_nickname']) ? self::valueValidate($user['fans_nickname']) : null,
+                    'iconInfo' => self::valueValidate($user['iconinfo'], true),
+                    'alaInfo' => ((!isset($user['ala_info']['lat']))
+                        || self::valueValidate($user['ala_info']) != null
+                        && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0))
+                        ? null
+                        : self::valueValidate($user['ala_info'], true)
+                ];
+                //if ($usersInfo['fansNickname'] == null) { unset($usersInfo['fansNickname']); }
+                //if ($usersInfo['alaInfo'] == null) { unset($usersInfo['alaInfo']); }
+            }
+        }
+        // Lazy saving to Eloquent model
+        $this->pushUsersList($usersInfo);
+
+        return $this;
+    }
+
+    private function pushUsersList($newUsersList)
+    {
+        foreach ($newUsersList as $newUser) {
+            $existedInListKey = array_search($newUser['uid'], array_column($this->usersList, 'uid'));
+            if ($existedInListKey === false) {
+                $this->usersList[] = $newUser;
+            } else {
+                $this->usersList[$existedInListKey] = $newUser;
+            }
+        }
+    }
+
+    protected function saveUsersList()
+    {
+        // Split INSERT cause to prevent update with null values
+        $usersList = [];
+        foreach ($this->usersList as $user) {
+            if ($user['fansNickname'] == null && $user['alaInfo'] == null) {
+                unset($user['fansNickname']);
+                unset($user['alaInfo']);
+                $usersList['null'][] = $user;
+            } elseif ($user['fansNickname'] == null) {
+                unset($user['fansNickname']);
+                $usersList['nullFansNickname'][] = $user;
+            } elseif ($user['alaInfo'] == null) {
+                unset($user['alaInfo']);
+                $usersList['nullAlaInfo'][] = $user;
+            } else {
+                $usersList['update'][] = $user;
+            }
+        }
+        foreach ($usersList as $list) {
+            (new Eloquent\UserModel())->insertOnDuplicateKey($list);
+        }
+
+        //$this->usersList = [];
     }
 }

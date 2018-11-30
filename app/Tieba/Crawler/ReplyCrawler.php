@@ -7,19 +7,25 @@ use Carbon\Carbon;
 use GuzzleHttp;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
+use Illuminate\Support\Facades\Log;
 
 class ReplyCrawler extends Crawlable
 {
-    protected $threadId;
-
     protected $clientVersion = '8.8.8';
 
-    protected $containsSubReplyPid = [];
+    protected $threadId;
+
+    protected $repliesList = [];
+
+    protected $indexesList = [];
+
+    protected $repliesUpdateInfo = [];
 
     public function doCrawl() : self
     {
         $client = $this->getClientHelper();
 
+        Log::info("Start to fetch replies for tid {$this->threadId}, page 1");
         $repliesJson = json_decode($client->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
             ['form_params' => ['kz' => $this->threadId, 'pn' => 1]] // reverse order = ['last'=>1,'r'=>1]
@@ -32,6 +38,7 @@ class ReplyCrawler extends Crawlable
             (function () use ($client, $repliesJson) {
                 for ($pn = 2; $pn <= $repliesJson['page']['total_page']; $pn++) {
                     yield function () use ($client, $pn) {
+                        Log::info("Start to fetch replies for tid {$this->threadId}, page {$pn}");
                         return $client->postAsync(
                             'http://c.tieba.baidu.com/c/f/pb/page',
                             ['form_params' => ['kz' => $this->threadId, 'pn' => $pn]]
@@ -40,7 +47,7 @@ class ReplyCrawler extends Crawlable
                 }
             })(),
             [
-                'concurrency' => 20,
+                'concurrency' => 10,
                 'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                     //add_measure($response->getReasonPhrase(), microtime(true), microtime(true));
                     $repliesJson = json_decode($response->getBody(), true);
@@ -73,16 +80,17 @@ class ReplyCrawler extends Crawlable
             $repliesList = $repliesJson['post_list'];
             $usersList = $repliesJson['user_list'];
         } else {
-            throw new \HttpResponseException("Error from tieba client, raw json: " . json_encode($repliesJson));
+            throw new \RuntimeException("Error from tieba client, raw json: " . json_encode($repliesJson));
         }
         if (count($repliesList) == 0) {
             throw new \LengthException('Reply posts list is empty');
         }
 
         $usersList = self::convertUsersListToUidKey($usersList);
+        $repliesUpdateInfo = [];
         $repliesInfo = [];
         $indexesInfo = [];
-        $subReplyPid = [];
+        $now = Carbon::now();
         foreach ($repliesList as $reply) {
             $repliesInfo[] = [
                 'tid' => $this->threadId,
@@ -99,22 +107,33 @@ class ReplyCrawler extends Crawlable
                 'signInfo' => self::valueValidate($reply['signature'], true),
                 'tailInfo' => self::valueValidate($reply['tail_info'], true),
                 'clientVersion' => $this->clientVersion,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'created_at' => $now,
+                'updated_at' => $now
             ];
+
+            $latestInfo = end($repliesInfo);
             if ($reply['sub_post_number'] > 0) {
-                $subReplyPid[] = $reply['id'];
+                $repliesUpdateInfo[$reply['id']] = self::getSubKeyValueByKeys($latestInfo, ['subReplyNum']);
             }
             $indexesInfo[] = [
-                'fid' => $this->forumId,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'postTime' => $latestInfo['replyTime'],
                 'type' => 'reply',
-                'tid' => $this->threadId,
-                'pid' => end($repliesInfo)['pid'],
-                'authorUid' => end($repliesInfo)['authorUid'],
-                'postTime' => end($repliesInfo)['replyTime']
-            ];
+                'fid' => $this->forumId
+            ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
-        $replyUpdateExceptFields = array_diff(array_keys($repliesInfo[0]), [
+
+        // Lazy saving to Eloquent model
+        $this->parseUsersList($usersList);
+        $this->repliesUpdateInfo = $repliesUpdateInfo + $this->repliesUpdateInfo;
+        $this->repliesList = array_merge($this->repliesList, $repliesInfo);
+        $this->indexesList = array_merge($this->indexesList, $indexesInfo);
+    }
+
+    public function saveLists() : self
+    {
+        $updateExceptFields = array_diff(array_keys($this->repliesList[0]), [
             'tid',
             'pid',
             'floor',
@@ -122,21 +141,23 @@ class ReplyCrawler extends Crawlable
             'authorUid',
             'created_at'
         ]);
+        // TODO: performance issue on big query
+        Eloquent\ModelFactory::newReply($this->forumId)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
+        $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
+        (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+        $this->saveUsersList();
 
-        $this->containsSubReplyPid = $subReplyPid;
-        $this->parseUsersList($usersList);
-        Eloquent\ModelFactory::newReply($this->forumId)->insertOnDuplicateKey($repliesInfo, $replyUpdateExceptFields);
-        (new Eloquent\IndexModel())->insertOnDuplicateKey($indexesInfo);
+        return $this;
     }
 
-    public function getPidContainsSubReply() : array
+    public function getRepliesInfo() : array
     {
-        return $this->containsSubReplyPid;
+        return $this->repliesUpdateInfo;
     }
 
-    public function __construct(int $tid, int $fid)
+    public function __construct(int $fid, int $tid)
     {
-        $this->threadId = $tid;
         $this->forumId = $fid;
+        $this->threadId = $tid;
     }
 }
