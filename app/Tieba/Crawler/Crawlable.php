@@ -20,7 +20,7 @@ abstract class Crawlable
 
     abstract public function saveLists();
 
-    protected function getClientHelper() : ClientRequester
+    protected function getClientHelper(): ClientRequester
     {
         /*$debugBar = resolve('debugbar');
 
@@ -49,7 +49,7 @@ abstract class Crawlable
         return $isJson ? json_encode($value) : $value;
     }
 
-    protected static function getSubKeyValueByKeys(array $haystack, array $keys) : array
+    protected static function getSubKeyValueByKeys(array $haystack, array $keys): array
     {
         $values = [];
         foreach ($keys as $key) {
@@ -71,7 +71,7 @@ abstract class Crawlable
         });
     }*/
 
-    protected function parseUsersList(array $usersList)
+    protected function parseUsersList(array $usersList): self
     {
         if (count($usersList) == 0) {
             throw new \LengthException('Users list is empty');
@@ -107,7 +107,7 @@ abstract class Crawlable
         return $this;
     }
 
-    private function pushUsersList($newUsersList)
+    private function pushUsersList($newUsersList): void
     {
         foreach ($newUsersList as $newUser) {
             $existedInListKey = array_search($newUser['uid'], array_column($this->usersList, 'uid'));
@@ -119,9 +119,9 @@ abstract class Crawlable
         }
     }
 
-    protected function saveUsersList()
+    protected function saveUsersList(): void
     {
-        // Split INSERT cause to prevent update with null values
+        // Split INSERT sql cause to prevent update with null values
         $usersList = [];
         foreach ($this->usersList as $user) {
             if ($user['fansNickname'] == null && $user['alaInfo'] == null) {

@@ -4,31 +4,33 @@ namespace App\Tieba;
 
 class PostFactory
 {
-    private static function getPostByModels(iterable $models, string $postType)
+    private static function getPostByModels(iterable $models, string $postType): array
     {
         $posts = [];
         $postTypeIdName = [
-            Post::class => 'tid',
+            Thread::class => 'tid',
             Reply::class => 'pid',
             SubReply::class => 'spid',
         ];
+
         foreach ($models as $model) {
             $posts[$model[$postTypeIdName[$postType]]] = new $postType($model);
         }
+
         return $posts;
     }
 
-    public static function getThreadsByModels(iterable $models)
+    public static function getThreadsByModels(iterable $models): array
     {
         return self::getPostByModels($models, Thread::class);
     }
 
-    public static function getRepliesByModels(iterable $models)
+    public static function getRepliesByModels(iterable $models): array
     {
         return self::getPostByModels($models, Reply::class);
     }
 
-    public static function getSubRepliesByModels(iterable $models)
+    public static function getSubRepliesByModels(iterable $models): array
     {
         return self::getPostByModels($models, SubReply::class);
     }
