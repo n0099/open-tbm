@@ -21,7 +21,7 @@ class ThreadCrawler extends Crawlable
 
     protected $threadsUpdateInfo = [];
 
-    public function doCrawl() : self
+    public function doCrawl(): self
     {
         $client = $this->getClientHelper();
 
@@ -36,7 +36,7 @@ class ThreadCrawler extends Crawlable
         return $this;
     }
 
-    private function parseThreadsList(array $threadsJson)
+    private function parseThreadsList(array $threadsJson): void
     {
         if ($threadsJson['error_code'] == 0) {
             $threadsList = $threadsJson['thread_list'];
@@ -93,7 +93,7 @@ class ThreadCrawler extends Crawlable
         $this->indexesList = $indexesInfo;
     }
 
-    public function saveLists() : self
+    public function saveLists(): self
     {
         $threadExceptFields = array_diff(array_keys($this->threadsList[0]), [
             'tid',
@@ -102,7 +102,7 @@ class ThreadCrawler extends Crawlable
             'authorUid',
             'created_at'
         ]);
-        Eloquent\ModelFactory::newThread($this->forumId)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
+        Eloquent\PostModelFactory::newThread($this->forumId)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
         $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
         (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
         $this->saveUsersList();
@@ -110,7 +110,7 @@ class ThreadCrawler extends Crawlable
         return $this;
     }
 
-    public function getThreadsInfo() : array
+    public function getThreadsInfo(): array
     {
         return $this->threadsUpdateInfo;
     }

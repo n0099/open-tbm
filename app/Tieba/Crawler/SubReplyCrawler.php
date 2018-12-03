@@ -23,7 +23,7 @@ class SubReplyCrawler extends Crawlable
 
     protected $indexesList = [];
 
-    public function doCrawl() : self
+    public function doCrawl(): self
     {
         $client = $this->getClientHelper();
 
@@ -64,7 +64,7 @@ class SubReplyCrawler extends Crawlable
         return $this;
     }
 
-    private function parseSubRepliesList(array $subRepliesJson)
+    private function parseSubRepliesList(array $subRepliesJson): void
     {
         if ($subRepliesJson['error_code'] == 0) {
             $subRepliesList = $subRepliesJson['subpost_list'];
@@ -111,7 +111,7 @@ class SubReplyCrawler extends Crawlable
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);
     }
 
-    public function saveLists() : self
+    public function saveLists(): self
     {
         $subReplyExceptFields = array_diff(array_keys($this->subRepliesList[0]), [
             'tid',
@@ -121,7 +121,7 @@ class SubReplyCrawler extends Crawlable
             'authorUid',
             'created_at'
         ]);
-        Eloquent\ModelFactory::newSubReply($this->forumId)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
+        Eloquent\PostModelFactory::newSubReply($this->forumId)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
         $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
         (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
         $this->saveUsersList();

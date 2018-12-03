@@ -21,7 +21,7 @@ class ReplyCrawler extends Crawlable
 
     protected $repliesUpdateInfo = [];
 
-    public function doCrawl() : self
+    public function doCrawl(): self
     {
         $client = $this->getClientHelper();
 
@@ -62,7 +62,7 @@ class ReplyCrawler extends Crawlable
         return $this;
     }
 
-    private static function convertUsersListToUidKey(array $usersList) : array
+    private static function convertUsersListToUidKey(array $usersList): array
     {
         $newUsersList = [];
 
@@ -74,7 +74,7 @@ class ReplyCrawler extends Crawlable
         return $newUsersList;
     }
 
-    private function parseRepliesList(array $repliesJson)
+    private function parseRepliesList(array $repliesJson): void
     {
         if ($repliesJson['error_code'] == 0) {
             $repliesList = $repliesJson['post_list'];
@@ -131,7 +131,7 @@ class ReplyCrawler extends Crawlable
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);
     }
 
-    public function saveLists() : self
+    public function saveLists(): self
     {
         $updateExceptFields = array_diff(array_keys($this->repliesList[0]), [
             'tid',
@@ -142,7 +142,7 @@ class ReplyCrawler extends Crawlable
             'created_at'
         ]);
         // TODO: performance issue on big query
-        Eloquent\ModelFactory::newReply($this->forumId)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
+        Eloquent\PostModelFactory::newReply($this->forumId)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
         $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
         (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
         $this->saveUsersList();
@@ -150,7 +150,7 @@ class ReplyCrawler extends Crawlable
         return $this;
     }
 
-    public function getRepliesInfo() : array
+    public function getRepliesInfo(): array
     {
         return $this->repliesUpdateInfo;
     }

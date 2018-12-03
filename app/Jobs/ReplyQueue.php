@@ -40,7 +40,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumId, $this->threadId))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
-        $oldRepliesInfo = self::convertIDListKey(Eloquent\ModelFactory::newReply($this->forumId)
+        $oldRepliesInfo = self::convertIDListKey(Eloquent\PostModelFactory::newReply($this->forumId)
             ->select('pid', 'subReplyNum')->whereIn('pid', array_keys($newRepliesInfo))->get()->toArray(), 'pid');
         $repliesCrawler->saveLists();
         echo 'reply:' . memory_get_usage() . PHP_EOL;
