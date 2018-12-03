@@ -15,9 +15,9 @@ class ThreadModel extends PostModel
         return $this->hasMany(ReplyModel::class, 'tid', 'tid');
     }
 
-    public function scopeTid($query, int $tid)
+    public function scopeTid($query, $tid): \Illuminate\Database\Eloquent\Builder
     {
-        return $query->where('tid', $tid);
+        return $this->scopeIDType($query, 'tid', $tid);
     }
 
     public function toPost(): \App\Tieba\Post

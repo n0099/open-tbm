@@ -31,7 +31,18 @@ abstract class PostModel extends Model
      */
     protected $forumId;
 
-    abstract public function scopeTid($query, int $tid);
+    protected function scopeIDType($query, string $postIDName, $postID): \Illuminate\Database\Eloquent\Builder
+    {
+        if (is_int($postID)) {
+            return $query->where($postIDName, $postID);
+        } elseif (is_array($postID)) {
+            return $query->whereIn($postIDName, $postID);
+        } else {
+            throw new \InvalidArgumentException("{$postIDName} must be int or array");
+        }
+    }
+
+    abstract public function scopeTid($query, $tid): \Illuminate\Database\Eloquent\Builder;
 
     abstract public function toPost(): \App\Tieba\Post;
 
