@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0d575ebab63fc033b9b7fa8c0ee6bcca",
+    "content-hash": "f3603aa7f85299d83946bceb31a69101",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -4017,6 +4017,64 @@
                 "timeline"
             ],
             "time": "2015-11-25T10:07:26+00:00"
+        },
+        {
+            "name": "itsgoingd/clockwork",
+            "version": "v3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/itsgoingd/clockwork.git",
+                "reference": "4adcf0a923849bd68b3f4d2fcb0041a5b8ca59f8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/itsgoingd/clockwork/zipball/4adcf0a923849bd68b3f4d2fcb0041a5b8ca59f8",
+                "reference": "4adcf0a923849bd68b3f4d2fcb0041a5b8ca59f8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5",
+                "psr/log": "1.*"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Clockwork\\Support\\Laravel\\ClockworkServiceProvider"
+                    ],
+                    "aliases": {
+                        "Clockwork": "Clockwork\\Support\\Laravel\\Facade"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Clockwork\\": "Clockwork/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "itsgoingd",
+                    "email": "itsgoingd@luzer.sk",
+                    "homepage": "https://twitter.com/itsgoingd"
+                }
+            ],
+            "description": "php dev tools integrated to your browser",
+            "homepage": "https://underground.works/clockwork",
+            "keywords": [
+                "Devtools",
+                "debugging",
+                "laravel",
+                "logging",
+                "lumen",
+                "profiling",
+                "slim"
+            ],
+            "time": "2018-12-03T17:36:12+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
