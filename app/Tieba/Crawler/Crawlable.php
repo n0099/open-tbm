@@ -34,10 +34,14 @@ abstract class Crawlable
         $stack->push(GuzzleHttp\Middleware::log($logger, new GuzzleHttp\MessageFormatter()));
         $stack->push(GuzzleHttp\Middleware::log(\Log::getLogger(), new GuzzleHttp\MessageFormatter('{code} {host}{target} {error}')));*/
 
-        return new ClientRequester([/*'handler' => $stack, */'client_version' => $this->clientVersion, 'request.options' => [
-            'timeout' => 5,
-            'connect_timeout' => 5
-        ]]);
+        return new ClientRequester([
+            //'handler' => $stack,
+            'client_version' => $this->clientVersion,
+            'request.options' => [
+                'timeout' => 5,
+                'connect_timeout' => 5
+            ]
+        ]);
     }
 
     protected static function valueValidate($value, bool $isJson = false)
@@ -124,6 +128,22 @@ abstract class Crawlable
         // Split INSERT sql cause to prevent update with null values
         $usersList = [];
         foreach ($this->usersList as $user) {
+            $nullValueFields = ['fansNickname' => false, 'alaInfo' => false];
+            foreach ($nullValueFields as $nullableFieldName => $isNull) {
+                $nullValueFields[$nullableFieldName] = $user[$nullableFieldName] == null ? true : false;
+            }
+            $nullValueFieldsCount = array_sum($nullValueFields);
+            if ($nullValueFieldsCount == count($nullValueFields)) {
+                $usersList['nullAll'][] = $user;
+            } elseif ($nullValueFieldsCount == 0) {
+                $usersList['notNullAll'][] = $user;
+            } else {
+                $nullValueFieldName = array_search(false, $nullValueFields);
+                $usersList[$nullValueFieldName] = $user;
+            }
+        }
+        // same functional with above
+        /*foreach ($this->usersList as $user) {
             if ($user['fansNickname'] == null && $user['alaInfo'] == null) {
                 unset($user['fansNickname']);
                 unset($user['alaInfo']);
@@ -137,7 +157,7 @@ abstract class Crawlable
             } else {
                 $usersList['update'][] = $user;
             }
-        }
+        }*/
         foreach ($usersList as $list) {
             (new Eloquent\UserModel())->insertOnDuplicateKey($list);
         }
