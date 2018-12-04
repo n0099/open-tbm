@@ -13,6 +13,7 @@ class PostFactory
             SubReply::class => 'spid',
         ];
 
+        // could be replaced with convertIDListKey()
         foreach ($models as $model) {
             $posts[$model[$postTypeIdName[$postType]]] = new $postType($model);
         }

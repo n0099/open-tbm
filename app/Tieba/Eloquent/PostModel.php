@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Post
- * Parent abstract class for App\Thread,Reply,SubReply class.
+ * Parent abstract class for App\Tieba\Thread|Reply|SubReply class.
  *
  * @package App\Tieba\Eloquent
  */
@@ -114,7 +114,7 @@ abstract class PostModel extends Model
      *
      * @return PostModel
      */
-    public function setForumId($forumId): PostModel
+    public function setForumId($forumId): self
     {
         if (is_int($forumId)) {
             $tableNamePrefix = "tbm_f{$forumId}_";
