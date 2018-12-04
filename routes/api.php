@@ -13,6 +13,13 @@ use Illuminate\Http\Request;
 |
 */
 
+Route::get('/index/tid/{tid}', 'SearchController@searchByTid');
+Route::get('/index/tid/{tid}/pid/{pid}', 'SearchController@searchByTid');
+Route::get('/index/tid/{tid}/pid/{pid}/spid/{spid}', 'SearchController@searchByTid');
+Route::get('/index/pid/{pid}', 'SearchController@searchByPid');
+Route::get('/index/pid/{pid}/spid/{spid}', 'SearchController@searchByPid');
+Route::get('/index/spid/{spid}', 'SearchController@searchBySpid');
+
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
