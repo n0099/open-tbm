@@ -3,6 +3,7 @@
 namespace App\Tieba\Eloquent;
 
 use App\Eloquent\InsertOnDuplicateKey;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -29,9 +30,13 @@ abstract class PostModel extends Model
     /**
      * @var int|string Forum id of this post, might be 'me0407'.
      */
-    protected $forumId;
+    protected $forumID;
 
-    protected function scopeIDType($query, string $postIDName, $postID): \Illuminate\Database\Eloquent\Builder
+    protected $fields;
+
+    protected $hidedFields;
+
+    protected function scopeIDType(Builder $query, string $postIDName, $postID): Builder
     {
         if (is_int($postID)) {
             return $query->where($postIDName, $postID);
@@ -42,7 +47,12 @@ abstract class PostModel extends Model
         }
     }
 
-    abstract public function scopeTid($query, $tid): \Illuminate\Database\Eloquent\Builder;
+    public function scopeHidePrivateFields(Builder $query): Builder
+    {
+        return $query->select(array_diff($this->fields, $this->hidedFields));
+    }
+
+    abstract public function scopeTid(Builder $query, $tid): Builder;
 
     abstract public function toPost(): \App\Tieba\Post;
 

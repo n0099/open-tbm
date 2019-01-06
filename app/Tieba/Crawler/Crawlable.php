@@ -3,6 +3,7 @@
 namespace App\Tieba\Crawler;
 
 use App\Tieba\Eloquent;
+use Carbon\Carbon;
 use GuzzleHttp;
 use function GuzzleHttp\json_encode;
 
@@ -81,6 +82,7 @@ abstract class Crawlable
 
         $usersInfo = [];
         foreach ($usersList as $user) {
+            $now = Carbon::now();
             if ($user['id'] == '' || $user['id'] < 0) { // TODO: compatible with anonymous user
                 $usersInfo[] = [
                 ];
@@ -97,7 +99,9 @@ abstract class Crawlable
                         || self::valueValidate($user['ala_info']) != null
                         && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0))
                         ? null
-                        : self::valueValidate($user['ala_info'], true)
+                        : self::valueValidate($user['ala_info'], true),
+                    'created_at' => $now,
+                    'updated_at' => $now
                 ];
                 //if ($usersInfo['fansNickname'] == null) { unset($usersInfo['fansNickname']); }
                 //if ($usersInfo['alaInfo'] == null) { unset($usersInfo['alaInfo']); }
@@ -156,8 +160,9 @@ abstract class Crawlable
                 $usersList['update'][] = $user;
             }
         }*/
-        foreach ($usersList as $list) {
-            (new Eloquent\UserModel())->insertOnDuplicateKey($list);
+        foreach ($usersList as $userList) {
+            $userListExceptFields = array_diff(array_keys($userList), ['created_at']);
+            (new Eloquent\UserModel())->insertOnDuplicateKey($userList, $userListExceptFields);
         }
 
         //$this->usersList = [];

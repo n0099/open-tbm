@@ -21,6 +21,15 @@ class PostModelFactory
         return (new SubReplyModel())->setForumID($fid);
     }
 
+    public static function getPostsModelByForumID($fid): array
+    {
+        return [
+            'thread' => self::newThread($fid),
+            'reply' => self::newReply($fid),
+            'subReply' => self::newSubReply($fid)
+        ];
+    }
+
     public static function getThreadByID(int $tid): ThreadModel
     {
         $fid = (new IndexModel())->where('tid', $tid)->value('fid');
