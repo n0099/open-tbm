@@ -3,9 +3,15 @@
 namespace App\Tieba;
 
 use \Illuminate\Database\Eloquent\Model;
+use function GuzzleHttp\json_decode;
 
 abstract class Post
 {
+    public static function convertJsonContentToHtml(string $json): string
+    {
+        return view('formatPostJsonContent', ['json' => json_decode($json, true)]);
+    }
+
     /**
      * Create a post helper with PostModel or array.
      *
