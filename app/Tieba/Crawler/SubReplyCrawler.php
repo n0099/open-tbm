@@ -13,11 +13,9 @@ class SubReplyCrawler extends Crawlable
 {
     protected $clientVersion = '8.8.8';
 
-    protected $forumId;
+    protected $threadID;
 
-    protected $threadId;
-
-    protected $replyId;
+    protected $replyID;
 
     protected $subRepliesList = [];
 
@@ -27,10 +25,10 @@ class SubReplyCrawler extends Crawlable
     {
         $client = $this->getClientHelper();
 
-        Log::info("Start to fetch sub replies for pid {$this->replyId}, tid {$this->threadId}, page 1");
+        Log::info("Start to fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page 1");
         $subRepliesJson = json_decode($client->post(
             'http://c.tieba.baidu.com/c/f/pb/floor',
-            ['form_params' => ['kz' => $this->threadId, 'pid' => $this->replyId, 'pn' => 1]]
+            ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => 1]]
         )->getBody(), true);
 
         $this->parseSubRepliesList($subRepliesJson);
@@ -40,10 +38,10 @@ class SubReplyCrawler extends Crawlable
             (function () use ($client, $subRepliesJson) {
                 for ($pn = 2; $pn <= $subRepliesJson['page']['total_page']; $pn++) {
                     yield function () use ($client, $pn) {
-                        Log::info("Fetch sub replies for pid {$this->replyId}, tid {$this->threadId}, page {$pn}");
+                        Log::info("Fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
                         return $client->postAsync(
                             'http://c.tieba.baidu.com/c/f/pb/floor',
-                            ['form_params' => ['kz' => $this->threadId, 'pid' => $this->replyId, 'pn' => $pn]]
+                            ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => $pn]]
                         );
                     };
                 }
@@ -82,14 +80,14 @@ class SubReplyCrawler extends Crawlable
         foreach ($subRepliesList as $subReply) {
             $usersList[] = $subReply['author'];
             $subRepliesInfo[] = [
-                'tid' => $this->threadId,
-                'pid' => $this->replyId,
+                'tid' => $this->threadID,
+                'pid' => $this->replyID,
                 'spid' => $subReply['id'],
                 'content' => self::valueValidate($subReply['content'], true),
                 'authorUid' => $subReply['author']['id'],
                 'authorManagerType' => self::valueValidate($subReply['author']['bawu_type']),
                 'authorExpGrade' => $subReply['author']['level_id'],
-                'replyTime' => Carbon::createFromTimestamp($subReply['time'])->toDateTimeString(),
+                'postTime' => Carbon::createFromTimestamp($subReply['time'])->toDateTimeString(),
                 'clientVersion' => $this->clientVersion,
                 'created_at' => $now,
                 'updated_at' => $now
@@ -99,9 +97,9 @@ class SubReplyCrawler extends Crawlable
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
-                'postTime' => $latestInfo['replyTime'],
+                'postTime' => $latestInfo['postTime'],
                 'type' => 'subReply',
-                'fid' => $this->forumId
+                'fid' => $this->forumID
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
 
@@ -117,11 +115,11 @@ class SubReplyCrawler extends Crawlable
             'tid',
             'pid',
             'spid',
-            'replyTime',
+            'postTime',
             'authorUid',
             'created_at'
         ]);
-        Eloquent\PostModelFactory::newSubReply($this->forumId)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
+        Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
         $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
         (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
         $this->saveUsersList();
@@ -131,8 +129,8 @@ class SubReplyCrawler extends Crawlable
 
     public function __construct(int $fid, int $tid, int $pid)
     {
-        $this->forumId = $fid;
-        $this->threadId = $tid;
-        $this->replyId = $pid;
+        $this->forumID = $fid;
+        $this->threadID = $tid;
+        $this->replyID = $pid;
     }
 }

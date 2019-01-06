@@ -47,9 +47,9 @@ abstract class PostModel extends Model
     abstract public function toPost(): \App\Tieba\Post;
 
     /**
-     * Override construct method for setting valid forumId and table name.
+     * Override construct method for setting valid forum id and table name.
      *
-     * @param $forumId
+     * @param $forumID
      */
     /*public function __construct($forumId)
     {
@@ -71,14 +71,14 @@ abstract class PostModel extends Model
     }*/
 
     /**
-     * Override the parent relation instance method for passing valid forumId to new related model.
+     * Override the parent relation instance method for passing valid forum id to new related model.
      *
      * @param  string  $class
      * @return mixed
      */
     protected function newRelatedInstance($class)
     {
-        return tap((new $class())->setForumId($this->forumId), function ($instance) {
+        return tap((new $class())->setForumID($this->forumID), function ($instance) {
             if (! $instance->getConnectionName()) {
                 $instance->setConnection($this->connection);
             }
@@ -86,7 +86,7 @@ abstract class PostModel extends Model
     }
 
     /**
-     * Override the parent newInstance method for passing valid forumId to model's query builder.
+     * Override the parent newInstance method for passing valid forum id to model's query builder.
      *
      * @param  array  $attributes
      * @param  bool  $exists
@@ -102,7 +102,7 @@ abstract class PostModel extends Model
             $this->getConnectionName()
         );
 
-        $model->setForumId($this->forumId);
+        $model->setForumID($this->forumID);
 
         return $model;
     }
@@ -110,21 +110,21 @@ abstract class PostModel extends Model
     /**
      * Setting model table name by forum id and post type.
      *
-     * @param int|string $forumId
+     * @param int|string $forumID
      *
      * @return PostModel
      */
-    public function setForumId($forumId): self
+    public function setForumID($forumID): self
     {
-        if (is_int($forumId)) {
-            $tableNamePrefix = "tbm_f{$forumId}_";
-        } elseif ($forumId == 'me0407') {
+        if (is_int($forumID)) {
+            $tableNamePrefix = "tbm_f{$forumID}_";
+        } elseif ($forumID == 'me0407') {
             $tableNamePrefix = 'tbm_me0407_';
         } else {
             throw new \InvalidArgumentException;
         }
 
-        $this->forumId = $forumId;
+        $this->forumID = $forumID;
 
         $postTypeClassNamePlural = [
             ThreadModel::class => 'threads',

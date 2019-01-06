@@ -15,11 +15,11 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $forumId;
+    private $forumID;
 
-    private $threadId;
+    private $threadID;
 
-    private $replyId;
+    private $replyID;
 
     private $queuePushTime;
 
@@ -27,9 +27,9 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
     {
         Log::info('sub reply queue constructed with' . "{$tid} in forum {$fid}");
 
-        $this->forumId = $fid;
-        $this->threadId = $tid;
-        $this->replyId = $pid;
+        $this->forumID = $fid;
+        $this->threadID = $tid;
+        $this->replyID = $pid;
         $this->queuePushTime = microtime(true);
     }
 
@@ -38,12 +38,12 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $queueStartTime = microtime(true);
         Log::info('sub reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
 
-        (new Crawler\SubReplyCrawler($this->forumId, $this->threadId, $this->replyId))->doCrawl()->saveLists();
+        (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID))->doCrawl()->saveLists();
         echo 'subreply:' . memory_get_usage() . PHP_EOL;
 
         $queueFinishTime = microtime(true);
         // report finished sub reply crawl
-        $currentCrawlingSubReply = CrawlingPostModel::select('id', 'startTime')->where(['tid' => $this->threadId, 'pid' => $this->replyId])->first();
+        $currentCrawlingSubReply = CrawlingPostModel::select('id', 'startTime')->where(['tid' => $this->threadID, 'pid' => $this->replyID])->first();
         $currentCrawlingSubReply->fill(['duration' => $queueFinishTime - $currentCrawlingSubReply->startTime])->save();
         $currentCrawlingSubReply->delete();
         Log::info('sub reply queue handled after ' . ($queueFinishTime - $queueStartTime));

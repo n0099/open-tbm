@@ -18,9 +18,9 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $forumId;
+    private $forumID;
 
-    private $threadId;
+    private $threadID;
 
     private $queuePushTime;
 
@@ -28,8 +28,8 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
     {
         Log::info('reply queue constructed with' . "{$tid} in forum {$fid}");
 
-        $this->forumId = $fid;
-        $this->threadId = $tid;
+        $this->forumID = $fid;
+        $this->threadID = $tid;
         $this->queuePushTime = microtime(true);
     }
 
@@ -38,9 +38,9 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         $queueStartTime = microtime(true);
         Log::info('reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
 
-        $repliesCrawler = (new Crawler\ReplyCrawler($this->forumId, $this->threadId))->doCrawl();
+        $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
-        $oldRepliesInfo = self::convertIDListKey(Eloquent\PostModelFactory::newReply($this->forumId)
+        $oldRepliesInfo = self::convertIDListKey(Eloquent\PostModelFactory::newReply($this->forumID)
             ->select('pid', 'subReplyNum')->whereIn('pid', array_keys($newRepliesInfo))->get()->toArray(), 'pid');
         $repliesCrawler->saveLists();
         echo 'reply:' . memory_get_usage() . PHP_EOL;
@@ -60,20 +60,20 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 if ((! isset($oldRepliesInfo[$pid]))
                     || ($newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum'])) {
                     CrawlingPostModel::insert([
-                        'fid' => $this->forumId,
-                        'tid' => $this->threadId,
+                        'fid' => $this->forumID,
+                        'tid' => $this->threadID,
                         'pid' => $pid,
                         'startTime' => microtime(true)
                     ]); // report crawling sub replies
                     //(new Crawler\SubReplyCrawler($this->forumId, $this->threadId, $pid))->doCrawl()->saveLists();
-                    SubReplyQueue::dispatch($this->forumId, $this->threadId, $pid);
+                    SubReplyQueue::dispatch($this->forumID, $this->threadID, $pid);
                 }
             }
         });
 
         $queueFinishTime = microtime(true);
         // report finished reply crawl
-        $currentCrawlingReply = CrawlingPostModel::select('id', 'startTime')->where(['tid' => $this->threadId, 'pid' => 0])->first();
+        $currentCrawlingReply = CrawlingPostModel::select('id', 'startTime')->where(['tid' => $this->threadID, 'pid' => 0])->first();
         $currentCrawlingReply->fill(['duration' => $queueFinishTime - $currentCrawlingReply->startTime])->save();
         $currentCrawlingReply->delete();
         Log::info('reply queue handled after ' . ($queueFinishTime - $queueStartTime));

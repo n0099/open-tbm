@@ -8,32 +8,32 @@ class PostModelFactory
 {
     public static function newThread(int $fid): ThreadModel
     {
-        return (new ThreadModel())->setForumId($fid);
+        return (new ThreadModel())->setForumID($fid);
     }
 
     public static function newReply(int $fid): ReplyModel
     {
-        return (new ReplyModel())->setForumId($fid);
+        return (new ReplyModel())->setForumID($fid);
     }
 
     public static function newSubReply(int $fid): SubReplyModel
     {
-        return (new SubReplyModel())->setForumId($fid);
+        return (new SubReplyModel())->setForumID($fid);
     }
 
-    public static function getThreadById(int $tid): ThreadModel
+    public static function getThreadByID(int $tid): ThreadModel
     {
         $fid = (new IndexModel())->where('tid', $tid)->value('fid');
         return self::newThread($fid);
     }
 
-    public static function getReplyById(int $pid): ReplyModel
+    public static function getReplyByID(int $pid): ReplyModel
     {
         $fid = (new IndexModel())->where('pid', $pid)->value('fid');
         return self::newReply($fid);
     }
 
-    public static function getSubReplyById(int $spid): SubReplyModel
+    public static function getSubReplyByID(int $spid): SubReplyModel
     {
         $fid = (new IndexModel())->where('spid', $spid)->value('fid');
         return self::newSubReply($fid);

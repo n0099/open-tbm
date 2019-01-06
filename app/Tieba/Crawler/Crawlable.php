@@ -8,8 +8,6 @@ use function GuzzleHttp\json_encode;
 
 abstract class Crawlable
 {
-    protected $forumId;
-
     protected $clientVersion;
 
     protected $indexesList;

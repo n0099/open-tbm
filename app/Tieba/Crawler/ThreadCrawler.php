@@ -13,6 +13,8 @@ class ThreadCrawler extends Crawlable
 {
     protected $clientVersion = '6.0.2';
 
+    protected $forumID;
+
     protected $forumName;
 
     protected $threadsList = [];
@@ -82,7 +84,7 @@ class ThreadCrawler extends Crawlable
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',
-                'fid' => $this->forumId
+                'fid' => $this->forumID
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
         }
 
@@ -102,7 +104,7 @@ class ThreadCrawler extends Crawlable
             'authorUid',
             'created_at'
         ]);
-        Eloquent\PostModelFactory::newThread($this->forumId)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
+        Eloquent\PostModelFactory::newThread($this->forumID)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
         $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
         (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
         $this->saveUsersList();
@@ -115,9 +117,9 @@ class ThreadCrawler extends Crawlable
         return $this->threadsUpdateInfo;
     }
 
-    public function __construct(int $forumId, string $forumName)
+    public function __construct(int $forumID, string $forumName)
     {
-        $this->forumId = $forumId;
+        $this->forumID = $forumID;
         $this->forumName = $forumName;
     }
 }

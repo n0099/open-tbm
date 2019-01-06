@@ -13,7 +13,7 @@ class ReplyCrawler extends Crawlable
 {
     protected $clientVersion = '8.8.8';
 
-    protected $threadId;
+    protected $threadID;
 
     protected $repliesList = [];
 
@@ -25,10 +25,10 @@ class ReplyCrawler extends Crawlable
     {
         $client = $this->getClientHelper();
 
-        Log::info("Start to fetch replies for tid {$this->threadId}, page 1");
+        Log::info("Start to fetch replies for tid {$this->threadID}, page 1");
         $repliesJson = json_decode($client->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
-            ['form_params' => ['kz' => $this->threadId, 'pn' => 1]] // reverse order = ['last'=>1,'r'=>1]
+            ['form_params' => ['kz' => $this->threadID, 'pn' => 1]] // reverse order = ['last'=>1,'r'=>1]
         )->getBody(), true);
 
         $this->parseRepliesList($repliesJson);
@@ -38,10 +38,10 @@ class ReplyCrawler extends Crawlable
             (function () use ($client, $repliesJson) {
                 for ($pn = 2; $pn <= $repliesJson['page']['total_page']; $pn++) {
                     yield function () use ($client, $pn) {
-                        Log::info("Start to fetch replies for tid {$this->threadId}, page {$pn}");
+                        Log::info("Start to fetch replies for tid {$this->threadID}, page {$pn}");
                         return $client->postAsync(
                             'http://c.tieba.baidu.com/c/f/pb/page',
-                            ['form_params' => ['kz' => $this->threadId, 'pn' => $pn]]
+                            ['form_params' => ['kz' => $this->threadID, 'pn' => $pn]]
                         );
                     };
                 }
@@ -93,7 +93,7 @@ class ReplyCrawler extends Crawlable
         $now = Carbon::now();
         foreach ($repliesList as $reply) {
             $repliesInfo[] = [
-                'tid' => $this->threadId,
+                'tid' => $this->threadID,
                 'pid' => $reply['id'],
                 'floor' => $reply['floor'],
                 'content' => self::valueValidate($reply['content'], true),
@@ -101,7 +101,7 @@ class ReplyCrawler extends Crawlable
                 'authorManagerType' => self::valueValidate($usersList[$reply['author_id']]['bawu_type']),
                 'authorExpGrade' => $usersList[$reply['author_id']]['level_id'],
                 'subReplyNum' => $reply['sub_post_number'],
-                'replyTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
+                'postTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
                 'isFold' => $reply['is_fold'],
                 'agreeInfo' => self::valueValidate(($reply['agree']['has_agree'] > 0 ? $reply['agree'] : null), true),
                 'signInfo' => self::valueValidate($reply['signature'], true),
@@ -118,9 +118,9 @@ class ReplyCrawler extends Crawlable
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
-                'postTime' => $latestInfo['replyTime'],
+                'postTime' => $latestInfo['postTime'],
                 'type' => 'reply',
-                'fid' => $this->forumId
+                'fid' => $this->forumID
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
 
@@ -137,12 +137,12 @@ class ReplyCrawler extends Crawlable
             'tid',
             'pid',
             'floor',
-            'replyTime',
+            'postTime',
             'authorUid',
             'created_at'
         ]);
         // TODO: performance issue on big query
-        Eloquent\PostModelFactory::newReply($this->forumId)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
+        Eloquent\PostModelFactory::newReply($this->forumID)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
         $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
         (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
         $this->saveUsersList();
@@ -157,7 +157,7 @@ class ReplyCrawler extends Crawlable
 
     public function __construct(int $fid, int $tid)
     {
-        $this->forumId = $fid;
-        $this->threadId = $tid;
+        $this->forumID = $fid;
+        $this->threadID = $tid;
     }
 }

@@ -14,12 +14,12 @@ abstract class Post
     public function __construct($postData)
     {
         $initialWith = function ($postProperties) {
-            $postIdByType = [
+            $postIDByType = [
                 Thread::class => 'tid',
                 Reply::class => 'pid',
                 SubReply::class => 'spid',
             ];
-            if (! isset($postProperties[$postIdByType[get_class($this)]])) {
+            if (! isset($postProperties[$postIDByType[get_class($this)]])) {
                 throw new \DomainException('Initial object dosen\'t match with class type');
             }
 
