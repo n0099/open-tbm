@@ -127,7 +127,7 @@ abstract class Crawlable
 
     protected function saveUsersList(): void
     {
-        // Split INSERT sql cause to prevent update with null values
+        // group INSERT sql statement to prevent update with null values
         $usersList = [];
         foreach ($this->usersList as $user) {
             $nullValueFields = ['fansNickname' => false, 'alaInfo' => false];
@@ -141,7 +141,7 @@ abstract class Crawlable
                 $usersList['notNullAll'][] = $user;
             } else {
                 $nullValueFieldName = array_search(false, $nullValueFields);
-                $usersList[$nullValueFieldName] = $user;
+                $usersList[$nullValueFieldName][] = $user;
             }
         }
         // same functional with above
@@ -160,9 +160,10 @@ abstract class Crawlable
                 $usersList['update'][] = $user;
             }
         }*/
-        foreach ($usersList as $userList) {
-            $userListExceptFields = array_diff(array_keys($userList), ['created_at']);
-            (new Eloquent\UserModel())->insertOnDuplicateKey($userList, $userListExceptFields);
+
+        foreach ($usersList as $usersListGroup) {
+            $userListExceptFields = array_diff(array_keys($usersListGroup[0]), ['created_at']);
+            (new Eloquent\UserModel())->insertOnDuplicateKey($usersListGroup, $userListExceptFields);
         }
 
         //$this->usersList = [];
