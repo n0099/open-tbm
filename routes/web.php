@@ -11,6 +11,6 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::view('/', 'index');
+Route::view('/query', 'query');
+Route::view('/query/{argu}', 'query')->where('argu', '.*');
