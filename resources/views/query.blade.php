@@ -837,32 +837,6 @@
                                     vue.$data.queryData.query.orderDirection = _.isEmpty(_.omit(vue.$data.queryData.param, 'page')) ? 'ASC' : 'DESC';
                                 }
 
-                                let checkCustomQueryAvailable = () => {
-                                    let isCustomQueryAvailable = $('#queryFid').prop('value') !== 'undefined'
-                                        || ! _.isEmpty(vue.$data.queryData.param.tid)
-                                        || ! _.isEmpty(vue.$data.queryData.param.pid)
-                                        || ! _.isEmpty(vue.$data.queryData.param.spid);
-                                    let customQueryParamsDOM = $('.custom-query-param');
-                                    customQueryParamsDOM.prop('disabled', ! isCustomQueryAvailable);
-                                    _.each(customQueryParamsDOM, (dom) => {
-                                        let customQueryParamName = $(dom).data('param');
-                                        if (isCustomQueryAvailable) {
-                                            let customQueryParamDefaultValue = _.find(vue.$data.customQueryParamsDefaultValue, { param: customQueryParamName });
-                                            if (customQueryParamDefaultValue != null) {
-                                                Reflect.set(vue.$data.queryData.query, customQueryParamName, customQueryParamDefaultValue.default);
-                                            }
-                                        } else {
-                                            /*if (customQueryParamDefaultValue != null) { // reset param value to default if it has
-                                                Reflect.set(vue.$data.queryData.query, customQueryParamName, customQueryParamDefaultValue.default);
-                                            } else */{
-                                                Reflect.deleteProperty(vue.$data.queryData.query, customQueryParamName);
-                                            }
-                                        }
-                                    });
-                                };
-                                checkCustomQueryAvailable();
-                                $('#queryFid').off('change').on('change', checkCustomQueryAvailable);
-
                                 let radioLikeCheckboxParamsGroup = [
                                     [
                                         'queryPostTypeThread',
@@ -961,6 +935,33 @@
                                 };
                                 checkQueryParamsRequiredPostType();
                                 $('[data-param=postType]').off('change').on('change', checkQueryParamsRequiredPostType);
+
+                                let checkCustomQueryAvailable = () => {
+                                    let isCustomQueryAvailable = $('#queryFid').prop('value') !== 'undefined'
+                                        || ! _.isEmpty(vue.$data.queryData.param.tid)
+                                        || ! _.isEmpty(vue.$data.queryData.param.pid)
+                                        || ! _.isEmpty(vue.$data.queryData.param.spid);
+                                    let customQueryParamsDOM = $('.custom-query-param');
+                                    customQueryParamsDOM.prop('disabled', ! isCustomQueryAvailable);
+                                    _.each(customQueryParamsDOM, (dom) => {
+                                        let customQueryParamName = $(dom).data('param');
+                                        if (isCustomQueryAvailable) {
+                                            let customQueryParamDefaultValue = _.find(vue.$data.customQueryParamsDefaultValue, { param: customQueryParamName });
+                                            if (customQueryParamDefaultValue != null) {
+                                                Reflect.set(vue.$data.queryData.query, customQueryParamName, customQueryParamDefaultValue.default);
+                                            }
+                                        } else {
+                                            /*if (customQueryParamDefaultValue != null) { // reset param value to default if it has
+                                                Reflect.set(vue.$data.queryData.query, customQueryParamName, customQueryParamDefaultValue.default);
+                                            } else */{
+                                                Reflect.deleteProperty(vue.$data.queryData.query, customQueryParamName);
+                                            }
+                                        }
+                                    });
+                                    checkQueryParamsRequiredPostType();
+                                };
+                                checkCustomQueryAvailable();
+                                $('#queryFid').off('change').on('change', checkCustomQueryAvailable);
 
                                 vue.$forceUpdate();
                             }

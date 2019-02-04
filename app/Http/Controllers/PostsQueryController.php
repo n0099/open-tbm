@@ -444,7 +444,7 @@ class PostsQueryController extends Controller
                     return max($unionValues);
                 })
             ];
-        } elseif (! $queryParamsName->flip()->only(['tid', 'pid', 'spid'])->isEmpty()) {
+        } elseif (! $queryParamsName->flip()->only(['fid', 'tid', 'pid', 'spid'])->isEmpty()) {
             $indexesModel = IndexModel::where($queryParams->only(['tid', 'pid', 'spid'])->filter()->toArray()); // filter() will remove falsy(like null) value elements
 
             //abort_if(! isset($indexesModel), 400);
