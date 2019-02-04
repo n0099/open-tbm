@@ -24,8 +24,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        $schedule->call(function () {
+            foreach (\App\Tieba\Eloquent\ForumModel::all() as $forum) {
+                \App\Jobs\ThreadQueue::dispatch($forum->fid, $forum->name);
+            }
+        })->everyMinute();
     }
 
     /**
