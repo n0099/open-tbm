@@ -62,7 +62,7 @@ abstract class Crawlable
     }
 
     /**
-     * Sort SQL INSERT data to prevent mutual insert intention gap deadlock.
+     * Sort SQL INSERT data to prevent mutual insert intention gap deadlock
      *
      * @param array $array
      * @param string $key
@@ -107,7 +107,7 @@ abstract class Crawlable
                 //if ($usersInfo['alaInfo'] == null) { unset($usersInfo['alaInfo']); }
             }
         }
-        // Lazy saving to Eloquent model
+        // lazy saving to Eloquent model
         $this->pushUsersList($usersInfo);
 
         return $this;

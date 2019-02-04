@@ -124,7 +124,7 @@ class ReplyCrawler extends Crawlable
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
 
-        // Lazy saving to Eloquent model
+        // lazy saving to Eloquent model
         $this->parseUsersList($usersList);
         $this->repliesUpdateInfo = $repliesUpdateInfo + $this->repliesUpdateInfo;
         $this->repliesList = array_merge($this->repliesList, $repliesInfo);

@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Eloquent\CrawlingPostModel;
-use DemeterChain\C;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -18,7 +17,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $forumID;
+    protected $forumID;
 
     private $threadID;
 
@@ -26,7 +25,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $fid, int $tid)
     {
-        Log::info('reply queue constructed with' . "{$tid} in forum {$fid}");
+        Log::info("reply queue constructed with {$tid} in forum {$fid}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
@@ -40,10 +39,13 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
-        $oldRepliesInfo = self::convertIDListKey(Eloquent\PostModelFactory::newReply($this->forumID)
-            ->select('pid', 'subReplyNum')->whereIn('pid', array_keys($newRepliesInfo))->get()->toArray(), 'pid');
+        $oldRepliesInfo = self::convertIDListKey(
+            Eloquent\PostModelFactory::newReply($this->forumID)
+                ->select('pid', 'subReplyNum')
+                ->whereIn('pid', array_keys($newRepliesInfo))->get()->toArray(),
+            'pid'
+        );
         $repliesCrawler->saveLists();
-        echo 'reply:' . memory_get_usage() . PHP_EOL;
 
         \DB::transaction(function () use ($newRepliesInfo, $oldRepliesInfo) {
             $latestCrawlingReplies = CrawlingPostModel::select('id', 'pid', 'startTime')

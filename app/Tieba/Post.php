@@ -13,7 +13,7 @@ abstract class Post
     }
 
     /**
-     * Create a post helper with PostModel or array.
+     * Create a post helper with PostModel or array
      *
      * @param array|\Illuminate\Database\Eloquent\Model $postData
      */

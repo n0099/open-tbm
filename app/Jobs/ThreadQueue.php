@@ -17,7 +17,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $forumID;
+    protected $forumID;
 
     private $forumName;
 
@@ -25,7 +25,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $forumID, string $forumName)
     {
-        Log::info('thread queue constructed with' . $forumName);
+        Log::info("thread queue constructed with {$forumName}");
         $this->forumID = $forumID;
         $this->forumName = $forumName;
         $this->queuePushTime = microtime(true);
@@ -51,11 +51,13 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
         $threadsCrawler = (new Crawler\ThreadCrawler($this->forumID, $this->forumName))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getThreadsInfo();
-        $oldThreadsInfo = self::convertIDListKey(Eloquent\PostModelFactory::newThread($this->forumID)
-            ->select('tid', 'latestReplyTime', 'replyNum')
-            ->whereIn('tid', array_keys($newThreadsInfo))->get()->toArray(), 'tid');
+        $oldThreadsInfo = self::convertIDListKey(
+            Eloquent\PostModelFactory::newThread($this->forumID)
+                ->select('tid', 'latestReplyTime', 'replyNum')
+                ->whereIn('tid', array_keys($newThreadsInfo))->get()->toArray(),
+            'tid'
+        );
         $threadsCrawler->saveLists();
-        echo 'thread:' . memory_get_usage() . PHP_EOL;
 
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {
             $latestCrawlingThreads = CrawlingPostModel::select('id', 'tid', 'startTime')

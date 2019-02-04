@@ -15,7 +15,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $forumID;
+    protected $forumID;
 
     private $threadID;
 
@@ -25,7 +25,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $fid, int $tid, int $pid)
     {
-        Log::info('sub reply queue constructed with' . "{$tid} in forum {$fid}");
+        Log::info("sub reply queue constructed with {$tid} in forum {$fid}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
@@ -39,7 +39,6 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         Log::info('sub reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
 
         (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID))->doCrawl()->saveLists();
-        echo 'subreply:' . memory_get_usage() . PHP_EOL;
 
         $queueFinishTime = microtime(true);
         // report finished sub reply crawl

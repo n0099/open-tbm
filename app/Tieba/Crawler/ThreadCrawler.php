@@ -88,7 +88,7 @@ class ThreadCrawler extends Crawlable
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
         }
 
-        // Lazy saving to Eloquent model
+        // lazy saving to Eloquent model
         $this->parseUsersList(collect($usersList)->unique('id')->toArray());
         $this->threadsUpdateInfo = $threadsUpdateInfo;
         $this->threadsList = $threadsInfo;

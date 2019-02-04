@@ -103,7 +103,7 @@ class SubReplyCrawler extends Crawlable
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
 
-        // Lazy saving to Eloquent model
+        // lazy saving to Eloquent model
         $this->parseUsersList(collect($usersList)->unique('id')->toArray());
         $this->subRepliesList = array_merge($this->subRepliesList, $subRepliesInfo);
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);

@@ -45,7 +45,7 @@ class ClientRequester extends \GuzzleHttp\Client
     }
 
     /**
-     * ClientHelper constructor.
+     * ClientHelper constructor
      *
      * @param array $config
      *
