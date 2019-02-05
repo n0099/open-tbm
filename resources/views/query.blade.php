@@ -607,19 +607,16 @@
                 },
                 methods: {
                     getUserData: function (uid) {
-                        if (uid === 0) { // thread latest replier uid might be unknown
-                            return [
-                                { id: 0 },
-                                { uid: 0 },
-                                { name: '未知用户' },
-                                { displayName: '未知用户' },
-                                { avatarUrl: null },
-                                { gender: 0 },
-                                { fansNickname: null },
-                                { iconInfo: [] },
-                            ];
-                        }
-                        return _.filter(this.postsData.users, { uid: uid })[0];
+                        return _.find(this.postsData.users, { uid: uid }) || [ // thread latest replier uid might be unknown
+                            { id: 0 },
+                            { uid: 0 },
+                            { name: '未知用户' },
+                            { displayName: '未知用户' },
+                            { avatarUrl: null },
+                            { gender: 0 },
+                            { fansNickname: null },
+                            { iconInfo: [] },
+                        ];
                     },
                     loadNewThreadsPage: function (eventDom, newPage) {
                         let pagingRouteName = this.$route.name.endsWith('+p') ? this.$route.name : this.$route.name + '+p';
