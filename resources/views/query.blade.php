@@ -753,9 +753,11 @@
                         $.getJSON(`${$$baseUrl}/api/postsQuery?${$.param(_.merge({}, routeParams, routeQueryStrings))}`).done((jsonData) => {
                             jsonData = preparePostsData(jsonData);
                             let pagesInfo = jsonData.pages;
-                            if (pagesInfo.totalItems === 0) {
+                            if (pagesInfo.totalItems === "0") {
                                 ajaxErrorCallback();
                             }
+                            $('#error-404-template').hide();
+
                             // is requesting new pages data on same query params or loading new data on different query params
                             if (shouldReplacePage) {
                                 this.$data.postsPages = [jsonData];
@@ -772,13 +774,16 @@
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
                         let routeParams = route.params;
                         let routeQuery = route.query;
-                        newPage = newPage || routeParams.page || 1;
-                        if (routeParams.tid == null || (! _.isEmpty(routeQuery))) {
+                        newPage = newPage || route.params.page || 1;
+
+                        if (route.query.fid != null) {
+                            document.title = `第${newPage}页 - ${_.find(this.$data.forumsList, { fid: route.query.fid }).name}吧 - 贴子查询 - 贴吧云监控`;
+                        } else if (route.params.tid == null || ! _.isEmpty(route.query)) {
                             document.title = `第${newPage}页 - 贴子查询 - 贴吧云监控`;
                         } else {
                             if (threadTitle == null) {
                                 _.each(this.$data.postsPages, (item) => {
-                                    threadTitle = _.filter(item.threads, { tid: parseInt(routeParams.tid) })[0].title;
+                                    threadTitle = _.filter(item.threads, { tid: parseInt(route.params.tid) })[0].title;
                                 });
                             }
                             document.title = `第${newPage}页 - ${threadTitle} - 贴子查询 - 贴吧云监控`;
@@ -1113,14 +1118,15 @@
                             path: '/query',
                             component: postsListPagesComponent,
                             children: [
-                                { name:'tid', path: 'tid/:tid',  children: [{ name:'tid+p', path: 'page/:page' }] },
-                                { name:'t+pid', path: 'tid/:tid/pid/:pid', children: [{ name:'t+pid+p', path: 'page/:page' }] },
-                                { name:'t+sid', path: 'tid/:tid/spid/:spid', children: [{ name:'t+spid+p', path: 'page/:page' }] },
-                                { name:'t+p+sid', path: 'tid/:tid/pid/:pid/spid/:spid', children: [{ name:'t+p+sid+p', path: 'page/:page' }] },
-                                { name:'pid', path: 'pid/:pid', children: [{ name:'pid+p', path: 'page/:page' }] },
-                                { name:'p+sid', path: 'pid/:pid/spid/:spid', children: [{ name:'p+sid+p', path: 'page/:page' }] },
-                                { name:'spid', path: 'spid/:spid', children: [{ name:'spid+p', path: 'page/:page' }] },
-                                { name: 'customQuery', path: '*', query: '*', children: [{ name:'customQuery+p', path: 'page/:page' }]},
+                                { name: 'postsQuery+p', path: 'page/:page' },
+                                { name: 'tid', path: 'tid/:tid',  children: [{ name:'tid+p', path: 'page/:page' }] },
+                                { name: 't+pid', path: 'tid/:tid/pid/:pid', children: [{ name:'t+pid+p', path: 'page/:page' }] },
+                                { name: 't+sid', path: 'tid/:tid/spid/:spid', children: [{ name:'t+spid+p', path: 'page/:page' }] },
+                                { name: 't+p+sid', path: 'tid/:tid/pid/:pid/spid/:spid', children: [{ name:'t+p+sid+p', path: 'page/:page' }] },
+                                { name: 'pid', path: 'pid/:pid', children: [{ name:'pid+p', path: 'page/:page' }] },
+                                { name: 'p+sid', path: 'pid/:pid/spid/:spid', children: [{ name:'p+sid+p', path: 'page/:page' }] },
+                                { name: 'spid', path: 'spid/:spid', children: [{ name:'spid+p', path: 'page/:page' }] },
+                                { name:  'customQuery', path: '*', query: '*', children: [{ name:'customQuery+p', path: 'page/:page' }]},
                             ]
                         }
                     ]
