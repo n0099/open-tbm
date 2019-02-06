@@ -12,9 +12,24 @@
         <link href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" rel="stylesheet">
         <link href="{{ $baseUrl }}/css/bootstrap-callout.css" rel="stylesheet">
         <style>
-            * {
-                font-weight: 300;
-                font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
+            @media (max-width: 767.98px) {
+                .container {
+                    max-width: 100%;
+                }
+            }
+            @media screen and (orientation: portrait) {
+                .horizontal-mobile-message {
+                    display: block
+                }
+            }
+            @media screen and (orientation: landscape) {
+                .horizontal-mobile-message {
+                    display: none
+                }
+            }
+
+            .horizontal-mobile-message {
+                z-index: 1040;
             }
 
             .footer-outer {
@@ -22,6 +37,11 @@
             }
             .footer-inner {
                 background-color: rgba(0,0,0,.2);
+            }
+
+            * {
+                font-weight: 300;
+                font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
             }
 
             ::-webkit-scrollbar
@@ -68,6 +88,7 @@
                 </ul>
             </div>
         </nav>
+        <div class="horizontal-mobile-message sticky-top p-2 bg-warning border-bottom text-center">请将设备横屏显示以获得最佳体验</div>
         <div class="container">
             @yield('container')
         </div>
