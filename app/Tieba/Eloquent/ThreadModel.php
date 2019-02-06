@@ -38,8 +38,6 @@ class ThreadModel extends PostModel
     protected $hidedFields = [
         'id',
         'clientVersion',
-        'created_at',
-        'updated_at',
     ];
 
     public function replies()

@@ -970,6 +970,7 @@
 
                             { // reply items dom recycle and events
                                 let registerEventsWithinReplyItems = () => {
+                                    $('[data-toggle="popover"]').popover();
                                     // use jquery mouse hover event to prevent high cpu usage when using vue @mouseover event
                                     $('.sub-reply-item').hover((event) => {
                                         $(event.currentTarget).find('.sub-reply-hide-link').show();
@@ -978,7 +979,6 @@
                                     });
                                 };
                                 vue.$nextTick(() => {
-                                    $('[data-toggle="popover"]').popover();
                                     registerEventsWithinReplyItems();
                                 });
 
@@ -1024,7 +1024,7 @@
 
                                 let showReplyItem = (replyItem, isInitialReply) => {
                                     console.log('show');
-                                    if (!isInitialReply) {
+                                    if (! isInitialReply) {
                                         // uncomment sub dom and remove css height
                                         replyItem.css('height', '').html(replyItem.contents()[0].nodeValue);
                                         replyItem.toggleClass('posts-list-placeholder', false).fadeTo('slow', 1);

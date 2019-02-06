@@ -41,9 +41,9 @@ class PostsQueryController extends Controller
         $tids = $postsInfo['thread']->pluck('tid');
         $pids = $postsInfo['reply']->pluck('pid');
         $spids = $postsInfo['subReply']->pluck('spid');
-        $threadsInfo = empty($tids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['thread']->tid($tids)->hidePrivateFields()->get() : $postsInfo['thread']);
-        $repliesInfo = empty($pids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['reply']->pid($pids)->hidePrivateFields()->get() : $postsInfo['reply']);
-        $subRepliesInfo = empty($spids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['subReply']->spid($spids)->hidePrivateFields()->get() : $postsInfo['subReply']);
+        $threadsInfo = empty($tids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['thread']->tid($tids->toArray())->hidePrivateFields()->get() : $postsInfo['thread']);
+        $repliesInfo = empty($pids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['reply']->pid($pids->toArray())->hidePrivateFields()->get() : $postsInfo['reply']);
+        $subRepliesInfo = empty($spids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['subReply']->spid($spids->toArray())->hidePrivateFields()->get() : $postsInfo['subReply']);
 
         $isSubIDsMissInOriginIDs = function (Collection $originIDs, Collection $subIDs): bool {
             return $subIDs->contains(function ($subID) use ($originIDs): bool {
@@ -55,7 +55,7 @@ class PostsQueryController extends Controller
         // $tids must be first argument to ensure the diffed $threadsIDInReplies existing
         if ($isSubIDsMissInOriginIDs(collect($tids), $threadsIDInReplies)) {
             // fetch complete threads info which appeared in replies and sub replies info but missed in $tids
-            $threadsInfo = collect($postsModel['thread']->tid($threadsIDInReplies->union($tids)->toArray())->hidePrivateFields()->get()->toArray()); // ->get->toArray->toCollection will return a collection with array posts data
+            $threadsInfo = $postsModel['thread']->tid($threadsIDInReplies->union($tids)->toArray())->hidePrivateFields()->get(); // ->get->toArray->toCollection will return a collection with array posts data
         }
         $repliesIDInThreadsAndSubReplies = $subRepliesInfo->pluck('pid');
         if (empty($pids)) {
@@ -65,7 +65,7 @@ class PostsQueryController extends Controller
         // $pids must be first argument to ensure the diffed $repliesIDInSubReplies existing
         if ($isSubIDsMissInOriginIDs(collect($pids), $repliesIDInThreadsAndSubReplies)) {
             // fetch complete replies info which appeared in threads and sub replies info but missed in $pids
-            $repliesInfo = collect($postsModel['reply']->pid($repliesIDInThreadsAndSubReplies->union($pids)->toArray())->hidePrivateFields()->get()->toArray());
+            $repliesInfo = $postsModel['reply']->pid($repliesIDInThreadsAndSubReplies->union($pids)->toArray())->hidePrivateFields()->get();
         }
 
         // same functional with above
@@ -85,7 +85,7 @@ class PostsQueryController extends Controller
             $subRepliesInfo = $postsModel['subReply']->spid($repliesInfo->pluck('spid')->toArray())->get();
         }*/
 
-        $convertJsonContentToHtml = function (array $post): array {
+        $convertJsonContentToHtml = function ($post) {
             if ($post['content'] != null) {
                 $post['content'] = trim(str_replace("\n", '', \App\Tieba\Reply::convertJsonContentToHtml($post['content'])));
             }
@@ -139,39 +139,6 @@ class PostsQueryController extends Controller
             'reply' => 'pid',
             'subReply' => 'spid'
         ];
-        $customQueryParams = collect([
-            'fid',
-            'postType',
-            'tidRange',
-            'pidRange',
-            'spidRange',
-            'threadTitle',
-            'threadTitletRegex',
-            'postContent',
-            'postContentRegex',
-            /*'orderBy',
-            'orderDirection'*/
-            //'userType',
-            'userName',
-            'userDisplayName',
-            'userExpGrade',
-            'userExpGradeRange',
-            'userGender',
-            'userManagerType',
-            'postTimeStart',
-            'postTimeEnd',
-            'latestReplyTimeStart',
-            'latestReplyTimeEnd',
-            'threadProperty',
-            'threadReplyNum',
-            'threadReplyNumRange',
-            'replySubReplyNum',
-            'replySubReplyNumRange',
-            'threadViewNum',
-            'threadViewNumRange',
-            'threadShareNum',
-            'threadShareNumRange'
-        ]);
 
         $postsQueriedInfo = [
             'fid' => 0,
@@ -180,8 +147,41 @@ class PostsQueryController extends Controller
             'subReply' => []
         ];
 
-        $isIndexQuery = ! $queryParamsName->flip()->only(['tid', 'pid', 'spid'])->isEmpty();
-        $isCustomQuery = $queryParamsName->contains(function ($paramName) use ($customQueryParams): bool {
+        $indexesQueryParams = $queryParams->only(['fid', 'tid', 'pid', 'spid'])->filter(); // filter() will remove falsy(like null) value elements
+        $isIndexQuery = ! $indexesQueryParams->isEmpty();
+        $isCustomQuery = $queryParamsName->contains(function ($paramName): bool {
+            $customQueryParams = collect([
+                'postType',
+                'tidRange',
+                'pidRange',
+                'spidRange',
+                'threadTitle',
+                'threadTitletRegex',
+                'postContent',
+                'postContentRegex',
+                /*'orderBy',
+                'orderDirection'*/
+                //'userType',
+                'userName',
+                'userDisplayName',
+                'userExpGrade',
+                'userExpGradeRange',
+                'userGender',
+                'userManagerType',
+                'postTimeStart',
+                'postTimeEnd',
+                'latestReplyTimeStart',
+                'latestReplyTimeEnd',
+                'threadProperty',
+                'threadReplyNum',
+                'threadReplyNumRange',
+                'replySubReplyNum',
+                'replySubReplyNumRange',
+                'threadViewNum',
+                'threadViewNumRange',
+                'threadShareNum',
+                'threadShareNumRange'
+            ]);
             // does query params contains custom query params and query params have a valid fid or post ids
             return $customQueryParams->contains($paramName);
         });
@@ -450,17 +450,18 @@ class PostsQueryController extends Controller
                 })
             ];
         } elseif ($isIndexQuery) {
-            $indexesModel = IndexModel::where($queryParams->only(['tid', 'pid', 'spid'])->filter()->toArray()); // filter() will remove falsy(like null) value elements
+            $indexesModel = IndexModel::where($indexesQueryParams->toArray());
 
             //abort_if(! isset($indexesModel), 400);
             if ($queryParamsName->contains('orderBy')) {
                 $indexesModel->orderBy($queryParams['orderBy'], $queryParams['orderDirection']);
             } else {
+                $indexesOrderDirection = $indexesQueryParams->keys()->diff(['fid'])->isEmpty() ? 'DESC' : 'ASC'; // using descending order when querying only with forum id
                 $indexesOrderBy = [
-                    'tid' => 'ASC',
-                    'pid' => 'ASC',
-                    'spid' => 'ASC',
-                    'postTime' => 'ASC',
+                    'tid' => $indexesOrderDirection,
+                    'pid' => $indexesOrderDirection,
+                    'spid' => $indexesOrderDirection,
+                    'postTime' => $indexesOrderDirection
                 ];
                 foreach ($indexesOrderBy as $orderFieldName => $orderDirection) {
                     $indexesModel = $indexesModel->orderBy($orderFieldName, $orderDirection);
@@ -471,8 +472,9 @@ class PostsQueryController extends Controller
 
             $postsQueriedInfo['fid'] = $indexesModel->pluck('fid')->first();
             foreach ($postsIDNamePair as $postType => $postIDName) { // assist queried posts ids from $indexesModel
-                $postsQueriedInfo[$postType] = $indexesModel->where('type', $postType)->pluck($postIDName)->toArray();
+                $postsQueriedInfo[$postType] = $indexesModel->where('type', $postType)->toArray();
             }
+
             $pagesInfo = [
                 'firstItem' => $indexesModel->firstItem(),
                 'currentItems' => $indexesModel->count(),
@@ -485,7 +487,7 @@ class PostsQueryController extends Controller
             abort(400, 'Query type is neither post id nor custom query');
         }
 
-        $nestedPostsInfo = self::getNestedPostsInfoByIDs($postsQueriedInfo, $isIndexQuery);
+        $nestedPostsInfo = self::getNestedPostsInfoByIDs($postsQueriedInfo, ! $isCustomQuery);
         $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUids)->hidePrivateFields()->get()->toArray();
         $json = json_encode([
             'pages' => $pagesInfo,

@@ -29,8 +29,6 @@ class ReplyModel extends PostModel
     protected $hidedFields = [
         'id',
         'clientVersion',
-        'created_at',
-        'updated_at',
     ];
 
     public function post()
