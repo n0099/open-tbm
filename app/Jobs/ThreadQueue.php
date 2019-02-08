@@ -85,9 +85,14 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         });
 
         $queueFinishTime = microtime(true);
-        $currentCrawlingThread = CrawlingPostModel::select('id', 'startTime')->where(['fid' => $this->forumID, 'tid' => 0])->first();
-        $currentCrawlingThread->fill(['duration' => $queueFinishTime - $currentCrawlingThread->startTime])->save();
-        $currentCrawlingThread->delete();
+        \DB::transaction(function () use ($queueFinishTime) {
+            // report previous finished forum crawl
+            $previousCrawlingForum = CrawlingPostModel::select('id', 'startTime')->where(['fid' => $this->forumID, 'tid' => 0])->first();
+            if ($previousCrawlingForum != null) { // might already marked as finished by other concurrency queues
+                $previousCrawlingForum->fill(['duration' => $queueFinishTime - $previousCrawlingForum->startTime])->save();
+                $previousCrawlingForum->delete();
+            }
+        });
         Log::info('thread queue handled after ' . ($queueFinishTime - $queueStartTime));
     }
 }
