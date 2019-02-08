@@ -63,10 +63,11 @@ class ThreadCrawler extends Crawlable
                     ? 2 // set to 2 when it's vip member sticky thread
                     : ($thread['is_top'] ?? true), // if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
                 'isGood' => $thread['is_good'],
+                "isTopic" => $thread['is_bub'],
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
                 'authorManagerType' => self::valueValidate($thread['author']['bawu_type']),
-                'postTime' => Carbon::createFromTimestamp($thread['create_time'])->toDateTimeString(),
+                'postTime' => isset($thread['create_time']) ? Carbon::createFromTimestamp($thread['create_time'])->toDateTimeString() : null, // post time will be null when it's topic thread
                 'latestReplyTime' => Carbon::createFromTimestamp($thread['last_time_int'])->toDateTimeString(),
                 'latestReplierUid' => $thread['last_replyer']['id'],
                 'replyNum' => $thread['reply_num'],

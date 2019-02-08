@@ -92,7 +92,7 @@ abstract class Crawlable
                     'name' => $user['name'],
                     'displayName' => $user['name'] == $user['name_show'] ? null : $user['name_show'],
                     'avatarUrl' => $user['portrait'],
-                    'gender' => self::valueValidate($user['gender']),
+                    'gender' => self::valueValidate($user['gender'] ?? null),
                     'fansNickname' => isset($user['fans_nickname']) ? self::valueValidate($user['fans_nickname']) : null,
                     'iconInfo' => self::valueValidate($user['iconinfo'], true),
                     'alaInfo' => ((!isset($user['ala_info']['lat']))
@@ -103,8 +103,6 @@ abstract class Crawlable
                     'created_at' => $now,
                     'updated_at' => $now
                 ];
-                //if ($usersInfo['fansNickname'] == null) { unset($usersInfo['fansNickname']); }
-                //if ($usersInfo['alaInfo'] == null) { unset($usersInfo['alaInfo']); }
             }
         }
         // lazy saving to Eloquent model
@@ -130,15 +128,15 @@ abstract class Crawlable
         // group INSERT sql statement to prevent update with null values
         $usersList = [];
         foreach ($this->usersList as $user) {
-            $nullValueFields = ['fansNickname' => false, 'alaInfo' => false];
+            $nullValueFields = ['gender' => false, 'fansNickname' => false, 'alaInfo' => false];
             foreach ($nullValueFields as $nullableFieldName => $isNull) {
-                $nullValueFields[$nullableFieldName] = $user[$nullableFieldName] == null ? true : false;
+                $nullValueFields[$nullableFieldName] = $user[$nullableFieldName] == null;
             }
             $nullValueFieldsCount = array_sum($nullValueFields);
             if ($nullValueFieldsCount == count($nullValueFields)) {
-                $usersList['nullAll'][] = $user;
+                $usersList['allNull'][] = $user;
             } elseif ($nullValueFieldsCount == 0) {
-                $usersList['notNullAll'][] = $user;
+                $usersList['notAllNull'][] = $user;
             } else {
                 $nullValueFieldName = array_search(false, $nullValueFields);
                 $usersList[$nullValueFieldName][] = $user;
