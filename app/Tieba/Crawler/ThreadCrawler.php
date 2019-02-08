@@ -59,7 +59,7 @@ class ThreadCrawler extends Crawlable
             $threadsInfo[] = [
                 'tid' => $thread['tid'],
                 'firstPid' => $thread['first_post_id'],
-                'isSticky' => $thread['is_top'],
+                'isSticky' => $thread['is_top'] ?? true, // if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
                 'isGood' => $thread['is_good'],
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
