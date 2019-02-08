@@ -18,6 +18,7 @@ class ThreadModel extends PostModel
         'firstPid',
         'isSticky',
         'isGood',
+        'isTopic',
         'title',
         'authorUid',
         'authorManagerType',

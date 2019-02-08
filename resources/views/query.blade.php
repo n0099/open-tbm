@@ -131,21 +131,24 @@
     @verbatim
         <template id="posts-list-template">
             <div :data-page="postsData.pages.currentPage" class="posts-list">
-                <div class="reply-list-previous-page p-4 row align-items-center">
+                <div class="reply-list-previous-page p-2 row align-items-center">
                     <div class="col align-middle"><hr /></div>
                     <div class="w-auto" v-for="page in [postsData.pages]">
                         <div class="p-2 badge badge-light">
                             <a v-if="page.currentPage > 1" class="badge badge-primary" :href="getPerviousPageUrl">上一页</a>
                             <p class="h4" v-text="`第 ${page.currentPage} 页`"></p>
-                            <small v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条 共 ${page.totalItems} 条`"></small>
+                            <p class="small" v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条 共 ${page.totalItems} 条`"></p>
+                            <span class="h5" v-text="`${postsData.forum.name}吧`"></span>
                         </div>
                     </div>
                     <div class="col align-middle"><hr /></div>
                 </div>
                 <div v-for="thread in postsData.threads" :data-title="thread.title" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
-                        <span v-if="thread.isSticky" class="badge badge-primary">置顶</span>
+                        <span v-if="thread.isSticky == 2" class="badge badge-warning">会员置顶</span>
+                        <span v-if="thread.isSticky == 1" class="badge badge-primary">置顶</span>
                         <span v-if="thread.isGood" class="badge badge-danger">精品</span>
+                        <span v-if="thread.isTopic" class="badge badge-danger">话题</span>
                         <h6 class="d-inline">{{ thread.title }}</h6>
                         <div class="float-right badge badge-light">
                             <router-link :to="{ name: 'tid', params: { tid: thread.tid } }" class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
@@ -604,7 +607,7 @@
                     };
                 },
                 computed: {
-                    getPerviousPageUrl: function() { // computed caching attr ensure each posts-list's url will not updated after page param change
+                    getPerviousPageUrl: function() { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
                         // generate an new absolute url with new page params which based on current route path
                         let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                         return `${$$baseUrlDir}${urlWithNewPage}`;
@@ -783,18 +786,16 @@
                     },
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
                         newPage = newPage || route.params.page || 1;
-
-                        if (route.query.fid != null) {
-                            document.title = `第${newPage}页 - ${_.find(this.$data.forumsList, { fid: route.query.fid }).name}吧 - 贴子查询 - 贴吧云监控`;
-                        } else if (route.params.tid == null || ! _.isEmpty(route.query)) {
-                            document.title = `第${newPage}页 - 贴子查询 - 贴吧云监控`;
-                        } else {
+                        let forumName = `${this.$data.postsPages[0].forum.name}吧`;
+                        if (route.params.tid != null) {
                             if (threadTitle == null) {
                                 _.each(this.$data.postsPages, (item) => {
-                                    threadTitle = _.filter(item.threads, { tid: parseInt(route.params.tid) })[0].title;
+                                    threadTitle = _.find(item.threads, { tid: parseInt(route.params.tid) }).title;
                                 });
                             }
-                            document.title = `第${newPage}页 - ${threadTitle} - 贴子查询 - 贴吧云监控`;
+                            document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                        } else {
+                            document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
                         }
                     }
                 },
@@ -814,13 +815,13 @@
                         }
                     });
 
+                    this.$data.queryData = { query: customQueryParams, param: queryParams };
                     $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
                         this.$data.forumsList = _.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
                             forum.fid = forum.fid.toString();
                             return forum;
                         });
-                        this.$data.queryData = { query: customQueryParams, param: queryParams }; // wait for forums list finish loading
-                        this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true);
+                        this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
                     });
                 },
                 watch: {
