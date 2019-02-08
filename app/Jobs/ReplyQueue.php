@@ -67,7 +67,6 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                         'pid' => $pid,
                         'startTime' => microtime(true)
                     ]); // report crawling sub replies
-                    //(new Crawler\SubReplyCrawler($this->forumId, $this->threadId, $pid))->doCrawl()->saveLists();
                     SubReplyQueue::dispatch($this->forumID, $this->threadID, $pid);
                 }
             }

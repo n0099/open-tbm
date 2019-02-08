@@ -83,7 +83,7 @@ class ReplyCrawler extends Crawlable
             throw new \RuntimeException("Error from tieba client, raw json: " . json_encode($repliesJson));
         }
         if (count($repliesList) == 0) {
-            throw new \LengthException('Reply posts list is empty');
+            throw new \LengthException('Reply posts list is empty, posts might already deleted from tieba');
         }
 
         $usersList = self::convertUsersListToUidKey($usersList);
@@ -133,19 +133,21 @@ class ReplyCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        $updateExceptFields = array_diff(array_keys($this->repliesList[0]), [
-            'tid',
-            'pid',
-            'floor',
-            'postTime',
-            'authorUid',
-            'created_at'
-        ]);
-        // TODO: performance issue on big query
-        Eloquent\PostModelFactory::newReply($this->forumID)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
-        $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
-        (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
-        $this->saveUsersList();
+        \DB::transaction(function () {
+            $updateExceptFields = array_diff(array_keys($this->repliesList[0]), [
+                'tid',
+                'pid',
+                'floor',
+                'postTime',
+                'authorUid',
+                'created_at'
+            ]);
+            // TODO: performance issue on big query
+            Eloquent\PostModelFactory::newReply($this->forumID)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
+            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
+            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            $this->saveUsersList();
+        });
 
         return $this;
     }

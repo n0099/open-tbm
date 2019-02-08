@@ -59,7 +59,9 @@ class ThreadCrawler extends Crawlable
             $threadsInfo[] = [
                 'tid' => $thread['tid'],
                 'firstPid' => $thread['first_post_id'],
-                'isSticky' => $thread['is_top'] ?? true, // if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
+                'isSticky' => $thread['is_membertop'] == 1
+                    ? 2 // set to 2 when it's vip member sticky thread
+                    : ($thread['is_top'] ?? true), // if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
                 'isGood' => $thread['is_good'],
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
@@ -97,17 +99,19 @@ class ThreadCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        $threadExceptFields = array_diff(array_keys($this->threadsList[0]), [
-            'tid',
-            'title',
-            'postTime',
-            'authorUid',
-            'created_at'
-        ]);
-        Eloquent\PostModelFactory::newThread($this->forumID)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
-        $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
-        (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
-        $this->saveUsersList();
+        \DB::transaction(function () {
+            $threadExceptFields = array_diff(array_keys($this->threadsList[0]), [
+                'tid',
+                'title',
+                'postTime',
+                'authorUid',
+                'created_at'
+            ]);
+            Eloquent\PostModelFactory::newThread($this->forumID)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
+            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
+            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            $this->saveUsersList();
+        });
 
         return $this;
     }

@@ -70,7 +70,7 @@ class SubReplyCrawler extends Crawlable
             throw new \RuntimeException("Error from tieba client, raw json: " . json_encode($subRepliesJson));
         }
         if (count($subRepliesList) == 0) {
-            throw new \LengthException('Sub reply posts list is empty');
+            throw new \LengthException('Sub reply posts list is empty, posts might already deleted from tieba');
         }
 
         $usersList = [];
@@ -111,18 +111,20 @@ class SubReplyCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        $subReplyExceptFields = array_diff(array_keys($this->subRepliesList[0]), [
-            'tid',
-            'pid',
-            'spid',
-            'postTime',
-            'authorUid',
-            'created_at'
-        ]);
-        Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
-        $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
-        (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
-        $this->saveUsersList();
+        \DB::transaction(function () {
+            $subReplyExceptFields = array_diff(array_keys($this->subRepliesList[0]), [
+                'tid',
+                'pid',
+                'spid',
+                'postTime',
+                'authorUid',
+                'created_at'
+            ]);
+            Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
+            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
+            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            $this->saveUsersList();
+        });
 
         return $this;
     }
