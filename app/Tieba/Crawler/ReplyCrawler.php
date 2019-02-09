@@ -146,8 +146,8 @@ class ReplyCrawler extends Crawlable
             Eloquent\PostModelFactory::newReply($this->forumID)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
             $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
             (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
-            $this->saveUsersList();
         });
+        $this->saveUsersList();
 
         return $this;
     }

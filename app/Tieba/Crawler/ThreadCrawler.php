@@ -55,21 +55,25 @@ class ThreadCrawler extends Crawlable
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($threadsList as $thread) {
-            $usersList[] = $thread['author'] + ['gender' => $thread['author']['sex']]; // sb 6.0.2
+            $usersList[] = $thread['author'] + ['gender' => $thread['author']['sex'] ?? null]; // sb 6.0.2
             $threadsInfo[] = [
                 'tid' => $thread['tid'],
                 'firstPid' => $thread['first_post_id'],
-                'isSticky' => $thread['is_membertop'] == 1
-                    ? 2 // set to 2 when it's vip member sticky thread
-                    : ($thread['is_top'] ?? true), // if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
+                'stickyType' => $thread['is_membertop'] == 1
+                    ? 'membertop'
+                    : isset($thread['is_top'])
+                        ? 'top'
+                        : $thread['is_top'] == 0  // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
+                            ? null
+                            : 'top',
                 'isGood' => $thread['is_good'],
-                "isTopic" => $thread['is_bub'],
+                "topicType" => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
                 'authorManagerType' => self::valueValidate($thread['author']['bawu_type']),
                 'postTime' => isset($thread['create_time']) ? Carbon::createFromTimestamp($thread['create_time'])->toDateTimeString() : null, // post time will be null when it's topic thread
                 'latestReplyTime' => Carbon::createFromTimestamp($thread['last_time_int'])->toDateTimeString(),
-                'latestReplierUid' => $thread['last_replyer']['id'],
+                'latestReplierUid' => $thread['last_replyer']['id'] ?? null, // topic thread won't have latest replier field
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
                 'shareNum' => $thread['share_num'],
@@ -111,8 +115,8 @@ class ThreadCrawler extends Crawlable
             Eloquent\PostModelFactory::newThread($this->forumID)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
             $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
             (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
-            $this->saveUsersList();
         });
+        $this->saveUsersList();
 
         return $this;
     }

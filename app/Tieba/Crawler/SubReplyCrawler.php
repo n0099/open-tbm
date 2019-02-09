@@ -123,8 +123,8 @@ class SubReplyCrawler extends Crawlable
             Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
             $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
             (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
-            $this->saveUsersList();
         });
+        $this->saveUsersList();
 
         return $this;
     }

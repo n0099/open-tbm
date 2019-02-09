@@ -92,12 +92,14 @@ abstract class Crawlable
                     'name' => $user['name'],
                     'displayName' => $user['name'] == $user['name_show'] ? null : $user['name_show'],
                     'avatarUrl' => $user['portrait'],
-                    'gender' => self::valueValidate($user['gender'] ?? null),
+                    'gender' => self::valueValidate($user['gender']),
                     'fansNickname' => isset($user['fans_nickname']) ? self::valueValidate($user['fans_nickname']) : null,
                     'iconInfo' => self::valueValidate($user['iconinfo'], true),
-                    'alaInfo' => ((!isset($user['ala_info']['lat']))
+                    'alaInfo' => (
+                        ! isset($user['ala_info']['lat'])
                         || self::valueValidate($user['ala_info']) != null
-                        && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0))
+                        && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0)
+                    )
                         ? null
                         : self::valueValidate($user['ala_info'], true),
                     'created_at' => $now,
