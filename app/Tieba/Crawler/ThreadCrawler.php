@@ -61,11 +61,11 @@ class ThreadCrawler extends Crawlable
                 'firstPid' => $thread['first_post_id'],
                 'stickyType' => $thread['is_membertop'] == 1
                     ? 'membertop'
-                    : isset($thread['is_top'])
-                        ? 'top'
-                        : $thread['is_top'] == 0  // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
+                    : isset($thread['is_top']) // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
+                        ? $thread['is_top'] == 0
                             ? null
-                            : 'top',
+                            : 'top'
+                        : null,
                 'isGood' => $thread['is_good'],
                 "topicType" => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
@@ -76,10 +76,10 @@ class ThreadCrawler extends Crawlable
                 'latestReplierUid' => $thread['last_replyer']['id'] ?? null, // topic thread won't have latest replier field
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
-                'shareNum' => $thread['share_num'],
-                'agreeInfo' => self::valueValidate(($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null), true),
-                'zanInfo' => self::valueValidate($thread['zan'], true),
-                'locationInfo' => self::valueValidate($thread['location'], true),
+                'shareNum' => $thread['share_num'] ?? null, // will cover previous shareNum when it's topic thread
+                'agreeInfo' => self::valueValidate(isset($thread['agree']) ? ($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null) : null, true),
+                'zanInfo' => self::valueValidate($thread['zan'] ?? null, true),
+                'locationInfo' => self::valueValidate($thread['location'] ?? null, true),
                 'clientVersion' => $this->clientVersion,
                 'created_at' => $now,
                 'updated_at' => $now

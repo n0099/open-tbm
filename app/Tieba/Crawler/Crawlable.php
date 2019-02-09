@@ -45,7 +45,7 @@ abstract class Crawlable
 
     protected static function valueValidate($value, bool $isJson = false)
     {
-        if ($value == '""' || $value == '[]' || blank($value)) {
+        if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
         }
 
