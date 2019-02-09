@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
@@ -55,6 +56,7 @@ class ThreadCrawler extends Crawlable
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($threadsList as $thread) {
+            ExceptionAdditionInfo::set(['parsingTid' => $thread['tid']]);
             $usersList[] = $thread['author'] + ['gender' => $thread['author']['sex'] ?? null]; // sb 6.0.2
             $threadsInfo[] = [
                 'tid' => $thread['tid'],
@@ -70,14 +72,14 @@ class ThreadCrawler extends Crawlable
                 "topicType" => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
-                'authorManagerType' => self::valueValidate($thread['author']['bawu_type']),
-                'postTime' => isset($thread['create_time']) ? Carbon::createFromTimestamp($thread['create_time'])->toDateTimeString() : null, // post time will be null when it's topic thread
+                'authorManagerType' => self::valueValidate($thread['author']['bawu_type'] ?? null), // topic thread won't have this
+                'postTime' => isset($thread['create_time']) ? Carbon::createFromTimestamp($thread['create_time'])->toDateTimeString() : null, // topic thread won't have this
                 'latestReplyTime' => Carbon::createFromTimestamp($thread['last_time_int'])->toDateTimeString(),
-                'latestReplierUid' => $thread['last_replyer']['id'] ?? null, // topic thread won't have latest replier field
+                'latestReplierUid' => $thread['last_replyer']['id'] ?? null, // topic thread won't have this
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
-                'shareNum' => $thread['share_num'] ?? null, // will cover previous shareNum when it's topic thread
-                'agreeInfo' => self::valueValidate(isset($thread['agree']) ? ($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null) : null, true),
+                'shareNum' => $thread['share_num'] ?? null, // topic thread won't have this
+                'agreeInfo' => self::valueValidate(isset($thread['agree']) ? ($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null) : null, true), // topic thread won't have this
                 'zanInfo' => self::valueValidate($thread['zan'] ?? null, true),
                 'locationInfo' => self::valueValidate($thread['location'] ?? null, true),
                 'clientVersion' => $this->clientVersion,
@@ -94,6 +96,7 @@ class ThreadCrawler extends Crawlable
                 'fid' => $this->forumID
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
         }
+        ExceptionAdditionInfo::remove('parsingTid');
 
         // lazy saving to Eloquent model
         $this->parseUsersList(collect($usersList)->unique('id')->toArray());
@@ -105,19 +108,32 @@ class ThreadCrawler extends Crawlable
     public function saveLists(): self
     {
         \DB::transaction(function () {
-            $threadExceptFields = array_diff(array_keys($this->threadsList[0]), [
-                'tid',
-                'title',
+            ExceptionAdditionInfo::set(['insertingThreads' => true]);
+            $threadsList = static::groupNullableColumnArray($this->threadsList, [
                 'postTime',
-                'authorUid',
-                'created_at'
+                'latestReplyTime',
+                'latestReplierUid',
+                'shareNum',
+                'agreeInfo'
             ]);
-            Eloquent\PostModelFactory::newThread($this->forumID)->insertOnDuplicateKey($this->threadsList, $threadExceptFields);
+            $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
+            foreach ($threadsList as $threadsListGroup) {
+                $threadExceptFields = array_diff(array_keys($threadsListGroup[0]), [
+                    'tid',
+                    'title',
+                    'postTime',
+                    'authorUid',
+                    'created_at'
+                ]);
+                $threadModel->insertOnDuplicateKey($threadsListGroup, $threadExceptFields);
+            }
             $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
             (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            ExceptionAdditionInfo::remove('insertingThreads');
         });
         $this->saveUsersList();
 
+        ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
         return $this;
     }
 
@@ -130,5 +146,10 @@ class ThreadCrawler extends Crawlable
     {
         $this->forumID = $forumID;
         $this->forumName = $forumName;
+
+        config(['globalExceptionAdditionInfo' => [
+            'crawlingFid' => $forumID,
+            'crawlingForumName' => $forumName
+        ]]);
     }
 }

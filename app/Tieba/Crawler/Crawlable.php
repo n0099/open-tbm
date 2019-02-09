@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
@@ -9,9 +10,11 @@ use function GuzzleHttp\json_encode;
 
 abstract class Crawlable
 {
+    protected $forumID;
+
     protected $clientVersion;
 
-    protected $indexesList;
+    protected $indexesList = [];
 
     protected $usersList = [];
 
@@ -62,6 +65,38 @@ abstract class Crawlable
     }
 
     /**
+     * Group INSERT sql statement to prevent updating cover old data with null values
+     *
+     * @param array $arrayToGroup
+     * @param array $nullableFields
+     *
+     * @return array
+     */
+    protected static function groupNullableColumnArray(array $arrayToGroup, array $nullableFields): array
+    {
+        $arrayAfterGroup = [];
+        foreach ($arrayToGroup as $item) {
+            $nullValueFields = array_map(function () {
+                return false;
+            }, array_flip($nullableFields));
+            foreach ($nullValueFields as $nullableFieldName => $isNull) {
+                $nullValueFields[$nullableFieldName] = $item[$nullableFieldName] ?? null === null;
+            }
+            $nullValueFieldsCount = array_sum($nullValueFields); // counts all null value fields
+            if ($nullValueFieldsCount == count($nullValueFields)) {
+                $arrayAfterGroup['allNull'][] = $item;
+            } elseif ($nullValueFieldsCount == 0) {
+                $arrayAfterGroup['notAllNull'][] = $item;
+            } else {
+                $nullValueFieldName = implode(array_keys($nullValueFields, true), '+'); // if there's multi fields having null value, we should group them together
+                $arrayAfterGroup[$nullValueFieldName][] = $item;
+            }
+        }
+
+        return $arrayAfterGroup;
+    }
+
+    /**
      * Sort SQL INSERT data to prevent mutual insert intention gap deadlock
      *
      * @param array $array
@@ -82,6 +117,7 @@ abstract class Crawlable
 
         $usersInfo = [];
         foreach ($usersList as $user) {
+            ExceptionAdditionInfo::set(['parsingUid' => $user['id']]);
             $now = Carbon::now();
             if ($user['id'] == '' || $user['id'] < 0) { // TODO: compatible with anonymous user
                 $usersInfo[] = [
@@ -107,6 +143,7 @@ abstract class Crawlable
                 ];
             }
         }
+        ExceptionAdditionInfo::remove('parsingUid');
         // lazy saving to Eloquent model
         $this->pushUsersList($usersInfo);
 
@@ -127,45 +164,15 @@ abstract class Crawlable
 
     protected function saveUsersList(): void
     {
-        // group INSERT sql statement to prevent update with null values
-        $usersList = [];
-        foreach ($this->usersList as $user) {
-            $nullValueFields = ['gender' => false, 'fansNickname' => false, 'alaInfo' => false];
-            foreach ($nullValueFields as $nullableFieldName => $isNull) {
-                $nullValueFields[$nullableFieldName] = $user[$nullableFieldName] == null;
-            }
-            $nullValueFieldsCount = array_sum($nullValueFields);
-            if ($nullValueFieldsCount == count($nullValueFields)) {
-                $usersList['allNull'][] = $user;
-            } elseif ($nullValueFieldsCount == 0) {
-                $usersList['notAllNull'][] = $user;
-            } else {
-                $nullValueFieldName = array_search(false, $nullValueFields);
-                $usersList[$nullValueFieldName][] = $user;
-            }
-        }
-        // same functional with above
-        /*foreach ($this->usersList as $user) {
-            if ($user['fansNickname'] == null && $user['alaInfo'] == null) {
-                unset($user['fansNickname']);
-                unset($user['alaInfo']);
-                $usersList['null'][] = $user;
-            } elseif ($user['fansNickname'] == null) {
-                unset($user['fansNickname']);
-                $usersList['nullFansNickname'][] = $user;
-            } elseif ($user['alaInfo'] == null) {
-                unset($user['alaInfo']);
-                $usersList['nullAlaInfo'][] = $user;
-            } else {
-                $usersList['update'][] = $user;
-            }
-        }*/
-
+        ExceptionAdditionInfo::set(['insertingUsers' => true]);
+        $usersList = static::groupNullableColumnArray($this->usersList, ['gender', 'fansNickname', 'alaInfo']);
+        $userModel = new Eloquent\UserModel();
         foreach ($usersList as $usersListGroup) {
             $userListExceptFields = array_diff(array_keys($usersListGroup[0]), ['created_at']);
-            (new Eloquent\UserModel())->insertOnDuplicateKey($usersListGroup, $userListExceptFields);
+            $userModel->insertOnDuplicateKey($usersListGroup, $userListExceptFields);
         }
+        ExceptionAdditionInfo::remove('insertingUsers');
 
-        //$this->usersList = [];
+        $this->usersList = [];
     }
 }

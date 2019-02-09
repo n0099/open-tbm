@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 class ReplyCrawler extends Crawlable
 {
     protected $clientVersion = '8.8.8';
+
+    protected $forumID;
 
     protected $threadID;
 
@@ -28,7 +31,7 @@ class ReplyCrawler extends Crawlable
         Log::info("Start to fetch replies for tid {$this->threadID}, page 1");
         $repliesJson = json_decode($client->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
-            ['form_params' => ['kz' => $this->threadID, 'pn' => 1]] // reverse order = ['last'=>1,'r'=>1]
+            ['form_params' => ['kz' => $this->threadID, 'pn' => 1]] // reverse order will be ['last' => 1,'r' => 1]
         )->getBody(), true);
 
         $this->parseRepliesList($repliesJson);
@@ -92,6 +95,7 @@ class ReplyCrawler extends Crawlable
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($repliesList as $reply) {
+            ExceptionAdditionInfo::set(['parsingPid' => $reply['id']]);
             $repliesInfo[] = [
                 'tid' => $this->threadID,
                 'pid' => $reply['id'],
@@ -123,6 +127,7 @@ class ReplyCrawler extends Crawlable
                 'fid' => $this->forumID
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
+        ExceptionAdditionInfo::remove('parsingPid');
 
         // lazy saving to Eloquent model
         $this->parseUsersList($usersList);
@@ -134,6 +139,7 @@ class ReplyCrawler extends Crawlable
     public function saveLists(): self
     {
         \DB::transaction(function () {
+            ExceptionAdditionInfo::set(['insertingReplies' => true]);
             $updateExceptFields = array_diff(array_keys($this->repliesList[0]), [
                 'tid',
                 'pid',
@@ -146,9 +152,11 @@ class ReplyCrawler extends Crawlable
             Eloquent\PostModelFactory::newReply($this->forumID)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
             $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
             (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            ExceptionAdditionInfo::remove('insertingReplies');
         });
         $this->saveUsersList();
 
+        ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid');
         return $this;
     }
 
@@ -161,5 +169,9 @@ class ReplyCrawler extends Crawlable
     {
         $this->forumID = $fid;
         $this->threadID = $tid;
+        ExceptionAdditionInfo::set([
+            'crawlingFid' => $fid,
+            'crawlingTid' => $tid
+        ]);
     }
 }

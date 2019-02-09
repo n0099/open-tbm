@@ -324,7 +324,7 @@ class PostsQueryController extends Controller
                                             return $postModel->where('isGood', true);
                                             break;
                                         case 'sticky':
-                                            return $postModel->where('isSticky', true);
+                                            return $postModel->whereNotNull('stickyType');
                                             break;
                                     }
                                 }

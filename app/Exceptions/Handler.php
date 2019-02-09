@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
 
 class Handler extends ExceptionHandler
 {
@@ -34,6 +35,8 @@ class Handler extends ExceptionHandler
      */
     public function report(Exception $exception)
     {
+        // report exception addition info
+        Log::error($exception->getMessage() . ', addition info: ' . urldecode(http_build_query(config('globalExceptionAdditionInfo') ?? [], null, ', ')));
         parent::report($exception);
     }
 

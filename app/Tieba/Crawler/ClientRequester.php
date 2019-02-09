@@ -49,12 +49,12 @@ class ClientRequester extends \GuzzleHttp\Client
      *
      * @param array $config
      *
-     * @throws \HttpRequestMethodException
+     * @throws \InvalidArgumentException
      */
     public function __construct(array $config = [])
     {
         if ($config['client_version'] === null) {
-            throw new \HttpRequestMethodException('Tieba client version must be determined');
+            throw new \InvalidArgumentException('Tieba client version must be determined');
         }
 
         //Note7 (￣▽￣)~*

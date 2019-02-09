@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
@@ -13,13 +14,15 @@ class SubReplyCrawler extends Crawlable
 {
     protected $clientVersion = '8.8.8';
 
+    protected $forumID;
+
     protected $threadID;
 
     protected $replyID;
 
-    protected $subRepliesList = [];
-
     protected $indexesList = [];
+
+    protected $subRepliesList = [];
 
     public function doCrawl(): self
     {
@@ -78,6 +81,7 @@ class SubReplyCrawler extends Crawlable
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($subRepliesList as $subReply) {
+            ExceptionAdditionInfo::set(['parsingSpid' => $subReply['id']]);
             $usersList[] = $subReply['author'];
             $subRepliesInfo[] = [
                 'tid' => $this->threadID,
@@ -102,6 +106,7 @@ class SubReplyCrawler extends Crawlable
                 'fid' => $this->forumID
             ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
+        ExceptionAdditionInfo::remove('parsingSpid');
 
         // lazy saving to Eloquent model
         $this->parseUsersList(collect($usersList)->unique('id')->toArray());
@@ -112,6 +117,7 @@ class SubReplyCrawler extends Crawlable
     public function saveLists(): self
     {
         \DB::transaction(function () {
+            ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
             $subReplyExceptFields = array_diff(array_keys($this->subRepliesList[0]), [
                 'tid',
                 'pid',
@@ -123,9 +129,11 @@ class SubReplyCrawler extends Crawlable
             Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
             $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
             (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            ExceptionAdditionInfo::remove('insertingSubReplies');
         });
         $this->saveUsersList();
 
+        ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');
         return $this;
     }
 
@@ -134,5 +142,10 @@ class SubReplyCrawler extends Crawlable
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->replyID = $pid;
+        ExceptionAdditionInfo::set([
+            'crawlingFid' => $fid,
+            'crawlingTid' => $tid,
+            'crawlingPid' => $pid
+        ]);
     }
 }
