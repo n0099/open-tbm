@@ -140,7 +140,7 @@ class ReplyCrawler extends Crawlable
     {
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
-            $chunkInsertBufferSize = 100;
+            $chunkInsertBufferSize = 2000;
             $replyModel = Eloquent\PostModelFactory::newReply($this->forumID);
             foreach (static::groupNullableColumnArray($this->repliesList, [
                 'authorManagerType'

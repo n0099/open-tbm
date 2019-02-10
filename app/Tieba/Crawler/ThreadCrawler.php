@@ -108,7 +108,7 @@ class ThreadCrawler extends Crawlable
     {
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingThreads' => true]);
-            $chunkInsertBufferSize = 100;
+            $chunkInsertBufferSize = 2000;
             $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
             foreach (static::groupNullableColumnArray($this->threadsList, [
                 'postTime',

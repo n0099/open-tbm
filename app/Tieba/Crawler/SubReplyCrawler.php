@@ -118,17 +118,14 @@ class SubReplyCrawler extends Crawlable
     {
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
-            $subReplyExceptFields = array_diff(array_keys($this->subRepliesList[0]), [
-                'tid',
-                'pid',
-                'spid',
-                'postTime',
-                'authorUid',
-                'created_at'
-            ]);
-            Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
-            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
-            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            $chunkInsertBufferSize = 2000;
+            $subReplyModel = Eloquent\PostModelFactory::newSubReply($this->forumID);
+            $subReplyUpdateFields = array_diff(array_keys($this->subRepliesList[0]), $subReplyModel->updateExpectFields);
+            $subReplyModel->chunkInsertOnDuplicate($this->subRepliesList, $subReplyUpdateFields, $chunkInsertBufferSize);
+
+            $indexModel = new \App\Eloquent\IndexModel();
+            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
+            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingSubReplies');
         });
         $this->saveUsersList();
