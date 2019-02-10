@@ -108,17 +108,15 @@ class ThreadCrawler extends Crawlable
     {
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingThreads' => true]);
-            $threadsList = static::groupNullableColumnArray($this->threadsList, [
+            $chunkInsertBufferSize = 100;
+            $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
+            foreach (static::groupNullableColumnArray($this->threadsList, [
                 'postTime',
                 'latestReplyTime',
                 'latestReplierUid',
                 'shareNum',
                 'agreeInfo'
-            ]);
-            $chunkInsertBufferSize = 100;
-
-            $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
-            foreach ($threadsList as $threadsListGroup) {
+            ]) as $threadsListGroup) {
                 $threadUpdateFields = array_diff(array_keys($threadsListGroup[0]), $threadModel->updateExpectFields);
                 $threadModel->chunkInsertOnDuplicate($threadsListGroup, $threadUpdateFields, $chunkInsertBufferSize);
             }

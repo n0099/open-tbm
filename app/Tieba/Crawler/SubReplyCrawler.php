@@ -6,9 +6,9 @@ use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
-use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
+use Illuminate\Support\Facades\Log;
 
 class SubReplyCrawler extends Crawlable
 {
@@ -118,14 +118,17 @@ class SubReplyCrawler extends Crawlable
     {
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
-            $chunkInsertBufferSize = 100;
-            $subReplyModel = Eloquent\PostModelFactory::newSubReply($this->forumID);
-            $subReplyUpdateFields = array_diff(array_keys($this->subRepliesList[0]), $subReplyModel->updateExpectFields);
-            $subReplyModel->chunkInsertOnDuplicate($this->subRepliesList, $subReplyUpdateFields, $chunkInsertBufferSize);
-
-            $indexModel = new \App\Eloquent\IndexModel();
-            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+            $subReplyExceptFields = array_diff(array_keys($this->subRepliesList[0]), [
+                'tid',
+                'pid',
+                'spid',
+                'postTime',
+                'authorUid',
+                'created_at'
+            ]);
+            Eloquent\PostModelFactory::newSubReply($this->forumID)->insertOnDuplicateKey($this->subRepliesList, $subReplyExceptFields);
+            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
+            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
             ExceptionAdditionInfo::remove('insertingSubReplies');
         });
         $this->saveUsersList();

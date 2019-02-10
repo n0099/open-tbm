@@ -164,11 +164,13 @@ abstract class Crawlable
     protected function saveUsersList(): void
     {
         ExceptionAdditionInfo::set(['insertingUsers' => true]);
-        $usersList = static::groupNullableColumnArray($this->usersList, ['gender', 'fansNickname', 'alaInfo']);
-        $userModel = new Eloquent\UserModel();
         $chunkInsertBufferSize = 100;
-
-        foreach ($usersList as $usersListGroup) {
+        $userModel = new Eloquent\UserModel();
+        foreach (static::groupNullableColumnArray($this->usersList, [
+            'gender',
+            'fansNickname',
+            'alaInfo'
+        ]) as $usersListGroup) {
             $userListUpdateFields = array_diff(array_keys($usersListGroup[0]), $userModel->updateExpectFields);
             $userModel->chunkInsertOnDuplicate($usersListGroup, $userListUpdateFields, $chunkInsertBufferSize);
         }

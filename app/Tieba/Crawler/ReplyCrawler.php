@@ -102,7 +102,7 @@ class ReplyCrawler extends Crawlable
                 'floor' => $reply['floor'],
                 'content' => self::valueValidate($reply['content'], true),
                 'authorUid' => $reply['author_id'],
-                'authorManagerType' => self::valueValidate($usersList[$reply['author_id']]['bawu_type']),
+                'authorManagerType' => self::valueValidate($usersList[$reply['author_id']]['bawu_type'] ?? null), // might be null for unknown reason
                 'authorExpGrade' => $usersList[$reply['author_id']]['level_id'],
                 'subReplyNum' => $reply['sub_post_number'],
                 'postTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
@@ -142,8 +142,12 @@ class ReplyCrawler extends Crawlable
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
             $chunkInsertBufferSize = 100;
             $replyModel = Eloquent\PostModelFactory::newReply($this->forumID);
-            $replyUpdateFields = array_diff(array_keys($this->repliesList[0]), $replyModel->updateExpectFields);
-            $replyModel->chunkInsertOnDuplicate($this->repliesList, $replyUpdateFields, $chunkInsertBufferSize);
+            foreach (static::groupNullableColumnArray($this->repliesList, [
+                'authorManagerType'
+            ]) as $repliesListGroup) {
+                $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);
+                $replyModel->chunkInsertOnDuplicate($repliesListGroup, $replyUpdateFields, $chunkInsertBufferSize);
+            }
 
             $indexModel = new \App\Eloquent\IndexModel();
             $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
