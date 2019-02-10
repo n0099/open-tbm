@@ -6,9 +6,9 @@ use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
+use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
-use Illuminate\Support\Facades\Log;
 
 class SubReplyCrawler extends Crawlable
 {
@@ -104,7 +104,7 @@ class SubReplyCrawler extends Crawlable
                 'postTime' => $latestInfo['postTime'],
                 'type' => 'subReply',
                 'fid' => $this->forumID
-            ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
+            ] + self::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingSpid');
 

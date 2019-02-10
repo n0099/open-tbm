@@ -87,13 +87,13 @@ class ThreadCrawler extends Crawlable
             ];
 
             $latestInfo = end($threadsInfo);
-            $threadsUpdateInfo[$thread['tid']] = self::getSubKeyValueByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
+            $threadsUpdateInfo[$thread['tid']] = self::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',
                 'fid' => $this->forumID
-            ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
+            ] + self::getArrayValuesByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
         }
         ExceptionAdditionInfo::remove('parsingTid');
 

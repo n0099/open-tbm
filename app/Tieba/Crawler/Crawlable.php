@@ -54,7 +54,7 @@ abstract class Crawlable
         return $isJson ? json_encode($value) : $value;
     }
 
-    protected static function getSubKeyValueByKeys(array $haystack, array $keys): array
+    protected static function getArrayValuesByKeys(array $haystack, array $keys): array
     {
         $values = [];
         foreach ($keys as $key) {

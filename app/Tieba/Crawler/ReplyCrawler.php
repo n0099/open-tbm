@@ -117,7 +117,7 @@ class ReplyCrawler extends Crawlable
 
             $latestInfo = end($repliesInfo);
             if ($reply['sub_post_number'] > 0) {
-                $repliesUpdateInfo[$reply['id']] = self::getSubKeyValueByKeys($latestInfo, ['subReplyNum']);
+                $repliesUpdateInfo[$reply['id']] = self::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
             }
             $indexesInfo[] = [
                 'created_at' => $now,
@@ -125,7 +125,7 @@ class ReplyCrawler extends Crawlable
                 'postTime' => $latestInfo['postTime'],
                 'type' => 'reply',
                 'fid' => $this->forumID
-            ] + self::getSubKeyValueByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
+            ] + self::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingPid');
 
