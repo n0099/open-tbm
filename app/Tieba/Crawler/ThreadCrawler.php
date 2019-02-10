@@ -5,10 +5,9 @@ namespace App\Tieba\Crawler;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
-use GuzzleHttp;
+use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
-use Illuminate\Support\Facades\Log;
 
 class ThreadCrawler extends Crawlable
 {
@@ -116,19 +115,17 @@ class ThreadCrawler extends Crawlable
                 'shareNum',
                 'agreeInfo'
             ]);
+            $chunkInsertBufferSize = 100;
+
             $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
             foreach ($threadsList as $threadsListGroup) {
-                $threadExceptFields = array_diff(array_keys($threadsListGroup[0]), [
-                    'tid',
-                    'title',
-                    'postTime',
-                    'authorUid',
-                    'created_at'
-                ]);
-                $threadModel->insertOnDuplicateKey($threadsListGroup, $threadExceptFields);
+                $threadUpdateFields = array_diff(array_keys($threadsListGroup[0]), $threadModel->updateExpectFields);
+                $threadModel->chunkInsertOnDuplicate($threadsListGroup, $threadUpdateFields, $chunkInsertBufferSize);
             }
-            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
-            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+
+            $indexModel = new \App\Eloquent\IndexModel();
+            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
+            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingThreads');
         });
         $this->saveUsersList();

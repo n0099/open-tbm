@@ -5,7 +5,6 @@ namespace App\Tieba\Crawler;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
-use GuzzleHttp;
 use function GuzzleHttp\json_encode;
 
 abstract class Crawlable
@@ -167,9 +166,11 @@ abstract class Crawlable
         ExceptionAdditionInfo::set(['insertingUsers' => true]);
         $usersList = static::groupNullableColumnArray($this->usersList, ['gender', 'fansNickname', 'alaInfo']);
         $userModel = new Eloquent\UserModel();
+        $chunkInsertBufferSize = 100;
+
         foreach ($usersList as $usersListGroup) {
-            $userListExceptFields = array_diff(array_keys($usersListGroup[0]), ['created_at']);
-            $userModel->insertOnDuplicateKey($usersListGroup, $userListExceptFields);
+            $userListUpdateFields = array_diff(array_keys($usersListGroup[0]), $userModel->updateExpectFields);
+            $userModel->chunkInsertOnDuplicate($usersListGroup, $userListUpdateFields, $chunkInsertBufferSize);
         }
         ExceptionAdditionInfo::remove('insertingUsers');
 

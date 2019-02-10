@@ -36,6 +36,8 @@ abstract class PostModel extends Model
 
     protected $hidedFields;
 
+    public $updateExpectFields;
+
     protected function scopeIDType(Builder $query, string $postIDName, $postID): Builder
     {
         if (is_int($postID)) {
@@ -55,30 +57,6 @@ abstract class PostModel extends Model
     abstract public function scopeTid(Builder $query, $tid): Builder;
 
     abstract public function toPost(): \App\Tieba\Post;
-
-    /**
-     * Override construct method for setting valid forum id and table name.
-     *
-     * @param $forumID
-     */
-    /*public function __construct($forumId)
-    {
-        if (is_int($forumId)) {
-            $this->forumId = $forumId;
-            $postTypeClassNamePlural = [
-                'App\Thread' => 'threads',
-                'App\Reply' => 'replies',
-                'App\SubReply' => 'sub_replies'
-            ];
-            $test = new Reply(0);
-            debug($test::class);
-            debug(get_class($test));
-
-            //$this->table = "tbm_f{$forumId}_" . $postTypeClassNamePlural[$this::class];
-        }
-
-        parent::__construct([]);
-    }*/
 
     /**
      * Override the parent relation instance method for passing valid forum id to new related model.

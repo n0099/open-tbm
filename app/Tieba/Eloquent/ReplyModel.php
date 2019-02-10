@@ -31,6 +31,15 @@ class ReplyModel extends PostModel
         'clientVersion',
     ];
 
+    public $updateExpectFields = [
+        'tid',
+        'pid',
+        'floor',
+        'postTime',
+        'authorUid',
+        'created_at'
+    ];
+
     public function post()
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');

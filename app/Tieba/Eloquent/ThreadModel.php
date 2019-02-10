@@ -41,6 +41,14 @@ class ThreadModel extends PostModel
         'clientVersion',
     ];
 
+    public $updateExpectFields = [
+        'tid',
+        'title',
+        'postTime',
+        'authorUid',
+        'created_at'
+    ];
+
     public function replies()
     {
         return $this->hasMany(ReplyModel::class, 'tid', 'tid');

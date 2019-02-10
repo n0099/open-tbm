@@ -33,6 +33,10 @@ class UserModel extends Model
         'updated_at',
     ];
 
+    public $updateExpectFields = [
+        'created_at'
+    ];
+
     public function scopeHidePrivateFields(Builder $query): Builder
     {
         return $query->select(array_diff($this->fields, $this->hidedFields));

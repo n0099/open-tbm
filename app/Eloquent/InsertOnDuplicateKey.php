@@ -13,6 +13,20 @@ trait InsertOnDuplicateKey
 {
     use \Yadakhov\InsertOnDuplicateKey;
 
+    /**
+     * Chunk big insert data to prevent SQL General error: 1390 Prepared statement contains too many placeholders
+     *
+     * @param array $data
+     * @param array $updateColumns
+     * @param int $chunkSize
+     */
+    public function chunkInsertOnDuplicate(array $data, array $updateColumns, int $chunkSize)
+    {
+        foreach (array_chunk($data, $chunkSize) as $chunkData) {
+            $this->insertOnDuplicateKey($chunkData, $updateColumns);
+        }
+    }
+
     public function insertOnDuplicateKey(array $data, array $updateColumns = null)
     {
         if (empty($data)) {

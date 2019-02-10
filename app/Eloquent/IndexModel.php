@@ -11,4 +11,8 @@ class IndexModel extends Model
     protected $table = 'tbm_postsIndex';
 
     protected $guarded = [];
+
+    public $updateExpectFields = [
+        'created_at'
+    ];
 }

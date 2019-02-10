@@ -2,8 +2,8 @@
 
 namespace App\Tieba\Eloquent;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class ForumModel extends Model
 {

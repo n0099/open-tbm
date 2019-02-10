@@ -26,6 +26,15 @@ class SubReplyModel extends PostModel
         'clientVersion',
     ];
 
+    public $updateExpectFields = [
+        'tid',
+        'pid',
+        'spid',
+        'postTime',
+        'authorUid',
+        'created_at'
+    ];
+
     public function post()
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');

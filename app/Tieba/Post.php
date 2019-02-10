@@ -2,7 +2,7 @@
 
 namespace App\Tieba;
 
-use \Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 use function GuzzleHttp\json_decode;
 
 abstract class Post

@@ -6,9 +6,9 @@ use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
 use GuzzleHttp;
+use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
-use Illuminate\Support\Facades\Log;
 
 class ReplyCrawler extends Crawlable
 {
@@ -140,18 +140,14 @@ class ReplyCrawler extends Crawlable
     {
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
-            $updateExceptFields = array_diff(array_keys($this->repliesList[0]), [
-                'tid',
-                'pid',
-                'floor',
-                'postTime',
-                'authorUid',
-                'created_at'
-            ]);
-            // TODO: performance issue on big query
-            Eloquent\PostModelFactory::newReply($this->forumID)->insertOnDuplicateKey($this->repliesList, $updateExceptFields);
-            $indexExceptFields = array_diff(array_keys($this->indexesList[0]), ['created_at']);
-            (new \App\Eloquent\IndexModel())->insertOnDuplicateKey($this->indexesList, $indexExceptFields);
+            $chunkInsertBufferSize = 100;
+            $replyModel = Eloquent\PostModelFactory::newReply($this->forumID);
+            $replyUpdateFields = array_diff(array_keys($this->repliesList[0]), $replyModel->updateExpectFields);
+            $replyModel->chunkInsertOnDuplicate($this->repliesList, $replyUpdateFields, $chunkInsertBufferSize);
+
+            $indexModel = new \App\Eloquent\IndexModel();
+            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
+            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingReplies');
         });
         $this->saveUsersList();
