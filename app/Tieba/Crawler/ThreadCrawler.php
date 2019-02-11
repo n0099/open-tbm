@@ -106,6 +106,7 @@ class ThreadCrawler extends Crawlable
 
     public function saveLists(): self
     {
+        \DB::statement('SET TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change next transaction's isolation level to reduce deadlock
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingThreads' => true]);
             $chunkInsertBufferSize = 2000;
@@ -125,8 +126,9 @@ class ThreadCrawler extends Crawlable
             $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
             $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingThreads');
+
+            $this->saveUsersList();
         });
-        $this->saveUsersList();
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
         return $this;
