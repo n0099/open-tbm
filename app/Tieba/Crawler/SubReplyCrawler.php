@@ -20,6 +20,8 @@ class SubReplyCrawler extends Crawlable
 
     protected $replyID;
 
+    protected $usersInfo;
+
     protected $indexesList = [];
 
     protected $subRepliesList = [];
@@ -52,7 +54,6 @@ class SubReplyCrawler extends Crawlable
             [
                 'concurrency' => 10,
                 'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
-                    //add_measure($response->getReasonPhrase(), microtime(true), microtime(true));
                     $subRepliesJson = json_decode($response->getBody(), true);
                     $this->parseSubRepliesList($subRepliesJson);
                 },
@@ -109,7 +110,7 @@ class SubReplyCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingSpid');
 
         // lazy saving to Eloquent model
-        $this->parseUsersList(collect($usersList)->unique('id')->toArray());
+        $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
         $this->subRepliesList = array_merge($this->subRepliesList, $subRepliesInfo);
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);
     }
@@ -129,7 +130,7 @@ class SubReplyCrawler extends Crawlable
             $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingSubReplies');
 
-            $this->saveUsersList();
+            $this->usersInfo->saveUsersList();
         });
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');
@@ -141,6 +142,8 @@ class SubReplyCrawler extends Crawlable
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->replyID = $pid;
+        $this->usersInfo = new UserInfoParser();
+
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,
             'crawlingTid' => $tid,

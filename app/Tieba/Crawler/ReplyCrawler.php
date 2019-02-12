@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
@@ -17,6 +18,8 @@ class ReplyCrawler extends Crawlable
     protected $forumID;
 
     protected $threadID;
+
+    protected $usersInfo;
 
     protected $repliesList = [];
 
@@ -130,7 +133,7 @@ class ReplyCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingPid');
 
         // lazy saving to Eloquent model
-        $this->parseUsersList($usersList);
+        $this->usersInfo->parseUsersList($usersList);
         $this->repliesUpdateInfo = $repliesUpdateInfo + $this->repliesUpdateInfo;
         $this->repliesList = array_merge($this->repliesList, $repliesInfo);
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);
@@ -143,19 +146,19 @@ class ReplyCrawler extends Crawlable
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
             $chunkInsertBufferSize = 2000;
             $replyModel = Eloquent\PostModelFactory::newReply($this->forumID);
-            foreach (static::groupNullableColumnArray($this->repliesList, [
+            foreach (self::groupNullableColumnArray($this->repliesList, [
                 'authorManagerType'
             ]) as $repliesListGroup) {
                 $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);
                 $replyModel->chunkInsertOnDuplicate($repliesListGroup, $replyUpdateFields, $chunkInsertBufferSize);
             }
 
-            $indexModel = new \App\Eloquent\IndexModel();
+            $indexModel = new IndexModel();
             $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
             $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingReplies');
 
-            $this->saveUsersList();
+            $this->usersInfo->saveUsersList();
         });
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid');
@@ -171,6 +174,8 @@ class ReplyCrawler extends Crawlable
     {
         $this->forumID = $fid;
         $this->threadID = $tid;
+        $this->usersInfo = new UserInfoParser();
+
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,
             'crawlingTid' => $tid

@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent;
 use Carbon\Carbon;
@@ -16,6 +17,8 @@ class ThreadCrawler extends Crawlable
     protected $forumID;
 
     protected $forumName;
+
+    protected $usersInfo;
 
     protected $threadsList = [];
 
@@ -98,7 +101,7 @@ class ThreadCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingTid');
 
         // lazy saving to Eloquent model
-        $this->parseUsersList(collect($usersList)->unique('id')->toArray());
+        $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
         $this->threadsUpdateInfo = $threadsUpdateInfo;
         $this->threadsList = $threadsInfo;
         $this->indexesList = $indexesInfo;
@@ -111,7 +114,7 @@ class ThreadCrawler extends Crawlable
             ExceptionAdditionInfo::set(['insertingThreads' => true]);
             $chunkInsertBufferSize = 2000;
             $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
-            foreach (static::groupNullableColumnArray($this->threadsList, [
+            foreach (self::groupNullableColumnArray($this->threadsList, [
                 'postTime',
                 'latestReplyTime',
                 'latestReplierUid',
@@ -122,12 +125,12 @@ class ThreadCrawler extends Crawlable
                 $threadModel->chunkInsertOnDuplicate($threadsListGroup, $threadUpdateFields, $chunkInsertBufferSize);
             }
 
-            $indexModel = new \App\Eloquent\IndexModel();
+            $indexModel = new IndexModel();
             $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
             $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingThreads');
 
-            $this->saveUsersList();
+            $this->usersInfo->saveUsersList();
         });
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
@@ -143,10 +146,11 @@ class ThreadCrawler extends Crawlable
     {
         $this->forumID = $forumID;
         $this->forumName = $forumName;
+        $this->usersInfo = new UserInfoParser();
 
-        config(['globalExceptionAdditionInfo' => [
+        ExceptionAdditionInfo::set([
             'crawlingFid' => $forumID,
             'crawlingForumName' => $forumName
-        ]]);
+        ]);
     }
 }
