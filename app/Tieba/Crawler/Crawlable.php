@@ -95,19 +95,6 @@ abstract class Crawlable
         return $arrayAfterGroup;
     }
 
-    /**
-     * Sort SQL INSERT data to prevent mutual insert intention gap deadlock
-     *
-     * @param array $array
-     * @param string $key
-     */
-    /*protected function sortArrayBySubKeyValue(array &$array, string $key)
-    {
-        usort($array, function ($first, $second) use ($key) {
-            return $first[$key] <=> $second[$key];
-        });
-    }*/
-
     protected function parseUsersList(array $usersList): self
     {
         if (count($usersList) == 0) {
