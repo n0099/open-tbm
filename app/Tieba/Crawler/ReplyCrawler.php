@@ -92,7 +92,7 @@ class ReplyCrawler extends Crawlable
             throw new \LengthException('Reply posts list is empty, posts might already deleted from tieba');
         }
 
-        $usersList = self::convertUsersListToUidKey($usersList);
+        $usersList = static::convertUsersListToUidKey($usersList);
         $repliesUpdateInfo = [];
         $repliesInfo = [];
         $indexesInfo = [];
@@ -103,16 +103,16 @@ class ReplyCrawler extends Crawlable
                 'tid' => $this->threadID,
                 'pid' => $reply['id'],
                 'floor' => $reply['floor'],
-                'content' => self::valueValidate($reply['content'], true),
+                'content' => static::valueValidate($reply['content'], true),
                 'authorUid' => $reply['author_id'],
-                'authorManagerType' => self::valueValidate($usersList[$reply['author_id']]['bawu_type'] ?? null), // might be null for unknown reason
+                'authorManagerType' => static::valueValidate($usersList[$reply['author_id']]['bawu_type'] ?? null), // might be null for unknown reason
                 'authorExpGrade' => $usersList[$reply['author_id']]['level_id'],
                 'subReplyNum' => $reply['sub_post_number'],
                 'postTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
                 'isFold' => $reply['is_fold'],
-                'agreeInfo' => self::valueValidate(($reply['agree']['has_agree'] > 0 ? $reply['agree'] : null), true),
-                'signInfo' => self::valueValidate($reply['signature'], true),
-                'tailInfo' => self::valueValidate($reply['tail_info'], true),
+                'agreeInfo' => static::valueValidate(($reply['agree']['has_agree'] > 0 ? $reply['agree'] : null), true),
+                'signInfo' => static::valueValidate($reply['signature'], true),
+                'tailInfo' => static::valueValidate($reply['tail_info'], true),
                 'clientVersion' => $this->clientVersion,
                 'created_at' => $now,
                 'updated_at' => $now
@@ -120,7 +120,7 @@ class ReplyCrawler extends Crawlable
 
             $latestInfo = end($repliesInfo);
             if ($reply['sub_post_number'] > 0) {
-                $repliesUpdateInfo[$reply['id']] = self::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
+                $repliesUpdateInfo[$reply['id']] = static::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
             }
             $indexesInfo[] = [
                 'created_at' => $now,
@@ -128,7 +128,7 @@ class ReplyCrawler extends Crawlable
                 'postTime' => $latestInfo['postTime'],
                 'type' => 'reply',
                 'fid' => $this->forumID
-            ] + self::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
+            ] + static::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingPid');
 
@@ -146,7 +146,7 @@ class ReplyCrawler extends Crawlable
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
             $chunkInsertBufferSize = 2000;
             $replyModel = Eloquent\PostModelFactory::newReply($this->forumID);
-            foreach (self::groupNullableColumnArray($this->repliesList, [
+            foreach (static::groupNullableColumnArray($this->repliesList, [
                 'authorManagerType'
             ]) as $repliesListGroup) {
                 $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);

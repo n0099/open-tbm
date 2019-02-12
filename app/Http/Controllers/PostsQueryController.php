@@ -6,15 +6,11 @@ use App\Eloquent\IndexModel;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
-use App\Tieba\Eloquent\ReplyModel;
-use App\Tieba\Eloquent\SubReplyModel;
-use App\Tieba\Eloquent\ThreadModel;
 use App\Tieba\Eloquent\UserModel;
 use Carbon\Carbon;
-use function GuzzleHttp\json_decode;
-use function GuzzleHttp\json_encode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use function GuzzleHttp\json_encode;
 
 class PostsQueryController extends Controller
 {
@@ -102,14 +98,14 @@ class PostsQueryController extends Controller
             $repliesInfo->pluck('authorUid'),
             $subRepliesInfo->pluck('authorUid')
         ])->flatten()->unique()->sort()->values()->toArray();
-        return self::convertNestedPostsInfo($threadsInfo->toArray(), $repliesInfo->toArray(), $subRepliesInfo->toArray());
+        return static::convertNestedPostsInfo($threadsInfo->toArray(), $repliesInfo->toArray(), $subRepliesInfo->toArray());
     }
 
     private static function convertNestedPostsInfo(array $threadsInfo = [], array $repliesInfo = [], array $subRepliesInfo = []): array
     {
-        $threadsInfo = self::convertIDListKey($threadsInfo, 'tid');
-        $repliesInfo = collect(self::convertIDListKey($repliesInfo, 'pid'));
-        $subRepliesInfo = collect(self::convertIDListKey($subRepliesInfo, 'spid'));
+        $threadsInfo = static::convertIDListKey($threadsInfo, 'tid');
+        $repliesInfo = collect(static::convertIDListKey($repliesInfo, 'pid'));
+        $subRepliesInfo = collect(static::convertIDListKey($subRepliesInfo, 'spid'));
         $nestedPostsInfo = [];
         foreach ($threadsInfo as $tid => $thread) {
             $threadReplies = $repliesInfo->where('tid', $tid)->toArray(); // can't use values() here to prevent losing posts id key
@@ -486,7 +482,7 @@ class PostsQueryController extends Controller
             abort(400, 'Query type is neither post id nor custom query');
         }
 
-        $nestedPostsInfo = self::getNestedPostsInfoByIDs($postsQueriedInfo, ! $isCustomQuery);
+        $nestedPostsInfo = static::getNestedPostsInfoByIDs($postsQueriedInfo, ! $isCustomQuery);
         $forumInfo = ForumModel::where('fid', $postsQueriedInfo['fid'])->hidePrivateFields()->first()->toArray();
         $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUids)->hidePrivateFields()->get()->toArray();
         $json = json_encode([

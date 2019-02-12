@@ -74,29 +74,29 @@ class ThreadCrawler extends Crawlable
                 "topicType" => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
-                'authorManagerType' => self::valueValidate($thread['author']['bawu_type'] ?? null), // topic thread won't have this
+                'authorManagerType' => static::valueValidate($thread['author']['bawu_type'] ?? null), // topic thread won't have this
                 'postTime' => isset($thread['create_time']) ? Carbon::createFromTimestamp($thread['create_time'])->toDateTimeString() : null, // topic thread won't have this
                 'latestReplyTime' => Carbon::createFromTimestamp($thread['last_time_int'])->toDateTimeString(),
                 'latestReplierUid' => $thread['last_replyer']['id'] ?? null, // topic thread won't have this
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
                 'shareNum' => $thread['share_num'] ?? null, // topic thread won't have this
-                'agreeInfo' => self::valueValidate(isset($thread['agree']) ? ($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null) : null, true), // topic thread won't have this
-                'zanInfo' => self::valueValidate($thread['zan'] ?? null, true),
-                'locationInfo' => self::valueValidate($thread['location'] ?? null, true),
+                'agreeInfo' => static::valueValidate(isset($thread['agree']) ? ($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null) : null, true), // topic thread won't have this
+                'zanInfo' => static::valueValidate($thread['zan'] ?? null, true),
+                'locationInfo' => static::valueValidate($thread['location'] ?? null, true),
                 'clientVersion' => $this->clientVersion,
                 'created_at' => $now,
                 'updated_at' => $now
             ];
 
             $latestInfo = end($threadsInfo);
-            $threadsUpdateInfo[$thread['tid']] = self::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
+            $threadsUpdateInfo[$thread['tid']] = static::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',
                 'fid' => $this->forumID
-            ] + self::getArrayValuesByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
+            ] + static::getArrayValuesByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
         }
         ExceptionAdditionInfo::remove('parsingTid');
 
@@ -114,7 +114,7 @@ class ThreadCrawler extends Crawlable
             ExceptionAdditionInfo::set(['insertingThreads' => true]);
             $chunkInsertBufferSize = 2000;
             $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
-            foreach (self::groupNullableColumnArray($this->threadsList, [
+            foreach (static::groupNullableColumnArray($this->threadsList, [
                 'postTime',
                 'latestReplyTime',
                 'latestReplierUid',

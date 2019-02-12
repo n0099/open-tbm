@@ -24,27 +24,27 @@ class PostModelFactory
     public static function getPostsModelByForumID($fid): array
     {
         return [
-            'thread' => self::newThread($fid),
-            'reply' => self::newReply($fid),
-            'subReply' => self::newSubReply($fid)
+            'thread' => static::newThread($fid),
+            'reply' => static::newReply($fid),
+            'subReply' => static::newSubReply($fid)
         ];
     }
 
     public static function getThreadByID(int $tid): ThreadModel
     {
         $fid = (new IndexModel())->where('tid', $tid)->value('fid');
-        return self::newThread($fid);
+        return static::newThread($fid);
     }
 
     public static function getReplyByID(int $pid): ReplyModel
     {
         $fid = (new IndexModel())->where('pid', $pid)->value('fid');
-        return self::newReply($fid);
+        return static::newReply($fid);
     }
 
     public static function getSubReplyByID(int $spid): SubReplyModel
     {
         $fid = (new IndexModel())->where('spid', $spid)->value('fid');
-        return self::newSubReply($fid);
+        return static::newSubReply($fid);
     }
 }

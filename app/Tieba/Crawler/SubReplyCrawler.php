@@ -88,9 +88,9 @@ class SubReplyCrawler extends Crawlable
                 'tid' => $this->threadID,
                 'pid' => $this->replyID,
                 'spid' => $subReply['id'],
-                'content' => self::valueValidate($subReply['content'], true),
+                'content' => static::valueValidate($subReply['content'], true),
                 'authorUid' => $subReply['author']['id'],
-                'authorManagerType' => self::valueValidate($subReply['author']['bawu_type']),
+                'authorManagerType' => static::valueValidate($subReply['author']['bawu_type']),
                 'authorExpGrade' => $subReply['author']['level_id'],
                 'postTime' => Carbon::createFromTimestamp($subReply['time'])->toDateTimeString(),
                 'clientVersion' => $this->clientVersion,
@@ -105,7 +105,7 @@ class SubReplyCrawler extends Crawlable
                 'postTime' => $latestInfo['postTime'],
                 'type' => 'subReply',
                 'fid' => $this->forumID
-            ] + self::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
+            ] + static::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingSpid');
 

@@ -23,16 +23,16 @@ class PostFactory
 
     public static function getThreadsByModels(iterable $models): array
     {
-        return self::getPostByModels($models, Thread::class);
+        return static::getPostByModels($models, Thread::class);
     }
 
     public static function getRepliesByModels(iterable $models): array
     {
-        return self::getPostByModels($models, Reply::class);
+        return static::getPostByModels($models, Reply::class);
     }
 
     public static function getSubRepliesByModels(iterable $models): array
     {
-        return self::getPostByModels($models, SubReply::class);
+        return static::getPostByModels($models, SubReply::class);
     }
 }
