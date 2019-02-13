@@ -4,7 +4,7 @@ namespace App\Tieba\Crawler;
 
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
-use App\Tieba\Eloquent;
+use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
@@ -112,7 +112,7 @@ class ThreadCrawler extends Crawlable
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingThreads' => true]);
             $chunkInsertBufferSize = 2000;
-            $threadModel = Eloquent\PostModelFactory::newThread($this->forumID);
+            $threadModel = PostModelFactory::newThread($this->forumID);
             foreach (static::groupNullableColumnArray($this->threadsList, [
                 'postTime',
                 'latestReplyTime',

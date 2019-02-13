@@ -2,8 +2,9 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
-use App\Tieba\Eloquent;
+use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
 use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
@@ -120,11 +121,11 @@ class SubReplyCrawler extends Crawlable
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
             $chunkInsertBufferSize = 2000;
-            $subReplyModel = Eloquent\PostModelFactory::newSubReply($this->forumID);
+            $subReplyModel = PostModelFactory::newSubReply($this->forumID);
             $subReplyUpdateFields = array_diff(array_keys($this->subRepliesList[0]), $subReplyModel->updateExpectFields);
             $subReplyModel->chunkInsertOnDuplicate($this->subRepliesList, $subReplyUpdateFields, $chunkInsertBufferSize);
 
-            $indexModel = new \App\Eloquent\IndexModel();
+            $indexModel = new IndexModel();
             $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
             $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
             ExceptionAdditionInfo::remove('insertingSubReplies');

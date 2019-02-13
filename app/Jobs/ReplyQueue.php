@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Eloquent\CrawlingPostModel;
 use App\Tieba\Crawler;
-use App\Tieba\Eloquent;
+use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,7 +41,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
         $oldRepliesInfo = static::convertIDListKey(
-            Eloquent\PostModelFactory::newReply($this->forumID)
+            PostModelFactory::newReply($this->forumID)
                 ->select('pid', 'subReplyNum')
                 ->whereIn('pid', array_keys($newRepliesInfo))->get()->toArray(),
             'pid'
@@ -49,18 +49,18 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         $repliesCrawler->saveLists();
 
         \DB::transaction(function () use ($newRepliesInfo, $oldRepliesInfo) {
-            $latestCrawlingReplies = CrawlingPostModel::select('id', 'pid', 'startTime')
+            $crawlingSubReplies = CrawlingPostModel::select('id', 'pid', 'startTime')
                 ->whereIn('pid', array_keys($newRepliesInfo))->lockForUpdate()->get();
-            $latestCrawlingRepliesID = $latestCrawlingReplies->pluck('pid');
             foreach ($newRepliesInfo as $pid => $newReply) {
-                if ($latestCrawlingRepliesID->contains($pid) === true) { // is latest crawler existed and started before $queueDeleteAfter ago
-                    if ($latestCrawlingReplies->startTime < new Carbon($this->queueDeleteAfter)) {
-                        $latestCrawlingReplies->delete();
+                foreach ($crawlingSubReplies as $crawlingSubReply) {
+                    if ($crawlingSubReply->pid == $pid // is latest reply's sub reply crawler existed and started before $queueDeleteAfter ago
+                        || $crawlingSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
+                        $crawlingSubReply->delete();
                     } else {
-                        continue;
+                        continue 2; // skip current reply's sub reply crawl
                     }
                 }
-                if ((! isset($oldRepliesInfo[$pid]))
+                if ((! isset($oldRepliesInfo[$pid])) // do we have to crawl new sub replies under reply
                     || ($newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum'])) {
                     CrawlingPostModel::insert([
                         'fid' => $this->forumID,

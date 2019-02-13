@@ -4,7 +4,7 @@ namespace App\Tieba\Crawler;
 
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
-use App\Tieba\Eloquent;
+use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
 use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
@@ -144,7 +144,7 @@ class ReplyCrawler extends Crawlable
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
             $chunkInsertBufferSize = 2000;
-            $replyModel = Eloquent\PostModelFactory::newReply($this->forumID);
+            $replyModel = PostModelFactory::newReply($this->forumID);
             foreach (static::groupNullableColumnArray($this->repliesList, [
                 'authorManagerType'
             ]) as $repliesListGroup) {
