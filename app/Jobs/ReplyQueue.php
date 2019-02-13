@@ -36,6 +36,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
     {
         $queueStartTime = microtime(true);
         Log::info('reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
+        \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
@@ -50,9 +51,9 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         \DB::transaction(function () use ($newRepliesInfo, $oldRepliesInfo) {
             $latestCrawlingReplies = CrawlingPostModel::select('id', 'pid', 'startTime')
                 ->whereIn('pid', array_keys($newRepliesInfo))->lockForUpdate()->get();
-            $latestCrawlingRepliesID = array_column($latestCrawlingReplies->toArray(), 'pid');
+            $latestCrawlingRepliesID = $latestCrawlingReplies->pluck('pid');
             foreach ($newRepliesInfo as $pid => $newReply) {
-                if (array_search($pid, $latestCrawlingRepliesID) === true) {
+                if ($latestCrawlingRepliesID->contains($pid) === true) { // is latest crawler existed and started before $queueDeleteAfter ago
                     if ($latestCrawlingReplies->startTime < new Carbon($this->queueDeleteAfter)) {
                         $latestCrawlingReplies->delete();
                     } else {
@@ -67,7 +68,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                         'pid' => $pid,
                         'startTime' => microtime(true)
                     ]); // report crawling sub replies
-                    SubReplyQueue::dispatch($this->forumID, $this->threadID, $pid);
+                    SubReplyQueue::dispatch($this->forumID, $this->threadID, $pid)->onQueue('crawler');
                 }
             }
         });

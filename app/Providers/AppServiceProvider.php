@@ -13,7 +13,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        // immediately rollback any transaction left open by previous failed queue
+        \Queue::looping(function () {
+            while (\DB::transactionLevel() > 0) {
+                \DB::rollBack();
+            }
+        });
     }
 
     /**

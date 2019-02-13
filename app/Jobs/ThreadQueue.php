@@ -35,19 +35,20 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
     {
         $queueStartTime = microtime(true);
         Log::info('thread queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
+        \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        \DB::beginTransaction();
-        $crawlingForumInfo = ['fid' => $this->forumID, 'tid' => 0];
-        $latestCrawlingForum = CrawlingPostModel::select('id', 'startTime')->where($crawlingForumInfo)->lockForUpdate()->first();
-        if ($latestCrawlingForum != null) { // is latest crawler existed and started before $queueDeleteAfter ago
-            if ($latestCrawlingForum->startTime < new Carbon($this->queueDeleteAfter)) {
-                $latestCrawlingForum->delete();
-            } else {
-                return; // exit queue
+        \DB::transaction(function () {
+            $crawlingForumInfo = ['fid' => $this->forumID, 'tid' => 0];
+            $latestCrawlingForum = CrawlingPostModel::select('id', 'startTime')->where($crawlingForumInfo)->lockForUpdate()->first();
+            if ($latestCrawlingForum != null) { // is latest crawler existed and started before $queueDeleteAfter ago
+                if ($latestCrawlingForum->startTime < new Carbon($this->queueDeleteAfter)) {
+                    $latestCrawlingForum->delete();
+                } else {
+                    return; // exit queue
+                }
             }
-        }
-        CrawlingPostModel::insert($crawlingForumInfo + ['startTime' => microtime(true)]); // report crawling threads
-        \DB::commit();
+            CrawlingPostModel::insert($crawlingForumInfo + ['startTime' => microtime(true)]); // report crawling threads
+        });
 
         $threadsCrawler = (new Crawler\ThreadCrawler($this->forumID, $this->forumName))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getThreadsInfo();
@@ -62,9 +63,9 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {
             $latestCrawlingThreads = CrawlingPostModel::select('id', 'tid', 'startTime')
                 ->whereIn('tid', array_keys($newThreadsInfo))->lockForUpdate()->get();
-            $latestCrawlingThreadsID = array_column($latestCrawlingThreads->toArray(), 'tid');
+            $latestCrawlingThreadsID = $latestCrawlingThreads->pluck('tid');
             foreach ($newThreadsInfo as $tid => $newThread) {
-                if (array_search($tid, $latestCrawlingThreadsID) === true) { // is latest crawler existed and started before $queueDeleteAfter ago
+                if ($latestCrawlingThreadsID->contains($tid) === true) { // is latest crawler existed and started before $queueDeleteAfter ago
                     if ($latestCrawlingThreads->startTime < new Carbon($this->queueDeleteAfter)) {
                         $latestCrawlingThreads->delete();
                     } else {
@@ -79,7 +80,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                         'tid' => $tid,
                         'startTime' => microtime(true)
                     ]); // report crawling replies
-                    ReplyQueue::dispatch($this->forumID, $tid);
+                    ReplyQueue::dispatch($this->forumID, $tid)->onQueue('crawler');
                 }
             }
         });

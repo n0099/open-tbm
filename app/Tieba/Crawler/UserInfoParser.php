@@ -65,6 +65,7 @@ class UserInfoParser
 
     public function saveUsersList(): void
     {
+        \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present session's transaction isolation level to reduce deadlock
         ExceptionAdditionInfo::set(['insertingUsers' => true]);
         $chunkInsertBufferSize = 100;
         $userModel = new UserModel();

@@ -141,7 +141,6 @@ class ReplyCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        \DB::statement('SET TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change next transaction's isolation level to reduce deadlock
         \DB::transaction(function () {
             ExceptionAdditionInfo::set(['insertingReplies' => true]);
             $chunkInsertBufferSize = 2000;

@@ -37,6 +37,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
     {
         $queueStartTime = microtime(true);
         Log::info('sub reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
+        \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID))->doCrawl()->saveLists();
 
