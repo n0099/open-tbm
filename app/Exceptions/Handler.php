@@ -36,7 +36,7 @@ class Handler extends ExceptionHandler
     public function report(Exception $exception)
     {
         // report exception addition info
-        Log::error($exception->getMessage() . ', addition info: ' . urldecode(http_build_query(config('globalExceptionAdditionInfo') ?? [], null, ', ')));
+        Log::error($exception->getMessage() . ', addition info: ' . urldecode(http_build_query(ExceptionAdditionInfo::$info ?? [], null, ', ')));
         parent::report($exception);
     }
 

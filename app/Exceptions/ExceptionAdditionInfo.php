@@ -11,19 +11,17 @@ namespace App\Exceptions;
  */
 class ExceptionAdditionInfo
 {
+    public static $info = [];
+
     public static function set(array $info): void
     {
-        config([
-            'globalExceptionAdditionInfo' => config('globalExceptionAdditionInfo') ?? [] + $info
-        ]);
+        static::$info = $info + static::$info;
     }
 
     public static function remove(...$infoName): void
     {
-        $vanillaAdditionInfo = config('globalExceptionAdditionInfo');
         foreach (func_get_args() as $infoName) {
-            unset($vanillaAdditionInfo[$infoName]);
+            unset(static::$info[$infoName]);
         }
-        config(['globalExceptionAdditionInfo' => $vanillaAdditionInfo]);
     }
 }
