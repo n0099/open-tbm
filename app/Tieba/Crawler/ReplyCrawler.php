@@ -106,7 +106,7 @@ class ReplyCrawler extends Crawlable
                 'content' => static::valueValidate($reply['content'], true),
                 'authorUid' => $reply['author_id'],
                 'authorManagerType' => static::valueValidate($usersList[$reply['author_id']]['bawu_type'] ?? null), // might be null for unknown reason
-                'authorExpGrade' => $usersList[$reply['author_id']]['level_id'],
+                'authorExpGrade' => $usersList[$reply['author_id']]['level_id'] ?? null, // might be null for unknown reason
                 'subReplyNum' => $reply['sub_post_number'],
                 'postTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
                 'isFold' => $reply['is_fold'],
@@ -146,7 +146,8 @@ class ReplyCrawler extends Crawlable
             $chunkInsertBufferSize = 2000;
             $replyModel = PostModelFactory::newReply($this->forumID);
             foreach (static::groupNullableColumnArray($this->repliesList, [
-                'authorManagerType'
+                'authorManagerType',
+                'authorExpGrade'
             ]) as $repliesListGroup) {
                 $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);
                 $replyModel->chunkInsertOnDuplicate($repliesListGroup, $replyUpdateFields, $chunkInsertBufferSize);
