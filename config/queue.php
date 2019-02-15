@@ -80,7 +80,7 @@ return [
 
     'failed' => [
         'database' => env('DB_CONNECTION', 'mysql'),
-        'table' => 'failed_jobs',
+        'table' => 'tbm_failed_jobs',
     ],
 
 ];

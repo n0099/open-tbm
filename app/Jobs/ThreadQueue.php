@@ -80,7 +80,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                         'tid' => $tid,
                         'startTime' => microtime(true)
                     ]); // report crawling replies
-                    ReplyQueue::dispatch($this->forumID, $tid);
+                    ReplyQueue::dispatch($this->forumID, $tid)->onQueue('crawler');
                 }
             }
         });

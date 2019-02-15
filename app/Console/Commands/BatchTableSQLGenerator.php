@@ -23,16 +23,28 @@ class BatchTableSQLGenerator extends Command
         {t_thread} => 主题贴表
         {t_reply} => 回复贴表
         {t_subReply} => 楼中楼表');
-        $this->info($input);
         $placeholders = [
             '{t_thread}' => 'tbm_f{fid}_threads',
             '{t_reply}' => 'tbm_f{fid}_replies',
             '{t_subReply}' => 'tbm_f{fid}_subReplies'
         ];
+        $outputSQLs = [];
         foreach (ForumModel::select('fid')->get() as $forum) {
             $placeholdersName = array_keys($placeholders);
             $replacedPlaceholders = str_replace('{fid}', $forum->fid, array_values($placeholders));
-            $this->warn(str_replace($placeholdersName, $replacedPlaceholders, $input));
+            $replacedInput = str_replace($placeholdersName, $replacedPlaceholders, $input);
+            $outputSQLs[] = $replacedInput;
+            $this->warn($replacedInput);
+        }
+        if ($this->confirm('是否执行上述SQL？')) {
+            foreach ($outputSQLs as $outputSQL) {
+                try {
+                    $affectedRows = \DB::statement($outputSQL);
+                    $this->info($outputSQL . '  影响行数：' . $affectedRows ?? 0);
+                } catch (\Exception $e) {
+                    $this->error($outputSQL . '  执行失败：' . $e->getMessage());
+                }
+            }
         }
     }
 }
