@@ -60,8 +60,8 @@ class SubReplyModel extends PostModel
         return $this->scopeIDType($query, 'spid', $spid);
     }
 
-    public function toPost(): \App\Tieba\Post
+    public function toPost(): \App\Tieba\Post\Post
     {
-        return new \App\Tieba\SubReply($this);
+        return new \App\Tieba\Post\SubReply($this);
     }
 }

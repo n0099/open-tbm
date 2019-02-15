@@ -85,7 +85,7 @@ class PostsQueryController extends Controller
 
         $convertJsonContentToHtml = function ($post) {
             if ($post['content'] != null) {
-                $post['content'] = trim(str_replace("\n", '', \App\Tieba\Reply::convertJsonContentToHtml($post['content'])));
+                $post['content'] = trim(str_replace("\n", '', \App\Tieba\Post\Reply::convertJsonContentToHtml($post['content'])));
             }
             return $post;
         };

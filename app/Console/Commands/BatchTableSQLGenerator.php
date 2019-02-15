@@ -42,7 +42,7 @@ class BatchTableSQLGenerator extends Command
                     $affectedRows = \DB::statement($outputSQL);
                     $this->info($outputSQL . '  影响行数：' . $affectedRows ?? 0);
                 } catch (\Exception $e) {
-                    $this->error($outputSQL . '  执行失败：' . $e->getMessage());
+                    $this->error($e->getMessage());
                 }
             }
         }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tieba;
+namespace App\Tieba\Post;
 
 class Thread extends Post
 {

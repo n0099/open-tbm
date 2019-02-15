@@ -60,8 +60,8 @@ class ReplyModel extends PostModel
         return $this->scopeIDType($query, 'pid', $pid);
     }
 
-    public function toPost(): \App\Tieba\Post
+    public function toPost(): \App\Tieba\Post\Post
     {
-        return new \App\Tieba\Reply($this);
+        return new \App\Tieba\Post\Reply($this);
     }
 }

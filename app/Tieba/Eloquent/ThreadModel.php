@@ -59,8 +59,8 @@ class ThreadModel extends PostModel
         return $this->scopeIDType($query, 'tid', $tid);
     }
 
-    public function toPost(): \App\Tieba\Post
+    public function toPost(): \App\Tieba\Post\Post
     {
-        return new \App\Tieba\Thread($this);
+        return new \App\Tieba\Post\Thread($this);
     }
 }

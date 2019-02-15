@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tieba;
+namespace App\Tieba\Post;
 
 use Illuminate\Database\Eloquent\Model;
 use function GuzzleHttp\json_decode;

@@ -1,6 +1,6 @@
 <?php
 
-namespace app\Tieba\Crawler;
+namespace App\Tieba\Crawler;
 
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent\UserModel;

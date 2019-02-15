@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Post
- * Parent abstract class for App\Tieba\Thread|Reply|SubReply class.
+ * Parent abstract class for App\Tieba\Post\Thread|Reply|SubReply class.
  *
  * @package App\Tieba\Eloquent
  */
@@ -56,7 +56,7 @@ abstract class PostModel extends Model
 
     abstract public function scopeTid(Builder $query, $tid): Builder;
 
-    abstract public function toPost(): \App\Tieba\Post;
+    abstract public function toPost(): \App\Tieba\Post\Post;
 
     /**
      * Override the parent relation instance method for passing valid forum id to new related model.
