@@ -12,6 +12,7 @@
 */
 
 Route::view('/', 'index');
+Route::view('/query', 'query');
 
 Auth::routes();
 

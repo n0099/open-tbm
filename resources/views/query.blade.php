@@ -149,7 +149,7 @@
                         <span v-if="thread.stickyType == 'top'" class="badge badge-primary">置顶</span>
                         <span v-if="thread.isGood" class="badge badge-danger">精品</span>
                         <span v-if="thread.topicType == 'text'" class="badge badge-danger">文本话题</span>
-                        <span v-if="thread.topicType == 'text'" class="badge badge-danger">文本话题</span>{{-- TODO: fill unknown picture topic thread type --}}
+                        <span v-if="thread.topicType == 'text'" class="badge badge-danger">文本话题</span><!-- TODO: fill unknown picture topic thread type -->
                         <h6 class="d-inline">{{ thread.title }}</h6>
                         <div class="float-right badge badge-light">
                             <router-link :to="{ name: 'tid', params: { tid: thread.tid } }" class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
@@ -797,7 +797,7 @@
                             document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
                         } else {
                             document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
-                        }topicType
+                        }
                     }
                 },
                 created: function () {
