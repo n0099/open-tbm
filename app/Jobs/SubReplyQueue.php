@@ -44,10 +44,14 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $queueFinishTime = microtime(true);
         \DB::transaction(function () use ($queueFinishTime) {
             // report previous reply crawl finished
-            $perviousCrawlingReply = CrawlingPostModel::select('id', 'startTime')->where(['tid' => $this->threadID, 'pid' => $this->replyID])->first();
-            if ($perviousCrawlingReply != null) { // might already marked as finished by other concurrency queues
-                $perviousCrawlingReply->fill(['duration' => $queueFinishTime - $perviousCrawlingReply->startTime])->save();
-                $perviousCrawlingReply->delete();
+            $currentCrawlingSubReply = CrawlingPostModel::select('id', 'startTime')->where([
+                'type' => 'subReply',
+                'tid' => $this->threadID,
+                'pid' => $this->replyID
+            ])->first();
+            if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
+                $currentCrawlingSubReply->fill(['duration' => $queueFinishTime - $currentCrawlingSubReply->startTime])->save();
+                $currentCrawlingSubReply->delete();
             }
         });
         Log::info('sub reply queue handled after ' . ($queueFinishTime - $queueStartTime));
