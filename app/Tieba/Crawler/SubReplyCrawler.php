@@ -5,6 +5,7 @@ namespace App\Tieba\Crawler;
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent\PostModelFactory;
+use app\Tieba\TiebaException;
 use Carbon\Carbon;
 use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
@@ -37,45 +38,55 @@ class SubReplyCrawler extends Crawlable
             ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => 1]]
         )->getBody(), true);
 
-        $this->parseSubRepliesList($subRepliesJson);
-
-        (new GuzzleHttp\Pool(
-            $client,
-            (function () use ($client, $subRepliesJson) {
-                for ($pn = 2; $pn <= $subRepliesJson['page']['total_page']; $pn++) {
-                    yield function () use ($client, $pn) {
-                        Log::info("Fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
-                        return $client->postAsync(
-                            'http://c.tieba.baidu.com/c/f/pb/floor',
-                            ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => $pn]]
-                        );
-                    };
-                }
-            })(),
-            [
-                'concurrency' => 10,
-                'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
-                    $subRepliesJson = json_decode($response->getBody(), true);
-                    $this->parseSubRepliesList($subRepliesJson);
-                },
-                'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
-                    report($e);
-                }
-            ]
-        ))->promise()->wait();
-
+        try {
+            $this->parseSubRepliesList($subRepliesJson);
+            (new GuzzleHttp\Pool(
+                $client,
+                (function () use ($client, $subRepliesJson) {
+                    for ($pn = 2; $pn <= $subRepliesJson['page']['total_page']; $pn++) {
+                        yield function () use ($client, $pn) {
+                            Log::info("Fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
+                            return $client->postAsync(
+                                'http://c.tieba.baidu.com/c/f/pb/floor',
+                                ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => $pn]]
+                            );
+                        };
+                    }
+                })(),
+                [
+                    'concurrency' => 10,
+                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
+                        $subRepliesJson = json_decode($response->getBody(), true);
+                        $this->parseSubRepliesList($subRepliesJson);
+                    },
+                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
+                        report($e);
+                    }
+                ]
+            ))->promise()->wait();
+        } catch (TiebaException $regularException) {
+            \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
+        } catch (\Exception $e) {
+            report($e);
+        }
         return $this;
     }
 
     private function parseSubRepliesList(array $subRepliesJson): void
     {
-        if ($subRepliesJson['error_code'] == 0) {
-            $subRepliesList = $subRepliesJson['subpost_list'];
-        } else {
-            throw new \RuntimeException("Error from tieba client, raw json: " . json_encode($subRepliesJson));
+        switch ($subRepliesJson['error_code']) {
+            case 0:
+                $subRepliesList = $subRepliesJson['subpost_list'];
+                break;
+            case 4: // {"error_code": "4", "error_msg": "贴子可能已被删除"}
+                throw new TiebaException('Reply already deleted when crawling sub reply.');
+            case 28: // {"error_code": "28", "error_msg": "您浏览的主题已不存在，去看看其他贴子吧"}
+                throw new TiebaException('Thread already deleted when crawling sub reply.');
+            default:
+                throw new \RuntimeException('Error from tieba client when crawling sub reply, raw json: ' . json_encode($subRepliesJson));
         }
         if (count($subRepliesList) == 0) {
-            throw new \LengthException('Sub reply posts list is empty, posts might already deleted from tieba');
+            throw new TiebaException('Sub reply list is empty, posts might already deleted from tieba.');
         }
 
         $usersList = [];

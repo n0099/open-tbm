@@ -43,13 +43,15 @@ class ThreadCrawler extends Crawlable
 
     private function parseThreadsList(array $threadsJson): void
     {
-        if ($threadsJson['error_code'] == 0) {
-            $threadsList = $threadsJson['thread_list'];
-        } else {
-            throw new \RuntimeException("Error from tieba client, raw json: " . json_encode($threadsJson));
+        switch ($threadsJson['error_code']) {
+            case 0:
+                $threadsList = $threadsJson['thread_list'];
+                break;
+            default:
+                throw new \RuntimeException("Error from tieba client when crawling thread, raw json: " . json_encode($threadsJson));
         }
         if (count($threadsList) == 0) {
-            throw new \LengthException('Forum posts list is empty');
+            throw new \LengthException('Forum threads list is empty');
         }
 
         $usersList = [];

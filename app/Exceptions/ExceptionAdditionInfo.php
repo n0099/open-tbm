@@ -24,4 +24,9 @@ class ExceptionAdditionInfo
             unset(static::$info[$infoName]);
         }
     }
+
+    public static function format(): string
+    {
+        return urldecode(http_build_query(static::$info ?? [], null, ', '));
+    }
 }

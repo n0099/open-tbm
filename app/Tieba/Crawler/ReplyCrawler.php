@@ -5,11 +5,13 @@ namespace App\Tieba\Crawler;
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent\PostModelFactory;
+use app\Tieba\TiebaException;
 use Carbon\Carbon;
 use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
+use mysql_xdevapi\Exception;
 
 class ReplyCrawler extends Crawlable
 {
@@ -37,33 +39,38 @@ class ReplyCrawler extends Crawlable
             ['form_params' => ['kz' => $this->threadID, 'pn' => 1]] // reverse order will be ['last' => 1,'r' => 1]
         )->getBody(), true);
 
-        $this->parseRepliesList($repliesJson);
-
-        (new GuzzleHttp\Pool(
-            $client,
-            (function () use ($client, $repliesJson) {
-                for ($pn = 2; $pn <= $repliesJson['page']['total_page']; $pn++) {
-                    yield function () use ($client, $pn) {
-                        Log::info("Start to fetch replies for tid {$this->threadID}, page {$pn}");
-                        return $client->postAsync(
-                            'http://c.tieba.baidu.com/c/f/pb/page',
-                            ['form_params' => ['kz' => $this->threadID, 'pn' => $pn]]
-                        );
-                    };
-                }
-            })(),
-            [
-                'concurrency' => 10,
-                'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
-                    //add_measure($response->getReasonPhrase(), microtime(true), microtime(true));
-                    $repliesJson = json_decode($response->getBody(), true);
-                    $this->parseRepliesList($repliesJson);
-                },
-                'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
-                    report($e);
-                }
-            ]
-        ))->promise()->wait();
+        try {
+            $this->parseRepliesList($repliesJson);
+            (new GuzzleHttp\Pool(
+                $client,
+                (function () use ($client, $repliesJson) {
+                    for ($pn = 2; $pn <= $repliesJson['page']['total_page']; $pn++) {
+                        yield function () use ($client, $pn) {
+                            Log::info("Start to fetch replies for tid {$this->threadID}, page {$pn}");
+                            return $client->postAsync(
+                                'http://c.tieba.baidu.com/c/f/pb/page',
+                                ['form_params' => ['kz' => $this->threadID, 'pn' => $pn]]
+                            );
+                        };
+                    }
+                })(),
+                [
+                    'concurrency' => 10,
+                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
+                        //add_measure($response->getReasonPhrase(), microtime(true), microtime(true));
+                        $repliesJson = json_decode($response->getBody(), true);
+                        $this->parseRepliesList($repliesJson);
+                    },
+                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
+                        report($e);
+                    }
+                ]
+            ))->promise()->wait();
+        } catch (TiebaException $regularException) {
+            \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
+        } catch (\Exception $e) {
+            report($e);
+        }
 
         return $this;
     }
@@ -82,14 +89,18 @@ class ReplyCrawler extends Crawlable
 
     private function parseRepliesList(array $repliesJson): void
     {
-        if ($repliesJson['error_code'] == 0) {
-            $repliesList = $repliesJson['post_list'];
-            $usersList = $repliesJson['user_list'];
-        } else {
-            throw new \RuntimeException("Error from tieba client, raw json: " . json_encode($repliesJson));
+        switch ($repliesJson['error_code']) {
+            case 0:
+                $repliesList = $repliesJson['post_list'];
+                $usersList = $repliesJson['user_list'];
+                break;
+            case 4: // {"error_code": "4", "error_msg": "贴子可能已被删除"}
+                throw new TiebaException('Thread already deleted when crawling reply.');
+            default:
+                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($repliesJson));
         }
         if (count($repliesList) == 0) {
-            throw new \LengthException('Reply posts list is empty, posts might already deleted from tieba');
+            throw new TiebaException('Reply list is empty, posts might already deleted from tieba.');
         }
 
         $usersList = static::convertUsersListToUidKey($usersList);
