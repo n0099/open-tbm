@@ -20,7 +20,7 @@ class PostsQueryController extends Controller
 
     protected static function convertIDListKey(array $list, string $keyName): array
     {
-        // same with \App\Jobs\CrawlerQueue::convertIDListKey()
+        // same with \App\Jobs\Crawler\CrawlerQueue::convertIDListKey()
         $newList = [];
 
         foreach ($list as $item) {

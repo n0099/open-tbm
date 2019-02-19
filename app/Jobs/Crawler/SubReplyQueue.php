@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Crawler;
 
 use App\Eloquent\CrawlingPostModel;
 use App\Tieba\Crawler;
