@@ -75,7 +75,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         });
 
         $queueFinishTime = microtime(true);
-        \DB::transaction(function () use ($queueFinishTime) {
+        \DB::transaction(function () use ($queueFinishTime, $repliesCrawler) {
             // report previous thread crawl finished
             $currentCrawlingReply = CrawlingPostModel::select('id', 'startTime')->where([
                 'type' => 'reply', // not including sub reply crawler queue
@@ -83,7 +83,9 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 'pid' => 0
             ])->first();
             if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
-                $currentCrawlingReply->fill(['duration' => $queueFinishTime - $currentCrawlingReply->startTime])->save();
+                $currentCrawlingReply->fill([
+                    'duration' => $queueFinishTime - $currentCrawlingReply->startTime
+                ] + $repliesCrawler->getTimes())->save();
                 $currentCrawlingReply->delete();
             }
         });

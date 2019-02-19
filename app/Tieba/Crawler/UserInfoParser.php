@@ -10,16 +10,17 @@ class UserInfoParser
 {
     protected $usersList = [];
 
-    public function parseUsersList(array $usersList): self
+    public function parseUsersList(array $usersList): int
     {
         if (count($usersList) == 0) {
             throw new \LengthException('Users list is empty');
         }
 
         $usersInfo = [];
+        $parsedUserTimes = 0;
+        $now = Carbon::now();
         foreach ($usersList as $user) {
             ExceptionAdditionInfo::set(['parsingUid' => $user['id']]);
-            $now = Carbon::now();
             if ($user['id'] == '' || $user['id'] < 0) { // TODO: compatible with anonymous user
                 $usersInfo[] = [
                 ];
@@ -43,12 +44,13 @@ class UserInfoParser
                     'updated_at' => $now
                 ];
             }
+            $parsedUserTimes += 1;
         }
         ExceptionAdditionInfo::remove('parsingUid');
         // lazy saving to Eloquent model
         $this->pushUsersList($usersInfo);
 
-        return $this;
+        return $parsedUserTimes;
     }
 
     private function pushUsersList($newUsersList): void

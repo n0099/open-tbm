@@ -39,10 +39,10 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         Log::info('sub reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID))->doCrawl()->saveLists();
+        $subRepliesCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID))->doCrawl()->saveLists();
 
         $queueFinishTime = microtime(true);
-        \DB::transaction(function () use ($queueFinishTime) {
+        \DB::transaction(function () use ($queueFinishTime, $subRepliesCrawler) {
             // report previous reply crawl finished
             $currentCrawlingSubReply = CrawlingPostModel::select('id', 'startTime')->where([
                 'type' => 'subReply',
@@ -50,7 +50,9 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                 'pid' => $this->replyID
             ])->first();
             if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
-                $currentCrawlingSubReply->fill(['duration' => $queueFinishTime - $currentCrawlingSubReply->startTime])->save();
+                $currentCrawlingSubReply->fill([
+                    'duration' => $queueFinishTime - $currentCrawlingSubReply->startTime
+                ] + $subRepliesCrawler->getTimes())->save();
                 $currentCrawlingSubReply->delete();
             }
         });

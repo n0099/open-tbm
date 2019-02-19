@@ -93,7 +93,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         });
 
         $queueFinishTime = microtime(true);
-        \DB::transaction(function () use ($queueFinishTime) {
+        \DB::transaction(function () use ($queueFinishTime, $threadsCrawler) {
             // report previous finished forum crawl
             $currentCrawlingForum = CrawlingPostModel::select('id', 'startTime')->where([
                 'type' => 'thread', // not including reply and sub reply crawler queue
@@ -101,7 +101,9 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 'tid' => 0
             ])->first();
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
-                $currentCrawlingForum->fill(['duration' => $queueFinishTime - $currentCrawlingForum->startTime])->save();
+                $currentCrawlingForum->fill([
+                    'duration' => $queueFinishTime - $currentCrawlingForum->startTime
+                ] + $threadsCrawler->getTimes())->save();
                 $currentCrawlingForum->delete();
             }
         });

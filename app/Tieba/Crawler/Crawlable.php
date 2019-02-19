@@ -12,9 +12,24 @@ abstract class Crawlable
 
     protected $indexesList = [];
 
+    protected $webRequestTimes = 0;
+
+    protected $parsedPostTimes = 0;
+
+    protected $parsedUserTimes = 0;
+
     abstract public function doCrawl();
 
     abstract public function saveLists();
+
+    public function getTimes(): array
+    {
+        return [
+            'webRequestTimes' => $this->webRequestTimes,
+            'parsedPostTimes' => $this->parsedPostTimes,
+            'parsedUserTimes' => $this->parsedUserTimes
+        ];
+    }
 
     protected function getClientHelper(): ClientRequester
     {

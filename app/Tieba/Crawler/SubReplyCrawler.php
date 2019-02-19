@@ -28,6 +28,12 @@ class SubReplyCrawler extends Crawlable
 
     protected $subRepliesList = [];
 
+    protected $webRequestTimes = 0;
+
+    protected $parsedPostTimes = 0;
+
+    protected $parsedUserTimes = 0;
+
     public function doCrawl(): self
     {
         $client = $this->getClientHelper();
@@ -37,6 +43,7 @@ class SubReplyCrawler extends Crawlable
             'http://c.tieba.baidu.com/c/f/pb/floor',
             ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => 1]]
         )->getBody(), true);
+        $this->webRequestTimes += 1;
 
         try {
             $this->parseSubRepliesList($subRepliesJson);
@@ -56,6 +63,7 @@ class SubReplyCrawler extends Crawlable
                 [
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
+                        $this->webRequestTimes += 1;
                         $subRepliesJson = json_decode($response->getBody(), true);
                         $this->parseSubRepliesList($subRepliesJson);
                     },
@@ -110,6 +118,7 @@ class SubReplyCrawler extends Crawlable
                 'updated_at' => $now
             ];
 
+            $this->parsedPostTimes += 1;
             $latestInfo = end($subRepliesInfo);
             $indexesInfo[] = [
                 'created_at' => $now,
@@ -122,7 +131,7 @@ class SubReplyCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingSpid');
 
         // lazy saving to Eloquent model
-        $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
+        $this->parsedUserTimes = $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
         $this->subRepliesList = array_merge($this->subRepliesList, $subRepliesInfo);
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);
     }
@@ -158,7 +167,10 @@ class SubReplyCrawler extends Crawlable
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,
             'crawlingTid' => $tid,
-            'crawlingPid' => $pid
+            'crawlingPid' => $pid,
+            'webRequestTimes' => &$this->webRequestTimes, // assign by reference will sync values change with addition info
+            'parsedPostTimes' => &$this->parsedPostTimes,
+            'parsedUserTimes' => &$this->parsedUserTimes
         ]);
     }
 }

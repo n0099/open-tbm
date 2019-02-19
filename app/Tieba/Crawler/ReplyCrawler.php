@@ -11,7 +11,6 @@ use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
-use mysql_xdevapi\Exception;
 
 class ReplyCrawler extends Crawlable
 {
@@ -29,6 +28,12 @@ class ReplyCrawler extends Crawlable
 
     protected $repliesUpdateInfo = [];
 
+    protected $webRequestTimes = 0;
+
+    protected $parsedPostTimes = 0;
+
+    protected $parsedUserTimes = 0;
+
     public function doCrawl(): self
     {
         $client = $this->getClientHelper();
@@ -38,6 +43,7 @@ class ReplyCrawler extends Crawlable
             'http://c.tieba.baidu.com/c/f/pb/page',
             ['form_params' => ['kz' => $this->threadID, 'pn' => 1]] // reverse order will be ['last' => 1,'r' => 1]
         )->getBody(), true);
+        $this->webRequestTimes += 1;
 
         try {
             $this->parseRepliesList($repliesJson);
@@ -57,7 +63,7 @@ class ReplyCrawler extends Crawlable
                 [
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
-                        //add_measure($response->getReasonPhrase(), microtime(true), microtime(true));
+                        $this->webRequestTimes += 1;
                         $repliesJson = json_decode($response->getBody(), true);
                         $this->parseRepliesList($repliesJson);
                     },
@@ -129,6 +135,7 @@ class ReplyCrawler extends Crawlable
                 'updated_at' => $now
             ];
 
+            $this->parsedPostTimes += 1;
             $latestInfo = end($repliesInfo);
             if ($reply['sub_post_number'] > 0) {
                 $repliesUpdateInfo[$reply['id']] = static::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
@@ -144,7 +151,7 @@ class ReplyCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingPid');
 
         // lazy saving to Eloquent model
-        $this->usersInfo->parseUsersList($usersList);
+        $this->parsedUserTimes = $this->usersInfo->parseUsersList($usersList);
         $this->repliesUpdateInfo = $repliesUpdateInfo + $this->repliesUpdateInfo;
         $this->repliesList = array_merge($this->repliesList, $repliesInfo);
         $this->indexesList = array_merge($this->indexesList, $indexesInfo);
@@ -189,7 +196,10 @@ class ReplyCrawler extends Crawlable
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,
-            'crawlingTid' => $tid
+            'crawlingTid' => $tid,
+            'webRequestTimes' => &$this->webRequestTimes, // assign by reference will sync values change with addition info
+            'parsedPostTimes' => &$this->parsedPostTimes,
+            'parsedUserTimes' => &$this->parsedUserTimes
         ]);
     }
 }

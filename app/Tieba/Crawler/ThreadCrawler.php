@@ -26,6 +26,12 @@ class ThreadCrawler extends Crawlable
 
     protected $threadsUpdateInfo = [];
 
+    protected $webRequestTimes = 0;
+
+    protected $parsedPostTimes = 0;
+
+    protected $parsedUserTimes = 0;
+
     public function doCrawl(): self
     {
         $client = $this->getClientHelper();
@@ -35,6 +41,7 @@ class ThreadCrawler extends Crawlable
             'http://c.tieba.baidu.com/c/f/frs/page',
             ['form_params' => ['kw' => $this->forumName, 'pn' => 1, 'rn' => 50]]
         )->getBody(), true);
+        $this->webRequestTimes += 1;
 
         $this->parseThreadsList($threadsList);
 
@@ -91,6 +98,7 @@ class ThreadCrawler extends Crawlable
                 'updated_at' => $now
             ];
 
+            $this->parsedPostTimes += 1;
             $latestInfo = end($threadsInfo);
             $threadsUpdateInfo[$thread['tid']] = static::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
             $indexesInfo[] = [
@@ -103,7 +111,7 @@ class ThreadCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingTid');
 
         // lazy saving to Eloquent model
-        $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
+        $this->parsedUserTimes = $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
         $this->threadsUpdateInfo = $threadsUpdateInfo;
         $this->threadsList = $threadsInfo;
         $this->indexesList = $indexesInfo;
@@ -151,7 +159,10 @@ class ThreadCrawler extends Crawlable
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $forumID,
-            'crawlingForumName' => $forumName
+            'crawlingForumName' => $forumName,
+            'webRequestTimes' => &$this->webRequestTimes, // assign by reference will sync values change with addition info
+            'parsedPostTimes' => &$this->parsedPostTimes,
+            'parsedUserTimes' => &$this->parsedUserTimes
         ]);
     }
 }
