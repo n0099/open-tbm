@@ -392,7 +392,6 @@
                             <input v-model="queryData.query.postTimeEnd" data-param="postTimeEnd" id="queryPostTimeEnd" type="datetime-local" class="custom-query-param form-control">
                         </div>
                     </div>
-                    <button class="form-group form-row btn btn-light" type="button" data-toggle="collapse" data-target="#queryCustomQueryParamsCollapse" aria-expanded="false" aria-controls="queryCustomQueryParamsCollapse">展开/折叠搜索查询参数</button>
                     <div id="queryCustomQueryParamsCollapse" class="collapse">
                         <div class="card-body">
                             <div class="form-group form-row">
@@ -547,6 +546,7 @@
                     </div>
                     <div class="form-group form-row">
                         <button type="submit" class="btn btn-primary">查询</button>
+                        <button class="ml-2 btn btn-light" type="button" data-toggle="collapse" data-target="#queryCustomQueryParamsCollapse" aria-expanded="false" aria-controls="queryCustomQueryParamsCollapse">搜索查询参数</button>
                     </div>
                 </form>
                 <posts-list v-for="(postsData, currentPostPage) in postsPages"

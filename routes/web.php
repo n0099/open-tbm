@@ -12,7 +12,7 @@
 */
 
 Route::view('/', 'index');
-Route::view('/query', 'query');
+Route::view('/query/{argu?}', 'query')->where('argu', '.*');
 
 Auth::routes();
 

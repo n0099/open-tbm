@@ -12,7 +12,7 @@
         <link href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" rel="stylesheet">
         <link href="{{ $baseUrl }}/css/bootstrap-callout.css" rel="stylesheet">
         <style>
-            @media (max-width: 767.98px) {
+            @media (max-width: 991.98px) {
                 .container {
                     max-width: 100%;
                 }
