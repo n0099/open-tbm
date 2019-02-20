@@ -25,9 +25,6 @@
             background-image: url({{ $baseUrl }}/svg/tombstone-posts-list.svg);
             background-size: 100%;
         }
-        #error-404-template {
-            display: none;
-        }
 
         .floating-posts-nav-btn {
             opacity: 0.5;
@@ -552,7 +549,7 @@
                 <posts-list v-for="(postsData, currentPostPage) in postsPages"
                             :key="currentPostPage"
                             :posts-data="postsData"></posts-list>
-                <loading-posts-placeholder v-if="loadingNewPosts === true"></loading-posts-placeholder>
+                <loading-posts-placeholder v-if="loadingNewPosts"></loading-posts-placeholder>
             </div>
         </template>
         <div id="posts-list-pages">
@@ -573,7 +570,7 @@
                     </div>
                 </div>
             </div>
-            <div id="error-404-template">
+            <div id="error-404-template" class="d-none">
                 <hr />
                 <div class="text-center" style="font-size: 8em">404</div>
             </div>
@@ -768,14 +765,13 @@
 
                             // is requesting new pages data on same query params or loading new data on different query params
                             if (shouldReplacePage) {
+                                $('.posts-list').remove(); // remove all previous query posts list to prevent hiding wrong reply item
                                 this.$data.postsPages = [jsonData];
                             } else {
                                 this.$data.postsPages.push(jsonData);
                             }
                             if (pagesInfo.totalItems === 0) {
                                 ajaxErrorCallback();
-                            } else {
-                                $('#error-404-template').hide();
                             }
 
                             new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
@@ -828,6 +824,7 @@
                 watch: {
                     loadingNewPosts: function () {
                         if (this.$data.loadingNewPosts) {
+                            $('#error-404-template').hide();
                             $('.posts-list > .reply-list-next-page').remove();
                         } else {
                             $('#first-loading-placeholder').hide(); // use hide() instead of remove() to prevent vue can't find loading-posts-placeholder-template
