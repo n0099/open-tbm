@@ -21,13 +21,18 @@ class UserInfoParser
         $now = Carbon::now();
         foreach ($usersList as $user) {
             ExceptionAdditionInfo::set(['parsingUid' => $user['id']]);
-            if ($user['id'] == '' || $user['id'] < 0) { // TODO: compatible with anonymous user
-                $usersInfo[] = [
-                ];
-            } else {
+            if ($user['id'] == '') {
+                return 0; // when thread's author user is anonymous, the first uid in users list will be empty string and will be re-recorded after next
+            } elseif ($user['id'] < 0) { // anonymous user
                 $usersInfo[] = [
                     'uid' => $user['id'],
-                    'name' => $user['name'],
+                    'name' => $user['name_show'],
+                    'avatarUrl' => $user['portrait']
+                ];
+            } else { // normal or canceled user
+                $usersInfo[] = [
+                    'uid' => $user['id'],
+                    'name' => Crawlable::valueValidate($user['name']),
                     'displayName' => $user['name'] == $user['name_show'] ? null : $user['name_show'],
                     'avatarUrl' => $user['portrait'],
                     'gender' => Crawlable::valueValidate($user['gender']),

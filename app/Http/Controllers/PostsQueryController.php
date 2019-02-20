@@ -231,7 +231,10 @@ class PostsQueryController extends Controller
 
                 foreach ($queryParams as $paramName => $paramValue) {
                     $applyParamsQueryOnPostModel = function () use ($queryParams, $queryUserType, $paramName, $paramValue, $postType, $postModel, $postsModel) {
-                        $applyUserInfoParamSubQuery = function (array $userTypes, iterable $userIDs) use ($postType, $postModel, $postsModel): Builder {
+                        $applyUserInfoParamSubQuery = function (array $userTypes, string $userInfoParamName, $userInfoParamValue) use ($postType, $postModel, $postsModel): Builder {
+                            $userIDs = \Cache::remember("postsQuery-UserInfoParam-{$userInfoParamName}={$userInfoParamValue}", 1, function () use ($userInfoParamName, $userInfoParamValue) {
+                                return UserModel::where($userInfoParamName, $userInfoParamValue)->pluck('uid'); // cache previous user info params query for 1 mins to prevent duplicate query in a single query
+                            });
                             foreach ($userTypes as $userType) {
                                 if ($userType == 'latestReplier') {
                                     if ($postType == 'thread') {
@@ -296,7 +299,7 @@ class PostsQueryController extends Controller
                                     $postModel = $postModel->where('floor', '!=', 1);
                                 }
 
-                                if (($queryParams['postContentRegex'] ?? false) == true) {
+                                if (($queryParams['postContentRegex'] ?? false)) {
                                     $postModel = $postModel->where('content', 'REGEXP', $paramValue);
                                 } else {
                                     $postModel = $postModel->where(function ($postModel) use ($paramValue) {
@@ -338,13 +341,13 @@ class PostsQueryController extends Controller
                                 return $postModel->where('shareNum', $queryParams['threadShareNumRange'] ?? '=', $paramValue);
                                 break;
                             case 'userName':
-                                return $applyUserInfoParamSubQuery($queryUserType, UserModel::where('name', $paramValue)->pluck('uid')); // TODO: might cause duplicated uid query
+                                return $applyUserInfoParamSubQuery($queryUserType, 'name', $paramValue);
                                 break;
                             case 'userDisplayName':
-                                return $applyUserInfoParamSubQuery($queryUserType, UserModel::where('displayName', $paramValue)->pluck('uid'));
+                                return $applyUserInfoParamSubQuery($queryUserType, 'displayName', $paramValue);
                                 break;
                             case 'userGender':
-                                return $applyUserInfoParamSubQuery($queryUserType, UserModel::where('gender', $paramValue)->pluck('uid'));
+                                return $applyUserInfoParamSubQuery($queryUserType, 'gender', $paramValue);
                                 break;
                             case 'userExpGrade':
                                 if ($postType == 'thread') {
