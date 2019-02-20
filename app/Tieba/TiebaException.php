@@ -1,6 +1,6 @@
 <?php
 
-namespace app\Tieba;
+namespace App\Tieba;
 
 class TiebaException extends \Exception
 {

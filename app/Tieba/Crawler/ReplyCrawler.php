@@ -5,7 +5,7 @@ namespace App\Tieba\Crawler;
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\Eloquent\PostModelFactory;
-use app\Tieba\TiebaException;
+use App\Tieba\TiebaException;
 use Carbon\Carbon;
 use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
