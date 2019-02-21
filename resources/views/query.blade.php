@@ -7,7 +7,7 @@
     <style>
         .lazyload, .lazyloading {
             opacity: 0;
-            background: #f7f7f7 url({{ $baseUrl }}/svg/icon-loading-blocks.svg) no-repeat center;
+            background: #f7f7f7 url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
         }
         .lazyloaded {
             opacity: 1;
@@ -16,13 +16,13 @@
         .loading-icon {
             width: 100px;
             height: 100px;
-            background-image: url({{ $baseUrl }}/svg/icon-loading-blocks.svg);
+            background-image: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif);
             background-size: 100%;
         }
 
         .posts-list-placeholder {
             height: 480px;
-            background-image: url({{ $baseUrl }}/svg/tombstone-posts-list.svg);
+            background-image: url({{ $baseUrl }}/img/tombstone-posts-list.svg);
             background-size: 100%;
         }
 
