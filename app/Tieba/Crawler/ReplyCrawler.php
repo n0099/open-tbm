@@ -159,25 +159,27 @@ class ReplyCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        \DB::transaction(function () {
-            ExceptionAdditionInfo::set(['insertingReplies' => true]);
-            $chunkInsertBufferSize = 2000;
-            $replyModel = PostModelFactory::newReply($this->forumID);
-            foreach (static::groupNullableColumnArray($this->repliesList, [
-                'authorManagerType',
-                'authorExpGrade'
-            ]) as $repliesListGroup) {
-                $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);
-                $replyModel->chunkInsertOnDuplicate($repliesListGroup, $replyUpdateFields, $chunkInsertBufferSize);
-            }
+        if ($this->indexesList != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+            \DB::transaction(function () {
+                ExceptionAdditionInfo::set(['insertingReplies' => true]);
+                $chunkInsertBufferSize = 2000;
+                $replyModel = PostModelFactory::newReply($this->forumID);
+                foreach (static::groupNullableColumnArray($this->repliesList, [
+                    'authorManagerType',
+                    'authorExpGrade'
+                ]) as $repliesListGroup) {
+                    $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);
+                    $replyModel->chunkInsertOnDuplicate($repliesListGroup, $replyUpdateFields, $chunkInsertBufferSize);
+                }
 
-            $indexModel = new IndexModel();
-            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
-            ExceptionAdditionInfo::remove('insertingReplies');
+                $indexModel = new IndexModel();
+                $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
+                $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+                ExceptionAdditionInfo::remove('insertingReplies');
 
-            $this->usersInfo->saveUsersList();
-        });
+                $this->usersInfo->saveUsersList();
+            });
+        }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid');
         return $this;

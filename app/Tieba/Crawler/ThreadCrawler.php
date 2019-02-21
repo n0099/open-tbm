@@ -119,28 +119,30 @@ class ThreadCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        \DB::transaction(function () {
-            ExceptionAdditionInfo::set(['insertingThreads' => true]);
-            $chunkInsertBufferSize = 2000;
-            $threadModel = PostModelFactory::newThread($this->forumID);
-            foreach (static::groupNullableColumnArray($this->threadsList, [
-                'postTime',
-                'latestReplyTime',
-                'latestReplierUid',
-                'shareNum',
-                'agreeInfo'
-            ]) as $threadsListGroup) {
-                $threadUpdateFields = array_diff(array_keys($threadsListGroup[0]), $threadModel->updateExpectFields);
-                $threadModel->chunkInsertOnDuplicate($threadsListGroup, $threadUpdateFields, $chunkInsertBufferSize);
-            }
+        if ($this->indexesList != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+            \DB::transaction(function () {
+                ExceptionAdditionInfo::set(['insertingThreads' => true]);
+                $chunkInsertBufferSize = 2000;
+                $threadModel = PostModelFactory::newThread($this->forumID);
+                foreach (static::groupNullableColumnArray($this->threadsList, [
+                    'postTime',
+                    'latestReplyTime',
+                    'latestReplierUid',
+                    'shareNum',
+                    'agreeInfo'
+                ]) as $threadsListGroup) {
+                    $threadUpdateFields = array_diff(array_keys($threadsListGroup[0]), $threadModel->updateExpectFields);
+                    $threadModel->chunkInsertOnDuplicate($threadsListGroup, $threadUpdateFields, $chunkInsertBufferSize);
+                }
 
-            $indexModel = new IndexModel();
-            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
-            ExceptionAdditionInfo::remove('insertingThreads');
+                $indexModel = new IndexModel();
+                $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
+                $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+                ExceptionAdditionInfo::remove('insertingThreads');
 
-            $this->usersInfo->saveUsersList();
-        });
+                $this->usersInfo->saveUsersList();
+            });
+        }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
         return $this;

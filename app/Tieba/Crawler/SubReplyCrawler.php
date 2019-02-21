@@ -138,20 +138,22 @@ class SubReplyCrawler extends Crawlable
 
     public function saveLists(): self
     {
-        \DB::transaction(function () {
-            ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
-            $chunkInsertBufferSize = 2000;
-            $subReplyModel = PostModelFactory::newSubReply($this->forumID);
-            $subReplyUpdateFields = array_diff(array_keys($this->subRepliesList[0]), $subReplyModel->updateExpectFields);
-            $subReplyModel->chunkInsertOnDuplicate($this->subRepliesList, $subReplyUpdateFields, $chunkInsertBufferSize);
+        if ($this->indexesList != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+            \DB::transaction(function () {
+                ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
+                $chunkInsertBufferSize = 2000;
+                $subReplyModel = PostModelFactory::newSubReply($this->forumID);
+                $subReplyUpdateFields = array_diff(array_keys($this->subRepliesList[0]), $subReplyModel->updateExpectFields);
+                $subReplyModel->chunkInsertOnDuplicate($this->subRepliesList, $subReplyUpdateFields, $chunkInsertBufferSize);
 
-            $indexModel = new IndexModel();
-            $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-            $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
-            ExceptionAdditionInfo::remove('insertingSubReplies');
+                $indexModel = new IndexModel();
+                $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
+                $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+                ExceptionAdditionInfo::remove('insertingSubReplies');
 
-            $this->usersInfo->saveUsersList();
-        });
+                $this->usersInfo->saveUsersList();
+            });
+        }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');
         return $this;
