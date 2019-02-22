@@ -55,7 +55,7 @@ abstract class Crawlable
         ]);
     }
 
-    public static function valueValidate($value, bool $isJson = false)
+    public static function nullableValidate($value, bool $isJson = false)
     {
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;

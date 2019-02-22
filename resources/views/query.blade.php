@@ -570,7 +570,7 @@
                     </div>
                 </div>
             </div>
-            <div id="error-404-template" class="d-none">
+            <div id="error-404-template">
                 <hr />
                 <div class="text-center" style="font-size: 8em">404</div>
             </div>
@@ -590,6 +590,8 @@
             }).on('ajaxStop', () => {
                 NProgress.done();
             });
+
+            $('#error-404-template').hide();
 
             new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'query' } });
             Vue.component('loading-posts-placeholder', {

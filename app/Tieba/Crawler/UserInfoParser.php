@@ -32,19 +32,19 @@ class UserInfoParser
             } else { // normal or canceled user
                 $usersInfo[] = [
                     'uid' => $user['id'],
-                    'name' => Crawlable::valueValidate($user['name']),
+                    'name' => Crawlable::nullableValidate($user['name']),
                     'displayName' => $user['name'] == $user['name_show'] ? null : $user['name_show'],
                     'avatarUrl' => $user['portrait'],
-                    'gender' => Crawlable::valueValidate($user['gender']),
-                    'fansNickname' => isset($user['fans_nickname']) ? Crawlable::valueValidate($user['fans_nickname']) : null,
-                    'iconInfo' => Crawlable::valueValidate($user['iconinfo'], true),
+                    'gender' => Crawlable::nullableValidate($user['gender']),
+                    'fansNickname' => isset($user['fans_nickname']) ? Crawlable::nullableValidate($user['fans_nickname']) : null,
+                    'iconInfo' => Crawlable::nullableValidate($user['iconinfo'], true),
                     'alaInfo' => (
                         ! isset($user['ala_info']['lat'])
-                        || Crawlable::valueValidate($user['ala_info']) != null
+                        || Crawlable::nullableValidate($user['ala_info']) != null
                         && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0)
                     )
                         ? null
-                        : Crawlable::valueValidate($user['ala_info'], true),
+                        : Crawlable::nullableValidate($user['ala_info'], true),
                     'created_at' => $now,
                     'updated_at' => $now
                 ];
