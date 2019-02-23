@@ -17,12 +17,19 @@ Route::get('/postsQuery', 'PostsQueryController@query');
 Route::get('/forumsList', function () {
     echo App\Tieba\Eloquent\ForumModel::all()->toJson();
 });
-/*Route::get('/index/tid/{tid}', 'SearchController@searchByTid');
-Route::get('/index/tid/{tid}/pid/{pid}', 'SearchController@searchByTid');
-Route::get('/index/tid/{tid}/pid/{pid}/spid/{spid}', 'SearchController@searchByTid');
-Route::get('/index/pid/{pid}', 'SearchController@searchByPid');
-Route::get('/index/pid/{pid}/spid/{spid}', 'SearchController@searchByPid');
-Route::get('/index/spid/{spid}', 'SearchController@searchBySpid');*/
+Route::get('/status', function () {
+    return \DB::table('tbm_crawledPosts')->select([
+        'type',
+        'fid',
+        'tid',
+        'pid',
+        'startTime',
+        'duration',
+        'webRequestTimes',
+        'parsedPostTimes',
+        'parsedUserTimes'
+    ])->orderBy('id', 'DESC')->limit(10000)->get()->toJson();
+});
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();

@@ -13,7 +13,7 @@
 
 Route::view('/', 'index');
 Route::view('/query/{argu?}', 'query')->where('argu', '.*');
+Route::view('/status', 'status');
 
 Auth::routes();
-
 Route::get('/home', 'HomeController@index')->name('home');

@@ -98,6 +98,7 @@
                 <div class="container">Made by n0099 © 2018 Copyright</div>
             </footer>
         </footer>
+        <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
         <script async src="https://cdn.jsdelivr.net/npm/lazysizes@4.1.5/lazysizes.min.js"></script>
