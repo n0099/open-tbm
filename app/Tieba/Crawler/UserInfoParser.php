@@ -27,7 +27,14 @@ class UserInfoParser
                 $usersInfo[] = [
                     'uid' => $user['id'],
                     'name' => $user['name_show'],
-                    'avatarUrl' => $user['portrait']
+                    'displayName' => null,
+                    'avatarUrl' => $user['portrait'],
+                    'gender' => null,
+                    'fansNickname' => null,
+                    'iconInfo' => null,
+                    'alaInfo' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now
                 ];
             } else { // normal or canceled user
                 $usersInfo[] = [
