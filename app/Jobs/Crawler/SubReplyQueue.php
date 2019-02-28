@@ -15,13 +15,13 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $queueStartTime;
+
     protected $forumID;
 
     private $threadID;
 
     private $replyID;
-
-    private $queuePushTime;
 
     public function __construct(int $fid, int $tid, int $pid)
     {
@@ -30,13 +30,11 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->replyID = $pid;
-        $this->queuePushTime = microtime(true);
     }
 
     public function handle()
     {
-        $queueStartTime = microtime(true);
-        Log::info('sub reply queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
+        $this->queueStartTime = microtime(true);
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $subRepliesCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID))->doCrawl()->saveLists();
@@ -51,11 +49,11 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
             ])->first();
             if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingSubReply->fill([
-                    'duration' => $queueFinishTime - $currentCrawlingSubReply->startTime
+                    'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $subRepliesCrawler->getTimes())->save();
                 $currentCrawlingSubReply->delete();
             }
         });
-        Log::info('sub reply queue handled after ' . ($queueFinishTime - $queueStartTime));
+        Log::info('sub reply queue handled after ' . ($queueFinishTime - $this->queueStartTime));
     }
 }

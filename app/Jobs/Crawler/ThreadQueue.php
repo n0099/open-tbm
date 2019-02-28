@@ -17,24 +17,22 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $queueStartTime;
+
     protected $forumID;
 
     private $forumName;
-
-    private $queuePushTime;
 
     public function __construct(int $forumID, string $forumName)
     {
         Log::info("Thread crawler queue constructed with {$forumName}");
         $this->forumID = $forumID;
         $this->forumName = $forumName;
-        $this->queuePushTime = microtime(true);
     }
 
     public function handle()
     {
-        $queueStartTime = microtime(true);
-        Log::info('Thread crawler queue start after waiting for ' . ($queueStartTime - $this->queuePushTime));
+        $this->queueStartTime = microtime(true);
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         \DB::transaction(function () {
@@ -102,11 +100,11 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             ])->first();
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingForum->fill([
-                    'duration' => $queueFinishTime - $currentCrawlingForum->startTime
+                    'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $threadsCrawler->getTimes())->save();
                 $currentCrawlingForum->delete();
             }
         });
-        Log::info('Thread crawler queue completed after ' . ($queueFinishTime - $queueStartTime));
+        Log::info('Thread crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
     }
 }
