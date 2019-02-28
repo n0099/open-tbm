@@ -6,20 +6,22 @@
 @section('container')
     <style>
         #statusChartDOM {
-            height : 30em;
+            height: 32em;
         }
     </style>
-    <div id="statusChartDOM"></div>
+    <div id="statusChartDOM" class="mt-2"></div>
 @endsection
 
 @section('script-after-container')
     <script src="https://cdn.jsdelivr.net/npm/echarts@4.1.0/dist/echarts.min.js"></script>
     <script>
         'use strict';
+        new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'status' } });
+
         let statusChart = echarts.init($('#statusChartDOM')[0]);
         statusChart.setOption({
             title: {
-                text: 'ECharts 入门示例'
+                text: '近期性能统计'
             },
             tooltip: {
                 trigger: 'axis'
@@ -41,10 +43,10 @@
                     'fid',
                     'tid',
                     'pid',
-                    'duration',
-                    'webRequestTimes',
-                    'parsedPostTimes',
-                    'parsedUserTimes'
+                    '耗时',
+                    '网络请求量',
+                    '处理贴子量',
+                    '处理用户量'
                 ]
             },
             dataZoom: [
@@ -62,30 +64,9 @@
             ],
             visualMap: [
                 {
-                    show: true,
-                    type: 'continuous',
-                    seriesIndex: 1,
-                    min: 0,
-                    max: 240
-                },
-                {
-                    show: true,
-                    type: 'continuous',
-                    seriesIndex: 3,
-                    min: 0,
-                    max: 1500
-                },
-                {
-                    show: true,
-                    type: 'continuous',
-                    seriesIndex: 2,
-                    min: 0,
-                    max: 5000
-                },
-                {
                     seriesIndex: 0,
-                    top: 25,
-                    right: 10,
+                    top: 30,
+                    right: 0,
                     pieces: [
                         { gt: 0, lte: 30, color: '#096' },
                         { gt: 30, lte: 60, color: '#ffde33' },
@@ -95,6 +76,27 @@
                         { gt: 480, color: '#7e0023' }
                     ],
                     outOfRange: { color: '#999' }
+                },
+                {
+                    show: true,
+                    type: 'continuous',
+                    seriesIndex: 1,
+                    min: 0,
+                    max: 240
+                },
+                {
+                    show: true,
+                    type: 'continuous',
+                    seriesIndex: 2,
+                    min: 0,
+                    max: 5000
+                },
+                {
+                    show: true,
+                    type: 'continuous',
+                    seriesIndex: 3,
+                    min: 0,
+                    max: 1500
                 }
             ],
             grid: [
@@ -118,17 +120,26 @@
             ],
             yAxis: [
                 {
-                    type: 'value'
+                    type: 'value',
+                    splitArea: { show: true },
+                    splitLine: { show: false }
                 },
                 {
                     type: 'value',
                     gridIndex: 1,
-                    inverse: true
+                    inverse: true,
+                    splitArea: { show: true },
+                    splitLine: { show: false }
+                },
+                { // 网络请求量下表副Y轴
+                    type: 'value',
+                    gridIndex: 1,
+                    splitLine: { show: false }
                 }
             ],
             series: [
                 {
-                    name: 'duration',
+                    name: '耗时',
                     type: 'line',
                     step: 'end',
                     symbolSize : 2,
@@ -136,7 +147,8 @@
                     areaStyle: {},
                     hoverAnimation: false,
                     markLine: {
-                        silent: true,
+                        symbol: 'none',
+                        lineStyle: { type: 'dotted' },
                         data: [
                             { yAxis: 30 },
                             { yAxis: 60 },
@@ -147,16 +159,16 @@
                     }
                 },
                 {
-                    name: 'webRequestTimes',
+                    name: '网络请求量',
+                    xAxisIndex: 1,
+                    yAxisIndex: 2,
                     type: 'line',
-                    step: 'middle',
                     symbolSize : 2,
                     sampling: 'average',
-                    areaStyle: {},
                     hoverAnimation: false
                 },
                 {
-                    name: 'parsedPostTimes',
+                    name: '处理贴子量',
                     xAxisIndex: 1,
                     yAxisIndex: 1,
                     type: 'line',
@@ -166,7 +178,7 @@
                     hoverAnimation: false
                 },
                 {
-                    name: 'parsedUserTimes',
+                    name: '处理用户量',
                     xAxisIndex: 1,
                     yAxisIndex: 1,
                     type: 'line',
@@ -200,19 +212,19 @@
             statusChart.setOption({
                 series: [
                     {
-                        name: 'duration',
+                        name: '耗时',
                         data: groupStatusByStartMinute('duration')
                     },
                     {
-                        name: 'webRequestTimes',
+                        name: '网络请求量',
                         data: groupStatusByStartMinute('webRequestTimes')
                     },
                     {
-                        name: 'parsedPostTimes',
+                        name: '处理贴子量',
                         data: groupStatusByStartMinute('parsedPostTimes')
                     },
                     {
-                        name: 'parsedUserTimes',
+                        name: '处理用户量',
                         data: groupStatusByStartMinute('parsedUserTimes')
                     }
                 ]

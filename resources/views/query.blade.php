@@ -583,14 +583,6 @@
         <script>
             'use strict';
 
-            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
-            NProgress.configure({ trickleSpeed: 200 });
-            $(document).on('ajaxStart', () => {
-                NProgress.start();
-            }).on('ajaxStop', () => {
-                NProgress.done();
-            });
-
             $('#error-404-template').hide();
 
             new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'query' } });
@@ -761,7 +753,13 @@
                             $('#error-404-template').show();
                         };
                         let ajaxStartTime = Date.now();
-                        $.getJSON(`${$$baseUrl}/api/postsQuery?${$.param(_.merge({}, routeParams, routeQueryStrings))}`).done((jsonData) => {
+                        let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings);
+                        if (_.isEmpty(queryQueryStrings)) {
+                            new Noty({ timeout: 3000, type: 'error', text: '请选择贴吧或/并输入查询参数'}).show();
+                            ajaxErrorCallback();
+                            return;
+                        }
+                        $.getJSON(`${$$baseUrl}/api/postsQuery?${$.param(queryQueryStrings)}`).done((jsonData) => {
                             jsonData = preparePostsData(jsonData);
                             let pagesInfo = jsonData.pages;
 
@@ -781,6 +779,9 @@
                         }).fail((jqXHR) => {
                             ajaxErrorCallback();
                             new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                            if (jqXHR.status === 400) {
+                                new Noty({ timeout: 3000, type: 'error', text: '请检查查询参数是否正确'}).show();
+                            }
                         });
                     },
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {

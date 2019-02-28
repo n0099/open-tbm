@@ -75,7 +75,7 @@
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-light">
-            <a class="navbar-brand" href="#">贴吧云监控</a>
+            <a class="navbar-brand" href="{{ $baseUrl }}">贴吧云监控</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -83,6 +83,9 @@
                 <ul class="navbar-nav">
                     <li :class="`nav-item ${activeNav == 'query' ? 'active' : null}`">
                         <a class="nav-link" :href="`${$data.$$baseUrl}/query`"><i class="fas fa-search"></i> 查询</a>
+                    </li>
+                    <li :class="`nav-item ${activeNav == 'status' ? 'active' : null}`">
+                        <a class="nav-link" :href="`${$data.$$baseUrl}/status`"><i class="fas fa-satellite-dish"></i> 状态</a>
                     </li>
                     @yield('navbar-items')
                 </ul>
@@ -92,12 +95,22 @@
         <div class="container">
             @yield('container')
         </div>
-        <footer class="footer-outer text-white pt-4">
+        <footer class="footer-outer text-white pt-4 mt-4">
             <div class="container">footer</div>
             <footer class="footer-inner text-white text-center p-3">
                 <div class="container">Made by n0099 © 2018 Copyright</div>
             </footer>
         </footer>
+        <script>
+            var $buoop = {required:{e:-4,f:-3,o:-3,s:-1,c:-3},insecure:true,unsupported:true,api:2018.07 };
+            function $buo_f(){
+                var e = document.createElement("script");
+                e.src = "https://n0099.net/browser-update.org/update.min.js";
+                document.body.appendChild(e);
+            };
+            try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
+            catch(e){window.attachEvent("onload", $buo_f)}
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
@@ -115,6 +128,14 @@
             let $$baseUrl = '{{ $baseUrl }}';
             let $$httpDoamin = '{{ $httpDomain }}';
             let $$baseUrlDir = '{{ $baseUrlDir }}';
+
+            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
+            NProgress.configure({ trickleSpeed: 200 });
+            $(document).on('ajaxStart', () => {
+                NProgress.start();
+            }).on('ajaxStop', () => {
+                NProgress.done();
+            });
         </script>
         @yield('script-after-container')
     </body>
