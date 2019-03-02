@@ -190,42 +190,28 @@
             ]
         });
         $.getJSON(`${$$baseUrl}/api/status`).done(function (jsonData) {
-            jsonData = _.sortBy(_.map(jsonData, (item) => {
-                return _.mapValues(item, (item, index) => {
-                    return index === 'startTime' ? moment.unix(item).format(moment.HTML5_FMT.DATETIME_LOCAL) : item;
-                })
-            }), 'startTime');
-            let groupStatusByStartMinute = (prop) => {
-                return _.chain(jsonData)
-                    .map((item) => {
-                        return _.pick(item, ['startTime', prop]);
-                    })
-                    .groupBy((item) => {
-                        return item.startTime;
-                    })
-                    .mapValues((item) => {
-                        return _.sumBy(item, prop);
-                    })
-                    .toPairs()
-                    .value();
+            let selectColumnFromStatus = (prop) => {
+                return _.map(jsonData, (item) => {
+                    return _.values(_.pick(item, ['startTime', prop]));
+                });
             };
             statusChart.setOption({
                 series: [
                     {
                         name: '耗时',
-                        data: groupStatusByStartMinute('duration')
+                        data: selectColumnFromStatus('duration')
                     },
                     {
                         name: '网络请求量',
-                        data: groupStatusByStartMinute('webRequestTimes')
+                        data: selectColumnFromStatus('webRequestTimes')
                     },
                     {
                         name: '处理贴子量',
-                        data: groupStatusByStartMinute('parsedPostTimes')
+                        data: selectColumnFromStatus('parsedPostTimes')
                     },
                     {
                         name: '处理用户量',
-                        data: groupStatusByStartMinute('parsedUserTimes')
+                        data: selectColumnFromStatus('parsedUserTimes')
                     }
                 ]
             })
