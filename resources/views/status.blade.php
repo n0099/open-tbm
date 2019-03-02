@@ -5,11 +5,15 @@
 
 @section('container')
     <style>
+        .echarts.loading {
+            background: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
+        }
+
         #statusChartDOM {
             height: 32em;
         }
     </style>
-    <div id="statusChartDOM" class="mt-2"></div>
+    <div id="statusChartDOM" class="echarts loading mt-2"></div>
 @endsection
 
 @section('script-after-container')
@@ -76,27 +80,6 @@
                         { gt: 480, color: '#7e0023' }
                     ],
                     outOfRange: { color: '#999' }
-                },
-                {
-                    show: true,
-                    type: 'continuous',
-                    seriesIndex: 1,
-                    min: 0,
-                    max: 240
-                },
-                {
-                    show: true,
-                    type: 'continuous',
-                    seriesIndex: 2,
-                    min: 0,
-                    max: 5000
-                },
-                {
-                    show: true,
-                    type: 'continuous',
-                    seriesIndex: 3,
-                    min: 0,
-                    max: 1500
                 }
             ],
             grid: [
@@ -165,7 +148,6 @@
                     type: 'line',
                     symbolSize : 2,
                     sampling: 'average',
-                    hoverAnimation: false
                 },
                 {
                     name: '处理贴子量',
@@ -175,7 +157,6 @@
                     symbolSize : 2,
                     sampling: 'average',
                     areaStyle: {},
-                    hoverAnimation: false
                 },
                 {
                     name: '处理用户量',
@@ -185,7 +166,6 @@
                     symbolSize : 2,
                     sampling: 'average',
                     areaStyle: {},
-                    hoverAnimation: false
                 }
             ]
         });
@@ -214,7 +194,8 @@
                         data: selectColumnFromStatus('parsedUserTimes')
                     }
                 ]
-            })
+            });
+            $('#statusChartDOM').removeClass('loading');
         });
     </script>
 @endsection

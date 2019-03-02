@@ -6,6 +6,15 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-79460112-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-79460112-1');
+        </script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.css" rel="stylesheet">
@@ -69,7 +78,6 @@
                 )
             }
         </style>
-        {{--<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.16/css/mdb.min.css" rel="stylesheet">--}}
         @yield('head-meta')
         <title>@yield('title') - 贴吧云监控</title>
     </head>
@@ -95,22 +103,13 @@
         <div class="container">
             @yield('container')
         </div>
-        <footer class="footer-outer text-white pt-4 mt-4">
+        <footer class="footer-outer text-light pt-4 mt-4">
             <div class="container">footer</div>
-            <footer class="footer-inner text-white text-center p-3">
-                <div class="container">Made by n0099 © 2018 Copyright</div>
+            <footer class="footer-inner text-center p-3">
+                <div class="container">Copyright © 2018 n0099 </div>
             </footer>
         </footer>
-        <script>
-            var $buoop = {required:{e:-4,f:-3,o:-3,s:-1,c:-3},insecure:true,unsupported:true,api:2018.07 };
-            function $buo_f(){
-                var e = document.createElement("script");
-                e.src = "https://n0099.net/browser-update.org/update.min.js";
-                document.body.appendChild(e);
-            };
-            try {document.addEventListener("DOMContentLoaded", $buo_f,false)}
-            catch(e){window.attachEvent("onload", $buo_f)}
-        </script>
+        <script async src="https://n0099.net/static/browser-update.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
@@ -122,7 +121,6 @@
         <script src="https://cdn.jsdelivr.net/gh/morr/jquery.appear@0.4.1/jquery.appear.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js"></script>
-        {{--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.16/js/mdb.min.js"></script>--}}
         <script>
             'use strict';
             let $$baseUrl = '{{ $baseUrl }}';
