@@ -11,18 +11,27 @@ require 'core.php';
         <style>
             body {font-family: Microsoft YaHei, Helvetica, Arial, sans-serif !important;}
         </style>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-79460112-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-79460112-1');
+        </script>
     </head>
     <body>
         <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <a class="navbar-brand" href="https://n0099.cf/tbm">贴吧云监控</a>
+            <a class="navbar-brand" href="https://n0099.net/tbm/v1">贴吧云监控</a>
             <div class="collapse navbar-collapse" id="navbar">
                 <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf">返回主站</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf/tc">贴吧云签到</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://n0099.cf/vtop">模拟城市吧吧务公开后台</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.net">返回主站</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.net/tc">贴吧云签到</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://n0099.net/vtop">模拟城市吧吧务公开后台</a></li>
                 </ul>
                 <a class="navbar-text my-2 my-lg-0" href="https://jq.qq.com/?_wv=1027&k=41RdoBF">四叶重工QQ群：292311751</a>
             </div>
@@ -31,12 +40,16 @@ require 'core.php';
         <div class="container">
             <div class="row clearfix">
                 <div class="col-md-12 column">
+                    <div class="alert alert-info" role="alert">
+                        <h5>贴吧云监控1.0已停止更新</h5>
+                        <span>请访问<a class="alert-link" href="https://n0099.net/tbm">2.0新版</a>以获取更新</span>
+                    </div>
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a class="nav-link" href="https://n0099.cf/tbm">记录查询</a>
+                            <a class="nav-link" href="https://n0099.net/tbm/v1">记录查询</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="https://n0099.cf/tbm/status.php">统计信息</a>
+                            <a class="nav-link active" href="https://n0099.net/tbm/v1/status.php">统计信息</a>
                         </li>
                     </ul>
                     <div class="alert alert-warning" role="alert">
@@ -70,7 +83,7 @@ require 'core.php';
                 </div>
             </div>
         </div>
-        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>        
+        <script src="https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
         <script src="https://cdn.bootcss.com/echarts/3.4.0/echarts.min.js"></script>
         <script>
         var base_chart_option = {
@@ -106,11 +119,11 @@ require 'core.php';
         cron_chart_option['xAxis'] = {type: 'time', name: '时间'};
         cron_chart_option['yAxis'] = {};
 
-        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_cron_time', 'days':'7'}, complete: function(data) {
+        $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_cron_time', 'days':'7'}, complete: function(data) {
             var ajax_response = eval(data.responseText);
             var cron_times = new Array();
             for(var i = 0, l = ajax_response.length; i < l; i++) {
-                cron_times.push(new Array(ajax_response[i]['date'], ajax_response[i]['time']));
+                cron_times.push(new Array(ajax_response[i]['end_time'], ajax_response[i]['time']));
             }
             cron_chart_option['series'] = {
                 name: '耗时（秒）',
@@ -126,7 +139,7 @@ require 'core.php';
             cron_chart.setOption(cron_chart_option);
         }});
 
-        $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_forums'}, complete: function(data) {
+        $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_forums'}, complete: function(data) {
             var ajax_response = eval(data.responseText);
             for(var i = 0, l = ajax_response.length; i < l; i++) {
                 var forum = ajax_response[i]['forum'];
@@ -160,7 +173,7 @@ require 'core.php';
                 }
                 forum_post_count_day_chart_option['xAxis'] = {type: 'category', name: '日期', data: post_count_days};
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'post','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'post','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var post_count_day_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
@@ -179,7 +192,7 @@ require 'core.php';
                     forum_post_count_day_chart.setOption(forum_post_count_day_chart_option);
                 }});
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'reply','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'reply','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var reply_count_day_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
@@ -198,7 +211,7 @@ require 'core.php';
                     forum_post_count_day_chart.setOption(forum_post_count_day_chart_option);
                 }});
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'lzl','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_day','days':'30','post':'lzl','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var lzl_count_day_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
@@ -237,7 +250,7 @@ require 'core.php';
                 }
                 forum_post_count_month_chart_option['xAxis'] = {type: 'category', name: '月份', data: post_count_months};
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'post','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'post','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var post_count_month_data = new Array();
                     for(var i = ajax_response.length - 1, l = 0; i >= l; i--) {
@@ -257,7 +270,7 @@ require 'core.php';
                     forum_post_count_month_chart.setOption(forum_post_count_month_chart_option);
                 }});
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'reply','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'reply','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var reply_count_month_data = new Array();
                     for(var i = ajax_response.length - 1, l = 0; i >= l; i--) {
@@ -277,7 +290,7 @@ require 'core.php';
                     forum_post_count_month_chart.setOption(forum_post_count_month_chart_option);
                 }});
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'lzl','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_month','months':'24','post':'lzl','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var lzl_count_month_data = new Array();
                     for(var i = ajax_response.length - 1, l = 0; i >= l; i--) {
@@ -316,7 +329,7 @@ require 'core.php';
                 }
                 forum_post_count_hour_chart_option['xAxis'] = {type: 'category', name: '小时', data: post_count_hours};
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'post','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'post','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var post_count_hour_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
@@ -335,7 +348,7 @@ require 'core.php';
                     forum_post_count_hour_chart.setOption(forum_post_count_hour_chart_option);
                 }});
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'reply','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'reply','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var reply_count_hour_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {
@@ -354,7 +367,7 @@ require 'core.php';
                     forum_post_count_hour_chart.setOption(forum_post_count_hour_chart_option);
                 }});
 
-                $.ajax({url: 'https://n0099.cf/tbm/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'lzl','forum':forum}, async: false, complete: function(data) {
+                $.ajax({url: 'https://n0099.net/tbm/v1/ajax.php', data: {'type':'get_post_count_by_hour','days':'1','post':'lzl','forum':forum}, async: false, complete: function(data) {
                     var ajax_response = eval(data.responseText);
                     var lzl_count_hour_data = new Array();
                     for(var i = 0, l = ajax_response.length; i < l; i++) {

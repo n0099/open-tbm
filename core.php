@@ -5,7 +5,7 @@ $sql = new mysqli('localhost', '', '', '');
 $sql -> query("SET collation_connection = utf8mb4_unicode_ci");
 
 function get_cron_time($minutes, $get_value) {
-    $value = round($GLOBALS['sql'] -> query("SELECT AVG(time) FROM tbmonitor_time WHERE date >= DATE_ADD(NOW(), INTERVAL -{$minutes} MINUTE)") -> fetch_all(MYSQLI_ASSOC)[0]['AVG(time)'], 2);
+    $value = round($GLOBALS['sql'] -> query("SELECT AVG(time) FROM tbmonitor_time WHERE end_time >= DATE_ADD(NOW(), INTERVAL -{$minutes} MINUTE)") -> fetch_all(MYSQLI_ASSOC)[0]['AVG(time)'], 2);
     if ($get_value == false) { return empty($value) ? '未知' : $value; }
     switch ($value) {
         case $value >= 60:
