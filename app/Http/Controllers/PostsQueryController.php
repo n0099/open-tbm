@@ -148,7 +148,6 @@ class PostsQueryController extends Controller
         $isIndexQuery = ! $indexesQueryParams->isEmpty();
         $isCustomQuery = $queryParamsName->contains(function ($paramName): bool {
             $customQueryParams = collect([
-                'postType',
                 'tidRange',
                 'pidRange',
                 'spidRange',

@@ -149,7 +149,7 @@
                         <span v-if="thread.topicType == 'text'" class="badge badge-danger">文本话题</span><!-- TODO: fill unknown picture topic thread type -->
                         <h6 class="d-inline">{{ thread.title }}</h6>
                         <div class="float-right badge badge-light">
-                            <router-link :to="{ name: 'tid', params: { tid: thread.tid } }" class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
+                            <router-link :to="{ name: 'tid', params: { tid: thread.tid.toString() } }" class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
                             <a class="badge badge-pill badge-light" :href="`https://tieba.baidu.com/p/${thread.tid}`" target="_blank"><i class="fas fa-link"></i></a>
                             <template v-for="latestReplier in [getUserData(thread.latestReplierUid)]">
                                 <a class="badge badge-pill badge-light" href="#!"
@@ -191,7 +191,7 @@
                                     <span>{{ reply.tailInfo }}</span>
                                 </div>
                                 <div class="float-right badge badge-light">
-                                    <router-link :to="{ name: 'pid', params: { pid: reply.pid } }" class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
+                                    <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }" class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
                                     <a class="badge badge-pill badge-light" :href="`https://tieba.baidu.com/p/${reply.tid}?pid=${reply.pid}#${reply.pid}`" target="_blank"><i class="fas fa-link"></i></a>
                                     <a class="badge badge-pill badge-light" href="#!"
                                        data-toggle="popover" data-trigger="click hover" data-html="true"
@@ -363,7 +363,8 @@
                                 <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
                             </div>
                             <select v-model="queryData.query.orderBy" data-param="orderBy" id="queryOrderBy" class="form-control col">
-                                <option value="default">默认（单贴查询按贴子ID及发帖时间正序；搜索查询按发帖时间倒序）</option>
+                                <option value="default">默认（单贴查询按发贴时间正序；单吧/搜索查询倒序）</option>
+                                <option value="postTime">发贴时间</option>
                                 <optgroup label="贴子ID">
                                     <option value="tid">主题贴tid</option>
                                     <option value="pid">回复贴pid</option>
@@ -547,7 +548,7 @@
                     </div>
                 </form>
                 <posts-list v-for="(postsData, currentPostPage) in postsPages"
-                            :key="currentPostPage"
+                            :key="`${currentPostPage + 1}@${$route.fullPath}`"
                             :posts-data="postsData"></posts-list>
                 <loading-posts-placeholder v-if="loadingNewPosts"></loading-posts-placeholder>
             </div>
@@ -755,7 +756,7 @@
                         let ajaxStartTime = Date.now();
                         let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings);
                         if (_.isEmpty(queryQueryStrings)) {
-                            new Noty({ timeout: 3000, type: 'error', text: '请选择贴吧或/并输入查询参数'}).show();
+                            new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
                             ajaxErrorCallback();
                             return;
                         }
@@ -765,7 +766,7 @@
 
                             // is requesting new pages data on same query params or loading new data on different query params
                             if (shouldReplacePage) {
-                                $('.posts-list').remove(); // remove all previous query posts list to prevent hiding wrong reply item
+                                $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
                                 this.$data.postsPages = [jsonData];
                             } else {
                                 this.$data.postsPages.push(jsonData);
@@ -780,7 +781,7 @@
                             ajaxErrorCallback();
                             new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} 耗时${Date.now() - ajaxStartTime}ms`}).show();
                             if (jqXHR.status === 400) {
-                                new Noty({ timeout: 3000, type: 'error', text: '请检查查询参数是否正确'}).show();
+                                new Noty({ timeout: 3000, type: 'warning', text: '请检查查询参数是否正确'}).show();
                             }
                         });
                     },
@@ -825,11 +826,10 @@
                     });
                 },
                 watch: {
-                    loadingNewPosts: function () {
-                        if (this.$data.loadingNewPosts) {
+                    loadingNewPosts: function (loadingNewPosts) {
+                        if (loadingNewPosts) {
                             $('#error-404-template').hide();
                             $('.posts-list > .reply-list-next-page').remove();
-                        } else {
                             $('#first-loading-placeholder').hide(); // use hide() instead of remove() to prevent vue can't find loading-posts-placeholder-template
                         }
                     },
@@ -848,8 +848,9 @@
                                     }
                                 });
 
+                                let isRouteCustomQuery = vue.$route.query == null;
                                 if (vue.$data.queryData.query.orderDirection == null) { // set default order direction which base on posts query type
-                                    vue.$data.queryData.query.orderDirection = _.isEmpty(_.omit(vue.$data.queryData.param, 'page')) ? 'ASC' : 'DESC';
+                                    vue.$data.queryData.query.orderDirection = isRouteCustomQuery && _.isEmpty(_.omit(vue.$data.queryData.param, 'fid')) ? 'DESC' : 'ASC';
                                 }
 
                                 let radioLikeCheckboxParamsGroup = [
@@ -1084,7 +1085,7 @@
                     }
                 },
                 beforeRouteUpdate (to, from, next) {
-                    // when clicking floating navigate bar #hash link, post type query string might be string
+                    // when clicking floating navigate bar #hash link, post type query param might be string instead of array
                     _.each(this.$data.arrayableCustomQueryParams, (arrayableParamName) => {
                         let arrayableParamValue = Reflect.get(to.query, arrayableParamName);
                         if (arrayableParamValue != null && ! _.isArray(arrayableParamValue)) {
@@ -1114,7 +1115,7 @@
                 }
             });
 
-            let postsListApp = new Vue({
+            let postsListVue = new Vue({
                 el: '#posts-list-pages',
                 router: new VueRouter({
                     mode: 'history',
