@@ -13,7 +13,14 @@
             height: 32em;
         }
     </style>
-    <div id="statusChartDOM" class="echarts loading mt-2"></div>
+    <div id="statusChart" class="row justify-content-end mt-2">
+        <div class="col-3 custom-checkbox custom-control">
+            <input v-model="autoRefresh" id="chkAutoRefresh" type="checkbox" class="custom-control-input">
+            <label class="custom-control-label" for="chkAutoRefresh">每分钟自动刷新</label>
+        </div>
+        <div class="w-100"></div>
+        <div id="statusChartDOM" class="echarts loading col mt-2"></div>
+    </div>
 @endsection
 
 @section('script-after-container')
@@ -22,7 +29,24 @@
         'use strict';
         new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'status' } });
 
-        let statusChart = echarts.init($('#statusChartDOM')[0]);
+        let statusChartVue = new Vue({
+            el: '#statusChart',
+            data: {
+                autoRefresh: false
+            },
+            watch: {
+                autoRefresh: function (autoRefresh) {
+                    if (autoRefresh) {
+                        this.autoRefreshIntervalID = setInterval(loadStatusData, 60000); // refresh data every minute
+                    } else {
+                        clearInterval(this.autoRefreshIntervalID);
+                    }
+                }
+            }
+        });
+
+        let statusChartDOM = $('#statusChartDOM');
+        let statusChart = echarts.init(statusChartDOM[0]);
         statusChart.setOption({
             title: {
                 text: '近期性能统计'
@@ -124,7 +148,7 @@
                 {
                     name: '耗时',
                     type: 'line',
-                    step: 'end',
+                    step: 'middle',
                     symbolSize : 2,
                     sampling: 'average',
                     areaStyle: {},
@@ -169,33 +193,38 @@
                 }
             ]
         });
-        $.getJSON(`${$$baseUrl}/api/status`).done(function (jsonData) {
-            let selectColumnFromStatus = (prop) => {
-                return _.map(jsonData, (item) => {
-                    return _.values(_.pick(item, ['startTime', prop]));
+
+        let loadStatusData = () => {
+            $.getJSON(`${$$baseUrl}/api/status`).done(function (jsonData) {
+                let selectColumnFromStatus = (prop) => {
+                    return _.map(jsonData, (item) => {
+                        return _.values(_.pick(item, ['startTime', prop]));
+                    });
+                };
+                statusChart.setOption({
+                    series: [
+                        {
+                            name: '耗时',
+                            data: selectColumnFromStatus('duration')
+                        },
+                        {
+                            name: '网络请求量',
+                            data: selectColumnFromStatus('webRequestTimes')
+                        },
+                        {
+                            name: '处理贴子量',
+                            data: selectColumnFromStatus('parsedPostTimes')
+                        },
+                        {
+                            name: '处理用户量',
+                            data: selectColumnFromStatus('parsedUserTimes')
+                        }
+                    ]
                 });
-            };
-            statusChart.setOption({
-                series: [
-                    {
-                        name: '耗时',
-                        data: selectColumnFromStatus('duration')
-                    },
-                    {
-                        name: '网络请求量',
-                        data: selectColumnFromStatus('webRequestTimes')
-                    },
-                    {
-                        name: '处理贴子量',
-                        data: selectColumnFromStatus('parsedPostTimes')
-                    },
-                    {
-                        name: '处理用户量',
-                        data: selectColumnFromStatus('parsedUserTimes')
-                    }
-                ]
             });
-            $('#statusChartDOM').removeClass('loading');
-        });
+        };
+
+        loadStatusData();
+        statusChartDOM.removeClass('loading');
     </script>
 @endsection
