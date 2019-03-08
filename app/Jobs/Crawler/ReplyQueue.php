@@ -22,14 +22,17 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
     protected $forumID;
 
-    private $threadID;
+    protected $threadID;
 
-    public function __construct(int $fid, int $tid)
+    protected $startPage;
+
+    public function __construct(int $fid, int $tid, int $startPage)
     {
-        Log::info("Reply crawler queue constructed with {$tid} in forum {$fid}");
+        Log::info("Reply crawler queue constructed with {$tid} in forum {$fid}, starts from page {$startPage}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
+        $this->startPage = $startPage;
     }
 
     public function handle()
@@ -37,7 +40,21 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         $this->queueStartTime = microtime(true);
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID))->doCrawl();
+        $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID, $this->startPage))->doCrawl();
+
+        // dispatch new self crawler which starts from current crawler's end page
+        if ($repliesCrawler->endPage < $repliesCrawler->getPages()['total_page']) {
+            $newCrawlerStartPage = $repliesCrawler->endPage + 1;
+            CrawlingPostModel::insert([
+                'type' => 'reply',
+                'fid' => $this->forumID,
+                'tid' => $this->threadID,
+                'startPage' => $newCrawlerStartPage,
+                'startTime' => microtime(true)
+            ]); // lock for next pages reply crawler
+            ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
+        }
+
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
         $oldRepliesInfo = Helper::convertIDListKey(
             PostModelFactory::newReply($this->forumID)
@@ -62,14 +79,16 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 }
                 if ((! isset($oldRepliesInfo[$pid])) // do we have to crawl new sub replies under reply
                     || ($newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum'])) {
+                    $firstSubReplyCrawlPage = 1;
                     CrawlingPostModel::insert([
                         'type' => 'subReply',
                         'fid' => $this->forumID,
                         'tid' => $this->threadID,
                         'pid' => $pid,
+                        'startPage' => $firstSubReplyCrawlPage,
                         'startTime' => microtime(true)
-                    ]); // report crawling sub replies
-                    SubReplyQueue::dispatch($this->forumID, $this->threadID, $pid)->onQueue('crawler');
+                    ]); // lock for current reply's sub reply crawler
+                    SubReplyQueue::dispatch($this->forumID, $this->threadID, $pid, $firstSubReplyCrawlPage)->onQueue('crawler');
                 }
             }
         });
@@ -79,8 +98,9 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             // report previous thread crawl finished
             $currentCrawlingReply = CrawlingPostModel::select('id', 'startTime')->where([
                 'type' => 'reply', // not including sub reply crawler queue
+                'fid' => $this->forumID,
                 'tid' => $this->threadID,
-                'pid' => 0
+                'startPage' => $this->startPage
             ])->first();
             if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingReply->fill([

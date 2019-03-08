@@ -35,28 +35,50 @@ class SubReplyCrawler extends Crawlable
 
     protected $parsedUserTimes = 0;
 
+    protected $pagesInfo = [];
+
+    public $startPage;
+
+    public $endPage;
+
     public function doCrawl(): self
     {
-        $client = $this->getClientHelper();
+        $tiebaClient = $this->getClientHelper();
 
-        Log::info("Start to fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page 1");
-        $subRepliesJson = json_decode($client->post(
+        Log::info("Start to fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$this->startPage}");
+        $startPageSubRepliesInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/floor',
-            ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => 1]]
+            [
+                'form_params' => [
+                    'kz' => $this->threadID,
+                    'pid' => $this->replyID,
+                    'pn' => $this->startPage
+                ]
+            ]
         )->getBody(), true);
         $this->webRequestTimes += 1;
+        $totalPages = $startPageSubRepliesInfo['page']['total_page'];
+        if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
+            $this->endPage = $totalPages;
+        }
 
         try {
-            $this->parseSubRepliesList($subRepliesJson);
+            $this->parseSubRepliesList($startPageSubRepliesInfo);
             (new GuzzleHttp\Pool(
-                $client,
-                (function () use ($client, $subRepliesJson) {
-                    for ($pn = 2; $pn <= $subRepliesJson['page']['total_page']; $pn++) {
-                        yield function () use ($client, $pn) {
+                $tiebaClient,
+                (function () use ($tiebaClient) {
+                    for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) {
+                        yield function () use ($tiebaClient, $pn) {
                             Log::info("Fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
-                            return $client->postAsync(
+                            return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/floor',
-                                ['form_params' => ['kz' => $this->threadID, 'pid' => $this->replyID, 'pn' => $pn]]
+                                [
+                                    'form_params' => [
+                                        'kz' => $this->threadID,
+                                        'pid' => $this->replyID,
+                                        'pn' => $pn
+                                    ]
+                                ]
                             );
                         };
                     }
@@ -65,8 +87,8 @@ class SubReplyCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
-                        $subRepliesJson = json_decode($response->getBody(), true);
-                        $this->parseSubRepliesList($subRepliesJson);
+                        $subRepliesInfo = json_decode($response->getBody(), true);
+                        $this->parseSubRepliesList($subRepliesInfo);
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         report($e);
@@ -83,6 +105,7 @@ class SubReplyCrawler extends Crawlable
 
     private function parseSubRepliesList(array $subRepliesJson): void
     {
+        $this->pagesInfo = $subRepliesJson['page'];
         switch ($subRepliesJson['error_code']) {
             case 0:
                 $subRepliesList = $subRepliesJson['subpost_list'];
@@ -127,7 +150,7 @@ class SubReplyCrawler extends Crawlable
                 'postTime' => $latestInfo['postTime'],
                 'type' => 'subReply',
                 'fid' => $this->forumID
-            ] + static::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
+            ] + Helper::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingSpid');
 
@@ -157,15 +180,20 @@ class SubReplyCrawler extends Crawlable
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');
+        $this->subRepliesList = [];
+        $this->indexesList = [];
         return $this;
     }
 
-    public function __construct(int $fid, int $tid, int $pid)
+    public function __construct(int $fid, int $tid, int $pid, int $startPage, int $endPage = null)
     {
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->replyID = $pid;
         $this->usersInfo = new UserInfoParser();
+        $this->startPage = $startPage;
+        $defaultCrawlPageRange = 100;
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,

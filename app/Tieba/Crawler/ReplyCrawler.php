@@ -35,28 +35,48 @@ class ReplyCrawler extends Crawlable
 
     protected $parsedUserTimes = 0;
 
+    protected $pagesInfo = [];
+
+    public $startPage;
+
+    public $endPage;
+
     public function doCrawl(): self
     {
-        $client = $this->getClientHelper();
+        $tiebaClient = $this->getClientHelper();
 
-        Log::info("Start to fetch replies for tid {$this->threadID}, page 1");
-        $repliesJson = json_decode($client->post(
+        Log::info("Start to fetch replies for thread, tid {$this->threadID}, page {$this->startPage}");
+        $startPageRepliesInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
-            ['form_params' => ['kz' => $this->threadID, 'pn' => 1]] // reverse order will be ['last' => 1,'r' => 1]
+            [
+                'form_params' => [ // reverse order will be ['last' => 1, 'r' => 1]
+                    'kz' => $this->threadID,
+                    'pn' => $this->startPage
+                ]
+            ]
         )->getBody(), true);
         $this->webRequestTimes += 1;
+        $totalPages = $startPageRepliesInfo['page']['total_page'];
+        if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
+            $this->endPage = $totalPages;
+        }
 
         try {
-            $this->parseRepliesList($repliesJson);
+            $this->parseRepliesList($startPageRepliesInfo);
             (new GuzzleHttp\Pool(
-                $client,
-                (function () use ($client, $repliesJson) {
-                    for ($pn = 2; $pn <= $repliesJson['page']['total_page']; $pn++) {
-                        yield function () use ($client, $pn) {
-                            Log::info("Start to fetch replies for tid {$this->threadID}, page {$pn}");
-                            return $client->postAsync(
+                $tiebaClient,
+                (function () use ($tiebaClient) {
+                    for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) {
+                        yield function () use ($tiebaClient, $pn) {
+                            Log::info("Fetching replies for thread, tid {$this->threadID}, page {$pn}");
+                            return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/page',
-                                ['form_params' => ['kz' => $this->threadID, 'pn' => $pn]]
+                                [
+                                    'form_params' => [
+                                        'kz' => $this->threadID,
+                                        'pn' => $pn
+                                    ]
+                                ]
                             );
                         };
                     }
@@ -65,8 +85,8 @@ class ReplyCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
-                        $repliesJson = json_decode($response->getBody(), true);
-                        $this->parseRepliesList($repliesJson);
+                        $repliesInfo = json_decode($response->getBody(), true);
+                        $this->parseRepliesList($repliesInfo);
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         report($e);
@@ -82,20 +102,9 @@ class ReplyCrawler extends Crawlable
         return $this;
     }
 
-    private static function convertUsersListToUidKey(array $usersList): array
-    {
-        $newUsersList = [];
-
-        foreach ($usersList as $user) {
-            $uid = $user['id'];
-            $newUsersList[$uid] = $user;
-        }
-
-        return $newUsersList;
-    }
-
     private function parseRepliesList(array $repliesJson): void
     {
+        $this->pagesInfo = $repliesJson['page'];
         switch ($repliesJson['error_code']) {
             case 0:
                 $repliesList = $repliesJson['post_list'];
@@ -142,7 +151,7 @@ class ReplyCrawler extends Crawlable
             $this->parsedPostTimes += 1;
             $latestInfo = end($repliesInfo);
             if ($reply['sub_post_number'] > 0) {
-                $repliesUpdateInfo[$reply['id']] = static::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
+                $repliesUpdateInfo[$reply['id']] = Helper::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
             }
             $indexesInfo[] = [
                 'created_at' => $now,
@@ -196,11 +205,14 @@ class ReplyCrawler extends Crawlable
         return $this->repliesUpdateInfo;
     }
 
-    public function __construct(int $fid, int $tid)
+    public function __construct(int $fid, int $tid, int $startPage, int $endPage = null)
     {
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->usersInfo = new UserInfoParser();
+        $this->startPage = $startPage;
+        $defaultCrawlPageRange = 100;
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,

@@ -22,7 +22,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     protected $forumID;
 
-    private $forumName;
+    protected $forumName;
 
     public function __construct(int $forumID, string $forumName)
     {
@@ -51,10 +51,10 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                     return; // exit queue
                 }
             }
-            CrawlingPostModel::insert($crawlingForumInfo + ['startTime' => microtime(true)]); // report crawling threads
+            CrawlingPostModel::insert($crawlingForumInfo + ['startTime' => microtime(true)]); // lock for current thread crawler
         });
 
-        $threadsCrawler = (new Crawler\ThreadCrawler($this->forumID, $this->forumName))->doCrawl();
+        $threadsCrawler = (new Crawler\ThreadCrawler($this->forumName, $this->forumID))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getThreadsInfo();
         $oldThreadsInfo = Helper::convertIDListKey(
             PostModelFactory::newThread($this->forumID)
@@ -81,13 +81,15 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 if ((! isset($oldThreadsInfo[$tid])) // do we have to crawl new replies under thread
                     || (strtotime($newThread['latestReplyTime']) != strtotime($oldThreadsInfo[$tid]['latestReplyTime']))
                     || ($newThread['replyNum'] != $oldThreadsInfo[$tid]['replyNum'])) {
+                    $firstReplyCrawlPage = 1;
                     CrawlingPostModel::insert([
                         'type' => 'reply',
                         'fid' => $this->forumID,
                         'tid' => $tid,
+                        'startPage' => $firstReplyCrawlPage,
                         'startTime' => microtime(true)
-                    ]); // report crawling replies
-                    ReplyQueue::dispatch($this->forumID, $tid)->onQueue('crawler');
+                    ]); // lock for current thread's reply crawler
+                    ReplyQueue::dispatch($this->forumID, $tid, $firstReplyCrawlPage)->onQueue('crawler');
                 }
             }
         });

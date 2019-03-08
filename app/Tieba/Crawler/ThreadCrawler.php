@@ -33,14 +33,21 @@ class ThreadCrawler extends Crawlable
 
     protected $parsedUserTimes = 0;
 
+    protected $pagesInfo = [];
+
     public function doCrawl(): self
     {
-        $client = $this->getClientHelper();
+        $tiebaClient = $this->getClientHelper();
 
         Log::info("Start to fetch threads for forum {$this->forumName}, page 1");
-        $threadsList = json_decode($client->post(
+        $threadsList = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/frs/page',
-            ['form_params' => ['kw' => $this->forumName, 'pn' => 1, 'rn' => 50]]
+            [
+                'form_params' => [
+                    'kw' => $this->forumName,
+                    'pn' => 1, 'rn' => 50
+                ]
+            ]
         )->getBody(), true);
         $this->webRequestTimes += 1;
 
@@ -51,6 +58,7 @@ class ThreadCrawler extends Crawlable
 
     private function parseThreadsList(array $threadsJson): void
     {
+        $this->pagesInfo = $threadsJson['page'];
         switch ($threadsJson['error_code']) {
             case 0:
                 $threadsList = $threadsJson['thread_list'];
@@ -101,7 +109,7 @@ class ThreadCrawler extends Crawlable
 
             $this->parsedPostTimes += 1;
             $latestInfo = end($threadsInfo);
-            $threadsUpdateInfo[$thread['tid']] = static::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
+            $threadsUpdateInfo[$thread['tid']] = Helper::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -156,7 +164,7 @@ class ThreadCrawler extends Crawlable
         return $this->threadsUpdateInfo;
     }
 
-    public function __construct(int $forumID, string $forumName)
+    public function __construct(string $forumName, int $forumID)
     {
         $this->forumID = $forumID;
         $this->forumName = $forumName;
