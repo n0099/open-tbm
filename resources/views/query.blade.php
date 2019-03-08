@@ -409,7 +409,7 @@
                             <div class="form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadTitle">主题贴标题</label>
                                 <div class="col-8 input-group">
-                                    <div class="input-group-prepend">
+                                    <div class="input-group-prepend">getJSON
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
                                                 <input v-model="queryData.query.threadTitleRegex" data-param="threadTitleRegex" id="queryThreadTitleRegex" type="checkbox" value="" class="custom-query-param custom-control-input">
@@ -450,7 +450,7 @@
                                     <label class="border-left col-2 col-form-lael" for="queryUserManagerType">吧务级别</label>
                                     <select v-model="queryData.query.userManagerType" data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
                                         <option value="default">所有</option>
-                                        <option value="NULL">吧友</option>
+                                        <option value="all">吧友</option>
                                         <option value="manager">吧主</option>
                                         <option value="assist">小吧主</option>
                                         <option value="voiceadmin">语音小编</option>
@@ -760,7 +760,7 @@
                             ajaxErrorCallback();
                             return;
                         }
-                        $.getJSON(`${$$baseUrl}/api/postsQuery?${$.param(queryQueryStrings)}`).done((jsonData) => {
+                        $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(queryQueryStrings)).done((jsonData) => {
                             jsonData = preparePostsData(jsonData);
                             let pagesInfo = jsonData.pages;
 

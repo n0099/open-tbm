@@ -1,8 +1,9 @@
 @php($baseUrl = env('APP_URL'))
 @php($httpDomain = implode('/', array_slice(explode('/', $baseUrl), 0, 3)))
 @php($baseUrlDir = substr($baseUrl, strlen($httpDomain)))
+@php($reCAPTCHASiteKey = env('reCAPTCHA_SITE_KEY'))
 <!doctype html>
-<html>
+<html lang="zh-cmn-Hans">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -53,6 +54,10 @@
                 font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
             }
 
+            .echarts.loading {
+                background: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
+            }
+
             ::-webkit-scrollbar
             {
                 width: 10px;
@@ -90,10 +95,10 @@
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="navbar-nav">
                     <li :class="`nav-item ${activeNav == 'query' ? 'active' : null}`">
-                        <a class="nav-link" :href="`${$data.$$baseUrl}/query`"><i class="fas fa-search"></i> 查询</a>
+                        <a class="nav-link" href="{{ route('query') }}"><i class="fas fa-search"></i> 查询</a>
                     </li>
                     <li :class="`nav-item ${activeNav == 'status' ? 'active' : null}`">
-                        <a class="nav-link" :href="`${$data.$$baseUrl}/status`"><i class="fas fa-satellite-dish"></i> 状态</a>
+                        <a class="nav-link" href="{{ route('status') }}"><i class="fas fa-satellite-dish"></i> 状态</a>
                     </li>
                     @yield('navbar-items')
                 </ul>
@@ -106,11 +111,13 @@
         <footer class="footer-outer text-light pt-4 mt-4">
             <div class="container">footer</div>
             <footer class="footer-inner text-center p-3">
-                <div class="container">Copyright © 2018 n0099 </div>
+                <div class="container">Copyright © 2018 n0099</div>
             </footer>
         </footer>
+        <script src="https://www.recaptcha.net/recaptcha/api.js?render={{ $reCAPTCHASiteKey }}"></script>
         <script async src="https://n0099.net/static/browser-update.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/echarts@4.1.0/dist/echarts.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
         <script async src="https://cdn.jsdelivr.net/npm/lazysizes@4.1.5/lazysizes.min.js"></script>
@@ -126,6 +133,7 @@
             let $$baseUrl = '{{ $baseUrl }}';
             let $$httpDoamin = '{{ $httpDomain }}';
             let $$baseUrlDir = '{{ $baseUrlDir }}';
+            let $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
 
             //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
             NProgress.configure({ trickleSpeed: 200 });

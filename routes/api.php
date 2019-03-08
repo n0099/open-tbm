@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ReCAPTCHACheck;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Http\Request;
 
@@ -35,7 +36,8 @@ Route::get('/status', function () {
         }, 'T')
         ->groupBy('startTime')
         ->get()->toJson();
-});
+})->middleware(ReCAPTCHACheck::class);
+
 Route::get('/stats/forumPostsCount', function () {
     $queryParams = collect(\Request::query());
     $queryParams->shift();
@@ -62,7 +64,7 @@ Route::get('/stats/forumPostsCount', function () {
     }
 
     return json_encode($forumPostsCount);
-});
+})->middleware(ReCAPTCHACheck::class);
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
