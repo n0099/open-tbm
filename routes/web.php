@@ -11,9 +11,10 @@
 |
 */
 
-Route::view('/', 'index');
-Route::view('/query/{argu?}', 'query')->where('argu', '.*');
-Route::view('/status', 'status');
+Route::view('/', 'index')->name('index');
+Route::view('/query/{argu?}', 'query')->where('argu', '.*')->name('query');
+Route::view('/status', 'status')->name('status');
+Route::view('/stats', 'stats')->name('stats');
 
 Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');

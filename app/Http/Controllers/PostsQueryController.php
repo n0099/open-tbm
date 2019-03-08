@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use function GuzzleHttp\json_encode;
+use Illuminate\Validation\Rule;
 
 class PostsQueryController extends Controller
 {
@@ -122,7 +123,6 @@ class PostsQueryController extends Controller
     private function getQueryResultJson(array $queryParams): string
     {
         $queryParams = collect($queryParams);
-        $queryParams->shift(); // remove first query url in parameters
         $queryParamsName = $queryParams->keys();
         // set post and user type params default value then remove from query params
         $queryParams['postType'] = $queryParams['postType'] ?? ['thread', 'reply', 'subReply'];
@@ -152,7 +152,7 @@ class PostsQueryController extends Controller
                 'pidRange',
                 'spidRange',
                 'threadTitle',
-                'threadTitletRegex',
+                'threadTitleRegex',
                 'postContent',
                 'postContentRegex',
                 'postTimeStart',
@@ -359,7 +359,7 @@ class PostsQueryController extends Controller
                                 }
                                 break;
                             case 'userManagerType':
-                                if ($paramValue == 'NULL') {
+                                if ($paramValue == 'all') {
                                     return $postModel->whereNull('authorManagerType');
                                 } else {
                                     return $postModel->where('authorManagerType', $paramValue);
@@ -498,6 +498,49 @@ class PostsQueryController extends Controller
 
     public function query(\Illuminate\Http\Request $request)
     {
-        return $this->getQueryResultJson($request->query());
+        $paramsValidValue = [
+            'orderDirection' => ['ASC', 'DESC'],
+            'range' => ['<', '=', '>'],
+            'userGender' => ['default', 0, 1, 2],
+            'userManagerType' => ['default', 'all', 'manager', 'assist', 'voiceadmin']
+        ];
+        return $this->getQueryResultJson($request->validate([
+            'page' => 'integer',
+            'fid' => 'integer',
+            'tid' => 'integer',
+            'pid' => 'integer',
+            'spid' => 'integer',
+            'postType' => 'array',
+            'orderBy' => 'string',
+            'orderDirection' => Rule::in($paramsValidValue['orderDirection']),
+            // below are custom query params
+            'tidRange' => ['required_with:tid', Rule::in($paramsValidValue['range'])],
+            'pidRange' => ['required_with:pid', Rule::in($paramsValidValue['range'])],
+            'spidRange' => ['required_with:spid', Rule::in($paramsValidValue['range'])],
+            'threadTitle' => 'string',
+            'threadTitleRegex' => 'boolean|required_with:threadTitle',
+            'postContent' => 'string',
+            'postContentRegex' => 'boolean|required_with:postContent',
+            'postTimeStart' => 'date|required_with:postTimeEnd',
+            'postTimeEnd' => 'date|required_with:postTimeStart',
+            'latestReplyTimeStart' => 'date|required_with:latestReplyTimeEnd',
+            'latestReplyTimeEnd' => 'date|required_with:latestReplyTimeStart',
+            'threadProperty' => 'array',
+            'threadReplyNum' => 'integer',
+            'threadReplyNumRange' => ['required_with:threadReplyNum', Rule::in($paramsValidValue['range'])],
+            'replySubReplyNum' => 'integer',
+            'replySubReplyNumRange' => ['required_with:replySubReplyNum', Rule::in($paramsValidValue['range'])],
+            'threadViewNum' => 'integer',
+            'threadViewNumRange' => ['required_with:threadViewNum', Rule::in($paramsValidValue['range'])],
+            'threadShareNum' => 'integer',
+            'threadShareNumRange' => ['required_with:threadShareNum', Rule::in($paramsValidValue['range'])],
+            'userType' => 'array',
+            'userName' => 'string',
+            'userDisplayName' => 'string',
+            'userExpGrade' => 'integer',
+            'userExpGradeRange' => ['required_with:tid', Rule::in($paramsValidValue['range'])],
+            'userGender' => Rule::in($paramsValidValue['userGender']),
+            'userManagerType' => Rule::in($paramsValidValue['userManagerType']),
+        ]));
     }
 }

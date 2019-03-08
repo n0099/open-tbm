@@ -1,5 +1,6 @@
 <?php
 
+use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Http\Request;
 
 /*
@@ -34,6 +35,33 @@ Route::get('/status', function () {
         }, 'T')
         ->groupBy('startTime')
         ->get()->toJson();
+});
+Route::get('/stats/forumPostsCount', function () {
+    $queryParams = collect(\Request::query());
+    $queryParams->shift();
+    $requiredParams = ['fid', 'timeRange', 'startTime', 'endTime'];
+    sort($requiredParams);
+    abort_if($queryParams->keys()->sort()->diff($requiredParams)->isEmpty(), 400, 'Missing required query params');
+
+    $groupTimeRangeRawSQL = [
+        'minute' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:%i") AS time',
+        'hour' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:00") AS time',
+        'day' => 'DATE(postTime) AS time',
+        'week' => 'DATE_FORMAT(postTime, "%Y第%u周") AS time',
+        'month' => 'DATE_FORMAT(postTime, "%Y-%m") AS time',
+        'year' => 'DATE_FORMAT(postTime, "%Y") AS time',
+    ];
+    $forumPostsCount = [];
+    foreach (PostModelFactory::getPostsModelByForumID($queryParams['fid']) as $postType => $forumPostModel) {
+        $forumPostsCount[$postType] = $forumPostModel
+            ->selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+            ->selectRaw('COUNT(*) AS count')
+            ->whereBetween('postTime', [$queryParams['startTime'], $queryParams['endTime']])
+            ->groupBy('time')
+            ->get()->toArray();
+    }
+
+    return json_encode($forumPostsCount);
 });
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
