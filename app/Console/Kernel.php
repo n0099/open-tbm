@@ -24,11 +24,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->call(function () {
-            foreach (\App\Tieba\Eloquent\ForumModel::all() as $forum) {
-                \App\Jobs\Crawler\ThreadQueue::dispatch($forum->fid, $forum->name)->onQueue('crawler');
-            }
-        })->everyMinute();
+        foreach (\App\Tieba\Eloquent\ForumModel::all() as $forum) {
+            \App\Jobs\Crawler\ThreadQueue::dispatch($forum->fid, $forum->name)->onQueue('crawler');
+        }
     }
 
     /**
