@@ -7,15 +7,15 @@ class PostFactory
     private static function getPostByModels(iterable $models, string $postType): array
     {
         $posts = [];
-        $postTypeIDName = [
+        $postsTypeName = [
             Thread::class => 'tid',
             Reply::class => 'pid',
             SubReply::class => 'spid',
         ];
 
-        // could be replaced with convertIDListKey()
+        // could be replaced with \App\Helper::convertIDListKey()
         foreach ($models as $model) {
-            $posts[$model[$postTypeIDName[$postType]]] = new $postType($model);
+            $posts[$model[$postsTypeName[$postType]]] = new $postType($model);
         }
 
         return $posts;

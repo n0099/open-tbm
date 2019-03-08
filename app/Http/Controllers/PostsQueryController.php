@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Eloquent\IndexModel;
+use App\Helper;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
@@ -18,19 +19,6 @@ class PostsQueryController extends Controller
     private $pagingPerPageItems = 200;
 
     private $postsAuthorUids = [];
-
-    protected static function convertIDListKey(array $list, string $keyName): array
-    {
-        // same with \App\Jobs\Crawler\CrawlerQueue::convertIDListKey()
-        $newList = [];
-
-        foreach ($list as $item) {
-            $newList[$item[$keyName]] = $item;
-        }
-        //ksort($newList); // NEVER SORT POSTS ID TO PREVENT REORDER QUERIED POSTS ORDER
-
-        return $newList;
-    }
 
     private function getNestedPostsInfoByIDs(array $postsInfo, bool $isInfoOnlyContainsPostsID): array
     {
@@ -104,9 +92,9 @@ class PostsQueryController extends Controller
 
     private static function convertNestedPostsInfo(array $threadsInfo = [], array $repliesInfo = [], array $subRepliesInfo = []): array
     {
-        $threadsInfo = static::convertIDListKey($threadsInfo, 'tid');
-        $repliesInfo = collect(static::convertIDListKey($repliesInfo, 'pid'));
-        $subRepliesInfo = collect(static::convertIDListKey($subRepliesInfo, 'spid'));
+        $threadsInfo = Helper::convertIDListKey($threadsInfo, 'tid');
+        $repliesInfo = collect(Helper::convertIDListKey($repliesInfo, 'pid'));
+        $subRepliesInfo = collect(Helper::convertIDListKey($subRepliesInfo, 'spid'));
         $nestedPostsInfo = [];
         foreach ($threadsInfo as $tid => $thread) {
             $threadReplies = $repliesInfo->where('tid', $tid)->toArray(); // can't use values() here to prevent losing posts id key

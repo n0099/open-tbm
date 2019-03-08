@@ -3,6 +3,7 @@
 namespace App\Jobs\Crawler;
 
 use App\Eloquent\CrawlingPostModel;
+use App\Helper;
 use App\Tieba\Crawler;
 use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
@@ -55,12 +56,13 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
         $threadsCrawler = (new Crawler\ThreadCrawler($this->forumID, $this->forumName))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getThreadsInfo();
-        $oldThreadsInfo = static::convertIDListKey(
+        $oldThreadsInfo = Helper::convertIDListKey(
             PostModelFactory::newThread($this->forumID)
                 ->select('tid', 'latestReplyTime', 'replyNum')
                 ->whereIn('tid', array_keys($newThreadsInfo))->get()->toArray(),
             'tid'
         );
+        ksort($oldThreadsInfo);
         $threadsCrawler->saveLists();
 
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {

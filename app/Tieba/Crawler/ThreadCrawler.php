@@ -4,6 +4,7 @@ namespace App\Tieba\Crawler;
 
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
+use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -106,7 +107,7 @@ class ThreadCrawler extends Crawlable
                 'updated_at' => $now,
                 'type' => 'thread',
                 'fid' => $this->forumID
-            ] + static::getArrayValuesByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
+            ] + Helper::getArrayValuesByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
         }
         ExceptionAdditionInfo::remove('parsingTid');
 
@@ -145,6 +146,8 @@ class ThreadCrawler extends Crawlable
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
+        $this->threadsList = [];
+        $this->indexesList = [];
         return $this;
     }
 

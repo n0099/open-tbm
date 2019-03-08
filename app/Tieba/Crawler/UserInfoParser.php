@@ -91,8 +91,8 @@ class UserInfoParser
             $userListUpdateFields = array_diff(array_keys($usersListGroup[0]), $userModel->updateExpectFields);
             $userModel->chunkInsertOnDuplicate($usersListGroup, $userListUpdateFields, $chunkInsertBufferSize);
         }
-        ExceptionAdditionInfo::remove('insertingUsers');
 
+        ExceptionAdditionInfo::remove('insertingUsers');
         $this->usersList = [];
     }
 }

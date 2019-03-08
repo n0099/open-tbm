@@ -18,9 +18,16 @@ abstract class Crawlable
 
     protected $parsedUserTimes = 0;
 
+    protected $pagesInfo = [];
+
     abstract public function doCrawl();
 
     abstract public function saveLists();
+
+    public function getPages() : array
+    {
+        return $this->pagesInfo;
+    }
 
     public function getTimes(): array
     {
@@ -33,7 +40,8 @@ abstract class Crawlable
 
     protected function getClientHelper(): ClientRequester
     {
-        /*$debugBar = resolve('debugbar');
+        /*
+        $debugBar = resolve('debugbar');
 
         $timeline = $debugBar->getCollector('time');
         $profiler = new GuzzleHttp\Profiling\Debugbar\Profiler($timeline);
@@ -43,7 +51,8 @@ abstract class Crawlable
 
         $logger = $debugBar->getCollector('messages');
         $stack->push(GuzzleHttp\Middleware::log($logger, new GuzzleHttp\MessageFormatter()));
-        $stack->push(GuzzleHttp\Middleware::log(\Log::getLogger(), new GuzzleHttp\MessageFormatter('{code} {host}{target} {error}')));*/
+        $stack->push(GuzzleHttp\Middleware::log(\Log::getLogger(), new GuzzleHttp\MessageFormatter('{code} {host}{target} {error}')));
+        */
 
         return new ClientRequester([
             //'handler' => $stack,
@@ -62,15 +71,6 @@ abstract class Crawlable
         }
 
         return $isJson ? json_encode($value) : $value;
-    }
-
-    public static function getArrayValuesByKeys(array $haystack, array $keys): array
-    {
-        $values = [];
-        foreach ($keys as $key) {
-            $values[$key] = $haystack[$key];
-        }
-        return $values;
     }
 
     /**

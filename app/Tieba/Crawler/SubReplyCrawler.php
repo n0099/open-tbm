@@ -4,6 +4,7 @@ namespace App\Tieba\Crawler;
 
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
+use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use Carbon\Carbon;

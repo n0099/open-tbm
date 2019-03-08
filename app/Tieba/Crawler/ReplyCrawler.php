@@ -4,6 +4,7 @@ namespace App\Tieba\Crawler;
 
 use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
+use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use Carbon\Carbon;
@@ -98,7 +99,11 @@ class ReplyCrawler extends Crawlable
         switch ($repliesJson['error_code']) {
             case 0:
                 $repliesList = $repliesJson['post_list'];
-                $usersList = $repliesJson['user_list'];
+                $usersList = [];
+                // inherits by reference to sync value changes
+                array_map(function ($userInfo) use (&$usersList) {
+                    $usersList[$userInfo['id']] = $userInfo;
+                }, $repliesJson['user_list']);
                 break;
             case 4: // {"error_code": "4", "error_msg": "贴子可能已被删除"}
                 throw new TiebaException('Thread already deleted when crawling reply.');
@@ -109,7 +114,6 @@ class ReplyCrawler extends Crawlable
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba.');
         }
 
-        $usersList = static::convertUsersListToUidKey($usersList);
         $repliesUpdateInfo = [];
         $repliesInfo = [];
         $indexesInfo = [];
@@ -146,7 +150,7 @@ class ReplyCrawler extends Crawlable
                 'postTime' => $latestInfo['postTime'],
                 'type' => 'reply',
                 'fid' => $this->forumID
-            ] + static::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
+            ] + Helper::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingPid');
 
@@ -182,6 +186,8 @@ class ReplyCrawler extends Crawlable
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid');
+        $this->repliesList = [];
+        $this->indexesList = [];
         return $this;
     }
 
