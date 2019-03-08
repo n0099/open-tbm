@@ -2,19 +2,20 @@
 @php($httpDomain = implode('/', array_slice(explode('/', $baseUrl), 0, 3)))
 @php($baseUrlDir = substr($baseUrl, strlen($httpDomain)))
 @php($reCAPTCHASiteKey = env('reCAPTCHA_SITE_KEY'))
+@php($GATrackingId = env('GA_TRACKING_ID'))
 <!doctype html>
 <html lang="zh-cmn-Hans">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-79460112-1"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $GATrackingId }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
 
-            gtag('config', 'UA-79460112-1');
+            gtag('config', '{{ $GATrackingId }}');
         </script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css" rel="stylesheet">
