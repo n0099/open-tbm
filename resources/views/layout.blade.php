@@ -147,6 +147,16 @@
                 NProgress.done();
             });
 
+            let reCAPTCHACheck = new Promise((resolve, reject) => {
+                grecaptcha.ready(() => {
+                    grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
+                        resolve({ reCAPTCHA: token });
+                    }, () => {
+                        new Noty({ timeout: 3000, type: 'error', text: 'reCAPTCHA验证失败'}).show();
+                    });
+                });
+            });
+
             let loadForumsList = new Promise((resolve, reject) => {
                 $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
                     resolve(_.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type

@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 |
 */
 
-Route::get('/postsQuery', 'PostsQueryController@query');
+Route::get('/postsQuery', 'PostsQueryController@query')->middleware(ReCAPTCHACheck::class);
 Route::get('/forumsList', function () {
     echo App\Tieba\Eloquent\ForumModel::all()->toJson();
 });

@@ -32,9 +32,8 @@
                 autoRefresh: function (autoRefresh) {
                     if (autoRefresh) {
                         this.autoRefreshIntervalID = setInterval(() => {
-                            grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
-                                $reCAPTCHAToken = token;
-                                loadStatusData();
+                            reCAPTCHACheck.then((token) => {
+                                loadStatusData(token);
                             });
                         }, 60000); // refresh data every minute
                     } else {
@@ -47,8 +46,8 @@
         let statusChartDOM = $('#statusChartDOM');
         let statusChart = echarts.init(statusChartDOM[0]);
 
-        let loadStatusData = () => {
-            $.getJSON(`${$$baseUrl}/api/status`, { 'reCAPTCHA': $reCAPTCHAToken }).done(function (jsonData) {
+        let loadStatusData = (reCAPTCHAToken) => {
+            $.getJSON(`${$$baseUrl}/api/status`, reCAPTCHAToken).done(function (jsonData) {
                 let selectColumnFromStatus = (prop) => {
                     return _.map(jsonData, (item) => {
                         return _.values(_.pick(item, ['startTime', prop]));
@@ -77,160 +76,156 @@
             });
         };
 
-        let $reCAPTCHAToken;
-        grecaptcha.ready(() => {
-            grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
-                $reCAPTCHAToken = token;
-                statusChart.setOption({
-                    title: {
-                        text: '近期性能统计'
-                    },
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    axisPointer: {
-                        link: { xAxisIndex: 'all' }
-                    },
-                    toolbox: {
-                        feature: {
-                            dataZoom: { show: true, yAxisIndex: 'none' },
-                            restore: { show: true },
-                            dataView: { show: true },
-                            saveAsImage: { show: true }
-                        }
-                    },
-                    legend: {
-                        data: [
-                            '耗时',
-                            '网络请求量',
-                            '处理贴子量',
-                            '处理用户量'
-                        ]
-                    },
-                    dataZoom: [
-                        {
-                            type: 'slider',
-                            xAxisIndex: [0, 1],
-                            filterMode: 'filter',
-                            start: 90,
-                            bottom: 0
-                        },
-                        {
-                            type: 'inside',
-                            xAxisIndex: [0, 1],
-                            filterMode: 'filter'
-                        }
-                    ],
-                    visualMap: [
-                        {
-                            seriesIndex: 0,
-                            top: 30,
-                            right: 0,
-                            pieces: [
-                                { gt: 0, lte: 30, color: '#096' },
-                                { gt: 30, lte: 60, color: '#ffde33' },
-                                { gt: 60, lte: 120, color: '#ff9933' },
-                                { gt: 120, lte: 240, color: '#cc0033' },
-                                { gt: 240, lte: 480, color: '#660099' },
-                                { gt: 480, color: '#7e0023' }
-                            ],
-                            outOfRange: { color: '#999' }
-                        }
-                    ],
-                    grid: [
-                        {
-                            height: '35%'
-                        },
-                        {
-                            height: '35%',
-                            top: '60%'
-                        }
-                    ],
-                    xAxis: [
-                        {
-                            type: 'time'
-                        },
-                        {
-                            type: 'time',
-                            gridIndex: 1,
-                            position: 'top'
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            type: 'value',
-                            splitArea: { show: true },
-                            splitLine: { show: false }
-                        },
-                        {
-                            type: 'value',
-                            gridIndex: 1,
-                            inverse: true,
-                            splitArea: { show: true },
-                            splitLine: { show: false }
-                        },
-                        { // 网络请求量下表副Y轴
-                            type: 'value',
-                            gridIndex: 1,
-                            splitLine: { show: false }
-                        }
-                    ],
-                    series: [
-                        {
-                            id: 'duration',
-                            name: '耗时',
-                            type: 'line',
-                            step: 'middle',
-                            symbolSize : 2,
-                            sampling: 'average',
-                            areaStyle: {},
-                            hoverAnimation: false,
-                            markLine: {
-                                symbol: 'none',
-                                lineStyle: { type: 'dotted' },
-                                data: [
-                                    { yAxis: 30 },
-                                    { yAxis: 60 },
-                                    { yAxis: 120 },
-                                    { yAxis: 240 },
-                                    { yAxis: 480 }
-                                ]
-                            }
-                        },
-                        {
-                            id: 'webRequestTimes',
-                            name: '网络请求量',
-                            xAxisIndex: 1,
-                            yAxisIndex: 2,
-                            type: 'line',
-                            symbolSize : 2,
-                            sampling: 'average'
-                        },
-                        {
-                            id: 'parsedPostTimes',
-                            name: '处理贴子量',
-                            xAxisIndex: 1,
-                            yAxisIndex: 1,
-                            type: 'line',
-                            symbolSize : 2,
-                            sampling: 'average',
-                            areaStyle: {}
-                        },
-                        {
-                            id: 'parsedUserTimes',
-                            name: '处理用户量',
-                            xAxisIndex: 1,
-                            yAxisIndex: 1,
-                            type: 'line',
-                            symbolSize : 2,
-                            sampling: 'average',
-                            areaStyle: {}
-                        }
+        reCAPTCHACheck.then((token) => {
+            statusChart.setOption({
+                title: {
+                    text: '近期性能统计'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                axisPointer: {
+                    link: { xAxisIndex: 'all' }
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: { show: true, yAxisIndex: 'none' },
+                        restore: { show: true },
+                        dataView: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                legend: {
+                    data: [
+                        '耗时',
+                        '网络请求量',
+                        '处理贴子量',
+                        '处理用户量'
                     ]
-                });
-                loadStatusData();
-                statusChartDOM.removeClass('loading');
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        xAxisIndex: [0, 1],
+                        filterMode: 'filter',
+                        start: 90,
+                        bottom: 0
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: [0, 1],
+                        filterMode: 'filter'
+                    }
+                ],
+                visualMap: [
+                    {
+                        seriesIndex: 0,
+                        top: 30,
+                        right: 0,
+                        pieces: [
+                            { gt: 0, lte: 30, color: '#096' },
+                            { gt: 30, lte: 60, color: '#ffde33' },
+                            { gt: 60, lte: 120, color: '#ff9933' },
+                            { gt: 120, lte: 240, color: '#cc0033' },
+                            { gt: 240, lte: 480, color: '#660099' },
+                            { gt: 480, color: '#7e0023' }
+                        ],
+                        outOfRange: { color: '#999' }
+                    }
+                ],
+                grid: [
+                    {
+                        height: '35%'
+                    },
+                    {
+                        height: '35%',
+                        top: '60%'
+                    }
+                ],
+                xAxis: [
+                    {
+                        type: 'time'
+                    },
+                    {
+                        type: 'time',
+                        gridIndex: 1,
+                        position: 'top'
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        splitArea: { show: true },
+                        splitLine: { show: false }
+                    },
+                    {
+                        type: 'value',
+                        gridIndex: 1,
+                        inverse: true,
+                        splitArea: { show: true },
+                        splitLine: { show: false }
+                    },
+                    { // 网络请求量下表副Y轴
+                        type: 'value',
+                        gridIndex: 1,
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [
+                    {
+                        id: 'duration',
+                        name: '耗时',
+                        type: 'line',
+                        step: 'middle',
+                        symbolSize : 2,
+                        sampling: 'average',
+                        areaStyle: {},
+                        hoverAnimation: false,
+                        markLine: {
+                            symbol: 'none',
+                            lineStyle: { type: 'dotted' },
+                            data: [
+                                { yAxis: 30 },
+                                { yAxis: 60 },
+                                { yAxis: 120 },
+                                { yAxis: 240 },
+                                { yAxis: 480 }
+                            ]
+                        }
+                    },
+                    {
+                        id: 'webRequestTimes',
+                        name: '网络请求量',
+                        xAxisIndex: 1,
+                        yAxisIndex: 2,
+                        type: 'line',
+                        symbolSize : 2,
+                        sampling: 'average'
+                    },
+                    {
+                        id: 'parsedPostTimes',
+                        name: '处理贴子量',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        type: 'line',
+                        symbolSize : 2,
+                        sampling: 'average',
+                        areaStyle: {}
+                    },
+                    {
+                        id: 'parsedUserTimes',
+                        name: '处理用户量',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        type: 'line',
+                        symbolSize : 2,
+                        sampling: 'average',
+                        areaStyle: {}
+                    }
+                ]
             });
+            loadStatusData(token);
+            statusChartDOM.removeClass('loading');
         });
     </script>
 @endsection

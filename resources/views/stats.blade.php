@@ -83,24 +83,22 @@
             methods: {
                 submitQueryForm: function () {
                     statsChartDOM.addClass('loading');
-                    grecaptcha.ready(() => {
-                        grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
-                            $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(this.$data.statsQuery, { reCAPTCHA: token }))).done((jsonData) => {
-                                series = [];
-                                _.each(jsonData, (datas, postType) => {
-                                    series.push({
-                                        id: postType,
-                                        data: _.map(datas, _.values)
-                                    });
+                    reCAPTCHACheck.then((token) => {
+                        $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(this.$data.statsQuery, token))).done((jsonData) => {
+                            series = [];
+                            _.each(jsonData, (datas, postType) => {
+                                series.push({
+                                    id: postType,
+                                    data: _.map(datas, _.values)
                                 });
-                                statsChart.setOption({
-                                    title: {
-                                        text: `${_.find(this.$data.forumsList, { fid: this.$data.statsQuery.fid }).name}吧贴量统计`
-                                    },
-                                    series
-                                });
-                                statsChartDOM.removeClass('loading');
                             });
+                            statsChart.setOption({
+                                title: {
+                                    text: `${_.find(this.$data.forumsList, { fid: this.$data.statsQuery.fid }).name}吧贴量统计`
+                                },
+                                series
+                            });
+                            statsChartDOM.removeClass('loading');
                         });
                     });
                 }

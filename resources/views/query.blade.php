@@ -760,29 +760,31 @@
                             ajaxErrorCallback();
                             return;
                         }
-                        $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(queryQueryStrings)).done((jsonData) => {
-                            jsonData = preparePostsData(jsonData);
-                            let pagesInfo = jsonData.pages;
+                        reCAPTCHACheck.then((token) => {
+                            $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token))).done((jsonData) => {
+                                jsonData = preparePostsData(jsonData);
+                                let pagesInfo = jsonData.pages;
 
-                            // is requesting new pages data on same query params or loading new data on different query params
-                            if (shouldReplacePage) {
-                                $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
-                                this.$data.postsPages = [jsonData];
-                            } else {
-                                this.$data.postsPages.push(jsonData);
-                            }
-                            if (pagesInfo.totalItems === 0) {
+                                // is requesting new pages data on same query params or loading new data on different query params
+                                if (shouldReplacePage) {
+                                    $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
+                                    this.$data.postsPages = [jsonData];
+                                } else {
+                                    this.$data.postsPages.push(jsonData);
+                                }
+                                if (pagesInfo.totalItems === 0) {
+                                    ajaxErrorCallback();
+                                }
+
+                                new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                                this.changeDocumentTitle(this.$route);
+                            }).fail((jqXHR) => {
                                 ajaxErrorCallback();
-                            }
-
-                            new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                            this.changeDocumentTitle(this.$route);
-                        }).fail((jqXHR) => {
-                            ajaxErrorCallback();
-                            new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                            if (jqXHR.status === 400) {
-                                new Noty({ timeout: 3000, type: 'warning', text: '请检查查询参数是否正确'}).show();
-                            }
+                                new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                                if (jqXHR.status === 400) {
+                                    new Noty({ timeout: 3000, type: 'warning', text: '请检查查询参数是否正确'}).show();
+                                }
+                            });
                         });
                     },
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
