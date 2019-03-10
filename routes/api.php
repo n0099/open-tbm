@@ -3,6 +3,7 @@
 use App\Http\Middleware\ReCAPTCHACheck;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,12 +40,6 @@ Route::get('/status', function () {
 })->middleware(ReCAPTCHACheck::class);
 
 Route::get('/stats/forumPostsCount', function () {
-    $queryParams = collect(\Request::query());
-    $queryParams->shift();
-    $requiredParams = ['fid', 'timeRange', 'startTime', 'endTime'];
-    sort($requiredParams);
-    abort_if($queryParams->keys()->sort()->diff($requiredParams)->isEmpty(), 400, 'Missing required query params');
-
     $groupTimeRangeRawSQL = [
         'minute' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:%i") AS time',
         'hour' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:00") AS time',
@@ -53,6 +48,14 @@ Route::get('/stats/forumPostsCount', function () {
         'month' => 'DATE_FORMAT(postTime, "%Y-%m") AS time',
         'year' => 'DATE_FORMAT(postTime, "%Y") AS time',
     ];
+
+    $queryParams = \Request()->validate([
+        'fid' => 'required|integer',
+        'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
+        'startTime' => 'required|date',
+        'endTime' => 'required|date'
+    ]);
+
     $forumPostsCount = [];
     foreach (PostModelFactory::getPostsModelByForumID($queryParams['fid']) as $postType => $forumPostModel) {
         $forumPostsCount[$postType] = $forumPostModel

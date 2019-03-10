@@ -101,6 +101,9 @@
                     <li :class="`nav-item ${activeNav == 'status' ? 'active' : null}`">
                         <a class="nav-link" href="{{ route('status') }}"><i class="fas fa-satellite-dish"></i> 状态</a>
                     </li>
+                    <li :class="`nav-item ${activeNav == 'stats' ? 'active' : null}`">
+                        <a class="nav-link" href="{{ route('stats') }}"><i class="fas fa-chart-pie"></i> 统计</a>
+                    </li>
                     @yield('navbar-items')
                 </ul>
             </div>
@@ -142,6 +145,15 @@
                 NProgress.start();
             }).on('ajaxStop', () => {
                 NProgress.done();
+            });
+
+            let loadForumsList = new Promise((resolve, reject) => {
+                $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
+                    resolve(_.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
+                        forum.fid = forum.fid.toString();
+                        return forum;
+                    }));
+                });
             });
         </script>
         @yield('script-after-container')

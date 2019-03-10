@@ -57,19 +57,19 @@
                 statusChart.setOption({
                     series: [
                         {
-                            name: '耗时',
+                            id: 'duration',
                             data: selectColumnFromStatus('duration')
                         },
                         {
-                            name: '网络请求量',
+                            id: 'webRequestTimes',
                             data: selectColumnFromStatus('webRequestTimes')
                         },
                         {
-                            name: '处理贴子量',
+                            id: 'parsedPostTimes',
                             data: selectColumnFromStatus('parsedPostTimes')
                         },
                         {
-                            name: '处理用户量',
+                            id: 'parsedUserTimes',
                             data: selectColumnFromStatus('parsedUserTimes')
                         }
                     ]
@@ -100,11 +100,7 @@
                         }
                     },
                     legend: {
-                        data:[
-                            'type',
-                            'fid',
-                            'tid',
-                            'pid',
+                        data: [
                             '耗时',
                             '网络请求量',
                             '处理贴子量',
@@ -116,7 +112,8 @@
                             type: 'slider',
                             xAxisIndex: [0, 1],
                             filterMode: 'filter',
-                            start: 90
+                            start: 90,
+                            bottom: 0
                         },
                         {
                             type: 'inside',
@@ -180,6 +177,7 @@
                     ],
                     series: [
                         {
+                            id: 'duration',
                             name: '耗时',
                             type: 'line',
                             step: 'middle',
@@ -200,30 +198,33 @@
                             }
                         },
                         {
+                            id: 'webRequestTimes',
                             name: '网络请求量',
                             xAxisIndex: 1,
                             yAxisIndex: 2,
                             type: 'line',
                             symbolSize : 2,
-                            sampling: 'average',
+                            sampling: 'average'
                         },
                         {
+                            id: 'parsedPostTimes',
                             name: '处理贴子量',
                             xAxisIndex: 1,
                             yAxisIndex: 1,
                             type: 'line',
                             symbolSize : 2,
                             sampling: 'average',
-                            areaStyle: {},
+                            areaStyle: {}
                         },
                         {
+                            id: 'parsedUserTimes',
                             name: '处理用户量',
                             xAxisIndex: 1,
                             yAxisIndex: 1,
                             type: 'line',
                             symbolSize : 2,
                             sampling: 'average',
-                            areaStyle: {},
+                            areaStyle: {}
                         }
                     ]
                 });

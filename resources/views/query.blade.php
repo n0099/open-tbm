@@ -340,7 +340,7 @@
                                 <option v-for="forum in forumsList" v-text="forum.name" :value="forum.fid"></option>
                             </select>
                         </div>
-                        <label class="border-left col-1 col-form-label">贴子类型</label>
+                        <label class="border-left text-center col-1 col-form-label">贴子类型</label>
                         <div class="input-group my-auto col-4">
                             <div class="custom-checkbox custom-control custom-control-inline">
                                 <input v-model="queryData.query.postType" data-param="postType" id="queryPostTypeThread" type="checkbox" value="thread" class="custom-control-input">
@@ -409,7 +409,7 @@
                             <div class="form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadTitle">主题贴标题</label>
                                 <div class="col-8 input-group">
-                                    <div class="input-group-prepend">getJSON
+                                    <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
                                                 <input v-model="queryData.query.threadTitleRegex" data-param="threadTitleRegex" id="queryThreadTitleRegex" type="checkbox" value="" class="custom-query-param custom-control-input">
@@ -447,7 +447,7 @@
                                         <input v-model="queryData.query.userType" data-param="userType" id="queryUserTypeLatestReplier" type="checkbox" value="latestReplier" class="custom-query-param custom-control-input">
                                         <label class="custom-control-label" for="queryUserTypeLatestReplier">最后回复人（仅主题贴）</label>
                                     </div>
-                                    <label class="border-left col-2 col-form-lael" for="queryUserManagerType">吧务级别</label>
+                                    <label class="border-left col-2 col-form-label" for="queryUserManagerType">吧务级别</label>
                                     <select v-model="queryData.query.userManagerType" data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
                                         <option value="default">所有</option>
                                         <option value="all">吧友</option>
@@ -817,11 +817,8 @@
                     });
 
                     this.$data.queryData = { query: customQueryParams, param: queryParams };
-                    $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
-                        this.$data.forumsList = _.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
-                            forum.fid = forum.fid.toString();
-                            return forum;
-                        });
+                    loadForumsList.then((forumsList) => {
+                        this.$data.forumsList = forumsList;
                         this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
                     });
                 },
