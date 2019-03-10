@@ -2,8 +2,6 @@
 
 namespace App\Tieba\Crawler;
 
-use function GuzzleHttp\json_encode;
-
 abstract class Crawlable
 {
     protected $forumID;
@@ -62,15 +60,6 @@ abstract class Crawlable
                 'connect_timeout' => 5
             ]
         ]);
-    }
-
-    public static function nullableValidate($value, bool $isJson = false)
-    {
-        if ($value === '""' || $value === '[]' || blank($value)) {
-            return null;
-        }
-
-        return $isJson ? json_encode($value) : $value;
     }
 
     /**

@@ -12,13 +12,4 @@ class CrawlingPostModel extends Model
     protected $guarded = [];
 
     public $timestamps = false;
-
-    public function scopeType(Builder $query, $type): Builder
-    {
-        if (is_array($type)) {
-            return $query->whereIn('type', $type);
-        } else {
-            return $query->where('type', $type);
-        }
-    }
 }

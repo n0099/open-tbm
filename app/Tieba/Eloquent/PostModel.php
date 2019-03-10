@@ -5,6 +5,7 @@ namespace App\Tieba\Eloquent;
 use App\Eloquent\InsertOnDuplicateKey;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Class Post
@@ -42,7 +43,7 @@ abstract class PostModel extends Model
     {
         if (is_int($postID)) {
             return $query->where($postIDName, $postID);
-        } elseif (is_array($postID)) {
+        } elseif (is_array($postID) || $postID instanceof Collection) {
             return $query->whereIn($postIDName, $postID);
         } else {
             throw new \InvalidArgumentException("{$postIDName} must be int or array");
