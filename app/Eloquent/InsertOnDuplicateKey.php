@@ -20,7 +20,7 @@ trait InsertOnDuplicateKey
      * @param array $updateColumns
      * @param int $chunkSize
      */
-    public function chunkInsertOnDuplicate(array $data, array $updateColumns, int $chunkSize)
+    public function chunkInsertOnDuplicate(array $data, $updateColumns, int $chunkSize)
     {
         foreach (array_chunk($data, $chunkSize) as $chunkData) {
             $this->insertOnDuplicateKey($chunkData, $updateColumns);

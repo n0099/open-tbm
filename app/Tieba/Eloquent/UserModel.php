@@ -37,6 +37,17 @@ class UserModel extends Model
         'created_at'
     ];
 
+    public function scopeUid(Builder $query, int $uid): Builder
+    {
+        if (is_int($uid)) {
+            return $query->where('uid', $uid);
+        } elseif (is_array($uid)) {
+            return $query->whereIn('uid', $uid);
+        } else {
+            throw new \InvalidArgumentException("uid must be int or array");
+        }
+    }
+
     public function scopeHidePrivateFields(Builder $query): Builder
     {
         return $query->select(array_diff($this->fields, $this->hidedFields));

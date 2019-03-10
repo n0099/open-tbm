@@ -14,10 +14,12 @@ class ReCAPTCHACheck
     public function handle(\Illuminate\Http\Request $request, \Closure $next)
     {
         $reCAPTCHA = new \ReCaptcha\ReCaptcha(env('reCAPTCHA_SECRET_KEY'));
-        if ($reCAPTCHA->verify($request->input('reCAPTCHA'), $request->ip())) {
+        $requestReCAPTCHA = $request->input('reCAPTCHA');
+        $isReCAPTCHAVaild = $requestReCAPTCHA == null ? false : $reCAPTCHA->verify($requestReCAPTCHA, $request->ip())->isSuccess();
+        if ($isReCAPTCHAVaild) {
             return $next($request);
         } else {
             abort(400);
-        };
+        }
     }
 }

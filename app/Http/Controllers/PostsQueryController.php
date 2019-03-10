@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\Eloquent\UserModel;
+use App\Tieba\Post\Post;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -74,7 +75,7 @@ class PostsQueryController extends Controller
 
         $convertJsonContentToHtml = function ($post) {
             if ($post['content'] != null) {
-                $post['content'] = trim(str_replace("\n", '', \App\Tieba\Post\Reply::convertJsonContentToHtml($post['content'])));
+                $post['content'] = trim(str_replace("\n", '', Post::convertJsonContentToHtml($post['content'])));
             }
             return $post;
         };
