@@ -28,7 +28,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $fid, int $tid, int $pid, int $startPage)
     {
-        Log::info("sub reply queue constructed with {$tid} in forum {$fid}, starts from page {$startPage}");
+        Log::info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$startPage}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
@@ -97,6 +97,6 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                 $currentCrawlingSubReply->delete();
             }
         });
-        Log::info('sub reply queue handled after ' . ($queueFinishTime - $this->queueStartTime));
+        Log::info('Sub reply queue completed after ' . ($queueFinishTime - $this->queueStartTime));
     }
 }

@@ -57,13 +57,14 @@ class SubReplyCrawler extends Crawlable
             ]
         )->getBody(), true);
         $this->webRequestTimes += 1;
-        $totalPages = $startPageSubRepliesInfo['page']['total_page'];
-        if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
-            $this->endPage = $totalPages;
-        }
 
         try {
             $this->parseSubRepliesList($startPageSubRepliesInfo);
+            $totalPages = $startPageSubRepliesInfo['page']['total_page'];
+            if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
+                $this->endPage = $totalPages;
+            }
+
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
@@ -176,7 +177,7 @@ class SubReplyCrawler extends Crawlable
                 ExceptionAdditionInfo::remove('insertingSubReplies');
 
                 $this->usersInfo->saveUsersList();
-            });
+            }, 5);
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');

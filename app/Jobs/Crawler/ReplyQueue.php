@@ -28,7 +28,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $fid, int $tid, int $startPage)
     {
-        Log::info("Reply crawler queue constructed with {$tid} in forum {$fid}, starts from page {$startPage}");
+        Log::info("Reply crawler queue dispatched with {$tid} in forum {$fid}, starts from page {$startPage}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;

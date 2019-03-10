@@ -26,7 +26,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $forumID, string $forumName)
     {
-        Log::info("Thread crawler queue constructed with {$forumName}");
+        Log::info("Thread crawler queue dispatched with {$forumID}({$forumName})");
         $this->forumID = $forumID;
         $this->forumName = $forumName;
     }

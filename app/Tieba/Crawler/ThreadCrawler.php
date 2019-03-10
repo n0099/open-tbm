@@ -150,7 +150,7 @@ class ThreadCrawler extends Crawlable
                 ExceptionAdditionInfo::remove('insertingThreads');
 
                 $this->usersInfo->saveUsersList();
-            });
+            }, 5);
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
