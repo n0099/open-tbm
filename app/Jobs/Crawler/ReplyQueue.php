@@ -45,39 +45,66 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         // dispatch new self crawler which starts from current crawler's end page
         if ($repliesCrawler->endPage < $repliesCrawler->getPages()['total_page']) {
             $newCrawlerStartPage = $repliesCrawler->endPage + 1;
-            CrawlingPostModel::insert([
-                'type' => 'reply',
-                'fid' => $this->forumID,
-                'tid' => $this->threadID,
-                'startPage' => $newCrawlerStartPage,
-                'startTime' => microtime(true)
-            ]); // lock for next pages reply crawler
-            ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
+            \DB::transaction(function () use ($newCrawlerStartPage) {
+                $crawlNextPageRangeReply = function () use ($newCrawlerStartPage) {
+                    CrawlingPostModel::insert([
+                        'type' => 'reply',
+                        'fid' => $this->forumID,
+                        'tid' => $this->threadID,
+                        'startPage' => $newCrawlerStartPage,
+                        'startTime' => microtime(true)
+                    ]); // lock for next page range reply crawler
+                    ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
+                };
+                $previousCrawlingNextPageRangeReply = CrawlingPostModel
+                    ::select('id', 'tid', 'startTime')
+                    ->where([
+                        'type' => 'reply',
+                        'fid' => $this->forumID,
+                        'tid' => $this->threadID,
+                        'startPage' => $newCrawlerStartPage
+                    ])
+                    ->lockForUpdate()->first();
+                if ($previousCrawlingNextPageRangeReply != null) { // is latest next page range reply crawler existed and started before $queueDeleteAfter ago
+                    if ($previousCrawlingNextPageRangeReply->startTime < new Carbon($this->queueDeleteAfter)) {
+                        $previousCrawlingNextPageRangeReply->delete();
+                        $crawlNextPageRangeReply();
+                    } else {
+                        // skip next page range reply crawl because it's already crawling by other queue
+                    }
+                } else {
+                    $crawlNextPageRangeReply();
+                }
+            });
         }
 
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
         $oldRepliesInfo = Helper::convertIDListKey(
             PostModelFactory::newReply($this->forumID)
                 ->select('pid', 'subReplyNum')
-                ->whereIn('pid', array_keys($newRepliesInfo))->get()->toArray(),
+                ->whereIn('pid', array_keys($newRepliesInfo))
+                ->get()->toArray(),
             'pid'
         );
         ksort($oldRepliesInfo);
         $repliesCrawler->saveLists();
 
         \DB::transaction(function () use ($newRepliesInfo, $oldRepliesInfo) {
-            $previousCrawlingSubReplies = CrawlingPostModel::select('id', 'pid', 'startTime')
-                ->type(['subReply'])->whereIn('pid', array_keys($newRepliesInfo))->lockForUpdate()->get();
+            $previousCrawlingSubReplies = CrawlingPostModel
+                ::select('id', 'pid', 'startTime')
+                ->where('type', 'subReply')
+                ->whereIn('pid', array_keys($newRepliesInfo))
+                ->lockForUpdate()->get();
             foreach ($newRepliesInfo as $pid => $newReply) {
                 foreach ($previousCrawlingSubReplies as $previousCrawlingSubReply) {
                     if ($previousCrawlingSubReply->pid == $pid // is latest sub reply crawler existed and started before $queueDeleteAfter ago
                         || $previousCrawlingSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
                         $previousCrawlingSubReply->delete();
                     } else {
-                        continue 2; // skip current reply's sub reply crawl
+                        continue 2; // skip current reply's sub reply crawl because it's already crawling by other queue
                     }
                 }
-                if ((! isset($oldRepliesInfo[$pid])) // do we have to crawl new sub replies under reply
+                if (! isset($oldRepliesInfo[$pid]) // do we have to crawl new sub replies under reply
                     || ($newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum'])) {
                     $firstSubReplyCrawlPage = 1;
                     CrawlingPostModel::insert([

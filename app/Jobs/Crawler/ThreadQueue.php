@@ -4,7 +4,7 @@ namespace App\Jobs\Crawler;
 
 use App\Eloquent\CrawlingPostModel;
 use App\Helper;
-use App\Tieba\Crawler;
+use App\Tieba\Crawler\ThreadCrawler;
 use App\Tieba\Eloquent\PostModelFactory;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -42,8 +42,11 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 'fid' => $this->forumID,
                 'tid' => 0
             ];
-            $latestCrawlingForum = CrawlingPostModel::select('id', 'startTime')
-                ->type('thread')->where($crawlingForumInfo)->lockForUpdate()->first(); // not including reply and sub reply crawler queue
+            $latestCrawlingForum = CrawlingPostModel
+                ::select('id', 'startTime')
+                ->where('type', 'thread')
+                ->where($crawlingForumInfo)
+                ->lockForUpdate()->first(); // not including reply and sub reply crawler queue
             if ($latestCrawlingForum != null) { // is latest crawler existed and started before $queueDeleteAfter ago
                 if ($latestCrawlingForum->startTime < new Carbon($this->queueDeleteAfter)) {
                     $latestCrawlingForum->delete();
@@ -51,10 +54,12 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                     return; // exit queue
                 }
             }
-            CrawlingPostModel::insert($crawlingForumInfo + ['startTime' => microtime(true)]); // lock for current thread crawler
+            CrawlingPostModel::insert($crawlingForumInfo + [
+                'startTime' => microtime(true)
+            ]); // lock for current thread crawler
         });
 
-        $threadsCrawler = (new Crawler\ThreadCrawler($this->forumName, $this->forumID))->doCrawl();
+        $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getThreadsInfo();
         $oldThreadsInfo = Helper::convertIDListKey(
             PostModelFactory::newThread($this->forumID)
@@ -67,15 +72,18 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {
             // including sub reply to prevent repeat crawling sub reply's parent reply
-            $previousCrawlingSubPosts = CrawlingPostModel::select('id', 'tid', 'startTime')
-                ->type(['reply', 'subReply'])->whereIn('tid', array_keys($newThreadsInfo))->lockForUpdate()->get();
+            $previousCrawlingSubPosts = CrawlingPostModel
+                ::select('id', 'tid', 'startTime')
+                ->whereIn('type', ['reply', 'subReply'])
+                ->whereIn('tid', array_keys($newThreadsInfo))
+                ->lockForUpdate()->get();
             foreach ($newThreadsInfo as $tid => $newThread) {
                 foreach ($previousCrawlingSubPosts as $previousCrawlingSubPost) {
                     if ($previousCrawlingSubPost->tid == $tid // is latest crawler existed and started before $queueDeleteAfter ago
                         || $previousCrawlingSubPost->startTime < new Carbon($this->queueDeleteAfter)) {
                         $previousCrawlingSubPost->delete();
                     } else {
-                        continue 2; // skip current pending thread's sub post crawl
+                        continue 2; // skip current pending thread's sub post crawl because it's already crawling by other queue
                     }
                 }
                 if ((! isset($oldThreadsInfo[$tid])) // do we have to crawl new replies under thread
