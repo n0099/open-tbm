@@ -106,7 +106,6 @@ class SubReplyCrawler extends Crawlable
 
     private function parseSubRepliesList(array $subRepliesJson): void
     {
-        $this->pagesInfo = $subRepliesJson['page'];
         switch ($subRepliesJson['error_code']) {
             case 0:
                 $subRepliesList = $subRepliesJson['subpost_list'];
@@ -121,6 +120,7 @@ class SubReplyCrawler extends Crawlable
         if (count($subRepliesList) == 0) {
             throw new TiebaException('Sub reply list is empty, posts might already deleted from tieba.');
         }
+        $this->pagesInfo = $subRepliesJson['page'];
 
         $usersList = [];
         $subRepliesInfo = [];

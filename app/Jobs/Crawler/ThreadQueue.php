@@ -56,7 +56,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             }
             CrawlingPostModel::insert($crawlingForumInfo + [
                 'startTime' => microtime(true)
-            ]); // lock for current thread crawler
+            ]); // lock for current pending thread crawler
         });
 
         $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID))->doCrawl();
@@ -72,21 +72,22 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {
             // including sub reply to prevent repeat crawling sub reply's parent reply
-            $previousCrawlingSubPosts = CrawlingPostModel
+            $parallelCrawlingReplies = CrawlingPostModel
                 ::select('id', 'tid', 'startTime')
                 ->whereIn('type', ['reply', 'subReply'])
                 ->whereIn('tid', array_keys($newThreadsInfo))
                 ->lockForUpdate()->get();
             foreach ($newThreadsInfo as $tid => $newThread) {
-                foreach ($previousCrawlingSubPosts as $previousCrawlingSubPost) {
-                    if ($previousCrawlingSubPost->tid == $tid // is latest crawler existed and started before $queueDeleteAfter ago
-                        || $previousCrawlingSubPost->startTime < new Carbon($this->queueDeleteAfter)) {
-                        $previousCrawlingSubPost->delete();
-                    } else {
-                        continue 2; // skip current pending thread's sub post crawl because it's already crawling by other queue
+                foreach ($parallelCrawlingReplies as $parallelCrawlingReply) {
+                    if ($parallelCrawlingReply->tid == $tid) {
+                        if ($parallelCrawlingReply->startTime < new Carbon($this->queueDeleteAfter)) {
+                            $parallelCrawlingReply->delete(); // release latest parallel reply crawler lock then dispatch new crawler when it's has started before $queueDeleteAfter ago
+                        } else {
+                            continue 2; // cancel pending thread's reply crawl because it's already crawling by other queue
+                        }
                     }
                 }
-                if ((! isset($oldThreadsInfo[$tid])) // do we have to crawl new replies under thread
+                if (! isset($oldThreadsInfo[$tid]) // do we have to crawl new replies under thread
                     || (strtotime($newThread['latestReplyTime']) != strtotime($oldThreadsInfo[$tid]['latestReplyTime']))
                     || ($newThread['replyNum'] != $oldThreadsInfo[$tid]['replyNum'])) {
                     $firstReplyCrawlPage = 1;

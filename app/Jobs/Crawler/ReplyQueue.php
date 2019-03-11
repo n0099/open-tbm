@@ -42,42 +42,6 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID, $this->startPage))->doCrawl();
 
-        // dispatch new self crawler which starts from current crawler's end page
-        if ($repliesCrawler->endPage < $repliesCrawler->getPages()['total_page']) {
-            $newCrawlerStartPage = $repliesCrawler->endPage + 1;
-            \DB::transaction(function () use ($newCrawlerStartPage) {
-                $crawlNextPageRangeReply = function () use ($newCrawlerStartPage) {
-                    CrawlingPostModel::insert([
-                        'type' => 'reply',
-                        'fid' => $this->forumID,
-                        'tid' => $this->threadID,
-                        'startPage' => $newCrawlerStartPage,
-                        'startTime' => microtime(true)
-                    ]); // lock for next page range reply crawler
-                    ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
-                };
-                $previousCrawlingNextPageRangeReply = CrawlingPostModel
-                    ::select('id', 'tid', 'startTime')
-                    ->where([
-                        'type' => 'reply',
-                        'fid' => $this->forumID,
-                        'tid' => $this->threadID,
-                        'startPage' => $newCrawlerStartPage
-                    ])
-                    ->lockForUpdate()->first();
-                if ($previousCrawlingNextPageRangeReply != null) { // is latest next page range reply crawler existed and started before $queueDeleteAfter ago
-                    if ($previousCrawlingNextPageRangeReply->startTime < new Carbon($this->queueDeleteAfter)) {
-                        $previousCrawlingNextPageRangeReply->delete();
-                        $crawlNextPageRangeReply();
-                    } else {
-                        // skip next page range reply crawl because it's already crawling by other queue
-                    }
-                } else {
-                    $crawlNextPageRangeReply();
-                }
-            });
-        }
-
         $newRepliesInfo = $repliesCrawler->getRepliesInfo();
         $oldRepliesInfo = Helper::convertIDListKey(
             PostModelFactory::newReply($this->forumID)
@@ -90,18 +54,19 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         $repliesCrawler->saveLists();
 
         \DB::transaction(function () use ($newRepliesInfo, $oldRepliesInfo) {
-            $previousCrawlingSubReplies = CrawlingPostModel
+            $parallelCrawlingSubReplies = CrawlingPostModel
                 ::select('id', 'pid', 'startTime')
                 ->where('type', 'subReply')
                 ->whereIn('pid', array_keys($newRepliesInfo))
                 ->lockForUpdate()->get();
             foreach ($newRepliesInfo as $pid => $newReply) {
-                foreach ($previousCrawlingSubReplies as $previousCrawlingSubReply) {
-                    if ($previousCrawlingSubReply->pid == $pid // is latest sub reply crawler existed and started before $queueDeleteAfter ago
-                        || $previousCrawlingSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
-                        $previousCrawlingSubReply->delete();
-                    } else {
-                        continue 2; // skip current reply's sub reply crawl because it's already crawling by other queue
+                foreach ($parallelCrawlingSubReplies as $parallelCrawlingSubReply) {
+                    if ($parallelCrawlingSubReply->pid == $pid) {
+                        if ($parallelCrawlingSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
+                            $parallelCrawlingSubReply->delete(); // release latest parallel sub reply crawler lock then dispatch new crawler when it's has started before $queueDeleteAfter ago
+                        } else {
+                            continue 2; // cancel pending reply's sub reply crawl because it's already crawling by other queue
+                        }
                     }
                 }
                 if (! isset($oldRepliesInfo[$pid]) // do we have to crawl new sub replies under reply
@@ -134,6 +99,35 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                     'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $repliesCrawler->getTimes())->save();
                 $currentCrawlingReply->delete();
+            }
+
+            // dispatch new self crawler which starts from current crawler's end page
+            if ($repliesCrawler->endPage < $repliesCrawler->getPages()['total_page']) {
+                $newCrawlerStartPage = $repliesCrawler->endPage + 1;
+                $parallelCrawlingReply = CrawlingPostModel
+                    ::select('id', 'tid', 'startTime', 'startPage')
+                    ->where([
+                        'type' => 'reply',
+                        'fid' => $this->forumID,
+                        'tid' => $this->threadID,
+                    ])
+                    ->lockForUpdate()->first();
+                if ($parallelCrawlingReply != null) { // is latest parallel reply crawler existed and started before $queueDeleteAfter ago
+                    if ($parallelCrawlingReply->startTime < new Carbon($this->queueDeleteAfter)
+                        || $parallelCrawlingReply->startPage < $repliesCrawler->startPage) {
+                        $parallelCrawlingReply->delete();
+                    } else {
+                        return; // cancel pending next page range reply crawl because it's already crawling by other queue
+                    }
+                }
+                CrawlingPostModel::insert([
+                    'type' => 'reply',
+                    'fid' => $this->forumID,
+                    'tid' => $this->threadID,
+                    'startPage' => $newCrawlerStartPage,
+                    'startTime' => microtime(true)
+                ]); // lock for next page range reply crawler
+                ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
             }
         });
         Log::info('Reply crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));

@@ -105,7 +105,6 @@ class ReplyCrawler extends Crawlable
 
     private function parseRepliesList(array $repliesJson): void
     {
-        $this->pagesInfo = $repliesJson['page'];
         switch ($repliesJson['error_code']) {
             case 0:
                 $repliesList = $repliesJson['post_list'];
@@ -123,6 +122,7 @@ class ReplyCrawler extends Crawlable
         if (count($repliesList) == 0) {
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba.');
         }
+        $this->pagesInfo = $repliesJson['page'];
 
         $repliesUpdateInfo = [];
         $repliesInfo = [];
