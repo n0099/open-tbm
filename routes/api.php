@@ -1,9 +1,11 @@
 <?php
 
+use App\Eloquent\BilibiliVoteModel;
 use App\Http\Middleware\ReCAPTCHACheck;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use function GuzzleHttp\json_encode;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +70,48 @@ Route::get('/stats/forumPostsCount', function () {
 
     return json_encode($forumPostsCount);
 })->middleware(ReCAPTCHACheck::class);
+
+Route::get('/bilibiliVote/top10CandidatesStats', function () {
+    $groupTimeRangeRawSQL = [
+        'minute' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:%i") AS time',
+        'hour' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:00") AS time',
+    ];
+    $queryParams = \Request()->validate([
+        'type' => 'required|in:count,timeline',
+        'timeRange' => ['required_if:type,timeline', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
+    ]);
+    $top10Candidates = BilibiliVoteModel::select('voteFor')
+        ->selectRaw('COUNT(*) AS count')
+        ->where('isValid', true)
+        ->groupBy('voteFor')
+        ->orderBy('count', 'DESC')
+        ->limit(10)
+        ->get()->pluck('voteFor')
+        ->toArray();
+    switch ($queryParams['type']) {
+        case 'count':
+            return BilibiliVoteModel::select(['voteFor', 'isValid'])
+                ->selectRaw('COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade')
+                ->whereIn('voteFor', $top10Candidates)
+                ->groupBy(['voteFor', 'isValid'])
+                ->orderBy('count', 'DESC')->get()->toJson();
+            break;
+        case 'timeline':
+            return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+                ->selectRaw('COUNT(*) AS count')
+                ->addSelect(['voteFor', 'isValid'])
+                ->whereIn('voteFor', $top10Candidates)
+                ->groupBy(['time', 'voteFor', 'isValid'])
+                ->orderBy('time', 'DESC')
+                ->get()->toJson();
+            /*return BilibiliVoteModel
+                ::selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+                ->selectRaw('COUNT(*) AS count')
+                ->groupBy('time')
+                ->get()->toJson();
+            break;*/
+    }
+});
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();

@@ -56,6 +56,7 @@
 
 @section('script-after-container')
     <script>
+        'use strict';
         new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'stats' } });
 
         let statsChartVue = new Vue({
@@ -85,7 +86,7 @@
                     statsChartDOM.addClass('loading');
                     reCAPTCHACheck.then((token) => {
                         $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(this.$data.statsQuery, token))).done((jsonData) => {
-                            series = [];
+                            let series = [];
                             _.each(jsonData, (datas, postType) => {
                                 series.push({
                                     id: postType,
@@ -112,10 +113,8 @@
                 text: '吧贴量统计'
             },
             tooltip: {
-                trigger: 'axis'
-            },
-            axisPointer: {
-                link: { xAxisIndex: 'all' }
+                trigger: 'axis',
+                axisPointer : { type : 'shadow' }
             },
             toolbox: {
                 feature: {
@@ -125,13 +124,6 @@
                     saveAsImage: { show: true },
                     magicType: { show: true, type: ['stack', 'tiled'] },
                 }
-            },
-            legend: {
-                data: [
-                    '主题贴',
-                    '回复贴',
-                    '楼中楼'
-                ]
             },
             dataZoom: [
                 {
@@ -147,12 +139,15 @@
                     filterMode: 'filter'
                 }
             ],
-            xAxis: [{
+            legend: {
+                data: ['主题贴', '回复贴', '楼中楼']
+            },
+            xAxis: {
                 type: 'time'
-            }],
-            yAxis: [{
+            },
+            yAxis: {
                 type: 'value',
-            }],
+            },
             series: [
                 {
                     id: 'thread',
@@ -178,13 +173,11 @@
                     type: 'line',
                     symbolSize: 2,
                     smooth: true,
-                    label: {
-                        normal: {
-                            show: true,
-                            position: 'top'
-                        }
-                    },
                     sampling: 'average',
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
                     stack: 'postsCount'
                 }
             ]

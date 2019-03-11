@@ -62,16 +62,16 @@
             ::-webkit-scrollbar
             {
                 width: 10px;
-                background-color: #F5F5F5;
+                background-color: #f5f5f5;
             }
             ::-webkit-scrollbar-track
             {
                 box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-                background-color: #F5F5F5;
+                background-color: #f5f5f5;
             }
             ::-webkit-scrollbar-thumb
             {
-                background-color: #F90;
+                background-color: #f90;
                 background-image: -webkit-linear-gradient(
                     45deg,
                     rgba(255, 255, 255, .2) 25%,
@@ -126,7 +126,7 @@
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
         <script async src="https://cdn.jsdelivr.net/npm/lazysizes@4.1.5/lazysizes.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue{{ App::environment('production') ? '.min' : null }}.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-router@3.0.2/dist/vue-router.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/morr/jquery.appear@0.4.1/jquery.appear.min.js"></script>
