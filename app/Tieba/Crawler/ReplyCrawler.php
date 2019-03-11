@@ -43,9 +43,10 @@ class ReplyCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        $tiebaClient = $this->getClientHelper();
-
         Log::info("Start to fetch replies for thread, tid {$this->threadID}, page {$this->startPage}");
+        ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
+
+        $tiebaClient = $this->getClientHelper();
         $startPageRepliesInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
             [
@@ -67,7 +68,7 @@ class ReplyCrawler extends Crawlable
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
-                    for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) {
+                    for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
                         yield function () use ($tiebaClient, $pn) {
                             Log::info("Fetching replies for thread, tid {$this->threadID}, page {$pn}");
                             return $tiebaClient->postAsync(
@@ -86,10 +87,12 @@ class ReplyCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         $repliesInfo = json_decode($response->getBody(), true);
                         $this->parseRepliesList($repliesInfo);
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         report($e);
                     }
                 ]

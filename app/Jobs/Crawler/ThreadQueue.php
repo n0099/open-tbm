@@ -36,28 +36,33 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         $this->queueStartTime = microtime(true);
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        \DB::transaction(function () {
+        $cancelCurrentCrawler = false;
+        \DB::transaction(function () use ($cancelCurrentCrawler) {
             $crawlingForumInfo = [
                 'type' => 'thread',
                 'fid' => $this->forumID,
-                'tid' => 0
             ];
             $latestCrawlingForum = CrawlingPostModel
                 ::select('id', 'startTime')
-                ->where('type', 'thread')
+                ->where('type', 'thread') // not including reply and sub reply crawler queue
                 ->where($crawlingForumInfo)
-                ->lockForUpdate()->first(); // not including reply and sub reply crawler queue
+                ->lockForUpdate()->first();
             if ($latestCrawlingForum != null) { // is latest crawler existed and started before $queueDeleteAfter ago
                 if ($latestCrawlingForum->startTime < new Carbon($this->queueDeleteAfter)) {
-                    $latestCrawlingForum->delete();
+                    $latestCrawlingForum->delete(); // release latest parallel thread crawler lock then dispatch new one when it's has started before $queueDeleteAfter ago
                 } else {
-                    return; // exit queue
+                    $cancelCurrentCrawler = true; // cancel pending thread crawl because it's already crawling
                 }
             }
-            CrawlingPostModel::insert($crawlingForumInfo + [
-                'startTime' => microtime(true)
-            ]); // lock for current pending thread crawler
+            if (! $cancelCurrentCrawler) {
+                CrawlingPostModel::insert($crawlingForumInfo + [
+                    'startTime' => microtime(true)
+                ]); // lock for current pending thread crawler
+            }
         });
+        if ($cancelCurrentCrawler) {
+            return;
+        }
 
         $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getThreadsInfo();
@@ -71,19 +76,19 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         $threadsCrawler->saveLists();
 
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {
-            // including sub reply to prevent repeat crawling sub reply's parent reply
             $parallelCrawlingReplies = CrawlingPostModel
                 ::select('id', 'tid', 'startTime')
-                ->whereIn('type', ['reply', 'subReply'])
+                ->whereIn('type', ['reply', 'subReply']) // including sub reply to prevent repeat crawling sub reply's parent reply (optional optimize case)
                 ->whereIn('tid', array_keys($newThreadsInfo))
                 ->lockForUpdate()->get();
             foreach ($newThreadsInfo as $tid => $newThread) {
+                // check for other parallelling reply crawler lock
                 foreach ($parallelCrawlingReplies as $parallelCrawlingReply) {
                     if ($parallelCrawlingReply->tid == $tid) {
                         if ($parallelCrawlingReply->startTime < new Carbon($this->queueDeleteAfter)) {
                             $parallelCrawlingReply->delete(); // release latest parallel reply crawler lock then dispatch new crawler when it's has started before $queueDeleteAfter ago
                         } else {
-                            continue 2; // cancel pending thread's reply crawl because it's already crawling by other queue
+                            continue 2; // cancel pending thread's reply crawl because it's already crawling
                         }
                     }
                 }
@@ -106,16 +111,18 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         $queueFinishTime = microtime(true);
         \DB::transaction(function () use ($queueFinishTime, $threadsCrawler) {
             // report previous finished forum crawl
-            $currentCrawlingForum = CrawlingPostModel::select('id', 'startTime')->where([
-                'type' => 'thread', // not including reply and sub reply crawler queue
-                'fid' => $this->forumID,
-                'tid' => 0
-            ])->first();
+            $currentCrawlingForum = CrawlingPostModel
+                ::select('id', 'startTime')
+                ->where([
+                    'type' => 'thread', // not including current thread's reply and sub reply crawler queue
+                    'fid' => $this->forumID,
+                ])
+                ->lockForUpdate()->first();
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingForum->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $threadsCrawler->getTimes())->save();
-                $currentCrawlingForum->delete();
+                $currentCrawlingForum->delete(); // release current crawl queue lock
             }
         });
         Log::info('Thread crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));

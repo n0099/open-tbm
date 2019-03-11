@@ -37,15 +37,17 @@ class ThreadCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        $tiebaClient = $this->getClientHelper();
-
         Log::info("Start to fetch threads for forum {$this->forumName}, page 1");
+        ExceptionAdditionInfo::set(['parsingPage' => 1]);
+
+        $tiebaClient = $this->getClientHelper();
         $threadsList = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/frs/page',
             [
                 'form_params' => [
                     'kw' => $this->forumName,
-                    'pn' => 1, 'rn' => 50
+                    'pn' => 1,
+                    'rn' => 50
                 ]
             ]
         )->getBody(), true);

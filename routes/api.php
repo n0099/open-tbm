@@ -111,7 +111,7 @@ Route::get('/bilibiliVote/top10CandidatesStats', function () {
                 ->get()->toJson();
             break;*/
     }
-});
+})->middleware(ReCAPTCHACheck::class);
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();

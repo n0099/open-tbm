@@ -46,39 +46,25 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $queueFinishTime = microtime(true);
         \DB::transaction(function () use ($queueFinishTime, $subRepliesCrawler) {
             // report previous reply crawl finished
-            $currentCrawlingSubReply = CrawlingPostModel::select('id', 'startTime')->where([
-                'type' => 'subReply',
-                'tid' => $this->threadID,
-                'pid' => $this->replyID,
-                'startPage' => $this->startPage
-            ])->first();
+            $currentCrawlingSubReply = CrawlingPostModel
+                ::select('id', 'startTime')
+                ->where([
+                    'type' => 'subReply',
+                    'tid' => $this->threadID,
+                    'pid' => $this->replyID,
+                    'startPage' => $this->startPage
+                ])
+                ->lockForUpdate()->first();
             if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingSubReply->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $subRepliesCrawler->getTimes())->save();
-                $currentCrawlingSubReply->delete();
+                $currentCrawlingSubReply->delete(); // release current crawl queue lock
             }
 
-            // dispatch new self crawler which starts from current crawler's end page
-            if ($subRepliesCrawler->endPage < $subRepliesCrawler->getPages()['total_page']) {
+            // dispatch next page range crawler if there's un-crawled pages
+            if ($subRepliesCrawler->endPage < ($subRepliesCrawler->getPages()['total_page'] ?? PHP_INT_MAX)) { // give up next page range crawl when TiebaException thrown within crawler parser
                 $newCrawlerStartPage = $subRepliesCrawler->endPage + 1;
-                $parallelCrawlingNextPageRangeSubReply = CrawlingPostModel
-                    ::select('id', 'tid', 'startTime')
-                    ->where([
-                        'type' => 'subReply',
-                        'fid' => $this->forumID,
-                        'tid' => $this->threadID,
-                        'pid' => $this->replyID,
-                        'startPage' => $newCrawlerStartPage
-                    ])
-                    ->lockForUpdate()->first();
-                if ($parallelCrawlingNextPageRangeSubReply != null) {
-                    if ($parallelCrawlingNextPageRangeSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
-                        $parallelCrawlingNextPageRangeSubReply->delete(); // release latest parallel next page range sub reply crawler lock then dispatch new crawler when it's has started before $queueDeleteAfter ago
-                    } else {
-                        return; // cancel pending next page range sub reply crawl because it's already crawling by other queue
-                    }
-                }
                 CrawlingPostModel::insert([
                     'type' => 'subReply',
                     'fid' => $this->forumID,

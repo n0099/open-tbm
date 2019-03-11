@@ -60,12 +60,13 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 ->whereIn('pid', array_keys($newRepliesInfo))
                 ->lockForUpdate()->get();
             foreach ($newRepliesInfo as $pid => $newReply) {
+                // check for other parallelling sub reply crawler lock
                 foreach ($parallelCrawlingSubReplies as $parallelCrawlingSubReply) {
                     if ($parallelCrawlingSubReply->pid == $pid) {
                         if ($parallelCrawlingSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
-                            $parallelCrawlingSubReply->delete(); // release latest parallel sub reply crawler lock then dispatch new crawler when it's has started before $queueDeleteAfter ago
+                            $parallelCrawlingSubReply->delete(); // release latest parallel sub reply crawler lock then dispatch new one when it had started before $queueDeleteAfter ago
                         } else {
-                            continue 2; // cancel pending reply's sub reply crawl because it's already crawling by other queue
+                            continue 2; // cancel pending reply's sub reply crawl because it's already crawling
                         }
                     }
                 }
@@ -87,39 +88,25 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
         $queueFinishTime = microtime(true);
         \DB::transaction(function () use ($queueFinishTime, $repliesCrawler) {
-            // report previous thread crawl finished
-            $currentCrawlingReply = CrawlingPostModel::select('id', 'startTime')->where([
-                'type' => 'reply', // not including sub reply crawler queue
-                'fid' => $this->forumID,
-                'tid' => $this->threadID,
-                'startPage' => $this->startPage
-            ])->first();
+            // report current crawl queue finished
+            $currentCrawlingReply = CrawlingPostModel
+                ::select('id', 'startTime')
+                ->where([
+                    'type' => 'reply', // not including current reply's sub reply crawler
+                    'fid' => $this->forumID,
+                    'tid' => $this->threadID,
+                ])
+                ->lockForUpdate()->first();
             if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingReply->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $repliesCrawler->getTimes())->save();
-                $currentCrawlingReply->delete();
+                $currentCrawlingReply->delete(); // release current crawl queue lock
             }
 
-            // dispatch new self crawler which starts from current crawler's end page
-            if ($repliesCrawler->endPage < $repliesCrawler->getPages()['total_page']) {
+            // dispatch next page range crawler if there's un-crawled pages
+            if ($repliesCrawler->endPage < ($repliesCrawler->getPages()['total_page'] ?? PHP_INT_MAX)) { // give up next page range crawl when TiebaException thrown within crawler parser) {
                 $newCrawlerStartPage = $repliesCrawler->endPage + 1;
-                $parallelCrawlingReply = CrawlingPostModel
-                    ::select('id', 'tid', 'startTime', 'startPage')
-                    ->where([
-                        'type' => 'reply',
-                        'fid' => $this->forumID,
-                        'tid' => $this->threadID,
-                    ])
-                    ->lockForUpdate()->first();
-                if ($parallelCrawlingReply != null) { // is latest parallel reply crawler existed and started before $queueDeleteAfter ago
-                    if ($parallelCrawlingReply->startTime < new Carbon($this->queueDeleteAfter)
-                        || $parallelCrawlingReply->startPage < $repliesCrawler->startPage) {
-                        $parallelCrawlingReply->delete();
-                    } else {
-                        return; // cancel pending next page range reply crawl because it's already crawling by other queue
-                    }
-                }
                 CrawlingPostModel::insert([
                     'type' => 'reply',
                     'fid' => $this->forumID,

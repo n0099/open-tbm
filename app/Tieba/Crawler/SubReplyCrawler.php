@@ -43,9 +43,10 @@ class SubReplyCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        $tiebaClient = $this->getClientHelper();
-
         Log::info("Start to fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$this->startPage}");
+        ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
+
+        $tiebaClient = $this->getClientHelper();
         $startPageSubRepliesInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/floor',
             [
@@ -68,7 +69,7 @@ class SubReplyCrawler extends Crawlable
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
-                    for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) {
+                    for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
                         yield function () use ($tiebaClient, $pn) {
                             Log::info("Fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
                             return $tiebaClient->postAsync(
@@ -88,10 +89,12 @@ class SubReplyCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         $subRepliesInfo = json_decode($response->getBody(), true);
                         $this->parseSubRepliesList($subRepliesInfo);
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         report($e);
                     }
                 ]
