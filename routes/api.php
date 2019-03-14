@@ -72,13 +72,13 @@ Route::get('/stats/forumPostsCount', function () {
 })->middleware(ReCAPTCHACheck::class);
 
 Route::get('/bilibiliVote/top10CandidatesStats', function () {
-    $groupTimeRangeRawSQL = [
+    /*$groupTimeRangeRawSQL = [
         'minute' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:%i") AS time',
         'hour' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:00") AS time',
-    ];
+    ];*/
     $queryParams = \Request()->validate([
         'type' => 'required|in:count,timeline',
-        'timeRange' => ['required_if:type,timeline', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
+        'timeRange' => 'string|required_if:type,timeline',
     ]);
     $voteStartTime = '2019-03-10T12:35:00'; // exactly 2019-03-10T12:38:17
     $voteEndTime = '2019-03-11T12:00:00';

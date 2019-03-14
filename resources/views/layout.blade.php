@@ -105,6 +105,17 @@
                     <li :class="`nav-item ${activeNav == 'stats' ? 'active' : null}`">
                         <a class="nav-link" href="{{ route('stats') }}"><i class="fas fa-chart-pie"></i> 统计</a>
                     </li>
+                    <li :class="`nav-item dropdown ${activeNav == 'bilibiliVote' ? 'active' : null}`">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarTopicDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-paper-plane"></i> 专题
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarTopicDropdown">
+                            <a :class="`dropdown-item ${activeNav == 'bilibiliVote' ? 'active' : null}`" href="{{ route('bilibiliVote') }}">bilibili吧公投</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐赠</a>
+                    </li>
                     @yield('navbar-items')
                 </ul>
             </div>

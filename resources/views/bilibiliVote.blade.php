@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', 'bilibili吧吧主公投 - 专题')
+@section('title', 'bilibili吧2019年吧主公投 - 专题')
 
 @section('container')
     <style>
@@ -378,7 +378,7 @@
                                         normal: { type: 'dashed' }
                                     },
                                     symbol: 'none',
-                                    data: validVotesCountDiffWithPrevious
+                                    data: validVotesbilibiliVoteCountDiffWithPrevious
                                 }
                             },
                             {
