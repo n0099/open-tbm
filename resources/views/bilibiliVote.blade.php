@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', '状态')
+@section('title', 'bilibili吧吧主公投 - 专题')
 
 @section('container')
     <style>
@@ -8,14 +8,14 @@
             height: 20em;
         }
         #timeLineStatsChartDOM {
-            height: 20em;
+            height: 40em;
         }
     </style>
     <div id="bilibiliVote" class="mt-2">
         <div class="justify-content-end row">
             <div class="col-3 custom-checkbox custom-control">
                 <input v-model="autoRefresh" id="chkAutoRefresh" type="checkbox" class="custom-control-input">
-                <label class="custom-control-label" for="chkAutoRefresh">每分钟自动刷新</label>
+                <label class="custom-control-label" for="chkAutoRefresh"><del>每分钟自动刷新</del></label>
             </div>
         </div>
         <div id="countStatsChartDOM" class="echarts loading row mt-2"></div>
@@ -71,19 +71,19 @@
                     countStatsChart.setOption({
                         title: {
                             text: 'bilibili吧吧主公投 前10票数',
-                            subtext: '系列间线上数字为与前一人票数差距\n数据来源：四叶贴吧云监控 四叶QQ群：292311751'
+                            subtext: '候选人间线上数字为与前一人票差\n数据仅供参考 数据来源：四叶贴吧云监控 四叶QQ群：292311751'
                         },
                         tooltip: {
                             trigger: 'axis',
-                            axisPointer : { type : 'shadow' }
+                            axisPointer: {type: 'shadow'}
                         },
                         toolbox: {
                             feature: {
-                                dataZoom: { show: true, yAxisIndex: 'none' },
-                                restore: { show: true },
-                                dataView: { show: true },
-                                saveAsImage: { show: true },
-                                magicType: { show: true, type: ['stack', 'tiled'] },
+                                dataZoom: {show: true, yAxisIndex: 'none'},
+                                restore: {show: true},
+                                dataView: {show: true},
+                                saveAsImage: {show: true},
+                                magicType: {show: true, type: ['stack', 'tiled']},
                             }
                         },
                         legend: {
@@ -137,14 +137,16 @@
                         ]
                     });
                     loadTop10CandidatesCounts(token);
-                    timeLineStatsChart.setOption({
+                });
+                reCAPTCHACheck.then((token) => {
+                    /*timeLineStatsChart.setOption({
                         title: {
                             text: 'bilibili吧吧主公投 前10票数历史增量',
                             subtext: '数据来源：四叶贴吧云监控 四叶QQ群：292311751'
                         },
                         tooltip: {
                             trigger: 'axis',
-                            axisPointer : { type : 'shadow' }
+                            axisPointer: { type: 'shadow' }
                         },
                         toolbox: {
                             feature: {
@@ -182,7 +184,7 @@
                             type: 'value',
                         },
                         series: [
-                            /*{
+                            /!*{
                                 id: 'thread',
                                 name: '有效票',
                                 type: 'line',
@@ -205,8 +207,76 @@
                                     position: 'top'
                                 },
                                 stack: 'postsCount'
-                            }*/
+                            }*!/
                         ]
+                    });*/
+                    timeLineStatsChart.setOption({
+                        baseOption: {
+                            timeline: {
+                                playInterval: 300,
+                                symbol: 'none',
+                                realtime: true,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                label: { show: false }
+                            },
+                            title: {
+                                text: 'bilibili吧吧主公投 前10票数 时间轴',
+                                subtext: '候选人间线上数字为与前一人票差\n数据仅供参考 数据来源：四叶贴吧云监控 四叶QQ群：292311751'
+                            },
+                            tooltip: {
+                                trigger: 'axis',
+                                axisPointer: { type: 'shadow' }
+                            },
+                            toolbox: {
+                                feature: {
+                                    dataZoom: { show: true, yAxisIndex: 'none' },
+                                    restore: { show: true },
+                                    dataView: { show: true },
+                                    saveAsImage: { show: true },
+                                    magicType: { show: true, type: ['stack', 'tiled'] },
+                                }
+                            },
+                            legend: {
+                                data: ['有效票', '无效票', '有效投票者平均等级', '无效投票者平均等级']
+                            },
+                            xAxis: [
+                                {
+                                    type: 'value',
+                                    splitLine: { show: false },
+                                    splitArea: { show: true }
+                                }
+                            ],
+                            yAxis: {
+                                type: 'category'
+                            },
+                            series: [
+                                {
+                                    id: 'validVotesCount',
+                                    name: '有效票',
+                                    type: 'bar',
+                                    label: {
+                                        show: true,
+                                        position: 'right',
+                                        color: '#fe980e'
+                                    },
+                                    z: 1 // prevent label covered by invalidVotesCount categroy
+                                },
+                                {
+                                    id: 'invalidVotesCount',
+                                    name: '无效票',
+                                    type: 'bar',
+                                    label: {
+                                        show: true,
+                                        position: 'right',
+                                        color: '#999999'
+                                    },
+                                    z: 0,
+                                    barGap: '0%'
+                                }
+                            ]
+                        }
                     });
                     loadTop10CandidatesTimelineStats(token, this.$data.statsQuery.top10CandidatesTimeRange);
                 });
@@ -216,7 +286,7 @@
         let countStatsChartDOM = $('#countStatsChartDOM');
         let countStatsChart = echarts.init(countStatsChartDOM[0]);
         let loadTop10CandidatesCounts = (reCAPTCHAToken) => {
-            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param({ type: 'count' })).then((jsonData) => {
+            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'count' }, reCAPTCHAToken))).then((jsonData) => {
                 let top10Candidates = _.map(_.map(_.filter(jsonData, { isValid: 1 }), 'voteFor'), (i) => i + '号');
                 let validVotes = _.filter(jsonData, { isValid: 1 });
                 let invalidVotes = _.filter(jsonData, { isValid: 0 });
@@ -233,7 +303,7 @@
                             coord: [index, count]
                         },
                         {
-                            coord: [index-1, validVotesCount[index - 1]]
+                            coord: [index - 1, validVotesCount[index - 1]]
                         }
                     ];
                 });
@@ -246,10 +316,11 @@
                         {
                             id: 'validVotesCount',
                             data: validVotesCount,
-                            markLine : {
+                            markLine: {
                                 lineStyle: {
                                     normal: { type: 'dashed' }
                                 },
+                                symbol: 'none',
                                 data: validVotesCountDiffWithPrevious
                             }
                         },
@@ -266,9 +337,81 @@
         let timeLineStatsChartDOM = $('#timeLineStatsChartDOM');
         let timeLineStatsChart = echarts.init(timeLineStatsChartDOM[0]);
         let loadTop10CandidatesTimelineStats = (reCAPTCHAToken, timeRange) => {
-            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param({ type: 'timeline', timeRange })).then((jsonData) => {
+            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'timeline', timeRange }, reCAPTCHAToken))).then((jsonData) => {
                 window.jsonData = jsonData;
-                let top10Candidates = _.uniq(_.map(_.filter(jsonData, { isValid: 1 }), 'voteFor')); // not order by votes count
+                let options = [];
+                /*let voteStartTime = moment('2019-03-10T12:35:00').unix();
+                let voteEndTime = moment('2019-03-11T12:00:00').unix();
+                let voteTimeGroupRange = 5 * 60; // 5 mins
+                let timeGroups = _.range(voteStartTime, voteEndTime + voteTimeGroupRange, voteTimeGroupRange);*/
+                _.each(_.groupBy(jsonData, 'endTime'), (timeGroup, time) => {
+                    let validVotes = _.filter(timeGroup, { isValid: 1 });
+                    let invalidVotes = _.filter(timeGroup, { isValid: 0 });
+                    let invalidVotesCount = _.map(invalidVotes, 'count');
+                    let validVotesCount = _.map(validVotes, 'count');
+                    let validVotesCountDiffWithPrevious = _.map(validVotesCount, (count, index) => {
+                        return [
+                            {
+                                label: {
+                                    show: true,
+                                    position: 'middle',
+                                    formatter: (-(count - validVotesCount[index + 1])).toString()
+                                },
+                                coord: [count, index]
+                            },
+                            {
+                                coord: [validVotesCount[index + 1], index + 1]
+                            }
+                        ];
+                    });
+                    validVotesCountDiffWithPrevious.pop(); // first candidate doesn't needs to exceed anyone
+                    options.push({
+                        yAxis: {
+                            data: _.map(validVotes, 'voteFor')
+                        },
+                        series: [
+                            {
+                                id: 'validVotesCount',
+                                data: validVotesCount,
+                                markLine: {
+                                    lineStyle: {
+                                        normal: { type: 'dashed' }
+                                    },
+                                    symbol: 'none',
+                                    data: validVotesCountDiffWithPrevious
+                                }
+                            },
+                            {
+                                id: 'invalidVotesCount',
+                                data: invalidVotesCount
+                            }
+                        ],
+                        graphic: [
+                            {
+                                type: 'text',
+                                right: '10%',
+                                bottom: '10%',
+                                z: 100,
+                                style: {
+                                    fill: '#989898',
+                                    text: moment.unix(time).format('M-D H:mm'),
+                                    font: 'bold 26px Microsoft YaHei'
+                                }
+                            }
+                        ]
+                    });
+                });
+
+                timeLineStatsChart.setOption({
+                    baseOption: {
+                        timeline: {
+                            autoPlay: true,
+                            data: _.map(_.sortBy(_.uniq(_.map(jsonData, 'endTime'))), (i) => moment.unix(i).format())
+                        }
+                    },
+                    options
+                });
+                /*let top10Candidates = _.uniq(_.map(_.filter(jsonData, { isValid: 1 }), 'voteFor')); // not order by votes count
                 let validVotes = _.filter(jsonData, { isValid: 1 });
                 let invalidVotes = _.filter(jsonData, { isValid: 0 });
 
@@ -282,7 +425,8 @@
                 });
                 timeLineStatsChart.setOption({
                     series
-                });
+                });*/
+                timeLineStatsChartDOM.removeClass('loading');
             });
         };
     </script>

@@ -114,7 +114,7 @@
             },
             tooltip: {
                 trigger: 'axis',
-                axisPointer : { type : 'shadow' }
+                axisPointer: { type: 'shadow' }
             },
             toolbox: {
                 feature: {

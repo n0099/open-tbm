@@ -80,6 +80,8 @@ Route::get('/bilibiliVote/top10CandidatesStats', function () {
         'type' => 'required|in:count,timeline',
         'timeRange' => ['required_if:type,timeline', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
     ]);
+    $voteStartTime = '2019-03-10T12:35:00'; // exactly 2019-03-10T12:38:17
+    $voteEndTime = '2019-03-11T12:00:00';
     $top10Candidates = BilibiliVoteModel::select('voteFor')
         ->selectRaw('COUNT(*) AS count')
         ->where('isValid', true)
@@ -93,23 +95,46 @@ Route::get('/bilibiliVote/top10CandidatesStats', function () {
             return BilibiliVoteModel::select(['voteFor', 'isValid'])
                 ->selectRaw('COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade')
                 ->whereIn('voteFor', $top10Candidates)
-                ->groupBy(['voteFor', 'isValid'])
-                ->orderBy('count', 'DESC')->get()->toJson();
+                ->groupBy('voteFor', 'isValid')
+                ->orderBy('count', 'DESC')
+                ->get()->toJson();
             break;
         case 'timeline':
-            return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+            $timeRange = 5 * 60; // 5 mins
+            $timeRanges = [];
+            for ($time = strtotime($voteStartTime); $time <= strtotime($voteEndTime); $time += $timeRange) {
+                $timeRanges[] = "SELECT \"{$time}\" AS endTime";
+            }
+            return \DB::query()
+                ->selectRaw('SUM(timeGroups.count) AS count, timeRanges.endTime, isValid, voteFor')
+                ->fromSub(BilibiliVoteModel
+                    ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeRange})*{$timeRange} as endTime, COUNT(*) as count, isValid, voteFor")
+                    ->whereIn('voteFor', $top10Candidates)
+                    ->groupBy('endTime', 'isValid', 'voteFor'), 'timeGroups')
+                ->join(\DB::raw('(' . implode(' UNION ', $timeRanges) . ') AS timeRanges'), 'timeGroups.endTime', '<', 'timeRanges.endTime')
+                ->groupBy('endTime', 'isValid', 'voteFor')
+                ->orderBy('count', 'ASC')
+                ->get()->toJson();
+            /*return BilibiliVoteModel
+                ::selectRaw('COUNT(*) AS count, endTime, isValid, voteFor, authorExpGrade')
+                ->join(\DB::raw('(' . implode(' UNION ', $a) . ') AS timeRanges'), 'tbm_bilibiliVote.postTime', '<', 'timeRanges.endTime')
+                ->whereIn('voteFor', $top10Candidates)
+                ->groupBy('timeRanges.endTime', 'isValid', 'voteFor', 'authorExpGrade')
+                ->orderBy('endTime', 'ASC')
+                ->get()->toArray();*/
+            /*return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
                 ->selectRaw('COUNT(*) AS count')
                 ->addSelect(['voteFor', 'isValid'])
                 ->whereIn('voteFor', $top10Candidates)
-                ->groupBy(['time', 'voteFor', 'isValid'])
+                ->groupBy('time', 'voteFor', 'isValid')
                 ->orderBy('time', 'DESC')
-                ->get()->toJson();
+                ->get()->toJson();*/
             /*return BilibiliVoteModel
                 ::selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
                 ->selectRaw('COUNT(*) AS count')
                 ->groupBy('time')
-                ->get()->toJson();
-            break;*/
+                ->get()->toJson();*/
+            break;
     }
 })->middleware(ReCAPTCHACheck::class);
 

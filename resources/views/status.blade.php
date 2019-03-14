@@ -49,7 +49,9 @@
                         },
                         tooltip: {
                             trigger: 'axis',
-                            axisPointer : { type : 'shadow' }
+                        },
+                        axisPointer: {
+                            link: { xAxisIndex: 'all' }
                         },
                         toolbox: {
                             feature: {
@@ -136,7 +138,7 @@
                                 name: '耗时',
                                 type: 'line',
                                 step: 'middle',
-                                symbolSize : 2,
+                                symbolSize: 2,
                                 sampling: 'average',
                                 areaStyle: {},
                                 hoverAnimation: false,
@@ -158,7 +160,7 @@
                                 xAxisIndex: 1,
                                 yAxisIndex: 2,
                                 type: 'line',
-                                symbolSize : 2,
+                                symbolSize: 2,
                                 sampling: 'average'
                             },
                             {
@@ -167,7 +169,7 @@
                                 xAxisIndex: 1,
                                 yAxisIndex: 1,
                                 type: 'line',
-                                symbolSize : 2,
+                                symbolSize: 2,
                                 sampling: 'average',
                                 areaStyle: {}
                             },
@@ -177,7 +179,7 @@
                                 xAxisIndex: 1,
                                 yAxisIndex: 1,
                                 type: 'line',
-                                symbolSize : 2,
+                                symbolSize: 2,
                                 sampling: 'average',
                                 areaStyle: {}
                             }

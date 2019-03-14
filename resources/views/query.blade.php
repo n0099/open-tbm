@@ -903,14 +903,14 @@
                                     let paramsRequiredPostType = [
                                         { domID: 'queryUserTypeLatestReplier', postType: ['thread'] },
                                         { domID: 'queryThreadTitle', postType: ['thread'] },
-                                        { domID: 'queryLatestReplyTimeStart', postType : ['thread'] },
-                                        { domID: 'queryLatestReplyTimeEnd', postType : ['thread'] },
-                                        { domID: 'queryThreadReplyNum', postType : ['thread'] },
-                                        { domID: 'queryReplySubReplyNum', postType : ['reply'] },
-                                        { domID: 'queryThreadViewNum', postType : ['thread'] },
-                                        { domID: 'queryThreadShareNum', postType : ['thread'] },
-                                        { domID: 'queryThreadPropertyGood', postType : ['thread'] },
-                                        { domID: 'queryThreadPropertySticky', postType : ['thread'] },
+                                        { domID: 'queryLatestReplyTimeStart', postType: ['thread'] },
+                                        { domID: 'queryLatestReplyTimeEnd', postType: ['thread'] },
+                                        { domID: 'queryThreadReplyNum', postType: ['thread'] },
+                                        { domID: 'queryReplySubReplyNum', postType: ['reply'] },
+                                        { domID: 'queryThreadViewNum', postType: ['thread'] },
+                                        { domID: 'queryThreadShareNum', postType: ['thread'] },
+                                        { domID: 'queryThreadPropertyGood', postType: ['thread'] },
+                                        { domID: 'queryThreadPropertySticky', postType: ['thread'] },
                                     ];
                                     _.each(paramsRequiredPostType, (param) => {
                                         let enabledParams = [];
