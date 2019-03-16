@@ -51,8 +51,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                 ->where([
                     'type' => 'subReply',
                     'tid' => $this->threadID,
-                    'pid' => $this->replyID,
-                    'startPage' => $this->startPage
+                    'pid' => $this->replyID
                 ])
                 ->lockForUpdate()->first();
             if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues

@@ -94,7 +94,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 ->where([
                     'type' => 'reply', // not including current reply's sub reply crawler
                     'fid' => $this->forumID,
-                    'tid' => $this->threadID,
+                    'tid' => $this->threadID
                 ])
                 ->lockForUpdate()->first();
             if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
