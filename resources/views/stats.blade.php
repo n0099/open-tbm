@@ -57,7 +57,7 @@
 @section('script-after-container')
     <script>
         'use strict';
-        new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'stats' } });
+        $$initialNavBar('stats');
 
         let statsChartVue = new Vue({
             el: '#statsForm',
@@ -71,7 +71,7 @@
                 submitDisabled: true
             },
             created: function () {
-                loadForumsList.then((forumsList) => {
+                $$loadForumsList.then((forumsList) => {
                     this.$data.forumsList = forumsList;
                 });
                 new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
@@ -84,7 +84,7 @@
             methods: {
                 submitQueryForm: function () {
                     statsChartDOM.addClass('loading');
-                    reCAPTCHACheck.then((token) => {
+                    $$reCAPTCHACheck().then((token) => {
                         $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(this.$data.statsQuery, token))).done((jsonData) => {
                             let series = [];
                             _.each(jsonData, (datas, postType) => {

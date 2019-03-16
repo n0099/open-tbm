@@ -96,25 +96,25 @@
             </button>
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="navbar-nav">
-                    <li :class="`nav-item ${activeNav == 'query' ? 'active' : null}`">
+                    <li :class="`nav-item ${isActiveNav('query')}`">
                         <a class="nav-link" href="{{ route('query') }}"><i class="fas fa-search"></i> 查询</a>
                     </li>
-                    <li :class="`nav-item ${activeNav == 'status' ? 'active' : null}`">
+                    <li :class="`nav-item ${isActiveNav('status')}`">
                         <a class="nav-link" href="{{ route('status') }}"><i class="fas fa-satellite-dish"></i> 状态</a>
                     </li>
-                    <li :class="`nav-item ${activeNav == 'stats' ? 'active' : null}`">
+                    <li :class="`nav-item ${isActiveNav('stats')}`">
                         <a class="nav-link" href="{{ route('stats') }}"><i class="fas fa-chart-pie"></i> 统计</a>
                     </li>
-                    <li :class="`nav-item dropdown ${activeNav == 'bilibiliVote' ? 'active' : null}`">
+                    <li :class="`nav-item dropdown ${isActiveNav(['bilibiliVote'])}`">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarTopicDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fas fa-paper-plane"></i> 专题
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarTopicDropdown">
-                            <a :class="`dropdown-item ${activeNav == 'bilibiliVote' ? 'active' : null}`" href="{{ route('bilibiliVote') }}">bilibili吧公投</a>
+                            <a :class="`dropdown-item ${isActiveNav('bilibiliVote')}`" href="{{ route('bilibiliVote') }}">bilibili吧公投</a>
                         </div>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐赠</a>
+                        <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐助</a>
                     </li>
                     @yield('navbar-items')
                 </ul>
@@ -151,15 +151,7 @@
             let $$baseUrlDir = '{{ $baseUrlDir }}';
             let $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
 
-            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
-            NProgress.configure({ trickleSpeed: 200 });
-            $(document).on('ajaxStart', () => {
-                NProgress.start();
-            }).on('ajaxStop', () => {
-                NProgress.done();
-            });
-
-            let reCAPTCHACheck = new Promise((resolve, reject) => {
+            let $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
                 grecaptcha.ready(() => {
                     grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
                         resolve({ reCAPTCHA: token });
@@ -168,14 +160,39 @@
                     });
                 });
             });
-
-            let loadForumsList = new Promise((resolve, reject) => {
+            let $$loadForumsList = new Promise((resolve, reject) => {
                 $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
                     resolve(_.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
                         forum.fid = forum.fid.toString();
                         return forum;
                     }));
                 });
+            });
+
+            let $$initialNavBar = (activeNav) => {
+                window.navBarVue = new Vue({
+                    el: '#navbar',
+                    data: { $$baseUrl, activeNav },
+                    methods: {
+                        isActiveNav: function (pageName) {
+                            let isActive;
+                            if (_.isArray(pageName)) {
+                                isActive = pageName.includes(this.$data.activeNav);
+                            } else {
+                                isActive = this.$data.activeNav === pageName;
+                            }
+                            return isActive ? 'active' : null;
+                        }
+                    }
+                });
+            };
+
+            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
+            NProgress.configure({ trickleSpeed: 200 });
+            $(document).on('ajaxStart', () => {
+                NProgress.start();
+            }).on('ajaxStop', () => {
+                NProgress.done();
             });
         </script>
         @yield('script-after-container')

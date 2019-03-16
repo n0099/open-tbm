@@ -583,10 +583,9 @@
     @verbatim
         <script>
             'use strict';
+            $$initialNavBar('query');
 
             $('#error-404-template').hide();
-
-            new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'query' } });
             Vue.component('loading-posts-placeholder', {
                 template: '#loading-posts-placeholder-template'
             });
@@ -760,7 +759,7 @@
                             ajaxErrorCallback();
                             return;
                         }
-                        reCAPTCHACheck.then((token) => {
+                        $$reCAPTCHACheck().then((token) => {
                             $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token))).done((jsonData) => {
                                 jsonData = preparePostsData(jsonData);
                                 let pagesInfo = jsonData.pages;
@@ -819,7 +818,7 @@
                     });
 
                     this.$data.queryData = { query: customQueryParams, param: queryParams };
-                    loadForumsList.then((forumsList) => {
+                    $$loadForumsList.then((forumsList) => {
                         this.$data.forumsList = forumsList;
                         this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
                     });

@@ -21,7 +21,7 @@
 @section('script-after-container')
     <script>
         'use strict';
-        new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'status' } });
+        $$initialNavBar('status');
 
         let statusChartVue = new Vue({
             el: '#statusChart',
@@ -32,7 +32,7 @@
                 autoRefresh: function (autoRefresh) {
                     if (autoRefresh) {
                         this.autoRefreshIntervalID = setInterval(() => {
-                            reCAPTCHACheck.then((token) => {
+                            $$reCAPTCHACheck().then((token) => {
                                 loadStatusData(token);
                             });
                         }, 60000); // refresh data every minute
@@ -42,7 +42,7 @@
                 }
             },
             created: function () {
-                reCAPTCHACheck.then((token) => {
+                $$reCAPTCHACheck().then((token) => {
                     statusChart.setOption({
                         title: {
                             text: '近期性能统计'
