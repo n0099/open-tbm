@@ -66,7 +66,7 @@ class SubReplyCrawler extends Crawlable
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
-                    for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
+                    for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
                             Log::info("Fetch sub replies for reply, pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
                             return $tiebaClient->postAsync(

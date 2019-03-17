@@ -66,7 +66,7 @@ class ThreadCrawler extends Crawlable
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
-                    for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
+                    for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
                             Log::info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$pn}");
                             return $tiebaClient->postAsync(

@@ -103,7 +103,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             }
 
             // dispatch next page range crawler if there's un-crawled pages
-            if ($repliesCrawler->endPage < ($repliesCrawler->getPages()['total_page'] ?? PHP_INT_MAX)) { // give up next page range crawl when TiebaException thrown within crawler parser) {
+            if ($repliesCrawler->endPage < ($repliesCrawler->getPages()['total_page'] ?? 0)) { // give up next page range crawl when TiebaException thrown within crawler parser
                 $newCrawlerStartPage = $repliesCrawler->endPage + 1;
                 CrawlingPostModel::insert([
                     'type' => 'reply',
