@@ -59,7 +59,7 @@ class ReplyCrawler extends Crawlable
         $this->webRequestTimes += 1;
 
         try {
-            $this->parseRepliesList($startPageRepliesInfo);
+            $this->checkThenParsePostsList($startPageRepliesInfo);
             $totalPages = $startPageRepliesInfo['page']['total_page'];
             if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
                 $this->endPage = $totalPages;
@@ -89,7 +89,7 @@ class ReplyCrawler extends Crawlable
                         $this->webRequestTimes += 1;
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         $repliesInfo = json_decode($response->getBody(), true);
-                        $this->parseRepliesList($repliesInfo);
+                        $this->checkThenParsePostsList($repliesInfo);
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
@@ -106,27 +106,28 @@ class ReplyCrawler extends Crawlable
         return $this;
     }
 
-    private function parseRepliesList(array $repliesJson): void
+    protected function checkThenParsePostsList(array $responseJson): void
     {
-        switch ($repliesJson['error_code']) {
-            case 0:
-                $repliesList = $repliesJson['post_list'];
-                $usersList = [];
-                // inherits by reference to sync value changes
-                array_map(function ($userInfo) use (&$usersList) {
-                    $usersList[$userInfo['id']] = $userInfo;
-                }, $repliesJson['user_list']);
+        switch ($responseJson['error_code']) {
+            case 0: // no error
                 break;
             case 4: // {"error_code": "4", "error_msg": "贴子可能已被删除"}
-                throw new TiebaException('Thread already deleted when crawling reply.');
+                throw new TiebaException('Thread already deleted when crawling reply');
             default:
-                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($repliesJson));
+                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($responseJson));
         }
-        if (count($repliesList) == 0) {
-            throw new TiebaException('Reply list is empty, posts might already deleted from tieba.');
-        }
-        $this->pagesInfo = $repliesJson['page'];
 
+        $repliesList = $responseJson['post_list'];
+        $repliesUserList = Helper::convertIDListKey($responseJson['user_list'], 'id');
+        if (count($repliesList) == 0) {
+            throw new TiebaException('Reply list is empty, posts might already deleted from tieba');
+        }
+        $this->pagesInfo = $responseJson['page'];
+        $this->parseRepliesList($repliesList, $repliesUserList);
+    }
+
+    private function parseRepliesList(array $repliesList, $usersList): void
+    {
         $repliesUpdateInfo = [];
         $repliesInfo = [];
         $indexesInfo = [];

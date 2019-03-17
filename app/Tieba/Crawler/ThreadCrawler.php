@@ -6,6 +6,7 @@ use App\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
+use App\Tieba\TiebaException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
@@ -53,25 +54,35 @@ class ThreadCrawler extends Crawlable
         )->getBody(), true);
         $this->webRequestTimes += 1;
 
-        $this->parseThreadsList($threadsList);
-
+        try {
+            $this->checkThenParsePostsList($threadsList);
+        } catch (TiebaException $regularException) {
+            \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
+        } catch (\Exception $e) {
+            report($e);
+        }
         return $this;
     }
 
-    private function parseThreadsList(array $threadsJson): void
+    protected function checkThenParsePostsList(array $responseJson): void
     {
-        $this->pagesInfo = $threadsJson['page'];
-        switch ($threadsJson['error_code']) {
-            case 0:
-                $threadsList = $threadsJson['thread_list'];
+        switch ($responseJson['error_code']) {
+            case 0: // no error
                 break;
             default:
-                throw new \RuntimeException("Error from tieba client when crawling thread, raw json: " . json_encode($threadsJson));
-        }
-        if (count($threadsList) == 0) {
-            throw new \LengthException('Forum threads list is empty');
+                throw new \RuntimeException("Error from tieba client when crawling thread, raw json: " . json_encode($responseJson));
         }
 
+        $threadsList = $responseJson['thread_list'];
+        if (count($threadsList) == 0) {
+            throw new TiebaException('Forum threads list is empty, forum might doesn\'t existed');
+        }
+        $this->pagesInfo = $responseJson['page'];
+        $this->parseThreadsList($threadsList);
+    }
+
+    private function parseThreadsList(array $threadsList): void
+    {
         $usersList = [];
         $threadsUpdateInfo = [];
         $threadsInfo = [];

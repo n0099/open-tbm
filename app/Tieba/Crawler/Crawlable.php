@@ -22,12 +22,14 @@ abstract class Crawlable
 
     abstract public function saveLists();
 
+    abstract protected function checkThenParsePostsList(array $responseJson): void;
+
     public function getPages() : array
     {
         return $this->pagesInfo;
     }
 
-    public function getTimes(): array
+    public function getProfiles(): array
     {
         return [
             'webRequestTimes' => $this->webRequestTimes,

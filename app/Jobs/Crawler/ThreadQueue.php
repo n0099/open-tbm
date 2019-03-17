@@ -121,7 +121,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingForum->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
-                ] + $threadsCrawler->getTimes())->save();
+                ] + $threadsCrawler->getProfiles())->save();
                 $currentCrawlingForum->delete(); // release current crawl queue lock
             }
         });

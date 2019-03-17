@@ -24,16 +24,15 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 
     protected $replyID;
 
-    protected $startPage;
+    protected $startPage = 1;
 
-    public function __construct(int $fid, int $tid, int $pid, int $startPage)
+    public function __construct(int $fid, int $tid, int $pid)
     {
-        Log::info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$startPage}");
+        Log::info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$this->startPage}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->replyID = $pid;
-        $this->startPage = $startPage;
     }
 
     public function handle()
@@ -41,10 +40,26 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $this->queueStartTime = microtime(true);
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        $subRepliesCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $this->startPage))->doCrawl()->saveLists();
+        $firstPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $this->startPage))->doCrawl()->saveLists();
 
         $queueFinishTime = microtime(true);
-        \DB::transaction(function () use ($queueFinishTime, $subRepliesCrawler) {
+        \DB::transaction(function () use ($queueFinishTime, $firstPageCrawler) {
+            // crawl last page sub reply if there's un-crawled pages
+            $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;  // give up next page range crawl when TiebaException thrown within crawler parser
+            if ($subRepliesListLastPage > $this->startPage) { // doesn't have to crawl every sub reply pages, only first and last one
+                $lastPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $subRepliesListLastPage))->doCrawl()->saveLists();
+            }
+            if (isset($lastPageCrawler)) {
+                $firstPageProfiles = $firstPageCrawler->getProfiles();
+                $lastPageProfiles = $lastPageCrawler->getProfiles();
+                // sum up first and last page crawler's profiles value
+                $crawlerProfiles = array_map(function ($i, $k) use ($lastPageProfiles) {
+                    return $i + $lastPageProfiles[$k];
+                }, $firstPageProfiles, array_keys($firstPageProfiles));
+            } else {
+                $crawlerProfiles = $firstPageCrawler->getProfiles();
+            }
+
             // report previous reply crawl finished
             $currentCrawlingSubReply = CrawlingPostModel
                 ::select('id', 'startTime')
@@ -57,22 +72,8 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
             if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingSubReply->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
-                ] + $subRepliesCrawler->getTimes())->save();
+                ] + $crawlerProfiles)->save();
                 $currentCrawlingSubReply->delete(); // release current crawl queue lock
-            }
-
-            // dispatch next page range crawler if there's un-crawled pages
-            if ($subRepliesCrawler->endPage < ($subRepliesCrawler->getPages()['total_page'] ?? PHP_INT_MAX)) { // give up next page range crawl when TiebaException thrown within crawler parser
-                $newCrawlerStartPage = $subRepliesCrawler->endPage + 1;
-                CrawlingPostModel::insert([
-                    'type' => 'subReply',
-                    'fid' => $this->forumID,
-                    'tid' => $this->threadID,
-                    'pid' => $this->replyID,
-                    'startPage' => $newCrawlerStartPage,
-                    'startTime' => microtime(true)
-                ]); // lock for next page range sub reply crawler
-                SubReplyQueue::dispatch($this->forumID, $this->threadID, $this->replyID, $newCrawlerStartPage)->onQueue('crawler');
             }
         });
         Log::info('Sub reply queue completed after ' . ($queueFinishTime - $this->queueStartTime));
