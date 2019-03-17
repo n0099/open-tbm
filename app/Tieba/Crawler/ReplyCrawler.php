@@ -204,7 +204,7 @@ class ReplyCrawler extends Crawlable
         return $this;
     }
 
-    public function getRepliesInfo(): array
+    public function getPostsIsUpdateInfo(): array
     {
         return $this->repliesUpdateInfo;
     }

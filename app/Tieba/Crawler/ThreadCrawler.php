@@ -68,7 +68,7 @@ class ThreadCrawler extends Crawlable
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
                         yield function () use ($tiebaClient, $pn) {
-                            Log::info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$this->startPage}");
+                            Log::info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/frs/page',
                                 [
@@ -215,7 +215,7 @@ class ThreadCrawler extends Crawlable
         return $this;
     }
 
-    public function getThreadsInfo(): array
+    public function getPostsIsUpdateInfo(): array
     {
         return $this->threadsUpdateInfo;
     }
