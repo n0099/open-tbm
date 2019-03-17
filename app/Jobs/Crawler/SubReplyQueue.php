@@ -49,13 +49,15 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
             if ($subRepliesListLastPage > $this->startPage) { // doesn't have to crawl every sub reply pages, only first and last one
                 $lastPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $subRepliesListLastPage))->doCrawl()->saveLists();
             }
+
+            $crawlerProfiles = [];
             if (isset($lastPageCrawler)) {
                 $firstPageProfiles = $firstPageCrawler->getProfiles();
                 $lastPageProfiles = $lastPageCrawler->getProfiles();
                 // sum up first and last page crawler's profiles value
-                $crawlerProfiles = array_map(function ($i, $k) use ($lastPageProfiles) {
-                    return $i + $lastPageProfiles[$k];
-                }, $firstPageProfiles, array_keys($firstPageProfiles));
+                foreach ($firstPageProfiles as $profileName => $profileValue) {
+                    $crawlerProfiles[$profileName] = $profileValue + $lastPageProfiles[$profileName];
+                }
             } else {
                 $crawlerProfiles = $firstPageCrawler->getProfiles();
             }
