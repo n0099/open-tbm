@@ -60,17 +60,13 @@ class ReplyCrawler extends Crawlable
 
         try {
             $this->checkThenParsePostsList($startPageRepliesInfo);
-            $totalPages = $startPageRepliesInfo['page']['total_page'];
-            if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
-                $this->endPage = $totalPages;
-            }
 
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
                         yield function () use ($tiebaClient, $pn) {
-                            Log::info("Fetching replies for thread, tid {$this->threadID}, page {$pn}");
+                            Log::info("Fetch replies for thread, tid {$this->threadID}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/page',
                                 [
@@ -88,8 +84,7 @@ class ReplyCrawler extends Crawlable
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $repliesInfo = json_decode($response->getBody(), true);
-                        $this->checkThenParsePostsList($repliesInfo);
+                        $this->checkThenParsePostsList(json_decode($response->getBody(), true));
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
@@ -123,6 +118,10 @@ class ReplyCrawler extends Crawlable
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba');
         }
         $this->pagesInfo = $responseJson['page'];
+        $totalPages = $responseJson['page']['total_page'];
+        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
+            $this->endPage = $totalPages;
+        }
         $this->parseRepliesList($repliesList, $repliesUserList);
     }
 

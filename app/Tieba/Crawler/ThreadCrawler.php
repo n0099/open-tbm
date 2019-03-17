@@ -8,6 +8,7 @@ use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use Carbon\Carbon;
+use GuzzleHttp;
 use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
@@ -36,9 +37,13 @@ class ThreadCrawler extends Crawlable
 
     protected $pagesInfo = [];
 
+    public $startPage;
+
+    public $endPage;
+
     public function doCrawl(): self
     {
-        Log::info("Start to fetch threads for forum {$this->forumName}, page 1");
+        Log::info("Start to fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$this->startPage}");
         ExceptionAdditionInfo::set(['parsingPage' => 1]);
 
         $tiebaClient = $this->getClientHelper();
@@ -56,6 +61,40 @@ class ThreadCrawler extends Crawlable
 
         try {
             $this->checkThenParsePostsList($threadsList);
+
+            // by default we doesn't have to crawl every sub reply pages, only first and last one
+            (new GuzzleHttp\Pool(
+                $tiebaClient,
+                (function () use ($tiebaClient) {
+                    for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
+                        yield function () use ($tiebaClient, $pn) {
+                            Log::info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$this->startPage}");
+                            return $tiebaClient->postAsync(
+                                'http://c.tieba.baidu.com/c/f/frs/page',
+                                [
+                                    'form_params' => [
+                                        'kw' => $this->forumName,
+                                        'pn' => $pn,
+                                        'rn' => 50
+                                    ]
+                                ]
+                            );
+                        };
+                    }
+                })(),
+                [
+                    'concurrency' => 10,
+                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
+                        $this->webRequestTimes += 1;
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
+                        $this->checkThenParsePostsList(json_decode($response->getBody(), true));
+                    },
+                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
+                        report($e);
+                    }
+                ]
+            ))->promise()->wait();
         } catch (TiebaException $regularException) {
             \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
         } catch (\Exception $e) {
@@ -78,6 +117,10 @@ class ThreadCrawler extends Crawlable
             throw new TiebaException('Forum threads list is empty, forum might doesn\'t existed');
         }
         $this->pagesInfo = $responseJson['page'];
+        $totalPages = $responseJson['page']['total_page'];
+        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
+            $this->endPage = $totalPages;
+        }
         $this->parseThreadsList($threadsList);
     }
 
@@ -177,11 +220,14 @@ class ThreadCrawler extends Crawlable
         return $this->threadsUpdateInfo;
     }
 
-    public function __construct(string $forumName, int $forumID)
+    public function __construct(string $forumName, int $forumID, int $startPage, int $endPage = null)
     {
         $this->forumID = $forumID;
         $this->forumName = $forumName;
         $this->usersInfo = new UserInfoParser();
+        $this->startPage = $startPage;
+        $defaultCrawlPageRange = 0; // by default we doesn't have to crawl every threads pages, only first one
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $forumID,

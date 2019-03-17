@@ -18,6 +18,10 @@ abstract class Crawlable
 
     protected $pagesInfo = [];
 
+    public $startPage;
+
+    public $endPage;
+
     abstract public function doCrawl();
 
     abstract public function saveLists();

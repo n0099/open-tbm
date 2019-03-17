@@ -61,10 +61,40 @@ class SubReplyCrawler extends Crawlable
 
         try {
             $this->checkThenParsePostsList($startPageSubRepliesInfo);
-            $totalPages = $startPageSubRepliesInfo['page']['total_page'];
-            if ($this->endPage > $totalPages) { // crawl end page should be trim when it's larger than replies total page
-                $this->endPage = $totalPages;
-            }
+
+            // by default we doesn't have to crawl every sub reply pages, only first and last one
+            (new GuzzleHttp\Pool(
+                $tiebaClient,
+                (function () use ($tiebaClient) {
+                    for ($pn = $this->startPage + 1; $pn < $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage)
+                        yield function () use ($tiebaClient, $pn) {
+                            Log::info("Fetch sub replies for reply, pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
+                            return $tiebaClient->postAsync(
+                                'http://c.tieba.baidu.com/c/f/pb/floor',
+                                [
+                                    'form_params' => [
+                                        'kz' => $this->threadID,
+                                        'pid' => $this->replyID,
+                                        'pn' => $pn
+                                    ]
+                                ]
+                            );
+                        };
+                    }
+                })(),
+                [
+                    'concurrency' => 10,
+                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
+                        $this->webRequestTimes += 1;
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
+                        $this->checkThenParsePostsList(json_decode($response->getBody(), true));
+                    },
+                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
+                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
+                        report($e);
+                    }
+                ]
+            ))->promise()->wait();
         } catch (TiebaException $regularException) {
             \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
         } catch (\Exception $e) {
@@ -91,6 +121,10 @@ class SubReplyCrawler extends Crawlable
             throw new TiebaException('Sub reply list is empty, posts might already deleted from tieba');
         }
         $this->pagesInfo = $responseJson['page'];
+        $totalPages = $responseJson['page']['total_page'];
+        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
+            $this->endPage = $totalPages;
+        }
         $this->parseSubRepliesList($subRepliesList);
     }
 
@@ -167,7 +201,7 @@ class SubReplyCrawler extends Crawlable
         $this->replyID = $pid;
         $this->usersInfo = new UserInfoParser();
         $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // doesn't have to crawl every sub reply pages, only first and last one
+        $defaultCrawlPageRange = 0; // by default we doesn't have to crawl every sub reply pages, only first and last one
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([
