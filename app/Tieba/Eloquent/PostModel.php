@@ -3,6 +3,7 @@
 namespace App\Tieba\Eloquent;
 
 use App\Eloquent\InsertOnDuplicateKey;
+use App\Eloquent\ModelHelper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -16,6 +17,7 @@ use Illuminate\Support\Collection;
 abstract class PostModel extends Model
 {
     use InsertOnDuplicateKey;
+    use ModelHelper;
 
     /**
      * @var string Default table name.
