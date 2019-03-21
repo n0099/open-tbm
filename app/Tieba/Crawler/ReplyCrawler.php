@@ -2,7 +2,7 @@
 
 namespace App\Tieba\Crawler;
 
-use App\Eloquent\IndexModel;
+use App\Tieba\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;

@@ -2,8 +2,6 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Eloquent\IndexModel;
-
 class PostModelFactory
 {
     public static function newThread(int $fid): ThreadModel
