@@ -59,6 +59,32 @@
                 background: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
             }
 
+            .tieba-image-zoom-in {
+                position: relative;
+            }
+            .tieba-image-zoom-in::after {
+                position: absolute;
+                top: 25px;
+                left: 30px;
+                content: "\f00e";
+                font: 900 2em "Font Awesome 5 Free";
+                opacity: 0.4;
+                cursor: zoom-in;
+            }
+            .tieba-image {
+                width: 100px;
+                height: 100px;
+                object-fit: contain;
+                cursor: zoom-in;
+            }
+            .tieba-image-zoom-out {
+                cursor: zoom-out;
+            }
+            .tieba-image-expanded {
+                max-width: 80%;
+                cursor: zoom-out;
+            }
+
             ::-webkit-scrollbar
             {
                 width: 10px;
@@ -125,7 +151,7 @@
             @yield('container')
         </div>
         <footer class="footer-outer text-light pt-4 mt-4">
-            <div class="container">footer</div>
+            <div class="container">四叶重工QQ群：292311751</div>
             <footer class="footer-inner text-center p-3">
                 <div class="container">Copyright © 2018 n0099</div>
             </footer>
@@ -191,9 +217,28 @@
             NProgress.configure({ trickleSpeed: 200 });
             $(document).on('ajaxStart', () => {
                 NProgress.start();
+                $('body').css('cursor', 'progress');
             }).on('ajaxStop', () => {
                 NProgress.done();
+                $('body').css('cursor', 'auto');
             });
+
+            let $$tiebaImageZoomEventRegister = () => {
+                let registerZoomInEvent = (event) => {
+                    let tiebaImageDOM = event.currentTarget;
+                    $(tiebaImageDOM).removeClass('tieba-image-zoom-in').addClass('tieba-image-zoom-out');
+                    $(tiebaImageDOM.children[0]).removeClass('tieba-image').addClass('tieba-image-expanded');
+                    $(tiebaImageDOM).off().on('click', registerZoomOutEvent);
+                };
+                let registerZoomOutEvent = (event) => {
+                    let tiebaImageDOM = event.currentTarget;
+                    $(tiebaImageDOM).addClass('tieba-image-zoom-in').removeClass('tieba-image-zoom-out');
+                    $(tiebaImageDOM.children[0]).addClass('tieba-image').removeClass('tieba-image-expanded');
+                    $(tiebaImageDOM).off().on('click', registerZoomInEvent);
+                };
+                $('.tieba-image-zoom-in').on('click', registerZoomInEvent);
+                $('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
+            }
         </script>
         @yield('script-after-container')
     </body>

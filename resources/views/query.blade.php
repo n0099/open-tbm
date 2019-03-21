@@ -995,6 +995,7 @@
                                     }, (event) => {
                                         $(event.currentTarget).find('.sub-reply-hide-link').hide();
                                     });
+                                    $$tiebaImageZoomEventRegister();
                                 };
                                 vue.$nextTick(() => {
                                     registerEventsWithinReplyItems();

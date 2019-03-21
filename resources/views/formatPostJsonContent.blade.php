@@ -1,3 +1,14 @@
+<?php
+use Spatie\Regex\Regex;
+
+if (! function_exists('tiebaImageUrlProxy')) {
+    function tiebaImageUrlProxy(string $imageUrl)
+    {
+        $imageProxy = env('TIEBA_IMAGE_PROXY') . '/';
+        return str_replace(['https://', 'http://'], $imageProxy, $imageUrl);
+    }
+}
+?>
 @foreach ($json as $content)
     @switch ($content['type'])
         @case (0) {{--文本 {"text": "content\n", "type": "0"} --}}
@@ -14,7 +25,7 @@
             @break
         @case (2) {{--表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"} --}}
             <?php
-                $emoticonsInfo = [
+            $emoticonsInfo = [
                     'image_emoticon' => ['class' => 'client', 'type' => 'png'], // 泡泡/客户端新版表情（>=61）
                     //'image_emoticon' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 旧版泡泡
                     'image_emoticon>51' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 泡泡-贴吧十周年
@@ -35,7 +46,7 @@
                     'w_' => ['class' => 'ldw', 'type' => 'gif'], // 绿豆蛙
                     '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
                 ];
-                $emoticonRegex = \Spatie\Regex\Regex::match('/(.+?)(\d+|$)/', $content['text']);
+                $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $content['text']);
                 $emoticonIndex = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2) ?? 1]; //TODO : bug
                 $emoticonUrlInfo = ($emoticonIndex['prefix'] == 'image_emoticon' && $emoticonIndex['index'] <= 61 && $emoticonIndex['index'] >= 51)
                     ? $emoticonsInfo['image_emoticon>51']
@@ -62,7 +73,9 @@
                 }
                 http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
             --}}
-            <img class="d-block lazyload" data-src="{{ str_replace('http://', 'https://', $content['origin_src'] ?? $content['src']) }}" />
+            <div class="tieba-image-zoom-in">
+                <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['origin_src'] ?? $content['src']) }}" />
+            </div>
             @break
         @case (4) {{-- {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
             <a href="http://tieba.baidu.com/home/main" target="_blank">{{ $content['text'] }}</a>
@@ -93,7 +106,9 @@
             --}}
             <a href="{{ $content['link'] }}" target="_blank">
                 @if (isset($content['origin_src']))
-                    <img class="d-block lazyload" data-src="{{ str_replace('http://', 'https://', $content['origin_src']) }}" />
+                    <div class="tieba-image-zoom-in">
+                        <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['origin_src']) }}" />
+                    </div>
                 @else
                     外站视频：{{ $content['text'] }}
                 @endif
@@ -148,7 +163,9 @@
                     "big_cdn_src": "http://t.hiphotos.baidu.com/forum/w%3D960%3Bq%3D60/sign={unknown token}/{image hash id}.jpg",
                 }
             --}}
-            <img class="d-block lazyload" data-src="{{ str_replace('http://', 'https://', $content['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
+            <div class="tieba-image-zoom-in">
+                <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
+            </div>
             @break
         @case (17) {{--活动 not found --}}
             @break
@@ -173,7 +190,9 @@
                 }
             --}}
             <a href="{{ $content['meme_info']['detail_link'] }}" target="_blank">
-                <img class="d-block lazyload" data-src="{{ $content['src'] }}" />
+                <div class="tieba-image-zoom-in">
+                    <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['src']) }}" />
+                </div>
             </a>
             @break
         @default
