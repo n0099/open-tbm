@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Helper;
+
 class ReCAPTCHACheck
 {
     public function handle(\Illuminate\Http\Request $request, \Closure $next)
@@ -13,7 +15,7 @@ class ReCAPTCHACheck
             if ($isReCAPTCHAValid) {
                 return $next($request);
             } else {
-                abort(400);
+                Helper::abortApi(40101);
             }
         } else {
             return $next($request);

@@ -194,7 +194,6 @@
                     }));
                 });
             });
-
             let $$initialNavBar = (activeNav) => {
                 window.navBarVue = new Vue({
                     el: '#navbar',
@@ -212,17 +211,14 @@
                     }
                 });
             };
-
-            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
-            NProgress.configure({ trickleSpeed: 200 });
-            $(document).on('ajaxStart', () => {
-                NProgress.start();
-                $('body').css('cursor', 'progress');
-            }).on('ajaxStop', () => {
-                NProgress.done();
-                $('body').css('cursor', 'auto');
-            });
-
+            let $$apiErrorInfoParse = (jqXHR) => {
+                let errorInfo = '';
+                if (jqXHR.responseJSON != null) {
+                    let responseErrorInfo = jqXHR.responseJSON;
+                    errorInfo = `错误码：${responseErrorInfo.errorCode}<br>${responseErrorInfo.errorInfo}`;
+                }
+                new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
+            };
             let $$tiebaImageZoomEventRegister = () => {
                 let registerZoomInEvent = (event) => {
                     let tiebaImageDOM = event.currentTarget;
@@ -238,7 +234,17 @@
                 };
                 $('.tieba-image-zoom-in').on('click', registerZoomInEvent);
                 $('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
-            }
+            };
+
+            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
+            NProgress.configure({ trickleSpeed: 200 });
+            $(document).on('ajaxStart', () => {
+                NProgress.start();
+                $('body').css('cursor', 'progress');
+            }).on('ajaxStop', () => {
+                NProgress.done();
+                $('body').css('cursor', 'auto');
+            });
         </script>
         @yield('script-after-container')
     </body>

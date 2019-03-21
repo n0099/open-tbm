@@ -782,10 +782,7 @@
                                 this.changeDocumentTitle(this.$route);
                             }).fail((jqXHR) => {
                                 ajaxErrorCallback();
-                                new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                                if (jqXHR.status === 400) {
-                                    new Noty({ timeout: 3000, type: 'warning', text: '请检查查询参数是否正确'}).show();
-                                }
+                                $$apiErrorInfoParse(jqXHR);
                             });
                         });
                     },

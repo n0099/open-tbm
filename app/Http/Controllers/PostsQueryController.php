@@ -196,7 +196,11 @@ class PostsQueryController extends Controller
         if ($isCustomQuery) {
             $queryPostsID = $queryParams->only(['tid', 'pid', 'spid'])->filter()->toArray();
             $customQueryForumID = $queryParams['fid']
-                ?? ($queryPostsID == [] ? abort(400, 'Custom query need a forum id') : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']);
+                ?? (
+                    $queryPostsID == []
+                        ? Helper::abortApi(40106)
+                        : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']
+                );
             $postsModel = PostModelFactory::getPostsModelByForumID($customQueryForumID);
 
             $postsQueryBuilder = [
@@ -216,7 +220,7 @@ class PostsQueryController extends Controller
                 'threadShareNum' => ['thread'],
             ];
             foreach ($paramsRequiredPostType as $paramName => $postType) {
-                abort_if(isset($queryParams[$paramName]) && array_diff($queryPostType, $postType) != [], 400, 'Querying post types doesn\'t fit with custom query params required types');
+                Helper::abortApiIf(isset($queryParams[$paramName]) && array_diff($queryPostType, $postType) != [], 40105);
             }
 
             /**
@@ -230,14 +234,14 @@ class PostsQueryController extends Controller
              */
             $applyCustomConditionOnPostModel = function (string $postType, PostModel $postModel, Collection $queryParams) use ($postsModel, $queryPostType, $queryUserType) {
                 if (in_array('latestReplier', $queryUserType)) {
-                    abort_if(! in_array('thread', $queryPostType), 400, 'Query post type must contain thread when querying with latest replier user info');
+                    Helper::abortApiIf(! in_array('thread', $queryPostType), 40103);
                     $userInfoParamsExcludingLatestReplier = [
                         'userExpGrade',
                         'userExpGradeRange',
                         'userManagerType'
                     ];
                     if ($queryParams->intersect($userInfoParamsExcludingLatestReplier) != []) {
-                        abort(400, 'Can\'t query some of latest replier\'s user info');
+                        Helper::abortApi(40104);
                     }
                 }
 
@@ -252,7 +256,7 @@ class PostsQueryController extends Controller
                                     if ($postType == 'thread') {
                                         $postModel = $postModel->whereIn('latestReplierUid', $userIDs);
                                     } else {
-                                        abort(400, 'Querying with latest replier user info require query with thread post type');
+                                        Helper::abortApi(40103);
                                     }
                                 } elseif ($userType == 'author') {
                                     $postModel = $postModel->whereIn('authorUid', $userIDs);
@@ -383,7 +387,6 @@ class PostsQueryController extends Controller
                             case 'threadViewNumRange':
                             case 'threadShareNumRange':
                             default:
-                                //abort(400, 'Can\'t querying with undefined params');
                                 return $postModel == null ? null : $postModel->newQuery();
                         }
                     };
@@ -456,7 +459,6 @@ class PostsQueryController extends Controller
         } elseif ($isIndexQuery) {
             $indexesModel = IndexModel::where($indexesQueryParams->toArray());
 
-            //abort_if(! isset($indexesModel), 400);
             if ($queryParamsName->contains('orderBy')) {
                 $indexesModel->orderBy($queryParams['orderBy'], $queryParams['orderDirection']);
             } else {
@@ -469,7 +471,7 @@ class PostsQueryController extends Controller
                 $indexesModel = $indexesModel->orderByMulti($indexesOrderBy);
             }
             $indexesModel = $indexesModel->whereIn('type', $queryPostType)->paginate($this->pagingPerPageItems);
-            abort_if($indexesModel->isEmpty(), 404);
+            Helper::abortApiIf($indexesModel->isEmpty(), 40102);
 
             $postsQueriedInfo['fid'] = $indexesModel->pluck('fid')->first();
             foreach ($postsIDNamePair as $postType => $postIDName) { // assign queried posts ids from $indexesModel
@@ -485,7 +487,7 @@ class PostsQueryController extends Controller
                 'lastPage' => $indexesModel->lastPage()
             ];
         } else {
-            abort(400, 'Query type is neither post id nor custom query');
+            Helper::abortApi(40101);
         }
 
         $nestedPostsInfo = $this->getNestedPostsInfoByIDs(

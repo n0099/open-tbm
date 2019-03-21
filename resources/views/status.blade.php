@@ -224,7 +224,7 @@
                         }
                     ]
                 });
-            });
+            }).fail($$apiErrorInfoParse);
         };
     </script>
 @endsection

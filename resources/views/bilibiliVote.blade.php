@@ -72,9 +72,9 @@
                 }
             },
             created: function () {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).then((jsonData) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((jsonData) => {
                     this.$data.candidatesName = jsonData;
-                });
+                }).fail($$apiErrorInfoParse);
                 $$reCAPTCHACheck().then((token) => {
                     countStatsChart.setOption({
                         title: {
@@ -354,7 +354,7 @@
         let countStatsChartDOM = $('#countStatsChartDOM');
         let countStatsChart = echarts.init(countStatsChartDOM[0]);
         let loadTop10CandidatesCounts = (reCAPTCHAToken) => {
-            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'count' }, reCAPTCHAToken))).then((jsonData) => {
+            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'count' }, reCAPTCHAToken))).done((jsonData) => {
                 /* dataset should be like
                     [
                         { voteFor: 1, validCount: 1, invalidCount: 0 },
@@ -409,13 +409,13 @@
                     ],
                 });
                 countStatsChartDOM.removeClass('loading');
-            });
+            }).fail($$apiErrorInfoParse);
         };
 
         let timeLineStatsChartDOM = $('#timeLineStatsChartDOM');
         let timeLineStatsChart = echarts.init(timeLineStatsChartDOM[0]);
         let loadTop10CandidatesTimelineStats = (reCAPTCHAToken, timeRange) => {
-            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'timeline', timeRange }, reCAPTCHAToken))).then((jsonData) => {
+            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'timeline', timeRange }, reCAPTCHAToken))).done((jsonData) => {
                 window.timelineValidVotes = _.filter(jsonData, { isValid: 1 });
                 window.timelineInvalidVotes = _.filter(jsonData, { isValid: 0 });
                 let options = [];
@@ -590,7 +590,7 @@
                     series
                 });*/
                 timeLineStatsChartDOM.removeClass('loading');
-            });
+            }).fail($$apiErrorInfoParse);
         };
     </script>
 @endsection

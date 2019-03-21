@@ -100,7 +100,7 @@
                                 series
                             });
                             statsChartDOM.removeClass('loading');
-                        });
+                        }).fail($$apiErrorInfoParse);
                     });
                 }
             }
