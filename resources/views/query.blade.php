@@ -182,6 +182,7 @@
                                 <div class="d-inline h5">
                                     <span class="badge badge-info">{{ reply.floor }}楼</span>
                                     <span v-if="reply.subReplyNum > 0" class="badge badge-info">{{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i></span>
+                                    <!--
                                     <span>fold:{{ reply.isFold }}</span>
                                     <span>{{ reply.agreeInfo }}</span>
                                     <span>{{ reply.signInfo }}</span>
@@ -189,6 +190,7 @@
                                     <span>{{ reply.agreeInfo }}</span>
                                     <span>{{ reply.signInfo }}</span>
                                     <span>{{ reply.tailInfo }}</span>
+                                    -->
                                 </div>
                                 <div class="float-right badge badge-light">
                                     <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }" class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
@@ -434,6 +436,7 @@
                                     </div>
                                     <input v-model="queryData.query.postContent" data-param="postContent" id="queryPostContent" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="custom-query-param form-control">
                                 </div>
+                                <small class="col align-self-center">仅非主题贴</small>
                             </div>
                             <fieldset class="border rounded col-10 p-3 mb-2 form-inline form-row">
                                 <legend class="h6 w-auto">用户信息 <small>主题贴下为楼主</small></legend>
@@ -548,7 +551,7 @@
                     </div>
                 </form>
                 <posts-list v-for="(postsData, currentPostPage) in postsPages"
-                            :key="`${currentPostPage + 1}@${$route.fullPath}`"
+                            :key="`page${currentPostPage + 1}@${JSON.stringify(_.merge({}, $route.params, $route.query))}`"
                             :posts-data="postsData"></posts-list>
                 <loading-posts-placeholder v-if="loadingNewPosts"></loading-posts-placeholder>
             </div>
@@ -788,16 +791,18 @@
                     },
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
                         newPage = newPage || route.params.page || 1;
-                        let forumName = `${this.$data.postsPages[0].forum.name}吧`;
-                        if (route.params.tid != null) {
-                            if (threadTitle == null) {
-                                _.each(this.$data.postsPages, (item) => {
-                                    threadTitle = _.find(item.threads, { tid: parseInt(route.params.tid) }).title;
-                                });
+                        if (! _.isEmpty(this.$data.postsPages)) { // make sure it's not 404
+                            let forumName = `${this.$data.postsPages[0].forum.name}吧`;
+                            if (route.params.tid != null) {
+                                if (threadTitle == null) {
+                                    _.each(this.$data.postsPages, (item) => {
+                                        threadTitle = (_.find(item.threads, { tid: parseInt(route.params.tid) }) || {}).title;
+                                    });
+                                }
+                                document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                            } else {
+                                document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
                             }
-                            document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
-                        } else {
-                            document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
                         }
                     }
                 },
@@ -910,6 +915,7 @@
                                         { domID: 'queryThreadShareNum', postType: ['thread'] },
                                         { domID: 'queryThreadPropertyGood', postType: ['thread'] },
                                         { domID: 'queryThreadPropertySticky', postType: ['thread'] },
+                                        { domID: 'queryPostContent', postType: ['reply', 'subReply'] },
                                     ];
                                     _.each(paramsRequiredPostType, (param) => {
                                         let enabledParams = [];
@@ -1105,11 +1111,9 @@
 
                         if (! isPageAlreadyLoaded) {
                             this.loadPageData(to.params, to.query, shouldReplacePage);
-                        } else {
-                            next();
                         }
                     }
-                    next();
+                    next(); // pass any route changes
                 }
             });
 
@@ -1132,7 +1136,7 @@
                                 { name: 'pid', path: 'pid/:pid', children: [{ name:'pid+p', path: 'page/:page' }] },
                                 { name: 'p+sid', path: 'pid/:pid/spid/:spid', children: [{ name:'p+sid+p', path: 'page/:page' }] },
                                 { name: 'spid', path: 'spid/:spid', children: [{ name:'spid+p', path: 'page/:page' }] },
-                                { name:  'customQuery', path: '*', query: '*', children: [{ name:'customQuery+p', path: 'page/:page' }]},
+                                { name: 'customQuery', path: '*', query: '*', children: [{ name:'customQuery+p', path: 'page/:page' }]},
                             ]
                         }
                     ]

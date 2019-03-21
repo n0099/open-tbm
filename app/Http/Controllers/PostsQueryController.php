@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Eloquent\IndexModel;
+use App\Tieba\Eloquent\IndexModel;
 use App\Helper;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
+use App\Tieba\Eloquent\ReplyModel;
 use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Post\Post;
 use Carbon\Carbon;
@@ -21,7 +22,7 @@ class PostsQueryController extends Controller
 
     private $postsAuthorUids = [];
 
-    private function getNestedPostsInfoByIDs(array $postsInfo, bool $isInfoOnlyContainsPostsID): array
+    private function getNestedPostsInfoByIDs(array $postsInfo, bool $isInfoOnlyContainsPostsID, $orderBy, $orderDirection): array
     {
         $postsModel = PostModelFactory::getPostsModelByForumID($postsInfo['fid']);
         $postsInfo['thread'] = collect($postsInfo['thread']);
@@ -30,30 +31,52 @@ class PostsQueryController extends Controller
         $tids = $postsInfo['thread']->pluck('tid');
         $pids = $postsInfo['reply']->pluck('pid');
         $spids = $postsInfo['subReply']->pluck('spid');
-        $threadsInfo = empty($tids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['thread']->tid($tids->toArray())->hidePrivateFields()->get() : $postsInfo['thread']);
-        $repliesInfo = empty($pids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['reply']->pid($pids->toArray())->hidePrivateFields()->get() : $postsInfo['reply']);
-        $subRepliesInfo = empty($spids) ? collect() : ($isInfoOnlyContainsPostsID ? $postsModel['subReply']->spid($spids->toArray())->hidePrivateFields()->get() : $postsInfo['subReply']);
-
+        $threadsInfo = empty($tids)
+            ? collect()
+            : ($isInfoOnlyContainsPostsID
+                ? $postsModel['thread']->tid($tids->toArray())->orderBy($orderBy ?? 'tid', $orderDirection)->hidePrivateFields()->get()
+                : $postsInfo['thread']
+            );
+        $repliesInfo = empty($pids)
+            ? collect()
+            : ($isInfoOnlyContainsPostsID
+                ? $postsModel['reply']->pid($pids->toArray())->orderBy($orderBy ?? 'pid', $orderDirection)->hidePrivateFields()->get()
+                : $postsInfo['reply']
+            );
+        $subRepliesInfo = empty($spids)
+            ? collect()
+            : ($isInfoOnlyContainsPostsID
+                ? $postsModel['subReply']->spid($spids->toArray())->orderBy($orderBy ?? 'spid', $orderDirection)->hidePrivateFields()->get()
+                : $postsInfo['subReply']
+            );
         $isSubIDsMissInOriginIDs = function (Collection $originIDs, Collection $subIDs): bool {
             return $subIDs->contains(function ($subID) use ($originIDs): bool {
                 return ! $originIDs->contains($subID);
             });
         };
+
         $threadsIDInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();
         // $tids must be first argument to ensure the diffed $threadsIDInReplies existing
-        if ($isSubIDsMissInOriginIDs(collect($tids), $threadsIDInReplies)) {
+        if ($isSubIDsMissInOriginIDs($tids, $threadsIDInReplies)) {
             // fetch complete threads info which appeared in replies and sub replies info but missed in $tids
-            $threadsInfo = $postsModel['thread']->tid($threadsIDInReplies->union($tids)->toArray())->hidePrivateFields()->get();
+            $threadsInfo = $postsModel['thread']
+                ->tid($threadsIDInReplies->concat($tids)->toArray())
+                ->orderBy($orderBy ?? 'tid', $orderDirection)
+                ->hidePrivateFields()->get();
         }
+
         $repliesIDInThreadsAndSubReplies = $subRepliesInfo->pluck('pid');
         if (empty($pids)) { // append thread's first reply when there's no pid
             $repliesIDInThreadsAndSubReplies = $repliesIDInThreadsAndSubReplies->concat($threadsInfo->pluck('firstPid'));
         }
         $repliesIDInThreadsAndSubReplies = $repliesIDInThreadsAndSubReplies->unique()->sort()->values();
         // $pids must be first argument to ensure the diffed $repliesIDInSubReplies existing
-        if ($isSubIDsMissInOriginIDs(collect($pids), $repliesIDInThreadsAndSubReplies)) {
+        if ($isSubIDsMissInOriginIDs($pids, $repliesIDInThreadsAndSubReplies)) {
             // fetch complete replies info which appeared in threads and sub replies info but missed in $pids
-            $repliesInfo = $postsModel['reply']->pid($repliesIDInThreadsAndSubReplies->union($pids)->toArray())->hidePrivateFields()->get();
+            $repliesInfo = $postsModel['reply']
+                ->pid($repliesIDInThreadsAndSubReplies->concat($pids)->toArray())
+                ->orderBy($orderBy ?? 'pid', $orderDirection)
+                ->hidePrivateFields()->get();
         }
 
         // same functional with above
@@ -97,6 +120,7 @@ class PostsQueryController extends Controller
         $repliesInfo = collect(Helper::convertIDListKey($repliesInfo, 'pid'));
         $subRepliesInfo = collect(Helper::convertIDListKey($subRepliesInfo, 'spid'));
         $nestedPostsInfo = [];
+
         foreach ($threadsInfo as $tid => $thread) {
             $threadReplies = $repliesInfo->where('tid', $tid)->toArray(); // can't use values() here to prevent losing posts id key
             foreach ($threadReplies as $pid => $reply) {
@@ -175,10 +199,10 @@ class PostsQueryController extends Controller
                 ?? ($queryPostsID == [] ? abort(400, 'Custom query need a forum id') : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']);
             $postsModel = PostModelFactory::getPostsModelByForumID($customQueryForumID);
 
-            $queryPostsBuilder = [
-                'thread' => null,
-                'reply' => null,
-                'subReply' => null
+            $postsQueryBuilder = [
+                'thread' => [],
+                'reply' => [],
+                'subReply' => []
             ];
 
             $paramsRequiredPostType = [
@@ -280,14 +304,7 @@ class PostsQueryController extends Controller
                                 ]);
                                 break;
                             case 'postContent':
-                                if ($postType == 'thread') {
-                                    // use Builder->setModel() to change query builder's model without losing previous queries conditions
-                                    $postModel = $postModel->setModel($postsModel['reply'])->where('floor', '=', 1);
-                                } elseif ($postType == 'reply') {
-                                    $postModel = $postModel->where('floor', '!=', 1);
-                                }
-
-                                if (($queryParams['postContentRegex'] ?? false)) {
+                                if ($queryParams['postContentRegex'] ?? false) {
                                     $postModel = $postModel->where('content', 'REGEXP', $paramValue);
                                 } else {
                                     $postModel = $postModel->where(function ($postModel) use ($paramValue) {
@@ -379,24 +396,25 @@ class PostsQueryController extends Controller
                 ? $postsModel
                 : collect($postsModel)->intersectByKeys(collect($queryPostType)->flip());
             foreach ($queryPostsTypeModel as $postType => $postModel) {
-                $queryPostsBuilder[$postType] = $applyCustomConditionOnPostModel($postType, $postModel, $queryParams);
+                $postsQueryBuilder[$postType] = $applyCustomConditionOnPostModel($postType, $postModel, $queryParams);
             }
 
-            foreach ($queryPostsBuilder as $postType => $postQueryBuilder) {
+            $customQueryDefalutOrderDirection = 'DESC';
+            foreach ($postsQueryBuilder as $postType => $postQueryBuilder) {
                 if ($postQueryBuilder != null) {
-                    if (! $queryParamsName->contains('orderBy')) {
-                        $postQueryBuilder = $postQueryBuilder->orderBy('postTime', 'DESC');
+                    if (! $queryParamsName->contains('orderBy')) { // order by post type id desc by default
+                        $postQueryBuilder = $postQueryBuilder->orderBy($postsIDNamePair[$postType], $customQueryDefalutOrderDirection);
                     }
-                    $queryPostsBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->paginate($this->pagingPerPageItems);
+                    $postsQueryBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->paginate($this->pagingPerPageItems);
                 }
             }
 
             $postsQueriedInfo['fid'] = $customQueryForumID;
-            foreach ($postsIDNamePair as $postType => $postIDName) { // assign posts queried info from $queryPostsBuilder
-                $postsQueriedInfo[$postType] = $queryPostsBuilder[$postType] == null ? [] : $queryPostsBuilder[$postType]->toArray()['data'];
+            foreach ($postsIDNamePair as $postType => $postIDName) { // assign posts queried info from $postsQueryBuilder
+                $postQueryBuilder = $postsQueryBuilder[$postType];
+                $postsQueriedInfo[$postType] = $postQueryBuilder == null ? [] : $postQueryBuilder->toArray()['data'];
             }
-
-            $queryPostsBuilder = array_filter($queryPostsBuilder); // array_filter() will remove falsy(like null) value elements
+            $postsQueryBuilder = array_filter($postsQueryBuilder); // array_filter() will remove falsy(like null) value elements
 
             /**
              * Union builders pagination $unionMethodName data by $unionStatement
@@ -416,22 +434,22 @@ class PostsQueryController extends Controller
                 return $unionStatement($unionValues == [] ? [0] : $unionValues); // prevent empty array
             };
             $pagesInfo = [
-                'firstItem' => $pageInfoUnion($queryPostsBuilder, 'firstItem', function ($unionValues) {
+                'firstItem' => $pageInfoUnion($postsQueryBuilder, 'firstItem', function ($unionValues) {
                     return min($unionValues);
                 }),
-                'currentItems' => $pageInfoUnion($queryPostsBuilder, 'count', function ($unionValues) {
+                'currentItems' => $pageInfoUnion($postsQueryBuilder, 'count', function ($unionValues) {
                     return array_sum($unionValues);
                 }),
-                'totalItems' => $pageInfoUnion($queryPostsBuilder, 'total', function ($unionValues) {
+                'totalItems' => $pageInfoUnion($postsQueryBuilder, 'total', function ($unionValues) {
                     return array_sum($unionValues);
                 }),
-                /*'perPageItems' => $pageInfoUnion($queryPostsBuilder, 'perPage', function ($unionValues) {
+                /*'perPageItems' => $pageInfoUnion($postsQueryBuilder, 'perPage', function ($unionValues) {
                     return min($unionValues);
                 }),*/
-                'currentPage' => $pageInfoUnion($queryPostsBuilder, 'currentPage', function ($unionValues) {
+                'currentPage' => $pageInfoUnion($postsQueryBuilder, 'currentPage', function ($unionValues) {
                     return min($unionValues);
                 }),
-                'lastPage' => $pageInfoUnion($queryPostsBuilder, 'lastPage', function ($unionValues) {
+                'lastPage' => $pageInfoUnion($postsQueryBuilder, 'lastPage', function ($unionValues) {
                     return max($unionValues);
                 })
             ];
@@ -444,14 +462,11 @@ class PostsQueryController extends Controller
             } else {
                 $indexesOrderDirection = $indexesQueryParams->keys()->diff(['fid'])->isEmpty() ? 'DESC' : 'ASC'; // using descending order when querying only with forum id
                 $indexesOrderBy = [
-                    'tid' => $indexesOrderDirection,
-                    'pid' => $indexesOrderDirection,
                     'spid' => $indexesOrderDirection,
-                    'postTime' => $indexesOrderDirection
+                    'pid' => $indexesOrderDirection,
+                    'tid' => $indexesOrderDirection
                 ];
-                foreach ($indexesOrderBy as $orderFieldName => $orderDirection) {
-                    $indexesModel = $indexesModel->orderBy($orderFieldName, $orderDirection);
-                }
+                $indexesModel = $indexesModel->orderByMulti($indexesOrderBy);
             }
             $indexesModel = $indexesModel->whereIn('type', $queryPostType)->paginate($this->pagingPerPageItems);
             abort_if($indexesModel->isEmpty(), 404);
@@ -473,7 +488,12 @@ class PostsQueryController extends Controller
             abort(400, 'Query type is neither post id nor custom query');
         }
 
-        $nestedPostsInfo = static::getNestedPostsInfoByIDs($postsQueriedInfo, ! $isCustomQuery);
+        $nestedPostsInfo = $this->getNestedPostsInfoByIDs(
+            $postsQueriedInfo,
+            ! $isCustomQuery,
+            $queryParams['orderBy'] ?? null,
+            $queryParams['orderDirection'] ?? $indexesOrderDirection ?? $customQueryDefalutOrderDirection ?? null
+        );
         $forumInfo = ForumModel::where('fid', $postsQueriedInfo['fid'])->hidePrivateFields()->first()->toArray();
         $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUids)->hidePrivateFields()->get()->toArray();
         $json = json_encode([
