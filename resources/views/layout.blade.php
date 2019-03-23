@@ -21,6 +21,7 @@
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/themes/light-border.css" rel="stylesheet">
         <link href="{{ $baseUrl }}/css/bootstrap-callout.css" rel="stylesheet">
         <style>
             @media (max-width: 991.98px) {
@@ -169,6 +170,7 @@
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/morr/jquery.appear@0.4.1/jquery.appear.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/umd/index.all.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js"></script>
         <script>
             'use strict';
@@ -178,6 +180,8 @@
             let $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
 
             let $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
+                NProgress.start();
+                $('body').css('cursor', 'progress');
                 grecaptcha.ready(() => {
                     grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
                         resolve({ reCAPTCHA: token });
@@ -215,7 +219,7 @@
                 let errorInfo = '';
                 if (jqXHR.responseJSON != null) {
                     let responseErrorInfo = jqXHR.responseJSON;
-                    errorInfo = `错误码：${responseErrorInfo.errorCode}<br>${responseErrorInfo.errorInfo}`;
+                    errorInfo = `错误码：${responseErrorInfo.errorCode}<br />${responseErrorInfo.errorInfo}`;
                 }
                 new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
             };
@@ -245,6 +249,42 @@
                 NProgress.done();
                 $('body').css('cursor', 'auto');
             });
+
+            let $$tippyInital = () => {
+                //tippy('[data-tippy]');
+                tippy('[data-tippy-content]');
+            };
+            tippy.setDefaults({
+                animation: 'perspective',
+                //followCursor: true,
+                interactive: true,
+                theme: 'light-border'
+            });
+
+            let $$getTiebaPostLink = (tid, pid = null, spid = null) => {
+                if (spid != null) {
+                    return `https://tieba.baidu.com/p/${tid}?pid=${spid}#${spid}`;
+                } else if (pid != null) {
+                    return `https://tieba.baidu.com/p/${tid}?pid=${pid}#${pid}`;
+                } else {
+                    return `https://tieba.baidu.com/p/${tid}`;
+                }
+            };
+            let $$getTBMPostLink = (tid, pid = null, spid = null) => {
+                if (spid != null) {
+                    return `${$$baseUrl}/query/tid/${tid}`;
+                } else if (pid != null) {
+                    return `${$$baseUrl}/query/pid/${pid}`;
+                } else {
+                    return `${$$baseUrl}/query/spid/${spid}`;
+                }
+            };
+            let $$getTiebaUserLink = (username) => {
+                return `http://tieba.baidu.com/home/main?un=${username}`;
+            };
+            let $$getTBMUserLink = (username) => {
+
+            };
         </script>
         @yield('script-after-container')
     </body>

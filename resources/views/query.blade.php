@@ -150,30 +150,37 @@
                         <h6 class="d-inline">{{ thread.title }}</h6>
                         <div class="float-right badge badge-light">
                             <router-link :to="{ name: 'tid', params: { tid: thread.tid.toString() } }" class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
-                            <a class="badge badge-pill badge-light" :href="`https://tieba.baidu.com/p/${thread.tid}`" target="_blank"><i class="fas fa-link"></i></a>
+                            <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(thread.tid)" target="_blank"><i class="fas fa-link"></i></a>
                             <template v-for="latestReplier in [getUserData(thread.latestReplierUid)]">
                                 <a class="badge badge-pill badge-light" href="#!"
-                                   data-toggle="popover" data-placement="bottom" data-trigger="click hover" data-html="true"
-                                   :data-title="`ID：${thread.tid}`"
-                                   :data-content="`最后回复人：${latestReplier.displayName == null
-                                       ? latestReplier.name
-                                       : latestReplier.displayName + '（' + latestReplier.name + '）'}
-                                       <br />最后回复时间：${thread.latestReplyTime}`">
-                                    <i class="far fa-comment-dots"></i>
+                                   :data-tippy-content="`<h6>ID：${thread.tid}</h6><hr /><br />
+                                        最后回复人：${latestReplier.displayName == null
+                                            ? latestReplier.name
+                                            : latestReplier.displayName + '（' + latestReplier.name + '）'}<br />
+                                        最后回复时间：${thread.latestReplyTime}<br />
+                                        收录时间：${thread.created_at}<br />
+                                        最后更新：${thread.updated_at}`">
+                                    <i class="fas fa-info"></i>
                                 </a>
                             </template>
-                            <a class="badge badge-pill badge-light" href="#!"
-                               data-toggle="popover" data-placement="bottom" data-trigger="click hover" data-html="true"
-                               :data-title="`ID：${thread.tid}`" :data-content="`收录时间：${thread.created_at}<br />最后更新：${thread.updated_at}`"><i class="fas fa-info"></i></a>
+
                             <span class="badge badge-pill badge-success">{{ thread.postTime }}</span>
                         </div>
                         <div>
-                            <span class="badge badge-info"><i class="far fa-comment-alt"></i> {{ thread.replyNum }}</span>
-                            <span class="badge badge-info"><i class="far fa-eye"></i> {{ thread.viewNum }}</span>
-                            <span class="badge badge-info"><i class="fas fa-share-alt"></i> {{ thread.shareNum }}</span>
-                            <span class="badge badge-info"><i class="far fa-thumbs-up"></i>agree：{{ thread.agreeInfo }}</span>
-                            <span v-if="thread.zanInfo != null" class="badge badge-info"><i class="far fa-thumbs-up"></i>zan：{{ thread.zanInfo.num }}</span>
-                            <span class="badge badge-info"><i class="fas fa-location-arrow"></i> {{ thread.locationInfo }}</span>
+                            <span data-tippy-content="回复量" class="badge badge-info"><i class="far fa-comment-alt"></i> {{ thread.replyNum }}</span>
+                            <span data-tippy-content="阅读量" class="badge badge-info"><i class="far fa-eye"></i> {{ thread.viewNum }}</span>
+                            <span data-tippy-content="分享次数" class="badge badge-info"><i class="fas fa-share-alt"></i> {{ thread.shareNum }}</span>
+                            <span v-if="thread.agreeInfo != null" data-tippy-content="总赞踩量" class="badge badge-info">
+                                <i class="far fa-thumbs-up"></i>{{ thread.agreeInfo.agree_num }}
+                                <i class="far fa-thumbs-down"></i>{{ thread.agreeInfo.disagree_num }}
+                            </span>
+                            <span v-if="thread.zanInfo != null" class="badge badge-info"
+                                  :data-tippy-content="`点赞量：${thread.zanInfo.num}<br />
+                                       最后点赞时间：${thread.zanInfo.last_time}<br />
+                                       近期点赞用户：${thread.zanInfo.user_id_list}<br />`">
+                                <i class="far fa-thumbs-up"></i> 旧版客户端赞
+                            </span>
+                            <span data-tippy-content="发贴位置" class="badge badge-info"><i class="fas fa-location-arrow"></i> {{ thread.locationInfo }}</span>
                         </div>
                     </div>
                     <template v-for="reply in thread.replies">
@@ -194,10 +201,8 @@
                                 </div>
                                 <div class="float-right badge badge-light">
                                     <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }" class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
-                                    <a class="badge badge-pill badge-light" :href="`https://tieba.baidu.com/p/${reply.tid}?pid=${reply.pid}#${reply.pid}`" target="_blank"><i class="fas fa-link"></i></a>
-                                    <a class="badge badge-pill badge-light" href="#!"
-                                       data-toggle="popover" data-trigger="click hover" data-html="true"
-                                       :data-title="`ID：${reply.pid}`" :data-content="`收录时间：${reply.created_at}<br />最后更新：${reply.updated_at}`"><i class="fas fa-info"></i></a>
+                                    <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank"><i class="fas fa-link"></i></a>
+                                    <a class="badge badge-pill badge-light" href="#!" :data-tippy-content="`<h6>ID：${reply.pid}</h6><hr /><br />收录时间：${reply.created_at}<br />最后更新：${reply.updated_at}`"><i class="fas fa-info"></i></a>
                                     <span class="badge badge-pill badge-primary">{{ reply.postTime }}</span>
                                 </div>
                             </div>
@@ -205,7 +210,7 @@
                                 <template v-for="author in [getUserData(reply.authorUid)]">
                                     <div class="reply-banner col-md-auto text-center">
                                         <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
-                                            <a class="d-block" :href="`http://tieba.baidu.com/home/main?un=${author.name}`" target="_blank">
+                                            <a class="d-block" :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
                                                 <img class="lazyload d-block mx-auto badge badge-light" width="100px" height="100px" :data-src="`https://himg.bdimg.com/sys/portrait/item/${author.avatarUrl}.jpg`" />
                                                 <span>{{ author.displayName }}<br v-if="author.displayName != null" />{{ author.name }}</span>
                                             </a>
@@ -226,7 +231,7 @@
                                             <li v-for="(subReply, index) in subReplyGroup" class="sub-reply-item list-group-item">
                                                 <template v-for="author in [getUserData(subReply.authorUid)]">
                                                     <a v-if="subReplyGroup[index - 1] == undefined" class="sub-reply-user-info badge badge-light"
-                                                       :href="`http://tieba.baidu.com/home/main?un=${author.name}`" target="_blank">
+                                                       :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
                                                         <img class="lazyload" width="25px" height="25px" :data-src="`https://himg.bdimg.com/sys/portrait/item/${author.avatarUrl}.jpg`" />
                                                         <span v-if="author.displayName == null">{{ author.name }}</span>
                                                         <span v-else>{{ author.displayName }}（{{ author.name }}）</span>
@@ -239,10 +244,8 @@
                                                         </div>
                                                     </a>
                                                     <div class="float-right badge badge-light">
-                                                        <a class="sub-reply-hide-link badge badge-pill badge-light" :href="`https://tieba.baidu.com/p/${subReply.tid}?pid=${subReply.spid}#${subReply.spid}`" target="_blank"><i class="fas fa-link"></i></a>
-                                                        <a class="sub-reply-hide-link badge badge-pill badge-light" href="#!"
-                                                           data-toggle="popover" data-trigger="click hover" data-html="true"
-                                                           :data-title="`ID：${subReply.spid}`" :data-content="`收录时间：${subReply.created_at}<br />最后更新：${subReply.updated_at}`"><i class="fas fa-info"></i></a>
+                                                        <a class="sub-reply-hide-link badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank"><i class="fas fa-link"></i></a>
+                                                        <a class="sub-reply-hide-link badge badge-pill badge-light" href="#!" :data-tippy-content="`<h6>ID：${subReply.spid}</h6><hr /><br />收录时间：${subReply.created_at}<br />最后更新：${subReply.updated_at}`"><i class="fas fa-info"></i></a>
                                                         <span class="badge badge-pill badge-info">{{ subReply.postTime }}</span>
                                                     </div>
                                                 </template>
@@ -598,7 +601,9 @@
                 props: ['postsData'], // received from parent component
                 data: function () {
                     return {
-                        $$baseUrl
+                        $$baseUrl,
+                        $$getTiebaPostLink,
+                        $$getTiebaUserLink
                     };
                 },
                 computed: {
@@ -985,7 +990,7 @@
 
                             { // reply items dom recycle and events
                                 let registerEventsWithinReplyItems = () => {
-                                    $('[data-toggle="popover"]').popover();
+                                    $$tippyInital();
                                     // use jquery mouse hover event to prevent high cpu usage when using vue @mouseover event
                                     $('.sub-reply-item').hover((event) => {
                                         $(event.currentTarget).find('.sub-reply-hide-link').show();
