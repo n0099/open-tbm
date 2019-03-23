@@ -198,7 +198,7 @@ class PostsQueryController extends Controller
             $customQueryForumID = $queryParams['fid']
                 ?? (
                     $queryPostsID == []
-                        ? Helper::abortApi(40106)
+                        ? Helper::abortApi(40002)
                         : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']
                 );
             $postsModel = PostModelFactory::getPostsModelByForumID($customQueryForumID);
@@ -220,7 +220,7 @@ class PostsQueryController extends Controller
                 'threadShareNum' => ['thread'],
             ];
             foreach ($paramsRequiredPostType as $paramName => $postType) {
-                Helper::abortApiIf(isset($queryParams[$paramName]) && array_diff($queryPostType, $postType) != [], 40105);
+                Helper::abortApiIf(isset($queryParams[$paramName]) && array_diff($queryPostType, $postType) != [], 40005);
             }
 
             /**
@@ -234,14 +234,14 @@ class PostsQueryController extends Controller
              */
             $applyCustomConditionOnPostModel = function (string $postType, PostModel $postModel, Collection $queryParams) use ($postsModel, $queryPostType, $queryUserType) {
                 if (in_array('latestReplier', $queryUserType)) {
-                    Helper::abortApiIf(! in_array('thread', $queryPostType), 40103);
+                    Helper::abortApiIf(! in_array('thread', $queryPostType), 40003);
                     $userInfoParamsExcludingLatestReplier = [
                         'userExpGrade',
                         'userExpGradeRange',
                         'userManagerType'
                     ];
                     if ($queryParams->intersect($userInfoParamsExcludingLatestReplier) != []) {
-                        Helper::abortApi(40104);
+                        Helper::abortApi(40004);
                     }
                 }
 
@@ -256,7 +256,7 @@ class PostsQueryController extends Controller
                                     if ($postType == 'thread') {
                                         $postModel = $postModel->whereIn('latestReplierUid', $userIDs);
                                     } else {
-                                        Helper::abortApi(40103);
+                                        Helper::abortApi(40003);
                                     }
                                 } elseif ($userType == 'author') {
                                     $postModel = $postModel->whereIn('authorUid', $userIDs);
@@ -402,11 +402,11 @@ class PostsQueryController extends Controller
                 $postsQueryBuilder[$postType] = $applyCustomConditionOnPostModel($postType, $postModel, $queryParams);
             }
 
-            $customQueryDefalutOrderDirection = 'DESC';
+            $customQueryDefaultOrderDirection = 'DESC';
             foreach ($postsQueryBuilder as $postType => $postQueryBuilder) {
                 if ($postQueryBuilder != null) {
                     if (! $queryParamsName->contains('orderBy')) { // order by post type id desc by default
-                        $postQueryBuilder = $postQueryBuilder->orderBy($postsIDNamePair[$postType], $customQueryDefalutOrderDirection);
+                        $postQueryBuilder = $postQueryBuilder->orderBy($postsIDNamePair[$postType], $customQueryDefaultOrderDirection);
                     }
                     $postsQueryBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->paginate($this->pagingPerPageItems);
                 }
@@ -464,37 +464,37 @@ class PostsQueryController extends Controller
             } else {
                 $indexesOrderDirection = $indexesQueryParams->keys()->diff(['fid'])->isEmpty() ? 'DESC' : 'ASC'; // using descending order when querying only with forum id
                 $indexesOrderBy = [
-                    'spid' => $indexesOrderDirection,
+                    'tid' => $indexesOrderDirection,
                     'pid' => $indexesOrderDirection,
-                    'tid' => $indexesOrderDirection
+                    'spid' => $indexesOrderDirection
                 ];
                 $indexesModel = $indexesModel->orderByMulti($indexesOrderBy);
             }
-            $indexesModel = $indexesModel->whereIn('type', $queryPostType)->paginate($this->pagingPerPageItems);
-            Helper::abortApiIf($indexesModel->isEmpty(), 40102);
+            $indexesResults = $indexesModel->whereIn('type', $queryPostType)->paginate($this->pagingPerPageItems);
+            Helper::abortApiIf($indexesResults->isEmpty(), 40401);
 
-            $postsQueriedInfo['fid'] = $indexesModel->pluck('fid')->first();
+            $postsQueriedInfo['fid'] = $indexesResults->pluck('fid')->first();
             foreach ($postsIDNamePair as $postType => $postIDName) { // assign queried posts ids from $indexesModel
-                $postsQueriedInfo[$postType] = $indexesModel->where('type', $postType)->toArray();
+                $postsQueriedInfo[$postType] = $indexesResults->where('type', $postType)->toArray();
             }
 
             $pagesInfo = [
-                'firstItem' => $indexesModel->firstItem(),
-                'currentItems' => $indexesModel->count(),
-                'totalItems' => $indexesModel->total(),
-                //'perPageItems' => $indexesModel->perPage(),
-                'currentPage' => $indexesModel->currentPage(),
-                'lastPage' => $indexesModel->lastPage()
+                'firstItem' => $indexesResults->firstItem(),
+                'currentItems' => $indexesResults->count(),
+                'totalItems' => $indexesResults->total(),
+                //'perPageItems' => $indexesResults->perPage(),
+                'currentPage' => $indexesResults->currentPage(),
+                'lastPage' => $indexesResults->lastPage()
             ];
         } else {
-            Helper::abortApi(40101);
+            Helper::abortApi(40001);
         }
 
         $nestedPostsInfo = $this->getNestedPostsInfoByIDs(
             $postsQueriedInfo,
             ! $isCustomQuery,
             $queryParams['orderBy'] ?? null,
-            $queryParams['orderDirection'] ?? $indexesOrderDirection ?? $customQueryDefalutOrderDirection ?? null
+            $queryParams['orderDirection'] ?? $indexesOrderDirection ?? $customQueryDefaultOrderDirection ?? null
         );
         $forumInfo = ForumModel::where('fid', $postsQueriedInfo['fid'])->hidePrivateFields()->first()->toArray();
         $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUids)->hidePrivateFields()->get()->toArray();
