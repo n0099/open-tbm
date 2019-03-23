@@ -155,7 +155,9 @@ class ThreadCrawler extends Crawlable
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
                 'shareNum' => $thread['share_num'] ?? null, // topic thread won't have this
-                'agreeInfo' => Helper::nullableValidate(isset($thread['agree']) ? ($thread['agree']['has_agree'] > 0 ? $thread['agree'] : null) : null, true), // topic thread won't have this
+                'agreeInfo' => Helper::nullableValidate(isset($thread['agree']) && ($thread['agree']['agree_num'] > 0 || $thread['agree']['disagree_num'] > 0)
+                    ? $thread['agree']
+                    : null, true), // topic thread won't have this
                 'zanInfo' => Helper::nullableValidate($thread['zan'] ?? null, true),
                 'locationInfo' => Helper::nullableValidate($thread['location'] ?? null, true),
                 'clientVersion' => $this->clientVersion,

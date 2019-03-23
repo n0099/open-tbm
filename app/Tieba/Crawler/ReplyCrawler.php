@@ -144,7 +144,7 @@ class ReplyCrawler extends Crawlable
                 'subReplyNum' => $reply['sub_post_number'],
                 'postTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
                 'isFold' => $reply['is_fold'],
-                'agreeInfo' => Helper::nullableValidate(($reply['agree']['has_agree'] > 0 ? $reply['agree'] : null), true),
+                'agreeInfo' => Helper::nullableValidate($reply['agree']['agree_num'] > 0 || $reply['agree']['disagree_num'] > 0 ? $reply['agree'] : null, true),
                 'signInfo' => Helper::nullableValidate($reply['signature'], true),
                 'tailInfo' => Helper::nullableValidate($reply['tail_info'], true),
                 'clientVersion' => $this->clientVersion,
