@@ -12,6 +12,12 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class ThreadModel extends PostModel
 {
+    protected $casts = [
+        'agreeInfo' => 'array',
+        'zanInfo' => 'array',
+        'locationInfo' => 'array'
+    ];
+
     protected $fields = [
         'id',
         'tid',
@@ -33,12 +39,12 @@ class ThreadModel extends PostModel
         'locationInfo',
         'clientVersion',
         'created_at',
-        'updated_at',
+        'updated_at'
     ];
 
     protected $hidedFields = [
         'id',
-        'clientVersion',
+        'clientVersion'
     ];
 
     public $updateExpectFields = [

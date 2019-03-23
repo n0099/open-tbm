@@ -9,10 +9,10 @@ if (! function_exists('tiebaImageUrlProxy')) {
     }
 }
 ?>
-@foreach ($json as $content)
-    @switch ($content['type'])
+@foreach ($content as $item)
+    @switch ($item['type'])
         @case (0) {{--文本 {"text": "content\n", "type": "0"} --}}
-            <span>{!! str_replace("\n", '<br />', trim($content['text'], "\n")) !!}</span>
+            <span>{!! str_replace("\n", '<br />', trim($item['text'], "\n")) !!}</span>
             @break
         @case (1)
             {{--链接
@@ -21,7 +21,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
                 {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[失效] http://pan.baidu.com/s/", "type": "1", "url_type": "1"}
                 {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[有效] http://pan.baidu.com/s/", "type": "1", "url_type": "2"}
             --}}
-            <a href="{{ $content['link'] }}" target="_blank">{{ $content['text'] }}</a>
+            <a href="{{ $item['link'] }}" target="_blank">{{ $item['text'] }}</a>
             @break
         @case (2) {{--表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"} --}}
             <?php
@@ -46,7 +46,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
                     'w_' => ['class' => 'ldw', 'type' => 'gif'], // 绿豆蛙
                     '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
                 ];
-                $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $content['text']);
+                $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item['text']);
                 $emoticonIndex = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2) ?? 1]; //TODO : bug
                 $emoticonUrlInfo = ($emoticonIndex['prefix'] == 'image_emoticon' && $emoticonIndex['index'] <= 61 && $emoticonIndex['index'] >= 51)
                     ? $emoticonsInfo['image_emoticon>51']
@@ -54,7 +54,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
                 $emoticonUrlPrefix = $emoticonUrlInfo['prefix'] ?? $emoticonIndex['prefix'];
                 $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonUrlInfo['class']}/{$emoticonUrlPrefix}{$emoticonIndex['index']}.{$emoticonUrlInfo['type']}";
             ?>
-            <img class="lazyload" data-src="{{ $emoticonUrl }}" alt="{{ $content['c'] }}" />
+            <img class="lazyload" data-src="{{ $emoticonUrl }}" alt="{{ $item['c'] }}" />
             @break
         @case (3)
             {{--图片
@@ -74,11 +74,11 @@ if (! function_exists('tiebaImageUrlProxy')) {
                 http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
             --}}
             <div class="tieba-image-zoom-in">
-                <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['origin_src'] ?? $content['src']) }}" />
+                <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['origin_src'] ?? $item['src']) }}" />
             </div>
             @break
         @case (4) {{-- {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
-            <a href="http://tieba.baidu.com/home/main" target="_blank">{{ $content['text'] }}</a>
+            <a href="http://tieba.baidu.com/home/main" target="_blank">{{ $item['text'] }}</a>
             @break
         @case (5)
             {{--视频
@@ -104,13 +104,13 @@ if (! function_exists('tiebaImageUrlProxy')) {
                     "is_native_app": "0"
                 }
             --}}
-            <a href="{{ $content['link'] }}" target="_blank">
-                @if (isset($content['origin_src']))
+            <a href="{{ $item['link'] }}" target="_blank">
+                @if (isset($item['origin_src']))
                     <div class="tieba-image-zoom-in">
-                        <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['origin_src']) }}" />
+                        <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['origin_src']) }}" />
                     </div>
                 @else
-                    外站视频：{{ $content['text'] }}
+                    外站视频：{{ $item['text'] }}
                 @endif
             </a>
             @break
@@ -118,7 +118,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
             <br />
             @break
         @case (9) {{--电话 {"text": "12345678 \d{8}", "type": "9", "phonetype": "2"} --}}
-            <span>{{ $content['text'] }}</span>
+            <span>{{ $item['text'] }}</span>
             @break
         @case (10)
             {{--语音
@@ -130,7 +130,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
                     "native_app": []
                 }
             --}}
-            <span>[[语音,时长:{{ $content['during_time'] }}s]]</span>
+            <span>[[语音,时长:{{ $item['during_time'] }}s]]</span>{{-- TODO: fill with voice player and play source url --}}
             @break
         @case (11)
             {{--客户端表情包
@@ -145,7 +145,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
                     "packet_name": ""
                 }
             --}}
-            <img class="d-block lazyload" data-src="{{ str_replace('http://', 'https://', $content['dynamic']) }}" alt="{{ $content['c'] }}" />
+            <img class="d-block lazyload" data-src="{{ str_replace('http://', 'https://', $item['dynamic']) }}" alt="{{ $item['c'] }}" />
             @break
         @case (16)
             {{--涂鸦
@@ -164,13 +164,13 @@ if (! function_exists('tiebaImageUrlProxy')) {
                 }
             --}}
             <div class="tieba-image-zoom-in">
-                <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
+                <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
             </div>
             @break
         @case (17) {{--活动 not found --}}
             @break
         @case (18) {{--话题 {"link": "http://tieba.baidu.com/mo/q/hotMessage?topic_id={topic id}&fid={forum id}&topic_name={topic name}", "text": "#{topic name}#", "type": "18"} --}}
-            <a href="{{ $content['link'] }}" target="_blank">{{ $content['text'] }}</a>
+            <a href="{{ $item['link'] }}" target="_blank">{{ $item['text'] }}</a>
             @break
         @case (20)
             {{--客户端表情商店
@@ -189,9 +189,9 @@ if (! function_exists('tiebaImageUrlProxy')) {
                     }
                 }
             --}}
-            <a href="{{ $content['meme_info']['detail_link'] }}" target="_blank">
+            <a href="{{ $item['meme_info']['detail_link'] }}" target="_blank">
                 <div class="tieba-image-zoom-in">
-                    <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($content['src']) }}" />
+                    <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['src']) }}" />
                 </div>
             </a>
             @break

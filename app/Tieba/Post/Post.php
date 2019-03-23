@@ -7,9 +7,9 @@ use function GuzzleHttp\json_decode;
 
 abstract class Post
 {
-    public static function convertJsonContentToHtml(string $json): string
+    public static function convertJsonContentToHtml(array $content): string
     {
-        return view('formatPostJsonContent', ['json' => json_decode($json, true)]);
+        return view('formatPostJsonContent', ['content' => $content]);
     }
 
     /**

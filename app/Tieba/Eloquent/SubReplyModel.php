@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SubReplyModel extends PostModel
 {
+    protected $casts = [
+        'content' => 'array'
+    ];
+
     protected $fields = [
         'id',
         'tid',
@@ -18,12 +22,12 @@ class SubReplyModel extends PostModel
         'postTime',
         'clientVersion',
         'created_at',
-        'updated_at',
+        'updated_at'
     ];
 
     protected $hidedFields = [
         'id',
-        'clientVersion',
+        'clientVersion'
     ];
 
     public $updateExpectFields = [

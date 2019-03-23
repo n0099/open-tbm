@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ReplyModel extends PostModel
 {
+    protected $casts = [
+        'content' => 'array',
+        'agreeInfo' => 'array',
+        'signInfo' => 'array',
+        'tailInfo' => 'array'
+    ];
+
     protected $fields = [
         'id',
         'tid',
@@ -23,12 +30,12 @@ class ReplyModel extends PostModel
         'tailInfo',
         'clientVersion',
         'created_at',
-        'updated_at',
+        'updated_at'
     ];
 
     protected $hidedFields = [
         'id',
-        'clientVersion',
+        'clientVersion'
     ];
 
     public $updateExpectFields = [

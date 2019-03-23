@@ -15,6 +15,11 @@ class UserModel extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'iconInfo' => 'array',
+        'alaInfo' => 'array'
+    ];
+
     protected $fields = [
         'id',
         'uid',
