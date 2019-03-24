@@ -11,6 +11,6 @@
 
 @section('script-after-container')
     <script>
-        new Vue({ el: '#navbar' , data: { $$baseUrl, activeNav: 'index' } });
+        $$initialNavBar('index');
     </script>
 @endsection

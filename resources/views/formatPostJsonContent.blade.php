@@ -25,34 +25,36 @@ if (! function_exists('tiebaImageUrlProxy')) {
             @break
         @case (2) {{--表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"} --}}
             <?php
-            $emoticonsInfo = [
-                    'image_emoticon' => ['class' => 'client', 'type' => 'png'], // 泡泡/客户端新版表情（>=61）
-                    //'image_emoticon' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 旧版泡泡
-                    'image_emoticon>51' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 泡泡-贴吧十周年
-                    'bearchildren_' => ['class' => 'bearchildren', 'type' => 'gif'], // 贴吧熊孩子
-                    'tiexing_' => ['class' => 'tiexing', 'type' => 'gif'], // 痒小贱
-                    'ali_' => ['class' => 'ali', 'type' => 'gif'], // 阿狸
-                    'llb_' => ['class' => 'luoluobu', 'type' => 'gif'], // 罗罗布
-                    'b' => ['class' => 'qpx_n', 'type' => 'gif'], // 气泡熊
-                    'xyj_' => ['class' => 'xyj', 'type' => 'gif'], // 小幺鸡
-                    'ltn_' => ['class' => 'lt', 'type' => 'gif'], // 冷兔
-                    'bfmn_' => ['class' => 'bfmn', 'type' => 'gif'], // 白发魔女
-                    'pczxh_' => ['class' => 'zxh', 'type' => 'gif'], // 张小盒
-                    't_' => ['class' => 'tsj', 'type' => 'gif'], // 兔斯基
-                    'wdj_' => ['class' => 'wdj', 'type' => 'png'], // 豌豆荚
-                    'lxs_' => ['class' => 'lxs', 'type' => 'gif'], // 冷先森
-                    'B_' => ['class' => 'bobo', 'type' => 'gif'], // 波波
-                    'yz_' => ['class' => 'shadow', 'type' => 'gif'], // 影子
-                    'w_' => ['class' => 'ldw', 'type' => 'gif'], // 绿豆蛙
-                    '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
-                ];
-                $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item['text']);
-                $emoticonIndex = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2) ?? 1]; //TODO : bug
-                $emoticonUrlInfo = ($emoticonIndex['prefix'] == 'image_emoticon' && $emoticonIndex['index'] <= 61 && $emoticonIndex['index'] >= 51)
-                    ? $emoticonsInfo['image_emoticon>51']
-                    : $emoticonsInfo[$emoticonIndex['prefix']];
-                $emoticonUrlPrefix = $emoticonUrlInfo['prefix'] ?? $emoticonIndex['prefix'];
-                $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonUrlInfo['class']}/{$emoticonUrlPrefix}{$emoticonIndex['index']}.{$emoticonUrlInfo['type']}";
+            $emoticonsIndex = [
+                'image_emoticon' => ['class' => 'client', 'type' => 'png'], // 泡泡/客户端新版表情（>=61）
+                //'image_emoticon' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 旧版泡泡
+                'image_emoticon>51' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 泡泡-贴吧十周年
+                'bearchildren_' => ['class' => 'bearchildren', 'type' => 'gif'], // 贴吧熊孩子
+                'tiexing_' => ['class' => 'tiexing', 'type' => 'gif'], // 痒小贱
+                'ali_' => ['class' => 'ali', 'type' => 'gif'], // 阿狸
+                'llb_' => ['class' => 'luoluobu', 'type' => 'gif'], // 罗罗布
+                'b' => ['class' => 'qpx_n', 'type' => 'gif'], // 气泡熊
+                'xyj_' => ['class' => 'xyj', 'type' => 'gif'], // 小幺鸡
+                'ltn_' => ['class' => 'lt', 'type' => 'gif'], // 冷兔
+                'bfmn_' => ['class' => 'bfmn', 'type' => 'gif'], // 白发魔女
+                'pczxh_' => ['class' => 'zxh', 'type' => 'gif'], // 张小盒
+                't_' => ['class' => 'tsj', 'type' => 'gif'], // 兔斯基
+                'wdj_' => ['class' => 'wdj', 'type' => 'png'], // 豌豆荚
+                'lxs_' => ['class' => 'lxs', 'type' => 'gif'], // 冷先森
+                'B_' => ['class' => 'bobo', 'type' => 'gif'], // 波波
+                'yz_' => ['class' => 'shadow', 'type' => 'gif'], // 影子
+                'w_' => ['class' => 'ldw', 'type' => 'gif'], // 绿豆蛙
+                '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
+            ];
+            $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item['text']);
+            $emoticonInfo = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2) ?? 1];
+            $emoticonInfo += ($emoticonInfo['prefix'] == 'image_emoticon' && $emoticonInfo['index'] <= 61 && $emoticonInfo['index'] >= 51)
+                ? $emoticonsIndex['image_emoticon>51']
+                : $emoticonsIndex[$emoticonInfo['prefix']];
+            if ($emoticonInfo['prefix'] == 'image_emoticon' && $emoticonInfo['index'] == null) {
+                $emoticonInfo['index'] = 1; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
+            }
+            $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonInfo['class']}/{$emoticonInfo['prefix']}{$emoticonInfo['index']}.{$emoticonInfo['type']}";
             ?>
             <img class="lazyload" data-src="{{ $emoticonUrl }}" alt="{{ $item['c'] }}" />
             @break
@@ -77,8 +79,8 @@ if (! function_exists('tiebaImageUrlProxy')) {
                 <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['origin_src'] ?? $item['src']) }}" />
             </div>
             @break
-        @case (4) {{-- {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
-            <a href="http://tieba.baidu.com/home/main" target="_blank">{{ $item['text'] }}</a>
+        @case (4) {{--@用户 {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
+            <a href="http://tieba.baidu.com/home/main?un={{ ltrim($item['text'], '@') }}" target="_blank">{{ $item['text'] }}</a>
             @break
         @case (5)
             {{--视频
