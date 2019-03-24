@@ -12,7 +12,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class ReplyQueue extends CrawlerQueue implements ShouldQueue
 {
@@ -28,7 +27,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $fid, int $tid, int $startPage)
     {
-        Log::info("Reply crawler queue dispatched with {$tid} in forum {$fid}, starts from page {$startPage}");
+        \Log::channel('crawler-info')->info("Reply crawler queue dispatched with {$tid} in forum {$fid}, starts from page {$startPage}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
@@ -115,6 +114,6 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
             }
         });
-        Log::info('Reply crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
+        \Log::channel('crawler-info')->info('Reply crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
     }
 }

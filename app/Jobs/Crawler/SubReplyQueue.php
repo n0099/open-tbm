@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 {
@@ -28,7 +27,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $fid, int $tid, int $pid)
     {
-        Log::info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$this->startPage}");
 
         $this->forumID = $fid;
         $this->threadID = $tid;
@@ -78,6 +77,6 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                 $currentCrawlingSubReply->delete(); // release current crawl queue lock
             }
         });
-        Log::info('Sub reply queue completed after ' . ($queueFinishTime - $this->queueStartTime));
+        \Log::channel('crawler-info')->info('Sub reply queue completed after ' . ($queueFinishTime - $this->queueStartTime));
     }
 }

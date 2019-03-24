@@ -44,7 +44,7 @@ abstract class Crawlable
 
     protected function getClientHelper(): ClientRequester
     {
-        /*
+        /* enable guzzle laravel debugbar
         $debugBar = resolve('debugbar');
 
         $timeline = $debugBar->getCollector('time');

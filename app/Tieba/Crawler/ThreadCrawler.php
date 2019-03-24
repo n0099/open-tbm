@@ -9,7 +9,6 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use Carbon\Carbon;
 use GuzzleHttp;
-use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
 
@@ -43,7 +42,7 @@ class ThreadCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        Log::info("Start to fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Start to fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$this->startPage}");
         ExceptionAdditionInfo::set(['parsingPage' => 1]);
 
         $tiebaClient = $this->getClientHelper();
@@ -68,7 +67,7 @@ class ThreadCrawler extends Crawlable
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
-                            Log::info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$pn}");
+                            \Log::channel('crawler-info')->info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/frs/page',
                                 [
@@ -96,7 +95,7 @@ class ThreadCrawler extends Crawlable
                 ]
             ))->promise()->wait();
         } catch (TiebaException $regularException) {
-            \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
+            \Log::channel('crawler-notice')->notice($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
         } catch (\Exception $e) {
             report($e);
         }

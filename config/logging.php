@@ -35,13 +35,31 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['common'],
         ],
 
-        'single' => [
+        'common' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/tbm-common.log'),
             'level' => 'debug',
+        ],
+
+        'crawler-info' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/tbm-crawler-info.log'),
+            'level' => 'info',
+        ],
+
+        'crawler-notice' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/tbm-crawler-notice.log'),
+            'level' => 'notice',
+        ],
+
+        'post-format' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/tbm-post-format.log'),
+            'level' => 'error',
         ],
 
         'daily' => [

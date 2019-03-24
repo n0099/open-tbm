@@ -46,11 +46,9 @@ class UserInfoParser
                     'gender' => Helper::nullableValidate($user['gender']),
                     'fansNickname' => isset($user['fans_nickname']) ? Helper::nullableValidate($user['fans_nickname']) : null,
                     'iconInfo' => Helper::nullableValidate($user['iconinfo'], true),
-                    'alaInfo' => (
-                        ! isset($user['ala_info']['lat'])
+                    'alaInfo' => ! isset($user['ala_info']['lat'])
                         || Helper::nullableValidate($user['ala_info']) != null
                         && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0)
-                    )
                         ? null
                         : Helper::nullableValidate($user['ala_info'], true),
                     'created_at' => $now,

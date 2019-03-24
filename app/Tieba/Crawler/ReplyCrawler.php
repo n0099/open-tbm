@@ -9,7 +9,6 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use Carbon\Carbon;
 use GuzzleHttp;
-use Illuminate\Support\Facades\Log;
 use function GuzzleHttp\json_decode;
 use function GuzzleHttp\json_encode;
 
@@ -43,7 +42,7 @@ class ReplyCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        Log::info("Start to fetch replies for thread, tid {$this->threadID}, page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Start to fetch replies for thread, tid {$this->threadID}, page {$this->startPage}");
         ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
 
         $tiebaClient = $this->getClientHelper();
@@ -66,7 +65,7 @@ class ReplyCrawler extends Crawlable
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
-                            Log::info("Fetch replies for thread, tid {$this->threadID}, page {$pn}");
+                            \Log::channel('crawler-info')->info("Fetch replies for thread, tid {$this->threadID}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/page',
                                 [
@@ -93,7 +92,7 @@ class ReplyCrawler extends Crawlable
                 ]
             ))->promise()->wait();
         } catch (TiebaException $regularException) {
-            \Log::warning($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
+            \Log::channel('crawler-notice')->notice($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
         } catch (\Exception $e) {
             report($e);
         }

@@ -12,7 +12,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class ThreadQueue extends CrawlerQueue implements ShouldQueue
 {
@@ -26,7 +25,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     public function __construct(int $forumID, string $forumName)
     {
-        Log::info("Thread crawler queue dispatched with {$forumID}({$forumName})");
+        \Log::channel('crawler-info')->info("Thread crawler queue dispatched with {$forumID}({$forumName})");
         $this->forumID = $forumID;
         $this->forumName = $forumName;
     }
@@ -125,6 +124,6 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 $currentCrawlingForum->delete(); // release current crawl queue lock
             }
         });
-        Log::info('Thread crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
+        \Log::channel('crawler-info')->info('Thread crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
     }
 }

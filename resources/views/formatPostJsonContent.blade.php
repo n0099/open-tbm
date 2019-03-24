@@ -8,6 +8,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
         return str_replace(['https://', 'http://'], $imageProxy, $imageUrl);
     }
 }
+try {
 ?>
 @foreach ($content as $item)
     @switch ($item['type'])
@@ -200,3 +201,7 @@ if (! function_exists('tiebaImageUrlProxy')) {
         @default
     @endswitch
 @endforeach
+<?php
+} catch (Exception $e) {
+    \Log::channel('post-format')->error($e);
+}
