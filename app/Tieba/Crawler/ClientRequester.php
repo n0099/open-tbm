@@ -2,27 +2,31 @@
 
 namespace App\Tieba\Crawler;
 
+use BadFunctionCallException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Promise\PromiseInterface;
+
 /**
  * Class ClientRequester
  *
  * @package App\Tieba\WebHelper
  */
-class ClientRequester extends \GuzzleHttp\Client
+class ClientRequester extends Client
 {
     /**
      * @param $method
      * @param string $uri
      * @param array $options
      *
-     * @return \GuzzleHttp\Promise\PromiseInterface
+     * @return PromiseInterface
      */
-    public function requestAsync($method, $uri = '', array $options = []): \GuzzleHttp\Promise\PromiseInterface
+    public function requestAsync($method, $uri = '', array $options = []): PromiseInterface
     {
         if (! isset($options['form_params'])) {
             throw new \InvalidArgumentException('Post form params must be determined');
         }
         if ($method != 'post') {
-            throw new \BadFunctionCallException('Client request must be HTTP POST');
+            throw new BadFunctionCallException('Client request must be HTTP POST');
         }
 
         $clientInfo = [

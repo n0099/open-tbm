@@ -4,6 +4,7 @@ namespace App\Tieba\Eloquent;
 
 use App\Eloquent\InsertOnDuplicateKey;
 use App\Eloquent\ModelHelper;
+use App\Tieba\Post\Post;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -59,7 +60,7 @@ abstract class PostModel extends Model
 
     abstract public function scopeTid(Builder $query, $tid): Builder;
 
-    abstract public function toPost(): \App\Tieba\Post\Post;
+    abstract public function toPost(): Post;
 
     /**
      * Override the parent relation instance method for passing valid forum id to new related model.

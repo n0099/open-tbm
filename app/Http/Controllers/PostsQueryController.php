@@ -7,7 +7,6 @@ use App\Helper;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
-use App\Tieba\Eloquent\ReplyModel;
 use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Post\Post;
 use Carbon\Carbon;

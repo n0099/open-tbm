@@ -2,6 +2,8 @@
 
 namespace App\Tieba\Eloquent;
 
+use App\Tieba\Post\Post;
+use App\Tieba\Post\SubReply;
 use Illuminate\Database\Eloquent\Builder;
 
 class SubReplyModel extends PostModel
@@ -64,8 +66,8 @@ class SubReplyModel extends PostModel
         return $this->scopeIDType($query, 'spid', $spid);
     }
 
-    public function toPost(): \App\Tieba\Post\Post
+    public function toPost(): Post
     {
-        return new \App\Tieba\Post\SubReply($this);
+        return new SubReply($this);
     }
 }

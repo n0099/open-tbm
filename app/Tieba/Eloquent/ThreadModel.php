@@ -2,6 +2,8 @@
 
 namespace App\Tieba\Eloquent;
 
+use App\Tieba\Post\Post;
+use App\Tieba\Post\Thread;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -65,8 +67,8 @@ class ThreadModel extends PostModel
         return $this->scopeIDType($query, 'tid', $tid);
     }
 
-    public function toPost(): \App\Tieba\Post\Post
+    public function toPost(): Post
     {
-        return new \App\Tieba\Post\Thread($this);
+        return new Thread($this);
     }
 }

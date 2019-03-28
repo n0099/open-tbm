@@ -4,7 +4,6 @@ namespace App\Jobs\Crawler;
 
 use App\Eloquent\CrawlingPostModel;
 use App\Tieba\Crawler;
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

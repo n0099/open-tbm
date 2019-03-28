@@ -2,6 +2,8 @@
 
 namespace App\Tieba\Eloquent;
 
+use App\Tieba\Post\Post;
+use App\Tieba\Post\Reply;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReplyModel extends PostModel
@@ -67,8 +69,8 @@ class ReplyModel extends PostModel
         return $this->scopeIDType($query, 'pid', $pid);
     }
 
-    public function toPost(): \App\Tieba\Post\Post
+    public function toPost(): Post
     {
-        return new \App\Tieba\Post\Reply($this);
+        return new Reply($this);
     }
 }

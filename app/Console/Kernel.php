@@ -2,6 +2,8 @@
 
 namespace App\Console;
 
+use App\Jobs\Crawler\ThreadQueue;
+use App\Tieba\Eloquent\ForumModel;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -24,8 +26,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        foreach (\App\Tieba\Eloquent\ForumModel::all() as $forum) {
-            \App\Jobs\Crawler\ThreadQueue::dispatch($forum->fid, $forum->name)->onQueue('crawler');
+        foreach (ForumModel::all() as $forum) {
+            ThreadQueue::dispatch($forum->fid, $forum->name)->onQueue('crawler');
         }
     }
 
