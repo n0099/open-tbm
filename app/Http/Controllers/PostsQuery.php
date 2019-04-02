@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
 use function GuzzleHttp\json_encode;
 use Illuminate\Validation\Rule;
 
-class PostsQueryController extends Controller
+class PostsQuery extends Controller
 {
     private $pagingPerPageItems = 200;
 
