@@ -36,7 +36,7 @@
         </div>
         <div class="form-group form-row">
             <label class="col-2 col-form-label" for="queryStatsTime">时间范围</label>
-            <div id="queryStatsTime" class="col-6 input-group">
+            <div id="queryStatsTime" class="col-8 input-group">
                 <div class="input-group-prepend">
                     <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
                 </div>
@@ -59,6 +59,103 @@
         'use strict';
         $$initialNavBar('stats');
 
+        let statsChartDOM;
+        let statsChart;
+        let initialStatsChart = () => {
+            statsChartDOM = $('#statsChartDOM');
+            statsChart.setOption({
+                title: {
+                    text: '吧贴量统计'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: { show: true, yAxisIndex: 'none' },
+                        restore: { show: true },
+                        dataView: { show: true },
+                        saveAsImage: { show: true },
+                        magicType: { show: true, type: ['stack', 'tiled'] },
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        filterMode: 'filter',
+                        start: 90,
+                        bottom: 0
+                    },
+                    {
+                        type: 'inside',
+                        filterMode: 'filter'
+                    }
+                ],
+                legend: {},
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                series: [
+                    {
+                        id: 'thread',
+                        name: '主题贴',
+                        type: 'line',
+                        symbolSize: 2,
+                        smooth: true,
+                        sampling: 'average',
+                        stack: 'postsCount'
+                    },
+                    {
+                        id: 'reply',
+                        name: '回复贴',
+                        type: 'line',
+                        symbolSize: 2,
+                        smooth: true,
+                        sampling: 'average',
+                        stack: 'postsCount'
+                    },
+                    {
+                        id: 'subReply',
+                        name: '楼中楼',
+                        type: 'line',
+                        symbolSize: 2,
+                        smooth: true,
+                        sampling: 'average',
+                        stack: 'postsCount'
+                    }
+                ]
+            });
+            statsChart = echarts.init(statsChartDOM[0], 'light');
+        };
+
+        let loadStatsChart = (statsQuery, forumsList) => {
+            statsChartDOM.addClass('loading');
+            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
+                $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(statsQuery, reCAPTCHAToken)))
+                    .done((jsonData) => {
+                        let series = [];
+                        _.each(jsonData, (datas, postType) => {
+                            series.push({
+                                id: postType,
+                                data: _.map(datas, _.values)
+                            });
+                        });
+                        statsChart.setOption({
+                            title: {
+                                text: `${_.find(forumsList, { fid: statsQuery.fid }).name}吧贴量统计`
+                            },
+                            series
+                        });
+                    })
+                    .fail($$apiErrorInfoParse)
+                    .always(() => statsChartDOM.removeClass('loading'));
+            });
+        };
+
         let statsChartVue = new Vue({
             el: '#statsForm',
             data: {
@@ -70,12 +167,6 @@
                 },
                 submitDisabled: true
             },
-            created: function () {
-                $$loadForumsList.then((forumsList) => {
-                    this.$data.forumsList = forumsList;
-                });
-                new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
-            },
             watch: {
                 statsQuery: function (statsQuery) {
                     this.$data.submitDisabled = _.difference(_.keys(statsQuery), ['fid', 'timeRange', 'startTime', 'endTime']).length !== 0
@@ -83,104 +174,20 @@
             },
             methods: {
                 submitQueryForm: function () {
+                    // fully refresh to regenerate a new echarts instance
+                    statsChart.clear();
+                    initialStatsChart();
                     statsChartDOM.addClass('loading');
-                    $$reCAPTCHACheck().then((token) => {
-                        $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(this.$data.statsQuery, token))).done((jsonData) => {
-                            let series = [];
-                            _.each(jsonData, (datas, postType) => {
-                                series.push({
-                                    id: postType,
-                                    data: _.map(datas, _.values)
-                                });
-                            });
-                            statsChart.setOption({
-                                title: {
-                                    text: `${_.find(this.$data.forumsList, { fid: this.$data.statsQuery.fid }).name}吧贴量统计`
-                                },
-                                series
-                            });
-                            statsChartDOM.removeClass('loading');
-                        }).fail($$apiErrorInfoParse);
-                    });
+                    loadStatsChart(this.$data.statsQuery, this.$data.forumsList);
                 }
+            },
+            mounted: function () {
+                initialStatsChart();
+                $$loadForumsList.then((forumsList) => {
+                    this.$data.forumsList = forumsList;
+                });
+                new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
             }
-        });
-
-        let statsChartDOM = $('#statsChartDOM');
-        let statsChart = echarts.init(statsChartDOM[0], 'light');
-        statsChart.setOption({
-            title: {
-                text: '吧贴量统计'
-            },
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: { type: 'shadow' }
-            },
-            toolbox: {
-                feature: {
-                    dataZoom: { show: true, yAxisIndex: 'none' },
-                    restore: { show: true },
-                    dataView: { show: true },
-                    saveAsImage: { show: true },
-                    magicType: { show: true, type: ['stack', 'tiled'] },
-                }
-            },
-            dataZoom: [
-                {
-                    type: 'slider',
-                    xAxisIndex: 0,
-                    filterMode: 'filter',
-                    start: 90,
-                    bottom: 0
-                },
-                {
-                    type: 'inside',
-                    xAxisIndex: 0,
-                    filterMode: 'filter'
-                }
-            ],
-            legend: {
-                data: ['主题贴', '回复贴', '楼中楼']
-            },
-            xAxis: {
-                type: 'time'
-            },
-            yAxis: {
-                type: 'value',
-            },
-            series: [
-                {
-                    id: 'thread',
-                    name: '主题贴',
-                    type: 'line',
-                    symbolSize: 2,
-                    smooth: true,
-                    sampling: 'average',
-                    stack: 'postsCount'
-                },
-                {
-                    id: 'reply',
-                    name: '回复贴',
-                    type: 'line',
-                    symbolSize: 2,
-                    smooth: true,
-                    sampling: 'average',
-                    stack: 'postsCount'
-                },
-                {
-                    id: 'subReply',
-                    name: '楼中楼',
-                    type: 'line',
-                    symbolSize: 2,
-                    smooth: true,
-                    sampling: 'average',
-                    label: {
-                        show: true,
-                        position: 'top'
-                    },
-                    stack: 'postsCount'
-                }
-            ]
         });
     </script>
 @endsection

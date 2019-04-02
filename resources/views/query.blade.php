@@ -731,7 +731,7 @@
                         this.$router.push({ path: `/query${queryParamsPath}`, query: customQueryParams });
                     },
                     loadPageData: function (routeParams, routeQueryStrings, shouldReplacePage) {
-                        let preparePostsData = (data) => {
+                        let groupSubRepliesByAuthor = (data) => {
                             data.threads.forEach((thread) => {
                                 thread.replies.forEach((reply) => {
                                     reply.subReplies.forEach((subReply, index, subReplies) => {
@@ -755,40 +755,48 @@
                             return data;
                         };
 
-                        this.$data.loadingNewPosts = true;
+                        let ajaxStartTime = Date.now();
+                        let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings);
                         let ajaxErrorCallback = () => {
                             this.$data.postsPages = []; // clear posts pages data will emit posts pages updated event
                             $('#error-404-template').show();
                         };
-                        let ajaxStartTime = Date.now();
-                        let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings);
                         if (_.isEmpty(queryQueryStrings)) {
                             new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
-                            ajaxErrorCallback();
+                            this.$data.postsPages = []; // clear posts pages data will emit posts pages updated event
+                            $('#first-loading-placeholder').hide();
                             return;
                         }
+
+                        if (window.previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
+                            window.previousPostsQueryAjax.abort();
+                        }
+                        this.$data.loadingNewPosts = true;
                         $$reCAPTCHACheck().then((token) => {
-                            $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token))).done((jsonData) => {
-                                jsonData = preparePostsData(jsonData);
-                                let pagesInfo = jsonData.pages;
+                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token)));
+                            window.previousPostsQueryAjax.done((jsonData) => {
+                                    jsonData = groupSubRepliesByAuthor(jsonData);
+                                    let pagesInfo = jsonData.pages;
 
-                                // is requesting new pages data on same query params or loading new data on different query params
-                                if (shouldReplacePage) {
-                                    $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
-                                    this.$data.postsPages = [jsonData];
-                                } else {
-                                    this.$data.postsPages.push(jsonData);
-                                }
-                                if (pagesInfo.totalItems === 0) {
+                                    // is requesting new pages data on same query params or loading new data on different query params
+                                    if (shouldReplacePage) {
+                                        $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
+                                        this.$data.postsPages = [jsonData];
+                                    } else {
+                                        this.$data.postsPages.push(jsonData);
+                                    }
+                                    if (pagesInfo.totalItems === 0) {
+                                        ajaxErrorCallback();
+                                    }
+
+                                    new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                                    this.changeDocumentTitle(this.$route);
+                                }).fail((jqXHR) => {
+                                    $$apiErrorInfoParse(jqXHR);
                                     ajaxErrorCallback();
-                                }
-
-                                new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                                this.changeDocumentTitle(this.$route);
-                            }).fail((jqXHR) => {
-                                ajaxErrorCallback();
-                                $$apiErrorInfoParse(jqXHR);
-                            });
+                                }).always(() => {
+                                    this.$data.loadingNewPosts = false
+                                });
                         });
                     },
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
@@ -839,8 +847,6 @@
                         }
                     },
                     postsPages: function () {
-                        this.$data.loadingNewPosts = false;
-
                         this.$nextTick(() => { // run jquery on posts lists after vue components stop updating
                             $('.sub-reply-hide-link').hide();
 
@@ -1059,6 +1065,7 @@
                                     // comment sub dom and set css height to keep scroll fixed
                                     replyItem.css('height', replyItem.height()).html(document.createComment(replyItem.html()));
                                     replyItem.toggleClass('posts-list-placeholder', true).fadeTo('slow', 0.5);
+                                    replyItem.children('.lazyloading').removeClass('lazyloading').addClass('lazyload');
                                     replyItem.off('disappear').appear().on('appear', _.throttle((event) => {
                                         showReplyItem($(event.currentTarget), false);
                                     }, 100, { leading: false }));
