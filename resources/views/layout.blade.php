@@ -17,6 +17,7 @@
 
             gtag('config', '{{ $GATrackingId }}');
         </script>
+        <link href="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.css" rel="stylesheet">
@@ -24,38 +25,6 @@
         <link href="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/themes/light-border.css" rel="stylesheet">
         <link href="{{ $baseUrl }}/css/bootstrap-callout.css" rel="stylesheet">
         <style>
-            @media (max-width: 991.98px) {
-                .container {
-                    max-width: 100%;
-                }
-            }
-            @media screen and (orientation: portrait) {
-                .horizontal-mobile-message {
-                    display: block
-                }
-            }
-            @media screen and (orientation: landscape) {
-                .horizontal-mobile-message {
-                    display: none
-                }
-            }
-
-            .horizontal-mobile-message {
-                z-index: 1040;
-            }
-
-            .footer-outer {
-                background-color: #2196f3;
-            }
-            .footer-inner {
-                background-color: rgba(0,0,0,.2);
-            }
-
-            * {
-                font-weight: 300;
-                font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
-            }
-
             .echarts.loading {
                 background: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
             }
@@ -84,6 +53,37 @@
             .tieba-image-expanded {
                 max-width: 80%;
                 cursor: zoom-out;
+            }
+
+            .footer-outer {
+                background-color: #2196f3;
+            }
+            .footer-inner {
+                background-color: rgba(0,0,0,.2);
+            }
+
+            * {
+                font-weight: 300;
+                font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
+            }
+
+            @media (max-width: 991.98px) {
+                .container {
+                    max-width: 100%;
+                }
+            }
+            @media screen and (orientation: portrait) {
+                .horizontal-mobile-message {
+                    display: block
+                }
+            }
+            @media screen and (orientation: landscape) {
+                .horizontal-mobile-message {
+                    display: none
+                }
+            }
+            .horizontal-mobile-message {
+                z-index: 1040;
             }
 
             ::-webkit-scrollbar
@@ -172,22 +172,57 @@
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/umd/index.all.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.js"></script>
         <script>
             'use strict';
+
+            moment.locale('zh-cn');
+
+            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
+            NProgress.configure({ trickleSpeed: 200 });
+            $(document).on('ajaxStart', () => {
+                NProgress.start();
+                $('body').css('cursor', 'progress');
+            }).on('ajaxStop', () => {
+                NProgress.done();
+                $('body').css('cursor', null);
+            });
+
+            let $$tippyInital = () => {
+                //tippy('[data-tippy]');
+                tippy('[data-tippy-content]');
+            };
+            tippy.setDefaults({
+                animation: 'perspective',
+                //followCursor: true,
+                interactive: true,
+                theme: 'light-border'
+            });
+
+            // resize all echarts instance when viewport size changed
+            $(window).on('resize', _.throttle(() => {
+                $('.echarts').each((k, echarts) => {
+                    echarts = echarts.getInstanceByDom(echarts);
+                    if (echarts != null) {
+                        echarts.resize();
+                    }
+                });
+            }, 1000, { leading: false }));
+
             let $$baseUrl = '{{ $baseUrl }}';
             let $$httpDoamin = '{{ $httpDomain }}';
             let $$baseUrlDir = '{{ $baseUrlDir }}';
             let $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
-
             let $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
                 NProgress.start();
                 $('body').css('cursor', 'progress');
                 grecaptcha.ready(() => {
-                    grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname }).then((token) => {
-                        resolve({ reCAPTCHA: token });
-                    }, () => {
-                        new Noty({ timeout: 3000, type: 'error', text: 'reCAPTCHA验证失败'}).show();
-                    });
+                    grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname })
+                        .then((token) => {
+                            resolve({ reCAPTCHA: token });
+                        }, () => {
+                            new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'}).show();
+                        });
                 });
             });
             let $$loadForumsList = new Promise((resolve, reject) => {
@@ -239,27 +274,6 @@
                 $('.tieba-image-zoom-in').on('click', registerZoomInEvent);
                 $('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
             };
-
-            //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
-            NProgress.configure({ trickleSpeed: 200 });
-            $(document).on('ajaxStart', () => {
-                NProgress.start();
-                $('body').css('cursor', 'progress');
-            }).on('ajaxStop', () => {
-                NProgress.done();
-                $('body').css('cursor', 'auto');
-            });
-
-            let $$tippyInital = () => {
-                //tippy('[data-tippy]');
-                tippy('[data-tippy-content]');
-            };
-            tippy.setDefaults({
-                animation: 'perspective',
-                //followCursor: true,
-                interactive: true,
-                theme: 'light-border'
-            });
 
             let $$getTiebaPostLink = (tid, pid = null, spid = null) => {
                 if (spid != null) {
