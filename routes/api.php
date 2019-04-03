@@ -69,10 +69,11 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
 
         return json_encode($forumPostsCount);
     });
-    Route::get('/bilibiliVote/top50CandidatesVotesCountResult', 'Topic\BilibiliVote@top50CandidatesVotesCountResult');
+    Route::get('/bilibiliVote/top50CandidatesVotesCount', 'Topic\BilibiliVote@top50CandidatesVotesCount');
     Route::get('/bilibiliVote/top5CandidatesVotesCountByTime', 'Topic\BilibiliVote@top5CandidatesVotesCountByTime');
     Route::get('/bilibiliVote/top10CandidatesTimeline', 'Topic\BilibiliVote@top10CandidatesTimeline');
-    Route::get('/bilibiliVote/getAllVotesCountByTime', 'Topic\BilibiliVote@getAllVotesCountByTime');
+    Route::get('/bilibiliVote/allVotesCountByTime', 'Topic\BilibiliVote@allVotesCountByTime');
+    Route::get('/bilibiliVote/allCandidatesVotesCount', 'Topic\BilibiliVote@allCandidatesVotesCount');
 });
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {

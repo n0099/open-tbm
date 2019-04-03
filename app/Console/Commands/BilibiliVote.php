@@ -45,7 +45,7 @@ class BilibiliVote extends Command
                 //$votersUsername = UserModel::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
                 foreach ($voteReplies as $voteReply) {
                     $voterUid = $voteReply['authorUid'];
-                    $voteRegex = Regex::match('/"text": "(.*?)投(.*?)号候选人/', $voteReply['content'] ?? '');
+                    $voteRegex = Regex::match('/"text":"(.*?)投(.*?)号候选人/', json_encode($voteReply['content']) ?? '');
                     $voteBy = $voteRegex->groupOr(1, '');
                     $voteFor = $voteRegex->groupOr(2, '');
                     $isVoteValid = $voteRegex->hasMatch()

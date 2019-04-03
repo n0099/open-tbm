@@ -25,7 +25,28 @@ class BilibiliVote
             ->toArray();
     }
 
-    public static function top50CandidatesVotesCountResult(Request $request)
+    public static function allCandidatesVotesCount(Request $request)
+    {
+        return BilibiliVoteModel::select(['voteFor', 'isValid'])
+            ->selectRaw('COUNT(*) AS count')
+            ->groupBy('voteFor', 'isValid')
+            ->orderBy('count', 'DESC')
+            ->get()->toJson();
+    }
+
+    public static function allVotesCountByTime(Request $request)
+    {
+        $request->validate([
+            'timeRange' => Rule::in(array_keys(static::$groupTimeRangeRawSQL))
+        ]);
+        return BilibiliVoteModel::selectRaw(static::$groupTimeRangeRawSQL[$request->query()['timeRange']])
+            ->selectRaw('COUNT(*) AS count, isValid')
+            ->groupBy('time', 'isValid')
+            ->orderBy('time', 'DESC')
+            ->get()->toJson();
+    }
+
+    public static function top50CandidatesVotesCount(Request $request)
     {
         $top50Candidates = static::getTopVotesCandidates(50);
         return BilibiliVoteModel::select(['voteFor', 'isValid'])
@@ -47,18 +68,6 @@ class BilibiliVote
             ->addSelect(['voteFor', 'isValid'])
             ->whereIn('voteFor', $top10Candidates)
             ->groupBy('time', 'voteFor', 'isValid')
-            ->orderBy('time', 'DESC')
-            ->get()->toJson();
-    }
-
-    public static function getAllVotesCountByTime(Request $request)
-    {
-        $request->validate([
-            'timeRange' => Rule::in(array_keys(static::$groupTimeRangeRawSQL))
-        ]);
-        return BilibiliVoteModel::selectRaw(static::$groupTimeRangeRawSQL[$request->query()['timeRange']])
-            ->selectRaw('COUNT(*) AS count, isValid')
-            ->groupBy('time', 'isValid')
             ->orderBy('time', 'DESC')
             ->get()->toJson();
     }

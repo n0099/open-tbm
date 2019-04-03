@@ -4,34 +4,71 @@
 
 @section('container')
     <style>
-        #countStatsChartDOM {
-            height: 20em;
+        #top50CandidatesCountsChartDOM {
+            height: 32em;
         }
-        #timeLineStatsChartDOM {
+        #candidatesTimelineChartDOM {
             height: 40em;
+        }
+        #top5CandidatesCountsByTimeChartDOM {
+            height: 40em;
+        }
+        #countsByTimeChartDOM {
+            height: 20em;
         }
     </style>
     <div id="bilibiliVote" class="mt-2">
-        <div class="justify-content-end row">
-            <div class="col-3 custom-checkbox custom-control">
-                <input v-model="autoRefresh" id="chkAutoRefresh" type="checkbox" class="custom-control-input">
-                <label class="custom-control-label" for="chkAutoRefresh"><del>每分钟自动刷新</del></label>
-            </div>
-        </div>
-        <div id="countStatsChartDOM" class="echarts loading row mt-2"></div>
+        <p>有效票定义:</p>
+        <ul>
+            <li>投票人吧内等级大于4</li>
+            <li><del>投票者回复内本人ID（xxx投yyy中xxx）与百度ID（非昵称）一致</del></li>
+            <li>被投候选人序号有效（1~1056）</li>
+            <li>此前未有过有效投票（即改票）</li>
+        </ul>
+        <p><a href="https://tieba.baidu.com/p/6059516291" target="_blank">关于启动本吧吧主招募的公示</a></p>
+        <p><a href="https://tieba.baidu.com/p/6062186860" target="_blank">【吧主招募】bilibili吧吧主候选人吧友投票贴</a></p>
+        <p><a href="https://tieba.baidu.com/p/6063655698" target="_blank">Bilibili吧吧主招募投票结果公示</a></p>
+        <p><a href="https://tieba.baidu.com/p/6061937239" target="_blank">吧务候选名单详细数据，含精品数（截止3月10日00时15分）</a></p>
+        <p><a href="https://tieba.baidu.com/p/6062515014" target="_blank">B吧吧主候选人 支持率Top10 含支持者等级分布</a></p>
+        <p><a href="https://tieba.baidu.com/p/6062736510" target="_blank">【数据分享】炎魔 五娃 奶茶的支持者都关注哪些贴吧？</a></p>
+        <p><a href="https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
+        <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
+        <hr />
+        <div id="top50CandidatesCountsChartDOM" class="echarts loading row mt-2"></div>
+        <hr />
+        <div id="candidatesTimelineChartDOM" class="echarts loading row mt-2"></div>
+        <hr />
         <div class="justify-content-end form-group form-row">
-            <label class="col-2 col-form-label" for="queryStatsTop10CandidatesTimeRange">时间粒度</label>
+            <label class="col-2 col-form-label text-right" for="queryCandidateCountByTimeTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
                     <span class="input-group-text"><i class="far fa-clock"></i></span>
                 </div>
-                <select v-model="statsQuery.top10CandidatesTimeRange" id="queryStatsTop10CandidatesTimeRange" class="form-control">
+                <select v-model="statsQuery.candidateCountByTimeTimeRange" id="queryCandidateCountByTimeTimeRange" class="form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                 </select>
             </div>
         </div>
-        <div id="timeLineStatsChartDOM" class="echarts loading row mt-2"></div>
+        <div id="top5CandidatesCountsByTimeChartDOM" class="echarts loading row mt-2"></div>
+        <hr />
+        <div class="justify-content-end form-group form-row">
+            <label class="col-2 col-form-label text-right" for="queryCountsByTimeTimeRange">时间粒度</label>
+            <div class="col-2 input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                </div>
+                <select v-model="statsQuery.countsByTimeTimeRange" id="queryCountsByTimeTimeRange" class="form-control">
+                    <option value="minute">分钟</option>
+                    <option value="hour">小时</option>
+                </select>
+            </div>
+        </div>
+        <div id="countsByTimeChartDOM" class="echarts loading row mt-2"></div>
+        <hr />
+        <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData">
+            <a slot="candidateName" slot-scope="text" :href="$data.$$getTiebaUserLink(text)">@{{ text }}</a>
+        </a-table>
     </div>
 @endsection
 
@@ -40,115 +77,430 @@
         'use strict';
         $$initialNavBar('bilibiliVote');
 
-        let bilibiliVoteVue = new Vue({
-            el: '#bilibiliVote',
-            data: {
-                autoRefresh: false,
-                statsQuery: {
-                    top10CandidatesTimeRange: 'minute'
-                }
-            },
-            watch: {
-                autoRefresh: function (autoRefresh) {
-                    if (autoRefresh) {
-                        this.autoRefreshIntervalID = setInterval(() => {
-                            $$reCAPTCHACheck().then((token) => {
-                                loadTop10CandidatesCounts(token);
-                            });
-                        }, 60000); // refresh data every minute
-                    } else {
-                        clearInterval(this.autoRefreshIntervalID);
+        let top50CandidatesCountsChartDOM;
+        let top50CandidatesCountsChart;
+        let initialTop50CandidatesCountsChart = () => {
+            top50CandidatesCountsChartDOM = $('#top50CandidatesCountsChartDOM');
+            top50CandidatesCountsChart = echarts.init(top50CandidatesCountsChartDOM[0]);
+            top50CandidatesCountsChart.setOption({
+                title: {
+                    text: 'bilibili吧吧主公投 前50候选人票数',
+                    subtext: '候选人间线上数字为与前一人票差 数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+                },
+                axisPointer: {
+                    link: { xAxisIndex: 'all' }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: { show: true, yAxisIndex: 'none' },
+                        restore: { show: true },
+                        dataView: { show: true },
+                        saveAsImage: { show: true },
+                        magicType: { show: true, type: ['stack', 'tiled'] },
                     }
                 },
-                'statsQuery.top10CandidatesTimeRange': function (top10CandidatesTimeRange) {
-                    $$reCAPTCHACheck().then((token) => {
-                        loadTop10CandidatesTimelineStats(token, top10CandidatesTimeRange);
-                    });
-                }
-            },
-            methods: {
-                formatCandidateNameById: function (id) {
-                    return `${id}号\n${this.$data.candidatesName[id - 1]}`;
-                }
-            },
-            created: function () {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((jsonData) => {
-                    this.$data.candidatesName = jsonData;
-                }).fail($$apiErrorInfoParse);
-                $$reCAPTCHACheck().then((token) => {
-                    countStatsChart.setOption({
-                        title: {
-                            text: 'bilibili吧吧主公投 前10票数',
-                            subtext: '候选人间线上数字为与前一人票差 数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+                legend: { left: '30%' },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        filterMode: 'filter',
+                        xAxisIndex: [0, 1],
+                        startValue: 0,
+                        endValue: 9,
+                        bottom: 0
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: [0, 1],
+                        filterMode: 'filter'
+                    }
+                ],
+                grid: [
+                    { height: '35%' },
+                    { height: '40%', top: '58%' }
+                ],
+                xAxis: [
+                    {
+                        type: 'category',
+                        axisLabel: { interval: 0, rotate: 30 }
+                    },
+                    {
+                        type: 'category',
+                        axisLabel: { show: false },
+                        gridIndex: 1,
+                        position: 'top'
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        splitLine: { show: false },
+                        splitArea: { show: true }
+                    },
+                    {
+                        type: 'value',
+                        splitLine: { show: false },
+                        splitArea: { show: true },
+                        inverse: true,
+                        gridIndex: 1
+                    }
+                ],
+                series: [
+                    {
+                        id: 'officialValidCount',
+                        name: '贴吧官方统计有效票',
+                        type: 'bar',
+                        encode: {
+                            x: 'voteFor',
+                            y: 'officialValidCount'
+                        }
+                    },
+                    {
+                        id: 'validCount',
+                        name: '有效票',
+                        type: 'bar',
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#fe980e'
                         },
-                        tooltip: {
-                            trigger: 'axis',
-                            axisPointer: { type: 'shadow' }
-                        },
-                        toolbox: {
-                            feature: {
-                                dataZoom: { show: true, yAxisIndex: 'none' },
-                                restore: { show: true },
-                                dataView: { show: true },
-                                saveAsImage: { show: true },
-                                magicType: { show: true, type: ['stack', 'tiled'] },
-                            }
-                        },
-                        legend: {
-                            data: ['有效票', '无效票', '有效投票者平均等级', '无效投票者平均等级']
-                        },
-                        xAxis: {
-                            type: 'category',
-                            axisLabel: { interval: 0, rotate: 30 }
-                        },
-                        yAxis: [
-                            {
-                                type: 'value'
-                            },
-                            {
-                                type: 'value',
-                                splitLine: { show: false }
-                            }
-                        ],
-                        series: [
-                            {
-                                id: 'validCount',
-                                name: '有效票',
-                                type: 'bar',
-                                label: {
-                                    show: true,
-                                    position: 'top',
-                                    color: '#fe980e'
+                        encode: {
+                            x: 'voteFor',
+                            y: 'validCount'
+                        }
+                    },
+                    {
+                        id: 'invalidCount',
+                        name: '无效票',
+                        type: 'bar',
+                        z: 0,
+                        barGap: '0%',
+                        encode: {
+                            x: 'voteFor',
+                            y: 'invalidCount'
+                        }
+                    },
+                    {
+                        id: 'validVotesVoterAvgGrade',
+                        name: '有效投票者平均等级',
+                        type: 'bar',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'voteFor',
+                            y: 'validAvgGrade'
+                        }
+                    },
+                    {
+                        id: 'invalidVotesVoterAvgGrade',
+                        name: '无效投票者平均等级',
+                        type: 'bar',
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        barGap: '0%',
+                        encode: {
+                            x: 'voteFor',
+                            y: 'invalidAvgGrade'
+                        }
+                    }
+                ]
+            });
+        };
+        let loadTop50CandidatesCountsChart = () => {
+            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50CandidatesVotesCount`, $.param(reCAPTCHAToken))
+                    .done((jsonData) => {
+                        /* dataset would be like
+                            [
+                                { voteFor: 1, validVotesCount: 1, validVotesAvgGrade: 18, invalidVotesCount: 1, invalidVotesAvgGrade: 18 },
+                                ...
+                            ]
+                        */
+                        let dataset = _.chain(jsonData)
+                            .groupBy('voteFor')
+                            .sortBy((group) => jsonData.indexOf(group[0])) // sort grouped groups by it's index of first item in origin array
+                            .map((candidateVotes) => {
+                                let validVotes = _.find(candidateVotes, { isValid: 1 });
+                                let validCount = validVotes == null ? 0 : validVotes.count;
+                                let validAvgGrade = validVotes == null ? 0 : validVotes.voterAvgGrade;
+                                let invalidVotes = _.find(candidateVotes, { isValid: 0 });
+                                let invalidCount = invalidVotes == null ? 0 : invalidVotes.count;
+                                let invalidAvgGrade = invalidVotes == null ? 0 : invalidVotes.voterAvgGrade;
+                                let officialValidCount = _.find(bilibiliVoteVue.$data.top50OfficialValidVotesCount, { voteFor: parseInt(candidateVotes[0].voteFor) })
+                                officialValidCount = officialValidCount == null ? 0 : officialValidCount.officialValidCount;
+                                return {
+                                    voteFor: bilibiliVoteVue.formatCandidateNameById(candidateVotes[0].voteFor),
+                                    validCount,
+                                    validAvgGrade,
+                                    invalidCount,
+                                    invalidAvgGrade,
+                                    officialValidCount
+                                }
+                            })
+                            .value();
+
+                        let valiCounts = _.map(dataset, 'validCount');
+                        let validCountsDiffWithPrevious = _.map(valiCounts, (count, index) => {
+                            return [
+                                {
+                                    label: {
+                                        show: true,
+                                        position: 'middle',
+                                        formatter: (-(count - valiCounts[index - 1])).toString()
+                                    },
+                                    coord: [index, count]
                                 },
-                                z: 1 // prevent label covered by invalidCount categroy
-                            },
-                            {
-                                id: 'invalidCount',
-                                name: '无效票',
-                                type: 'bar',
-                                z: 0
-                            },
-                            /*{
-                                id: 'validVotesVoterAvgGrade',
-                                name: '有效投票者平均等级',
+                                {
+                                    coord: [index - 1, valiCounts[index - 1]]
+                                }
+                            ];
+                        });
+                        validCountsDiffWithPrevious.shift(); // first candidate doesn't needs to exceed anyone
+
+                        top50CandidatesCountsChart.setOption({
+                            dataset: { source: dataset },
+                            series: [
+                                {
+                                    id: 'validCount',
+                                    markLine: {
+                                        lineStyle: {
+                                            normal: { type: 'dashed' }
+                                        },
+                                        symbol: 'none',
+                                        data: validCountsDiffWithPrevious
+                                    },
+                                }
+                            ],
+                        });
+                    })
+                    .always(() => top50CandidatesCountsChartDOM.removeClass('loading'));
+            });
+        };
+
+        let top5CandidatesCountsByTimeChartDOM;
+        let top5CandidatesCountsByTimeChart;
+        let initialTop5CandidatesCountsByTimeChart = () => {
+            top5CandidatesCountsByTimeChartDOM = $('#top5CandidatesCountsByTimeChartDOM');
+            top5CandidatesCountsByTimeChart = echarts.init(top5CandidatesCountsByTimeChartDOM[0]);
+            top5CandidatesCountsByTimeChart.setOption({
+                title: {
+                    text: 'bilibili吧吧主公投 前5票数分时增量',
+                    subtext: '数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+                },
+                axisPointer: {
+                    link: { xAxisIndex: 'all' }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                },
+                legend: {
+                    type: 'scroll',
+                    left: '30%'
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        xAxisIndex: [0, 1],
+                        filterMode: 'filter',
+                        end: 100,
+                        bottom: '46%'
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: [0, 1],
+                        filterMode: 'filter'
+                    }
+                ],
+                grid: [
+                    { height: '35%' },
+                    { height: '35%', top: '60%' }
+                ],
+                xAxis: [
+                    {
+                        type: 'time'
+                    },
+                    {
+                        type: 'time',
+                        gridIndex: 1,
+                        position: 'top'
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                    },
+                    {
+                        type: 'value',
+                        gridIndex: 1,
+                    }
+                ]
+            });
+        };
+        let loadTop5CandidatesCountsByTimeChart = (timeRange) => {
+            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top5CandidatesVotesCountByTime`,
+                    $.param(_.merge({ timeRange }, reCAPTCHAToken)))
+                    .done((jsonData) => {
+                        let top10Candidates = _.uniq(_.map(_.filter(jsonData, { isValid: 1 }), 'voteFor')); // not order by votes count
+                        let validVotes = _.filter(jsonData, { isValid: 1 });
+                        let invalidVotes = _.filter(jsonData, { isValid: 0 });
+
+                        let series = [];
+                        _.each(top10Candidates, (candidateId) => {
+                            series.push({
+                                name: `${candidateId}号有效票增量`,
                                 type: 'line',
-                                yAxisIndex: 1
-                            },
-                            {
-                                id: 'invalidVotesVoterAvgGrade',
-                                name: '无效投票者平均等级',
+                                symbolSize: 2,
+                                smooth: true,
+                                data: _.map(_.filter(validVotes, { voteFor: candidateId }), (i) => [i.time, i.count])
+                            });
+                            series.push({
+                                name: `${candidateId}号无效票增量`,
                                 type: 'line',
+                                symbolSize: 2,
+                                smooth: true,
+                                xAxisIndex: 1,
                                 yAxisIndex: 1,
-                                barGap: '0%'
-                            }*/
-                        ]
-                    });
-                    loadTop10CandidatesCounts(token);
+                                data: _.map(_.filter(invalidVotes, { voteFor: candidateId }), (i) => [i.time, i.count])
+                            });
+                        });
+                        top5CandidatesCountsByTimeChart.setOption({
+                            series
+                        });
+                    })
+
+                    .always(() => top5CandidatesCountsByTimeChartDOM.removeClass('loading'));
+            });
+        };
+
+        let countsByTimeChartDOM;
+        let countsByTimeChart;
+        let initialCountsByTimeChart = () => {
+            countsByTimeChartDOM = $('#countsByTimeChartDOM');
+            countsByTimeChart = echarts.init(countsByTimeChartDOM[0]);
+            countsByTimeChart.setOption({
+                title: {
+                    text: 'bilibili吧吧主公投 总票数分时增量',
+                    subtext: '数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: { show: true, yAxisIndex: 'none' },
+                        restore: { show: true },
+                        dataView: { show: true },
+                        saveAsImage: { show: true },
+                        magicType: { show: true, type: ['stack', 'tiled'] },
+                    }
+                },
+                legend: { left: '30%' },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'filter',
+                        end: 100,
+                        bottom: 0
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        filterMode: 'filter'
+                    }
+                ],
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                series: [
+                    {
+                        id: 'validCount',
+                        name: '有效票增量',
+                        type: 'line',
+                        symbolSize: 2,
+                        smooth: true,
+                        encode: {
+                            x: 'time',
+                            y: 'validCount'
+                        }
+                    },
+                    {
+                        id: 'invalidCount',
+                        name: '无效票增量',
+                        type: 'line',
+                        symbolSize: 2,
+                        smooth: true,
+                        encode: {
+                            x: 'time',
+                            y: 'invalidCount'
+                        }
+                    }
+                ]
+            });
+        };
+        let loadCountsByTimeChart = (timeRange) => {
+            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/allVotesCountByTime`,
+                    $.param(_.merge({ timeRange }, reCAPTCHAToken)))
+                    .done((jsonData) => {
+                        let dataset = _.chain(jsonData)
+                            .groupBy('time')
+                            .map((counts, time) => {
+                                let validCount = _.find(counts, { isValid: 1 });
+                                validCount = validCount == null ? 0 : validCount.count;
+                                let invalidCount = _.find(counts, { isValid: 0 });
+                                invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                return {
+                                    time,
+                                    validCount,
+                                    invalidCount
+                                };
+                            })
+                            .value();
+                        countsByTimeChart.setOption({
+                            dataset: { source: dataset },
+                        });
+                    })
+                    .always(() => countsByTimeChartDOM.removeClass('loading'));
+            });
+        };
+
+        let candidatesTimelineChartDOM;
+        let candidatesTimelineChart;
+        let initialCandidatesTimelineChart = () => {
+            candidatesTimelineChartDOM = $('#candidatesTimelineChartDOM');
+            candidatesTimelineChart = echarts.init(candidatesTimelineChartDOM[0]);
+            let votesCountSeriesLabelFormatter = (votesData, currentCount, candidateName) => {
+                let timeline = candidatesTimelineChart.getOption().timeline[0];
+                let previousTimelineValue = _.find(votesData, {
+                    endTime: moment(timeline.data[timeline.currentIndex - 1]).unix().toString(),
+                    voteFor: _.truncate(candidateName, { length: candidateName.indexOf('号'), omission: '' }) // trim series name from '1号' to '1'
                 });
-                /*timeLineStatsChart.setOption({
+                previousTimelineValue = previousTimelineValue === undefined ? 0 : previousTimelineValue.count;
+                return `${currentCount} (+${currentCount - previousTimelineValue})`;
+            };
+            candidatesTimelineChart.setOption({
+                baseOption: {
+                    timeline: {
+                        playInterval: 300,
+                        symbol: 'none',
+                        realtime: true,
+                        loop: false,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        label: { show: false }
+                    },
                     title: {
-                        text: 'bilibili吧吧主公投 前10票数历史增量',
-                        subtext: '数据来源：四叶贴吧云监控 四叶QQ群：292311751'
+                        text: 'bilibili吧吧主公投 前10候选人票数时间轴',
+                        subtext: '候选人间线上数字为与前一人票差\n数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -163,434 +515,378 @@
                             magicType: { show: true, type: ['stack', 'tiled'] },
                         }
                     },
-                    legend: {
-                        //data: ['有效票', '无效票', '有效票增量', '无效票增量']
-                    },
-                    dataZoom: [
+                    legend: {},
+                    xAxis: [
                         {
-                            type: 'slider',
-                            xAxisIndex: 0,
-                            filterMode: 'filter',
-                            start: 90,
-                            bottom: 0
-                        },
-                        {
-                            type: 'inside',
-                            xAxisIndex: 0,
-                            filterMode: 'filter'
+                            type: 'value',
+                            splitLine: { show: false },
+                            splitArea: { show: true }
                         }
                     ],
-                    grid: [
-                        { bottom: '0%' }, // ???
-                    ],
-                    xAxis: {
-                        type: 'time'
-                    },
                     yAxis: {
-                        type: 'value',
+                        type: 'category'
                     },
                     series: [
                         {
-                            id: 'thread',
-                            name: '有效票',
-                            type: 'line',
-                            symbolSize: 2,
-                            stack: 'postsCount'
-                        },
-                        {
-                            id: 'reply',
-                            name: '回复贴',
-                            type: 'line',
-                            stack: 'postsCount'
-                        },
-                        {
-                            id: 'subReply',
-                            name: '楼中楼',
-                            type: 'line',
-                            symbolSize: 2,
+                            id: 'officialValidCount',
+                            name: '贴吧官方统计有效票',
+                            type: 'bar',
                             label: {
                                 show: true,
-                                position: 'top'
+                                position: 'right',
+                                formatter: (params) => `${params.value.officialValidCount} 相差${params.value.officialValidCount - params.value.validCount}`
                             },
-                            stack: 'postsCount'
-                        }
-                    ]
-                });*/
-                $$reCAPTCHACheck().then((token) => {
-                    let votesCountSeriesLabelFormatter = (votesData, currentCount, candidateName) => {
-                        let timeline = timeLineStatsChart.getOption().timeline[0];
-                        let previousTimelineValue = _.find(votesData, {
-                            endTime: moment(timeline.data[timeline.currentIndex - 1]).unix().toString(),
-                            voteFor: _.truncate(candidateName, { length: candidateName.indexOf('号'), omission: '' }) // trim series name from '1号' to '1'
-                        });
-                        previousTimelineValue = previousTimelineValue === undefined ? 0 : previousTimelineValue.count;
-                        return `${currentCount} (+${currentCount - previousTimelineValue})`;
-                    };
-                    timeLineStatsChart.setOption({
-                        baseOption: {
-                            timeline: {
-                                playInterval: 300,
-                                symbol: 'none',
-                                realtime: true,
-                                loop: false,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                label: { show: false }
+                            encode: {
+                                x: 'officialValidCount',
+                                y: 'voteFor'
                             },
-                            title: {
-                                text: 'bilibili吧吧主公投 前10票数 时间轴',
-                                subtext: '候选人间线上数字为与前一人票差\n数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
-                            },
-                            tooltip: {
-                                trigger: 'axis',
-                                axisPointer: { type: 'shadow' }
-                            },
-                            toolbox: {
-                                feature: {
-                                    dataZoom: { show: true, yAxisIndex: 'none' },
-                                    restore: { show: true },
-                                    dataView: { show: true },
-                                    saveAsImage: { show: true },
-                                    magicType: { show: true, type: ['stack', 'tiled'] },
-                                }
-                            },
-                            legend: {
-                                data: ['有效票', '无效票', '贴吧官方统计有效票']
-                            },
-                            xAxis: [
-                                {
-                                    type: 'value',
-                                    splitLine: { show: false },
-                                    splitArea: { show: true }
-                                }
-                            ],
-                            yAxis: {
-                                type: 'category'
-                            },
-                            series: [
-                                {
-                                    id: 'officalValidCount',
-                                    name: '贴吧官方统计有效票',
-                                    type: 'bar',
-                                    label: {
-                                        show: true,
-                                        position: 'right',
-                                        formatter: (params) => {
-                                            return `${params.value.officalValidCount} 相差${params.value.officalValidCount - params.value.validCount}`;
-                                        }
-                                    },
-                                    encode: {
-                                        x: 'officalValidCount',
-                                        y: 'voteFor'
-                                    },
-                                    itemStyle: { color: '#91c7ae' }
-                                },
-                                {
-                                    id: 'validCount',
-                                    name: '有效票',
-                                    type: 'bar',
-                                    label: {
-                                        show: true,
-                                        position: 'right',
-                                        color: '#fe980e',
-                                        formatter: (params) => votesCountSeriesLabelFormatter(window.timelineValidVotes, params.value.validCount, params.name)
-                                    },
-                                    z: 1, // prevent label covered by invalidCount categroy
-                                    encode: {
-                                        x: 'validCount',
-                                        y: 'voteFor'
-                                    },
-                                    itemStyle: { color: '#c23531' }
-                                },
-                                {
-                                    id: 'invalidCount',
-                                    name: '无效票',
-                                    type: 'bar',
-                                    label: {
-                                        show: true,
-                                        position: 'right',
-                                        color: '#999999',
-                                        formatter: (params) => votesCountSeriesLabelFormatter(window.timelineInvalidVotes, params.value.invalidCount, params.name)
-                                    },
-                                    z: 0,
-                                    barGap: '0%',
-                                    encode: {
-                                        x: 'invalidCount',
-                                        y: 'voteFor'
-                                    },
-                                    itemStyle: { color: '#2f4554' }
-                                },
-                                {
-                                    id: 'totalVotesValidation',
-                                    type: 'pie',
-                                    center: ['85%', '35%'],
-                                    radius: ['25%', '8%'],
-                                    label: {
-                                        show: true,
-                                        position: 'inside',
-                                        formatter: '{b}\n{c}\n{d}%'
-                                    }
-                                }
-                            ],
-                            graphic: {
-                                type: 'text',
-                                right: '15%',
-                                bottom: '15%',
-                                z: 100,
-                                style: {
-                                    fill: '#989898',
-                                    font: '28px Microsoft YaHei',
-                                    textAlign: 'right'
-                                }
-                            }
-                        }
-                    });
-                    loadTop10CandidatesTimelineStats(token, this.$data.statsQuery.top10CandidatesTimeRange);
-                });
-            }
-        });
-
-        let countStatsChartDOM = $('#countStatsChartDOM');
-        let countStatsChart = echarts.init(countStatsChartDOM[0]);
-        let loadTop10CandidatesCounts = (reCAPTCHAToken) => {
-            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'count' }, reCAPTCHAToken))).done((jsonData) => {
-                /* dataset should be like
-                    [
-                        { voteFor: 1, validCount: 1, invalidCount: 0 },
-                        ...
-                    ]
-                */
-                let dataset = _.chain(jsonData)
-                    .groupBy('voteFor')
-                    .sortBy((group) => jsonData.indexOf(group[0]))
-                    .map((candidateVotes) => {
-                        let validCount = _.find(candidateVotes, { isValid: 1 });
-                        validCount = validCount == null ? 0 : validCount.count;
-                        let invalidCount = _.find(candidateVotes, { isValid: 0 });
-                        invalidCount = invalidCount == null ? 0 : invalidCount.count;
-                        return {
-                            voteFor: bilibiliVoteVue.formatCandidateNameById(candidateVotes[0].voteFor),
-                            validCount,
-                            invalidCount
-                        }
-                    })
-                    .value();
-                let valiCounts = _.map(dataset, 'validCount');
-                let validCountsDiffWithPrevious = _.map(valiCounts, (count, index) => {
-                    return [
-                        {
-                            label: {
-                                show: true,
-                                position: 'middle',
-                                formatter: (-(count - valiCounts[index - 1])).toString()
-                            },
-                            coord: [index, count]
+                            itemStyle: { color: '#91c7ae' }
                         },
-                        {
-                            coord: [index - 1, valiCounts[index - 1]]
-                        }
-                    ];
-                });
-                validCountsDiffWithPrevious.shift(); // first candidate doesn't needs to exceed anyone
-                countStatsChart.setOption({
-                    dataset: { source: dataset },
-                    series: [
                         {
                             id: 'validCount',
-                            markLine: {
-                                lineStyle: {
-                                    normal: { type: 'dashed' }
-                                },
-                                symbol: 'none',
-                                data: validCountsDiffWithPrevious
+                            name: '有效票',
+                            type: 'bar',
+                            label: {
+                                show: true,
+                                position: 'right',
+                                color: '#fe980e',
+                                formatter: (params) => votesCountSeriesLabelFormatter(window.timelineValidVotes, params.value.validCount, params.name)
                             },
+                            z: 1, // prevent label covered by invalidCount categroy
+                            encode: {
+                                x: 'validCount',
+                                y: 'voteFor'
+                            },
+                            itemStyle: { color: '#c23531' }
+                        },
+                        {
+                            id: 'invalidCount',
+                            name: '无效票',
+                            type: 'bar',
+                            label: {
+                                show: true,
+                                position: 'right',
+                                color: '#999999',
+                                formatter: (params) => votesCountSeriesLabelFormatter(window.timelineInvalidVotes, params.value.invalidCount, params.name)
+                            },
+                            z: 0,
+                            barGap: '0%',
+                            encode: {
+                                x: 'invalidCount',
+                                y: 'voteFor'
+                            },
+                            itemStyle: { color: '#2f4554' }
+                        },
+                        {
+                            id: 'totalVotesValidation',
+                            type: 'pie',
+                            center: ['85%', '35%'],
+                            radius: ['25%', '8%'],
+                            label: {
+                                show: true,
+                                position: 'inside',
+                                formatter: '{b}\n{c}\n{d}%'
+                            }
                         }
                     ],
-                });
-                countStatsChartDOM.removeClass('loading');
-            }).fail($$apiErrorInfoParse);
-        };
-
-        let timeLineStatsChartDOM = $('#timeLineStatsChartDOM');
-        let timeLineStatsChart = echarts.init(timeLineStatsChartDOM[0]);
-        let loadTop10CandidatesTimelineStats = (reCAPTCHAToken, timeRange) => {
-            $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesStats`, $.param(_.merge({ type: 'timeline', timeRange }, reCAPTCHAToken))).done((jsonData) => {
-                window.timelineValidVotes = _.filter(jsonData, { isValid: 1 });
-                window.timelineInvalidVotes = _.filter(jsonData, { isValid: 0 });
-                let options = [];
-                _.each(_.groupBy(jsonData, 'endTime'), (timeGroup, time) => {
-                    /* dataset should be like
-                    [
-                        { voteFor: 1, validCount: 1, invalidCount: 0 },
-                        ...
-                    ]
-                    */
-                    let dataset = _.chain(timeGroup)
-                        .sortBy('count')
-                        .groupBy('voteFor')
-                        .sortBy((group) => _.chain(group)
-                            .map('count')
-                            .map((i) => parseInt(i))
-                            .sum()
-                            .value()
-                        )
-                        .map((candidateVotes) => {
-                            let validCount = _.find(candidateVotes, { isValid: 1 });
-                            validCount = validCount == null ? 0 : validCount.count;
-                            let invalidCount = _.find(candidateVotes, { isValid: 0 });
-                            invalidCount = invalidCount == null ? 0 : invalidCount.count;
-                            return {
-                                voteFor: bilibiliVoteVue.formatCandidateNameById(candidateVotes[0].voteFor),
-                                validCount,
-                                invalidCount,
-                                officalValidCount: null
-                            }
-                        })
-                        .value();
-                    let validCounts = _.map(dataset, 'validCount');
-                    let validCountsDiffWithPrevious = _.map(validCounts, function (count, index) {
-                        return [
-                            {
-                                label: {
-                                    show: true,
-                                    position: 'middle',
-                                    formatter: (-(count - validCounts[index + 1])).toString()
-                                },
-                                coord: [count, index]
-                            },
-                            {
-                                coord: [validCounts[index + 1], index + 1]
-                            }
-                        ];
-                    });
-                    validCountsDiffWithPrevious = validCountsDiffWithPrevious.slice(-5, -1);
-                    let totalVotesCount = (isValid = null) => {
-                        let votesSumCount = _.chain(timeGroup);
-                        if (isValid != null) {
-                            votesSumCount = votesSumCount.filter({ isValid })
+                    graphic: {
+                        type: 'text',
+                        right: '15%',
+                        bottom: '15%',
+                        z: 100,
+                        style: {
+                            fill: '#989898',
+                            font: '28px Microsoft YaHei',
+                            textAlign: 'right'
                         }
-                        return votesSumCount
-                            .map('count')
-                            .map((i) => parseInt(i))
-                            .sum()
-                            .value()
-                    };
-                    let totalValidVotes = totalVotesCount(1);
-                    let totalInvalidVotes = totalVotesCount(0);
-                    options.push({
-                        dataset: { source: dataset },
-                        series: [
-                            {
-                                id: 'validCount',
-                                markLine: {
-                                    lineStyle: {
-                                        normal: { type: 'dashed' }
+                    }
+                }
+            });
+        };
+        let loadCandidatesTimelineChart = () => {
+            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesTimeline`, $.param(reCAPTCHAToken))
+                    .done((jsonData) => {
+                        window.timelineValidVotes = _.filter(jsonData, { isValid: 1 });
+                        window.timelineInvalidVotes = _.filter(jsonData, { isValid: 0 });
+                        let options = [];
+                        _.each(_.groupBy(jsonData, 'endTime'), (timeGroup, time) => {
+                            /* dataset would be like
+                            [
+                                { voteFor: 1, validCount: 1, invalidCount: 0 },
+                                ...
+                            ]
+                            */
+                            let dataset = _.chain(timeGroup)
+                                .sortBy('count')
+                                .groupBy('voteFor')
+                                .sortBy((group) => _.chain(group)
+                                    .map('count')
+                                    .map((i) => parseInt(i))
+                                    .sum()
+                                    .value()
+                                )
+                                .map((candidateVotes) => {
+                                    let validCount = _.find(candidateVotes, { isValid: 1 });
+                                    validCount = validCount == null ? 0 : validCount.count;
+                                    let invalidCount = _.find(candidateVotes, { isValid: 0 });
+                                    invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                    return {
+                                        voteFor: bilibiliVoteVue.formatCandidateNameById(candidateVotes[0].voteFor),
+                                        validCount,
+                                        invalidCount,
+                                        officialValidCount: null
+                                    }
+                                })
+                                .value();
+
+                            let validCounts = _.map(dataset, 'validCount');
+                            let validCountsDiffWithPrevious = _.map(validCounts, function (count, index) {
+                                return [
+                                    {
+                                        label: {
+                                            show: true,
+                                            position: 'middle',
+                                            formatter: (-(count - validCounts[index + 1])).toString()
+                                        },
+                                        coord: [count, index]
                                     },
-                                    symbol: 'none',
-                                    data: validCountsDiffWithPrevious
+                                    {
+                                        coord: [validCounts[index + 1], index + 1]
+                                    }
+                                ];
+                            });
+                            validCountsDiffWithPrevious = validCountsDiffWithPrevious.slice(-5, -1);
+
+                            let totalVotesCount = (isValid = null) => {
+                                let votesSumCount = _.chain(timeGroup);
+                                if (isValid != null) {
+                                    votesSumCount = votesSumCount.filter({ isValid })
                                 }
+                                return votesSumCount
+                                    .map('count')
+                                    .map((i) => parseInt(i))
+                                    .sum()
+                                    .value()
+                            };
+                            let totalValidVotes = totalVotesCount(1);
+                            let totalInvalidVotes = totalVotesCount(0);
+
+                            options.push({
+                                dataset: { source: dataset },
+                                series: [
+                                    {
+                                        id: 'validCount',
+                                        markLine: {
+                                            lineStyle: {
+                                                normal: { type: 'dashed' }
+                                            },
+                                            symbol: 'none',
+                                            data: validCountsDiffWithPrevious
+                                        }
+                                    },
+                                    {
+                                        id: 'totalVotesValidation',
+                                        data: [
+                                            {
+                                                name: '有效票',
+                                                value: totalValidVotes
+                                            },
+                                            {
+                                                name: '无效票',
+                                                value: totalInvalidVotes
+                                            }
+                                        ]
+                                    }
+                                ],
+                                graphic: {
+                                    style: {
+                                        text: `共${totalVotesCount()}票\n${moment.unix(time).format('M-D H:mm')}`,
+                                    }
+                                }
+                            });
+                        });
+
+                        // clone last timeline option then transform it to official votes count option
+                        let originTimelineOptions = _.cloneDeep(options[options.length - 1]);
+                        _.remove(originTimelineOptions.series, { id: 'totalVotesValidation' });
+                        options.push(_.merge(originTimelineOptions, {
+                            dataset: {
+                                source: _.chain(bilibiliVoteVue.$data.top50OfficialValidVotesCount)
+                                    .orderBy('officialValidCount')
+                                    .takeRight(10)
+                                    .map((officialCounts) => {
+                                        return {
+                                            voteFor: bilibiliVoteVue.formatCandidateNameById(officialCounts.voteFor),
+                                            officialValidCount: officialCounts.officialValidCount
+                                        };
+                                    })
+                                    .value()
                             },
-                            {
+                            series: originTimelineOptions.series.concat({
                                 id: 'totalVotesValidation',
                                 data: [
                                     {
-                                        name: '有效票',
-                                        value: totalValidVotes
+                                        name: '官方有效票',
+                                        value: 12247
                                     },
                                     {
-                                        name: '无效票',
-                                        value: totalInvalidVotes
+                                        name: '官方无效票',
+                                        value: 473
                                     }
                                 ]
+                            }),
+                            graphic: {
+                                style: {
+                                    text: '贴吧官方统计共12720票\n有效12247票 无效473票\n3-11 18:26',
+                                }
                             }
-                        ],
-                        graphic: {
-                            style: {
-                                text: `共${totalVotesCount()}票\n${moment.unix(time).format('M-D H:mm')}`,
-                            }
-                        }
-                    });
-                });
-                let originTimelineOptions = _.cloneDeep(options[options.length - 1]);
-                _.remove(originTimelineOptions.series, { id: 'totalVotesValidation' });
-                options.push(_.merge(originTimelineOptions, {
-                    dataset: {
-                        source: _.map(_.sortBy([
-                            { voteFor: 50, officalValidCount: 4562 },
-                            { voteFor: 779, officalValidCount: 3747 },
-                            { voteFor: 1011, officalValidCount: 2261 },
-                            { voteFor: 840, officalValidCount: 655 },
-                            { voteFor: 48, officalValidCount: 129 },
-                            { voteFor: 1, officalValidCount: 80 },
-                            { voteFor: 58, officalValidCount: 74 },
-                            { voteFor: 2, officalValidCount: 56 },
-                            { voteFor: 452, officalValidCount: 55 },
-                            { voteFor: 40, officalValidCount: 45 }
-                        ], 'officalValidCount'), (officalCounts) => {
-                            return { voteFor: bilibiliVoteVue.formatCandidateNameById(officalCounts.voteFor), officalValidCount: officalCounts.officalValidCount };
-                        })
-                    },
-                    series: originTimelineOptions.series.concat({
-                        id: 'totalVotesValidation',
-                        data: [
-                            {
-                                name: '官方有效票',
-                                value: 12247
-                            },
-                            {
-                                name: '官方无效票',
-                                value: 473
-                            }
-                        ]
-                    }),
-                    graphic: {
-                        style: {
-                            text: '贴吧官方统计共12720票\n有效12247票 无效473票\n3-11 18:26',
-                        }
-                    }
-                }));
-                let timelineRanges = _.map(_.sortBy(_.uniq(_.map(jsonData, 'endTime'))), (i) => moment.unix(i).format());
-                timelineRanges.push('2019-03-11T18:26:40+08:00');
-                timeLineStatsChart.setOption({
-                    baseOption: {
-                        timeline: {
-                            autoPlay: true,
-                            data: timelineRanges
-                        }
-                    },
-                    options
-                });
-                timeLineStatsChart.on('timelinechanged', (params) => {
-                    if (params.currentIndex + 1 === timeLineStatsChart.getOption().timeline[0].data.length) {
-                        timeLineStatsChart.dispatchAction({
-                            type: 'legendSelect',
-                            name: '贴吧官方统计有效票'
-                        });
-                    } else {
-                        timeLineStatsChart.dispatchAction({
-                            type: 'legendUnSelect',
-                            name: '贴吧官方统计有效票'
-                        });
-                    }
-                });
-                /*let top10Candidates = _.uniq(_.map(_.filter(jsonData, { isValid: 1 }), 'voteFor')); // not order by votes count
-                let validVotes = _.filter(jsonData, { isValid: 1 });
-                let invalidVotes = _.filter(jsonData, { isValid: 0 });
+                        }));
 
-                let series = [];
-                _.each(top10Candidates, (candidateId) => {
-                    series.push({
-                        name: `${candidateId}号有效票`,
-                        type: 'line',
-                        data: _.map(_.filter(validVotes, { voteFor: candidateId }), (i) => [i.time, i.count])
-                    });
-                });
-                timeLineStatsChart.setOption({
-                    series
-                });*/
-                timeLineStatsChartDOM.removeClass('loading');
-            }).fail($$apiErrorInfoParse);
+                        let timelineRanges = _.map(_.sortBy(_.uniq(_.map(jsonData, 'endTime'))), (i) => moment.unix(i).format());
+                        timelineRanges.push('2019-03-11T18:26:40+08:00'); // official votes count show time
+                        candidatesTimelineChart.setOption({
+                            baseOption: {
+                                timeline: {
+                                    autoPlay: true,
+                                    data: timelineRanges
+                                }
+                            },
+                            options
+                        });
+
+                        // only display official votes count legend when timeline arrive it's show time
+                        candidatesTimelineChart.on('timelinechanged', (params) => {
+                            if (params.currentIndex + 1 === candidatesTimelineChart.getOption().timeline[0].data.length) {
+                                candidatesTimelineChart.dispatchAction({
+                                    type: 'legendSelect',
+                                    name: '贴吧官方统计有效票'
+                                });
+                            } else {
+                                candidatesTimelineChart.dispatchAction({
+                                    type: 'legendUnSelect',
+                                    name: '贴吧官方统计有效票'
+                                });
+                            }
+                        });
+                    })
+                    .always(() => candidatesTimelineChartDOM.removeClass('loading'));
+            });
         };
+
+        let bilibiliVoteVue = new Vue({
+            el: '#bilibiliVote',
+            data: {
+                $$getTiebaUserLink,
+                statsQuery: {
+                    candidateCountByTimeTimeRange: 'hour',
+                    countsByTimeTimeRange: 'hour'
+                },
+                candidatesName: [],
+                top50OfficialValidVotesCount: [],
+                candidatesDetailColumns: [
+                    {
+                        title: '#',
+                        dataIndex: 'candidateIndex',
+                        sorter: (a, b) => a.candidateIndex - b.candidateIndex
+                    },
+                    {
+                        title: '候选人',
+                        dataIndex: 'candidateName',
+                        scopedSlots: { customRender: 'candidateName' }
+                    },
+                    {
+                        title: '有效票数',
+                        dataIndex: 'validCount',
+                        sorter: (a, b) => a.validCount - b.validCount,
+                        defaultSortOrder: 'descend'
+                    },
+                    {
+                        title: '无效票数',
+                        dataIndex: 'invalidCount',
+                        sorter: (a, b) => a.invalidCount - b.invalidCount
+                    },
+                    {
+                        title: '官方有效票数（仅前50）',
+                        dataIndex: 'officialValidCount'
+                    }
+                ],
+                candidatesDetailData: []
+            },
+            watch: {
+                'statsQuery.candidateCountByTimeTimeRange': function (candidateCountByTimeTimeRange) {
+                    // fully refresh to regenerate a new echarts instance
+                    top5CandidatesCountsByTimeChart.clear();
+                    initialTop5CandidatesCountsByTimeChart();
+                    top5CandidatesCountsByTimeChartDOM.addClass('loading');
+                    loadTop5CandidatesCountsByTimeChart(candidateCountByTimeTimeRange);
+                },
+                'statsQuery.countsByTimeTimeRange': function (countsByTimeTimeRange) {
+                    // fully refresh to regenerate a new echarts instance
+                    countsByTimeChart.clear();
+                    initialCountsByTimeChart();
+                    countsByTimeChartDOM.addClass('loading');
+                    loadCountsByTimeChart(countsByTimeTimeRange);
+                }
+            },
+            methods: {
+                formatCandidateNameById: function (id) {
+                    return `${id}号\n${this.$data.candidatesName[id - 1]}`;
+                }
+            },
+            mounted: function () {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((jsonData) => {
+                    this.$data.candidatesName = jsonData;
+                    this.$data.candidatesDetailData = _.map(jsonData, (candidateName, candidateIndex) => {
+                        candidateIndex += 1;
+                        return {
+                            key: candidateIndex,
+                            candidateIndex,
+                            candidateName
+                        };
+                    });
+
+                    $$reCAPTCHACheck().then((reCAPTCHAToken) => {
+                        $.getJSON(`${$$baseUrl}/api/bilibiliVote/allCandidatesVotesCount`, $.param(reCAPTCHAToken)).done((jsonData) => {
+                            this.$data.candidatesDetailData = _.map(this.$data.candidatesDetailData, (candidate) => {
+                                let candidateVotes = _.filter(jsonData, { voteFor: candidate.candidateIndex.toString() });
+                                if (candidateVotes != null) {
+                                    let validCount = _.find(candidateVotes, { isValid: 1 });
+                                    validCount = validCount == null ? 0 : validCount.count;
+                                    let invalidCount = _.find(candidateVotes, { isValid: 0 });
+                                    invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                    return _.merge(candidate, {
+                                        validCount,
+                                        invalidCount
+                                    });
+                                }
+                            });
+                        });
+                    });
+
+                    $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50OfficialValidVotesCount.json`).done((jsonData) => {
+                        this.$data.top50OfficialValidVotesCount = jsonData;
+                        this.$data.candidatesDetailData = _.values(_.merge( // merge by key
+                            _.keyBy(this.$data.candidatesDetailData, 'candidateIndex'),
+                            _.keyBy(_.map(jsonData, (candidate) => {
+                                return {
+                                    candidateIndex: candidate.voteFor,
+                                    officialValidCount: candidate.officialValidCount
+                                };
+                            }), 'candidateIndex')
+                        ));
+                    });
+
+                    initialTop50CandidatesCountsChart();
+                    loadTop50CandidatesCountsChart();
+                    initialTop5CandidatesCountsByTimeChart();
+                    loadTop5CandidatesCountsByTimeChart(this.$data.statsQuery.candidateCountByTimeTimeRange);
+                    initialCountsByTimeChart();
+                    loadCountsByTimeChart(this.$data.statsQuery.countsByTimeTimeRange);
+                    initialCandidatesTimelineChart();
+                    loadCandidatesTimelineChart();
+                });
+            }
+        });
     </script>
 @endsection
