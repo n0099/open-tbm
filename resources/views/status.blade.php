@@ -195,7 +195,6 @@
                             ]
                         });
                     })
-                    .fail($$apiErrorInfoParse)
                     .always(() => statusChartDOM.removeClass('loading'));
             });
         };

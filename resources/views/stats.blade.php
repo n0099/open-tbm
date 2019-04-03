@@ -151,7 +151,7 @@
                             series
                         });
                     })
-                    .fail($$apiErrorInfoParse)
+                    .fail($$apiErrorInfoParse
                     .always(() => statsChartDOM.removeClass('loading'));
             });
         };

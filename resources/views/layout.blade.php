@@ -176,19 +176,24 @@
         <script>
             'use strict';
 
-            moment.locale('zh-cn');
-
             //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
             NProgress.configure({ trickleSpeed: 200 });
-            $(document).on('ajaxStart', () => {
+            $(document).ajaxStart(() => {
                 NProgress.start();
                 $('body').css('cursor', 'progress');
-            }).on('ajaxStop', () => {
+            }).ajaxStop(() => {
                 NProgress.done();
                 $('body').css('cursor', null);
+            }).ajaxError((event, jqXHR) => {
+                let errorInfo = '';
+                if (jqXHR.responseJSON != null) {
+                    let responseErrorInfo = jqXHR.responseJSON;
+                    errorInfo = `错误码：${responseErrorInfo.errorCode}<br />${responseErrorInfo.errorInfo}`;
+                }
+                new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
             });
 
-            let $$tippyInital = () => {
+            const $$tippyInital = () => {
                 //tippy('[data-tippy]');
                 tippy('[data-tippy-content]');
             };
@@ -201,19 +206,19 @@
 
             // resize all echarts instance when viewport size changed
             $(window).on('resize', _.throttle(() => {
-                $('.echarts').each((k, echarts) => {
-                    echarts = echarts.getInstanceByDom(echarts);
-                    if (echarts != null) {
-                        echarts.resize();
+                $('.echarts').each((k, echartsDOM) => {
+                    let echartsInstance = echarts.getInstanceByDom(echartsDOM);
+                    if (echartsInstance != null) { // instance might be undefined when echarts haven't been initialed
+                        echartsInstance.resize();
                     }
                 });
             }, 1000, { leading: false }));
 
-            let $$baseUrl = '{{ $baseUrl }}';
-            let $$httpDoamin = '{{ $httpDomain }}';
-            let $$baseUrlDir = '{{ $baseUrlDir }}';
-            let $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
-            let $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
+            const $$baseUrl = '{{ $baseUrl }}';
+            const $$httpDoamin = '{{ $httpDomain }}';
+            const $$baseUrlDir = '{{ $baseUrlDir }}';
+            const $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
+            const $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
                 NProgress.start();
                 $('body').css('cursor', 'progress');
                 grecaptcha.ready(() => {
@@ -225,7 +230,7 @@
                         });
                 });
             });
-            let $$loadForumsList = new Promise((resolve, reject) => {
+            const $$loadForumsList = new Promise((resolve, reject) => {
                 $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
                     resolve(_.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
                         forum.fid = forum.fid.toString();
@@ -233,7 +238,7 @@
                     }));
                 });
             });
-            let $$initialNavBar = (activeNav) => {
+            const $$initialNavBar = (activeNav) => {
                 window.navBarVue = new Vue({
                     el: '#navbar',
                     data: { $$baseUrl, activeNav },
@@ -250,15 +255,7 @@
                     }
                 });
             };
-            let $$apiErrorInfoParse = (jqXHR) => {
-                let errorInfo = '';
-                if (jqXHR.responseJSON != null) {
-                    let responseErrorInfo = jqXHR.responseJSON;
-                    errorInfo = `错误码：${responseErrorInfo.errorCode}<br />${responseErrorInfo.errorInfo}`;
-                }
-                new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
-            };
-            let $$tiebaImageZoomEventRegister = () => {
+            const $$tiebaImageZoomEventRegister = () => {
                 let registerZoomInEvent = (event) => {
                     let tiebaImageDOM = event.currentTarget;
                     $(tiebaImageDOM).removeClass('tieba-image-zoom-in').addClass('tieba-image-zoom-out');
@@ -275,7 +272,7 @@
                 $('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
             };
 
-            let $$getTiebaPostLink = (tid, pid = null, spid = null) => {
+            const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
                 if (spid != null) {
                     return `https://tieba.baidu.com/p/${tid}?pid=${spid}#${spid}`;
                 } else if (pid != null) {
@@ -284,7 +281,7 @@
                     return `https://tieba.baidu.com/p/${tid}`;
                 }
             };
-            let $$getTBMPostLink = (tid, pid = null, spid = null) => {
+            const $$getTBMPostLink = (tid, pid = null, spid = null) => {
                 if (spid != null) {
                     return `${$$baseUrl}/query/tid/${tid}`;
                 } else if (pid != null) {
@@ -293,10 +290,10 @@
                     return `${$$baseUrl}/query/spid/${spid}`;
                 }
             };
-            let $$getTiebaUserLink = (username) => {
+            const $$getTiebaUserLink = (username) => {
                 return `http://tieba.baidu.com/home/main?un=${username}`;
             };
-            let $$getTBMUserLink = (username) => {
+            const $$getTBMUserLink = (username) => {
 
             };
         </script>
