@@ -129,16 +129,16 @@
         <template id="posts-list-template">
             <div :data-page="postsData.pages.currentPage" class="posts-list">
                 <div class="reply-list-previous-page p-2 row align-items-center">
-                    <div class="col align-middle"><hr /></div>
+                    <div class="col"><hr /></div>
                     <div class="w-auto" v-for="page in [postsData.pages]">
                         <div class="p-2 badge badge-light">
-                            <a v-if="page.currentPage > 1" class="badge badge-primary" :href="getPerviousPageUrl">上一页</a>
+                            <a v-if="page.currentPage > 1" class="badge badge-primary" :href="getPreviousPageUrl">上一页</a>
                             <p class="h4" v-text="`第 ${page.currentPage} 页`"></p>
-                            <p class="small" v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条 共 ${page.totalItems} 条`"></p>
+                            <p class="small" v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条`"></p>
                             <span class="h5" v-text="`${postsData.forum.name}吧`"></span>
                         </div>
                     </div>
-                    <div class="col align-middle"><hr /></div>
+                    <div class="col"><hr /></div>
                 </div>
                 <div v-for="thread in postsData.threads" :data-title="thread.title" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
@@ -163,7 +163,6 @@
                                     <i class="fas fa-info"></i>
                                 </a>
                             </template>
-
                             <span class="badge badge-pill badge-success">{{ thread.postTime }}</span>
                         </div>
                         <div>
@@ -211,7 +210,7 @@
                                     <div class="reply-banner col-md-auto text-center">
                                         <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
                                             <a class="d-block" :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
-                                                <img class="lazyload d-block mx-auto badge badge-light" width="100px" height="100px" :data-src="`https://himg.bdimg.com/sys/portrait/item/${author.avatarUrl}.jpg`" />
+                                                <img class="lazyload d-block mx-auto badge badge-light" width="90px" height="90px" :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
                                                 <span>{{ author.displayName }}<br v-if="author.displayName != null" />{{ author.name }}</span>
                                             </a>
                                             <div v-if="author.uid == getUserData(thread.authorUid).uid" class="badge badge-pill badge-success">楼主</div>
@@ -232,7 +231,7 @@
                                                 <template v-for="author in [getUserData(subReply.authorUid)]">
                                                     <a v-if="subReplyGroup[index - 1] == undefined" class="sub-reply-user-info badge badge-light"
                                                        :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
-                                                        <img class="lazyload" width="25px" height="25px" :data-src="`https://himg.bdimg.com/sys/portrait/item/${author.avatarUrl}.jpg`" />
+                                                        <img class="lazyload" width="25px" height="25px" :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
                                                         <span v-if="author.displayName == null">{{ author.name }}</span>
                                                         <span v-else>{{ author.displayName }}（{{ author.name }}）</span>
                                                         <div class="btn-group" role="group">
@@ -258,18 +257,15 @@
                         </div>
                     </template>
                 </div>
-                <div class="reply-list-next-page p-4">
+                <div v-if="! loadingNewPosts" class="reply-list-next-page p-4">
                     <div class="row align-items-center">
                         <div class="col"><hr /></div>
-                        <template v-for="page in [postsData.pages]">
-                            <div class="w-auto">
-                                <span v-if="page.currentPage == page.lastPage" class="h4">已经到底了~</span>
-                                <button v-else @click="loadNewThreadsPage($event.currentTarget, page.currentPage + 1)" type="button" class="btn btn-secondary">
-                                    <p class="h4">下一页</p>
-                                    <small v-text="`剩 ${page.lastPage - page.currentPage} 页 共 ${page.lastPage} 页`"></small>
-                                </button>
-                            </div>
-                        </template>
+                        <div class="w-auto" v-for="page in [postsData.pages]">
+                            <span v-if="page.currentPage == page.lastPage" class="h4">已经到底了~</span><!-- TODO: fix last page logical-->
+                            <button v-else @click="loadNewThreadsPage($event.currentTarget, page.currentPage + 1)" type="button" class="btn btn-secondary">
+                                <span class="h4">下一页</span>
+                            </button>
+                        </div>
                         <div class="col"><hr /></div>
                     </div>
                 </div>
@@ -555,7 +551,8 @@
                 </form>
                 <posts-list v-for="(postsData, currentPostPage) in postsPages"
                             :key="`page${currentPostPage + 1}@${JSON.stringify(_.merge({}, $route.params, $route.query))}`"
-                            :posts-data="postsData"></posts-list>
+                            :posts-data="postsData"
+                            :loading-new-posts="loadingNewPosts"></posts-list>
                 <loading-posts-placeholder v-if="loadingNewPosts"></loading-posts-placeholder>
             </div>
         </template>
@@ -598,17 +595,18 @@
 
             const postsListComponent = Vue.component('posts-list', {
                 template: '#posts-list-template',
-                props: ['postsData'], // received from parent component
+                props: ['postsData', 'loadingNewPosts'], // received from parent component
                 data: function () {
                     return {
                         $$baseUrl,
                         $$getTiebaPostLink,
-                        $$getTiebaUserLink
+                        $$getTiebaUserLink,
+                        $$getTiebaUserAvatarUrl
                     };
                 },
                 computed: {
-                    getPerviousPageUrl: function() { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
-                        // generate an new absolute url with new page params which based on current route path
+                    getPreviousPageUrl: function() { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
+                        // generate an new absolute url with previous page params which based on current route path
                         let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                         return `${$$baseUrlDir}${urlWithNewPage}`;
                     }
@@ -626,7 +624,7 @@
                             { iconInfo: [] },
                         ];
                     },
-                    loadNewThreadsPage: function (eventDom, newPage) {
+                    loadNewThreadsPage: function (eventDOM, newPage) {
                         let pagingRouteName = this.$route.name.endsWith('+p') ? this.$route.name : this.$route.name + '+p';
                         this.$router.push({ name: pagingRouteName, params: { page: newPage.toString() }, query: this.$route.query }); // route params value should always be string
                     }
@@ -767,6 +765,9 @@
                             $('#first-loading-placeholder').hide();
                             return;
                         }
+                        if (shouldReplacePage) {
+                            this.$data.postsPages = []; // clear posts pages data before finish to show loading placeholder
+                        }
 
                         if (window.previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
                             window.previousPostsQueryAjax.abort();
@@ -785,14 +786,10 @@
                                     } else {
                                         this.$data.postsPages.push(jsonData);
                                     }
-                                    if (pagesInfo.totalItems === 0) {
-                                        ajaxErrorCallback();
-                                    }
 
                                     new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
                                     this.changeDocumentTitle(this.$route);
                                 }).fail((jqXHR) => {
-                                    $$apiErrorInfoParse(jqXHR);
                                     ajaxErrorCallback();
                                 }).always(() => {
                                     this.$data.loadingNewPosts = false
@@ -833,7 +830,7 @@
                     });
 
                     this.$data.queryData = { query: customQueryParams, param: queryParams };
-                    $$loadForumsList.then((forumsList) => {
+                    $$loadForumsList().then((forumsList) => {
                         this.$data.forumsList = forumsList;
                         this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
                     });
@@ -842,7 +839,6 @@
                     loadingNewPosts: function (loadingNewPosts) {
                         if (loadingNewPosts) {
                             $('#error-404-template').hide();
-                            $('.posts-list > .reply-list-next-page').remove();
                             $('#first-loading-placeholder').hide(); // use hide() instead of remove() to prevent vue can't find loading-posts-placeholder-template
                         }
                     },
@@ -1072,7 +1068,7 @@
                                 };
 
                                 // auto dom recycle and reproduce when dom (in)visible
-                                $('.posts-list:last .reply-item')/*.off()*/.each((index, replyItem) => { // only work on last newly loaded page's reply item
+                                $('.posts-list .reply-item').off().each((index, replyItem) => { // re-hide all reply items including previous pages
                                     if (index > 5) {
                                         hideReplyItem($(replyItem)); // recycle all the other reply items dom
                                     } else {
@@ -1089,10 +1085,10 @@
                                 });
 
                                 // scroll viewport to element anchor by url hash after posts list loaded
-                                let urlHashReplyItemDom = this.$route.hash === '#!' ? null : $(this.$route.hash)[0];  // ignore #! shebang url hash
-                                if (urlHashReplyItemDom != null) {
-                                    urlHashReplyItemDom.scrollIntoView();
-                                    replyBodyAppearEventHandler(null, null, $(urlHashReplyItemDom));
+                                let urlHashReplyItemDOM = this.$route.hash === '#!' ? null : $(this.$route.hash)[0];  // ignore #! shebang url hash
+                                if (urlHashReplyItemDOM != null) {
+                                    urlHashReplyItemDOM.scrollIntoView();
+                                    replyBodyAppearEventHandler(null, null, $(urlHashReplyItemDOM));
                                 }
                             }
                         });
@@ -1139,7 +1135,7 @@
                             component: postsListPagesComponent,
                             children: [
                                 { name: 'postsQuery+p', path: 'page/:page' },
-                                { name: 'tid', path: 'tid/:tid',  children: [{ name:'tid+p', path: 'page/:page' }] },
+                                { name: 'tid', path: 'tid/:tid', children: [{ name:'tid+p', path: 'page/:page' }] },
                                 { name: 't+pid', path: 'tid/:tid/pid/:pid', children: [{ name:'t+pid+p', path: 'page/:page' }] },
                                 { name: 't+sid', path: 'tid/:tid/spid/:spid', children: [{ name:'t+spid+p', path: 'page/:page' }] },
                                 { name: 't+p+sid', path: 'tid/:tid/pid/:pid/spid/:spid', children: [{ name:'t+p+sid+p', path: 'page/:page' }] },

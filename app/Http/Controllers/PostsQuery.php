@@ -12,7 +12,6 @@ use App\Tieba\Post\Post;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use function GuzzleHttp\json_encode;
 use Illuminate\Validation\Rule;
 
 class PostsQuery extends Controller
@@ -132,7 +131,7 @@ class PostsQuery extends Controller
         return array_values($nestedPostsInfo);
     }
 
-    private function getQueryResultJson(array $queryParams): string
+    private function getQueryResultJson(array $queryParams): array
     {
         $queryParams = collect($queryParams);
         $queryParamsName = $queryParams->keys();
@@ -407,7 +406,7 @@ class PostsQuery extends Controller
                     if (! $queryParamsName->contains('orderBy')) { // order by post type id desc by default
                         $postQueryBuilder = $postQueryBuilder->orderBy($postsIDNamePair[$postType], $customQueryDefaultOrderDirection);
                     }
-                    $postsQueryBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->paginate($this->pagingPerPageItems);
+                    $postsQueryBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->simplePaginate($this->pagingPerPageItems);
                 }
             }
 
@@ -442,17 +441,8 @@ class PostsQuery extends Controller
                 'currentItems' => $pageInfoUnion($postsQueryBuilder, 'count', function ($unionValues) {
                     return array_sum($unionValues);
                 }),
-                'totalItems' => $pageInfoUnion($postsQueryBuilder, 'total', function ($unionValues) {
-                    return array_sum($unionValues);
-                }),
-                /*'perPageItems' => $pageInfoUnion($postsQueryBuilder, 'perPage', function ($unionValues) {
-                    return min($unionValues);
-                }),*/
                 'currentPage' => $pageInfoUnion($postsQueryBuilder, 'currentPage', function ($unionValues) {
                     return min($unionValues);
-                }),
-                'lastPage' => $pageInfoUnion($postsQueryBuilder, 'lastPage', function ($unionValues) {
-                    return max($unionValues);
                 })
             ];
         } elseif ($isIndexQuery) {
@@ -469,7 +459,7 @@ class PostsQuery extends Controller
                 ];
                 $indexesModel = $indexesModel->orderByMulti($indexesOrderBy);
             }
-            $indexesResults = $indexesModel->whereIn('type', $queryPostType)->paginate($this->pagingPerPageItems);
+            $indexesResults = $indexesModel->whereIn('type', $queryPostType)->simplePaginate($this->pagingPerPageItems);
             Helper::abortApiIf($indexesResults->isEmpty(), 40401);
 
             $postsQueriedInfo['fid'] = $indexesResults->pluck('fid')->first();
@@ -480,10 +470,7 @@ class PostsQuery extends Controller
             $pagesInfo = [
                 'firstItem' => $indexesResults->firstItem(),
                 'currentItems' => $indexesResults->count(),
-                'totalItems' => $indexesResults->total(),
-                //'perPageItems' => $indexesResults->perPage(),
                 'currentPage' => $indexesResults->currentPage(),
-                'lastPage' => $indexesResults->lastPage()
             ];
         } else {
             Helper::abortApi(40001);
@@ -497,13 +484,12 @@ class PostsQuery extends Controller
         );
         $forumInfo = ForumModel::where('fid', $postsQueriedInfo['fid'])->hidePrivateFields()->first()->toArray();
         $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUids)->hidePrivateFields()->get()->toArray();
-        $json = json_encode([
+        return [
             'pages' => $pagesInfo,
             'forum' => $forumInfo,
             'threads' => $nestedPostsInfo,
             'users' => $usersInfo
-        ]);
-        return $json;
+        ];
     }
 
     public function query(\Illuminate\Http\Request $request)
