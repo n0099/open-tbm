@@ -10,7 +10,7 @@
     </style>
     <div id="statusChart" class="row justify-content-end mt-2">
         <span><a-switch v-model="autoRefresh" /></span>
-        <span> 每分钟自动刷新</span>
+        <span class="ml-1">每分钟自动刷新</span>
         <div class="w-100"></div>
         <div id="statusChartDOM" class="echarts loading col mt-2"></div>
     </div>

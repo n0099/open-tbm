@@ -63,6 +63,7 @@
         let statsChart;
         let initialStatsChart = () => {
             statsChartDOM = $('#statsChartDOM');
+            statsChart = echarts.init(statsChartDOM[0], 'light');
             statsChart.setOption({
                 title: {
                     text: '吧贴量统计'
@@ -129,9 +130,7 @@
                     }
                 ]
             });
-            statsChart = echarts.init(statsChartDOM[0], 'light');
         };
-
         let loadStatsChart = (statsQuery, forumsList) => {
             statsChartDOM.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
@@ -151,7 +150,6 @@
                             series
                         });
                     })
-                    .fail($$apiErrorInfoParse
                     .always(() => statsChartDOM.removeClass('loading'));
             });
         };
@@ -183,7 +181,7 @@
             },
             mounted: function () {
                 initialStatsChart();
-                $$loadForumsList.then((forumsList) => {
+                $$loadForumsList().then((forumsList) => {
                     this.$data.forumsList = forumsList;
                 });
                 new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();

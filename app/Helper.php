@@ -18,6 +18,7 @@ class Helper
         $errorInfos = [
             // httpStatusCode => [ errorCode => errorInfo ]
             400 => [
+                // 40000 => App\Exceptions\Handler->convertValidationExceptionToResponse()
                 40001 => '贴子查询类型必须为索引或自定义搜索查询',
                 40002 => '自定义贴子查询必须指定查询贴吧',
                 40003 => '最后回复人用户参数仅支持主题贴查询',
@@ -31,6 +32,7 @@ class Helper
                 40401 => '贴子查询结果为空',
             ],
         ];
+
         $statusCode = 0;
         $errorInfo = '';
         foreach ($errorInfos as $infoStatusCode => $infoErrorInfo) {

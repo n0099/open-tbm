@@ -2,20 +2,20 @@
 @php($httpDomain = implode('/', array_slice(explode('/', $baseUrl), 0, 3)))
 @php($baseUrlDir = substr($baseUrl, strlen($httpDomain)))
 @php($reCAPTCHASiteKey = env('reCAPTCHA_SITE_KEY'))
-@php($GATrackingId = env('GA_TRACKING_ID'))
+@php($GATrackingID = env('GA_TRACKING_ID'))
 <!doctype html>
 <html lang="zh-cmn-Hans">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $GATrackingId }}"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $GATrackingID }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
 
-            gtag('config', '{{ $GATrackingId }}');
+            gtag('config', '{{ $GATrackingID }}');
         </script>
         <link href="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -222,7 +222,7 @@
                 NProgress.start();
                 $('body').css('cursor', 'progress');
                 grecaptcha.ready(() => {
-                    grecaptcha.execute($$reCAPTCHASiteKey, { action: window.location.pathname })
+                    grecaptcha.execute($$reCAPTCHASiteKey)
                         .then((token) => {
                             resolve({ reCAPTCHA: token });
                         }, () => {
@@ -230,7 +230,7 @@
                         });
                 });
             });
-            const $$loadForumsList = new Promise((resolve, reject) => {
+            const $$loadForumsList = () => new Promise((resolve, reject) => {
                 $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
                     resolve(_.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
                         forum.fid = forum.fid.toString();
@@ -295,6 +295,9 @@
             };
             const $$getTBMUserLink = (username) => {
 
+            };
+            const $$getTiebaUserAvatarUrl = (avatarUrl) => {
+                return `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
             };
         </script>
         @yield('script-after-container')

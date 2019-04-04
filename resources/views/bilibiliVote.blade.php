@@ -232,7 +232,7 @@
                                 let officialValidCount = _.find(bilibiliVoteVue.$data.top50OfficialValidVotesCount, { voteFor: parseInt(candidateVotes[0].voteFor) })
                                 officialValidCount = officialValidCount == null ? 0 : officialValidCount.officialValidCount;
                                 return {
-                                    voteFor: bilibiliVoteVue.formatCandidateNameById(candidateVotes[0].voteFor),
+                                    voteFor: bilibiliVoteVue.formatCandidateNameByID(candidateVotes[0].voteFor),
                                     validCount,
                                     validAvgGrade,
                                     invalidCount,
@@ -349,22 +349,22 @@
                         let invalidVotes = _.filter(jsonData, { isValid: 0 });
 
                         let series = [];
-                        _.each(top10Candidates, (candidateId) => {
+                        _.each(top10Candidates, (candidateID) => {
                             series.push({
-                                name: `${candidateId}号有效票增量`,
+                                name: `${candidateID}号有效票增量`,
                                 type: 'line',
                                 symbolSize: 2,
                                 smooth: true,
-                                data: _.map(_.filter(validVotes, { voteFor: candidateId }), (i) => [i.time, i.count])
+                                data: _.map(_.filter(validVotes, { voteFor: candidateID }), (i) => [i.time, i.count])
                             });
                             series.push({
-                                name: `${candidateId}号无效票增量`,
+                                name: `${candidateID}号无效票增量`,
                                 type: 'line',
                                 symbolSize: 2,
                                 smooth: true,
                                 xAxisIndex: 1,
                                 yAxisIndex: 1,
-                                data: _.map(_.filter(invalidVotes, { voteFor: candidateId }), (i) => [i.time, i.count])
+                                data: _.map(_.filter(invalidVotes, { voteFor: candidateID }), (i) => [i.time, i.count])
                             });
                         });
                         top5CandidatesCountsByTimeChart.setOption({
@@ -515,7 +515,9 @@
                             magicType: { show: true, type: ['stack', 'tiled'] },
                         }
                     },
-                    legend: {},
+                    legend: {
+                        data: ['贴吧官方统计有效票', '有效票', '无效票']
+                    },
                     xAxis: [
                         {
                             type: 'value',
@@ -632,7 +634,7 @@
                                     let invalidCount = _.find(candidateVotes, { isValid: 0 });
                                     invalidCount = invalidCount == null ? 0 : invalidCount.count;
                                     return {
-                                        voteFor: bilibiliVoteVue.formatCandidateNameById(candidateVotes[0].voteFor),
+                                        voteFor: bilibiliVoteVue.formatCandidateNameByID(candidateVotes[0].voteFor),
                                         validCount,
                                         invalidCount,
                                         officialValidCount: null
@@ -717,7 +719,7 @@
                                     .takeRight(10)
                                     .map((officialCounts) => {
                                         return {
-                                            voteFor: bilibiliVoteVue.formatCandidateNameById(officialCounts.voteFor),
+                                            voteFor: bilibiliVoteVue.formatCandidateNameByID(officialCounts.voteFor),
                                             officialValidCount: officialCounts.officialValidCount
                                         };
                                     })
@@ -830,7 +832,7 @@
                 }
             },
             methods: {
-                formatCandidateNameById: function (id) {
+                formatCandidateNameByID: function (id) {
                     return `${id}号\n${this.$data.candidatesName[id - 1]}`;
                 }
             },
