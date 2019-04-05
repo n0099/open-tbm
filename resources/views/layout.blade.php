@@ -123,14 +123,20 @@
             </button>
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="navbar-nav">
-                    <li :class="`nav-item ${isActiveNav('query')}`">
-                        <a class="nav-link" href="{{ route('query') }}"><i class="fas fa-search"></i> 查询</a>
-                    </li>
-                    <li :class="`nav-item ${isActiveNav('status')}`">
-                        <a class="nav-link" href="{{ route('status') }}"><i class="fas fa-satellite-dish"></i> 状态</a>
+                    <li :class="`nav-item dropdown ${isActiveNav(['post', 'user'])}`">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarQueryDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-search"></i> 查询</a>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarQueryDropdown">
+                            <a :class="`dropdown-item ${isActiveNav('post')}`" href="{{ route('post') }}"><i class="far fa-comment-dots"></i> 贴子</a>
+                            <a :class="`dropdown-item ${isActiveNav('user')}`" href="{{ route('user') }}"><i class="fas fa-users"></i> 用户</a>
+                        </div>
                     </li>
                     <li :class="`nav-item ${isActiveNav('stats')}`">
                         <a class="nav-link" href="{{ route('stats') }}"><i class="fas fa-chart-pie"></i> 统计</a>
+                    </li>
+                    <li :class="`nav-item ${isActiveNav('status')}`">
+                        <a class="nav-link" href="{{ route('status') }}"><i class="fas fa-satellite-dish"></i> 状态</a>
                     </li>
                     <li :class="`nav-item dropdown ${isActiveNav(['bilibiliVote'])}`">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarTopicDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -283,11 +289,11 @@
             };
             const $$getTBMPostLink = (tid, pid = null, spid = null) => {
                 if (spid != null) {
-                    return `${$$baseUrl}/query/tid/${tid}`;
+                    return `${$$baseUrl}/post/tid/${tid}`;
                 } else if (pid != null) {
-                    return `${$$baseUrl}/query/pid/${pid}`;
+                    return `${$$baseUrl}/post/pid/${pid}`;
                 } else {
-                    return `${$$baseUrl}/query/spid/${spid}`;
+                    return `${$$baseUrl}/post/spid/${spid}`;
                 }
             };
             const $$getTiebaUserLink = (username) => {

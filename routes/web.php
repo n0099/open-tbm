@@ -12,7 +12,8 @@
 */
 
 Route::view('/', 'index')->name('index');
-Route::view('/query/{argu?}', 'query')->where('argu', '.*')->name('query');
+Route::view('/post/{argu?}', 'post')->where('argu', '.*')->name('post');
+Route::view('/user/{argu?}', 'user')->where('argu', '.*')->name('user');
 Route::view('/status', 'status')->name('status');
 Route::view('/stats', 'stats')->name('stats');
 Route::view('/bilibiliVote', 'bilibiliVote')->name('bilibiliVote');

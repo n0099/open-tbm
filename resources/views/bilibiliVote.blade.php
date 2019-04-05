@@ -25,6 +25,7 @@
             <li>被投候选人序号有效（1~1056）</li>
             <li>此前未有过有效投票（即改票）</li>
         </ul>
+        <p><a href="https://github.com/n0099/bilibiliVote" target="_blank">原始数据@GitHub</a></p>
         <p><a href="https://tieba.baidu.com/p/6059516291" target="_blank">关于启动本吧吧主招募的公示</a></p>
         <p><a href="https://tieba.baidu.com/p/6062186860" target="_blank">【吧主招募】bilibili吧吧主候选人吧友投票贴</a></p>
         <p><a href="https://tieba.baidu.com/p/6063655698" target="_blank">Bilibili吧吧主招募投票结果公示</a></p>
@@ -42,9 +43,12 @@
             <label class="col-2 col-form-label text-right" for="queryCandidateCountByTimeTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <span class="input-group-text">
+                        <i class="far fa-clock"></i>
+                    </span>
                 </div>
-                <select v-model="statsQuery.candidateCountByTimeTimeRange" id="queryCandidateCountByTimeTimeRange" class="form-control">
+                <select v-model="statsQuery.candidateCountByTimeTimeRange"
+                        id="queryCandidateCountByTimeTimeRange" class="form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                 </select>
@@ -56,9 +60,12 @@
             <label class="col-2 col-form-label text-right" for="queryCountsByTimeTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <span class="input-group-text">
+                        <i class="far fa-clock"></i>
+                    </span>
                 </div>
-                <select v-model="statsQuery.countsByTimeTimeRange" id="queryCountsByTimeTimeRange" class="form-control">
+                <select v-model="statsQuery.countsByTimeTimeRange"
+                        id="queryCountsByTimeTimeRange" class="form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                 </select>

@@ -22,6 +22,7 @@ Route::get('/forumsList', function () {
 
 Route::middleware(ReCAPTCHACheck::class)->group(function () {
     Route::get('/postsQuery', 'PostsQuery@query');
+    Route::get('/usersQuery', 'UsersQuery@query');
     Route::get('/status', function () {
         return \DB::query()
             ->select('startTime')

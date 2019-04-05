@@ -13,18 +13,24 @@
             <label class="col-2 col-form-label" for="queryStatsForum">贴吧</label>
             <div class="col-4 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                    <span class="input-group-text">
+                        <i class="fas fa-filter"></i>
+                    </span>
                 </div>
                 <select v-model="statsQuery.fid" id="queryStatsForum" class="form-control">
-                    <option v-for="forum in forumsList" v-text="forum.name" :value="forum.fid"></option>
+                    <option v-for="forum in forumsList" :key="forum.fid"
+                            v-text="forum.name" :value="forum.fid"></option>
                 </select>
             </div>
             <label class="border-left text-center col-2 col-form-label" for="queryStatsTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <span class="input-group-text">
+                        <i class="far fa-clock"></i>
+                    </span>
                 </div>
-                <select v-model="statsQuery.timeRange" id="queryStatsTimeRange" class="form-control">
+                <select v-model="statsQuery.timeRange"
+                        id="queryStatsTimeRange" class="form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                     <option value="day">天</option>
@@ -38,13 +44,17 @@
             <label class="col-2 col-form-label" for="queryStatsTime">时间范围</label>
             <div id="queryStatsTime" class="col-8 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                    <span class="input-group-text">
+                        <i class="far fa-calendar-alt"></i>
+                    </span>
                 </div>
-                <input v-model="statsQuery.startTime" id="queryStatsStartTime" type="datetime-local" class="form-control">
+                <input v-model="statsQuery.startTime"
+                       id="queryStatsStartTime" type="datetime-local" class="form-control">
                 <div class="input-group-prepend">
                     <span class="input-group-text">至</span>
                 </div>
-                <input v-model="statsQuery.endTime" id="queryStatsEndTime" type="datetime-local" class="form-control">
+                <input v-model="statsQuery.endTime"
+                       id="queryStatsEndTime" type="datetime-local" class="form-control">
             </div>
             <button type="submit" :disabled="submitDisabled" class="ml-auto btn btn-primary">查询</button>
         </div>

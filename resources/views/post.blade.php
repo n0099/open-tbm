@@ -130,9 +130,10 @@
             <div :data-page="postsData.pages.currentPage" class="posts-list">
                 <div class="reply-list-previous-page p-2 row align-items-center">
                     <div class="col"><hr /></div>
-                    <div class="w-auto" v-for="page in [postsData.pages]">
+                    <div v-for="page in [postsData.pages]" class="w-auto">
                         <div class="p-2 badge badge-light">
-                            <a v-if="page.currentPage > 1" class="badge badge-primary" :href="getPreviousPageUrl">上一页</a>
+                            <a v-if="page.currentPage > 1"
+                               class="badge badge-primary" :href="getPreviousPageUrl">上一页</a>
                             <p class="h4" v-text="`第 ${page.currentPage} 页`"></p>
                             <p class="small" v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条`"></p>
                             <span class="h5" v-text="`${postsData.forum.name}吧`"></span>
@@ -140,7 +141,8 @@
                     </div>
                     <div class="col"><hr /></div>
                 </div>
-                <div v-for="thread in postsData.threads" :data-title="thread.title" class="thread-item card">
+                <div v-for="thread in postsData.threads" :key="thread.tid"
+                     :data-title="thread.title" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
                         <span v-if="thread.stickyType == 'membertop'" class="badge badge-warning">会员置顶</span>
                         <span v-if="thread.stickyType == 'top'" class="badge badge-primary">置顶</span>
@@ -149,8 +151,11 @@
                         <span v-if="thread.topicType == 'text'" class="badge badge-danger">文本话题</span><!-- TODO: fill unknown picture topic thread type -->
                         <h6 class="d-inline">{{ thread.title }}</h6>
                         <div class="float-right badge badge-light">
-                            <router-link :to="{ name: 'tid', params: { tid: thread.tid.toString() } }" class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
-                            <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(thread.tid)" target="_blank"><i class="fas fa-link"></i></a>
+                            <router-link :to="{ name: 'tid', params: { tid: thread.tid.toString() } }"
+                                         class="thread-list-show-only badge badge-pill badge-light">只看此贴</router-link>
+                            <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(thread.tid)" target="_blank">
+                                <i class="fas fa-link"></i>
+                            </a>
                             <template v-for="latestReplier in [getUserData(thread.latestReplierUid)]">
                                 <a class="badge badge-pill badge-light" href="#!"
                                    :data-tippy-content="`<h6>ID：${thread.tid}</h6><hr /><br />
@@ -166,28 +171,39 @@
                             <span class="badge badge-pill badge-success">{{ thread.postTime }}</span>
                         </div>
                         <div>
-                            <span data-tippy-content="回复量" class="badge badge-info"><i class="far fa-comment-alt"></i> {{ thread.replyNum }}</span>
-                            <span data-tippy-content="阅读量" class="badge badge-info"><i class="far fa-eye"></i> {{ thread.viewNum }}</span>
-                            <span data-tippy-content="分享次数" class="badge badge-info"><i class="fas fa-share-alt"></i> {{ thread.shareNum }}</span>
+                            <span data-tippy-content="回复量" class="badge badge-info">
+                                <i class="far fa-comment-alt"></i> {{ thread.replyNum }}
+                            </span>
+                            <span data-tippy-content="阅读量" class="badge badge-info">
+                                <i class="far fa-eye"></i> {{ thread.viewNum }}
+                            </span>
+                            <span data-tippy-content="分享次数" class="badge badge-info">
+                                <i class="fas fa-share-alt"></i> {{ thread.shareNum }}
+                            </span>v
                             <span v-if="thread.agreeInfo != null" data-tippy-content="总赞踩量" class="badge badge-info">
                                 <i class="far fa-thumbs-up"></i>{{ thread.agreeInfo.agree_num }}
                                 <i class="far fa-thumbs-down"></i>{{ thread.agreeInfo.disagree_num }}
                             </span>
                             <span v-if="thread.zanInfo != null" class="badge badge-info"
-                                  :data-tippy-content="`点赞量：${thread.zanInfo.num}<br />
-                                       最后点赞时间：${thread.zanInfo.last_time}<br />
-                                       近期点赞用户：${thread.zanInfo.user_id_list}<br />`">
+                                  :data-tippy-content="`
+                                        点赞量：${thread.zanInfo.num}<br />
+                                        最后点赞时间：${thread.zanInfo.last_time}<br />
+                                        近期点赞用户：${thread.zanInfo.user_id_list}<br />`">
                                 <i class="far fa-thumbs-up"></i> 旧版客户端赞
                             </span>
-                            <span data-tippy-content="发贴位置" class="badge badge-info"><i class="fas fa-location-arrow"></i> {{ thread.locationInfo }}</span>
+                            <span data-tippy-content="发贴位置" class="badge badge-info">
+                                <i class="fas fa-location-arrow"></i> {{ thread.locationInfo }}
+                            </span>
                         </div>
                     </div>
                     <template v-for="reply in thread.replies">
-                        <div :id="reply.pid" class="reply-item" data-appear-top-offset="3000">
+                        <div :key="reply.pid" :id="reply.pid" class="reply-item" data-appear-top-offset="3000">
                             <div class="reply-title sticky-top card-header">
                                 <div class="d-inline h5">
                                     <span class="badge badge-info">{{ reply.floor }}楼</span>
-                                    <span v-if="reply.subReplyNum > 0" class="badge badge-info">{{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i></span>
+                                    <span v-if="reply.subReplyNum > 0" class="badge badge-info">
+                                        {{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i>
+                                    </span>
                                     <!--
                                     <span>fold:{{ reply.isFold }}</span>
                                     <span>{{ reply.agreeInfo }}</span>
@@ -199,9 +215,16 @@
                                     -->
                                 </div>
                                 <div class="float-right badge badge-light">
-                                    <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }" class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
+                                    <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }"
+                                                 class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
                                     <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank"><i class="fas fa-link"></i></a>
-                                    <a class="badge badge-pill badge-light" href="#!" :data-tippy-content="`<h6>ID：${reply.pid}</h6><hr /><br />收录时间：${reply.created_at}<br />最后更新：${reply.updated_at}`"><i class="fas fa-info"></i></a>
+                                    <a class="badge badge-pill badge-light" href="#!"
+                                       :data-tippy-content="`
+                                            <h6>ID：${reply.pid}</h6><hr /><br />
+                                            收录时间：${reply.created_at}<br />
+                                            最后更新：${reply.updated_at}`">
+                                        <i class="fas fa-info"></i>
+                                    </a>
                                     <span class="badge badge-pill badge-primary">{{ reply.postTime }}</span>
                                 </div>
                             </div>
@@ -210,8 +233,13 @@
                                     <div class="reply-banner col-md-auto text-center">
                                         <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
                                             <a class="d-block" :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
-                                                <img class="lazyload d-block mx-auto badge badge-light" width="90px" height="90px" :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
-                                                <span>{{ author.displayName }}<br v-if="author.displayName != null" />{{ author.name }}</span>
+                                                <img class="lazyload d-block mx-auto badge badge-light" width="90px" height="90px"
+                                                     :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
+                                                <span>
+                                                    {{ author.displayName }}
+                                                    <br v-if="author.displayName != null" />
+                                                    {{ author.name }}
+                                                </span>
                                             </a>
                                             <div v-if="author.uid == getUserData(thread.authorUid).uid" class="badge badge-pill badge-success">楼主</div>
                                             <div v-if="reply.authorManagerType != null">
@@ -223,35 +251,49 @@
                                     </div>
                                 </template>
                                 <div class="reply-body col border-left">
-                                    <div class="card-body p-3" v-html="reply.content"></div>
-                                    <div v-if="reply.subReplies.length > 0" v-for="subReplyGroup in reply.subReplies"
-                                         class="sub-reply-group card bs-callout bs-callout-success">
-                                        <ul class="list-group list-group-flush">
-                                            <li v-for="(subReply, index) in subReplyGroup" class="sub-reply-item list-group-item">
-                                                <template v-for="author in [getUserData(subReply.authorUid)]">
-                                                    <a v-if="subReplyGroup[index - 1] == undefined" class="sub-reply-user-info badge badge-light"
-                                                       :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
-                                                        <img class="lazyload" width="25px" height="25px" :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
-                                                        <span v-if="author.displayName == null">{{ author.name }}</span>
-                                                        <span v-else>{{ author.displayName }}（{{ author.name }}）</span>
-                                                        <div class="btn-group" role="group">
-                                                            <button v-if="author.uid == getUserData(thread.authorUid).uid" type="button" class="badge btn btn-success">楼主</button>
-                                                            <button v-else-if="author.uid == getUserData(reply.authorUid).uid" type="button" class="badge btn btn-info">层主</button>
-                                                            <button v-if="subReply.authorManagerType == 'manager'" type="button" class="badge btn btn-danger">吧主</button>
-                                                            <button v-else-if="subReply.authorManagerType == 'assist'" type="button" class="badge btn btn-info">小吧</button>
-                                                            <button type="button" class="badge btn btn-primary">Lv{{ subReply.authorExpGrade }}</button>
+                                    <div v-html="reply.content" class="card-body p-3"></div>
+                                    <template v-if="reply.subReplies.length > 0">
+                                        <div v-for="subReplyGroup in reply.subReplies" :key="`${reply.pid}-${subReplyGroup[0].spid}`"
+                                             class="sub-reply-group card bs-callout bs-callout-success">
+                                            <ul class="list-group list-group-flush">
+                                                <li v-for="(subReply, index) in subReplyGroup" :key="subReply.spid"
+                                                    class="sub-reply-item list-group-item">
+                                                    <template v-for="author in [getUserData(subReply.authorUid)]">
+                                                        <a v-if="subReplyGroup[index - 1] == undefined"
+                                                           class="sub-reply-user-info badge badge-light"
+                                                           :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
+                                                            <img class="lazyload" width="25px" height="25px"
+                                                                 :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
+                                                            <span v-if="author.displayName == null">{{ author.name }}</span>
+                                                            <span v-else>{{ author.displayName }}（{{ author.name }}）</span>
+                                                            <div class="btn-group" role="group">
+                                                                <button v-if="author.uid == getUserData(thread.authorUid).uid" type="button" class="badge btn btn-success">楼主</button>
+                                                                <button v-else-if="author.uid == getUserData(reply.authorUid).uid" type="button" class="badge btn btn-info">层主</button>
+                                                                <button v-if="subReply.authorManagerType == 'manager'" type="button" class="badge btn btn-danger">吧主</button>
+                                                                <button v-else-if="subReply.authorManagerType == 'assist'" type="button" class="badge btn btn-info">小吧</button>
+                                                                <button type="button" class="badge btn btn-primary">Lv{{ subReply.authorExpGrade }}</button>
+                                                            </div>
+                                                        </a>
+                                                        <div class="float-right badge badge-light">
+                                                            <a class="sub-reply-hide-link badge badge-pill badge-light"
+                                                               :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank">
+                                                                <i class="fas fa-link"></i>
+                                                            </a>
+                                                            <a class="sub-reply-hide-link badge badge-pill badge-light" href="#!"
+                                                               :data-tippy-content="`
+                                                                    <h6>ID：${subReply.spid}</h6><hr /><br />
+                                                                    收录时间：${subReply.created_at}<br />
+                                                                    最后更新：${subReply.updated_at}`">
+                                                                <i class="fas fa-info"></i>
+                                                            </a>
+                                                            <span class="badge badge-pill badge-info">{{ subReply.postTime }}</span>
                                                         </div>
-                                                    </a>
-                                                    <div class="float-right badge badge-light">
-                                                        <a class="sub-reply-hide-link badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank"><i class="fas fa-link"></i></a>
-                                                        <a class="sub-reply-hide-link badge badge-pill badge-light" href="#!" :data-tippy-content="`<h6>ID：${subReply.spid}</h6><hr /><br />收录时间：${subReply.created_at}<br />最后更新：${subReply.updated_at}`"><i class="fas fa-info"></i></a>
-                                                        <span class="badge badge-pill badge-info">{{ subReply.postTime }}</span>
-                                                    </div>
-                                                </template>
-                                                <div v-html="subReply.content"></div>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                                    </template>
+                                                    <div v-html="subReply.content"></div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -262,7 +304,8 @@
                         <div class="col"><hr /></div>
                         <div class="w-auto" v-for="page in [postsData.pages]">
                             <span v-if="page.currentPage == page.lastPage" class="h4">已经到底了~</span><!-- TODO: fix last page logical-->
-                            <button v-else @click="loadNewThreadsPage($event.currentTarget, page.currentPage + 1)" type="button" class="btn btn-secondary">
+                            <button v-else @click="loadNewThreadsPage($event.currentTarget, page.currentPage + 1)"
+                                    type="button" class="btn btn-secondary">
                                 <span class="h4">下一页</span>
                             </button>
                         </div>
@@ -273,24 +316,37 @@
         </template>
         <template id="posts-list-pages-template">
             <div>
-                <button type="button" class="floating-posts-nav-btn btn btn-light border"><i class="fas fa-bars"></i></button>
+                <button type="button" class="floating-posts-nav-btn btn btn-light border">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="floating-posts-nav border-left shadow-sm bg-light">
                     <template v-for="postsData in postsPages">
                         <template v-for="currentPage in [postsData.pages.currentPage]">
-                            <nav :id="`posts-nav-page-${currentPage}`" class="posts-nav-page nav flex-column">
+                            <nav :key="currentPage"
+                                 :id="`posts-nav-page-${currentPage}`"
+                                 class="posts-nav-page nav flex-column">
                                 <a v-text="`第${currentPage}页`" href="#!"
-                                   data-toggle="collapse" :data-target="`.posts-nav-thread[data-parent='#posts-nav-page-${currentPage}']`"
-                                   aria-expanded="false" aria-controls="posts-nav" class="posts-nav-page-link border border-primary btn"></a>
+                                   data-toggle="collapse"
+                                   :data-target="`.posts-nav-thread[data-parent='#posts-nav-page-${currentPage}']`"
+                                   aria-expanded="false" aria-controls="posts-nav"
+                                   class="posts-nav-page-link border border-primary btn"></a>
                                 <div v-for="thread in postsData.threads"
-                                     :data-parent="`#posts-nav-page-${currentPage}`" class="posts-nav-thread border collapse">
+                                     :key="thread.tid"
+                                     :data-parent="`#posts-nav-page-${currentPage}`"
+                                     class="posts-nav-thread border collapse">
                                     <a v-text="thread.title" href="#!"
-                                       data-toggle="collapse" :id="`posts-nav-thread-${thread.tid}`"
+                                       data-toggle="collapse"
+                                       :id="`posts-nav-thread-${thread.tid}`"
                                        :data-target="`.posts-nav-reply[data-parent='#posts-nav-thread-${thread.tid}']`"
-                                       aria-expanded="false" aria-controls="posts-nav-reply" class="posts-nav-thread-link border-bottom btn"></a>
+                                       aria-expanded="false" aria-controls="posts-nav-reply"
+                                       class="posts-nav-thread-link border-bottom btn"></a>
                                     <nav class="nav flex-column">
-                                        <a v-for="reply in thread.replies" v-text="`${reply.floor}L`"
+                                        <a v-for="reply in thread.replies"
+                                           :key="reply.pid"
+                                           v-text="`${reply.floor}L`"
                                            :data-parent="`#posts-nav-thread-${thread.tid}`"
-                                           class="posts-nav-reply collapse btn" :href="`#${reply.pid}`"></a>
+                                           class="posts-nav-reply collapse btn"
+                                           :href="`#${reply.pid}`"></a>
                                     </nav>
                                 </div>
                             </nav>
@@ -304,55 +360,73 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">tid</span>
                             </div>
-                            <select v-model="queryData.query.tidRange" data-param="tidRange" id="queryTidRange" class="col-1 form-control">
+                            <select v-model="queryData.query.tidRange"
+                                    data-param="tidRange" id="queryTidRange"
+                                    class="col-1 form-control">
                                 <option>&lt;</option>
                                 <option>=</option>
                                 <option>&gt;</option>
                             </select>
-                            <input v-model="queryData.param.tid" data-param="tid" id="queryTid" type="number" class="form-control" placeholder="5000000000" aria-label="tid" />
+                            <input v-model="queryData.param.tid"
+                                   data-param="tid" id="queryTid" type="number"
+                                   class="form-control" placeholder="5000000000" aria-label="tid" />
                             <div class="input-group-prepend">
                                 <span class="input-group-text">pid</span>
                             </div>
-                            <select v-model="queryData.query.pidRange" data-param="pidRange" id="queryPidRange" class="col-1 form-control">
+                            <select v-model="queryData.query.pidRange"
+                                    data-param="pidRange" id="queryPidRange" class="col-1 form-control">
                                 <option>&lt;</option>
                                 <option>=</option>
                                 <option>&gt;</option>
                             </select>
-                            <input v-model="queryData.param.pid" data-param="pid" id="queryPid" type="number" class="form-control" placeholder="15000000000" aria-label="pid" />
+                            <input v-model="queryData.param.pid"
+                                   data-param="pid" id="queryPid" type="number"
+                                   class="form-control" placeholder="15000000000" aria-label="pid" />
                             <div class="input-group-prepend">
                                 <span class="input-group-text">spid</span>
                             </div>
-                            <select v-model="queryData.query.spidRange" data-param="spidRange" id="querySpidRange" class="col-1 form-control">
+                            <select v-model="queryData.query.spidRange"
+                                    data-param="spidRange" id="querySpidRange"
+                                    class="col-1 form-control">
                                 <option>&lt;</option>
                                 <option>=</option>
                                 <option>&gt;</option>
                             </select>
-                            <input v-model="queryData.param.spid" data-param="spid" id="querySpid" type="number" class="form-control" placeholder="15000000000" aria-label="spid" />
+                            <input v-model="queryData.param.spid"
+                                   data-param="spid" id="querySpid" type="number"
+                                   class="form-control" placeholder="15000000000" aria-label="spid" />
                         </div>
                     </div>
                     <div class="form-group form-row">
                         <label class="col-2 col-form-label" for="queryFid">贴吧</label>
                         <div class="col-3 input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                                <span class="input-group-text">
+                                    <i class="fas fa-filter"></i>
+                                </span>
                             </div>
-                            <select v-model="queryData.query.fid" data-param="fid" id="queryFid" class="form-control">
+                            <select v-model="queryData.query.fid"
+                                    data-param="fid" id="queryFid" class="form-control">
                                 <option value="undefined">未指定</option>
-                                <option v-for="forum in forumsList" v-text="forum.name" :value="forum.fid"></option>
+                                <option v-for="forum in forumsList" :key="forum.fid"
+                                        v-text="forum.name" :value="forum.fid"></option>
                             </select>
                         </div>
                         <label class="border-left text-center col-1 col-form-label">贴子类型</label>
                         <div class="input-group my-auto col-4">
                             <div class="custom-checkbox custom-control custom-control-inline">
-                                <input v-model="queryData.query.postType" data-param="postType" id="queryPostTypeThread" type="checkbox" value="thread" class="custom-control-input">
+                                <input v-model="queryData.query.postType"
+                                       data-param="postType" id="queryPostTypeThread" type="checkbox" value="thread" class="custom-control-input">
                                 <label class="custom-control-label" for="queryPostTypeThread">主题贴</label>
                             </div>
                             <div class="custom-checkbox custom-control custom-control-inline">
-                                <input v-model="queryData.query.postType" data-param="postType" id="queryPostTypeReply" type="checkbox" value="reply" class="custom-control-input">
+                                <input v-model="queryData.query.postType"
+                                       data-param="postType" id="queryPostTypeReply" type="checkbox" value="reply" class="custom-control-input">
                                 <label class="custom-control-label" for="queryPostTypeReply">回复贴</label>
                             </div>
                             <div class="custom-checkbox custom-control custom-control-inline">
-                                <input v-model="queryData.query.postType" data-param="postType" id="queryPostTypeSubReply" type="checkbox" value="subReply" class="custom-control-input">
+                                <input v-model="queryData.query.postType"
+                                       data-param="postType" id="queryPostTypeSubReply" type="checkbox" value="subReply" class="custom-control-input">
                                 <label class="custom-control-label" for="queryPostTypeSubReply">楼中楼</label>
                             </div>
                         </div>
@@ -361,9 +435,12 @@
                         <label class="col-2 col-form-label" for="queryOrder">排序方式</label>
                         <div id="queryOrder" class="col-8 input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
+                                <span class="input-group-text">
+                                    <i class="fas fa-sort-amount-down"></i>
+                                </span>
                             </div>
-                            <select v-model="queryData.query.orderBy" data-param="orderBy" id="queryOrderBy" class="form-control col">
+                            <select v-model="queryData.query.orderBy"
+                                    data-param="orderBy" id="queryOrderBy" class="form-control col">
                                 <option value="default">默认（单贴查询按发贴时间正序；单吧/搜索查询倒序）</option>
                                 <option value="postTime">发贴时间</option>
                                 <optgroup label="贴子ID">
@@ -372,7 +449,8 @@
                                     <option value="spid">楼中楼spid</option>
                                 </optgroup>
                             </select>
-                            <select v-model="queryData.query.orderDirection" data-param="orderDirection" id="queryOrderDirection" class="col-4 form-control">
+                            <select v-model="queryData.query.orderDirection"
+                                    data-param="orderDirection" id="queryOrderDirection" class="col-4 form-control">
                                 <option value="ASC">正序（从小/旧至大/新）</option>
                                 <option value="DESC">倒序（从大/新至小/旧）</option>
                             </select>
@@ -382,13 +460,17 @@
                         <label class="col-2 col-form-label" for="queryPostTime">发贴时间</label>
                         <div id="queryPostTime" class="col-7 input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                <span class="input-group-text">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
                             </div>
-                            <input v-model="queryData.query.postTimeStart" data-param="postTimeStart" id="queryPostTimeStart" type="datetime-local" class="custom-query-param form-control">
+                            <input v-model="queryData.query.postTimeStart"
+                                   data-param="postTimeStart" id="queryPostTimeStart" type="datetime-local" class="custom-query-param form-control">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">至</span>
                             </div>
-                            <input v-model="queryData.query.postTimeEnd" data-param="postTimeEnd" id="queryPostTimeEnd" type="datetime-local" class="custom-query-param form-control">
+                            <input v-model="queryData.query.postTimeEnd"
+                                   data-param="postTimeEnd" id="queryPostTimeEnd" type="datetime-local" class="custom-query-param form-control">
                         </div>
                     </div>
                     <div id="queryCustomQueryParamsCollapse" class="collapse">
@@ -397,13 +479,17 @@
                                 <label class="col-2 col-form-label" for="queryLatestReplyTime">最后回复时间</label>
                                 <div id="queryLatestReplyTime" class="col-7 input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                        <span class="input-group-text">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </span>
                                     </div>
-                                    <input v-model="queryData.query.latestReplyTimeStart" data-param="latestReplyTimeStart" id="queryLatestReplyTimeStart" type="datetime-local" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.latestReplyTimeStart"
+                                           data-param="latestReplyTimeStart" id="queryLatestReplyTimeStart" type="datetime-local" class="custom-query-param form-control">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">至</span>
                                     </div>
-                                    <input v-model="queryData.query.latestReplyTimeEnd" data-param="latestReplyTimeEnd" id="queryLatestReplyTimeEnd" type="datetime-local" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.latestReplyTimeEnd"
+                                           data-param="latestReplyTimeEnd" id="queryLatestReplyTimeEnd" type="datetime-local" class="custom-query-param form-control">
                                 </div>
                                 <small class="col align-self-center">仅主题贴</small>
                             </div>
@@ -413,12 +499,14 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
-                                                <input v-model="queryData.query.threadTitleRegex" data-param="threadTitleRegex" id="queryThreadTitleRegex" type="checkbox" value="" class="custom-query-param custom-control-input">
+                                                <input v-model="queryData.query.threadTitleRegex"
+                                                       data-param="threadTitleRegex" id="queryThreadTitleRegex" type="checkbox" value="" class="custom-query-param custom-control-input">
                                                 <label class="custom-control-label" for="queryThreadTitleRegex">正则</label>
                                             </div>
                                         </div>
                                     </div>
-                                    <input v-model="queryData.query.threadTitle" data-param="threadTitle" id="queryThreadTitle" type="text" placeholder="模糊匹配 仅主题贴" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.threadTitle"
+                                           data-param="threadTitle" id="queryThreadTitle" type="text" placeholder="模糊匹配 仅主题贴" class="custom-query-param form-control">
                                 </div>
                                 <small class="col align-self-center">仅主题贴</small>
                             </div>
@@ -428,29 +516,36 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
-                                                <input v-model="queryData.query.postContentRegex" data-param="postContentRegex" id="queryPostContentRegex" type="checkbox" value="" class="custom-query-param custom-control-input">
+                                                <input v-model="queryData.query.postContentRegex"
+                                                       data-param="postContentRegex" id="queryPostContentRegex" type="checkbox" value="" class="custom-query-param custom-control-input">
                                                 <label class="custom-control-label" for="queryPostContentRegex">正则</label>
                                             </div>
                                         </div>
                                     </div>
-                                    <input v-model="queryData.query.postContent" data-param="postContent" id="queryPostContent" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.postContent"
+                                           data-param="postContent" id="queryPostContent" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="custom-query-param form-control">
                                 </div>
                                 <small class="col align-self-center">仅非主题贴</small>
                             </div>
                             <fieldset class="border rounded col-10 p-3 mb-2 form-inline form-row">
-                                <legend class="h6 w-auto">用户信息 <small>主题贴下为楼主</small></legend>
+                                <legend class="h6 w-auto">
+                                    用户信息 <small>主题贴下为楼主</small>
+                                </legend>
                                 <div class="mb-2 form-row">
                                     <label class="col-2 col-form-label">查询范围</label>
                                     <div class="custom-checkbox custom-control custom-control-inline">
-                                        <input v-model="queryData.query.userType" data-param="userType" id="queryUserTypeAuthor" type="checkbox" value="author" class="custom-query-param custom-control-input">
+                                        <input v-model="queryData.query.userType"
+                                               data-param="userType" id="queryUserTypeAuthor" type="checkbox" value="author" class="custom-query-param custom-control-input">
                                         <label class="custom-control-label" for="queryUserTypeAuthor">发贴人</label>
                                     </div>
                                     <div class="custom-checkbox custom-control custom-control-inline">
-                                        <input v-model="queryData.query.userType" data-param="userType" id="queryUserTypeLatestReplier" type="checkbox" value="latestReplier" class="custom-query-param custom-control-input">
+                                        <input v-model="queryData.query.userType"
+                                               data-param="userType" id="queryUserTypeLatestReplier" type="checkbox" value="latestReplier" class="custom-query-param custom-control-input">
                                         <label class="custom-control-label" for="queryUserTypeLatestReplier">最后回复人（仅主题贴）</label>
                                     </div>
                                     <label class="border-left col-2 col-form-label" for="queryUserManagerType">吧务级别</label>
-                                    <select v-model="queryData.query.userManagerType" data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
+                                    <select v-model="queryData.query.userManagerType"
+                                            data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
                                         <option value="default">所有</option>
                                         <option value="all">吧友</option>
                                         <option value="manager">吧主</option>
@@ -460,20 +555,25 @@
                                 </div>
                                 <div class="form-row">
                                     <label class="col-1 col-form-label" for="queryUserName">用户名</label>
-                                    <input v-model="queryData.query.userName" data-param="userName" id="queryUserName" type="text" placeholder="n0099" class="custom-query-param form-control col-2">
+                                    <input v-model="queryData.query.userName"
+                                           data-param="userName" id="queryUserName" type="text" placeholder="n0099" class="custom-query-param form-control col-2">
                                     <label class="col-1 col-form-label" for="queryUserDisplayName">昵称</label>
-                                    <input v-model="queryData.query.userDisplayName" data-param="userDisplayName" id="queryUserDisplayName" type="text" placeholder="神奇🍀" class="custom-query-param form-control col-2">
+                                    <input v-model="queryData.query.userDisplayName"
+                                           data-param="userDisplayName" id="queryUserDisplayName" type="text" placeholder="神奇🍀" class="custom-query-param form-control col-2">
                                     <label class="col-1 col-form-label" for="queryUserExpGrade">等级</label>
                                     <div class="col-2 input-group">
-                                        <select v-model="queryData.query.userExpGradeRange" data-param="userExpGradeRange" id="queryUserExpGradeRange" class="custom-query-param form-control">
+                                        <select v-model="queryData.query.userExpGradeRange"
+                                                data-param="userExpGradeRange" id="queryUserExpGradeRange" class="custom-query-param form-control">
                                             <option>&lt;</option>
                                             <option>=</option>
                                             <option>&gt;</option>
                                         </select>
-                                        <input v-model="queryData.query.userExpGrade" data-param="userExpGrade" id="queryUserExpGrade" type="number" placeholder="18" class="custom-query-param form-control">
+                                        <input v-model="queryData.query.userExpGrade"
+                                               data-param="userExpGrade" id="queryUserExpGrade" type="number" placeholder="18" class="custom-query-param form-control">
                                     </div>
                                     <label class="col-1 col-form-label" for="queryUserGender">性别</label>
-                                    <select v-model="queryData.query.userGender" data-param="userGender" id="queryUserGender" class="custom-query-param form-control col-1">
+                                    <select v-model="queryData.query.userGender"
+                                            data-param="userGender" id="queryUserGender" class="custom-query-param form-control col-1">
                                         <option value="default">不限</option>
                                         <option value="0">未指定（显示为男）</option>
                                         <option value="1">男 ♂</option>
@@ -487,7 +587,8 @@
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
-                                                <input v-model="queryData.query.threadProperty" data-param="threadProperty" id="queryThreadPropertyGood" type="checkbox" value="good" class="custom-query-param custom-control-input">
+                                                <input v-model="queryData.query.threadProperty"
+                                                       data-param="threadProperty" id="queryThreadPropertyGood" type="checkbox" value="good" class="custom-query-param custom-control-input">
                                                 <label class="text-danger font-weight-bold custom-control-label" for="queryThreadPropertyGood">精品</label>
                                             </div>
                                         </div>
@@ -495,7 +596,8 @@
                                     <div class="input-group-append">
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
-                                                <input v-model="queryData.query.threadProperty" data-param="threadProperty" id="queryThreadPropertySticky" type="checkbox" value="sticky" class="custom-query-param custom-control-input">
+                                                <input v-model="queryData.query.threadProperty"
+                                                       data-param="threadProperty" id="queryThreadPropertySticky" type="checkbox" value="sticky" class="custom-query-param custom-control-input">
                                                 <label class="text-primary font-weight-bold custom-control-label" for="queryThreadPropertySticky">置顶</label>
                                             </div>
                                         </div>
@@ -505,48 +607,58 @@
                             <div class="form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadReplyNumGroup">主题贴回复数</label>
                                 <div id="queryThreadReplyNumGroup" class="col-3 input-group">
-                                    <select v-model="queryData.query.threadReplyNumRange" data-param="threadReplyNumRange" id="queryThreadReplyNumRange" class="col-4 form-control">
+                                    <select v-model="queryData.query.threadReplyNumRange"
+                                            data-param="threadReplyNumRange" id="queryThreadReplyNumRange" class="col-4 form-control">
                                         <option>&lt;</option>
                                         <option>=</option>
                                         <option>&gt;</option>
                                     </select>
-                                    <input v-model="queryData.query.threadReplyNum" data-param="threadReplyNum" id="queryThreadReplyNum" type="number" placeholder="100" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.threadReplyNum"
+                                           data-param="threadReplyNum" id="queryThreadReplyNum" type="number" placeholder="100" class="custom-query-param form-control">
                                 </div>
                                 <label class="col-2 col-form-label" for="queryReplySubReplyNumGroup">楼中楼回复数</label>
                                 <div id="queryReplySubReplyNumGroup" class="col-3 input-group">
-                                    <select v-model="queryData.query.replySubReplyNumRange" data-param="replySubReplyNumRange" id="queryReplySubReplyNumRange" class="col-4 form-control">
+                                    <select v-model="queryData.query.replySubReplyNumRange"
+                                            data-param="replySubReplyNumRange" id="queryReplySubReplyNumRange" class="col-4 form-control">
                                         <option>&lt;</option>
                                         <option>=</option>
                                         <option>&gt;</option>
                                     </select>
-                                    <input v-model="queryData.query.replySubReplyNum" data-param="replySubReplyNum" id="queryReplySubReplyNum" type="number" placeholder="仅回复贴" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.replySubReplyNum"
+                                           data-param="replySubReplyNum" id="queryReplySubReplyNum" type="number" placeholder="仅回复贴" class="custom-query-param form-control">
                                 </div>
                             </div>
                             <div class="form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadViewNumGroup">主题贴查看量</label>
                                 <div id="queryThreadViewNumGroup" class="col-3 input-group">
-                                    <select v-model="queryData.query.threadViewNumRange" data-param="threadViewNumRange" id="queryThreadViewNumRange" class="col-4 form-control">
+                                    <select v-model="queryData.query.threadViewNumRange"
+                                            data-param="threadViewNumRange" id="queryThreadViewNumRange" class="col-4 form-control">
                                         <option>&lt;</option>
                                         <option>=</option>
                                         <option>&gt;</option>
                                     </select>
-                                    <input v-model="queryData.query.threadViewNum" data-param="threadViewNum" id="queryThreadViewNum" type="number" placeholder="100" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.threadViewNum"
+                                           data-param="threadViewNum" id="queryThreadViewNum" type="number" placeholder="100" class="custom-query-param form-control">
                                 </div>
                                 <label class="col-2 col-form-label" for="queryThreadShareNumGroup">主题贴分享量</label>
                                 <div id="queryThreadShareNumGroup" class="col-3 input-group">
-                                    <select v-model="queryData.query.threadShareNumRange" data-param="threadShareNumRange" id="queryThreadShareNumRange" class="col-4 form-control">
+                                    <select v-model="queryData.query.threadShareNumRange"
+                                            data-param="threadShareNumRange" id="queryThreadShareNumRange" class="col-4 form-control">
                                         <option>&lt;</option>
                                         <option>=</option>
                                         <option>&gt;</option>
                                     </select>
-                                    <input v-model="queryData.query.threadShareNum" data-param="threadShareNum" id="queryThreadShareNum" type="number" placeholder="100" class="custom-query-param form-control">
+                                    <input v-model="queryData.query.threadShareNum"
+                                           data-param="threadShareNum" id="queryThreadShareNum" type="number" placeholder="100" class="custom-query-param form-control">
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="form-group form-row">
                         <button type="submit" class="btn btn-primary">查询</button>
-                        <button class="ml-2 btn btn-light" type="button" data-toggle="collapse" data-target="#queryCustomQueryParamsCollapse" aria-expanded="false" aria-controls="queryCustomQueryParamsCollapse">搜索查询参数</button>
+                        <button class="ml-2 btn btn-light" type="button"
+                                data-toggle="collapse" data-target="#queryCustomQueryParamsCollapse"
+                                aria-expanded="false" aria-controls="queryCustomQueryParamsCollapse">搜索查询参数</button>
                     </div>
                 </form>
                 <posts-list v-for="(postsData, currentPostPage) in postsPages"
@@ -595,7 +707,10 @@
 
             const postsListComponent = Vue.component('posts-list', {
                 template: '#posts-list-template',
-                props: ['postsData', 'loadingNewPosts'], // received from parent component
+                props: { // received from parent component
+                    postsData: Object,
+                    loadingNewPosts: Boolean
+                },
                 data: function () {
                     return {
                         $$baseUrl,
@@ -662,179 +777,6 @@
                         ]
                     };
                 },
-                methods: {
-                    submitQueryForm: function () {
-                        let queryParams = _.chain(this.$data.queryData.param)
-                            .omit('page')
-                            .omitBy(_.isEmpty) // omitBy will remove empty param values like empty string
-                            .toPairs()
-                            .map((param) => {
-                                return _.fromPairs([param]); // convert { k:v, k:v } to [[k, v], [k ,v]]
-                            })
-                            .sortBy((param) => {
-                                return _.indexOf(['tid', 'pid', 'spid'], _.keys(param)[0]); // sort params array with given order
-                            })
-                            .value();
-                        let queryParamsPath = '';
-                        _.each(queryParams, (param) => {
-                            if (_.values(param)[0] !== "") {
-                                queryParamsPath += `/${_.keys(param)[0]}/${_.values(param)[0]}`;
-                            }
-                        });
-
-                        let customQueryParams = _.omitBy(_.cloneDeep(this.$data.queryData.query), _.isEmpty); // omitBy will remove empty query param values like empty string
-                        if (_.isEqual(_.sortBy(customQueryParams.postType), _.sortBy(['thread', 'reply', 'subReply']))) { // sort post type array to compare without effect from order
-                            delete customQueryParams.postType;
-                        }
-
-                        if (customQueryParams.fid === 'undefined') {
-                            delete customQueryParams.fid;
-                        }
-                        if (customQueryParams.orderBy === 'default') {
-                            delete customQueryParams.orderDirection;
-                        }
-
-                        _.each(this.$data.customQueryParamsDefaultValue, (param) => { // remove default value params
-                            let paramName = param.param;
-                            if (Reflect.get(customQueryParams, paramName) === param.default) {
-                                Reflect.deleteProperty(customQueryParams, paramName);
-                            }
-                        });
-
-                        let queryPostsIDRangeParams = [
-                            'tidRange',
-                            'pidRange',
-                            'spidRange'
-                        ];
-                        _.each(queryPostsIDRangeParams, (param) => { // remove range param when posts id param is unset
-                            if (Reflect.get(this.$data.queryData.param, param.replace('Range', '')) === undefined) {
-                                Reflect.deleteProperty(customQueryParams, param);
-                            }
-                        });
-
-                        let userInfoParams = [
-                            'userManagerType',
-                            'userName',
-                            'userDisplayName',
-                            'userExpGradeRange',
-                            'userExpGrade',
-                            'userGender'
-                        ];
-                        if (_.every(userInfoParams, (param) => {
-                            return Reflect.get(customQueryParams, param) == null;
-                        })) {
-                            delete customQueryParams.userType;
-                        }
-
-                        this.$router.push({ path: `/query${queryParamsPath}`, query: customQueryParams });
-                    },
-                    loadPageData: function (routeParams, routeQueryStrings, shouldReplacePage) {
-                        let groupSubRepliesByAuthor = (data) => {
-                            data.threads.forEach((thread) => {
-                                thread.replies.forEach((reply) => {
-                                    reply.subReplies.forEach((subReply, index, subReplies) => {
-                                        // group sub replies item by continuous and same author info
-                                        let previousSubReply = subReplies[index - 1];
-                                        if (previousSubReply !== undefined
-                                            && subReply.authorUid === previousSubReply.authorUid
-                                            && subReply.authorManagerType === previousSubReply.authorManagerType
-                                            && subReply.authorExpGrade === previousSubReply.authorExpGrade) {
-                                            _.last(subReplies).push(subReply);
-                                        } else {
-                                            subReplies.push([subReply]);
-                                        }
-                                    });
-                                    // remove ungrouped sub replies
-                                    reply.subReplies = reply.subReplies.filter((subReply) => {
-                                        return _.isArray(subReply);
-                                    });
-                                });
-                            });
-                            return data;
-                        };
-
-                        let ajaxStartTime = Date.now();
-                        let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings);
-                        let ajaxErrorCallback = () => {
-                            this.$data.postsPages = []; // clear posts pages data will emit posts pages updated event
-                            $('#error-404-template').show();
-                        };
-                        if (_.isEmpty(queryQueryStrings)) {
-                            new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
-                            this.$data.postsPages = []; // clear posts pages data will emit posts pages updated event
-                            $('#first-loading-placeholder').hide();
-                            return;
-                        }
-                        if (shouldReplacePage) {
-                            this.$data.postsPages = []; // clear posts pages data before finish to show loading placeholder
-                        }
-
-                        if (window.previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
-                            window.previousPostsQueryAjax.abort();
-                        }
-                        this.$data.loadingNewPosts = true;
-                        $$reCAPTCHACheck().then((token) => {
-                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token)));
-                            window.previousPostsQueryAjax.done((jsonData) => {
-                                    jsonData = groupSubRepliesByAuthor(jsonData);
-                                    let pagesInfo = jsonData.pages;
-
-                                    // is requesting new pages data on same query params or loading new data on different query params
-                                    if (shouldReplacePage) {
-                                        $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
-                                        this.$data.postsPages = [jsonData];
-                                    } else {
-                                        this.$data.postsPages.push(jsonData);
-                                    }
-
-                                    new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                                    this.changeDocumentTitle(this.$route);
-                                }).fail((jqXHR) => {
-                                    ajaxErrorCallback();
-                                }).always(() => {
-                                    this.$data.loadingNewPosts = false
-                                });
-                        });
-                    },
-                    changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
-                        newPage = newPage || route.params.page || 1;
-                        if (! _.isEmpty(this.$data.postsPages)) { // make sure it's not 404
-                            let forumName = `${this.$data.postsPages[0].forum.name}吧`;
-                            if (route.params.tid != null) {
-                                if (threadTitle == null) {
-                                    _.each(this.$data.postsPages, (item) => {
-                                        threadTitle = (_.find(item.threads, { tid: parseInt(route.params.tid) }) || {}).title;
-                                    });
-                                }
-                                document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
-                            } else {
-                                document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
-                            }
-                        }
-                    }
-                },
-                created: function () {
-                    let customQueryParams = _.cloneDeep(this.$route.query);
-                    let queryParams = _.omit(_.cloneDeep(this.$route.params), 'pathMatch'); // prevent store pathMatch property into params due to https://github.com/vuejs/vue-router/issues/2503
-                    _.each(this.$data.arrayableCustomQueryParams, (arrayableParamName) => {
-                        let arrayableParamValue = Reflect.get(customQueryParams, arrayableParamName);
-                        if (arrayableParamValue != null && ! _.isArray(arrayableParamValue)) { // https://github.com/vuejs/vue-router/issues/1232
-                            Reflect.set(customQueryParams, arrayableParamName, [arrayableParamValue]);
-                            Reflect.set(this.$route.query, arrayableParamName, [Reflect.get(this.$route.query, arrayableParamName)]);
-                            //this.$route.query.postType = [this.$route.query.postType]; // vue.$route should be unchangeable but in here we have to change it's query
-                            /*this.$router.push({ query: _.mapValues(this.$route.query, (value, param) => {
-                                    return param == 'postType' ? [value] : value;
-                                })
-                            });*/
-                        }
-                    });
-
-                    this.$data.queryData = { query: customQueryParams, param: queryParams };
-                    $$loadForumsList().then((forumsList) => {
-                        this.$data.forumsList = forumsList;
-                        this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
-                    });
-                },
                 watch: {
                     loadingNewPosts: function (loadingNewPosts) {
                         if (loadingNewPosts) {
@@ -875,10 +817,10 @@
                                     _.each(radioLikeCheckboxParamsGroup, (paramsGroup) => {
                                         if (paramsGroup.includes(event.target.id)
                                             && _.map(paramsGroup, (domID) => {
-                                            return $(`#${domID}`).prop('checked')
-                                        }).every((postTypesCheck) => { // is all post type unchecked
-                                            return ! postTypesCheck;
-                                        })) {
+                                                return $(`#${domID}`).prop('checked')
+                                            }).every((postTypesCheck) => { // is all post type unchecked
+                                                return ! postTypesCheck;
+                                            })) {
                                             event.preventDefault();
                                         }
                                     });
@@ -1094,6 +1036,179 @@
                         });
                     }
                 },
+                created: function () {
+                    let customQueryParams = _.cloneDeep(this.$route.query);
+                    let queryParams = _.omit(_.cloneDeep(this.$route.params), 'pathMatch'); // prevent store pathMatch property into params due to https://github.com/vuejs/vue-router/issues/2503
+                    _.each(this.$data.arrayableCustomQueryParams, (arrayableParamName) => {
+                        let arrayableParamValue = Reflect.get(customQueryParams, arrayableParamName);
+                        if (arrayableParamValue != null && ! _.isArray(arrayableParamValue)) { // https://github.com/vuejs/vue-router/issues/1232
+                            Reflect.set(customQueryParams, arrayableParamName, [arrayableParamValue]);
+                            Reflect.set(this.$route.query, arrayableParamName, [Reflect.get(this.$route.query, arrayableParamName)]);
+                            //this.$route.query.postType = [this.$route.query.postType]; // vue.$route should be unchangeable but in here we have to change it's query
+                            /*this.$router.push({ query: _.mapValues(this.$route.query, (value, param) => {
+                                    return param == 'postType' ? [value] : value;
+                                })
+                            });*/
+                        }
+                    });
+
+                    this.$data.queryData = { query: customQueryParams, param: queryParams };
+                    $$loadForumsList().then((forumsList) => {
+                        this.$data.forumsList = forumsList;
+                        this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
+                    });
+                },
+                methods: {
+                    submitQueryForm: function () {
+                        let queryParams = _.chain(this.$data.queryData.param)
+                            .omit('page')
+                            .omitBy(_.isEmpty) // omitBy will remove empty param values like empty string
+                            .toPairs()
+                            .map((param) => {
+                                return _.fromPairs([param]); // convert { k:v, k:v } to [[k, v], [k ,v]]
+                            })
+                            .sortBy((param) => {
+                                return _.indexOf(['tid', 'pid', 'spid'], _.keys(param)[0]); // sort params array with given order
+                            })
+                            .value();
+                        let queryParamsPath = '';
+                        _.each(queryParams, (param) => {
+                            if (_.values(param)[0] !== "") {
+                                queryParamsPath += `/${_.keys(param)[0]}/${_.values(param)[0]}`;
+                            }
+                        });
+
+                        let customQueryParams = _.omitBy(_.cloneDeep(this.$data.queryData.query), _.isEmpty); // omitBy will remove empty query param values like empty string
+                        if (_.isEqual(_.sortBy(customQueryParams.postType), _.sortBy(['thread', 'reply', 'subReply']))) { // sort post type array to compare without effect from order
+                            delete customQueryParams.postType;
+                        }
+
+                        if (customQueryParams.fid === 'undefined') {
+                            delete customQueryParams.fid;
+                        }
+                        if (customQueryParams.orderBy === 'default') {
+                            delete customQueryParams.orderDirection;
+                        }
+
+                        _.each(this.$data.customQueryParamsDefaultValue, (param) => { // remove default value params
+                            let paramName = param.param;
+                            if (Reflect.get(customQueryParams, paramName) === param.default) {
+                                Reflect.deleteProperty(customQueryParams, paramName);
+                            }
+                        });
+
+                        let queryPostsIDRangeParams = [
+                            'tidRange',
+                            'pidRange',
+                            'spidRange'
+                        ];
+                        _.each(queryPostsIDRangeParams, (param) => { // remove range param when posts id param is unset
+                            if (Reflect.get(this.$data.queryData.param, param.replace('Range', '')) === undefined) {
+                                Reflect.deleteProperty(customQueryParams, param);
+                            }
+                        });
+
+                        let userInfoParams = [
+                            'userManagerType',
+                            'userName',
+                            'userDisplayName',
+                            'userExpGradeRange',
+                            'userExpGrade',
+                            'userGender'
+                        ];
+                        if (_.every(userInfoParams, (param) => {
+                            return Reflect.get(customQueryParams, param) == null;
+                        })) {
+                            delete customQueryParams.userType;
+                        }
+
+                        this.$router.push({ path: `/post${queryParamsPath}`, query: customQueryParams });
+                    },
+                    loadPageData: function (routeParams, routeQueryStrings, shouldReplacePage) {
+                        let groupSubRepliesByAuthor = (data) => {
+                            data.threads.forEach((thread) => {
+                                thread.replies.forEach((reply) => {
+                                    reply.subReplies.forEach((subReply, index, subReplies) => {
+                                        // group sub replies item by continuous and same author info
+                                        let previousSubReply = subReplies[index - 1];
+                                        if (previousSubReply !== undefined
+                                            && subReply.authorUid === previousSubReply.authorUid
+                                            && subReply.authorManagerType === previousSubReply.authorManagerType
+                                            && subReply.authorExpGrade === previousSubReply.authorExpGrade) {
+                                            _.last(subReplies).push(subReply);
+                                        } else {
+                                            subReplies.push([subReply]);
+                                        }
+                                    });
+                                    // remove ungrouped sub replies
+                                    reply.subReplies = reply.subReplies.filter((subReply) => {
+                                        return _.isArray(subReply);
+                                    });
+                                });
+                            });
+                            return data;
+                        };
+
+                        let ajaxStartTime = Date.now();
+                        let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings);
+                        let ajaxErrorCallback = () => {
+                            this.$data.postsPages = []; // clear posts pages data will emit posts pages updated event
+                            $('#error-404-template').show();
+                        };
+                        if (_.isEmpty(queryQueryStrings)) {
+                            new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
+                            this.$data.postsPages = []; // clear posts pages data will emit posts pages updated event
+                            $('#first-loading-placeholder').hide();
+                            return;
+                        }
+                        if (shouldReplacePage) {
+                            this.$data.postsPages = []; // clear posts pages data before finish to show loading placeholder
+                        }
+
+                        if (window.previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
+                            window.previousPostsQueryAjax.abort();
+                        }
+                        this.$data.loadingNewPosts = true;
+                        $$reCAPTCHACheck().then((token) => {
+                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token)));
+                            window.previousPostsQueryAjax.done((jsonData) => {
+                                jsonData = groupSubRepliesByAuthor(jsonData);
+                                let pagesInfo = jsonData.pages;
+
+                                // is requesting new pages data on same query params or loading new data on different query params
+                                if (shouldReplacePage) {
+                                    $('.posts-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
+                                    this.$data.postsPages = [jsonData];
+                                } else {
+                                    this.$data.postsPages.push(jsonData);
+                                }
+
+                                new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                                this.changeDocumentTitle(this.$route);
+                            }).fail((jqXHR) => {
+                                ajaxErrorCallback();
+                            }).always(() => {
+                                this.$data.loadingNewPosts = false
+                            });
+                        });
+                    },
+                    changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
+                        newPage = newPage || route.params.page || 1;
+                        if (! _.isEmpty(this.$data.postsPages)) { // make sure it's not 404
+                            let forumName = `${this.$data.postsPages[0].forum.name}吧`;
+                            if (route.params.tid != null) {
+                                if (threadTitle == null) {
+                                    _.each(this.$data.postsPages, (item) => {
+                                        threadTitle = (_.find(item.threads, { tid: parseInt(route.params.tid) }) || {}).title;
+                                    });
+                                }
+                                document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                            } else {
+                                document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
+                            }
+                        }
+                    }
+                },
                 beforeRouteUpdate (to, from, next) {
                     // when clicking floating navigate bar #hash link, post type query param might be string instead of array
                     _.each(this.$data.arrayableCustomQueryParams, (arrayableParamName) => {
@@ -1131,7 +1246,7 @@
                     routes: [
                         {
                             name: 'postsQuery',
-                            path: '/query',
+                            path: '/post',
                             component: postsListPagesComponent,
                             children: [
                                 { name: 'postsQuery+p', path: 'page/:page' },
