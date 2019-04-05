@@ -22,7 +22,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 
     protected $replyID;
 
-    protected $startPage = 1;
+    protected $startPage = 1; // hardcoded crawl start page
 
     public function __construct(int $fid, int $tid, int $pid)
     {
@@ -44,7 +44,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         \DB::transaction(function () use ($queueFinishTime, $firstPageCrawler) {
             // crawl last page sub reply if there's un-crawled pages
             $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;  // give up next page range crawl when TiebaException thrown within crawler parser
-            if ($subRepliesListLastPage > $this->startPage) { // doesn't have to crawl every sub reply pages, only first and last one
+            if ($subRepliesListLastPage > $this->startPage) { // don't have to crawl every sub reply pages, only first and last one
                 $lastPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $subRepliesListLastPage))->doCrawl()->saveLists();
             }
 

@@ -23,11 +23,17 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     protected $forumName;
 
-    public function __construct(int $forumID, string $forumName)
+    protected $startPage;
+
+    protected $endPage;
+
+    public function __construct(int $forumID, string $forumName, int $startPage = 1, int $endPage = null)
     {
         \Log::channel('crawler-info')->info("Thread crawler queue dispatched with {$forumID}({$forumName})");
         $this->forumID = $forumID;
         $this->forumName = $forumName;
+        $this->startPage = $startPage;
+        $this->endPage = $endPage;
     }
 
     public function handle()
@@ -38,12 +44,12 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         $cancelCurrentCrawler = false;
         \DB::transaction(function () use ($cancelCurrentCrawler) {
             $crawlingForumInfo = [
-                'type' => 'thread',
+                'type' => 'thread', // not including reply and sub reply crawler queue
                 'fid' => $this->forumID,
+                'startPage' => $this->startPage
             ];
             $latestCrawlingForum = CrawlingPostModel
                 ::select('id', 'startTime')
-                ->where('type', 'thread') // not including reply and sub reply crawler queue
                 ->where($crawlingForumInfo)
                 ->lockForUpdate()->first();
             if ($latestCrawlingForum != null) { // is latest crawler existed and started before $queueDeleteAfter ago
@@ -63,7 +69,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             return;
         }
 
-        $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID, 1))->doCrawl();
+        $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID, $this->startPage, $this->endPage))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getPostsIsUpdateInfo();
         $oldThreadsInfo = Helper::convertIDListKey(
             PostModelFactory::newThread($this->forumID)
@@ -115,6 +121,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 ->where([
                     'type' => 'thread', // not including current thread's reply and sub reply crawler queue
                     'fid' => $this->forumID,
+                    'startPage' => $this->startPage
                 ])
                 ->lockForUpdate()->first();
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
@@ -122,6 +129,18 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                     'duration' => $queueFinishTime - $this->queueStartTime
                 ] + $threadsCrawler->getProfiles())->save();
                 $currentCrawlingForum->delete(); // release current crawl queue lock
+            }
+
+            // dispatch next page range crawler if there's un-crawled pages
+            if ($threadsCrawler->endPage < ($this->endPage ?? 0)) { // give up next page range crawl when TiebaException thrown within crawler parser
+                $newCrawlerStartPage = $threadsCrawler->endPage + 1;
+                CrawlingPostModel::insert([
+                    'type' => 'thread',
+                    'fid' => $this->forumID,
+                    'startPage' => $newCrawlerStartPage,
+                    'startTime' => microtime(true)
+                ]); // lock for next page range reply crawler
+                ThreadQueue::dispatch($this->forumID, $this->forumName, $newCrawlerStartPage, $this->endPage)->onQueue('crawler');
             }
         });
         \Log::channel('crawler-info')->info('Thread crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));

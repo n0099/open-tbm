@@ -61,7 +61,7 @@ class ThreadCrawler extends Crawlable
         try {
             $this->checkThenParsePostsList($threadsList);
 
-            // by default we doesn't have to crawl every sub reply pages, only first and last one
+            // by default we don't have to crawl every sub reply pages, only first and last one
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
@@ -221,14 +221,17 @@ class ThreadCrawler extends Crawlable
         return $this->threadsUpdateInfo;
     }
 
-    public function __construct(string $forumName, int $forumID, int $startPage, int $endPage = null)
+    public function __construct(string $forumName, int $forumID, int $startPage, $endPage)
     {
         $this->forumID = $forumID;
         $this->forumName = $forumName;
         $this->usersInfo = new UserInfoParser();
         $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we doesn't have to crawl every threads pages, only first one
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+        $crawlPageRange = $endPage == null ? 0 : 100; // by default we don't have to crawl every threads pages, only first one
+        $this->endPage = $this->startPage + $crawlPageRange; // $this->endPage will be either $startPage or $startPage + 100 (if $endPage determined)
+        if ($this->endPage > $endPage) { // $this->endPage shouldn't be larger than $endPage required
+            $this->endPage = $endPage;
+        }
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $forumID,

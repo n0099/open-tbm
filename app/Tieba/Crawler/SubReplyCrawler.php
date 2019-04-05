@@ -61,7 +61,7 @@ class SubReplyCrawler extends Crawlable
         try {
             $this->checkThenParsePostsList($startPageSubRepliesInfo);
 
-            // by default we doesn't have to crawl every sub reply pages, only first and last one
+            // by default we don't have to crawl every sub reply pages, only first and last one
             (new GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
@@ -200,7 +200,7 @@ class SubReplyCrawler extends Crawlable
         $this->replyID = $pid;
         $this->usersInfo = new UserInfoParser();
         $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we doesn't have to crawl every sub reply pages, only first and last one
+        $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only first and last one
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([
