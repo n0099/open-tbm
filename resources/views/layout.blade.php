@@ -14,7 +14,6 @@
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-
             gtag('config', '{{ $GATrackingID }}');
         </script>
         <link href="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.css" rel="stylesheet">
@@ -171,16 +170,139 @@
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
         <script async src="https://cdn.jsdelivr.net/npm/lazysizes@4.1.5/lazysizes.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue{{ App::environment('production') ? '.min' : null }}.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue{{ App::environment('production') ? '.min' : null }}.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-router@3.0.2/dist/vue-router.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue-observe-visibility@0.4.3/dist/vue-observe-visibility.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/intersection-observer@0.5.1/intersection-observer.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/morr/jquery.appear@0.4.1/jquery.appear.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/umd/index.all.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.js"></script>
+        <template id="scroll-list-template">
+            <div>
+                <div v-for="(item, itemIndex) in items" :key="itemIndex"
+                     v-displaying="displayingItemsID.includes(itemIndex)"
+                     v-observe-visibility="visibilityChanged"
+                     v-initial-item-height="itemsInitialHeight"
+                     v-bind="evalItemsAttrsValue('outer', items, item, itemIndex)"
+                     :data-item-index="itemIndex">
+                    <keep-alive>
+                        <transition :name="itemTransitionName">
+                            <div v-if="displayingItemsID.includes(itemIndex)"
+                                 v-bind="evalItemsAttrsValue('inner', items, item, itemIndex)">
+                                <slot :item="item"></slot>
+                            </div>
+                        </transition>
+                    </keep-alive>
+                </div>
+            </div>
+        </template>
         <script>
             'use strict';
+
+            const scrollListComponent = Vue.component('scroll-list', {
+                template: '#scroll-list-template',
+                directives: {
+                    displaying: {
+                        update: function (el, binding) {
+                            let isDisplaying = binding.value;
+                            if (binding.value !== binding.oldValue) { // is value changed
+                                if (isDisplaying) { // reset item dimensions
+                                    el.style.height = null;
+                                    el.style.width = null;
+                                } else {
+                                    let itemHeightBeforeHide = el.offsetHeight;
+                                    el.style.height = `${itemHeightBeforeHide}px`; // set height to ensure viewport height not change (height sink)
+                                    el.style.width = '100%'; // set width 100% to ensure items won't warp
+                                }
+                            }
+                        }
+                    },
+                    'initial-item-height': {
+                        bind: function (el, binding) {
+                            el.style.height = binding.value; // set initial items height after first loaded to prevent initialed hiding item haven't height
+                            el.style.width = '100%'; // set width 100% to ensure items won't warp
+                        }
+                    }
+                },
+                props: {
+                    items: {
+                        type: Array,
+                        required: true
+                    },
+                    itemsInitialHeight: {
+                        type: String,
+                        required: true
+                    },
+                    itemsShowingNum: {
+                        type: Number,
+                        required: true
+                    },
+                    itemTransitionName: String,
+                    itemsOuterAttrs: Object,
+                    itemsInnerAttrs: Object
+                },
+                data: function () {
+                    return {
+                        displayingItemsID: []
+                    };
+                },
+                mounted: function () {
+                    this.$data.displayingItemsID = this.range(0, this.$props.itemsShowingNum); // initially showing first $itemsShowingNum items
+                },
+                methods: {
+                    evalItemsAttrsValue: function (renderPosition, items, item, itemIndex) {
+                        let evaledValue = {};
+                        let itemsAttrs = renderPosition === 'outer'
+                            ? this.$props.itemsOuterAttrs
+                            : (renderPosition === 'inner' ? this.$props.itemsInnerAttrs : (() => { throw 'items attr render position not valid'; })());
+                        Object.keys(itemsAttrs).forEach((key) => {
+                            let itemAttrs = itemsAttrs[key];
+                            if (itemAttrs.type === 'eval') {
+                                let evalValue = new Function('items', 'item', 'itemIndex', `return ${itemAttrs.value}`);
+                                evaledValue[key] = evalValue(items, item, itemIndex).toString();
+                            } else if (itemAttrs.type === 'string') {
+                                evaledValue[key] = itemAttrs.value;
+                            } else {
+                                throw 'items attr render type not valid';
+                            }
+                        });
+                        return evaledValue;
+                    },
+                    range: function (start, end) { // [start, end)
+                        return new Array(end - start).fill().map((d, i) => i + start);
+                    },
+                    visibilityChanged: function (isVisible, observer) {
+                        if (isVisible) {
+                            let itemIndex = parseInt(observer.target.getAttribute('data-item-index'));
+                            /* output example
+                             * (1, 5, 20) => [1,2,3,4,5]
+                             * (10, 4, 20) => [9,10,11,12]
+                             * (10, 5, 20) => [8,9,10,11,12]
+                             * (19, 5, 20) => [16,17,18,19,20]
+                             */
+                            let getDisplayIndexRange = (median, rangeSize, rangeUpperBound) => {
+                                let distanceFromMedianToBound = (rangeSize % 2 ? rangeSize - 1: rangeSize) / 2; // the distance from median value to output array upper/lower bound
+                                let out = [];
+                                if (median - distanceFromMedianToBound < 0) { // when output lower bound will be <0
+                                    out = this.range(0, rangeSize);
+                                } else if (median + distanceFromMedianToBound > rangeUpperBound) { // when output upper bound will be >rangeUpperBound, rangeUpperBound - rangeSize will restrict output length won't >rangeUpperBound
+                                    out = this.range(rangeUpperBound - rangeSize + 1, rangeUpperBound + 1);
+                                } else {
+                                    out = this.range(median - distanceFromMedianToBound, median + distanceFromMedianToBound + 1); // normally
+                                }
+                                if (rangeSize % 2 === 0) { // if required output size is even number, we should remove first lowest value to align with output size
+                                    out.shift();
+                                }
+                                return out;
+                            };
+                            this.$data.displayingItemsID = getDisplayIndexRange(itemIndex, this.$props.itemsShowingNum, this.$props.items.length);
+                        }
+                    }
+                }
+            });
 
             //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
             NProgress.configure({ trickleSpeed: 200 });
@@ -189,7 +311,7 @@
                 $('body').css('cursor', 'progress');
             }).ajaxStop(() => {
                 NProgress.done();
-                $('body').css('cursor', null);
+                $('body').css('cursor', '');
             }).ajaxError((event, jqXHR) => {
                 let errorInfo = '';
                 if (jqXHR.responseJSON != null) {
@@ -233,6 +355,10 @@
                             resolve({ reCAPTCHA: token });
                         }, () => {
                             new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'}).show();
+                        })
+                        .then(() => {
+                            NProgress.done();
+                            $('body').css('cursor', '');
                         });
                 });
             });
