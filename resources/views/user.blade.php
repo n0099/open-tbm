@@ -1,10 +1,18 @@
 @extends('layout')
 
-@section('title', '用户')
+@section('title', '用户查询')
 
 @section('container')
     <style>
-
+        .user-item-initial {
+            height: 20em;
+        }
+        .user-item-enter-active, .user-item-leave-active {
+            transition: opacity .3s;
+        }
+        .user-item-enter, .user-item-leave-to {
+            opacity: 0;
+        }
     </style>
     @verbatim
         <template id="users-list-template">
@@ -21,19 +29,27 @@
                         </div>
                         <div class="col align-middle"><hr /></div>
                     </div>
-                    <div v-for="user in usersData.users" class="row">
-                        <p>{{ user }}</p>
-                        <div class="col-3">
-                            <img class="lazyload d-block mx-auto badge badge-light" width="120px" height="120px" :data-src="$data.$$getTiebaUserAvatarUrl(user.avatarUrl)" />
-                        </div>
-                        <div class="col">
-                            <p>UID：{{ user.uid }}</p>
-                            <p v-if="user.displayName != null">覆盖ID：{{ user.displayName }}</p>
-                            <p v-if="user.name != null">用户名：{{ user.name }}</p>
-                            <p>性别：{{ getUserGender(user.gender) }}</p>
-                            <p v-if="user.fansNickname != null">粉丝头衔：{{ user.fansNickname }}</p>
-                        </div>
-                    </div>
+                    <scroll-list :items="usersData.users" :items-initial-height="'20em'"
+                                 :items-showing-num="5" :item-transition-name="'user-item'"
+                                 :items-outer-attrs="{ id: { type: 'eval', value: 'item.uid' } }"
+                                 :items-inner-attrs="{ class: { type: 'string', value: 'row' } }">
+                        <template v-slot="slotProps">
+                            <template v-for="user in [slotProps.item]">
+                                <p>{{ user }}</p>
+                                <div class="col-3">
+                                    <img class="lazyload d-block mx-auto badge badge-light" width="120px" height="120px"
+                                         :data-src="$data.$$getTiebaUserAvatarUrl(user.avatarUrl)" />
+                                </div>
+                                <div class="col">
+                                    <p>UID：{{ user.uid }}</p>
+                                    <p v-if="user.displayName != null">覆盖ID：{{ user.displayName }}</p>
+                                    <p v-if="user.name != null">用户名：{{ user.name }}</p>
+                                    <p>性别：{{ getUserGender(user.gender) }}</p>
+                                    <p v-if="user.fansNickname != null">粉丝头衔：{{ user.fansNickname }}</p>
+                                </div>
+                            </template>
+                        </template>
+                    </scroll-list>
                     <div class="reply-list-next-page p-4">
                         <div class="row align-items-center">
                             <div class="col"><hr /></div>
@@ -59,7 +75,7 @@
         <div id="users-list">
             <router-view></router-view>
         </div>
-    @endverbatim
+        @endverbatim
 @endsection
 
 @section('script-after-container')
@@ -69,21 +85,27 @@
 
         const usersListComponent = Vue.component('users-list', {
             template: '#users-list-template',
-            props: ['usersData'], // received from parent component
+            props: { // received from parent component
+                usersData: Object
+            },
             data: function () {
                 return {
-                    $$getTiebaUserAvatarUrl
+                    $$getTiebaUserAvatarUrl,
+                    displayingItemsID: []
                 };
             },
             computed: {
-                getPreviousPageUrl: function() { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
+                getPreviousPageUrl: function () { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
                     // generate an new absolute url with previous page params which based on current route path
                     let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                     return `${$$baseUrlDir}${urlWithNewPage}`;
                 }
             },
+            mounted: function () {
+
+            },
             methods: {
-                getUserGender: function(gender) {
+                getUserGender: function (gender) {
                     let gendersList = {
                         0: '未指定（显示为男）',
                         1: '男 ♂',
@@ -101,9 +123,6 @@
                     usersPages: []
                 };
             },
-            methods: {
-
-            },
             mounted: function () {
                 $$reCAPTCHACheck().then((token) => {
                     $.getJSON(`${$$baseUrl}/api/usersQuery`, $.param(_.merge({ gender: 2 }, token)))
@@ -114,6 +133,9 @@
 
                         });
                 });
+            },
+            methods: {
+
             }
         });
 
