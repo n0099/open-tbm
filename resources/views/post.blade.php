@@ -179,7 +179,7 @@
                             </span>
                             <span data-tippy-content="分享次数" class="badge badge-info">
                                 <i class="fas fa-share-alt"></i> {{ thread.shareNum }}
-                            </span>v
+                            </span>
                             <span v-if="thread.agreeInfo != null" data-tippy-content="总赞踩量" class="badge badge-info">
                                 <i class="far fa-thumbs-up"></i>{{ thread.agreeInfo.agree_num }}
                                 <i class="far fa-thumbs-down"></i>{{ thread.agreeInfo.disagree_num }}
@@ -196,8 +196,8 @@
                             </span>
                         </div>
                     </div>
-                    <template v-for="reply in thread.replies">
-                        <div :key="reply.pid" :id="reply.pid" class="reply-item" data-appear-top-offset="3000">
+                    <div v-for="reply in thread.replies" :key="reply.pid"
+                         :id="reply.pid" class="reply-item" data-appear-top-offset="3000">
                             <div class="reply-title sticky-top card-header">
                                 <div class="d-inline h5">
                                     <span class="badge badge-info">{{ reply.floor }}楼</span>
@@ -297,7 +297,6 @@
                                 </div>
                             </div>
                         </div>
-                    </template>
                 </div>
                 <div v-if="! loadingNewPosts" class="reply-list-next-page p-4">
                     <div class="row align-items-center">
@@ -322,8 +321,7 @@
                 <div class="floating-posts-nav border-left shadow-sm bg-light">
                     <template v-for="postsData in postsPages">
                         <template v-for="currentPage in [postsData.pages.currentPage]">
-                            <nav :key="currentPage"
-                                 :id="`posts-nav-page-${currentPage}`"
+                            <nav :id="`posts-nav-page-${currentPage}`"
                                  class="posts-nav-page nav flex-column">
                                 <a v-text="`第${currentPage}页`" href="#!"
                                    data-toggle="collapse"
@@ -698,7 +696,7 @@
     @verbatim
         <script>
             'use strict';
-            $$initialNavBar('query');
+            $$initialNavBar('post');
 
             $('#error-404-template').hide();
             Vue.component('loading-posts-placeholder', {
@@ -720,7 +718,7 @@
                     };
                 },
                 computed: {
-                    getPreviousPageUrl: function() { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
+                    getPreviousPageUrl: function () { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
                         // generate an new absolute url with previous page params which based on current route path
                         let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                         return `${$$baseUrlDir}${urlWithNewPage}`;

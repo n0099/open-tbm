@@ -95,7 +95,7 @@
                     {
                         type: 'slider',
                         filterMode: 'filter',
-                        start: 90,
+                        start: 0,
                         bottom: 0
                     },
                     {
