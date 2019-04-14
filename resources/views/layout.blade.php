@@ -183,19 +183,17 @@
         <template id="scroll-list-template">
             <div>
                 <div v-for="(item, itemIndex) in items" :key="itemIndex"
-                     v-displaying="displayingItemsID.includes(itemIndex)"
-                     v-observe-visibility="visibilityChanged"
-                     v-initial-item-height="itemsInitialHeight"
-                     v-bind="evalItemsAttrsValue('outer', items, item, itemIndex)"
+                     v-eval-dynamic-dimensions="shouldDisplay(itemIndex)"
+                     v-observe-visibility="{ callback: visibilityChanged, throttle: 100 }"
+                     v-initial-item-dimensions="itemsInitialDimensions"
+                     v-bind="evalItemsAttrs('outer', items, item, itemIndex)"
                      :data-item-index="itemIndex">
-                    <keep-alive>
-                        <transition :name="itemTransitionName">
-                            <div v-if="displayingItemsID.includes(itemIndex)"
-                                 v-bind="evalItemsAttrsValue('inner', items, item, itemIndex)">
-                                <slot :item="item"></slot>
-                            </div>
-                        </transition>
-                    </keep-alive>
+                    <transition :name="itemTransitionName">
+                        <div v-if="shouldDisplay(itemIndex)"
+                             v-bind="evalItemsAttrs('inner', items, item, itemIndex)">
+                            <slot :item="item"></slot>
+                        </div>
+                    </transition>
                 </div>
             </div>
         </template>
@@ -205,25 +203,31 @@
             const scrollListComponent = Vue.component('scroll-list', {
                 template: '#scroll-list-template',
                 directives: {
-                    displaying: {
-                        update: function (el, binding) {
-                            let isDisplaying = binding.value;
-                            if (binding.value !== binding.oldValue) { // is value changed
-                                if (isDisplaying) { // reset item dimensions
-                                    el.style.height = null;
-                                    el.style.width = null;
-                                } else {
-                                    let itemHeightBeforeHide = el.offsetHeight;
-                                    el.style.height = `${itemHeightBeforeHide}px`; // set height to ensure viewport height not change (height sink)
-                                    el.style.width = '100%'; // set width 100% to ensure items won't warp
+                    'eval-dynamic-dimensions': {
+                        update: function (el, binding, vnode) {
+                            let vue = vnode.context;
+                            if (vue.$props.itemsDynamicDimensions === true) {
+                                if (binding.value !== binding.oldValue) { // is value changed
+                                    if (el.style.height === vue.$props.itemsInitialDimensions.height // item dimesnsions haven't been evaluated before
+                                        || el.style.width === vue.$props.itemsInitialDimensions.width) {
+                                        el.style.height = null;
+                                        el.style.width = null;
+                                        vue.$nextTick(() => { // remain origin dom's height and width to ensure viewport dimensions not change (height sink)
+                                            let itemHeightBeforeHide = el.offsetHeight;
+                                            let itemWidthBeforeHide = el.offsetWidth;
+                                            el.style.height = `${itemHeightBeforeHide}px`;
+                                            el.style.width = `${itemWidthBeforeHide}px`;
+                                        });
+                                    }
                                 }
                             }
                         }
                     },
-                    'initial-item-height': {
+                    'initial-item-dimensions': {
                         bind: function (el, binding) {
-                            el.style.height = binding.value; // set initial items height after first loaded to prevent initialed hiding item haven't height
-                            el.style.width = '100%'; // set width 100% to ensure items won't warp
+                            // set initial items height and width to prevent initialed hiding item stacked at one pixel
+                            el.style.height = binding.value.height;
+                            el.style.width = binding.value.width;
                         }
                     }
                 },
@@ -232,8 +236,12 @@
                         type: Array,
                         required: true
                     },
-                    itemsInitialHeight: {
-                        type: String,
+                    itemsDynamicDimensions: {
+                        type: Boolean,
+                        required: true
+                    },
+                    itemsInitialDimensions: {
+                        type: Object,
                         required: true
                     },
                     itemsShowingNum: {
@@ -249,15 +257,23 @@
                         displayingItemsID: []
                     };
                 },
+                created: function () {
+                    // initial $itemsInitialDimensions value with default value '100%'
+                    let initialDimensions = this.$props.itemsInitialDimensions;
+                    initialDimensions.height = initialDimensions.height || '100%';
+                    initialDimensions.width = initialDimensions.width || '100%';
+                },
                 mounted: function () {
                     this.$data.displayingItemsID = this.range(0, this.$props.itemsShowingNum); // initially showing first $itemsShowingNum items
                 },
                 methods: {
-                    evalItemsAttrsValue: function (renderPosition, items, item, itemIndex) {
+                    evalItemsAttrs: function (renderPosition, items, item, itemIndex) {
                         let evaledValue = {};
                         let itemsAttrs = renderPosition === 'outer'
                             ? this.$props.itemsOuterAttrs
-                            : (renderPosition === 'inner' ? this.$props.itemsInnerAttrs : (() => { throw 'items attr render position not valid'; })());
+                            : (renderPosition === 'inner'
+                                ? this.$props.itemsInnerAttrs
+                                : (() => { throw 'items attr render position not valid'; })());
                         Object.keys(itemsAttrs).forEach((key) => {
                             let itemAttrs = itemsAttrs[key];
                             if (itemAttrs.type === 'eval') {
@@ -271,35 +287,39 @@
                         });
                         return evaledValue;
                     },
+                    shouldDisplay: function (itemIndex) {
+                        let displayingItemsID = this.$data.displayingItemsID;
+                        return itemIndex >= displayingItemsID[0] && itemIndex <= displayingItemsID[displayingItemsID.length - 1]
+                    },
                     range: function (start, end) { // [start, end)
                         return new Array(end - start).fill().map((d, i) => i + start);
                     },
                     visibilityChanged: function (isVisible, observer) {
                         if (isVisible) {
                             let itemIndex = parseInt(observer.target.getAttribute('data-item-index'));
-                            /* output example
-                             * (1, 5, 20) => [1,2,3,4,5]
-                             * (10, 4, 20) => [9,10,11,12]
-                             * (10, 5, 20) => [8,9,10,11,12]
-                             * (19, 5, 20) => [16,17,18,19,20]
-                             */
-                            let getDisplayIndexRange = (median, rangeSize, rangeUpperBound) => {
-                                let distanceFromMedianToBound = (rangeSize % 2 ? rangeSize - 1: rangeSize) / 2; // the distance from median value to output array upper/lower bound
-                                let out = [];
-                                if (median - distanceFromMedianToBound < 0) { // when output lower bound will be <0
-                                    out = this.range(0, rangeSize);
-                                } else if (median + distanceFromMedianToBound > rangeUpperBound) { // when output upper bound will be >rangeUpperBound, rangeUpperBound - rangeSize will restrict output length won't >rangeUpperBound
-                                    out = this.range(rangeUpperBound - rangeSize + 1, rangeUpperBound + 1);
-                                } else {
-                                    out = this.range(median - distanceFromMedianToBound, median + distanceFromMedianToBound + 1); // normally
-                                }
-                                if (rangeSize % 2 === 0) { // if required output size is even number, we should remove first lowest value to align with output size
-                                    out.shift();
-                                }
-                                return out;
-                            };
-                            this.$data.displayingItemsID = getDisplayIndexRange(itemIndex, this.$props.itemsShowingNum, this.$props.items.length);
+                            this.$data.displayingItemsID = this.getDisplayIndexRange(itemIndex, this.$props.itemsShowingNum, this.$props.items.length);
                         }
+                    },
+                    getDisplayIndexRange: function (median, rangeSize, rangeUpperBound) {
+                        /* output example
+                         * (1, 5, 20) => [1,2,3,4,5]
+                         * (10, 4, 20) => [9,10,11,12]
+                         * (10, 5, 20) => [8,9,10,11,12]
+                         * (19, 5, 20) => [16,17,18,19,20]
+                         */
+                        let distanceFromMedianToBound = (rangeSize % 2 ? rangeSize - 1: rangeSize) / 2; // the distance from median value to output array upper/lower bound
+                        let out = [];
+                        if (median - distanceFromMedianToBound < 0) { // when output lower bound will be <0
+                            out = this.range(0, rangeSize);
+                        } else if (median + distanceFromMedianToBound > rangeUpperBound) { // when output upper bound will be >rangeUpperBound, rangeUpperBound - rangeSize will restrict output length won't >rangeUpperBound
+                            out = this.range(rangeUpperBound - rangeSize + 1, rangeUpperBound + 1);
+                        } else {
+                            out = this.range(median - distanceFromMedianToBound, median + distanceFromMedianToBound + 1); // normally
+                        }
+                        if (rangeSize % 2 === 0) { // if required output size is even number, we should remove first lowest value to align with output size
+                            out.shift();
+                        }
+                        return out;
                     }
                 }
             });
@@ -355,10 +375,6 @@
                             resolve({ reCAPTCHA: token });
                         }, () => {
                             new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'}).show();
-                        })
-                        .then(() => {
-                            NProgress.done();
-                            $('body').css('cursor', '');
                         });
                 });
             });

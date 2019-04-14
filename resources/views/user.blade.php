@@ -29,8 +29,9 @@
                         </div>
                         <div class="col align-middle"><hr /></div>
                     </div>
-                    <scroll-list :items="usersData.users" :items-initial-height="'20em'"
-                                 :items-showing-num="5" :item-transition-name="'user-item'"
+                    <scroll-list :items="usersData.users"
+                                 :items-dynamic-dimensions="true" :items-initial-dimensions="{ height: '20em' }"
+                                 :items-showing-num="15" :item-transition-name="'user-item'"
                                  :items-outer-attrs="{ id: { type: 'eval', value: 'item.uid' } }"
                                  :items-inner-attrs="{ class: { type: 'string', value: 'row' } }">
                         <template v-slot="slotProps">
