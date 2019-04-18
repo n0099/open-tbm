@@ -54,6 +54,10 @@
                 cursor: zoom-out;
             }
 
+            .grecaptcha-badge {
+                visibility: hidden;
+            }
+
             .footer-outer {
                 background-color: #2196f3;
             }
@@ -157,9 +161,17 @@
             @yield('container')
         </div>
         <footer class="footer-outer text-light pt-4 mt-4">
-            <div class="container">四叶重工QQ群：292311751</div>
+            <div class="container">
+                <p>四叶重工QQ群：292311751</p>
+                <p>
+                    访问本站即表示你同意Google
+                    <a class="text-warning" href="https://www.google.com/analytics/terms/cn.html" target="_blank">Analytics</a> 和
+                    <a class="text-warning" href="https://policies.google.com/terms" target="_blank">reCAPTCHA</a> 服务条款 及其
+                    <a class="text-warning" href="https://policies.google.com/privacy" target="_blank">隐私条款</a>
+                </p>
+            </div>
             <footer class="footer-inner text-center p-3">
-                <div class="container">Copyright © 2018 n0099</div>
+                <div class="container">© 2018 ~ 2019 n0099</div>
             </footer>
         </footer>
         <script src="https://www.recaptcha.net/recaptcha/api.js?render={{ $reCAPTCHASiteKey }}"></script>
@@ -375,6 +387,8 @@
                             resolve({ reCAPTCHA: token });
                         }, () => {
                             new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'}).show();
+                            NProgress.done();
+                            $('body').css('cursor', '');
                         });
                 });
             });
