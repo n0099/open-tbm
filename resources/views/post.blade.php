@@ -20,8 +20,10 @@
             background-size: 100%;
         }
 
-        .posts-list-placeholder {
+        .first-loading-placeholder {
             height: 480px;
+        }
+        .post-item-placeholder {
             background-image: url({{ $baseUrl }}/img/tombstone-posts-list.svg);
             background-size: 100%;
         }
@@ -39,7 +41,7 @@
             bottom: 0;
             right: 0;
             overflow: auto;
-            width: 12.5rem;
+            width: 40%;
             height: 100%;
             z-index: 1021;
         }
@@ -75,11 +77,18 @@
             background-color: #F2F2F2;
         }
 
-        /*.thread-item .reply-item {}*/
+        /*.thread-item*/ .reply-item {
+            border-top: 0.625rem solid #FFF; /* simulation border as margin for using white background color to cover scroll-list placeholder background */
+        }
+        .reply-item-enter-active, .reply-item-leave-active {
+            transition: opacity .2s;
+        }
+        .reply-item-enter, .reply-item-leave-to {
+            opacity: 0;
+        }
 
         /*.reply-item*/ .reply-title {
             top: 72px;
-            margin-top: .625rem;
             border-top: 1px solid #ededed;
             border-bottom: 0;
             background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
@@ -186,9 +195,9 @@
                             </span>
                             <span v-if="thread.zanInfo != null" class="badge badge-info"
                                   :data-tippy-content="`
-                                        点赞量：${thread.zanInfo.num}<br />
-                                        最后点赞时间：${thread.zanInfo.last_time}<br />
-                                        近期点赞用户：${thread.zanInfo.user_id_list}<br />`">
+                                    点赞量：${thread.zanInfo.num}<br />
+                                    最后点赞时间：${thread.zanInfo.last_time}<br />
+                                    近期点赞用户：${thread.zanInfo.user_id_list}<br />`">
                                 <i class="far fa-thumbs-up"></i> 旧版客户端赞
                             </span>
                             <span data-tippy-content="发贴位置" class="badge badge-info">
@@ -196,107 +205,119 @@
                             </span>
                         </div>
                     </div>
-                    <div v-for="reply in thread.replies" :key="reply.pid"
-                         :id="reply.pid" class="reply-item" data-appear-top-offset="3000">
-                            <div class="reply-title sticky-top card-header">
-                                <div class="d-inline h5">
-                                    <span class="badge badge-info">{{ reply.floor }}楼</span>
-                                    <span v-if="reply.subReplyNum > 0" class="badge badge-info">
-                                        {{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i>
-                                    </span>
-                                    <!--
-                                    <span>fold:{{ reply.isFold }}</span>
-                                    <span>{{ reply.agreeInfo }}</span>
-                                    <span>{{ reply.signInfo }}</span>
-                                    <span>{{ reply.tailInfo }}</span>
-                                    <span>{{ reply.agreeInfo }}</span>
-                                    <span>{{ reply.signInfo }}</span>
-                                    <span>{{ reply.tailInfo }}</span>
-                                    -->
-                                </div>
-                                <div class="float-right badge badge-light">
-                                    <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }"
-                                                 class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
-                                    <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank"><i class="fas fa-link"></i></a>
-                                    <a class="badge badge-pill badge-light" href="#!"
-                                       :data-tippy-content="`
-                                            <h6>ID：${reply.pid}</h6><hr /><br />
-                                            收录时间：${reply.created_at}<br />
-                                            最后更新：${reply.updated_at}`">
-                                        <i class="fas fa-info"></i>
-                                    </a>
-                                    <span class="badge badge-pill badge-primary">{{ reply.postTime }}</span>
-                                </div>
-                            </div>
-                            <div class="reply-info shadow-sm row bs-callout bs-callout-info">
-                                <template v-for="author in [getUserData(reply.authorUid)]">
-                                    <div class="reply-banner col-md-auto text-center">
-                                        <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
-                                            <a class="d-block" :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
-                                                <img class="lazyload d-block mx-auto badge badge-light" width="90px" height="90px"
-                                                     :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
-                                                <span>
-                                                    {{ author.displayName }}
-                                                    <br v-if="author.displayName != null" />
-                                                    {{ author.name }}
-                                                </span>
-                                            </a>
-                                            <div v-if="author.uid == getUserData(thread.authorUid).uid" class="badge badge-pill badge-success">楼主</div>
-                                            <div v-if="reply.authorManagerType != null">
-                                                <span v-if="reply.authorManagerType == 'manager'" class="badge badge-danger">吧主</span>
-                                                <span v-else-if="reply.authorManagerType == 'assist'" class="badge badge-info">小吧</span>
-                                            </div>
-                                            <div class="badge badge-pill badge-primary">Lv{{ reply.authorExpGrade }}</div>
-                                        </div>
+                    <scroll-list :items="thread.replies"
+                                 item-dynamic-dimensions :item-initial-dimensions="{ height: '50em' }"
+                                 :items-showing-num="10" item-transition-name="reply-item"
+                                 :item-outer-attrs="{ id: { type: 'eval', value: 'item.pid'}, class: { type: 'string', value: '1' } }"
+                                 :item-inner-attrs="{ class: { type: 'string', value: 'reply-item' } }"
+                                 item-observe-event="reply-item-observe"
+                                 @reply-item-observe="$parent.replyItemObserveEvent"
+                                 class="post-item-placeholder">
+                        <template v-slot="slotProps">
+                            <template v-for="reply in [slotProps.item]">
+                                <div class="reply-title sticky-top card-header">
+                                    <div class="d-inline h5">
+                                        <span class="badge badge-info">{{ reply.floor }}楼</span>
+                                        <span v-if="reply.subReplyNum > 0" class="badge badge-info">
+                                            {{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i>
+                                        </span>
+                                        <!-- TODO: implement these reply's property
+                                        <span>fold:{{ reply.isFold }}</span>
+                                        <span>{{ reply.agreeInfo }}</span>
+                                        <span>{{ reply.signInfo }}</span>
+                                        <span>{{ reply.tailInfo }}</span>
+                                        <span>{{ reply.agreeInfo }}</span>
+                                        <span>{{ reply.signInfo }}</span>
+                                        <span>{{ reply.tailInfo }}</span>
+                                        -->
                                     </div>
-                                </template>
-                                <div class="reply-body col border-left">
-                                    <div v-html="reply.content" class="card-body p-3"></div>
-                                    <template v-if="reply.subReplies.length > 0">
-                                        <div v-for="subReplyGroup in reply.subReplies" :key="`${reply.pid}-${subReplyGroup[0].spid}`"
-                                             class="sub-reply-group card bs-callout bs-callout-success">
-                                            <ul class="list-group list-group-flush">
-                                                <li v-for="(subReply, index) in subReplyGroup" :key="subReply.spid"
-                                                    class="sub-reply-item list-group-item">
-                                                    <template v-for="author in [getUserData(subReply.authorUid)]">
-                                                        <a v-if="subReplyGroup[index - 1] == undefined"
-                                                           class="sub-reply-user-info badge badge-light"
-                                                           :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
-                                                            <img class="lazyload" width="25px" height="25px"
-                                                                 :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
-                                                            <span v-if="author.displayName == null">{{ author.name }}</span>
-                                                            <span v-else>{{ author.displayName }}（{{ author.name }}）</span>
-                                                            <div class="btn-group" role="group">
-                                                                <button v-if="author.uid == getUserData(thread.authorUid).uid" type="button" class="badge btn btn-success">楼主</button>
-                                                                <button v-else-if="author.uid == getUserData(reply.authorUid).uid" type="button" class="badge btn btn-info">层主</button>
-                                                                <button v-if="subReply.authorManagerType == 'manager'" type="button" class="badge btn btn-danger">吧主</button>
-                                                                <button v-else-if="subReply.authorManagerType == 'assist'" type="button" class="badge btn btn-info">小吧</button>
-                                                                <button type="button" class="badge btn btn-primary">Lv{{ subReply.authorExpGrade }}</button>
-                                                            </div>
-                                                        </a>
-                                                        <div class="float-right badge badge-light">
-                                                            <a class="sub-reply-hide-link badge badge-pill badge-light"
-                                                               :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank">
-                                                                <i class="fas fa-link"></i>
-                                                            </a>
-                                                            <a class="sub-reply-hide-link badge badge-pill badge-light" href="#!"
-                                                               :data-tippy-content="`
-                                                                    <h6>ID：${subReply.spid}</h6><hr /><br />
-                                                                    收录时间：${subReply.created_at}<br />
-                                                                    最后更新：${subReply.updated_at}`">
-                                                                <i class="fas fa-info"></i>
-                                                            </a>
-                                                            <span class="badge badge-pill badge-info">{{ subReply.postTime }}</span>
-                                                        </div>
-                                                    </template>
-                                                    <div v-html="subReply.content"></div>
-                                                </li>
-                                            </ul>
+                                    <div class="float-right badge badge-light">
+                                        <router-link :to="{ name: 'pid', params: { pid: reply.pid.toString() } }"
+                                                     class="reply-list-show-only badge badge-pill badge-light">只看此楼</router-link>
+                                        <a class="badge badge-pill badge-light" :href="$data.$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank">
+                                            <i class="fas fa-link"></i>
+                                        </a>
+                                        <a class="badge badge-pill badge-light" href="#!"
+                                           :data-tippy-content="`
+                                                <h6>ID：${reply.pid}</h6><hr /><br />
+                                                收录时间：${reply.created_at}<br />
+                                                最后更新：${reply.updated_at}`">
+                                            <i class="fas fa-info"></i>
+                                        </a>
+                                        <span class="badge badge-pill badge-primary">{{ reply.postTime }}</span>
+                                    </div>
+                                </div>
+                                <div class="reply-info shadow-sm row bs-callout bs-callout-info">
+                                    <template v-for="author in [getUserData(reply.authorUid)]">
+                                        <div class="reply-banner col-md-auto text-center">
+                                            <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
+                                                <a class="d-block" :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
+                                                    <img class="lazyload d-block mx-auto badge badge-light" width="90px" height="90px"
+                                                         :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
+                                                    <span>
+                                                        {{ author.displayName }}
+                                                        <br v-if="author.displayName != null" />
+                                                        {{ author.name }}
+                                                    </span>
+                                                </a>
+                                                <div v-if="author.uid == getUserData(thread.authorUid).uid" class="badge badge-pill badge-success">楼主</div>
+                                                <div v-if="reply.authorManagerType != null">
+                                                    <span v-if="reply.authorManagerType == 'manager'" class="badge badge-danger">吧主</span>
+                                                    <span v-else-if="reply.authorManagerType == 'assist'" class="badge badge-info">小吧</span>
+                                                </div>
+                                                <div class="badge badge-pill badge-primary">Lv{{ reply.authorExpGrade }}</div>
+                                            </div>
                                         </div>
                                     </template>
+                                    <div class="reply-body col border-left">
+                                        <div v-html="reply.content" class="card-body p-3"></div>
+                                        <template v-if="reply.subReplies.length > 0">
+                                            <div v-for="subReplyGroup in reply.subReplies" :key="`${reply.pid}-${subReplyGroup[0].spid}`"
+                                                 class="sub-reply-group card bs-callout bs-callout-success">
+                                                <ul class="list-group list-group-flush">
+                                                    <li v-for="(subReply, index) in subReplyGroup" :key="subReply.spid"
+                                                        class="sub-reply-item list-group-item">
+                                                        <template v-for="author in [getUserData(subReply.authorUid)]">
+                                                            <a v-if="subReplyGroup[index - 1] == undefined"
+                                                               class="sub-reply-user-info badge badge-light"
+                                                               :href="$data.$$getTiebaUserLink(author.name)" target="_blank">
+                                                                <img class="lazyload" width="25px" height="25px"
+                                                                     :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" />
+                                                                <span v-if="author.displayName == null">{{ author.name }}</span>
+                                                                <span v-else>{{ author.displayName }}（{{ author.name }}）</span>
+                                                                <div class="btn-group" role="group">
+                                                                    <button v-if="author.uid == getUserData(thread.authorUid).uid" type="button" class="badge btn btn-success">楼主</button>
+                                                                    <button v-else-if="author.uid == getUserData(reply.authorUid).uid" type="button" class="badge btn btn-info">层主</button>
+                                                                    <button v-if="subReply.authorManagerType == 'manager'" type="button" class="badge btn btn-danger">吧主</button>
+                                                                    <button v-else-if="subReply.authorManagerType == 'assist'" type="button" class="badge btn btn-info">小吧</button>
+                                                                    <button type="button" class="badge btn btn-primary">Lv{{ subReply.authorExpGrade }}</button>
+                                                                </div>
+                                                            </a>
+                                                            <div class="float-right badge badge-light">
+                                                                <a class="sub-reply-hide-link badge badge-pill badge-light"
+                                                                   :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank">
+                                                                    <i class="fas fa-link"></i>
+                                                                </a>
+                                                                <a class="sub-reply-hide-link badge badge-pill badge-light" href="#!"
+                                                                   :data-tippy-content="`
+                                                                        <h6>ID：${subReply.spid}</h6><hr /><br />
+                                                                        收录时间：${subReply.created_at}<br />
+                                                                        最后更新：${subReply.updated_at}`">
+                                                                    <i class="fas fa-info"></i>
+                                                                </a>
+                                                                <span class="badge badge-pill badge-info">{{ subReply.postTime }}</span>
+                                                            </div>
+                                                        </template>
+                                                        <div v-html="subReply.content"></div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            </template>
+                        </template>
+                    </scroll-list>
                 </div>
                 <div v-if="! loadingNewPosts" class="reply-list-next-page p-4">
                     <div class="row align-items-center">
@@ -321,31 +342,26 @@
                 <div class="floating-posts-nav border-left shadow-sm bg-light">
                     <template v-for="postsData in postsPages">
                         <template v-for="currentPage in [postsData.pages.currentPage]">
-                            <nav :id="`posts-nav-page-${currentPage}`"
-                                 class="posts-nav-page nav flex-column">
-                                <a v-text="`第${currentPage}页`" href="#!"
-                                   data-toggle="collapse"
+                            <nav :id="`posts-nav-page-${currentPage}`" class="posts-nav-page nav flex-column">
+                                <a v-text="`第${currentPage}页`" href="#!" data-toggle="collapse"
                                    :data-target="`.posts-nav-thread[data-parent='#posts-nav-page-${currentPage}']`"
                                    aria-expanded="false" aria-controls="posts-nav"
                                    class="posts-nav-page-link border border-primary btn"></a>
-                                <div v-for="thread in postsData.threads"
-                                     :key="thread.tid"
+                                <div v-for="thread in postsData.threads" :key="thread.tid"
                                      :data-parent="`#posts-nav-page-${currentPage}`"
-                                     class="posts-nav-thread border collapse">
-                                    <a v-text="thread.title" href="#!"
-                                       data-toggle="collapse"
+                                     class="posts-nav-thread collapse">
+                                    <a v-text="thread.title" href="#!" data-toggle="collapse"
                                        :id="`posts-nav-thread-${thread.tid}`"
                                        :data-target="`.posts-nav-reply[data-parent='#posts-nav-thread-${thread.tid}']`"
                                        aria-expanded="false" aria-controls="posts-nav-reply"
-                                       class="posts-nav-thread-link border-bottom btn"></a>
+                                       class="posts-nav-thread-link btn"></a>
                                     <nav class="nav flex-column">
-                                        <a v-for="reply in thread.replies"
-                                           :key="reply.pid"
-                                           v-text="`${reply.floor}L`"
+                                        <a v-for="reply in thread.replies" :key="reply.pid"
+                                           v-text="`${reply.floor}L`" :href="`#${reply.pid}`"
                                            :data-parent="`#posts-nav-thread-${thread.tid}`"
-                                           class="posts-nav-reply collapse btn"
-                                           :href="`#${reply.pid}`"></a>
+                                           class="posts-nav-reply collapse btn"></a>
                                     </nav>
+                                    <div class="border-top"></div>
                                 </div>
                             </nav>
                         </template>
@@ -679,7 +695,7 @@
                         <div class="col"><hr /></div>
                         <div class="w-100"></div>
                         <div class="col">
-                            <div class="posts-list-placeholder"></div>
+                            <div class="post-item-placeholder first-loading-placeholder"></div>
                         </div>
                     </div>
                 </div>
@@ -930,7 +946,7 @@
                                 vue.$forceUpdate();
                             }
 
-                            { // reply items dom recycle and events
+                            {
                                 let registerEventsWithinReplyItems = () => {
                                     $$tippyInital();
                                     // use jquery mouse hover event to prevent high cpu usage when using vue @mouseover event
@@ -945,90 +961,15 @@
                                     registerEventsWithinReplyItems();
                                 });
 
-                                let replyBodyAppearEventHandler = (event = null, eventTarget = null, customReplyItem = null) => {
-                                    // listen reply body's appear event to ensure reply item really appeared for avoiding the offset effect
-                                    _.throttle(() => {
-                                        // replace browser url hash with current viewing reply id hash and it's page num
-                                        let replyItem = customReplyItem || $(event.currentTarget).parents('.reply-item');
-                                        let currentPage = replyItem.parents('.posts-list').data('page').toString();
-                                        let threadTitle = replyItem.parents('.thread-item').data('title');
-                                        let replyPid = replyItem.prop('id');
-                                        if (replyItem.length !== 0 && currentPage != null) { // ensure reply item haven't deleted by dom recycling
-                                            //replyItem.off('appear');
-                                            if (customReplyItem != null && replyItem.hasClass('posts-list-placeholder')) {
-                                                showReplyItem(replyItem, false); // display hided reply item immediately
-                                            }
-
-                                            vue.$router.replace({
-                                                params: currentPage === "1" ? null : { page: currentPage },
-                                                hash: `#${replyPid}`,
-                                                query: vue.$route.query
-                                            });
-                                            vue.changeDocumentTitle(vue.$route, currentPage, threadTitle);
-
-                                            let postsNav = $('.floating-posts-nav');
-                                            let currentReplyNav = postsNav.find(`.posts-nav-reply[href="#${replyPid}"]`);
-                                            // unselect other replies, threads and pages link
-                                            postsNav.find('.posts-nav-reply').not(currentReplyNav).toggleClass('btn-info', false);
-                                            postsNav.find('.posts-nav-thread').not(currentReplyNav.parents('.posts-nav-thread')).children('.posts-nav-thread-link').toggleClass('btn-info', false);
-                                            postsNav.find('.posts-nav-page').not(currentReplyNav.parents('.posts-nav-page')).children('.posts-nav-page-link').toggleClass('btn-info', false);
-                                            // select current replies, threads and pages link
-                                            currentReplyNav.toggleClass('btn-info', true)
-                                                .parent().siblings('.posts-nav-thread-link').toggleClass('btn-info', true)
-                                                .parent().siblings('.posts-nav-page-link').toggleClass('btn-info', true);
-                                            currentReplyNav[0].scrollIntoView();
-                                            if (!currentReplyNav.is(':last-child')) {
-                                                postsNav[0].scrollTop -= 50;
-                                            }
-                                        }
-                                    }, 100, { leading: false })();
-                                };
-
-                                let showReplyItem = (replyItem, isInitialReply) => {
-                                    if (! isInitialReply) {
-                                        // uncomment sub dom and remove css height
-                                        replyItem.css('height', '').html(replyItem.contents()[0].nodeValue);
-                                        replyItem.toggleClass('posts-list-placeholder', false).fadeTo('slow', 1);
-                                        registerEventsWithinReplyItems(); //re-register child dom's events
-                                    }
-                                    replyItem.find('.reply-body').appear().on('appear', replyBodyAppearEventHandler);
-                                    replyItem.off('appear').appear().on('disappear', _.throttle((event) => {
-                                        hideReplyItem($(event.currentTarget));
-                                    }, 100, { leading: false }));
-                                };
-
-                                let hideReplyItem = (replyItem) => {
-                                    // comment sub dom and set css height to keep scroll fixed
-                                    replyItem.css('height', replyItem.height()).html(document.createComment(replyItem.html()));
-                                    replyItem.toggleClass('posts-list-placeholder', true).fadeTo('slow', 0.5);
-                                    replyItem.children('.lazyloading').removeClass('lazyloading').addClass('lazyload');
-                                    replyItem.off('disappear').appear().on('appear', _.throttle((event) => {
-                                        showReplyItem($(event.currentTarget), false);
-                                    }, 100, { leading: false }));
-                                };
-
-                                // auto dom recycle and reproduce when dom (in)visible
-                                $('.posts-list .reply-item').off().each((index, replyItem) => { // re-hide all reply items including previous pages
-                                    if (index > 5) {
-                                        hideReplyItem($(replyItem)); // recycle all the other reply items dom
-                                    } else {
-                                        showReplyItem($(replyItem), true);
-                                    }
-                                });
-
                                 $('.posts-nav-thread').collapse('show');
-                                $('.posts-nav-reply').collapse('show').off('click').on('click', (event) => { // force trigger appear event when clicking reply navigation link
-                                    replyBodyAppearEventHandler(null, null, $($(event.target).prop('hash')));
-                                });
                                 $('.floating-posts-nav-btn').off('click').on('click', () => {
-                                    $('.floating-posts-nav').fadeToggle().find('.posts-nav-reply.btn-info')[0].scrollIntoView();
+                                    $('.floating-posts-nav').fadeToggle().find('.posts-nav-reply.btn')[0].scrollIntoView();
                                 });
 
                                 // scroll viewport to element anchor by url hash after posts list loaded
                                 let urlHashReplyItemDOM = this.$route.hash === '#!' ? null : $(this.$route.hash)[0];  // ignore #! shebang url hash
                                 if (urlHashReplyItemDOM != null) {
                                     urlHashReplyItemDOM.scrollIntoView();
-                                    replyBodyAppearEventHandler(null, null, $(urlHashReplyItemDOM));
                                 }
                             }
                         });
@@ -1203,6 +1144,40 @@
                                 document.title = `第${newPage}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
                             } else {
                                 document.title = `第${newPage}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
+                            }
+                        }
+                    },
+                    replyItemObserveEvent: function (isVisible, observer) {
+                        // replace browser url hash with current viewing reply id hash and it's page num
+                        let replyItem = $(observer.target).children('.reply-item');
+                        if (! isVisible || replyItem.length === 0) {
+                            return;
+                        }
+                        // TODO: rewrite with vue
+                        let currentPage = replyItem.parents('.posts-list').data('page').toString();
+                        let threadTitle = replyItem.parents('.thread-item').data('title');
+                        let replyPid = replyItem.prop('id');
+                        if (replyItem.length !== 0 && currentPage != null) { // ensure reply item haven't deleted by dom recycling
+                            this.$router.replace({
+                                params: currentPage === "1" ? null : { page: currentPage },
+                                hash: `#${replyPid}`,
+                                query: this.$route.query
+                            });
+                            this.changeDocumentTitle(this.$route, currentPage, threadTitle);
+
+                            let postsNav = $('.floating-posts-nav');
+                            let currentReplyNav = postsNav.find(`.posts-nav-reply[href="#${replyPid}"]`);
+                            // unselect other replies, threads and pages link
+                            postsNav.find('.posts-nav-reply').not(currentReplyNav).toggleClass('btn-info', false);
+                            postsNav.find('.posts-nav-thread').not(currentReplyNav.parents('.posts-nav-thread')).children('.posts-nav-thread-link').toggleClass('btn-info', false);
+                            postsNav.find('.posts-nav-page').not(currentReplyNav.parents('.posts-nav-page')).children('.posts-nav-page-link').toggleClass('btn-info', false);
+                            // select current replies, threads and pages link
+                            currentReplyNav.toggleClass('btn-info', true)
+                                .parent().siblings('.posts-nav-thread-link').toggleClass('btn-info', true)
+                                .parent().siblings('.posts-nav-page-link').toggleClass('btn-info', true);
+                            currentReplyNav[0].scrollIntoView();
+                            if (! currentReplyNav.is(':last-child')) {
+                                postsNav[0].scrollTop -= 50;
                             }
                         }
                     }
