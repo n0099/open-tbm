@@ -4,9 +4,6 @@
 
 @section('container')
     <style>
-        .user-item-initial {
-            height: 20em;
-        }
         .user-item-enter-active, .user-item-leave-active {
             transition: opacity .3s;
         }
@@ -22,7 +19,7 @@
                         <div class="col align-middle"><hr /></div>
                         <div v-for="page in [usersData.pages]" class="w-auto">
                             <div class="p-2 badge badge-light">
-                                <a v-if="page.currentPage > 1" class="badge badge-primary" :href="getPreviousPageUrl">上一页</a>
+                                <a v-if="page.currentPage > 1" class="badge badge-primary" :href="previousPageUrl">上一页</a>
                                 <p class="h4" v-text="`第 ${page.currentPage} 页`"></p>
                                 <span class="small" v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条`"></span>
                             </div>
@@ -30,10 +27,10 @@
                         <div class="col align-middle"><hr /></div>
                     </div>
                     <scroll-list :items="usersData.users"
-                                 :items-dynamic-dimensions="true" :items-initial-dimensions="{ height: '20em' }"
-                                 :items-showing-num="15" :item-transition-name="'user-item'"
-                                 :items-outer-attrs="{ id: { type: 'eval', value: 'item.uid' } }"
-                                 :items-inner-attrs="{ class: { type: 'string', value: 'row' } }">
+                                 item-dynamic-dimensions :item-initial-dimensions="{ height: '20em' }"
+                                 :items-showing-num="15" item-transition-name="user-item"
+                                 :item-outer-attrs="{ id: { type: 'eval', value: 'item.uid' } }"
+                                 :item-inner-attrs="{ class: { type: 'string', value: 'row' } }">
                         <template v-slot="slotProps">
                             <template v-for="user in [slotProps.item]">
                                 <p>{{ user }}</p>
@@ -96,7 +93,7 @@
                 };
             },
             computed: {
-                getPreviousPageUrl: function () { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
+                previousPageUrl: function () { // computed function will caching attr to ensure each posts-list's url will not updated after page param change
                     // generate an new absolute url with previous page params which based on current route path
                     let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                     return `${$$baseUrlDir}${urlWithNewPage}`;

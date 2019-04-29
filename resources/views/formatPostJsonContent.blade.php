@@ -4,7 +4,7 @@ use Spatie\Regex\Regex;
 if (! function_exists('tiebaImageUrlProxy')) {
     function tiebaImageUrlProxy(string $imageUrl)
     {
-        $imageProxy = env('TIEBA_IMAGE_PROXY') . '/';
+        $imageProxy = env('TIEBA_IMAGE_PROXY');
         return str_replace(['https://', 'http://'], $imageProxy, $imageUrl);
     }
 }

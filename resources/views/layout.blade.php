@@ -176,6 +176,7 @@
         <script src="https://www.recaptcha.net/recaptcha/api.js?render={{ $reCAPTCHASiteKey }}"></script>
         <script async src="https://n0099.net/static/browser-update.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/zh-cn.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/echarts@4.1.0/dist/echarts.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
@@ -192,20 +193,26 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.js"></script>
         <template id="scroll-list-template">
-            <div :id="`scroll-list-${scrollListID}`">
+            <div :id="`scroll-list-${scrollListID}`"
+                 v-observe-visibility="{ callback: listVisibilityChanged, throttle: 100, intersection: { threshold: 0.01 } }">
                 <component :is="itemOuterTagsName" v-for="(item, itemIndex) in items" :key="itemIndex"
-                     v-eval-dynamic-dimensions="shouldDisplay(itemIndex)"
-                     v-observe-visibility="{ callback: visibilityChanged, throttle: 100 }"
-                     v-initial-item-dimensions="itemInitialDimensions"
-                     v-bind="evalItemAttrs('outer', items, item, itemIndex)"
-                     :data-item-index="itemIndex"
-                     >
-                    <transition :name="itemTransitionName">
+                           v-eval-dynamic-dimensions="shouldDisplay(itemIndex)"
+                           v-observe-visibility="{ callback: itemVisibilityChanged, throttle: 100, intersection: { threshold: 0.01 } }"
+                           v-initial-item-dimensions="itemInitialDimensions"
+                           v-bind="evalItemAttrs('outer', items, item, itemIndex)"
+                           :data-item-index="itemIndex">
+                    <transition v-if="itemTransitionName != null" :name="itemTransitionName">
                         <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
-                             v-bind="evalItemAttrs('inner', items, item, itemIndex)">
+                                   v-bind="evalItemAttrs('inner', items, item, itemIndex)">
                             <slot :item="item"></slot>
                         </component>
                     </transition>
+                    <template v-else>
+                        <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
+                                   v-bind="evalItemAttrs('inner', items, item, itemIndex)">
+                            <slot :item="item"></slot>
+                        </component>
+                    </template>
                 </component>
             </div>
         </template>
@@ -271,7 +278,7 @@
                     return {
                         displayingItemsID: [],
                         scrollListID: '',
-                        itemDOMDimensionsCache: {},
+                        itemDOMDimensionsCache: [],
                         itemEvaledAttrsValue: { outer: {}, inner: {} },
                         itemOuterTagsName: this.$props.itemOuterTags || 'div',
                         itemInnerTagsName: this.$props.itemOuterTags || 'div'
@@ -317,11 +324,14 @@
                         } else {
                             // add itemPlaceholderClass to class attr value when hiding item
                             if (this.$props.itemPlaceholderClass != null
-                                && cachedEvalValue.class != null
                                 && renderPosition === 'outer'
                                 && ! this.shouldDisplay(itemIndex)) {
                                 cachedEvalValue = Object.assign({}, cachedEvalValue); // shadow copy to prevent mutate cache
-                                cachedEvalValue.class += ` ${this.$props.itemPlaceholderClass}`;
+                                if (cachedEvalValue.class == null) {
+                                    cachedEvalValue.class = this.$props.itemPlaceholderClass;
+                                } else {
+                                    cachedEvalValue.class += ` ${this.$props.itemPlaceholderClass}`;
+                                }
                             }
                             return cachedEvalValue;
                         }
@@ -330,7 +340,12 @@
                         let displayingItemsID = this.$data.displayingItemsID;
                         return itemIndex >= displayingItemsID[0] && itemIndex <= displayingItemsID[displayingItemsID.length - 1]
                     },
-                    visibilityChanged: function (isVisible, observer) {
+                    listVisibilityChanged: function (isVisible, observer) {
+                        if (! isVisible) { // hide all items when viewport is leaving whole scroll list
+                            this.$data.displayingItemsID = [];
+                        }
+                    },
+                    itemVisibilityChanged: function (isVisible, observer) {
                         let itemDOM = observer.target;
                         let itemIndex = parseInt(itemDOM.getAttribute('data-item-index'));
                         if (isVisible) {
@@ -339,10 +354,6 @@
                         } else {
                             // cache current hiding item dom's height and width px before hided
                             this.$data.itemDOMDimensionsCache[itemIndex] = { height: itemDOM.offsetHeight, width: itemDOM.offsetWidth };
-                            // hide all items when viewport is leaving whole scroll list
-                            if (itemIndex === 0 || itemIndex === this.$props.items.length - 1) {
-                                this.$data.displayingItemsID = [];
-                            }
                         }
                         // call user defined parent component event
                         let parentCompentEventName = this.$props.itemObserveEvent;
@@ -379,6 +390,8 @@
                     }
                 }
             });
+
+            moment.locale('zh-cn');
 
             //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
             NProgress.configure({ trickleSpeed: 200 });
