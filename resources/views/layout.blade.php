@@ -194,10 +194,10 @@
         <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.js"></script>
         <template id="scroll-list-template">
             <div :id="`scroll-list-${scrollListID}`"
-                 v-observe-visibility="{ callback: listVisibilityChanged, throttle: 100, intersection: { threshold: 0.01 } }">
+                 v-observe-visibility="{ callback: listVisibilityChanged, throttle: 100 }">
                 <component :is="itemOuterTagsName" v-for="(item, itemIndex) in items" :key="itemIndex"
                            v-eval-dynamic-dimensions="shouldDisplay(itemIndex)"
-                           v-observe-visibility="{ callback: itemVisibilityChanged, throttle: 100, intersection: { threshold: 0.01 } }"
+                           v-observe-visibility="{ callback: itemVisibilityChanged, throttle: 100 }"
                            v-initial-item-dimensions="itemInitialDimensions"
                            v-bind="evalItemAttrs('outer', items, item, itemIndex)"
                            :data-item-index="itemIndex">
@@ -279,9 +279,10 @@
                         displayingItemsID: [],
                         scrollListID: '',
                         itemDOMDimensionsCache: [],
-                        itemEvaledAttrsValue: { outer: {}, inner: {} },
+                        itemEvaledAttrsCache: { outer: {}, inner: {} },
                         itemOuterTagsName: this.$props.itemOuterTags || 'div',
-                        itemInnerTagsName: this.$props.itemOuterTags || 'div'
+                        itemInnerTagsName: this.$props.itemOuterTags || 'div',
+                        lastScrollTime: 0
                     };
                 },
                 created: function () {
@@ -296,44 +297,41 @@
                 },
                 methods: {
                     evalItemAttrs: function (renderPosition, items, item, itemIndex) {
-                        let cachedEvalValue = this.$data.itemEvaledAttrsValue[renderPosition][itemIndex];
-                        if (cachedEvalValue == null) {
-                            let evaledValue = {};
+                        let addItemPlaceholderClass = (renderPosition, evalAttrs) => { // add itemPlaceholderClass to class attr value when hiding item
+                            if (this.$props.itemPlaceholderClass != null
+                                && renderPosition === 'outer'
+                                && ! this.shouldDisplay(itemIndex)) {
+                                evalAttrs = Object.assign({}, evalAttrs); // shadow copy to prevent mutate cache
+                                if (evalAttrs.class == null) {
+                                    evalAttrs.class = this.$props.itemPlaceholderClass;
+                                } else {
+                                    evalAttrs.class += ` ${this.$props.itemPlaceholderClass}`;
+                                }
+                            }
+                            return evalAttrs
+                        };
+                        let cachedEvalAttrs = this.$data.itemEvaledAttrsCache[renderPosition][itemIndex];
+                        if (cachedEvalAttrs == null) {
                             let itemsAttrs = renderPosition === 'outer'
                                 ? this.$props.itemOuterAttrs
                                 : (renderPosition === 'inner'
                                     ? this.$props.itemInnerAttrs
                                     : (() => { throw 'items attr render position not valid'; })());
-                            if (itemsAttrs != null) {
-                                Object.keys(itemsAttrs).forEach((attrName) => {
-                                    let itemAttrs = itemsAttrs[attrName];
-                                    if (itemAttrs.type === 'eval') {
-                                        let evalValue = new Function('items', 'item', 'itemIndex', `return ${itemAttrs.value}`);
-                                        evaledValue[attrName] = evalValue(items, item, itemIndex).toString();
-                                    } else if (itemAttrs.type === 'string') {
-                                        evaledValue[attrName] = itemAttrs.value;
-                                    } else {
-                                        throw 'item attrs render type not valid';
-                                    }
-                                });
-                                this.$data.itemEvaledAttrsValue[renderPosition][itemIndex] = evaledValue; // cache evaluated attrs value
-                                return evaledValue;
-                            } else {
-                                return {};
-                            }
-                        } else {
-                            // add itemPlaceholderClass to class attr value when hiding item
-                            if (this.$props.itemPlaceholderClass != null
-                                && renderPosition === 'outer'
-                                && ! this.shouldDisplay(itemIndex)) {
-                                cachedEvalValue = Object.assign({}, cachedEvalValue); // shadow copy to prevent mutate cache
-                                if (cachedEvalValue.class == null) {
-                                    cachedEvalValue.class = this.$props.itemPlaceholderClass;
+                            let evalAttrs = {};
+                            Object.keys(itemsAttrs || {}).forEach((attrName) => {
+                                let itemAttrs = itemsAttrs[attrName];
+                                if (itemAttrs.type === 'eval') {
+                                    evalAttrs[attrName] = new Function('items', 'item', 'itemIndex', `return ${itemAttrs.value}`)(items, item, itemIndex).toString();
+                                } else if (itemAttrs.type === 'string') {
+                                    evalAttrs[attrName] = itemAttrs.value;
                                 } else {
-                                    cachedEvalValue.class += ` ${this.$props.itemPlaceholderClass}`;
+                                    throw 'item attrs render type not valid';
                                 }
-                            }
-                            return cachedEvalValue;
+                            });
+                            this.$data.itemEvaledAttrsCache[renderPosition][itemIndex] = evalAttrs; // cache evaluated attrs value
+                            return addItemPlaceholderClass(renderPosition, evalAttrs);
+                        } else {
+                            return addItemPlaceholderClass(renderPosition, cachedEvalAttrs);
                         }
                     },
                     shouldDisplay: function (itemIndex) {

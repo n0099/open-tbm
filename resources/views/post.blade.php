@@ -65,8 +65,9 @@
         }
         /*.posts-nav .posts-nav-page*/ .posts-nav-thread {
             margin-left: 10%;
+            width: 90%;
         }
-        /*.posts-nav .posts-nav-page*/ .posts-nav-thread a {
+        /*.posts-nav .posts-nav-page*/ .posts-nav-thread-link {
             width: 90%;
         }
 
@@ -157,9 +158,12 @@
                 <scroll-list :items="postsData.threads"
                              item-dynamic-dimensions :item-initial-dimensions="{ height: '500em' }"
                              :items-showing-num="3" item-transition-name="thread-item"
-                             :item-outer-attrs="{ 'data-title': { type: 'eval', value: 'item.title'} }"
-                             :item-inner-attrs="{ class: { type: 'string', value: 'thread-item card' } }"
-                             item-placeholder-class="post-item-placeholder">
+                             :item-inner-attrs="{
+                                'data-title': { type: 'eval', value: 'item.title'},
+                                class: { type: 'string', value: 'thread-item card' }
+                             }"
+                             item-placeholder-class="post-item-placeholder"
+                             ref="threadItemsScrollList">
                     <template v-slot="slotProps">
                         <template v-for="thread in [slotProps.item]">
                             <div class="thread-title shadow-sm card-header sticky-top">
@@ -177,7 +181,7 @@
                                     </a>
                                     <template v-for="latestReplier in [getUserData(thread.latestReplierUid)]">
                                         <a class="badge badge-pill badge-light" href="#!"
-                                           :data-tippy-content="`<h6>ID：${thread.tid}</h6><hr /><br />
+                                           :data-tippy-content="`<h6>ID：${thread.tid}</h6><hr />
                                                 最后回复人：${latestReplier.displayName == null
                                                     ? latestReplier.name
                                                     : latestReplier.displayName + '（' + latestReplier.name + '）'}<br />
@@ -216,8 +220,8 @@
                                 </div>
                             </div>
                             <div v-for="reply in thread.replies" :key="reply.pid"
-                                 v-observe-visibility="{ callback: $parent.replyItemObserveEvent, throttle: 100 }"
-                                 :data-pid="reply.pid" class="reply-item">
+                                 v-observe-visibility="{ callback: $parent.replyItemObserveEvent, throttle: 500 }"
+                                 :id="reply.pid" class="reply-item">
                                 <div class="reply-title sticky-top card-header">
                                     <div class="d-inline h5">
                                         <span class="badge badge-info">{{ reply.floor }}楼</span>
@@ -242,7 +246,7 @@
                                         </a>
                                         <a class="badge badge-pill badge-light" href="#!"
                                            :data-tippy-content="`
-                                                <h6>ID：${reply.pid}</h6><hr /><br />
+                                                <h6>ID：${reply.pid}</h6><hr />
                                                 收录时间：${reply.created_at}<br />
                                                 最后更新：${reply.updated_at}`">
                                             <i class="fas fa-info"></i>
@@ -307,7 +311,7 @@
                                                                         </a>
                                                                         <a class="badge badge-pill badge-light" href="#!"
                                                                            :data-tippy-content="`
-                                                                                <h6>ID：${subReply.spid}</h6><hr /><br />
+                                                                                <h6>ID：${subReply.spid}</h6><hr />
                                                                                 收录时间：${subReply.created_at}<br />
                                                                                 最后更新：${subReply.updated_at}`">
                                                                             <i class="fas fa-info"></i>
@@ -357,23 +361,25 @@
                                 <nav :id="`posts-nav-page-${currentPage}`" class="posts-nav-page nav">
                                     <a v-text="`第${currentPage}页`" href="#!" data-toggle="collapse"
                                        :data-target="`.posts-nav-thread[data-parent='#posts-nav-page-${currentPage}']`"
-                                       aria-expanded="false" aria-controls="posts-nav"
+                                       aria-expanded="true" aria-controls="posts-nav"
                                        class="posts-nav-page-link border border-primary btn"
                                        v-class-list="{ 'btn-info': latestObservedReplyLocation.page == currentPage }"></a>
                                     <div v-for="thread in postsData.threads" :key="thread.tid"
                                          :data-parent="`#posts-nav-page-${currentPage}`"
-                                         class="posts-nav-thread collapse">
+                                         class="posts-nav-thread collapse show">
                                         <a v-text="thread.title" href="#!" data-toggle="collapse"
                                            :id="`posts-nav-thread-${thread.tid}`"
                                            :data-target="`.posts-nav-reply[data-parent='#posts-nav-thread-${thread.tid}']`"
-                                           aria-expanded="false" aria-controls="posts-nav-reply"
+                                           aria-expanded="true" aria-controls="posts-nav-reply"
                                            class="posts-nav-thread-link text-left btn"
                                            v-class-list="{ 'btn-info': latestObservedReplyLocation.tid == thread.tid }"></a>
                                         <nav class="nav">
                                             <a v-for="reply in thread.replies" :key="reply.pid"
+                                               @click="$parent.navigateToReplyItem(reply.pid)"
+                                               v-scroll-into-view="latestObservedReplyLocation.pid == reply.pid"
                                                v-text="`${reply.floor}L`" :href="`#${reply.pid}`"
                                                :data-parent="`#posts-nav-thread-${thread.tid}`"
-                                               class="posts-nav-reply collapse btn"
+                                               class="posts-nav-reply collapse show btn"
                                                v-class-list="{ 'btn-info': latestObservedReplyLocation.pid == reply.pid }"></a>
                                         </nav>
                                         <div class="border-top"></div>
@@ -701,7 +707,8 @@
                            :key="genPostListKey(currentListPage)"
                            :posts-data="postsData"
                            :loading-new-posts="loadingNewPosts"
-                           :is-last-page="currentListPage == postPages.length - 1"></post-list>
+                           :is-last-page="currentListPage == postPages.length - 1"
+                           ref="postLists"></post-list>
                 <loading-posts-placeholder v-if="loadingNewPosts"></loading-posts-placeholder>
             </div>
         </template>
@@ -798,6 +805,16 @@
                                     $(el).removeClass(className);
                                 }
                             });
+                        }
+                    },
+                    'scroll-into-view': {
+                        update: function (el, binding) {
+                            if (binding.value === true) {
+                                el.scrollIntoView();
+                                if (! $(el).is(':last-child')) {
+                                    $('.posts-nav')[0].scrollTop -= 100;
+                                }
+                            }
                         }
                     }
                 },
@@ -1027,15 +1044,10 @@
                             {
                                 this.replyItemEventRegister();
 
-                                $('.posts-nav-thread').collapse('show');
-                                $('.posts-nav-btn').off('click').on('click', () => {
-                                    $('.posts-nav').fadeToggle().find('.posts-nav-reply.btn')[0].scrollIntoView();
-                                });
-
-                                // scroll viewport to element anchor by url hash after posts list loaded
-                                let urlHashReplyItemDOM = this.$route.hash === '#!' ? null : $(this.$route.hash)[0];  // ignore #! shebang url hash
-                                if (urlHashReplyItemDOM != null) {
-                                    urlHashReplyItemDOM.scrollIntoView();
+                                // scroll viewport to reply item anchor by url hash pid after posts list loaded
+                                let urlHashReplyPid = this.$route.hash === '#!' ? null : this.$route.hash.substring(1); // ignore #! shebang url hash
+                                if (urlHashReplyPid != null) {
+                                    this.navigateToReplyItem(urlHashReplyPid);
                                 }
                             }
                         });
@@ -1216,13 +1228,13 @@
                     replyItemObserveEvent: function (isVisible, observer) {
                         this.replyItemEventRegister();
                         let replyItem = $(observer.target);
-                        let replyPid = replyItem.data('pid');
+                        let replyPid = parseInt(replyItem.prop('id'));
                         if (isVisible) {
                             this.$data.latestObservedReplyPid = replyPid;
                             let currentPage = replyItem.parents('.post-list').data('page').toString();
                             let threadTitle = replyItem.parents('.thread-item').data('title');
                             this.$router.replace({
-                                params: currentPage === "1" ? null : { page: currentPage },
+                                params: { page: currentPage },
                                 hash: `#${replyPid}`,
                                 query: this.$route.query
                             });
@@ -1235,6 +1247,18 @@
                             keyCache = this.$data.postListKeyCache[currentListPage] = `i-${currentListPage + 1}@${JSON.stringify(_.merge({}, this.$route.params, this.$route.query))}`; // shadow copy
                         }
                         return keyCache;
+                    },
+                    navigateToReplyItem: function (pid) {
+                        pid = parseInt(pid);
+                        _.each(this.$refs.postLists, (postList) => {
+                            let scrollList = postList.$refs.threadItemsScrollList;
+                            _.each(scrollList.$props.items, (thread, threadKeyInScrollList) => {
+                                if (_.find(thread.replies, { pid } ) != null) {
+                                    scrollList.$data.displayingItemsID = scrollList.getDisplayIndexRange(0, scrollList.$props.items.length, threadKeyInScrollList, scrollList.$props.itemsShowingNum);
+                                    return;
+                                }
+                            });
+                        });
                     }
                 },
                 beforeRouteUpdate (to, from, next) {
