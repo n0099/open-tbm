@@ -4,16 +4,16 @@
 
 @section('container')
     <style>
-        #top50CandidatesCountsChartDOM {
+        #top50CandidatesCountChartDOM {
             height: 32em;
         }
         #candidatesTimelineChartDOM {
             height: 40em;
         }
-        #top5CandidatesCountsByTimeChartDOM {
+        #top5CandidatesCountByTimeChartDOM {
             height: 40em;
         }
-        #countsByTimeChartDOM {
+        #countByTimeChartDOM {
             height: 20em;
         }
     </style>
@@ -35,7 +35,7 @@
         <p><a href="https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
         <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
         <hr />
-        <div id="top50CandidatesCountsChartDOM" class="echarts loading row mt-2"></div>
+        <div id="top50CandidatesCountChartDOM" class="echarts loading row mt-2"></div>
         <hr />
         <div id="candidatesTimelineChartDOM" class="echarts loading row mt-2"></div>
         <hr />
@@ -54,24 +54,24 @@
                 </select>
             </div>
         </div>
-        <div id="top5CandidatesCountsByTimeChartDOM" class="echarts loading row mt-2"></div>
+        <div id="top5CandidatesCountByTimeChartDOM" class="echarts loading row mt-2"></div>
         <hr />
         <div class="justify-content-end form-group form-row">
-            <label class="col-2 col-form-label text-right" for="queryCountsByTimeTimeRange">时间粒度</label>
+            <label class="col-2 col-form-label text-right" for="queryCountByTimeTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
                     <span class="input-group-text">
                         <i class="far fa-clock"></i>
                     </span>
                 </div>
-                <select v-model="statsQuery.countsByTimeTimeRange"
-                        id="queryCountsByTimeTimeRange" class="form-control">
+                <select v-model="statsQuery.countByTimeTimeRange"
+                        id="queryCountByTimeTimeRange" class="form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                 </select>
             </div>
         </div>
-        <div id="countsByTimeChartDOM" class="echarts loading row mt-2"></div>
+        <div id="countByTimeChartDOM" class="echarts loading row mt-2"></div>
         <hr />
         <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData">
             <a slot="candidateName" slot-scope="text" :href="$data.$$getTiebaUserLink(text)">@{{ text }}</a>
@@ -84,12 +84,12 @@
         'use strict';
         $$initialNavBar('bilibiliVote');
 
-        let top50CandidatesCountsChartDOM;
-        let top50CandidatesCountsChart;
-        let initialTop50CandidatesCountsChart = () => {
-            top50CandidatesCountsChartDOM = $('#top50CandidatesCountsChartDOM');
-            top50CandidatesCountsChart = echarts.init(top50CandidatesCountsChartDOM[0]);
-            top50CandidatesCountsChart.setOption({
+        let top50CandidatesCountChartDOM;
+        let top50CandidatesCountChart;
+        let initialTop50CandidatesCountChart = () => {
+            top50CandidatesCountChartDOM = $('#top50CandidatesCountChartDOM');
+            top50CandidatesCountChart = echarts.init(top50CandidatesCountChartDOM[0]);
+            top50CandidatesCountChart.setOption({
                 title: {
                     text: 'bilibili吧吧主公投 前50候选人票数',
                     subtext: '候选人间线上数字为与前一人票差 数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
@@ -216,19 +216,19 @@
                 ]
             });
         };
-        let loadTop50CandidatesCountsChart = () => {
+        let loadTop50CandidatesCountChart = () => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50CandidatesVotesCount`, $.param(reCAPTCHAToken))
-                    .done((jsonData) => {
+                    .done((ajaxData) => {
                         /* dataset would be like
                             [
                                 { voteFor: 1, validVotesCount: 1, validVotesAvgGrade: 18, invalidVotesCount: 1, invalidVotesAvgGrade: 18 },
                                 ...
                             ]
                         */
-                        let dataset = _.chain(jsonData)
+                        let dataset = _.chain(ajaxData)
                             .groupBy('voteFor')
-                            .sortBy((group) => jsonData.indexOf(group[0])) // sort grouped groups by it's index of first item in origin array
+                            .sortBy((group) => ajaxData.indexOf(group[0])) // sort grouped groups by it's index of first item in origin array
                             .map((candidateVotes) => {
                                 let validVotes = _.find(candidateVotes, { isValid: 1 });
                                 let validCount = validVotes == null ? 0 : validVotes.count;
@@ -249,25 +249,25 @@
                             })
                             .value();
 
-                        let valiCounts = _.map(dataset, 'validCount');
-                        let validCountsDiffWithPrevious = _.map(valiCounts, (count, index) => {
+                        let validCount = _.map(dataset, 'validCount');
+                        let validCountDiffWithPrevious = _.map(validCount, (count, index) => {
                             return [
                                 {
                                     label: {
                                         show: true,
                                         position: 'middle',
-                                        formatter: (-(count - valiCounts[index - 1])).toString()
+                                        formatter: (-(count - validCount[index - 1])).toString()
                                     },
                                     coord: [index, count]
                                 },
                                 {
-                                    coord: [index - 1, valiCounts[index - 1]]
+                                    coord: [index - 1, validCount[index - 1]]
                                 }
                             ];
                         });
-                        validCountsDiffWithPrevious.shift(); // first candidate doesn't needs to exceed anyone
+                        validCountDiffWithPrevious.shift(); // first candidate doesn't needs to exceed anyone
 
-                        top50CandidatesCountsChart.setOption({
+                        top50CandidatesCountChart.setOption({
                             dataset: { source: dataset },
                             series: [
                                 {
@@ -277,22 +277,22 @@
                                             normal: { type: 'dashed' }
                                         },
                                         symbol: 'none',
-                                        data: validCountsDiffWithPrevious
+                                        data: validCountDiffWithPrevious
                                     },
                                 }
                             ],
                         });
                     })
-                    .always(() => top50CandidatesCountsChartDOM.removeClass('loading'));
+                    .always(() => top50CandidatesCountChartDOM.removeClass('loading'));
             });
         };
 
-        let top5CandidatesCountsByTimeChartDOM;
-        let top5CandidatesCountsByTimeChart;
-        let initialTop5CandidatesCountsByTimeChart = () => {
-            top5CandidatesCountsByTimeChartDOM = $('#top5CandidatesCountsByTimeChartDOM');
-            top5CandidatesCountsByTimeChart = echarts.init(top5CandidatesCountsByTimeChartDOM[0]);
-            top5CandidatesCountsByTimeChart.setOption({
+        let top5CandidatesCountByTimeChartDOM;
+        let top5CandidatesCountByTimeChart;
+        let initialTop5CandidatesCountByTimeChart = () => {
+            top5CandidatesCountByTimeChartDOM = $('#top5CandidatesCountByTimeChartDOM');
+            top5CandidatesCountByTimeChart = echarts.init(top5CandidatesCountByTimeChartDOM[0]);
+            top5CandidatesCountByTimeChart.setOption({
                 title: {
                     text: 'bilibili吧吧主公投 前5票数分时增量',
                     subtext: '数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
@@ -346,14 +346,14 @@
                 ]
             });
         };
-        let loadTop5CandidatesCountsByTimeChart = (timeRange) => {
+        let loadTop5CandidatesCountByTimeChart = (timeRange) => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top5CandidatesVotesCountByTime`,
                     $.param(_.merge({ timeRange }, reCAPTCHAToken)))
-                    .done((jsonData) => {
-                        let top10Candidates = _.uniq(_.map(_.filter(jsonData, { isValid: 1 }), 'voteFor')); // not order by votes count
-                        let validVotes = _.filter(jsonData, { isValid: 1 });
-                        let invalidVotes = _.filter(jsonData, { isValid: 0 });
+                    .done((ajaxData) => {
+                        let top10Candidates = _.uniq(_.map(_.filter(ajaxData, { isValid: 1 }), 'voteFor')); // not order by votes count
+                        let validVotes = _.filter(ajaxData, { isValid: 1 });
+                        let invalidVotes = _.filter(ajaxData, { isValid: 0 });
 
                         let series = [];
                         _.each(top10Candidates, (candidateID) => {
@@ -374,21 +374,21 @@
                                 data: _.map(_.filter(invalidVotes, { voteFor: candidateID }), (i) => [i.time, i.count])
                             });
                         });
-                        top5CandidatesCountsByTimeChart.setOption({
+                        top5CandidatesCountByTimeChart.setOption({
                             series
                         });
                     })
 
-                    .always(() => top5CandidatesCountsByTimeChartDOM.removeClass('loading'));
+                    .always(() => top5CandidatesCountByTimeChartDOM.removeClass('loading'));
             });
         };
 
-        let countsByTimeChartDOM;
-        let countsByTimeChart;
-        let initialCountsByTimeChart = () => {
-            countsByTimeChartDOM = $('#countsByTimeChartDOM');
-            countsByTimeChart = echarts.init(countsByTimeChartDOM[0]);
-            countsByTimeChart.setOption({
+        let countByTimeChartDOM;
+        let countByTimeChart;
+        let initialCountByTimeChart = () => {
+            countByTimeChartDOM = $('#countByTimeChartDOM');
+            countByTimeChart = echarts.init(countByTimeChartDOM[0]);
+            countByTimeChart.setOption({
                 title: {
                     text: 'bilibili吧吧主公投 总票数分时增量',
                     subtext: '数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
@@ -452,17 +452,17 @@
                 ]
             });
         };
-        let loadCountsByTimeChart = (timeRange) => {
+        let loadCountByTimeChart = (timeRange) => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/allVotesCountByTime`,
                     $.param(_.merge({ timeRange }, reCAPTCHAToken)))
-                    .done((jsonData) => {
-                        let dataset = _.chain(jsonData)
+                    .done((ajaxData) => {
+                        let dataset = _.chain(ajaxData)
                             .groupBy('time')
-                            .map((counts, time) => {
-                                let validCount = _.find(counts, { isValid: 1 });
+                            .map((count, time) => {
+                                let validCount = _.find(count, { isValid: 1 });
                                 validCount = validCount == null ? 0 : validCount.count;
-                                let invalidCount = _.find(counts, { isValid: 0 });
+                                let invalidCount = _.find(count, { isValid: 0 });
                                 invalidCount = invalidCount == null ? 0 : invalidCount.count;
                                 return {
                                     time,
@@ -471,11 +471,11 @@
                                 };
                             })
                             .value();
-                        countsByTimeChart.setOption({
+                        countByTimeChart.setOption({
                             dataset: { source: dataset },
                         });
                     })
-                    .always(() => countsByTimeChartDOM.removeClass('loading'));
+                    .always(() => countByTimeChartDOM.removeClass('loading'));
             });
         };
 
@@ -615,11 +615,11 @@
         let loadCandidatesTimelineChart = () => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesTimeline`, $.param(reCAPTCHAToken))
-                    .done((jsonData) => {
-                        window.timelineValidVotes = _.filter(jsonData, { isValid: 1 });
-                        window.timelineInvalidVotes = _.filter(jsonData, { isValid: 0 });
+                    .done((ajaxData) => {
+                        window.timelineValidVotes = _.filter(ajaxData, { isValid: 1 });
+                        window.timelineInvalidVotes = _.filter(ajaxData, { isValid: 0 });
                         let options = [];
-                        _.each(_.groupBy(jsonData, 'endTime'), (timeGroup, time) => {
+                        _.each(_.groupBy(ajaxData, 'endTime'), (timeGroup, time) => {
                             /* dataset would be like
                             [
                                 { voteFor: 1, validCount: 1, invalidCount: 0 },
@@ -649,23 +649,23 @@
                                 })
                                 .value();
 
-                            let validCounts = _.map(dataset, 'validCount');
-                            let validCountsDiffWithPrevious = _.map(validCounts, function (count, index) {
+                            let validCount = _.map(dataset, 'validCount');
+                            let validCountDiffWithPrevious = _.map(validCount, function (count, index) {
                                 return [
                                     {
                                         label: {
                                             show: true,
                                             position: 'middle',
-                                            formatter: (-(count - validCounts[index + 1])).toString()
+                                            formatter: (-(count - validCount[index + 1])).toString()
                                         },
                                         coord: [count, index]
                                     },
                                     {
-                                        coord: [validCounts[index + 1], index + 1]
+                                        coord: [validCount[index + 1], index + 1]
                                     }
                                 ];
                             });
-                            validCountsDiffWithPrevious = validCountsDiffWithPrevious.slice(-5, -1);
+                            validCountDiffWithPrevious = validCountDiffWithPrevious.slice(-5, -1);
 
                             let totalVotesCount = (isValid = null) => {
                                 let votesSumCount = _.chain(timeGroup);
@@ -691,7 +691,7 @@
                                                 normal: { type: 'dashed' }
                                             },
                                             symbol: 'none',
-                                            data: validCountsDiffWithPrevious
+                                            data: validCountDiffWithPrevious
                                         }
                                     },
                                     {
@@ -724,10 +724,10 @@
                                 source: _.chain(bilibiliVoteVue.$data.top50OfficialValidVotesCount)
                                     .orderBy('officialValidCount')
                                     .takeRight(10)
-                                    .map((officialCounts) => {
+                                    .map((officialCount) => {
                                         return {
-                                            voteFor: bilibiliVoteVue.formatCandidateNameByID(officialCounts.voteFor),
-                                            officialValidCount: officialCounts.officialValidCount
+                                            voteFor: bilibiliVoteVue.formatCandidateNameByID(officialCount.voteFor),
+                                            officialValidCount: officialCount.officialValidCount
                                         };
                                     })
                                     .value()
@@ -752,7 +752,7 @@
                             }
                         }));
 
-                        let timelineRanges = _.map(_.sortBy(_.uniq(_.map(jsonData, 'endTime'))), (i) => moment.unix(i).format());
+                        let timelineRanges = _.map(_.sortBy(_.uniq(_.map(ajaxData, 'endTime'))), (i) => moment.unix(i).format());
                         timelineRanges.push('2019-03-11T18:26:40+08:00'); // official votes count show time
                         candidatesTimelineChart.setOption({
                             baseOption: {
@@ -789,7 +789,7 @@
                 $$getTiebaUserLink,
                 statsQuery: {
                     candidateCountByTimeTimeRange: 'hour',
-                    countsByTimeTimeRange: 'hour'
+                    countByTimeTimeRange: 'hour'
                 },
                 candidatesName: [],
                 top50OfficialValidVotesCount: [],
@@ -825,17 +825,17 @@
             watch: {
                 'statsQuery.candidateCountByTimeTimeRange': function (candidateCountByTimeTimeRange) {
                     // fully refresh to regenerate a new echarts instance
-                    top5CandidatesCountsByTimeChart.clear();
-                    initialTop5CandidatesCountsByTimeChart();
-                    top5CandidatesCountsByTimeChartDOM.addClass('loading');
-                    loadTop5CandidatesCountsByTimeChart(candidateCountByTimeTimeRange);
+                    top5CandidatesCountByTimeChart.clear();
+                    initialTop5CandidatesCountByTimeChart();
+                    top5CandidatesCountByTimeChartDOM.addClass('loading');
+                    loadTop5CandidatesCountByTimeChart(candidateCountByTimeTimeRange);
                 },
-                'statsQuery.countsByTimeTimeRange': function (countsByTimeTimeRange) {
+                'statsQuery.countByTimeTimeRange': function (countByTimeTimeRange) {
                     // fully refresh to regenerate a new echarts instance
-                    countsByTimeChart.clear();
-                    initialCountsByTimeChart();
-                    countsByTimeChartDOM.addClass('loading');
-                    loadCountsByTimeChart(countsByTimeTimeRange);
+                    countByTimeChart.clear();
+                    initialCountByTimeChart();
+                    countByTimeChartDOM.addClass('loading');
+                    loadCountByTimeChart(countByTimeTimeRange);
                 }
             },
             methods: {
@@ -844,9 +844,9 @@
                 }
             },
             mounted: function () {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((jsonData) => {
-                    this.$data.candidatesName = jsonData;
-                    this.$data.candidatesDetailData = _.map(jsonData, (candidateName, candidateIndex) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((ajaxData) => {
+                    this.$data.candidatesName = ajaxData;
+                    this.$data.candidatesDetailData = _.map(ajaxData, (candidateName, candidateIndex) => {
                         candidateIndex += 1;
                         return {
                             key: candidateIndex,
@@ -856,9 +856,9 @@
                     });
 
                     $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                        $.getJSON(`${$$baseUrl}/api/bilibiliVote/allCandidatesVotesCount`, $.param(reCAPTCHAToken)).done((jsonData) => {
+                        $.getJSON(`${$$baseUrl}/api/bilibiliVote/allCandidatesVotesCount`, $.param(reCAPTCHAToken)).done((ajaxData) => {
                             this.$data.candidatesDetailData = _.map(this.$data.candidatesDetailData, (candidate) => {
-                                let candidateVotes = _.filter(jsonData, { voteFor: candidate.candidateIndex.toString() });
+                                let candidateVotes = _.filter(ajaxData, { voteFor: candidate.candidateIndex.toString() });
                                 if (candidateVotes != null) {
                                     let validCount = _.find(candidateVotes, { isValid: 1 });
                                     validCount = validCount == null ? 0 : validCount.count;
@@ -873,11 +873,11 @@
                         });
                     });
 
-                    $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50OfficialValidVotesCount.json`).done((jsonData) => {
-                        this.$data.top50OfficialValidVotesCount = jsonData;
+                    $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50OfficialValidVotesCount.json`).done((ajaxData) => {
+                        this.$data.top50OfficialValidVotesCount = ajaxData;
                         this.$data.candidatesDetailData = _.values(_.merge( // merge by key
                             _.keyBy(this.$data.candidatesDetailData, 'candidateIndex'),
-                            _.keyBy(_.map(jsonData, (candidate) => {
+                            _.keyBy(_.map(ajaxData, (candidate) => {
                                 return {
                                     candidateIndex: candidate.voteFor,
                                     officialValidCount: candidate.officialValidCount
@@ -886,12 +886,12 @@
                         ));
                     });
 
-                    initialTop50CandidatesCountsChart();
-                    loadTop50CandidatesCountsChart();
-                    initialTop5CandidatesCountsByTimeChart();
-                    loadTop5CandidatesCountsByTimeChart(this.$data.statsQuery.candidateCountByTimeTimeRange);
-                    initialCountsByTimeChart();
-                    loadCountsByTimeChart(this.$data.statsQuery.countsByTimeTimeRange);
+                    initialTop50CandidatesCountChart();
+                    loadTop50CandidatesCountChart();
+                    initialTop5CandidatesCountByTimeChart();
+                    loadTop5CandidatesCountByTimeChart(this.$data.statsQuery.candidateCountByTimeTimeRange);
+                    initialCountByTimeChart();
+                    loadCountByTimeChart(this.$data.statsQuery.countByTimeTimeRange);
                     initialCandidatesTimelineChart();
                     loadCandidatesTimelineChart();
                 });

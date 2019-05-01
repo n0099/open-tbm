@@ -145,9 +145,9 @@
             statsChartDOM.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(statsQuery, reCAPTCHAToken)))
-                    .done((jsonData) => {
+                    .done((ajaxData) => {
                         let series = [];
-                        _.each(jsonData, (datas, postType) => {
+                        _.each(ajaxData, (datas, postType) => {
                             series.push({
                                 id: postType,
                                 data: _.map(datas, _.values)

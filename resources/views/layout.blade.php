@@ -414,7 +414,6 @@
             };
             tippy.setDefaults({
                 animation: 'perspective',
-                //followCursor: true,
                 interactive: true,
                 theme: 'light-border'
             });
@@ -448,8 +447,8 @@
                 });
             });
             const $$loadForumsList = () => new Promise((resolve, reject) => {
-                $.getJSON(`${$$baseUrl}/api/forumsList`).done((jsonData) => {
-                    resolve(_.map(jsonData, (forum) => { // convert every fid to string to ensure fid params value type
+                $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => {
+                    resolve(_.map(ajaxData, (forum) => { // convert every fid to string to ensure fid params value type
                         forum.fid = forum.fid.toString();
                         return forum;
                     }));
