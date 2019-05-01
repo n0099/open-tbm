@@ -303,21 +303,20 @@
                                                                 </div>
                                                             </a>
                                                             <div class="float-right badge badge-light">
-                                                                <keep-alive>
-                                                                    <div v-if="hoveringSubReplyItem == subReply.spid" class="d-inline">
-                                                                        <a class="badge badge-pill badge-light"
-                                                                           :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank">
-                                                                            <i class="fas fa-link"></i>
-                                                                        </a>
-                                                                        <a class="badge badge-pill badge-light" href="#!"
-                                                                           :data-tippy-content="`
-                                                                                <h6>ID：${subReply.spid}</h6><hr />
-                                                                                收录时间：${subReply.created_at}<br />
-                                                                                最后更新：${subReply.updated_at}`">
-                                                                            <i class="fas fa-info"></i>
-                                                                        </a>
-                                                                    </div>
-                                                                </keep-alive>
+                                                                <div v-show="hoveringSubReplyItem == subReply.spid"
+                                                                     :class="{ 'd-inline': hoveringSubReplyItem == subReply.spid }">
+                                                                    <a class="badge badge-pill badge-light"
+                                                                       :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank">
+                                                                        <i class="fas fa-link"></i>
+                                                                    </a>
+                                                                    <a class="badge badge-pill badge-light" href="#!"
+                                                                       :data-tippy-content="`
+                                                                            <h6>ID：${subReply.spid}</h6><hr />
+                                                                            收录时间：${subReply.created_at}<br />
+                                                                            最后更新：${subReply.updated_at}`">
+                                                                        <i class="fas fa-info"></i>
+                                                                    </a>
+                                                                </div>
                                                                 <span class="badge badge-pill badge-info" :data-tippy-content="subReply.postTime">{{ moment(subReply.postTime).fromNow() }}</span>
                                                             </div>
                                                         </template>
@@ -767,7 +766,7 @@
                     };
                 },
                 computed: {
-                    previousPageUrl: function () { // cache attr to ensure each post-list's url won't be updated after page param change
+                    previousPageUrl: function () { // cache attr to ensure each list component's url won't be updated after page param change
                         // generate an new absolute url with previous page params which based on current route path
                         let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                         return `${$$baseUrlDir}${urlWithNewPage}`;
@@ -1163,16 +1162,18 @@
                         };
 
                         let ajaxStartTime = Date.now();
-                        let queryQueryStrings = _.merge({}, routeParams, routeQueryStrings); // shadow copy
+                        let ajaxQueryStrings = _.merge({}, routeParams, routeQueryStrings); // shadow copy
                         let ajaxErrorCallback = () => {
                             this.$data.postPages = []; // clear posts pages data will emit posts pages updated event
                             $('#error-404-template').show();
                         };
-                        if (_.isEmpty(queryQueryStrings)) {
+                        if (_.isEmpty(ajaxQueryStrings)) {
                             new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
                             this.$data.postPages = []; // clear posts pages data will emit posts pages updated event
                             $('#first-loading-placeholder').hide();
                             return;
+                        } else {
+                            ajaxQueryStrings = $.param(_.merge(ajaxQueryStrings, token));
                         }
                         if (shouldReplacePage) {
                             this.$data.postPages = []; // clear posts pages data before finish to show loading placeholder
@@ -1183,17 +1184,17 @@
                         }
                         this.$data.loadingNewPosts = true;
                         $$reCAPTCHACheck().then((token) => {
-                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge(queryQueryStrings, token)));
-                            window.previousPostsQueryAjax.done((jsonData) => {
-                                jsonData = groupSubRepliesByAuthor(jsonData);
-                                let pagesInfo = jsonData.pages;
+                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryStrings);
+                            window.previousPostsQueryAjax.done((ajaxData) => {
+                                ajaxData = groupSubRepliesByAuthor(ajaxData);
+                                let pagesInfo = ajaxData.pages;
 
                                 // is requesting new pages data on same query params or loading new data on different query params
                                 if (shouldReplacePage) {
                                     //$('.post-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
-                                    this.$data.postPages = [jsonData];
+                                    this.$data.postPages = [ajaxData];
                                 } else {
-                                    this.$data.postPages.push(jsonData);
+                                    this.$data.postPages.push(ajaxData);
                                 }
 
                                 new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
@@ -1304,14 +1305,14 @@
                             path: '/post',
                             component: postListPagesComponent,
                             children: [
-                                { name: 'postsQuery+p', path: 'page/:page' },
-                                { name: 'tid', path: 'tid/:tid', children: [{ name:'tid+p', path: 'page/:page' }] },
-                                { name: 't+pid', path: 'tid/:tid/pid/:pid', children: [{ name:'t+pid+p', path: 'page/:page' }] },
-                                { name: 't+sid', path: 'tid/:tid/spid/:spid', children: [{ name:'t+spid+p', path: 'page/:page' }] },
-                                { name: 't+p+sid', path: 'tid/:tid/pid/:pid/spid/:spid', children: [{ name:'t+p+sid+p', path: 'page/:page' }] },
-                                { name: 'pid', path: 'pid/:pid', children: [{ name:'pid+p', path: 'page/:page' }] },
-                                { name: 'p+sid', path: 'pid/:pid/spid/:spid', children: [{ name:'p+sid+p', path: 'page/:page' }] },
-                                { name: 'spid', path: 'spid/:spid', children: [{ name:'spid+p', path: 'page/:page' }] },
+                                { name: 'nullQuery+p', path: 'page/:page' },
+                                { name: 'tid', path: 't/:tid', children: [{ name:'tid+p', path: 'page/:page' }] },
+                                { name: 't+pid', path: 't/:tid/p/:pid', children: [{ name:'t+pid+p', path: 'page/:page' }] },
+                                { name: 't+spid', path: 't/:tid/sp/:spid', children: [{ name:'t+spid+p', path: 'page/:page' }] },
+                                { name: 't+p+spid', path: 't/:tid/p/:pid/sp/:spid', children: [{ name:'t+p+spid+p', path: 'page/:page' }] },
+                                { name: 'pid', path: 'p/:pid', children: [{ name:'pid+p', path: 'page/:page' }] },
+                                { name: 'p+spid', path: 'p/:pid/sp/:spid', children: [{ name:'p+spid+p', path: 'page/:page' }] },
+                                { name: 'spid', path: 'sp/:spid', children: [{ name:'spid+p', path: 'page/:page' }] },
                                 { name: 'customQuery', path: '*', query: '*', children: [{ name:'customQuery+p', path: 'page/:page' }]},
                             ]
                         }
