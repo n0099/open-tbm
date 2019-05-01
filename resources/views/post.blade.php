@@ -1,5 +1,4 @@
 @extends('layout')
-@php($baseUrl = env('APP_URL'))
 
 @section('title', '贴子查询')
 
@@ -19,16 +18,12 @@
             background-image: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif);
             background-size: 100%;
         }
-
-        .first-loading-placeholder {
+        .loading-list-placeholder .post-item-placeholder {
             height: 480px;
         }
         .post-item-placeholder {
             background-image: url({{ $baseUrl }}/img/tombstone-post-list.svg);
             background-size: 100%;
-        }
-        #error-404-template {
-            display: none; /* hide by default */
         }
 
         .posts-nav-btn {
@@ -335,7 +330,7 @@
                     <div class="row align-items-center">
                         <div class="col"><hr /></div>
                         <div class="w-auto" v-for="page in [postsData.pages]">
-                            <span v-if="page.currentPage == page.lastPage" class="h4">已经到底了~</span><!-- TODO: fix last page logical-->
+                            <span v-if="page.currentPage == page.lastPage" class="h4">已经到底了~</span>
                             <button v-else @click="loadNewThreadsPage($event.currentTarget, page.currentPage + 1)"
                                     type="button" class="btn btn-secondary">
                                 <span class="h4">下一页</span>
@@ -708,15 +703,21 @@
                            :loading-new-posts="loadingNewPosts"
                            :is-last-page="currentListPage == postPages.length - 1"
                            ref="postLists"></post-list>
-                <loading-posts-placeholder v-if="loadingNewPosts"></loading-posts-placeholder>
+                <loading-list-placeholder v-if="loadingNewPosts"></loading-list-placeholder>
+            </div>
+        </template>
+        <template id="error-404-placeholder-template">
+            <div class="text-center" style="font-size: 8em">
+                <hr />404
             </div>
         </template>
         <div id="post-list-pages">
             <router-view></router-view>
-            <div id="first-loading-placeholder">
+            <error-404-placeholder v-show="showError404Placeholder"></error-404-placeholder>
+            <div v-show="showFirstLoadingPlaceholder" id="first-loading-placeholder">
                 <!-- use div instead of template to display div dom before vue loaded -->
-                <div id="loading-posts-placeholder-template">
-                    <div class="loading-posts-placeholder row align-items-center">
+                <div id="loading-list-placeholder-template">
+                    <div class="loading-list-placeholder row align-items-center">
                         <div class="col"><hr /></div>
                         <div class="w-auto">
                             <div class="loading-icon mx-auto"></div>
@@ -724,14 +725,10 @@
                         <div class="col"><hr /></div>
                         <div class="w-100"></div>
                         <div class="col">
-                            <div class="post-item-placeholder first-loading-placeholder"></div>
+                            <div class="post-item-placeholder"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div id="error-404-template">
-                <hr />
-                <div class="text-center" style="font-size: 8em">404</div>
             </div>
         </div>
     @endverbatim
@@ -743,8 +740,12 @@
             'use strict';
             $$initialNavBar('post');
 
-            const loadingPostsPlaceholderComponent = Vue.component('loading-posts-placeholder', {
-                template: '#loading-posts-placeholder-template'
+            const loadingListPlaceholderComponent = Vue.component('loading-list-placeholder', {
+                template: '#loading-list-placeholder-template'
+            });
+
+            const error404PlaceholderComponent = Vue.component('error-404-placeholder', {
+                template: '#error-404-placeholder-template'
             });
 
             const postListComponent = Vue.component('post-list', {
@@ -890,8 +891,8 @@
                 watch: {
                     loadingNewPosts: function (loadingNewPosts) {
                         if (loadingNewPosts) {
-                            $('#error-404-template').hide();
-                            $('#first-loading-placeholder').hide(); // use hide() instead of remove() to prevent vue can't find loading-posts-placeholder-template
+                            this.$parent.showError404Placeholder = false;
+                            this.$parent.showFirstLoadingPlaceholder = false;
                         }
                     },
                     postPages: function () {
@@ -1162,21 +1163,17 @@
                         };
 
                         let ajaxStartTime = Date.now();
-                        let ajaxQueryStrings = _.merge({}, routeParams, routeQueryStrings); // shadow copy
-                        let ajaxErrorCallback = () => {
-                            this.$data.postPages = []; // clear posts pages data will emit posts pages updated event
-                            $('#error-404-template').show();
-                        };
-                        if (_.isEmpty(ajaxQueryStrings)) {
+                        let ajaxQueryString = _.merge({}, routeParams, routeQueryStrings); // shadow copy
+                        if (_.isEmpty(ajaxQueryString)) {
                             new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
-                            this.$data.postPages = []; // clear posts pages data will emit posts pages updated event
-                            $('#first-loading-placeholder').hide();
+                            this.$data.postPages = []; // clear posts pages data will emit posts pages updated event after initial load
+                            this.$parent.showFirstLoadingPlaceholder = false;
                             return;
                         } else {
-                            ajaxQueryStrings = $.param(_.merge(ajaxQueryStrings, token));
+                            ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
                         }
                         if (shouldReplacePage) {
-                            this.$data.postPages = []; // clear posts pages data before finish to show loading placeholder
+                            this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
                         }
 
                         if (window.previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
@@ -1184,26 +1181,29 @@
                         }
                         this.$data.loadingNewPosts = true;
                         $$reCAPTCHACheck().then((token) => {
-                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryStrings);
-                            window.previousPostsQueryAjax.done((ajaxData) => {
-                                ajaxData = groupSubRepliesByAuthor(ajaxData);
-                                let pagesInfo = ajaxData.pages;
+                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
+                            window.previousPostsQueryAjax
+                                .done((ajaxData) => {
+                                    ajaxData = groupSubRepliesByAuthor(ajaxData);
+                                    let pagesInfo = ajaxData.pages;
 
-                                // is requesting new pages data on same query params or loading new data on different query params
-                                if (shouldReplacePage) {
-                                    //$('.post-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
-                                    this.$data.postPages = [ajaxData];
-                                } else {
-                                    this.$data.postPages.push(ajaxData);
-                                }
+                                    if (shouldReplacePage) { // is requesting new pages data on same query params or loading new data on different query params
+                                        //$('.post-list *').off(); // remove all previous posts list children dom event to prevent re-hiding wrong reply item after load
+                                        this.$data.postPages = [ajaxData];
+                                    } else {
+                                        this.$data.postPages.push(ajaxData);
+                                    }
 
-                                new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                                this.changeDocumentTitle(this.$route);
-                            }).fail((jqXHR) => {
-                                ajaxErrorCallback();
-                            }).always(() => {
-                                this.$data.loadingNewPosts = false
-                            });
+                                    new Noty({ timeout: 3000, type: 'success', text: `已加载第${pagesInfo.currentPage}页 ${pagesInfo.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                                    this.changeDocumentTitle(this.$route);
+                                })
+                                .fail((jqXHR) => {
+                                    this.$data.postPages = [];
+                                    this.$parent.showError404Placeholder = true;
+                                })
+                                .always(() => {
+                                    this.$data.loadingNewPosts = false
+                                });
                         });
                     },
                     changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
@@ -1296,6 +1296,12 @@
 
             let postListVue = new Vue({
                 el: '#post-list-pages',
+                data: function () {
+                    return {
+                        showFirstLoadingPlaceholder: true, // show by initially
+                        showError404Placeholder: false
+                    };
+                },
                 router: new VueRouter({
                     mode: 'history',
                     base: `${$$baseUrlDir}/`,

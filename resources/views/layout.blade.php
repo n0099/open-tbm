@@ -1,8 +1,3 @@
-@php($baseUrl = env('APP_URL'))
-@php($httpDomain = implode('/', array_slice(explode('/', $baseUrl), 0, 3)))
-@php($baseUrlDir = substr($baseUrl, strlen($httpDomain)))
-@php($reCAPTCHASiteKey = env('reCAPTCHA_SITE_KEY'))
-@php($GATrackingID = env('GA_TRACKING_ID'))
 <!doctype html>
 <html lang="zh-cmn-Hans">
     <head>
@@ -393,20 +388,26 @@
 
             //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
             NProgress.configure({ trickleSpeed: 200 });
-            $(document).ajaxStart(() => {
-                NProgress.start();
-                $('body').css('cursor', 'progress');
-            }).ajaxStop(() => {
-                NProgress.done();
-                $('body').css('cursor', '');
-            }).ajaxError((event, jqXHR) => {
-                let errorInfo = '';
-                if (jqXHR.responseJSON != null) {
-                    let responseErrorInfo = jqXHR.responseJSON;
-                    errorInfo = `错误码：${responseErrorInfo.errorCode}<br />${responseErrorInfo.errorInfo}`;
+            const $$changePageLoading = (isLoading) => {
+                if (isLoading) {
+                    NProgress.start();
+                    $('body').css('cursor', 'progress');
+                } else {
+                    NProgress.done();
+                    $('body').css('cursor', '');
                 }
-                new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
-            });
+            };
+            $(document)
+                .ajaxStart(() => $$changePageLoading(true))
+                .ajaxStop(() => $$changePageLoading(false))
+                .ajaxError((event, jqXHR) => {
+                    let errorInfo = '';
+                    if (jqXHR.responseJSON != null) {
+                        let responseErrorInfo = jqXHR.responseJSON;
+                        errorInfo = `错误码：${responseErrorInfo.errorCode}<br />${responseErrorInfo.errorInfo}`;
+                    }
+                    new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
+                });
 
             const $$tippyInital = () => {
                 //tippy('[data-tippy]');
@@ -439,10 +440,11 @@
                     grecaptcha.execute($$reCAPTCHASiteKey)
                         .then((token) => {
                             resolve({ reCAPTCHA: token });
+                            $$changePageLoading(false);
                         }, () => {
+                            reject();
+                            $$changePageLoading(false);
                             new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'}).show();
-                            NProgress.done();
-                            $('body').css('cursor', '');
                         });
                 });
             });

@@ -1,5 +1,4 @@
 @extends('layout')
-@php($baseUrl = env('APP_URL'))
 
 @section('title', '首页')
 
