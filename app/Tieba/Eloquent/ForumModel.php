@@ -27,6 +27,11 @@ class ForumModel extends Model
         return $query->select(array_diff($this->fields, $this->hidedFields));
     }
 
+    public function scopeIsCrawling(Builder $query, bool $isCrawling): Builder
+    {
+        return $query->where('isCrawling', $isCrawling);
+    }
+
     public static function getName(int $fid): Collection
     {
         return static::where('fid', $fid)->value('name');

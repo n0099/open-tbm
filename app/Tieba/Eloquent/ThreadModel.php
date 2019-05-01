@@ -24,6 +24,7 @@ class ThreadModel extends PostModel
         'id',
         'tid',
         'firstPid',
+        'threadType',
         'stickyType',
         'isGood',
         'topicType',
@@ -36,9 +37,9 @@ class ThreadModel extends PostModel
         'replyNum',
         'viewNum',
         'shareNum',
+        'location',
         'agreeInfo',
         'zanInfo',
-        'locationInfo',
         'clientVersion',
         'created_at',
         'updated_at'

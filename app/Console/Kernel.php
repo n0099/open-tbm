@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        foreach (ForumModel::all() as $forum) {
+        foreach (ForumModel::isCrawling(true)->get() as $forum) {
             ThreadQueue::dispatch($forum->fid, $forum->name)->onQueue('crawler');
         }
     }

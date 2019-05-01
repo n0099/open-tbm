@@ -27,6 +27,7 @@ class ReplyModel extends PostModel
         'subReplyNum',
         'postTime',
         'isFold',
+        'location',
         'agreeInfo',
         'signInfo',
         'tailInfo',

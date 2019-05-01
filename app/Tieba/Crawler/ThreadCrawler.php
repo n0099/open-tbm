@@ -136,6 +136,7 @@ class ThreadCrawler extends Crawlable
             $threadsInfo[] = [
                 'tid' => $thread['tid'],
                 'firstPid' => $thread['first_post_id'],
+                'threadType' => $thread['thread_types'],
                 'stickyType' => $thread['is_membertop'] == 1
                     ? 'membertop'
                     : isset($thread['is_top']) // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
@@ -144,7 +145,7 @@ class ThreadCrawler extends Crawlable
                             : 'top'
                         : null,
                 'isGood' => $thread['is_good'],
-                "topicType" => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
+                'topicType' => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
                 'authorUid' => $thread['author']['id'],
                 'authorManagerType' => Helper::nullableValidate($thread['author']['bawu_type'] ?? null), // topic thread won't have this
@@ -154,11 +155,11 @@ class ThreadCrawler extends Crawlable
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
                 'shareNum' => $thread['share_num'] ?? null, // topic thread won't have this
+                'location' => Helper::nullableValidate($thread['location'] ?? null, true),
                 'agreeInfo' => Helper::nullableValidate(isset($thread['agree']) && ($thread['agree']['agree_num'] > 0 || $thread['agree']['disagree_num'] > 0)
                     ? $thread['agree']
                     : null, true), // topic thread won't have this
                 'zanInfo' => Helper::nullableValidate($thread['zan'] ?? null, true),
-                'locationInfo' => Helper::nullableValidate($thread['location'] ?? null, true),
                 'clientVersion' => $this->clientVersion,
                 'created_at' => $now,
                 'updated_at' => $now
