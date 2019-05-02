@@ -1169,8 +1169,6 @@
                             this.$data.postPages = []; // clear posts pages data will emit posts pages updated event after initial load
                             this.$parent.showFirstLoadingPlaceholder = false;
                             return;
-                        } else {
-                            ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
                         }
                         if (shouldReplacePage) {
                             this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
@@ -1181,6 +1179,7 @@
                         }
                         this.$data.loadingNewPosts = true;
                         $$reCAPTCHACheck().then((token) => {
+                            ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
                             window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
                             window.previousPostsQueryAjax
                                 .done((ajaxData) => {
