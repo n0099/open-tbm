@@ -8,7 +8,7 @@ abstract class Crawlable
 
     protected $clientVersion;
 
-    protected $indexesList = [];
+    protected $indexesInfo = [];
 
     protected $webRequestTimes = 0;
 
@@ -24,16 +24,16 @@ abstract class Crawlable
 
     abstract public function doCrawl();
 
-    abstract public function saveLists();
+    abstract public function savePostsInfo();
 
-    abstract protected function checkThenParsePostsList(array $responseJson): void;
+    abstract protected function checkThenParsePostsInfo(array $responseJson): void;
 
     public function getPages() : array
     {
         return $this->pagesInfo;
     }
 
-    public function getProfiles(): array
+    public function getTimingProfiles(): array
     {
         return [
             'webRequestTimes' => $this->webRequestTimes,

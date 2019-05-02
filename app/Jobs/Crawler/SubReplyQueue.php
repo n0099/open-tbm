@@ -38,26 +38,26 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $this->queueStartTime = microtime(true);
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        $firstPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $this->startPage))->doCrawl()->saveLists();
+        $firstPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $this->startPage))->doCrawl()->savePostsInfo();
 
         $queueFinishTime = microtime(true);
         \DB::transaction(function () use ($queueFinishTime, $firstPageCrawler) {
             // crawl last page sub reply if there's un-crawled pages
             $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;  // give up next page range crawl when TiebaException thrown within crawler parser
             if ($subRepliesListLastPage > $this->startPage) { // don't have to crawl every sub reply pages, only first and last one
-                $lastPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $subRepliesListLastPage))->doCrawl()->saveLists();
+                $lastPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
             }
 
             $crawlerProfiles = [];
             if (isset($lastPageCrawler)) {
-                $firstPageProfiles = $firstPageCrawler->getProfiles();
-                $lastPageProfiles = $lastPageCrawler->getProfiles();
+                $firstPageProfiles = $firstPageCrawler->getTimingProfiles();
+                $lastPageProfiles = $lastPageCrawler->getTimingProfiles();
                 // sum up first and last page crawler's profiles value
                 foreach ($firstPageProfiles as $profileName => $profileValue) {
                     $crawlerProfiles[$profileName] = $profileValue + $lastPageProfiles[$profileName];
                 }
             } else {
-                $crawlerProfiles = $firstPageCrawler->getProfiles();
+                $crawlerProfiles = $firstPageCrawler->getTimingProfiles();
             }
 
             // report previous reply crawl finished

@@ -41,7 +41,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID, $this->startPage))->doCrawl();
 
-        $newRepliesInfo = $repliesCrawler->getPostsIsUpdateInfo();
+        $newRepliesInfo = $repliesCrawler->getUpdatedPostsInfo();
         $oldRepliesInfo = Helper::convertIDListKey(
             PostModelFactory::newReply($this->forumID)
                 ->select('pid', 'subReplyNum')
@@ -50,7 +50,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             'pid'
         );
         ksort($oldRepliesInfo);
-        $repliesCrawler->saveLists();
+        $repliesCrawler->savePostsInfo();
 
         \DB::transaction(function () use ($newRepliesInfo, $oldRepliesInfo) {
             $parallelCrawlingSubReplies = CrawlingPostModel
@@ -97,7 +97,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingReply->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
-                ] + $repliesCrawler->getProfiles())->save();
+                ] + $repliesCrawler->getTimingProfiles())->save();
                 $currentCrawlingReply->delete(); // release current crawl queue lock
             }
 

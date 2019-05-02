@@ -22,11 +22,11 @@ class ReplyCrawler extends Crawlable
 
     protected $usersInfo;
 
-    protected $repliesList = [];
+    protected $repliesInfo = [];
 
-    protected $indexesList = [];
+    protected $indexesInfo = [];
 
-    protected $repliesUpdateInfo = [];
+    protected $updatedRepliesInfo = [];
 
     protected $webRequestTimes = 0;
 
@@ -58,7 +58,7 @@ class ReplyCrawler extends Crawlable
         $this->webRequestTimes += 1;
 
         try {
-            $this->checkThenParsePostsList($startPageRepliesInfo);
+            $this->checkThenParsePostsInfo($startPageRepliesInfo);
 
             (new GuzzleHttp\Pool(
                 $tiebaClient,
@@ -83,7 +83,7 @@ class ReplyCrawler extends Crawlable
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $this->checkThenParsePostsList(json_decode($response->getBody(), true));
+                        $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
@@ -100,7 +100,7 @@ class ReplyCrawler extends Crawlable
         return $this;
     }
 
-    protected function checkThenParsePostsList(array $responseJson): void
+    protected function checkThenParsePostsInfo(array $responseJson): void
     {
         switch ($responseJson['error_code']) {
             case 0: // no error
@@ -121,25 +121,25 @@ class ReplyCrawler extends Crawlable
         if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
             $this->endPage = $totalPages;
         }
-        $this->parseRepliesList($repliesList, $repliesUserList);
+        $this->parsePostsInfo($repliesList, $repliesUserList);
     }
 
-    private function parseRepliesList(array $repliesList, $usersList): void
+    private function parsePostsInfo(array $repliesList, $usersInfo): void
     {
-        $repliesUpdateInfo = [];
+        $updatedRepliesInfo = [];
         $repliesInfo = [];
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($repliesList as $reply) {
             ExceptionAdditionInfo::set(['parsingPid' => $reply['id']]);
-            $repliesInfo[] = [
+            $currentInfo = [
                 'tid' => $this->threadID,
                 'pid' => $reply['id'],
                 'floor' => $reply['floor'],
                 'content' => Helper::nullableValidate($reply['content'], true),
                 'authorUid' => $reply['author_id'],
-                'authorManagerType' => Helper::nullableValidate($usersList[$reply['author_id']]['bawu_type'] ?? null), // might be null for unknown reason
-                'authorExpGrade' => Helper::nullableValidate($usersList[$reply['author_id']]['level_id'] ?? null), // might be null for unknown reason
+                'authorManagerType' => Helper::nullableValidate($usersInfo[$reply['author_id']]['bawu_type'] ?? null), // might be null for unknown reason
+                'authorExpGrade' => Helper::nullableValidate($usersInfo[$reply['author_id']]['level_id'] ?? null), // might be null for unknown reason
                 'subReplyNum' => $reply['sub_post_number'],
                 'postTime' => Carbon::createFromTimestamp($reply['time'])->toDateTimeString(),
                 'isFold' => $reply['is_fold'],
@@ -153,67 +153,67 @@ class ReplyCrawler extends Crawlable
             ];
 
             $this->parsedPostTimes += 1;
-            $latestInfo = end($repliesInfo);
+            $repliesInfo[] = $currentInfo;
             if ($reply['sub_post_number'] > 0) {
-                $repliesUpdateInfo[$reply['id']] = Helper::getArrayValuesByKeys($latestInfo, ['subReplyNum']);
+                $updatedRepliesInfo[$reply['id']] = Helper::getArrayValuesByKeys($currentInfo, ['subReplyNum']);
             }
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
-                'postTime' => $latestInfo['postTime'],
+                'postTime' => $currentInfo['postTime'],
                 'type' => 'reply',
                 'fid' => $this->forumID
-            ] + Helper::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'authorUid']);
+            ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingPid');
 
         // lazy saving to Eloquent model
-        $this->parsedUserTimes = $this->usersInfo->parseUsersList($usersList);
-        $this->repliesUpdateInfo = $repliesUpdateInfo + $this->repliesUpdateInfo;
-        $this->repliesList = array_merge($this->repliesList, $repliesInfo);
-        $this->indexesList = array_merge($this->indexesList, $indexesInfo);
+        $this->parsedUserTimes = $this->usersInfo->parseUsersInfo($usersInfo);
+        $this->updatedRepliesInfo = $updatedRepliesInfo + $this->updatedRepliesInfo; // newly added update info will override previous one
+        $this->repliesInfo = array_merge($this->repliesInfo, $repliesInfo);
+        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
 
-    public function saveLists(): self
+    public function savePostsInfo(): self
     {
-        if ($this->indexesList != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+        if ($this->indexesInfo != null) { // if TiebaException thrown while parsing posts, indexes list might be null
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingReplies' => true]);
                 $chunkInsertBufferSize = 2000;
                 $replyModel = PostModelFactory::newReply($this->forumID);
-                foreach (static::groupNullableColumnArray($this->repliesList, [
+                foreach (static::groupNullableColumnArray($this->repliesInfo, [
                     'authorManagerType',
                     'authorExpGrade'
-                ]) as $repliesListGroup) {
-                    $replyUpdateFields = array_diff(array_keys($repliesListGroup[0]), $replyModel->updateExpectFields);
-                    $replyModel->chunkInsertOnDuplicate($repliesListGroup, $replyUpdateFields, $chunkInsertBufferSize);
+                ]) as $repliesInfoGroup) {
+                    $replyUpdateFields = array_diff(array_keys($repliesInfoGroup[0]), $replyModel->updateExpectFields);
+                    $replyModel->chunkInsertOnDuplicate($repliesInfoGroup, $replyUpdateFields, $chunkInsertBufferSize);
                 }
 
                 $indexModel = new IndexModel();
-                $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-                $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+                $indexUpdateFields = array_diff(array_keys($this->indexesInfo[0]), $indexModel->updateExpectFields);
+                $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingReplies');
 
-                $this->usersInfo->saveUsersList();
+                $this->usersInfo->saveUsersInfo();
             }, 5);
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid');
-        $this->repliesList = [];
-        $this->indexesList = [];
+        $this->repliesInfo = [];
+        $this->indexesInfo = [];
         return $this;
     }
 
-    public function getPostsIsUpdateInfo(): array
+    public function getUpdatedPostsInfo(): array
     {
-        return $this->repliesUpdateInfo;
+        return $this->updatedRepliesInfo;
     }
 
     public function __construct(int $fid, int $tid, int $startPage, int $endPage = null)
     {
         $this->forumID = $fid;
         $this->threadID = $tid;
-        $this->usersInfo = new UserInfoParser();
+        $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 100;
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage

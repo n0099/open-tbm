@@ -70,7 +70,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         }
 
         $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID, $this->startPage, $this->endPage))->doCrawl();
-        $newThreadsInfo = $threadsCrawler->getPostsIsUpdateInfo();
+        $newThreadsInfo = $threadsCrawler->getUpdatedPostsInfo();
         $oldThreadsInfo = Helper::convertIDListKey(
             PostModelFactory::newThread($this->forumID)
                 ->select('tid', 'latestReplyTime', 'replyNum')
@@ -78,7 +78,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             'tid'
         );
         ksort($oldThreadsInfo);
-        $threadsCrawler->saveLists();
+        $threadsCrawler->savePostsInfo();
 
         \DB::transaction(function () use ($newThreadsInfo, $oldThreadsInfo) {
             $parallelCrawlingReplies = CrawlingPostModel
@@ -127,7 +127,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingForum->fill([
                     'duration' => $queueFinishTime - $this->queueStartTime
-                ] + $threadsCrawler->getProfiles())->save();
+                ] + $threadsCrawler->getTimingProfiles())->save();
                 $currentCrawlingForum->delete(); // release current crawl queue lock
             }
 

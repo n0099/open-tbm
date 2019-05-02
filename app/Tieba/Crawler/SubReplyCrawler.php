@@ -24,9 +24,9 @@ class SubReplyCrawler extends Crawlable
 
     protected $usersInfo;
 
-    protected $indexesList = [];
+    protected $subRepliesInfo = [];
 
-    protected $subRepliesList = [];
+    protected $indexesInfo = [];
 
     protected $webRequestTimes = 0;
 
@@ -59,7 +59,7 @@ class SubReplyCrawler extends Crawlable
         $this->webRequestTimes += 1;
 
         try {
-            $this->checkThenParsePostsList($startPageSubRepliesInfo);
+            $this->checkThenParsePostsInfo($startPageSubRepliesInfo);
 
             // by default we don't have to crawl every sub reply pages, only first and last one
             (new GuzzleHttp\Pool(
@@ -86,7 +86,7 @@ class SubReplyCrawler extends Crawlable
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $this->checkThenParsePostsList(json_decode($response->getBody(), true));
+                        $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
@@ -102,7 +102,7 @@ class SubReplyCrawler extends Crawlable
         return $this;
     }
 
-    protected function checkThenParsePostsList(array $responseJson): void
+    protected function checkThenParsePostsInfo(array $responseJson): void
     {
         switch ($responseJson['error_code']) {
             case 0: // no error
@@ -124,19 +124,19 @@ class SubReplyCrawler extends Crawlable
         if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
             $this->endPage = $totalPages;
         }
-        $this->parseSubRepliesList($subRepliesList);
+        $this->parsePostsInfo($subRepliesList);
     }
 
-    private function parseSubRepliesList(array $subRepliesList): void
+    private function parsePostsInfo(array $subRepliesList): void
     {
-        $usersList = [];
+        $usersInfo = [];
         $subRepliesInfo = [];
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($subRepliesList as $subReply) {
             ExceptionAdditionInfo::set(['parsingSpid' => $subReply['id']]);
-            $usersList[] = $subReply['author'];
-            $subRepliesInfo[] = [
+            $usersInfo[] = $subReply['author'];
+            $currentInfo = [
                 'tid' => $this->threadID,
                 'pid' => $this->replyID,
                 'spid' => $subReply['id'],
@@ -151,45 +151,45 @@ class SubReplyCrawler extends Crawlable
             ];
 
             $this->parsedPostTimes += 1;
-            $latestInfo = end($subRepliesInfo);
+            $subRepliesInfo[] = $currentInfo;
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
-                'postTime' => $latestInfo['postTime'],
+                'postTime' => $currentInfo['postTime'],
                 'type' => 'subReply',
                 'fid' => $this->forumID
-            ] + Helper::getArrayValuesByKeys($latestInfo, ['tid', 'pid', 'spid', 'authorUid']);
+            ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingSpid');
 
         // lazy saving to Eloquent model
-        $this->parsedUserTimes = $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
-        $this->subRepliesList = array_merge($this->subRepliesList, $subRepliesInfo);
-        $this->indexesList = array_merge($this->indexesList, $indexesInfo);
+        $this->parsedUserTimes = $this->usersInfo->parseUsersInfo(collect($usersInfo)->unique('id')->toArray());
+        $this->subRepliesInfo = array_merge($this->subRepliesInfo, $subRepliesInfo);
+        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
 
-    public function saveLists(): self
+    public function savePostsInfo(): self
     {
-        if ($this->indexesList != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+        if ($this->indexesInfo != null) { // if TiebaException thrown while parsing posts, indexes list might be null
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
                 $chunkInsertBufferSize = 2000;
                 $subReplyModel = PostModelFactory::newSubReply($this->forumID);
-                $subReplyUpdateFields = array_diff(array_keys($this->subRepliesList[0]), $subReplyModel->updateExpectFields);
-                $subReplyModel->chunkInsertOnDuplicate($this->subRepliesList, $subReplyUpdateFields, $chunkInsertBufferSize);
+                $subReplyUpdateFields = array_diff(array_keys($this->subRepliesInfo[0]), $subReplyModel->updateExpectFields);
+                $subReplyModel->chunkInsertOnDuplicate($this->subRepliesInfo, $subReplyUpdateFields, $chunkInsertBufferSize);
 
                 $indexModel = new IndexModel();
-                $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-                $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+                $indexUpdateFields = array_diff(array_keys($this->indexesInfo[0]), $indexModel->updateExpectFields);
+                $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingSubReplies');
 
-                $this->usersInfo->saveUsersList();
+                $this->usersInfo->saveUsersInfo();
             }, 5);
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');
-        $this->subRepliesList = [];
-        $this->indexesList = [];
+        $this->subRepliesInfo = [];
+        $this->indexesInfo = [];
         return $this;
     }
 
@@ -198,7 +198,7 @@ class SubReplyCrawler extends Crawlable
         $this->forumID = $fid;
         $this->threadID = $tid;
         $this->replyID = $pid;
-        $this->usersInfo = new UserInfoParser();
+        $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only first and last one
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage

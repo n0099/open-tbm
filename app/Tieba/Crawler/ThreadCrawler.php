@@ -22,11 +22,11 @@ class ThreadCrawler extends Crawlable
 
     protected $usersInfo;
 
-    protected $threadsList = [];
+    protected $threadsInfo = [];
 
-    protected $indexesList = [];
+    protected $indexesInfo = [];
 
-    protected $threadsUpdateInfo = [];
+    protected $updatedPostsInfo = [];
 
     protected $webRequestTimes = 0;
 
@@ -46,7 +46,7 @@ class ThreadCrawler extends Crawlable
         ExceptionAdditionInfo::set(['parsingPage' => 1]);
 
         $tiebaClient = $this->getClientHelper();
-        $threadsList = json_decode($tiebaClient->post(
+        $threadsInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/frs/page',
             [
                 'form_params' => [
@@ -59,7 +59,7 @@ class ThreadCrawler extends Crawlable
         $this->webRequestTimes += 1;
 
         try {
-            $this->checkThenParsePostsList($threadsList);
+            $this->checkThenParsePostsInfo($threadsInfo);
 
             // by default we don't have to crawl every sub reply pages, only first and last one
             (new GuzzleHttp\Pool(
@@ -86,7 +86,7 @@ class ThreadCrawler extends Crawlable
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) {
                         $this->webRequestTimes += 1;
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $this->checkThenParsePostsList(json_decode($response->getBody(), true));
+                        $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
                     },
                     'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
@@ -102,7 +102,7 @@ class ThreadCrawler extends Crawlable
         return $this;
     }
 
-    protected function checkThenParsePostsList(array $responseJson): void
+    protected function checkThenParsePostsInfo(array $responseJson): void
     {
         switch ($responseJson['error_code']) {
             case 0: // no error
@@ -120,30 +120,30 @@ class ThreadCrawler extends Crawlable
         if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
             $this->endPage = $totalPages;
         }
-        $this->parseThreadsList($threadsList);
+        $this->parsePostsInfo($threadsList);
     }
 
-    private function parseThreadsList(array $threadsList): void
+    private function parsePostsInfo(array $threadsList): void
     {
-        $usersList = [];
-        $threadsUpdateInfo = [];
+        $usersInfo = [];
+        $updatedThreadsInfo = [];
         $threadsInfo = [];
         $indexesInfo = [];
         $now = Carbon::now();
         foreach ($threadsList as $thread) {
             ExceptionAdditionInfo::set(['parsingTid' => $thread['tid']]);
-            $usersList[] = $thread['author'] + ['gender' => $thread['author']['sex'] ?? null]; // sb 6.0.2
-            $threadsInfo[] = [
+            $usersInfo[] = $thread['author'] + ['gender' => $thread['author']['sex'] ?? null]; // sb 6.0.2
+            $currentInfo = [
                 'tid' => $thread['tid'],
                 'firstPid' => $thread['first_post_id'],
                 'threadType' => $thread['thread_types'],
                 'stickyType' => $thread['is_membertop'] == 1
                     ? 'membertop'
-                    : isset($thread['is_top']) // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the first(oldest) thread won't have is_top field
+                    : isset($thread['is_top'])
                         ? $thread['is_top'] == 0
                             ? null
                             : 'top'
-                        : null,
+                        : 'top', // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
                 'isGood' => $thread['is_good'],
                 'topicType' => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
@@ -166,67 +166,67 @@ class ThreadCrawler extends Crawlable
             ];
 
             $this->parsedPostTimes += 1;
-            $latestInfo = end($threadsInfo);
-            $threadsUpdateInfo[$thread['tid']] = Helper::getArrayValuesByKeys($latestInfo, ['latestReplyTime', 'replyNum']);
+            $threadsInfo[] = $currentInfo;
+            $updatedThreadsInfo[$thread['tid']] = Helper::getArrayValuesByKeys($currentInfo, ['latestReplyTime', 'replyNum']);
             $indexesInfo[] = [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',
                 'fid' => $this->forumID
-            ] + Helper::getArrayValuesByKeys($latestInfo, ['tid', 'authorUid', 'postTime']);
+            ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'authorUid', 'postTime']);
         }
         ExceptionAdditionInfo::remove('parsingTid');
 
         // lazy saving to Eloquent model
-        $this->parsedUserTimes = $this->usersInfo->parseUsersList(collect($usersList)->unique('id')->toArray());
-        $this->threadsUpdateInfo = $threadsUpdateInfo;
-        $this->threadsList = $threadsInfo;
-        $this->indexesList = $indexesInfo;
+        $this->parsedUserTimes = $this->usersInfo->parseUsersInfo(collect($usersInfo)->unique('id')->toArray());
+        $this->updatedPostsInfo = $updatedThreadsInfo + $this->updatedPostsInfo; // newly added update info will override previous one
+        $this->threadsInfo = array_merge($this->threadsInfo, $threadsInfo);
+        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
 
-    public function saveLists(): self
+    public function savePostsInfo(): self
     {
-        if ($this->indexesList != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+        if ($this->indexesInfo != null) { // if TiebaException thrown while parsing posts, indexes list might be null
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingThreads' => true]);
                 $chunkInsertBufferSize = 2000;
                 $threadModel = PostModelFactory::newThread($this->forumID);
-                foreach (static::groupNullableColumnArray($this->threadsList, [
+                foreach (static::groupNullableColumnArray($this->threadsInfo, [
                     'postTime',
                     'latestReplyTime',
                     'latestReplierUid',
                     'shareNum',
                     'agreeInfo'
-                ]) as $threadsListGroup) {
-                    $threadUpdateFields = array_diff(array_keys($threadsListGroup[0]), $threadModel->updateExpectFields);
-                    $threadModel->chunkInsertOnDuplicate($threadsListGroup, $threadUpdateFields, $chunkInsertBufferSize);
+                ]) as $threadsInfoGroup) {
+                    $threadUpdateFields = array_diff(array_keys($threadsInfoGroup[0]), $threadModel->updateExpectFields);
+                    $threadModel->chunkInsertOnDuplicate($threadsInfoGroup, $threadUpdateFields, $chunkInsertBufferSize);
                 }
 
                 $indexModel = new IndexModel();
-                $indexUpdateFields = array_diff(array_keys($this->indexesList[0]), $indexModel->updateExpectFields);
-                $indexModel->chunkInsertOnDuplicate($this->indexesList, $indexUpdateFields, $chunkInsertBufferSize);
+                $indexUpdateFields = array_diff(array_keys($this->indexesInfo[0]), $indexModel->updateExpectFields);
+                $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingThreads');
 
-                $this->usersInfo->saveUsersList();
+                $this->usersInfo->saveUsersInfo();
             }, 5);
         }
 
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
-        $this->threadsList = [];
-        $this->indexesList = [];
+        $this->threadsInfo = [];
+        $this->indexesInfo = [];
         return $this;
     }
 
-    public function getPostsIsUpdateInfo(): array
+    public function getUpdatedPostsInfo(): array
     {
-        return $this->threadsUpdateInfo;
+        return $this->updatedPostsInfo;
     }
 
     public function __construct(string $forumName, int $forumID, int $startPage, $endPage)
     {
         $this->forumID = $forumID;
         $this->forumName = $forumName;
-        $this->usersInfo = new UserInfoParser();
+        $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $crawlPageRange = $endPage == null ? 0 : 100; // by default we don't have to crawl every threads pages, only first one
         $this->endPage = $this->startPage + $crawlPageRange; // $this->endPage will be either $startPage or $startPage + 100 (if $endPage determined)
