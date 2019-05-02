@@ -99,4 +99,9 @@ abstract class Crawlable
 
         return $arrayAfterGroup;
     }
+
+    public static function getUpdateFieldsWithoutExpected(array $updateItem, $model): array
+    {
+        return array_diff(array_keys($updateItem), $model->updateExpectFields);
+    }
 }

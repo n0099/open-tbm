@@ -119,11 +119,13 @@ class SubReplyCrawler extends Crawlable
         if (count($subRepliesList) == 0) {
             throw new TiebaException('Sub reply list is empty, posts might already deleted from tieba');
         }
+
         $this->pagesInfo = $responseJson['page'];
         $totalPages = $responseJson['page']['total_page'];
         if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
             $this->endPage = $totalPages;
         }
+
         $this->parsePostsInfo($subRepliesList);
     }
 
@@ -175,11 +177,11 @@ class SubReplyCrawler extends Crawlable
                 ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
                 $chunkInsertBufferSize = 2000;
                 $subReplyModel = PostModelFactory::newSubReply($this->forumID);
-                $subReplyUpdateFields = array_diff(array_keys($this->subRepliesInfo[0]), $subReplyModel->updateExpectFields);
+                $subReplyUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->subRepliesInfo[0], $subReplyModel);
                 $subReplyModel->chunkInsertOnDuplicate($this->subRepliesInfo, $subReplyUpdateFields, $chunkInsertBufferSize);
 
                 $indexModel = new IndexModel();
-                $indexUpdateFields = array_diff(array_keys($this->indexesInfo[0]), $indexModel->updateExpectFields);
+                $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
                 $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingSubReplies');
 

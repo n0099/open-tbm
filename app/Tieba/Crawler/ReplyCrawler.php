@@ -22,6 +22,8 @@ class ReplyCrawler extends Crawlable
 
     protected $usersInfo;
 
+    protected $parentThreadInfo = [];
+
     protected $repliesInfo = [];
 
     protected $indexesInfo = [];
@@ -111,20 +113,23 @@ class ReplyCrawler extends Crawlable
                 throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($responseJson));
         }
 
+        $parentThreadInfo = $responseJson['thread'];
         $repliesList = $responseJson['post_list'];
-        $repliesUserList = Helper::convertIDListKey($responseJson['user_list'], 'id');
+        $replyUsersList = Helper::convertIDListKey($responseJson['user_list'], 'id');
         if (count($repliesList) == 0) {
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba');
         }
+
         $this->pagesInfo = $responseJson['page'];
         $totalPages = $responseJson['page']['total_page'];
         if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
             $this->endPage = $totalPages;
         }
-        $this->parsePostsInfo($repliesList, $repliesUserList);
+
+        $this->parsePostsInfo($parentThreadInfo, $repliesList, $replyUsersList);
     }
 
-    private function parsePostsInfo(array $repliesList, $usersInfo): void
+    private function parsePostsInfo(array $parentThreadInfo, array $repliesList, array $usersInfo): void
     {
         $updatedRepliesInfo = [];
         $repliesInfo = [];
@@ -168,8 +173,14 @@ class ReplyCrawler extends Crawlable
         ExceptionAdditionInfo::remove('parsingPid');
 
         // lazy saving to Eloquent model
+        $usersInfo[$parentThreadInfo['author']['id']]['privacySettings'] = $parentThreadInfo['author']['priv_sets']; // parent thread author privacy settings
         $this->parsedUserTimes = $this->usersInfo->parseUsersInfo($usersInfo);
         $this->updatedRepliesInfo = $updatedRepliesInfo + $this->updatedRepliesInfo; // newly added update info will override previous one
+        $this->parentThreadInfo[$parentThreadInfo['id']] = [
+            'tid' => $parentThreadInfo['id'],
+            'antiSpamInfo' => $parentThreadInfo['thread_info']['antispam_info'] ?? null,
+            'authorPhoneType' => $parentThreadInfo['thread_info']['phone_type'] ?? null
+        ];
         $this->repliesInfo = array_merge($this->repliesInfo, $repliesInfo);
         $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
@@ -185,12 +196,15 @@ class ReplyCrawler extends Crawlable
                     'authorManagerType',
                     'authorExpGrade'
                 ]) as $repliesInfoGroup) {
-                    $replyUpdateFields = array_diff(array_keys($repliesInfoGroup[0]), $replyModel->updateExpectFields);
+                    $replyUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($repliesInfoGroup[0], $replyModel);
                     $replyModel->chunkInsertOnDuplicate($repliesInfoGroup, $replyUpdateFields, $chunkInsertBufferSize);
                 }
 
+                $parentThreadModel = PostModelFactory::newThread($this->forumID);
+                $parentThreadModel->chunkInsertOnDuplicate($this->parentThreadInfo, array_keys($this->parentThreadInfo), $chunkInsertBufferSize);
+
                 $indexModel = new IndexModel();
-                $indexUpdateFields = array_diff(array_keys($this->indexesInfo[0]), $indexModel->updateExpectFields);
+                $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
                 $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingReplies');
 

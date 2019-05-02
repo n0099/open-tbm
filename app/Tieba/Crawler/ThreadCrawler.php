@@ -115,11 +115,13 @@ class ThreadCrawler extends Crawlable
         if (count($threadsList) == 0) {
             throw new TiebaException('Forum threads list is empty, forum might doesn\'t existed');
         }
+
         $this->pagesInfo = $responseJson['page'];
         $totalPages = $responseJson['page']['total_page'];
         if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
             $this->endPage = $totalPages;
         }
+
         $this->parsePostsInfo($threadsList);
     }
 
@@ -155,6 +157,8 @@ class ThreadCrawler extends Crawlable
                 'replyNum' => $thread['reply_num'],
                 'viewNum' => $thread['view_num'],
                 'shareNum' => $thread['share_num'] ?? null, // topic thread won't have this
+                'authorPhoneType' => null, // set by ReplyCrawler parent thread info updating
+                'antiSpamInfo' => null, // set by ReplyCrawler parent thread info updating
                 'location' => Helper::nullableValidate($thread['location'] ?? null, true),
                 'agreeInfo' => Helper::nullableValidate(isset($thread['agree']) && ($thread['agree']['agree_num'] > 0 || $thread['agree']['disagree_num'] > 0)
                     ? $thread['agree']
@@ -198,12 +202,12 @@ class ThreadCrawler extends Crawlable
                     'shareNum',
                     'agreeInfo'
                 ]) as $threadsInfoGroup) {
-                    $threadUpdateFields = array_diff(array_keys($threadsInfoGroup[0]), $threadModel->updateExpectFields);
+                    $threadUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($threadsInfoGroup[0], $threadModel);
                     $threadModel->chunkInsertOnDuplicate($threadsInfoGroup, $threadUpdateFields, $chunkInsertBufferSize);
                 }
 
                 $indexModel = new IndexModel();
-                $indexUpdateFields = array_diff(array_keys($this->indexesInfo[0]), $indexModel->updateExpectFields);
+                $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
                 $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingThreads');
 

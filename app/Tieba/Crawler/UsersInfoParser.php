@@ -46,6 +46,7 @@ class UsersInfoParser
                     'gender' => Helper::nullableValidate($user['gender']),
                     'fansNickname' => isset($user['fans_nickname']) ? Helper::nullableValidate($user['fans_nickname']) : null,
                     'iconInfo' => Helper::nullableValidate($user['iconinfo'], true),
+                    'privacySettings' => null, // set by ReplyCrawler parent thread author info updating
                     'alaInfo' => ! isset($user['ala_info']['lat'])
                         || Helper::nullableValidate($user['ala_info']) != null
                         && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0)
@@ -87,7 +88,7 @@ class UsersInfoParser
             'fansNickname',
             'alaInfo'
         ]) as $usersInfoGroup) {
-            $userUpdateFields = array_diff(array_keys($usersInfoGroup[0]), $userModel->updateExpectFields);
+            $userUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($usersInfoGroup[0], $userModel);
             $userModel->chunkInsertOnDuplicate($usersInfoGroup, $userUpdateFields, $chunkInsertBufferSize);
         }
 
