@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use function GuzzleHttp\json_encode;
+
 /**
  * Class ExceptionAdditionInfo
  *
@@ -18,15 +20,15 @@ class ExceptionAdditionInfo
         static::$info = $info + static::$info;
     }
 
-    public static function remove(...$infoName): void
+    public static function remove(...$infoNames): void
     {
-        foreach (func_get_args() as $infoName) {
+        foreach ($infoNames as $infoName) {
             unset(static::$info[$infoName]);
         }
     }
 
     public static function format(): string
     {
-        return urldecode(http_build_query(static::$info ?? [], null, ', '));
+        return json_encode(static::$info ?? [], JSON_UNESCAPED_UNICODE);
     }
 }

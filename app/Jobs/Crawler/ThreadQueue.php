@@ -6,6 +6,7 @@ use App\Eloquent\CrawlingPostModel;
 use App\Helper;
 use App\Tieba\Crawler\ThreadCrawler;
 use App\Tieba\Eloquent\PostModelFactory;
+use App\TimingHelper;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,8 +17,6 @@ use Illuminate\Queue\SerializesModels;
 class ThreadQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    protected $queueStartTime;
 
     protected $forumID;
 
@@ -38,7 +37,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     public function handle()
     {
-        $this->queueStartTime = microtime(true);
+        $queueTiming = new TimingHelper();
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $cancelCurrentCrawler = false;
@@ -113,8 +112,8 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             }
         });
 
-        $queueFinishTime = microtime(true);
-        \DB::transaction(function () use ($queueFinishTime, $threadsCrawler) {
+        $queueTiming->stop();
+        \DB::transaction(function () use ($threadsCrawler, $queueTiming) {
             // report previous finished forum crawl
             $currentCrawlingForum = CrawlingPostModel
                 ::select('id', 'startTime')
@@ -126,8 +125,8 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 ->lockForUpdate()->first();
             if ($currentCrawlingForum != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingForum->fill([
-                    'duration' => $queueFinishTime - $this->queueStartTime
-                ] + $threadsCrawler->getTimingProfiles())->save();
+                    'queueTiming' => $queueTiming->getTiming()
+                ] + $threadsCrawler->getProfiles())->save();
                 $currentCrawlingForum->delete(); // release current crawl queue lock
             }
 
@@ -143,6 +142,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 ThreadQueue::dispatch($this->forumID, $this->forumName, $newCrawlerStartPage, $this->endPage)->onQueue('crawler');
             }
         });
-        \Log::channel('crawler-info')->info('Thread crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
+
+        \Log::channel('crawler-info')->info('Thread crawler queue completed after ' . ($queueTiming->getTiming()));
     }
 }

@@ -6,6 +6,7 @@ use App\Eloquent\CrawlingPostModel;
 use App\Helper;
 use App\Tieba\Crawler;
 use App\Tieba\Eloquent\PostModelFactory;
+use App\TimingHelper;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,8 +17,6 @@ use Illuminate\Queue\SerializesModels;
 class ReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    protected $queueStartTime;
 
     protected $forumID;
 
@@ -36,11 +35,10 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
     public function handle()
     {
-        $this->queueStartTime = microtime(true);
+        $queueTiming = new TimingHelper();
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID, $this->startPage))->doCrawl();
-
         $newRepliesInfo = $repliesCrawler->getUpdatedPostsInfo();
         $oldRepliesInfo = Helper::convertIDListKey(
             PostModelFactory::newReply($this->forumID)
@@ -83,8 +81,8 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             }
         });
 
-        $queueFinishTime = microtime(true);
-        \DB::transaction(function () use ($queueFinishTime, $repliesCrawler) {
+        $queueTiming->stop();
+        \DB::transaction(function () use ($repliesCrawler, $queueTiming) {
             // report current crawl queue finished
             $currentCrawlingReply = CrawlingPostModel
                 ::select('id', 'startTime')
@@ -96,8 +94,8 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 ->lockForUpdate()->first();
             if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
                 $currentCrawlingReply->fill([
-                    'duration' => $queueFinishTime - $this->queueStartTime
-                ] + $repliesCrawler->getTimingProfiles())->save();
+                    'queueTiming' => $queueTiming->getTiming()
+                ] + $repliesCrawler->getProfiles())->save();
                 $currentCrawlingReply->delete(); // release current crawl queue lock
             }
 
@@ -114,6 +112,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                 ReplyQueue::dispatch($this->forumID, $this->threadID, $newCrawlerStartPage)->onQueue('crawler');
             }
         });
-        \Log::channel('crawler-info')->info('Reply crawler queue completed after ' . ($queueFinishTime - $this->queueStartTime));
+
+        \Log::channel('crawler-info')->info('Reply crawler queue completed after ' . ($queueTiming->getTiming()));
     }
 }

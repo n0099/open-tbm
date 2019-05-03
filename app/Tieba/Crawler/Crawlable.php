@@ -10,11 +10,13 @@ abstract class Crawlable
 
     protected $indexesInfo = [];
 
-    protected $webRequestTimes = 0;
-
-    protected $parsedPostTimes = 0;
-
-    protected $parsedUserTimes = 0;
+    protected $profiles = [
+        'webRequestTiming' => 0,
+        'savePostsTiming' => 0,
+        'webRequestTimes' => 0,
+        'parsedPostTimes' => 0,
+        'parsedUserTimes' => 0,
+    ];
 
     protected $pagesInfo = [];
 
@@ -33,13 +35,9 @@ abstract class Crawlable
         return $this->pagesInfo;
     }
 
-    public function getTimingProfiles(): array
+    public function getProfiles(): array
     {
-        return [
-            'webRequestTimes' => $this->webRequestTimes,
-            'parsedPostTimes' => $this->parsedPostTimes,
-            'parsedUserTimes' => $this->parsedUserTimes
-        ];
+        return $this->profiles;
     }
 
     protected function getClientHelper(): ClientRequester
