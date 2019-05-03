@@ -185,7 +185,7 @@ class ThreadCrawler extends Crawlable
 
         // lazy saving to Eloquent model
         $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo(collect($usersInfo)->unique('id')->toArray());
-        $this->updatedPostsInfo = $updatedThreadsInfo + $this->updatedPostsInfo; // newly added update info will override previous one
+        $this->updatedPostsInfo = $updatedThreadsInfo + $this->updatedPostsInfo; // newly added update info will override previous one by post id key
         $this->threadsInfo = array_merge($this->threadsInfo, $threadsInfo);
         $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }

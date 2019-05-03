@@ -177,10 +177,10 @@ class ReplyCrawler extends Crawlable
         // lazy saving to Eloquent model
         $usersInfo[$parentThreadInfo['author']['id']]['privacySettings'] = $parentThreadInfo['author']['priv_sets']; // parent thread author privacy settings
         $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo($usersInfo);
-        $this->updatedRepliesInfo = $updatedRepliesInfo + $this->updatedRepliesInfo; // newly added update info will override previous one
+        $this->updatedRepliesInfo = $updatedRepliesInfo + $this->updatedRepliesInfo; // newly added update info will override previous one by post id key
         $this->parentThreadInfo[$parentThreadInfo['id']] = [
             'tid' => $parentThreadInfo['id'],
-            'antiSpamInfo' => $parentThreadInfo['thread_info']['antispam_info'] ?? null,
+            'antiSpamInfo' => Helper::nullableValidate($parentThreadInfo['thread_info']['antispam_info'] ?? null, true),
             'authorPhoneType' => $parentThreadInfo['thread_info']['phone_type'] ?? null
         ];
         $this->repliesInfo = array_merge($this->repliesInfo, $repliesInfo);
@@ -204,7 +204,8 @@ class ReplyCrawler extends Crawlable
                 }
 
                 $parentThreadModel = PostModelFactory::newThread($this->forumID);
-                $parentThreadModel->chunkInsertOnDuplicate($this->parentThreadInfo, array_keys($this->parentThreadInfo), $chunkInsertBufferSize);
+                $this->parentThreadInfo = array_values($this->parentThreadInfo); // array_values will remove tid key
+                $parentThreadModel->chunkInsertOnDuplicate($this->parentThreadInfo, array_keys($this->parentThreadInfo[0]), $chunkInsertBufferSize);
 
                 $indexModel = new IndexModel();
                 $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
