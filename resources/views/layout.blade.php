@@ -11,42 +11,26 @@
             gtag('js', new Date());
             gtag('config', '{{ $GATrackingID }}');
         </script>
-        <link href="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.css" rel="stylesheet">
+        @yield('style-module')
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/themes/light-border.css" rel="stylesheet">
-        <link href="{{ $baseUrl }}/css/bootstrap-callout.css" rel="stylesheet">
         <style>
-            .echarts.loading {
-                background: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
+            .lazyload, .lazyloading {
+                opacity: 0;
+                background: #f7f7f7 url({{ asset('img/icon-huaji-loading-spinner.gif') }}) no-repeat center;
             }
-
-            .tieba-image-zoom-in {
-                position: relative;
+            .lazyloaded {
+                opacity: 1;
+                transition: opacity 200ms;
             }
-            .tieba-image-zoom-in::after {
-                position: absolute;
-                top: 25px;
-                left: 30px;
-                content: "\f00e"; /* fa-search-plus */
-                font: 900 2em "Font Awesome 5 Free";
-                opacity: 0.4;
-                cursor: zoom-in;
-            }
-            .tieba-image {
+            .loading-icon {
                 width: 100px;
                 height: 100px;
-                object-fit: contain;
-                cursor: zoom-in;
-            }
-            .tieba-image-zoom-out {
-                cursor: zoom-out;
-            }
-            .tieba-image-expanded {
-                max-width: 80%;
-                cursor: zoom-out;
+                background-image: url({{ asset('img/icon-huaji-loading-spinner.gif') }});
+                background-size: 100%;
             }
 
             .grecaptcha-badge {
@@ -110,7 +94,7 @@
                 )
             }
         </style>
-        @yield('head-meta')
+        @yield('style')
         <title>@yield('title') - 贴吧云监控</title>
     </head>
     <body>
@@ -147,7 +131,6 @@
                     <li class="nav-item">
                         <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐助</a>
                     </li>
-                    @yield('navbar-items')
                 </ul>
             </div>
         </nav>
@@ -172,220 +155,21 @@
         <script async src="https://n0099.net/static/browser-update.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/locale/zh-cn.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/echarts@4.1.0/dist/echarts.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/noty@3.1.4/lib/noty.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
         <script async src="https://cdn.jsdelivr.net/npm/lazysizes@4.1.5/lazysizes.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue{{ App::environment('production') ? '.min' : null }}.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-router@3.0.2/dist/vue-router.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vue-observe-visibility@0.4.3/dist/vue-observe-visibility.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/intersection-observer@0.5.1/intersection-observer.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/gh/morr/jquery.appear@0.4.1/jquery.appear.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/tippy.js@4.2.0/umd/index.all.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/js/bootstrap.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.3.7/dist/antd.min.js"></script>
-        <template id="scroll-list-template">
-            <div :id="`scroll-list-${scrollListID}`"
-                 v-observe-visibility="{ callback: listVisibilityChanged, throttle: 100 }">
-                <component :is="itemOuterTagsName" v-for="(item, itemIndex) in items" :key="itemIndex"
-                           v-eval-dynamic-dimensions="shouldDisplay(itemIndex)"
-                           v-observe-visibility="{ callback: itemVisibilityChanged, throttle: 100 }"
-                           v-initial-item-dimensions="itemInitialDimensions"
-                           v-bind="evalItemAttrs('outer', items, item, itemIndex)"
-                           :data-item-index="itemIndex">
-                    <transition v-if="itemTransitionName != null" :name="itemTransitionName">
-                        <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
-                                   v-bind="evalItemAttrs('inner', items, item, itemIndex)">
-                            <slot :item="item"></slot>
-                        </component>
-                    </transition>
-                    <template v-else>
-                        <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
-                                   v-bind="evalItemAttrs('inner', items, item, itemIndex)">
-                            <slot :item="item"></slot>
-                        </component>
-                    </template>
-                </component>
-            </div>
-        </template>
+        @yield('script-module')
         <script>
             'use strict';
 
-            const scrollListComponent = Vue.component('scroll-list', {
-                template: '#scroll-list-template',
-                directives: {
-                    'eval-dynamic-dimensions': {
-                        update: function (el, binding, vnode) {
-                            let vue = vnode.context;
-                            if (vue.$props.itemDynamicDimensions === true) {
-                                let isDisplaying =  binding.value;
-                                if (isDisplaying !== binding.oldValue) { // is value changed
-                                    if (isDisplaying) { // reset item dom's dimensions to allow user changing dom height and width
-                                        el.style.height = null;
-                                        el.style.width = null;
-                                    } else { // remain origin item dom's height and width to ensure viewport dimensions not change (height sink)
-                                        let itemIndex = parseInt(el.getAttribute('data-item-index')); // fetch dimensions from previous cache
-                                        let cachedItemDimensions = vue.$data.itemDOMDimensionsCache[itemIndex];
-                                        el.style.height = cachedItemDimensions == null ? null : `${cachedItemDimensions.height}px`;
-                                        el.style.width = cachedItemDimensions == null ? null : `${cachedItemDimensions.width}px`;
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    'initial-item-dimensions': {
-                        bind: function (el, binding) {
-                            // set initial items height and width to prevent initialed hiding item stacked at one pixel
-                            el.style.height = binding.value.height;
-                            el.style.width = binding.value.width;
-                        }
-                    }
-                },
-                props: {
-                    items: {
-                        type: Array,
-                        required: true
-                    },
-                    itemDynamicDimensions: {
-                        type: Boolean,
-                        required: true
-                    },
-                    itemInitialDimensions: {
-                        type: Object,
-                        required: true
-                    },
-                    itemsShowingNum: {
-                        type: Number,
-                        required: true
-                    },
-                    itemTransitionName: String,
-                    itemOuterAttrs: Object,
-                    itemInnerAttrs: Object,
-                    itemOuterTags: String,
-                    itemInnerTags: String,
-                    itemObserveEvent: String,
-                    itemPlaceholderClass: String
-                },
-                data: function () {
-                    return {
-                        displayingItemsID: [],
-                        scrollListID: '',
-                        itemDOMDimensionsCache: [],
-                        itemEvaledAttrsCache: { outer: {}, inner: {} },
-                        itemOuterTagsName: this.$props.itemOuterTags || 'div',
-                        itemInnerTagsName: this.$props.itemOuterTags || 'div',
-                        lastScrollTime: 0
-                    };
-                },
-                created: function () {
-                    // initial props and data's value with default value
-                    let initialDimensions = this.$props.itemInitialDimensions;
-                    initialDimensions.height = initialDimensions.height || '';
-                    initialDimensions.width = initialDimensions.width || '';
-                    this.$data.scrollListID = Math.random().toString(36).substring(5);
-                },
-                mounted: function () {
-                    this.$data.displayingItemsID = this.range(0, this.$props.itemsShowingNum); // initially showing first $itemsShowingNum items
-                },
-                methods: {
-                    evalItemAttrs: function (renderPosition, items, item, itemIndex) {
-                        let addItemPlaceholderClass = (renderPosition, evalAttrs) => { // add itemPlaceholderClass to class attr value when hiding item
-                            if (this.$props.itemPlaceholderClass != null
-                                && renderPosition === 'outer'
-                                && ! this.shouldDisplay(itemIndex)) {
-                                evalAttrs = Object.assign({}, evalAttrs); // shadow copy to prevent mutate cache
-                                if (evalAttrs.class == null) {
-                                    evalAttrs.class = this.$props.itemPlaceholderClass;
-                                } else {
-                                    evalAttrs.class += ` ${this.$props.itemPlaceholderClass}`;
-                                }
-                            }
-                            return evalAttrs
-                        };
-                        let cachedEvalAttrs = this.$data.itemEvaledAttrsCache[renderPosition][itemIndex];
-                        if (cachedEvalAttrs == null) {
-                            let itemsAttrs = renderPosition === 'outer'
-                                ? this.$props.itemOuterAttrs
-                                : (renderPosition === 'inner'
-                                    ? this.$props.itemInnerAttrs
-                                    : (() => { throw 'items attr render position not valid'; })());
-                            let evalAttrs = {};
-                            Object.keys(itemsAttrs || {}).forEach((attrName) => {
-                                let itemAttrs = itemsAttrs[attrName];
-                                if (itemAttrs.type === 'eval') {
-                                    evalAttrs[attrName] = new Function('items', 'item', 'itemIndex', `return ${itemAttrs.value}`)(items, item, itemIndex).toString();
-                                } else if (itemAttrs.type === 'string') {
-                                    evalAttrs[attrName] = itemAttrs.value;
-                                } else {
-                                    throw 'item attrs render type not valid';
-                                }
-                            });
-                            this.$data.itemEvaledAttrsCache[renderPosition][itemIndex] = evalAttrs; // cache evaluated attrs value
-                            return addItemPlaceholderClass(renderPosition, evalAttrs);
-                        } else {
-                            return addItemPlaceholderClass(renderPosition, cachedEvalAttrs);
-                        }
-                    },
-                    shouldDisplay: function (itemIndex) {
-                        let displayingItemsID = this.$data.displayingItemsID;
-                        return itemIndex >= displayingItemsID[0] && itemIndex <= displayingItemsID[displayingItemsID.length - 1]
-                    },
-                    listVisibilityChanged: function (isVisible, observer) {
-                        if (! isVisible) { // hide all items when viewport is leaving whole scroll list
-                            this.$data.displayingItemsID = [];
-                        }
-                    },
-                    itemVisibilityChanged: function (isVisible, observer) {
-                        let itemDOM = observer.target;
-                        let itemIndex = parseInt(itemDOM.getAttribute('data-item-index'));
-                        if (isVisible) {
-                            // moving displaying items index
-                            this.$data.displayingItemsID = this.getDisplayIndexRange(0, this.$props.items.length, itemIndex, this.$props.itemsShowingNum);
-                        } else {
-                            // cache current hiding item dom's height and width px before hided
-                            this.$data.itemDOMDimensionsCache[itemIndex] = { height: itemDOM.offsetHeight, width: itemDOM.offsetWidth };
-                        }
-                        // call user defined parent component event
-                        let parentCompentEventName = this.$props.itemObserveEvent;
-                        if (parentCompentEventName != null) {
-                            this.$emit(parentCompentEventName, isVisible, observer);
-                        }
-                    },
-                    range: function (start, end) { // [start, end)
-                        return new Array(end - start).fill().map((d, i) => i + start);
-                    },
-                    getDisplayIndexRange: function (rangeLowerBound, rangeUpperBound, median, rangeSize) {
-                        /* output example
-                         * (0, 20, 0, 5) => [0, 1, 2, 3, 4]
-                         * (0, 20, 1, 4) => [0, 1, 2, 3]
-                         * (1, 20, 10, 4) => [9, 10, 11, 12]
-                         * (1, 20, 10, 5) => [8, 9, 10, 11, 12]
-                         * (1, 20, 19, 5) => [16, 17, 18, 19, 20]
-                         */
-                        let distanceFromMedianToRangeSize = Math.floor(rangeSize / 2); // the distance from median value to output array lower/upper bound
-                        let isStartFromLowerBound = median - distanceFromMedianToRangeSize < rangeLowerBound;
-                        let isEndAtUpperBound = median + distanceFromMedianToRangeSize > rangeUpperBound;
-                        let out = [];
-                        if (isStartFromLowerBound) {
-                            out = this.range(rangeLowerBound, rangeSize); // start from rangeLowerBound will restrict output range size won't <rangeLowerBound
-                        } else if (isEndAtUpperBound) {
-                            out = this.range(rangeUpperBound - rangeSize + 1, rangeUpperBound + 1); // start from rangeUpperBound - rangeSize will restrict output range size won't >rangeUpperBound
-                        } else {
-                            out = this.range(median - distanceFromMedianToRangeSize, median + distanceFromMedianToRangeSize + 1); // normally median range
-                            if (rangeSize % 2 === 0) {
-                                out.shift(); // remove first lowest value to align size when required output range size is even number
-                            }
-                        }
-                        return out;
-                    }
-                }
-            });
-
             moment.locale('zh-cn');
-
             //window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
             NProgress.configure({ trickleSpeed: 200 });
             const $$changePageLoading = (isLoading) => {
@@ -419,16 +203,6 @@
                 theme: 'light-border'
             });
 
-            // resize all echarts instance when viewport size changed
-            $(window).on('resize', _.throttle(() => {
-                $('.echarts').each((k, echartsDOM) => {
-                    let echartsInstance = echarts.getInstanceByDom(echartsDOM);
-                    if (echartsInstance != null) { // instance might be undefined when echarts haven't been initialed
-                        echartsInstance.resize();
-                    }
-                });
-            }, 1000, { leading: false }));
-
             const $$baseUrl = '{{ $baseUrl }}';
             const $$httpDoamin = '{{ $httpDomain }}';
             const $$baseUrlDir = '{{ $baseUrlDir }}';
@@ -448,14 +222,6 @@
                         });
                 });
             });
-            const $$loadForumsList = () => new Promise((resolve, reject) => {
-                $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => {
-                    resolve(_.map(ajaxData, (forum) => { // convert every fid to string to ensure fid params value type
-                        forum.fid = forum.fid.toString();
-                        return forum;
-                    }));
-                });
-            });
             const $$initialNavBar = (activeNav) => {
                 window.navBarVue = new Vue({
                     el: '#navbar',
@@ -473,22 +239,15 @@
                     }
                 });
             };
-            const $$tiebaImageZoomEventRegister = () => {
-                let registerZoomInEvent = (event) => {
-                    let tiebaImageDOM = event.currentTarget;
-                    $(tiebaImageDOM).removeClass('tieba-image-zoom-in').addClass('tieba-image-zoom-out');
-                    $(tiebaImageDOM.children[0]).removeClass('tieba-image').addClass('tieba-image-expanded');
-                    $(tiebaImageDOM).off().on('click', registerZoomOutEvent);
-                };
-                let registerZoomOutEvent = (event) => {
-                    let tiebaImageDOM = event.currentTarget;
-                    $(tiebaImageDOM).addClass('tieba-image-zoom-in').removeClass('tieba-image-zoom-out');
-                    $(tiebaImageDOM.children[0]).addClass('tieba-image').removeClass('tieba-image-expanded');
-                    $(tiebaImageDOM).off().on('click', registerZoomInEvent);
-                };
-                $('.tieba-image-zoom-in').on('click', registerZoomInEvent);
-                $('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
-            };
+
+            const $$loadForumsList = () => new Promise((resolve, reject) => {
+                $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => {
+                    resolve(_.map(ajaxData, (forum) => { // convert every fid to string to ensure fid params value type
+                        forum.fid = forum.fid.toString();
+                        return forum;
+                    }));
+                });
+            });
 
             const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
                 if (spid != null) {
@@ -518,6 +277,6 @@
                 return `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
             };
         </script>
-        @yield('script-after-container')
+        @yield('script')
     </body>
 </html>

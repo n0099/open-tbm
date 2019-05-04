@@ -1,8 +1,10 @@
 @extends('layout')
+@include('module.echarts')
+@include('module.vueAntd')
 
 @section('title', 'bilibili吧2019年吧主公投 - 专题')
 
-@section('container')
+@section('style')
     <style>
         #top50CandidatesCountChartDOM {
             height: 32em;
@@ -17,6 +19,9 @@
             height: 20em;
         }
     </style>
+@endsection
+
+@section('container')
     <div id="bilibiliVote" class="mt-2">
         <p>有效票定义:</p>
         <ul>
@@ -79,7 +84,7 @@
     </div>
 @endsection
 
-@section('script-after-container')
+@section('script')
     <script>
         'use strict';
         $$initialNavBar('bilibiliVote');

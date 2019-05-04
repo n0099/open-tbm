@@ -1,13 +1,18 @@
 @extends('layout')
+@include('module.echarts')
+@include('module.vueAntd')
 
 @section('title', '状态')
 
-@section('container')
+@section('style')
     <style>
         #statusChartDOM {
             height: 40em;
         }
     </style>
+@endsection
+
+@section('container')
     <div id="statusChart" class="row justify-content-end mt-2">
         <span><a-switch v-model="autoRefresh" /></span>
         <span class="ml-1">每分钟自动刷新</span>
@@ -16,7 +21,7 @@
     </div>
 @endsection
 
-@section('script-after-container')
+@section('script')
     <script>
         'use strict';
         $$initialNavBar('status');

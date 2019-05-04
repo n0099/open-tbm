@@ -1,13 +1,17 @@
 @extends('layout')
+@include('module.echarts')
 
 @section('title', '统计')
 
-@section('container')
+@section('style')
     <style>
         #statsChartDOM {
             height: 20em;
         }
     </style>
+@endsection
+
+@section('container')
     <form @submit.prevent="submitQueryForm()" id="statsForm" class="mt-3 query-form">
         <div class="form-group form-row">
             <label class="col-2 col-form-label" for="queryStatsForum">贴吧</label>
@@ -64,7 +68,7 @@
     </div>
 @endsection
 
-@section('script-after-container')
+@section('script')
     <script>
         'use strict';
         $$initialNavBar('stats');

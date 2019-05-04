@@ -8,7 +8,7 @@
     <div class="text-center" style="font-size: 2em">请访问其他页面</div>
 @endsection
 
-@section('script-after-container')
+@section('script')
     <script>
         $$initialNavBar('index');
     </script>

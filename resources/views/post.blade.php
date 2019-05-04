@@ -1,28 +1,22 @@
 @extends('layout')
+@include('module.bootstrapCallout')
+@include('module.tiebaPostContentElement')
+@include('module.vueScrollList')
 
 @section('title', '贴子查询')
 
-@section('container')
+@section('style')
     <style>
-        .lazyload, .lazyloading {
-            opacity: 0;
-            background: #f7f7f7 url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif) no-repeat center;
+        .bs-callout {
+            padding: .625em !important;
+            margin: .625em 0 !important;
         }
-        .lazyloaded {
-            opacity: 1;
-            transition: opacity 200ms;
-        }
-        .loading-icon {
-            width: 100px;
-            height: 100px;
-            background-image: url({{ $baseUrl }}/img/icon-huaji-loading-spinner.gif);
-            background-size: 100%;
-        }
+
         .loading-list-placeholder .post-item-placeholder {
             height: 480px;
         }
         .post-item-placeholder {
-            background-image: url({{ $baseUrl }}/img/tombstone-post-list.svg);
+            background-image: url({{ asset('img/tombstone-post-list.svg') }});
             background-size: 100%;
         }
 
@@ -55,14 +49,14 @@
         .posts-nav a:hover {
             border-color: #17a2b8;
         }
-        /*.posts-nav .posts-nav-page*/ .posts-nav-page-link {
+        .posts-nav-page-link {
             width: 100%;
         }
-        /*.posts-nav .posts-nav-page*/ .posts-nav-thread {
+        .posts-nav-thread {
             margin-left: 10%;
             width: 90%;
         }
-        /*.posts-nav .posts-nav-page*/ .posts-nav-thread-link {
+        .posts-nav-thread-link {
             width: 90%;
         }
 
@@ -79,11 +73,11 @@
         .thread-item-enter, .thread-item-leave-to {
             opacity: 0;
         }
-        /*.thread-item*/ .thread-title {
+        .thread-title {
             background-color: #F2F2F2;
         }
 
-        /*.reply-item*/ .reply-title {
+        .reply-title {
             top: 72px;
             margin-top: .625em;
             border-top: 1px solid #ededed;
@@ -91,49 +85,47 @@
             background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
             z-index: 1019;
         }
-        /*.reply-item*/ .reply-info {
+        .reply-info {
             margin: 0 !important;
             border-top: 0 !important;
         }
-        /*.reply-info*/ .reply-banner {
+        .reply-banner {
             padding-left: 0;
             padding-right: .5em;
         }
-        /*.reply-item .reply-info*/ .reply-body {
+        .reply-body {
             width: 0; /* let reply-body show abreast with reply-banner */
             padding-left: .5em;
             padding-right: .5em;
         }
-        /*.reply-item .reply-info .reply-banner*/ .reply-user-info {
+        .reply-user-info {
             z-index: 1018;
             top: 8em;
             padding: .25em;
             font-size: 1em;
             line-height: 140%;
         }
-        /*.reply-item .reply-info .reply-banner*/ .reply-user-info a:link {
+        .reply-user-info a:link {
             text-decoration: none;
         }
 
-        /*.reply-item .reply-info .reply-body*/ .sub-reply-group {
+        .sub-reply-group {
             margin: 0 0 .25em .5em !important;
             padding: .25em !important;
         }
-        /*.sub-reply-group*/ .sub-reply-item {
+        .sub-reply-item {
             padding: .125em .125em .125em .625em;
         }
-        /*.sub-reply-group*/ .sub-reply-item > * {
+        .sub-reply-item > * {
             padding: .25em;
         }
-        /*.sub-reply-group .sub-reply-item*/ .sub-reply-user-info {
+        .sub-reply-user-info {
             font-size: 0.9em;
         }
-
-        .bs-callout {
-            padding: .625em;
-            margin: .625em 0;
-        }
     </style>
+@endsection
+
+@section('container')
     @verbatim
         <template id="post-list-template">
             <div :data-page="postsData.pages.currentPage" class="post-list">
@@ -734,7 +726,7 @@
     @endverbatim
 @endsection
 
-@section('script-after-container')
+@section('script')
     @verbatim
         <script>
             'use strict';
