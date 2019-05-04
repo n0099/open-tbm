@@ -181,7 +181,8 @@ class ReplyCrawler extends Crawlable
         $this->parentThreadInfo[$parentThreadInfo['id']] = [
             'tid' => $parentThreadInfo['id'],
             'antiSpamInfo' => Helper::nullableValidate($parentThreadInfo['thread_info']['antispam_info'] ?? null, true),
-            'authorPhoneType' => $parentThreadInfo['thread_info']['phone_type'] ?? null
+            'authorPhoneType' => $parentThreadInfo['thread_info']['phone_type'] ?? null,
+            'updated_at' => $now
         ];
         $this->repliesInfo = array_merge($this->repliesInfo, $repliesInfo);
         $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
@@ -203,9 +204,10 @@ class ReplyCrawler extends Crawlable
                     $replyModel->chunkInsertOnDuplicate($repliesInfoGroup, $replyUpdateFields, $chunkInsertBufferSize);
                 }
 
-                $parentThreadModel = PostModelFactory::newThread($this->forumID);
-                $this->parentThreadInfo = array_values($this->parentThreadInfo); // array_values will remove tid key
-                $parentThreadModel->chunkInsertOnDuplicate($this->parentThreadInfo, array_keys($this->parentThreadInfo[0]), $chunkInsertBufferSize);
+                $threadModel = PostModelFactory::newThread($this->forumID);
+                foreach ($this->parentThreadInfo as $threadId => $threadInfo) {
+                    $threadModel->where('tid', $threadId)->update($threadInfo);
+                }
 
                 $indexModel = new IndexModel();
                 $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);

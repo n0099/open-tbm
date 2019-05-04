@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SubReplyModel extends PostModel
 {
+    protected $primaryKey = 'spid';
+
     protected $casts = [
         'content' => 'array'
     ];

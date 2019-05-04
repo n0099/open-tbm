@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class ThreadModel extends PostModel
 {
+    protected $primaryKey = 'tid';
+
     protected $casts = [
         'agreeInfo' => 'array',
         'zanInfo' => 'array',

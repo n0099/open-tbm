@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ReplyModel extends PostModel
 {
+    protected $primaryKey = 'pid';
+
     protected $casts = [
         'content' => 'array',
         'agreeInfo' => 'array',
