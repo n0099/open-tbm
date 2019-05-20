@@ -24,19 +24,41 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
     Route::get('/postsQuery', 'PostsQuery@query');
     Route::get('/usersQuery', 'UsersQuery@query');
     Route::get('/status', function () {
+        $groupTimeRangeRawSQL = [
+            'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',
+            'hour' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:00") AS startTime',
+            'day' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d") AS startTime',
+        ];
+
+        $queryParams = \Request()->validate([
+            'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
+            'startTime' => 'required|date',
+            'endTime' => 'required|date'
+        ]);
+
         return \DB::query()
-            ->select('startTime')
-            ->selectRaw('SUM(duration) AS duration')
-            ->selectRaw('SUM(webRequestTimes) AS webRequestTimes')
-            ->selectRaw('SUM(parsedPostTimes) AS parsedPostTimes')
-            ->selectRaw('SUM(parsedUserTimes) AS parsedUserTimes')
-            ->fromSub(function ($query) {
-                $query->from('tbm_crawledPosts')->selectRaw('FROM_UNIXTIME(startTime, "%Y-%m-%dT%H:%i") AS startTime')->addSelect([
-                    'duration',
-                    'webRequestTimes',
-                    'parsedPostTimes',
-                    'parsedUserTimes'
-                ])->orderBy('id', 'DESC')->limit(10000);
+            ->selectRaw('
+                startTime,
+                SUM(queueTiming) AS queueTiming,
+                SUM(webRequestTiming) AS webRequestTiming,
+                SUM(savePostsTiming) AS savePostsTiming,
+                SUM(webRequestTimes) AS webRequestTimes,
+                SUM(parsedPostTimes) AS parsedPostTimes,
+                SUM(parsedUserTimes) AS parsedUserTimes
+            ')
+            ->fromSub(function ($query) use ($queryParams, $groupTimeRangeRawSQL) {
+                $query->from('tbm_crawledPosts')
+                ->selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+                ->selectRaw('
+                    queueTiming,
+                    webRequestTiming,
+                    savePostsTiming,
+                    webRequestTimes,
+                    parsedPostTimes,
+                    parsedUserTimes
+                ')
+                ->havingRaw("startTime BETWEEN '{$queryParams['startTime']}' AND '{$queryParams['endTime']}'")
+                ->orderBy('id', 'DESC');
             }, 'T')
             ->groupBy('startTime')
             ->get()->toJson();

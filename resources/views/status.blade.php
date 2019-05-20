@@ -13,11 +13,48 @@
 @endsection
 
 @section('container')
-    <div id="statusChart" class="row justify-content-end mt-2">
-        <span><a-switch v-model="autoRefresh" /></span>
-        <span class="ml-1">每分钟自动刷新</span>
-        <div class="w-100"></div>
-        <div id="statusChartDOM" class="echarts loading col mt-2"></div>
+    <form @submit.prevent="submitQueryForm()" id="statusForm" class="mt-3 query-form">
+        <div class="form-group form-row">
+            <label class="col-2 col-form-label" for="queryStatusTime">时间范围</label>
+            <div id="queryStatusTime" class="col-7 input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">
+                        <i class="far fa-calendar-alt"></i>
+                    </span>
+                </div>
+                <input v-model="statusQuery.startTime"
+                       id="queryStatusStartTime" type="datetime-local" class="form-control">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">至</span>
+                </div>
+                <input v-model="statusQuery.endTime"
+                       id="queryStatusEndTime" type="datetime-local" class="form-control">
+            </div>
+            <label class="border-left text-center col-1 col-form-label" for="queryStatusTimeRange">时间粒度</label>
+            <div class="col-2 input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">
+                        <i class="far fa-clock"></i>
+                    </span>
+                </div>
+                <select v-model="statusQuery.timeRange"
+                        id="queryStatusTimeRange" class="form-control">
+                    <option value="minute">分钟</option>
+                    <option value="hour">小时</option>
+                    <option value="day">天</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row justify-content-end">
+            <div class="col-auto my-auto">
+                <span><a-switch v-model="autoRefresh" /></span>
+                <span class="ml-1">每分钟自动刷新</span>
+            </div>
+            <button type="submit" class="btn btn-primary">查询</button>
+        </div>
+    </form>
+    <div id="statusChart" class="row mt-2">
+        <div id="statusChartDOM" class="echarts col mt-2"></div>
     </div>
 @endsection
 
@@ -115,14 +152,12 @@
                 ],
                 series: [
                     {
-                        id: 'duration',
-                        name: '耗时',
+                        id: 'queueTiming',
+                        name: '单位总耗时',
                         type: 'line',
                         step: 'middle',
                         symbolSize: 2,
                         sampling: 'average',
-                        areaStyle: {},
-                        hoverAnimation: false,
                         markLine: {
                             symbol: 'none',
                             lineStyle: { type: 'dotted' },
@@ -135,6 +170,25 @@
                             ]
                         }
                     },
+                    {
+                        id: 'savePostsTiming',
+                        name: '贴子保存耗时',
+                        type: 'line',
+                        symbolSize: 0,
+                        sampling: 'average',
+                        areaStyle: {},
+                        stack: 'queueTiming'
+                    },
+                    {
+                        id: 'webRequestTiming',
+                        name: '网络请求耗时',
+                        type: 'line',
+                        symbolSize: 0,
+                        sampling: 'average',
+                        areaStyle: {},
+                        stack: 'queueTiming'
+                    },
+
                     {
                         id: 'webRequestTimes',
                         name: '网络请求量',
@@ -152,7 +206,6 @@
                         type: 'line',
                         symbolSize: 2,
                         sampling: 'average',
-                        areaStyle: {}
                     },
                     {
                         id: 'parsedUserTimes',
@@ -162,42 +215,34 @@
                         type: 'line',
                         symbolSize: 2,
                         sampling: 'average',
-                        areaStyle: {}
                     }
                 ]
             });
         };
-        let loadStatusChart = () => {
+        let loadStatusChart = (statusQuery) => {
+            statusChartDOM.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/status`, reCAPTCHAToken)
-                    .done(function (jsonData) {
+                $.getJSON(`${$$baseUrl}/api/status`, $.param(_.merge(statusQuery, reCAPTCHAToken)))
+                    .done((ajaxData) => {
                         let selectColumnFromStatus = (prop) => {
-                            return _.map(jsonData, (i) => {
+                            return _.map(ajaxData, (i) => {
                                 return [
                                     i.startTime,
-                                    Reflect.get(i, prop)
+                                    i[prop]
                                 ];
                             });
                         };
+                        let series = _.chain(statusChart.getOption().series)
+                            .map('id')
+                            .map((seriesName) => {
+                                return {
+                                    id: seriesName,
+                                    data: selectColumnFromStatus(seriesName)
+                                };
+                            })
+                            .value();
                         statusChart.setOption({
-                            series: [
-                                {
-                                    id: 'duration',
-                                    data: selectColumnFromStatus('duration')
-                                },
-                                {
-                                    id: 'webRequestTimes',
-                                    data: selectColumnFromStatus('webRequestTimes')
-                                },
-                                {
-                                    id: 'parsedPostTimes',
-                                    data: selectColumnFromStatus('parsedPostTimes')
-                                },
-                                {
-                                    id: 'parsedUserTimes',
-                                    data: selectColumnFromStatus('parsedUserTimes')
-                                }
-                            ]
+                            series
                         });
                     })
                     .always(() => statusChartDOM.removeClass('loading'));
@@ -205,10 +250,15 @@
         };
 
         let statusChartVue = new Vue({
-            el: '#statusChart',
+            el: '#statusForm',
             data: {
                 autoRefresh: false,
-                autoRefreshIntervalID: 0
+                autoRefreshIntervalID: 0,
+                statusQuery: {
+                    timeRange: 'minute',
+                    startTime: moment().subtract(1, 'week').format('YYYY-MM-DDTHH:mm'),
+                    endTime: moment().format('YYYY-MM-DDTHH:mm')
+                }
             },
             watch: {
                 autoRefresh: function (autoRefresh) {
@@ -221,9 +271,17 @@
                     }
                 }
             },
+            methods: {
+                submitQueryForm: function () {
+                    // fully refresh to regenerate a new echarts instance
+                    statusChart.clear();
+                    initialStatusChart();
+                    loadStatusChart(this.$data.statusQuery);
+                }
+            },
             mounted: function () {
                 initialStatusChart();
-                loadStatusChart();
+                loadStatusChart(this.$data.statusQuery);
             }
         });
     </script>
