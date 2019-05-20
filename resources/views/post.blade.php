@@ -1166,14 +1166,14 @@
                             this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
                         }
 
-                        if (window.previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
-                            window.previousPostsQueryAjax.abort();
+                        if (window.$$previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
+                            window.$$previousPostsQueryAjax.abort();
                         }
                         this.$data.loadingNewPosts = true;
                         $$reCAPTCHACheck().then((token) => {
                             ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
-                            window.previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
-                            window.previousPostsQueryAjax
+                            window.$$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
+                            window.$$previousPostsQueryAjax
                                 .done((ajaxData) => {
                                     ajaxData = groupSubRepliesByAuthor(ajaxData);
                                     let pagesInfo = ajaxData.pages;

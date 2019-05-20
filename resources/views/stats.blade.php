@@ -60,7 +60,7 @@
                 <input v-model="statsQuery.endTime"
                        id="queryStatsEndTime" type="datetime-local" class="form-control">
             </div>
-            <button type="submit" :disabled="submitDisabled" class="ml-auto btn btn-primary">查询</button>
+            <button type="submit" class="ml-auto btn btn-primary">查询</button>
         </div>
     </form>
     <div id="statsChart" class="row mt-2">
@@ -150,16 +150,34 @@
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(statsQuery, reCAPTCHAToken)))
                     .done((ajaxData) => {
-                        let series = [];
-                        _.each(ajaxData, (datas, postType) => {
-                            series.push({
+                        let series = _.map(ajaxData, (datas, postType) => {
+                            return {
                                 id: postType,
                                 data: _.map(datas, _.values)
-                            });
+                            };
                         });
+                        let timeCategories = _.chain(ajaxData)
+                            .map((counts) => {
+                                return _.map(counts, (count) => {
+                                    return count.time;
+                                });
+                            })
+                            .flatten()
+                            .sort()
+                            .uniq()
+                            .value();
                         statsChart.setOption({
                             title: {
                                 text: `${_.find(forumsList, { fid: statsQuery.fid }).name}吧贴量统计`
+                            },
+                            xAxis: {
+                                data: timeCategories,
+                                type: $$echartsTimeRangeAxisType[statsQuery.timeRange],
+                                axisPointer: {
+                                    label: {
+                                        formatter: $$echartsTimeRangeAxisPointerLabelFormatter[statsQuery.timeRange]
+                                    }
+                                }
                             },
                             series
                         });
@@ -176,12 +194,6 @@
                     timeRange: 'day',
                     startTime: moment().subtract(1, 'week').format('YYYY-MM-DDTHH:mm'),
                     endTime: moment().format('YYYY-MM-DDTHH:mm')
-                },
-                submitDisabled: true
-            },
-            watch: {
-                statsQuery: function (statsQuery) {
-                    this.$data.submitDisabled = _.difference(_.keys(statsQuery), ['fid', 'timeRange', 'startTime', 'endTime']).length !== 0
                 }
             },
             methods: {
@@ -189,7 +201,6 @@
                     // fully refresh to regenerate a new echarts instance
                     statsChart.clear();
                     initialStatsChart();
-                    statsChartDOM.addClass('loading');
                     loadStatsChart(this.$data.statsQuery, this.$data.forumsList);
                 }
             },

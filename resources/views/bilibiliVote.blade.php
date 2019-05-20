@@ -225,12 +225,12 @@
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50CandidatesVotesCount`, $.param(reCAPTCHAToken))
                     .done((ajaxData) => {
-                        /* dataset would be like
+                        /*
                             [
                                 { voteFor: 1, validVotesCount: 1, validVotesAvgGrade: 18, invalidVotesCount: 1, invalidVotesAvgGrade: 18 },
                                 ...
                             ]
-                        */
+                         */
                         let dataset = _.chain(ajaxData)
                             .groupBy('voteFor')
                             .sortBy((group) => ajaxData.indexOf(group[0])) // sort grouped groups by it's index of first item in origin array
@@ -380,10 +380,22 @@
                             });
                         });
                         top5CandidatesCountByTimeChart.setOption({
+                            axisPointer: {
+                                label: {
+                                    formatter: $$echartsTimeRangeAxisPointerLabelFormatter[timeRange]
+                                }
+                            },
+                            xAxis: [
+                                {
+                                    type: $$echartsTimeRangeAxisType[timeRange]
+                                },
+                                {
+                                    type: $$echartsTimeRangeAxisType[timeRange]
+                                }
+                            ],
                             series
                         });
                     })
-
                     .always(() => top5CandidatesCountByTimeChartDOM.removeClass('loading'));
             });
         };
@@ -429,7 +441,7 @@
                     type: 'time'
                 },
                 yAxis: {
-                    type: 'value',
+                    type: 'value'
                 },
                 series: [
                     {
@@ -462,6 +474,12 @@
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/allVotesCountByTime`,
                     $.param(_.merge({ timeRange }, reCAPTCHAToken)))
                     .done((ajaxData) => {
+                        /*
+                            [
+                                { time: '2019-03-11 12:00', validCount: 1, invalidCount: 0 },
+                                ...
+                            ]
+                         */
                         let dataset = _.chain(ajaxData)
                             .groupBy('time')
                             .map((count, time) => {
@@ -477,6 +495,14 @@
                             })
                             .value();
                         countByTimeChart.setOption({
+                            xAxis: {
+                                type: $$echartsTimeRangeAxisType[timeRange],
+                                axisPointer: {
+                                    label: {
+                                        formatter: $$echartsTimeRangeAxisPointerLabelFormatter[timeRange]
+                                    }
+                                }
+                            },
                             dataset: { source: dataset },
                         });
                     })
@@ -530,13 +556,12 @@
                     legend: {
                         data: ['贴吧官方统计有效票', '有效票', '无效票']
                     },
-                    xAxis: [
-                        {
-                            type: 'value',
-                            splitLine: { show: false },
-                            splitArea: { show: true }
-                        }
-                    ],
+                    xAxis: {
+                        type: 'value',
+                        splitLine: { show: false },
+                        splitArea: { show: true }
+                    }
+                    ,
                     yAxis: {
                         type: 'category'
                     },
@@ -625,12 +650,12 @@
                         window.timelineInvalidVotes = _.filter(ajaxData, { isValid: 0 });
                         let options = [];
                         _.each(_.groupBy(ajaxData, 'endTime'), (timeGroup, time) => {
-                            /* dataset would be like
-                            [
-                                { voteFor: 1, validCount: 1, invalidCount: 0 },
-                                ...
-                            ]
-                            */
+                            /*
+                                [
+                                    { voteFor: 1, validCount: 1, invalidCount: 0, officialValidCount: null },
+                                    ...
+                                ]
+                             */
                             let dataset = _.chain(timeGroup)
                                 .sortBy('count')
                                 .groupBy('voteFor')
