@@ -31,6 +31,7 @@ class Helper
             404 => [
                 40401 => '贴子查询结果为空',
                 40402 => '用户查询结果为空',
+                40403 => '吧贴量统计查询结果为空',
             ],
         ];
 
@@ -79,5 +80,12 @@ class Helper
         }
 
         return $isJson ? json_encode($value) : $value;
+    }
+
+    public static function isArrayValuesAllEqualTo(array $haystack, $equalTo): bool
+    {
+        return array_filter($haystack, function ($value) use ($equalTo) {
+            return $value !== $equalTo;
+        }) === [];
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
+use App\Helper;
 use App\Http\Middleware\ReCAPTCHACheck;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use function GuzzleHttp\json_encode;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +48,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
             'day' => 'DATE(postTime) AS time',
             'week' => 'DATE_FORMAT(postTime, "%Y第%u周") AS time',
             'month' => 'DATE_FORMAT(postTime, "%Y-%m") AS time',
-            'year' => 'DATE_FORMAT(postTime, "%Y") AS time',
+            'year' => 'DATE_FORMAT(postTime, "%Y年") AS time',
         ];
 
         $queryParams = \Request()->validate([
@@ -67,8 +67,9 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
                 ->groupBy('time')
                 ->get()->toArray();
         }
+        Helper::abortApiIf(Helper::isArrayValuesAllEqualTo($forumPostsCount, []), 40403);
 
-        return json_encode($forumPostsCount);
+        return $forumPostsCount;
     });
     Route::get('/bilibiliVote/top50CandidatesVotesCount', 'Topic\BilibiliVote@top50CandidatesVotesCount');
     Route::get('/bilibiliVote/top5CandidatesVotesCountByTime', 'Topic\BilibiliVote@top5CandidatesVotesCountByTime');
