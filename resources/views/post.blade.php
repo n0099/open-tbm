@@ -439,8 +439,8 @@
                                         v-text="forum.name" :value="forum.fid"></option>
                             </select>
                         </div>
-                        <label class="border-left text-center col-1 col-form-label">贴子类型</label>
-                        <div class="input-group my-auto col-4">
+                        <label class="text-center col-1 col-form-label">贴子类型</label>
+                        <div class="input-group my-auto col">
                             <div class="custom-checkbox custom-control custom-control-inline">
                                 <input v-model="queryData.query.postType"
                                        data-param="postType" id="queryPostTypeThread" type="checkbox" value="thread" class="custom-control-input">
@@ -554,23 +554,33 @@
                                 </div>
                                 <small class="col align-self-center">仅非主题贴</small>
                             </div>
-                            <fieldset class="border rounded col-10 p-3 mb-2 form-inline form-row">
+                            <fieldset class="border rounded col-10 p-3 form-group form-row">
                                 <legend class="h6 w-auto">
                                     用户信息 <small>主题贴下为楼主</small>
                                 </legend>
-                                <div class="mb-2 form-row">
-                                    <label class="col-2 col-form-label">查询范围</label>
-                                    <div class="custom-checkbox custom-control custom-control-inline">
-                                        <input v-model="queryData.query.userType"
-                                               data-param="userType" id="queryUserTypeAuthor" type="checkbox" value="author" class="custom-query-param custom-control-input">
-                                        <label class="custom-control-label" for="queryUserTypeAuthor">发贴人</label>
+                                <div class="form-group form-row">
+                                    <select-user @select-user-changed="selectUserChanged"
+                                                 :select-user-by-options-name="{
+                                                     uid: 'userID',
+                                                     name: 'userName',
+                                                     displayName: 'userDisplayName'
+                                                 }"></select-user>
+                                    <label class="text-center col-2 col-form-label">查询范围</label>
+                                    <div class="input-group my-auto col">
+                                        <div class="custom-checkbox custom-control custom-control-inline">
+                                            <input v-model="queryData.query.userType"
+                                                   data-param="userType" id="queryUserTypeAuthor" type="checkbox" value="author" class="custom-query-param custom-control-input">
+                                            <label class="custom-control-label" for="queryUserTypeAuthor">发贴人</label>
+                                        </div>
+                                        <div class="custom-checkbox custom-control custom-control-inline">
+                                            <input v-model="queryData.query.userType"
+                                                   data-param="userType" id="queryUserTypeLatestReplier" type="checkbox" value="latestReplier" class="custom-query-param custom-control-input">
+                                            <label class="custom-control-label" for="queryUserTypeLatestReplier">最后回复人（仅主题贴）</label>
+                                        </div>
                                     </div>
-                                    <div class="custom-checkbox custom-control custom-control-inline">
-                                        <input v-model="queryData.query.userType"
-                                               data-param="userType" id="queryUserTypeLatestReplier" type="checkbox" value="latestReplier" class="custom-query-param custom-control-input">
-                                        <label class="custom-control-label" for="queryUserTypeLatestReplier">最后回复人（仅主题贴）</label>
-                                    </div>
-                                    <label class="border-left col-2 col-form-label" for="queryUserManagerType">吧务级别</label>
+                                </div>
+                                <div class="form-group form-row">
+                                    <label class="col-2 col-form-label" for="queryUserManagerType">吧务级别</label>
                                     <select v-model="queryData.query.userManagerType"
                                             data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
                                         <option value="default">所有</option>
@@ -579,15 +589,7 @@
                                         <option value="assist">小吧主</option>
                                         <option value="voiceadmin">语音小编</option>
                                     </select>
-                                </div>
-                                <div class="form-row">
-                                    <label class="col-1 col-form-label" for="queryUserName">用户名</label>
-                                    <input v-model="queryData.query.userName"
-                                           data-param="userName" id="queryUserName" type="text" placeholder="n0099" class="custom-query-param form-control col-2">
-                                    <label class="col-1 col-form-label" for="queryUserDisplayName">昵称</label>
-                                    <input v-model="queryData.query.userDisplayName"
-                                           data-param="userDisplayName" id="queryUserDisplayName" type="text" placeholder="神奇🍀" class="custom-query-param form-control col-2">
-                                    <label class="col-1 col-form-label" for="queryUserExpGrade">等级</label>
+                                    <label class="text-center col-1 col-form-label" for="queryUserExpGrade">等级</label>
                                     <div class="col-2 input-group">
                                         <select v-model="queryData.query.userExpGradeRange"
                                                 data-param="userExpGradeRange" id="queryUserExpGradeRange" class="custom-query-param form-control">
@@ -598,7 +600,7 @@
                                         <input v-model="queryData.query.userExpGrade"
                                                data-param="userExpGrade" id="queryUserExpGrade" type="number" placeholder="18" class="custom-query-param form-control">
                                     </div>
-                                    <label class="col-1 col-form-label" for="queryUserGender">性别</label>
+                                    <label class="text-center col-1 col-form-label" for="queryUserGender">性别</label>
                                     <select v-model="queryData.query.userGender"
                                             data-param="userGender" id="queryUserGender" class="custom-query-param form-control col-1">
                                         <option value="default">不限</option>
@@ -610,7 +612,7 @@
                             </fieldset>
                             <div class="form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadProperty">主题贴属性</label>
-                                <div id="queryThreadProperty" class="col-4 input-group">
+                                <div id="queryThreadProperty" class="col input-group">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
                                             <div class="custom-checkbox custom-control">
@@ -855,7 +857,7 @@
                         postPages: [], // multi pages of posts list collection
                         loadingNewPosts: false,
                         forumsList: [],
-                        queryData: [],
+                        queryData: { query: {}, param: {} },
                         customQueryParamsDefaultValue: [
                             { param: 'postType', default: ['thread', 'reply', 'subReply']},
                             { param: 'tidRange', default: '=' },
@@ -1065,6 +1067,14 @@
                     });
                 },
                 methods: {
+                    selectUserChanged: function (event) {
+                        let queryParams = this.$data.queryData.query;
+                        // set all user select params value to null to prevent old value remains after selectUserBy changed
+                        queryParams.userID = null;
+                        queryParams.userName = null;
+                        queryParams.userDisplayName = null;
+                        queryParams = _.merge(queryParams, event);
+                    },
                     submitQueryForm: function () {
                         let queryParams = _.chain(this.$data.queryData.param)
                             .omit('page')
@@ -1116,6 +1126,7 @@
 
                         let userInfoParams = [
                             'userManagerType',
+                            'userID',
                             'userName',
                             'userDisplayName',
                             'userExpGradeRange',

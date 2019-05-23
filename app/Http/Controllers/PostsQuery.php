@@ -180,6 +180,7 @@ class PostsQuery extends Controller
                 'threadShareNum',
                 'threadShareNumRange',
                 'userType',
+                'userID',
                 'userName',
                 'userDisplayName',
                 'userExpGrade',
@@ -207,18 +208,20 @@ class PostsQuery extends Controller
                 'subReply' => []
             ];
 
-            $paramsRequiredPostType = [
+            $customQueryParamsRequiredPostTypes = [
                 'threadTitle' => ['thread'],
                 'latestReplyTimeStart' => ['thread'],
-                //'latestReplyTimeEnd' => ['thread'],
                 'threadProperty' => ['thread'],
                 'threadReplyNum' => ['thread'],
                 'replySubReplyNum' => ['reply'],
                 'threadViewNum' => ['thread'],
                 'threadShareNum' => ['thread'],
+                'postContent' => ['reply', 'subReply']
             ];
-            foreach ($paramsRequiredPostType as $paramName => $postType) {
-                Helper::abortApiIf(isset($queryParams[$paramName]) && array_diff($queryPostType, $postType) != [], 40005);
+            foreach ($customQueryParamsRequiredPostTypes as $paramName => $requiredPostTypes) {
+                foreach ($requiredPostTypes as $requiredPostType) {
+                    Helper::abortAPIIf(40005, isset($queryParams[$paramName]) && in_array($requiredPostType, $queryPostType));
+                }
             }
 
             /**
@@ -243,10 +246,14 @@ class PostsQuery extends Controller
 
                 foreach ($queryParams as $paramName => $paramValue) {
                     $applyParamsQueryOnPostModel = function () use ($queryParams, $queryUserType, $paramName, $paramValue, $postType, $postModel, $postsModel) {
-                        $applyUserInfoParamSubQuery = function (array $userTypes, string $userInfoParamName, $userInfoParamValue) use ($postType, $postModel, $postsModel): Builder {
-                            $userIDs = \Cache::remember("postsQuery-UserInfoParam-{$userInfoParamName}={$userInfoParamValue}", 1, function () use ($userInfoParamName, $userInfoParamValue) {
-                                return UserModel::where($userInfoParamName, $userInfoParamValue)->pluck('uid'); // cache previous user info params query for 1 mins to prevent duplicate query in a single query
-                            });
+                        $applyUserInfoSubQuery = function (array $userTypes, string $userInfoFieldName, $paramValue) use ($postType, $postModel, $postsModel): Builder {
+                            if ($userInfoFieldName == 'uid') {
+                                $userIDs = [$paramValue]; // query user by user defined id param directly
+                            } else {
+                                $userIDs = \Cache::remember("postsQuery-UserInfoParam-{$userInfoFieldName}={$paramValue}", 1, function () use ($userInfoFieldName, $paramValue) {
+                                    return UserModel::where($userInfoFieldName, $paramValue)->pluck('uid'); // cache previous user info params query for 1 mins to prevent duplicate query in a single query
+                                });
+                            }
                             foreach ($userTypes as $userType) {
                                 if ($userType == 'latestReplier') {
                                     if ($postType == 'thread') {
@@ -345,14 +352,17 @@ class PostsQuery extends Controller
                             case 'threadShareNum':
                                 return $postModel->where('shareNum', $queryParams['threadShareNumRange'] ?? '=', $paramValue);
                                 break;
+                            case 'userID':
+                                return $applyUserInfoSubQuery($queryUserType, 'uid', $paramValue);
+                                break;
                             case 'userName':
-                                return $applyUserInfoParamSubQuery($queryUserType, 'name', $paramValue);
+                                return $applyUserInfoSubQuery($queryUserType, 'name', $paramValue);
                                 break;
                             case 'userDisplayName':
-                                return $applyUserInfoParamSubQuery($queryUserType, 'displayName', $paramValue);
+                                return $applyUserInfoSubQuery($queryUserType, 'displayName', $paramValue);
                                 break;
                             case 'userGender':
-                                return $applyUserInfoParamSubQuery($queryUserType, 'gender', $paramValue);
+                                return $applyUserInfoSubQuery($queryUserType, 'gender', $paramValue);
                                 break;
                             case 'userExpGrade':
                                 if ($postType == 'thread') {
@@ -529,6 +539,7 @@ class PostsQuery extends Controller
             'threadShareNum' => 'integer|required_with:threadShareNumRange',
             'threadShareNumRange' => Rule::in($paramsValidValue['range']),
             'userType' => 'array',
+            'userID' => 'int',
             'userName' => 'string',
             'userDisplayName' => 'string',
             'userExpGrade' => 'integer',
