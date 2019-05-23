@@ -12,7 +12,7 @@
 @endsection
 
 @section('container')
-    <form @submit.prevent="submitQueryForm()" id="statsForm" class="mt-3 query-form">
+    <form @submit.prevent="submitQueryForm()" id="statsForm" class="mt-3">
         <div class="form-group form-row">
             <label class="col-2 col-form-label" for="queryStatsForum">贴吧</label>
             <div class="col-4 input-group">
@@ -196,6 +196,13 @@
                     endTime: moment().format('YYYY-MM-DDTHH:mm')
                 }
             },
+            mounted: function () {
+                initialStatsChart();
+                $$loadForumsList().then((forumsList) => {
+                    this.$data.forumsList = forumsList;
+                });
+                new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
+            },
             methods: {
                 submitQueryForm: function () {
                     // fully refresh to regenerate a new echarts instance
@@ -203,13 +210,6 @@
                     initialStatsChart();
                     loadStatsChart(this.$data.statsQuery, this.$data.forumsList);
                 }
-            },
-            mounted: function () {
-                initialStatsChart();
-                $$loadForumsList().then((forumsList) => {
-                    this.$data.forumsList = forumsList;
-                });
-                new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
             }
         });
     </script>

@@ -98,6 +98,7 @@
         <title>@yield('title') - 贴吧云监控</title>
     </head>
     <body>
+        @yield('body-module')
         <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-light">
             <a class="navbar-brand" href="{{ $baseUrl }}">贴吧云监控</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">

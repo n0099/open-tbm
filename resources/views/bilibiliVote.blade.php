@@ -1,6 +1,6 @@
 @extends('layout')
 @include('module.echarts')
-@include('module.vueAntd')
+@include('module.vue.antd')
 
 @section('title', 'bilibili吧2019年吧主公投 - 专题')
 
@@ -868,11 +868,6 @@
                     loadCountByTimeChart(countByTimeTimeRange);
                 }
             },
-            methods: {
-                formatCandidateNameByID: function (id) {
-                    return `${id}号\n${this.$data.candidatesName[id - 1]}`;
-                }
-            },
             mounted: function () {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((ajaxData) => {
                     this.$data.candidatesName = ajaxData;
@@ -925,6 +920,11 @@
                     initialCandidatesTimelineChart();
                     loadCandidatesTimelineChart();
                 });
+            },
+            methods: {
+                formatCandidateNameByID: function (id) {
+                    return `${id}号\n${this.$data.candidatesName[id - 1]}`;
+                }
             }
         });
     </script>

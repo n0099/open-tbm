@@ -1,6 +1,6 @@
 @extends('layout')
 @include('module.echarts')
-@include('module.vueAntd')
+@include('module.vue.antd')
 
 @section('title', '状态')
 
@@ -13,7 +13,7 @@
 @endsection
 
 @section('container')
-    <form @submit.prevent="submitQueryForm()" id="statusForm" class="mt-3 query-form">
+    <form @submit.prevent="submitQueryForm()" id="statusForm" class="mt-3">
         <div class="form-group form-row">
             <label class="col-2 col-form-label" for="queryStatusTime">时间范围</label>
             <div id="queryStatusTime" class="col-7 input-group">
@@ -264,12 +264,16 @@
                 autoRefresh: function (autoRefresh) {
                     if (autoRefresh) {
                         this.$data.autoRefreshIntervalID = setInterval(() => {
-                            loadStatusChart();
+                            loadStatusChart(this.$data.statusQuery);
                         }, 60000); // refresh data every minute
                     } else {
                         clearInterval(this.$data.autoRefreshIntervalID);
                     }
                 }
+            },
+            mounted: function () {
+                initialStatusChart();
+                loadStatusChart(this.$data.statusQuery);
             },
             methods: {
                 submitQueryForm: function () {
@@ -278,10 +282,6 @@
                     initialStatusChart();
                     loadStatusChart(this.$data.statusQuery);
                 }
-            },
-            mounted: function () {
-                initialStatusChart();
-                loadStatusChart(this.$data.statusQuery);
             }
         });
     </script>

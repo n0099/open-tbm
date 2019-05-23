@@ -1,7 +1,8 @@
 @extends('layout')
 @include('module.bootstrapCallout')
 @include('module.tiebaPostContentElement')
-@include('module.vueScrollList')
+@include('module.vue.scrollList')
+@include('module.vue.tiebaSelectUser')
 
 @section('title', '贴子查询')
 
@@ -379,7 +380,7 @@
         </template>
         <template id="post-list-pages-template">
             <div>
-                <form @submit.prevent="submitQueryForm()" class="mt-3 query-form">
+                <form @submit.prevent="submitQueryForm()" class="mt-3">
                     <div class="form-group form-row">
                         <label class="col-2 col-form-label" for="queryPostID">贴子ID</label>
                         <div id="queryPostID" class="input-group col">

@@ -1,4 +1,4 @@
-@section('style-module')
+@section('body-module')
     @parent
     <template id="scroll-list-template">
         <div :id="`scroll-list-${scrollListID}`"
