@@ -17,14 +17,12 @@ class UsersQuery extends Controller
             'displayName' => 'string',
             'gender' => 'integer|in:0,1,2'
         ]);
-        if (empty($queryParams)) {
-            Helper::abortApi(40402);
-        }
+        Helper::abortAPIIf(40402, empty($queryParams));
 
         $queriedInfo = UserModel::where($queryParams)
             ->orderBy('id', 'DESC')
             ->hidePrivateFields()->simplePaginate($this->pagingPerPageItems);
-        Helper::abortApiIf($queriedInfo->isEmpty(), 40402);
+        Helper::abortAPIIf(40402, $queriedInfo->isEmpty());
 
         return [
             'pages' => [

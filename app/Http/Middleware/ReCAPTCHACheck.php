@@ -15,7 +15,7 @@ class ReCAPTCHACheck
             if ($isReCAPTCHAValid) {
                 return $next($request);
             } else {
-                Helper::abortApi(40101);
+                Helper::abortAPI(40101);
             }
         } else {
             return $next($request);

@@ -6,14 +6,14 @@ use function GuzzleHttp\json_encode;
 
 class Helper
 {
-    public static function abortApiIf(bool $condidtion, int $errorCode): void
+    public static function abortAPIIf(int $errorCode, bool $condidtion): void
     {
         if ($condidtion) {
-            static::abortApi($errorCode);
+            static::abortAPI($errorCode);
         }
     }
 
-    public static function abortApi(int $errorCode): void
+    public static function abortAPI(int $errorCode): void
     {
         $errorInfos = [
             // httpStatusCode => [ errorCode => errorInfo ]

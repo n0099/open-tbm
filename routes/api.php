@@ -89,7 +89,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
                 ->groupBy('time')
                 ->get()->toArray();
         }
-        Helper::abortApiIf(Helper::isArrayValuesAllEqualTo($forumPostsCount, []), 40403);
+        Helper::abortAPIIf(40403, Helper::isArrayValuesAllEqualTo($forumPostsCount, []));
 
         return $forumPostsCount;
     });

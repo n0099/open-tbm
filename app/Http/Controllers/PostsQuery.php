@@ -196,7 +196,7 @@ class PostsQuery extends Controller
             $customQueryForumID = $queryParams['fid']
                 ?? (
                     $queryPostsID == []
-                        ? Helper::abortApi(40002)
+                        ? Helper::abortAPI(40002)
                         : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']
                 );
             $postsModel = PostModelFactory::getPostsModelByForumID($customQueryForumID);
@@ -232,15 +232,13 @@ class PostsQuery extends Controller
              */
             $applyCustomConditionOnPostModel = function (string $postType, PostModel $postModel, Collection $queryParams) use ($postsModel, $queryPostType, $queryUserType) {
                 if (in_array('latestReplier', $queryUserType)) {
-                    Helper::abortApiIf(! in_array('thread', $queryPostType), 40003);
+                    Helper::abortAPIIf(40003, !in_array('thread', $queryPostType));
                     $userInfoParamsExcludingLatestReplier = [
                         'userExpGrade',
                         'userExpGradeRange',
                         'userManagerType'
                     ];
-                    if ($queryParams->intersect($userInfoParamsExcludingLatestReplier) != []) {
-                        Helper::abortApi(40004);
-                    }
+                    Helper::abortAPIIf(40004, $queryParams->intersect($userInfoParamsExcludingLatestReplier) != []);
                 }
 
                 foreach ($queryParams as $paramName => $paramValue) {
@@ -254,7 +252,7 @@ class PostsQuery extends Controller
                                     if ($postType == 'thread') {
                                         $postModel = $postModel->whereIn('latestReplierUid', $userIDs);
                                     } else {
-                                        Helper::abortApi(40003);
+                                        Helper::abortAPI(40003);
                                     }
                                 } elseif ($userType == 'author') {
                                     $postModel = $postModel->whereIn('authorUid', $userIDs);
@@ -460,7 +458,7 @@ class PostsQuery extends Controller
                 $indexesModel = $indexesModel->orderByMulti($indexesOrderBy);
             }
             $indexesResults = $indexesModel->whereIn('type', $queryPostType)->simplePaginate($this->pagingPerPageItems);
-            Helper::abortApiIf($indexesResults->isEmpty(), 40401);
+            Helper::abortAPIIf(40401, $indexesResults->isEmpty());
 
             $postsQueriedInfo['fid'] = $indexesResults->pluck('fid')->first();
             foreach ($postsIDNamePair as $postType => $postIDName) { // assign queried posts ids from $indexesModel
@@ -473,7 +471,7 @@ class PostsQuery extends Controller
                 'currentPage' => $indexesResults->currentPage(),
             ];
         } else {
-            Helper::abortApi(40001);
+            Helper::abortAPI(40001);
         }
 
         $nestedPostsInfo = $this->getNestedPostsInfoByIDs(
