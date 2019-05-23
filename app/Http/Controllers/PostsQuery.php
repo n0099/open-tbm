@@ -96,7 +96,7 @@ class PostsQuery extends Controller
 
         $convertJsonContentToHtml = function ($post) {
             if ($post['content'] != null) {
-                $post['content'] = trim(str_replace("\n", '', Post::convertJsonContentToHtml($post['content'])));
+                $post['content'] = Post::convertJsonContentToHtml($post['content']);
             }
             return $post;
         };

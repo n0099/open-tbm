@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a7c9ab7be1d5ca4a5c68362a663dec19",
+    "content-hash": "49e789914d1b3348b86bbc6057c10962",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -595,6 +595,49 @@
                 "url"
             ],
             "time": "2018-12-04T20:46:45+00:00"
+        },
+        {
+            "name": "hedronium/spaceless-blade",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Hedronium/SpacelessBlade.git",
+                "reference": "bcf36bcc046dffc18d8ef161356933069bf2cdc1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Hedronium/SpacelessBlade/zipball/bcf36bcc046dffc18d8ef161356933069bf2cdc1",
+                "reference": "bcf36bcc046dffc18d8ef161356933069bf2cdc1",
+                "shasum": ""
+            },
+            "replace": {
+                "solidew/spaceless-blade": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "hedronium\\SpacelessBlade\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Omran Jamal",
+                    "email": "o.jamal97@gmail.com",
+                    "homepage": "http://about.me/omran.jamal"
+                }
+            ],
+            "description": "Adds the @spaceless tag to Blade. (works like in Twig)",
+            "keywords": [
+                "blade",
+                "laravel",
+                "spaceless",
+                "twig"
+            ],
+            "time": "2016-01-25T17:22:00+00:00"
         },
         {
             "name": "jakub-onderka/php-console-color",

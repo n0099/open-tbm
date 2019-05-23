@@ -9,7 +9,8 @@ abstract class Post
 {
     public static function convertJsonContentToHtml(array $content): string
     {
-        return view('formatPostJsonContent', ['content' => $content]);
+        // remove spam \n and spaces due to blade @break directive
+        return str_replace("\n", null, trim(view('formatPostJsonContent', ['content' => $content])));
     }
 
     /**
