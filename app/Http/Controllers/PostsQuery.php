@@ -18,9 +18,9 @@ class PostsQuery extends Controller
 {
     private $pagingPerPageItems = 200;
 
-    private $postsAuthorUids = [];
+    private $postsAuthorUid = [];
 
-    private function getNestedPostsInfoByIDs(array $postsInfo, bool $isInfoOnlyContainsPostsID, $orderBy, $orderDirection): array
+    private function getNestedPostsInfoByID(array $postsInfo, bool $isInfoOnlyContainsPostsID, $orderBy, $orderDirection): array
     {
         $postsModel = PostModelFactory::getPostsModelByForumID($postsInfo['fid']);
         $postsInfo['thread'] = collect($postsInfo['thread']);
@@ -77,23 +77,6 @@ class PostsQuery extends Controller
                 ->hidePrivateFields()->get();
         }
 
-        // same functional with above
-        /*if ($threadsInfo->isEmpty()) { // fetch thread info when reply and
-            if ($repliesInfo->isNotEmpty()) { // query params only have reply
-                $threadsInfo = $postsModel['thread']->tid($repliesInfo->pluck('tid')->toArray())->get();
-            } elseif ($subRepliesInfo->isNotEmpty()) {
-                $threadsInfo = $postsModel['thread']->tid($subRepliesInfo->pluck('tid')->toArray())->get();
-            } else {
-                throw new \InvalidArgumentException('Posts IDs is empty');
-            }
-        }
-        if ($repliesInfo->isEmpty()) {
-            $repliesInfo = $postsModel['reply']->pid($subRepliesInfo->pluck('pid')->toArray())->get();
-        }
-        if ($subRepliesInfo->isEmpty()) {
-            $subRepliesInfo = $postsModel['subReply']->spid($repliesInfo->pluck('spid')->toArray())->get();
-        }*/
-
         $convertJsonContentToHtml = function ($post) {
             if ($post['content'] != null) {
                 $post['content'] = Post::convertJsonContentToHtml($post['content']);
@@ -103,7 +86,7 @@ class PostsQuery extends Controller
         $repliesInfo->transform($convertJsonContentToHtml);
         $subRepliesInfo->transform($convertJsonContentToHtml);
 
-        $this->postsAuthorUids = collect([
+        $this->postsAuthorUid = collect([
             $threadsInfo->pluck('authorUid'),
             $threadsInfo->pluck('latestReplierUid'),
             $repliesInfo->pluck('authorUid'),
@@ -248,21 +231,21 @@ class PostsQuery extends Controller
                     $applyParamsQueryOnPostModel = function () use ($queryParams, $queryUserType, $paramName, $paramValue, $postType, $postModel, $postsModel) {
                         $applyUserInfoSubQuery = function (array $userTypes, string $userInfoFieldName, $paramValue) use ($postType, $postModel, $postsModel): Builder {
                             if ($userInfoFieldName == 'uid') {
-                                $userIDs = [$paramValue]; // query user by user defined id param directly
+                                $uids = [$paramValue]; // query user by user defined id param directly
                             } else {
-                                $userIDs = \Cache::remember("postsQuery-UserInfoParam-{$userInfoFieldName}={$paramValue}", 1, function () use ($userInfoFieldName, $paramValue) {
+                                $uids = \Cache::remember("postsQuery-UserInfoParam-{$userInfoFieldName}={$paramValue}", 1, function () use ($userInfoFieldName, $paramValue) {
                                     return UserModel::where($userInfoFieldName, $paramValue)->pluck('uid'); // cache previous user info params query for 1 mins to prevent duplicate query in a single query
                                 });
                             }
                             foreach ($userTypes as $userType) {
                                 if ($userType == 'latestReplier') {
                                     if ($postType == 'thread') {
-                                        $postModel = $postModel->whereIn('latestReplierUid', $userIDs);
+                                        $postModel = $postModel->whereIn('latestReplierUid', $uids);
                                     } else {
                                         Helper::abortAPI(40003);
                                     }
                                 } elseif ($userType == 'author') {
-                                    $postModel = $postModel->whereIn('authorUid', $userIDs);
+                                    $postModel = $postModel->whereIn('authorUid', $uids);
                                 }
                             }
                             return $postModel;
@@ -458,20 +441,20 @@ class PostsQuery extends Controller
 
             if ($queryParamsName->contains('orderBy')) {
                 $indexesModel->orderBy($queryParams['orderBy'], $queryParams['orderDirection']);
-            } else {
-                $indexesOrderDirection = $indexesQueryParams->keys()->diff(['fid'])->isEmpty() ? 'DESC' : 'ASC'; // using descending order when querying only with forum id
-                $indexesOrderBy = [
-                    'tid' => $indexesOrderDirection,
-                    'pid' => $indexesOrderDirection,
-                    'spid' => $indexesOrderDirection
-                ];
-                $indexesModel = $indexesModel->orderByMulti($indexesOrderBy);
+            } elseif ($indexesQueryParams->keys()->toArray() == ['fid']) { // query by fid only
+                $indexesModel->orderBy('postTime', 'DESC'); // order by postTime to prevent posts out of order when order by post id
+            } else { // query by post id
+                $indexesModel = $indexesModel->orderByMulti([
+                    'tid' => 'ASC',
+                    'pid' => 'ASC',
+                    'spid' => 'ASC'
+                ]);
             }
             $indexesResults = $indexesModel->whereIn('type', $queryPostType)->simplePaginate($this->pagingPerPageItems);
             Helper::abortAPIIf(40401, $indexesResults->isEmpty());
 
             $postsQueriedInfo['fid'] = $indexesResults->pluck('fid')->first();
-            foreach ($postsIDNamePair as $postType => $postIDName) { // assign queried posts ids from $indexesModel
+            foreach ($postsIDNamePair as $postType => $postIDName) { // assign queried posts id from $indexesModel
                 $postsQueriedInfo[$postType] = $indexesResults->where('type', $postType)->toArray();
             }
 
@@ -484,14 +467,14 @@ class PostsQuery extends Controller
             Helper::abortAPI(40001);
         }
 
-        $nestedPostsInfo = $this->getNestedPostsInfoByIDs(
+        $nestedPostsInfo = $this->getNestedPostsInfoByID(
             $postsQueriedInfo,
             ! $isCustomQuery,
             $queryParams['orderBy'] ?? null,
             $queryParams['orderDirection'] ?? $indexesOrderDirection ?? $customQueryDefaultOrderDirection ?? null
         );
         $forumInfo = ForumModel::where('fid', $postsQueriedInfo['fid'])->hidePrivateFields()->first()->toArray();
-        $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUids)->hidePrivateFields()->get()->toArray();
+        $usersInfo = UserModel::whereIn('uid', $this->postsAuthorUid)->hidePrivateFields()->get()->toArray();
         return [
             'pages' => $pagesInfo,
             'forum' => $forumInfo,
