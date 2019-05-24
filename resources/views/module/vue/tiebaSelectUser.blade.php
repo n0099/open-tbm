@@ -2,17 +2,17 @@
     @parent
     <template id="select-user-template">
         <div class="col-4 input-group">
-            <select v-model="selectUserBy" class="form-control col-4">
+            <select v-model="selectBy" class="form-control col-4">
                 <option value="uid">UID</option>
                 <option value="name">用户名</option>
                 <option value="displayName">覆盖名</option>
             </select>
             <keep-alive>
-                <input v-if="selectUserBy == 'uid'" v-model="selectData[selectUserByOptionsName.uid]"
-                       type="number" placeholder="123456" aria-label="UID" class="form-control col">
-                <input v-else-if="selectUserBy == 'name'" v-model="selectData[selectUserByOptionsName.name]"
+                <input v-if="selectBy == 'uid'" v-model="selectValue[selectByOptionsName.uid]"
+                       type="number" placeholder="4000000000" aria-label="UID" class="form-control col">
+                <input v-else-if="selectBy == 'name'" v-model="selectValue[selectByOptionsName.name]"
                        type="text" placeholder="n0099" aria-label="用户名" class="form-control col">
-                <input v-else-if="selectUserBy == 'displayName'" v-model="selectData[selectUserByOptionsName.displayName]"
+                <input v-else-if="selectBy == 'displayName'" v-model="selectValue[selectByOptionsName.displayName]"
                        type="text" placeholder="神奇🍀" aria-label="覆盖名" class="form-control col">
             </keep-alive>
         </div>
@@ -26,8 +26,12 @@
 
         const userSelectFormComponent = Vue.component('select-user', {
             template: '#select-user-template',
+            model: {
+                prop: 'selectValue',
+                event: 'select-value-changed'
+            },
             props: {
-                selectUserByOptionsName: {
+                selectByOptionsName: {
                     type: Object,
                     default: function () {
                         return {
@@ -36,24 +40,33 @@
                             displayName: 'displayName'
                         };
                     }
+                },
+                selectValue: {
+                    type: Object,
+                    default: function () {
+                        return { name: '' };
+                    }
                 }
             },
             data: function () {
                 return {
-                    selectUserBy: 'name',
-                    selectData: {}
+                    selectBy: 'name'
                 }
             },
             watch: {
-                selectUserBy: function () {
-                    this.$data.selectData = {};
+                selectBy: function (selectBy) {
+                    this.$data.selectValue = { [selectBy]: null }; // empty value to prevent old value remains after select by changed
+                    this.$emit('select-value-changed', this.$data.selectValue);
                 },
-                selectData: {
-                    handler: function (selectData) {
-                        this.$emit('select-user-changed', selectData);
+                selectValue: {
+                    handler: function (selectValue) {
+                        this.$emit('select-value-changed', selectValue);
                     },
                     deep: true
                 }
+            },
+            mounted: function () {
+
             }
         });
     </script>

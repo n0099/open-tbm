@@ -272,7 +272,7 @@
                 return `http://tieba.baidu.com/home/main?un=${username}`;
             };
             const $$getTBMUserLink = (username) => {
-
+                return `${$$baseUrl}/user/n/${username}`;
             };
             const $$getTiebaUserAvatarUrl = (avatarUrl) => {
                 return `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
