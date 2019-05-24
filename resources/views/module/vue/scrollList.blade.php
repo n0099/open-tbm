@@ -12,13 +12,13 @@
                 <transition v-if="itemTransitionName != null" :name="itemTransitionName">
                     <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
                                v-bind="evalItemAttrs('inner', items, item, itemIndex)">
-                        <slot :item="item"></slot>
+                        <slot :item="item" :item-index="itemIndex"></slot>
                     </component>
                 </transition>
                 <template v-else>
                     <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
                                v-bind="evalItemAttrs('inner', items, item, itemIndex)">
-                        <slot :item="item"></slot>
+                        <slot :item="item" :item-index="itemIndex"></slot>
                     </component>
                 </template>
             </component>
@@ -76,7 +76,7 @@
                     type: Object,
                     required: true
                 },
-                itemsShowingNum: {
+                itemMinDisplayNum: {
                     type: Number,
                     required: true
                 },
@@ -90,13 +90,13 @@
             },
             data: function () {
                 return {
-                    displayingItemsID: [],
+                    newDisplayItemsIndex: [],
                     scrollListID: '',
                     itemDOMDimensionsCache: [],
                     itemEvaledAttrsCache: { outer: {}, inner: {} },
                     itemOuterTagsName: this.$props.itemOuterTags || 'div',
                     itemInnerTagsName: this.$props.itemOuterTags || 'div',
-                    lastScrollTime: 0
+                    currentDisplayingItemsIndex: []
                 };
             },
             created: function () {
@@ -107,7 +107,7 @@
                 this.$data.scrollListID = Math.random().toString(36).substring(5);
             },
             mounted: function () {
-                this.$data.displayingItemsID = this.range(0, this.$props.itemsShowingNum); // initially showing first $itemsShowingNum items
+                this.$data.newDisplayItemsIndex = this.range(0, this.$props.itemMinDisplayNum); // initially display first itemMinDisplayNum items
             },
             methods: {
                 evalItemAttrs: function (renderPosition, items, item, itemIndex) {
@@ -115,7 +115,7 @@
                         if (this.$props.itemPlaceholderClass != null
                             && renderPosition === 'outer'
                             && ! this.shouldDisplay(itemIndex)) {
-                            evalAttrs = Object.assign({}, evalAttrs); // shadow copy to prevent mutate cache
+                            evalAttrs = Object.assign({}, evalAttrs); // shallow copy to prevent mutate cache
                             if (evalAttrs.class == null) {
                                 evalAttrs.class = this.$props.itemPlaceholderClass;
                             } else {
@@ -149,24 +149,26 @@
                     }
                 },
                 shouldDisplay: function (itemIndex) {
-                    let displayingItemsID = this.$data.displayingItemsID;
-                    return itemIndex >= displayingItemsID[0] && itemIndex <= displayingItemsID[displayingItemsID.length - 1]
+                    return this.$data.newDisplayItemsIndex.includes(itemIndex);
                 },
                 listVisibilityChanged: function (isVisible, observer) {
                     if (! isVisible) { // hide all items when viewport is leaving whole scroll list
-                        this.$data.displayingItemsID = [];
+                        this.$data.newDisplayItemsIndex = [];
                     }
                 },
                 itemVisibilityChanged: function (isVisible, observer) {
                     let itemDOM = observer.target;
                     let itemIndex = parseInt(itemDOM.getAttribute('data-item-index'));
                     if (isVisible) {
-                        // moving displaying items index
-                        this.$data.displayingItemsID = this.getDisplayIndexRange(0, this.$props.items.length, itemIndex, this.$props.itemsShowingNum);
+                        let newDisplayItemsID = this.getDisplayIndexRange(0, this.$props.items.length, itemIndex, this.$props.itemMinDisplayNum);
+                        this.$data.currentDisplayingItemsIndex.push(itemIndex); // make sure remain current displaying items
+                        this.$data.newDisplayItemsIndex = newDisplayItemsID.concat(this.$data.currentDisplayingItemsIndex); // move newly display items index
                     } else {
+                        this.$data.currentDisplayingItemsIndex = this.$data.currentDisplayingItemsIndex.filter((i) => i !== itemIndex); // remove from currentDisplayingItemsIndex
                         // cache current hiding item dom's height and width px before hided
                         this.$data.itemDOMDimensionsCache[itemIndex] = { height: itemDOM.offsetHeight, width: itemDOM.offsetWidth };
                     }
+
                     // call user defined parent component event
                     let parentCompentEventName = this.$props.itemObserveEvent;
                     if (parentCompentEventName != null) {

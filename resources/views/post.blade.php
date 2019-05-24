@@ -145,7 +145,7 @@
                 </div>
                 <scroll-list :items="postsData.threads"
                              item-dynamic-dimensions :item-initial-dimensions="{ height: '500em' }"
-                             :items-showing-num="3" item-transition-name="thread-item"
+                             :item-min-display-num="3" item-transition-name="thread-item"
                              :item-inner-attrs="{
                                 'data-title': { type: 'eval', value: 'item.title'},
                                 class: { type: 'string', value: 'thread-item card' }
@@ -558,14 +558,14 @@
                                 <legend class="h6 w-auto">
                                     用户信息 <small>主题贴下为楼主</small>
                                 </legend>
-                                <div class="form-group form-row">
+                                <div class="form-inline form-group form-row">
                                     <select-user @select-user-changed="selectUserChanged"
                                                  :select-user-by-options-name="{
                                                      uid: 'userID',
                                                      name: 'userName',
                                                      displayName: 'userDisplayName'
                                                  }"></select-user>
-                                    <label class="text-center col-2 col-form-label">查询范围</label>
+                                    <label class="col-2 col-form-label">查询范围</label>
                                     <div class="input-group my-auto col">
                                         <div class="custom-checkbox custom-control custom-control-inline">
                                             <input v-model="queryData.query.userType"
@@ -579,7 +579,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group form-row">
+                                <div class="form-inline form-group form-row">
                                     <label class="col-2 col-form-label" for="queryUserManagerType">吧务级别</label>
                                     <select v-model="queryData.query.userManagerType"
                                             data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
@@ -589,7 +589,7 @@
                                         <option value="assist">小吧主</option>
                                         <option value="voiceadmin">语音小编</option>
                                     </select>
-                                    <label class="text-center col-1 col-form-label" for="queryUserExpGrade">等级</label>
+                                    <label class="col-1 col-form-label" for="queryUserExpGrade">等级</label>
                                     <div class="col-2 input-group">
                                         <select v-model="queryData.query.userExpGradeRange"
                                                 data-param="userExpGradeRange" id="queryUserExpGradeRange" class="custom-query-param form-control">
@@ -600,7 +600,7 @@
                                         <input v-model="queryData.query.userExpGrade"
                                                data-param="userExpGrade" id="queryUserExpGrade" type="number" placeholder="18" class="custom-query-param form-control">
                                     </div>
-                                    <label class="text-center col-1 col-form-label" for="queryUserGender">性别</label>
+                                    <label class="col-1 col-form-label" for="queryUserGender">性别</label>
                                     <select v-model="queryData.query.userGender"
                                             data-param="userGender" id="queryUserGender" class="custom-query-param form-control col-1">
                                         <option value="default">不限</option>
@@ -633,7 +633,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group form-row">
+                            <div class="form-inline form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadReplyNumGroup">主题贴回复数</label>
                                 <div id="queryThreadReplyNumGroup" class="col-3 input-group">
                                     <select v-model="queryData.query.threadReplyNumRange"
@@ -657,7 +657,7 @@
                                            data-param="replySubReplyNum" id="queryReplySubReplyNum" type="number" placeholder="仅回复贴" class="custom-query-param form-control">
                                 </div>
                             </div>
-                            <div class="form-group form-row">
+                            <div class="form-inline form-group form-row">
                                 <label class="col-2 col-form-label" for="queryThreadViewNumGroup">主题贴查看量</label>
                                 <div id="queryThreadViewNumGroup" class="col-3 input-group">
                                     <select v-model="queryData.query.threadViewNumRange"
@@ -1167,7 +1167,7 @@
                         };
 
                         let ajaxStartTime = Date.now();
-                        let ajaxQueryString = _.merge({}, routeParams, routeQueryStrings); // shadow copy
+                        let ajaxQueryString = _.merge({}, routeParams, routeQueryStrings); // deep clone
                         if (_.isEmpty(ajaxQueryString)) {
                             new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
                             this.$data.postPages = []; // clear posts pages data will emit posts pages updated event after initial load
@@ -1248,7 +1248,7 @@
                     genPostListKey: function (currentListPage) {
                         let keyCache = this.$data.postListKeyCache[currentListPage];
                         if (keyCache == null) {
-                            keyCache = this.$data.postListKeyCache[currentListPage] = `i-${currentListPage + 1}@${JSON.stringify(_.merge({}, this.$route.params, this.$route.query))}`; // shadow copy
+                            keyCache = this.$data.postListKeyCache[currentListPage] = `i-${currentListPage + 1}@${JSON.stringify(_.merge({}, this.$route.params, this.$route.query))}`; // deep clone
                         }
                         return keyCache;
                     },
