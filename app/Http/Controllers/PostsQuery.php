@@ -97,9 +97,9 @@ class PostsQuery extends Controller
 
     private static function convertNestedPostsInfo(array $threadsInfo = [], array $repliesInfo = [], array $subRepliesInfo = []): array
     {
-        $threadsInfo = Helper::convertIDListKey($threadsInfo, 'tid');
-        $repliesInfo = collect(Helper::convertIDListKey($repliesInfo, 'pid'));
-        $subRepliesInfo = collect(Helper::convertIDListKey($subRepliesInfo, 'spid'));
+        $threadsInfo = Helper::setKeyWithItemsValue($threadsInfo, 'tid');
+        $repliesInfo = collect(Helper::setKeyWithItemsValue($repliesInfo, 'pid'));
+        $subRepliesInfo = collect(Helper::setKeyWithItemsValue($subRepliesInfo, 'spid'));
         $nestedPostsInfo = [];
 
         foreach ($threadsInfo as $tid => $thread) {
@@ -203,7 +203,7 @@ class PostsQuery extends Controller
             ];
             foreach ($customQueryParamsRequiredPostTypes as $paramName => $requiredPostTypes) {
                 foreach ($requiredPostTypes as $requiredPostType) {
-                    Helper::abortAPIIf(40005, isset($queryParams[$paramName]) && in_array($requiredPostType, $queryPostType));
+                    Helper::abortAPIIf(40005, isset($queryParams[$paramName]) && in_array($requiredPostType, $queryPostType, true));
                 }
             }
 
@@ -217,8 +217,8 @@ class PostsQuery extends Controller
              * @return Builder|PostModel|null
              */
             $applyCustomConditionOnPostModel = function (string $postType, PostModel $postModel, Collection $queryParams) use ($postsModel, $queryPostType, $queryUserType) {
-                if (in_array('latestReplier', $queryUserType)) {
-                    Helper::abortAPIIf(40003, !in_array('thread', $queryPostType));
+                if (in_array('latestReplier', $queryUserType, true)) {
+                    Helper::abortAPIIf(40003, ! in_array('thread', $queryPostType, true));
                     $userInfoParamsExcludingLatestReplier = [
                         'userExpGrade',
                         'userExpGradeRange',
@@ -280,7 +280,7 @@ class PostsQuery extends Controller
                                     'pid' => ['reply', 'subReply'],
                                     'spid' => ['subReply']
                                 ];
-                                if (in_array($postType, $orderByRequiredPostType[$paramValue])) {
+                                if (in_array($postType, $orderByRequiredPostType[$paramValue], true)) {
                                     return $postModel->orderBy($queryParams['orderBy'], $queryParams['orderDirection']);
                                 } else {
                                     return null; // if post type is not complicated with order by required, return null to prevent duplicated post model

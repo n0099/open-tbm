@@ -12,13 +12,9 @@ class ReCAPTCHACheck
             $reCAPTCHA = new \ReCaptcha\ReCaptcha(env('reCAPTCHA_SECRET_KEY'));
             $requestReCAPTCHA = $request->input('reCAPTCHA');
             $isReCAPTCHAValid = $requestReCAPTCHA == null ? false : $reCAPTCHA->verify($requestReCAPTCHA, $request->ip())->isSuccess();
-            if ($isReCAPTCHAValid) {
-                return $next($request);
-            } else {
-                Helper::abortAPI(40101);
-            }
-        } else {
-            return $next($request);
+            Helper::abortAPIIf(40101, ! $isReCAPTCHAValid);
         }
+
+        return $next($request);
     }
 }

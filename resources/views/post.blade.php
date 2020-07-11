@@ -393,7 +393,7 @@
                                 <option>=</option>
                                 <option>&gt;</option>
                             </select>
-                            <input v-model="queryData.param.tid"
+                            <input v-model="queryData.params.tid"
                                    data-param="tid" id="queryTid" type="number"
                                    class="form-control" placeholder="5000000000" aria-label="tid" />
                             <div class="input-group-prepend">
@@ -405,7 +405,7 @@
                                 <option>=</option>
                                 <option>&gt;</option>
                             </select>
-                            <input v-model="queryData.param.pid"
+                            <input v-model="queryData.params.pid"
                                    data-param="pid" id="queryPid" type="number"
                                    class="form-control" placeholder="15000000000" aria-label="pid" />
                             <div class="input-group-prepend">
@@ -417,7 +417,7 @@
                                 <option>=</option>
                                 <option>&gt;</option>
                             </select>
-                            <input v-model="queryData.param.spid"
+                            <input v-model="queryData.params.spid"
                                    data-param="spid" id="querySpid" type="number"
                                    class="form-control" placeholder="15000000000" aria-label="spid" />
                         </div>
@@ -855,7 +855,7 @@
                         postPages: [], // multi pages of posts list collection
                         loadingNewPosts: false,
                         forumsList: [],
-                        queryData: { query: {}, param: {} },
+                        queryData: { query: {}, params: {} },
                         customQueryParamsDefaultValue: [
                             { param: 'postType', default: ['thread', 'reply', 'subReply']},
                             { param: 'tidRange', default: '=' },
@@ -901,7 +901,7 @@
 
                                 let isRouteCustomQuery = vue.$route.query == null;
                                 if (vue.$data.queryData.query.orderDirection == null) { // set default order direction which base on posts query type
-                                    vue.$data.queryData.query.orderDirection = isRouteCustomQuery && _.isEmpty(_.omit(vue.$data.queryData.param, 'fid')) ? 'DESC' : 'ASC';
+                                    vue.$data.queryData.query.orderDirection = isRouteCustomQuery && _.isEmpty(_.omit(vue.$data.queryData.params, 'fid')) ? 'DESC' : 'ASC';
                                 }
 
                                 let radioLikeCheckboxParamsGroup = [
@@ -1006,9 +1006,9 @@
 
                                 let checkCustomQueryAvailable = () => {
                                     let isCustomQueryAvailable = $('#queryFid').prop('value') !== 'undefined'
-                                        || ! _.isEmpty(vue.$data.queryData.param.tid)
-                                        || ! _.isEmpty(vue.$data.queryData.param.pid)
-                                        || ! _.isEmpty(vue.$data.queryData.param.spid);
+                                        || ! _.isEmpty(vue.$data.queryData.params.tid)
+                                        || ! _.isEmpty(vue.$data.queryData.params.pid)
+                                        || ! _.isEmpty(vue.$data.queryData.params.spid);
                                     let customQueryParamsDOM = $('.custom-query-param');
                                     customQueryParamsDOM.prop('disabled', ! isCustomQueryAvailable);
                                     _.each(customQueryParamsDOM, (dom) => {
@@ -1058,10 +1058,10 @@
                         }
                     });
 
-                    this.$data.queryData = { query: customQueryParams, param: queryParams };
+                    this.$data.queryData = { query: customQueryParams, params: queryParams };
                     $$loadForumsList().then((forumsList) => {
                         this.$data.forumsList = forumsList;
-                        this.loadPageData(this.$data.queryData.param, this.$data.queryData.query, true); // wait for forums list finish loading
+                        this.loadPageData(this.$data.queryData.params, this.$data.queryData.query, true); // wait for forums list finish loading
                     });
                 },
                 methods: {
@@ -1074,7 +1074,7 @@
                         queryParams = _.merge(queryParams, event);
                     },
                     submitQueryForm: function () {
-                        let queryParams = _.chain(this.$data.queryData.param)
+                        let queryParams = _.chain(this.$data.queryData.params)
                             .omit('page')
                             .omitBy(_.isEmpty) // omitBy will remove empty param values like empty string
                             .toPairs()
@@ -1117,7 +1117,7 @@
                             'spidRange'
                         ];
                         _.each(queryPostsIDRangeParams, (param) => { // remove range param when posts id param is unset
-                            if (Reflect.get(this.$data.queryData.param, param.replace('Range', '')) === undefined) {
+                            if (Reflect.get(this.$data.queryData.params, param.replace('Range', '')) === undefined) {
                                 Reflect.deleteProperty(customQueryParams, param);
                             }
                         });

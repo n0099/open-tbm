@@ -3,16 +3,12 @@
 namespace App\Http\Controllers\Topic;
 
 use App\Eloquent\BilibiliVoteModel;
+use App\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class BilibiliVote
 {
-    private static $groupTimeRangeRawSQL = [
-        'minute' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:%i") AS time',
-        'hour' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:00") AS time',
-    ];
-
     private static function getTopVotesCandidates(int $candidatesCount): array
     {
         return BilibiliVoteModel::select('voteFor')
@@ -36,10 +32,11 @@ class BilibiliVote
 
     public static function allVotesCountByTime(Request $request)
     {
+        $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeRange' => Rule::in(array_keys(static::$groupTimeRangeRawSQL))
+            'timeRange' => Rule::in(array_keys($groupTimeRangeRawSQL))
         ]);
-        return BilibiliVoteModel::selectRaw(static::$groupTimeRangeRawSQL[$request->query()['timeRange']])
+        return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$request->query()['timeRange']])
             ->selectRaw('COUNT(*) AS count, isValid')
             ->groupBy('time', 'isValid')
             ->orderBy('time', 'DESC')
@@ -59,11 +56,12 @@ class BilibiliVote
 
     public static function top5CandidatesVotesCountByTime(Request $request)
     {
+        $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeRange' => Rule::in(array_keys(static::$groupTimeRangeRawSQL))
+            'timeRange' => Rule::in(array_keys($groupTimeRangeRawSQL))
         ]);
         $top10Candidates = static::getTopVotesCandidates(5);
-        return BilibiliVoteModel::selectRaw(static::$groupTimeRangeRawSQL[$request->query()['timeRange']])
+        return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$request->query()['timeRange']])
             ->selectRaw('COUNT(*) AS count')
             ->addSelect(['voteFor', 'isValid'])
             ->whereIn('voteFor', $top10Candidates)

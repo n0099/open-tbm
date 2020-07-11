@@ -40,7 +40,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->forumID, $this->threadID, $this->startPage))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getUpdatedPostsInfo();
-        $oldRepliesInfo = Helper::convertIDListKey(
+        $oldRepliesInfo = Helper::setKeyWithItemsValue(
             PostModelFactory::newReply($this->forumID)
                 ->select('pid', 'subReplyNum')
                 ->whereIn('pid', array_keys($newRepliesInfo))

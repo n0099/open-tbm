@@ -64,15 +64,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
             ->get()->toJson();
     });
     Route::get('/stats/forumPostsCount', function () {
-        $groupTimeRangeRawSQL = [
-            'minute' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:%i") AS time',
-            'hour' => 'DATE_FORMAT(postTime, "%Y-%m-%d %H:00") AS time',
-            'day' => 'DATE(postTime) AS time',
-            'week' => 'DATE_FORMAT(postTime, "%Y第%u周") AS time',
-            'month' => 'DATE_FORMAT(postTime, "%Y-%m") AS time',
-            'year' => 'DATE_FORMAT(postTime, "%Y年") AS time',
-        ];
-
+        $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime');
         $queryParams = \Request()->validate([
             'fid' => 'required|integer',
             'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],

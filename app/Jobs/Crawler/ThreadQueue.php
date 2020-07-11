@@ -70,7 +70,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
         $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID, $this->startPage, $this->endPage))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getUpdatedPostsInfo();
-        $oldThreadsInfo = Helper::convertIDListKey(
+        $oldThreadsInfo = Helper::setKeyWithItemsValue(
             PostModelFactory::newThread($this->forumID)
                 ->select('tid', 'latestReplyTime', 'replyNum')
                 ->whereIn('tid', array_keys($newThreadsInfo))->get()->toArray(),

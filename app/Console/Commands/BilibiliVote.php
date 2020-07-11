@@ -6,7 +6,6 @@ use App\Eloquent\BilibiliVoteModel;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\Eloquent\UserModel;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Spatie\Regex\Regex;
@@ -33,7 +32,7 @@ class BilibiliVote extends Command
         $voteResultModel = new BilibiliVoteModel();
         $replyModel->where('tid', $voteThreadID)
             ->whereBetween('postTime', [$voteStartTime, $voteEndTime])
-            ->chunk(10, function (Collection $voteReplies) use ($voteResultModel) {
+            ->chunk(10, function (Collection $voteReplies) use ($voteResultModel) { // lower chunk size to minimize influence of ignoring previous valid vote
                 $voteResults = [];
                 $candidateIDRange = range(1, 1056);
                 $votersPreviousValidVotesCount = $voteResultModel
@@ -43,7 +42,7 @@ class BilibiliVote extends Command
                     ->where('isValid', true)
                     ->groupBy('authorUid')
                     ->get();
-                //$votersUsername = UserModel::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
+                // $votersUsername = UserModel::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
                 foreach ($voteReplies as $voteReply) {
                     $voterUid = $voteReply['authorUid'];
                     $voteRegex = Regex::match('/"text":"(.*?)投(.*?)号候选人/', json_encode($voteReply['content']) ?? '');
@@ -51,10 +50,9 @@ class BilibiliVote extends Command
                     $voteFor = trim($voteRegex->groupOr(2, ''));
                     $isVoteValid = $voteRegex->hasMatch()
                         && $voteReply['authorExpGrade'] >= 4
-                        //&& $voteBy == ($votersUsername->where('uid', $voterUid)->first()['name'] ?? false)
-                        && in_array($voteFor, $candidateIDRange)
+                        // && $voteBy == ($votersUsername->where('uid', $voterUid)->first()['name'] ?? false)
+                        && in_array($voteFor, $candidateIDRange, true)
                         && $votersPreviousValidVotesCount->where('authorUid', $voterUid)->first() == null;
-                    ;
                     $voteResults[] = [
                         'pid' => $voteReply['pid'],
                         'authorUid' => $voteReply['authorUid'],

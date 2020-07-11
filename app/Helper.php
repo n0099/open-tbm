@@ -15,7 +15,7 @@ class Helper
 
     public static function abortAPI(int $errorCode): void
     {
-        $errorInfos = [
+        $statusCodeAndErrorInfos = [
             // httpStatusCode => [ errorCode => errorInfo ]
             400 => [
                 // 40000 => App\Exceptions\Handler->convertValidationExceptionToResponse()
@@ -36,14 +36,14 @@ class Helper
         ];
 
         $statusCode = 0;
-        $errorInfo = '';
-        foreach ($errorInfos as $infoStatusCode => $infoErrorInfo) {
+        $errorInfo = null;
+        foreach ($statusCodeAndErrorInfos as $infoStatusCode => $infoErrorInfo) {
             if (array_key_exists($errorCode, $infoErrorInfo)) {
                 $statusCode = $infoStatusCode;
                 $errorInfo = $infoErrorInfo[$errorCode];
             }
         }
-        if ($errorInfo == null) {
+        if ($errorInfo === null) {
             throw new \InvalidArgumentException('given error code doesn\'t existed');
         }
         \Response::json([
@@ -53,24 +53,22 @@ class Helper
         exit;
     }
 
-    public static function convertIDListKey(array $list, string $keyName): array
+    public static function setKeyWithItemsValue(array $array, string $itemsKey): array
     {
-        $newList = [];
-
-        foreach ($list as $item) {
-            $newList[$item[$keyName]] = $item;
+        $return = [];
+        foreach ($array as $item) {
+            $return[$item[$itemsKey]] = $item;
         }
-
-        return $newList;
+        return $return;
     }
 
     public static function getArrayValuesByKeys(array $haystack, array $keys): array
     {
-        $values = [];
+        $return = [];
         foreach ($keys as $key) {
-            $values[$key] = $haystack[$key];
+            $return[$key] = $haystack[$key];
         }
-        return $values;
+        return $return;
     }
 
     public static function nullableValidate($value, bool $isJson = false)
@@ -78,7 +76,6 @@ class Helper
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
         }
-
         return $isJson ? json_encode($value) : $value;
     }
 
@@ -87,5 +84,17 @@ class Helper
         return array_filter($haystack, function ($value) use ($equalTo) {
             return $value !== $equalTo;
         }) === [];
+    }
+
+    public static function getRawSqlGroupByTimeRange(string $fieldName, array $timeRanges = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
+    {
+        return array_intersect_key([
+            'minute' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:%i\") AS time",
+            'hour' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:00\") AS time",
+            'day' => "DATE({$fieldName}) AS time",
+            'week' => "DATE_FORMAT({$fieldName}, \"%Y第%u周\") AS time",
+            'month' => "DATE_FORMAT({$fieldName}, \"%Y-%m\") AS time",
+            'year' => "DATE_FORMAT({$fieldName}, \"%Y年\") AS time"
+        ], array_fill_keys($timeRanges, null));
     }
 }
