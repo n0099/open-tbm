@@ -17,9 +17,9 @@ class ReplyCrawler extends Crawlable
 {
     protected $clientVersion = '8.8.8';
 
-    protected $forumID;
+    protected $fid;
 
-    protected $threadID;
+    protected $tid;
 
     protected $usersInfo;
 
@@ -39,7 +39,7 @@ class ReplyCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        \Log::channel('crawler-info')->info("Start to fetch replies for thread, tid {$this->threadID}, page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Start to fetch replies for thread, tid {$this->tid}, page {$this->startPage}");
         ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
 
         $tiebaClient = $this->getClientHelper();
@@ -48,7 +48,7 @@ class ReplyCrawler extends Crawlable
             'http://c.tieba.baidu.com/c/f/pb/page',
             [
                 'form_params' => [ // reverse order will be ['last' => 1, 'r' => 1]
-                    'kz' => $this->threadID,
+                    'kz' => $this->tid,
                     'pn' => $this->startPage
                 ]
             ]
@@ -66,12 +66,12 @@ class ReplyCrawler extends Crawlable
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
-                            \Log::channel('crawler-info')->info("Fetch replies for thread, tid {$this->threadID}, page {$pn}");
+                            \Log::channel('crawler-info')->info("Fetch replies for thread, tid {$this->tid}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/page',
                                 [
                                     'form_params' => [
-                                        'kz' => $this->threadID,
+                                        'kz' => $this->tid,
                                         'pn' => $pn
                                     ]
                                 ]
@@ -140,7 +140,7 @@ class ReplyCrawler extends Crawlable
         foreach ($repliesList as $reply) {
             ExceptionAdditionInfo::set(['parsingPid' => $reply['id']]);
             $currentInfo = [
-                'tid' => $this->threadID,
+                'tid' => $this->tid,
                 'pid' => $reply['id'],
                 'floor' => $reply['floor'],
                 'content' => Helper::nullableValidate($reply['content'], true),
@@ -169,7 +169,7 @@ class ReplyCrawler extends Crawlable
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],
                 'type' => 'reply',
-                'fid' => $this->forumID
+                'fid' => $this->fid
             ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingPid');
@@ -195,7 +195,7 @@ class ReplyCrawler extends Crawlable
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingReplies' => true]);
                 $chunkInsertBufferSize = 2000;
-                $replyModel = PostModelFactory::newReply($this->forumID);
+                $replyModel = PostModelFactory::newReply($this->fid);
                 foreach (static::groupNullableColumnArray($this->repliesInfo, [
                     'authorManagerType',
                     'authorExpGrade'
@@ -204,9 +204,9 @@ class ReplyCrawler extends Crawlable
                     $replyModel->chunkInsertOnDuplicate($repliesInfoGroup, $replyUpdateFields, $chunkInsertBufferSize);
                 }
 
-                $threadModel = PostModelFactory::newThread($this->forumID);
-                foreach ($this->parentThreadInfo as $threadId => $threadInfo) {
-                    $threadModel->where('tid', $threadId)->update($threadInfo);
+                $threadModel = PostModelFactory::newThread($this->fid);
+                foreach ($this->parentThreadInfo as $tid => $threadInfo) {
+                    $threadModel->where('tid', $tid)->update($threadInfo);
                 }
 
                 $indexModel = new IndexModel();
@@ -233,8 +233,8 @@ class ReplyCrawler extends Crawlable
 
     public function __construct(int $fid, int $tid, int $startPage, int $endPage = null)
     {
-        $this->forumID = $fid;
-        $this->threadID = $tid;
+        $this->fid = $fid;
+        $this->tid = $tid;
         $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 100;

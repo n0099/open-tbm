@@ -24,13 +24,13 @@ class BilibiliVote extends Command
 
     public function handle()
     {
-        $bilibiliForumID = 2265748;
-        $voteThreadID = 6062186860;
+        $bilibiliFid = 2265748;
+        $voteTid = 6062186860;
         $voteStartTime = '2019-03-10T12:35:00'; // exactly 2019-03-10T12:38:17
         $voteEndTime = '2019-03-11T12:00:00';
-        $replyModel = PostModelFactory::newReply($bilibiliForumID);
+        $replyModel = PostModelFactory::newReply($bilibiliFid);
         $voteResultModel = new BilibiliVoteModel();
-        $replyModel->where('tid', $voteThreadID)
+        $replyModel->where('tid', $voteTid)
             ->whereBetween('postTime', [$voteStartTime, $voteEndTime])
             ->chunk(10, function (Collection $voteReplies) use ($voteResultModel) { // lower chunk size to minimize influence of ignoring previous valid vote
                 $voteResults = [];

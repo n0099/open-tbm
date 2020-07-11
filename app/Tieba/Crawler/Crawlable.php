@@ -4,7 +4,7 @@ namespace App\Tieba\Crawler;
 
 abstract class Crawlable
 {
-    protected $forumID;
+    protected $fid;
 
     protected $clientVersion;
 

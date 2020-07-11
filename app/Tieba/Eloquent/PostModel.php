@@ -34,7 +34,7 @@ abstract class PostModel extends Model
     /**
      * @var int|string Forum id of this post, might be 'me0407'.
      */
-    protected $forumID;
+    protected $fid;
 
     protected $fields;
 
@@ -70,7 +70,7 @@ abstract class PostModel extends Model
      */
     protected function newRelatedInstance($class)
     {
-        return tap((new $class())->setForumID($this->forumID), function ($instance) {
+        return tap((new $class())->setFid($this->fid), function ($instance) {
             if (! $instance->getConnectionName()) {
                 $instance->setConnection($this->connection);
             }
@@ -94,7 +94,7 @@ abstract class PostModel extends Model
             $this->getConnectionName()
         );
 
-        $model->setForumID($this->forumID);
+        $model->setFid($this->fid);
 
         return $model;
     }
@@ -102,21 +102,21 @@ abstract class PostModel extends Model
     /**
      * Setting model table name by forum id and post type.
      *
-     * @param int|string $forumID
+     * @param int|string $fid
      *
      * @return PostModel
      */
-    public function setForumID($forumID): self
+    public function setFid($fid): self
     {
-        if (is_int($forumID)) {
-            $tableNamePrefix = "tbm_f{$forumID}_";
-        } elseif ($forumID == 'me0407') {
+        if (is_int($fid)) {
+            $tableNamePrefix = "tbm_f{$fid}_";
+        } elseif ($fid == 'me0407') {
             $tableNamePrefix = 'tbm_me0407_';
         } else {
             throw new \InvalidArgumentException;
         }
 
-        $this->forumID = $forumID;
+        $this->fid = $fid;
 
         $postTypeClassNamePlural = [
             ThreadModel::class => 'threads',

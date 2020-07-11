@@ -17,7 +17,7 @@ class ThreadCrawler extends Crawlable
 {
     protected $clientVersion = '6.0.2';
 
-    protected $forumID;
+    protected $fid;
 
     protected $forumName;
 
@@ -37,7 +37,7 @@ class ThreadCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        \Log::channel('crawler-info')->info("Start to fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Start to fetch threads for forum {$this->forumName}, fid {$this->fid}, page {$this->startPage}");
         ExceptionAdditionInfo::set(['parsingPage' => 1]);
 
         $tiebaClient = $this->getClientHelper();
@@ -66,7 +66,7 @@ class ThreadCrawler extends Crawlable
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
-                            \Log::channel('crawler-info')->info("Fetch threads for forum {$this->forumName}, fid {$this->forumID}, page {$pn}");
+                            \Log::channel('crawler-info')->info("Fetch threads for forum {$this->forumName}, fid {$this->fid}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/frs/page',
                                 [
@@ -178,7 +178,7 @@ class ThreadCrawler extends Crawlable
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',
-                'fid' => $this->forumID
+                'fid' => $this->fid
             ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'authorUid', 'postTime']);
         }
         ExceptionAdditionInfo::remove('parsingTid');
@@ -197,7 +197,7 @@ class ThreadCrawler extends Crawlable
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingThreads' => true]);
                 $chunkInsertBufferSize = 2000;
-                $threadModel = PostModelFactory::newThread($this->forumID);
+                $threadModel = PostModelFactory::newThread($this->fid);
                 foreach (static::groupNullableColumnArray($this->threadsInfo, [
                     'postTime',
                     'latestReplyTime',
@@ -231,9 +231,9 @@ class ThreadCrawler extends Crawlable
         return $this->updatedPostsInfo;
     }
 
-    public function __construct(string $forumName, int $forumID, int $startPage, $endPage)
+    public function __construct(int $fid, string $forumName, int $startPage, $endPage)
     {
-        $this->forumID = $forumID;
+        $this->fid = $fid;
         $this->forumName = $forumName;
         $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
@@ -244,7 +244,7 @@ class ThreadCrawler extends Crawlable
         }
 
         ExceptionAdditionInfo::set([
-            'crawlingFid' => $forumID,
+            'crawlingFid' => $fid,
             'crawlingForumName' => $forumName,
             'profiles' => &$this->profiles // assign by reference will sync values change with addition info
         ]);

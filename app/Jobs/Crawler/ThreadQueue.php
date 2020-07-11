@@ -18,7 +18,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $forumID;
+    protected $fid;
 
     protected $forumName;
 
@@ -26,10 +26,10 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
 
     protected $endPage;
 
-    public function __construct(int $forumID, string $forumName, int $startPage = 1, int $endPage = null)
+    public function __construct(int $fid, string $forumName, int $startPage = 1, int $endPage = null)
     {
-        \Log::channel('crawler-info')->info("Thread crawler queue dispatched with {$forumID}({$forumName})");
-        $this->forumID = $forumID;
+        \Log::channel('crawler-info')->info("Thread crawler queue dispatched with {$fid}({$forumName})");
+        $this->fid = $fid;
         $this->forumName = $forumName;
         $this->startPage = $startPage;
         $this->endPage = $endPage;
@@ -44,7 +44,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
         \DB::transaction(function () use ($cancelCurrentCrawler) {
             $crawlingForumInfo = [
                 'type' => 'thread', // not including reply and sub reply crawler queue
-                'fid' => $this->forumID,
+                'fid' => $this->fid,
                 'startPage' => $this->startPage
             ];
             $latestCrawlingForum = CrawlingPostModel
@@ -68,10 +68,10 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             return;
         }
 
-        $threadsCrawler = (new ThreadCrawler($this->forumName, $this->forumID, $this->startPage, $this->endPage))->doCrawl();
+        $threadsCrawler = (new ThreadCrawler($this->fid, $this->forumName, $this->startPage, $this->endPage))->doCrawl();
         $newThreadsInfo = $threadsCrawler->getUpdatedPostsInfo();
         $oldThreadsInfo = Helper::setKeyWithItemsValue(
-            PostModelFactory::newThread($this->forumID)
+            PostModelFactory::newThread($this->fid)
                 ->select('tid', 'latestReplyTime', 'replyNum')
                 ->whereIn('tid', array_keys($newThreadsInfo))->get()->toArray(),
             'tid'
@@ -102,12 +102,12 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                     $firstReplyCrawlPage = 1;
                     CrawlingPostModel::insert([
                         'type' => 'reply',
-                        'fid' => $this->forumID,
+                        'fid' => $this->fid,
                         'tid' => $tid,
                         'startPage' => $firstReplyCrawlPage,
                         'startTime' => microtime(true)
                     ]); // lock for current thread's reply crawler
-                    ReplyQueue::dispatch($this->forumID, $tid, $firstReplyCrawlPage)->onQueue('crawler');
+                    ReplyQueue::dispatch($this->fid, $tid, $firstReplyCrawlPage)->onQueue('crawler');
                 }
             }
         });
@@ -119,7 +119,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 ::select('id', 'startTime')
                 ->where([
                     'type' => 'thread', // not including current thread's reply and sub reply crawler queue
-                    'fid' => $this->forumID,
+                    'fid' => $this->fid,
                     'startPage' => $this->startPage
                 ])
                 ->lockForUpdate()->first();
@@ -135,11 +135,11 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                 $newCrawlerStartPage = $threadsCrawler->endPage + 1;
                 CrawlingPostModel::insert([
                     'type' => 'thread',
-                    'fid' => $this->forumID,
+                    'fid' => $this->fid,
                     'startPage' => $newCrawlerStartPage,
                     'startTime' => microtime(true)
                 ]); // lock for next page range reply crawler
-                ThreadQueue::dispatch($this->forumID, $this->forumName, $newCrawlerStartPage, $this->endPage)->onQueue('crawler');
+                ThreadQueue::dispatch($this->fid, $this->forumName, $newCrawlerStartPage, $this->endPage)->onQueue('crawler');
             }
         });
 

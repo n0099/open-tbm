@@ -6,20 +6,20 @@ class PostModelFactory
 {
     public static function newThread(int $fid): ThreadModel
     {
-        return (new ThreadModel())->setForumID($fid);
+        return (new ThreadModel())->setFid($fid);
     }
 
     public static function newReply(int $fid): ReplyModel
     {
-        return (new ReplyModel())->setForumID($fid);
+        return (new ReplyModel())->setFid($fid);
     }
 
     public static function newSubReply(int $fid): SubReplyModel
     {
-        return (new SubReplyModel())->setForumID($fid);
+        return (new SubReplyModel())->setFid($fid);
     }
 
-    public static function getPostsModelByForumID($fid): array
+    public static function getPostModelsByFid($fid): array
     {
         return [
             'thread' => static::newThread($fid),

@@ -6,7 +6,7 @@ class CrawlerQueue
 {
     public $tries = 5;
 
-    protected $forumID;
+    protected $fid;
 
     protected $queueDeleteAfter = '-5 mins';
 }

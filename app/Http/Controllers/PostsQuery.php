@@ -22,7 +22,7 @@ class PostsQuery extends Controller
 
     private function getNestedPostsInfoByID(array $postsInfo, bool $isInfoOnlyContainsPostsID, $orderBy, $orderDirection): array
     {
-        $postsModel = PostModelFactory::getPostsModelByForumID($postsInfo['fid']);
+        $postsModel = PostModelFactory::getPostModelsByFid($postsInfo['fid']);
         $postsInfo['thread'] = collect($postsInfo['thread']);
         $postsInfo['reply'] = collect($postsInfo['reply']);
         $postsInfo['subReply'] = collect($postsInfo['subReply']);
@@ -53,26 +53,26 @@ class PostsQuery extends Controller
             });
         };
 
-        $threadsIDInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();
-        // $tids must be first argument to ensure the diffed $threadsIDInReplies existing
-        if ($isSubIDsMissInOriginIDs($tids, $threadsIDInReplies)) {
+        $tidsInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();
+        // $tids must be first argument to ensure the diffed $tidsInReplies existing
+        if ($isSubIDsMissInOriginIDs($tids, $tidsInReplies)) {
             // fetch complete threads info which appeared in replies and sub replies info but missed in $tids
             $threadsInfo = $postsModel['thread']
-                ->tid($threadsIDInReplies->concat($tids)->toArray())
+                ->tid($tidsInReplies->concat($tids)->toArray())
                 ->orderBy($orderBy ?? 'tid', $orderDirection)
                 ->hidePrivateFields()->get();
         }
 
-        $repliesIDInThreadsAndSubReplies = $subRepliesInfo->pluck('pid');
+        $pidsInThreadsAndSubReplies = $subRepliesInfo->pluck('pid');
         if (empty($pids)) { // append thread's first reply when there's no pid
-            $repliesIDInThreadsAndSubReplies = $repliesIDInThreadsAndSubReplies->concat($threadsInfo->pluck('firstPid'));
+            $pidsInThreadsAndSubReplies = $pidsInThreadsAndSubReplies->concat($threadsInfo->pluck('firstPid'));
         }
-        $repliesIDInThreadsAndSubReplies = $repliesIDInThreadsAndSubReplies->unique()->sort()->values();
-        // $pids must be first argument to ensure the diffed $repliesIDInSubReplies existing
-        if ($isSubIDsMissInOriginIDs($pids, $repliesIDInThreadsAndSubReplies)) {
+        $pidsInThreadsAndSubReplies = $pidsInThreadsAndSubReplies->unique()->sort()->values();
+        // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
+        if ($isSubIDsMissInOriginIDs($pids, $pidsInThreadsAndSubReplies)) {
             // fetch complete replies info which appeared in threads and sub replies info but missed in $pids
             $repliesInfo = $postsModel['reply']
-                ->pid($repliesIDInThreadsAndSubReplies->concat($pids)->toArray())
+                ->pid($pidsInThreadsAndSubReplies->concat($pids)->toArray())
                 ->orderBy($orderBy ?? 'pid', $orderDirection)
                 ->hidePrivateFields()->get();
         }
@@ -177,13 +177,13 @@ class PostsQuery extends Controller
 
         if ($isCustomQuery) {
             $queryPostsID = $queryParams->only(['tid', 'pid', 'spid'])->filter()->toArray();
-            $customQueryForumID = $queryParams['fid']
+            $customQueryFid = $queryParams['fid']
                 ?? (
                     $queryPostsID == []
                         ? Helper::abortAPI(40002)
                         : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']
                 );
-            $postsModel = PostModelFactory::getPostsModelByForumID($customQueryForumID);
+            $postsModel = PostModelFactory::getPostModelsByFid($customQueryFid);
 
             $postsQueryBuilder = [
                 'thread' => [],
@@ -401,7 +401,7 @@ class PostsQuery extends Controller
                 }
             }
 
-            $postsQueriedInfo['fid'] = $customQueryForumID;
+            $postsQueriedInfo['fid'] = $customQueryFid;
             foreach ($postsIDNamePair as $postType => $postIDName) { // assign posts queried info from $postsQueryBuilder
                 $postQueryBuilder = $postsQueryBuilder[$postType];
                 $postsQueriedInfo[$postType] = $postQueryBuilder == null ? [] : $postQueryBuilder->toArray()['data'];

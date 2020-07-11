@@ -17,11 +17,11 @@ class SubReplyCrawler extends Crawlable
 {
     protected $clientVersion = '8.8.8';
 
-    protected $forumID;
+    protected $fid;
 
-    protected $threadID;
+    protected $tid;
 
-    protected $replyID;
+    protected $pid;
 
     protected $usersInfo;
 
@@ -37,7 +37,7 @@ class SubReplyCrawler extends Crawlable
 
     public function doCrawl(): self
     {
-        \Log::channel('crawler-info')->info("Start to fetch sub replies for pid {$this->replyID}, tid {$this->threadID}, page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Start to fetch sub replies for pid {$this->pid}, tid {$this->tid}, page {$this->startPage}");
         ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
 
         $tiebaClient = $this->getClientHelper();
@@ -46,8 +46,8 @@ class SubReplyCrawler extends Crawlable
             'http://c.tieba.baidu.com/c/f/pb/floor',
             [
                 'form_params' => [
-                    'kz' => $this->threadID,
-                    'pid' => $this->replyID,
+                    'kz' => $this->tid,
+                    'pid' => $this->pid,
                     'pn' => $this->startPage
                 ]
             ]
@@ -66,13 +66,13 @@ class SubReplyCrawler extends Crawlable
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
                         yield function () use ($tiebaClient, $pn) {
-                            \Log::channel('crawler-info')->info("Fetch sub replies for reply, pid {$this->replyID}, tid {$this->threadID}, page {$pn}");
+                            \Log::channel('crawler-info')->info("Fetch sub replies for reply, pid {$this->pid}, tid {$this->tid}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/floor',
                                 [
                                     'form_params' => [
-                                        'kz' => $this->threadID,
-                                        'pid' => $this->replyID,
+                                        'kz' => $this->tid,
+                                        'pid' => $this->pid,
                                         'pn' => $pn
                                     ]
                                 ]
@@ -141,8 +141,8 @@ class SubReplyCrawler extends Crawlable
             ExceptionAdditionInfo::set(['parsingSpid' => $subReply['id']]);
             $usersInfo[] = $subReply['author'];
             $currentInfo = [
-                'tid' => $this->threadID,
-                'pid' => $this->replyID,
+                'tid' => $this->tid,
+                'pid' => $this->pid,
                 'spid' => $subReply['id'],
                 'content' => Helper::nullableValidate($subReply['content'], true),
                 'authorUid' => $subReply['author']['id'],
@@ -161,7 +161,7 @@ class SubReplyCrawler extends Crawlable
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],
                 'type' => 'subReply',
-                'fid' => $this->forumID
+                'fid' => $this->fid
             ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'spid', 'authorUid']);
         }
         ExceptionAdditionInfo::remove('parsingSpid');
@@ -179,7 +179,7 @@ class SubReplyCrawler extends Crawlable
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
                 $chunkInsertBufferSize = 2000;
-                $subReplyModel = PostModelFactory::newSubReply($this->forumID);
+                $subReplyModel = PostModelFactory::newSubReply($this->fid);
                 $subReplyUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->subRepliesInfo[0], $subReplyModel);
                 $subReplyModel->chunkInsertOnDuplicate($this->subRepliesInfo, $subReplyUpdateFields, $chunkInsertBufferSize);
 
@@ -202,9 +202,9 @@ class SubReplyCrawler extends Crawlable
 
     public function __construct(int $fid, int $tid, int $pid, int $startPage, int $endPage = null)
     {
-        $this->forumID = $fid;
-        $this->threadID = $tid;
-        $this->replyID = $pid;
+        $this->fid = $fid;
+        $this->tid = $tid;
+        $this->pid = $pid;
         $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only first and last one

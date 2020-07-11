@@ -73,7 +73,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
         ]);
 
         $forumPostsCount = [];
-        foreach (PostModelFactory::getPostsModelByForumID($queryParams['fid']) as $postType => $forumPostModel) {
+        foreach (PostModelFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
             $forumPostsCount[$postType] = $forumPostModel
                 ->selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
                 ->selectRaw('COUNT(*) AS count')

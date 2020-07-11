@@ -15,11 +15,11 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $forumID;
+    protected $fid;
 
-    protected $threadID;
+    protected $tid;
 
-    protected $replyID;
+    protected $pid;
 
     protected $startPage = 1; // hardcoded crawl start page
 
@@ -27,9 +27,9 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
     {
         \Log::channel('crawler-info')->info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$this->startPage}");
 
-        $this->forumID = $fid;
-        $this->threadID = $tid;
-        $this->replyID = $pid;
+        $this->fid = $fid;
+        $this->tid = $tid;
+        $this->pid = $pid;
     }
 
     public function handle()
@@ -37,14 +37,14 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $queueTiming = new TimingHelper();
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        $firstPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $this->startPage))->doCrawl()->savePostsInfo();
+        $firstPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $this->startPage))->doCrawl()->savePostsInfo();
 
         $queueTiming->stop();
         \DB::transaction(function () use ($firstPageCrawler, $queueTiming) {
             // crawl last page sub reply if there's un-crawled pages
             $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;  // give up next page range crawl when TiebaException thrown within crawler parser
             if ($subRepliesListLastPage > $this->startPage) { // don't have to crawl every sub reply pages, only first and last one
-                $lastPageCrawler = (new Crawler\SubReplyCrawler($this->forumID, $this->threadID, $this->replyID, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
+                $lastPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
             }
 
             $crawlerProfiles = [];
@@ -64,8 +64,8 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                 ::select('id', 'startTime')
                 ->where([
                     'type' => 'subReply',
-                    'tid' => $this->threadID,
-                    'pid' => $this->replyID
+                    'tid' => $this->tid,
+                    'pid' => $this->pid
                 ])
                 ->lockForUpdate()->first();
             if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
