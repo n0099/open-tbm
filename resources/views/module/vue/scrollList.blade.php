@@ -165,8 +165,9 @@
                         this.$data.newDisplayItemsIndex = newDisplayItemsID.concat(this.$data.currentDisplayingItemsIndex); // move newly display items index
                     } else {
                         this.$data.currentDisplayingItemsIndex = this.$data.currentDisplayingItemsIndex.filter((i) => i !== itemIndex); // remove from currentDisplayingItemsIndex
-                        // cache current hiding item dom's height and width px before hided
-                        this.$data.itemDOMDimensionsCache[itemIndex] = { height: itemDOM.offsetHeight, width: itemDOM.offsetWidth };
+                        if (this.$props.itemDynamicDimensions === true) { // cache current hiding item dom's height and width px before hided
+                            this.$data.itemDOMDimensionsCache[itemIndex] = { height: itemDOM.offsetHeight, width: itemDOM.offsetWidth };
+                        }
                     }
 
                     // call user defined parent component event

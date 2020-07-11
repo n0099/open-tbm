@@ -388,8 +388,7 @@
                                 <span class="input-group-text">tid</span>
                             </div>
                             <select v-model="queryData.query.tidRange"
-                                    data-param="tidRange" id="queryTidRange"
-                                    class="col-1 form-control">
+                                    data-param="tidRange" id="queryTidRange" class="col-1 form-control">
                                 <option>&lt;</option>
                                 <option>=</option>
                                 <option>&gt;</option>
@@ -413,8 +412,7 @@
                                 <span class="input-group-text">spid</span>
                             </div>
                             <select v-model="queryData.query.spidRange"
-                                    data-param="spidRange" id="querySpidRange"
-                                    class="col-1 form-control">
+                                    data-param="spidRange" id="querySpidRange" class="col-1 form-control">
                                 <option>&lt;</option>
                                 <option>=</option>
                                 <option>&gt;</option>
@@ -559,8 +557,8 @@
                                     用户信息 <small>主题贴下为楼主</small>
                                 </legend>
                                 <div class="form-inline form-group form-row">
-                                    <select-user @select-user-changed="selectUserChanged"
-                                                 :select-user-by-options-name="{
+                                    <select-user @changed="selectUserChanged"
+                                                 :select-by-options-name="{
                                                      uid: 'userID',
                                                      name: 'userName',
                                                      displayName: 'userDisplayName'
@@ -1069,7 +1067,7 @@
                 methods: {
                     selectUserChanged: function (event) {
                         let queryParams = this.$data.queryData.query;
-                        // set all user select params value to null to prevent old value remains after selectUserBy changed
+                        // reset all user select params to prevent old value remains after <select-user> params changed
                         queryParams.userID = null;
                         queryParams.userName = null;
                         queryParams.userDisplayName = null;

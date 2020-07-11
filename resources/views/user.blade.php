@@ -77,7 +77,7 @@
         <template id="user-query-form-template">
             <form @submit.prevent="submitQueryForm(formData)" class="mt-3">
                 <div class="form-inline form-group form-row">
-                    <select-user v-model="selectUserParam"></select-user>
+                    <select-user v-model="selectUser"></select-user>
                     <label class="col-2 col-form-label" for="queryGender">性别</label>
                     <select v-model="formData.query.gender"
                             id="queryGender" class="form-control col-3">
@@ -188,15 +188,15 @@
             data: function () {
                 return {
                     formData: { query: {}, param: {} },
-                    selectUserParam: {}
+                    selectUser: {}
                 };
             },
             computed: {
 
             },
             watch: {
-                selectUserParam: function (selectUserParam) {
-                    this.$data.formData.param = selectUserParam;
+                selectUser: function (selectUser) {
+                    this.$data.formData.param = selectUser.params;
                 }
             },
             created: function () {
@@ -205,14 +205,14 @@
                 this.$data.formData = { query: queryCustomParams, param: queryPathParams };
             },
             beforeMount: function () {
-                this.$data.selectUserParam = this.$route.params;
+                this.$data.selectUser.selectBy = this.$route.name;
+                this.$data.selectUser.params = this.$route.params;
             },
             methods: {
                 submitQueryForm: function (formData) {
                     formData = _.mapValues(formData, (i) => _.omitBy(i, _.isEmpty)); // deep clone, remove falsy (like null) params value
-                    let selectUserBy = _.keys(formData.param)[0];
                     this.$router.push({
-                        name: _.isEmpty(selectUserBy) ? 'noParam' : selectUserBy,
+                        name: _.isEmpty(formData.param) ? 'emptyParam' : this.$data.selectUser.selectBy,
                         query: formData.query,
                         params: formData.param
                     });
@@ -284,11 +284,11 @@
                 base: `${$$baseUrlDir}/`,
                 routes: [
                     {
-                        name: 'noParam',
+                        name: 'emptyParam',
                         path: '/user',
                         component: userListPagesComponent,
                         children: [
-                            { name: 'noParam+p', path: 'page/:page' },
+                            { name: 'emptyParam+p', path: 'page/:page' },
                             { name: 'uid', path: 'id/:uid', children: [{ name:'uid+p', path: 'page/:page' }] },
                             { name: 'name', path: 'n/:name', children: [{ name:'name+p', path: 'page/:page' }] },
                             { name: 'displayName', path: 'dn/:displayName', children: [{ name:'displayName+p', path: 'page/:page' }] }
