@@ -233,7 +233,7 @@
                          */
                         let dataset = _.chain(ajaxData)
                             .groupBy('voteFor')
-                            .sortBy((group) => ajaxData.indexOf(group[0])) // sort grouped groups by it's index of first item in origin array
+                            .sortBy((candidate) => -_.sumBy(candidate, 'count')) // sort grouped candidate by it's total votes count descend
                             .map((candidateVotes) => {
                                 let validVotes = _.find(candidateVotes, { isValid: 1 });
                                 let validCount = validVotes == null ? 0 : validVotes.count;
@@ -519,7 +519,7 @@
                 let timeline = candidatesTimelineChart.getOption().timeline[0];
                 let previousTimelineValue = _.find(votesData, {
                     endTime: moment(timeline.data[timeline.currentIndex - 1]).unix().toString(),
-                    voteFor: _.truncate(candidateName, { length: candidateName.indexOf('号'), omission: '' }) // trim series name from '1号' to '1'
+                    voteFor: candidateName.substr(0, candidateName.indexOf('号')) // trim ending '号' in series name
                 });
                 previousTimelineValue = previousTimelineValue === undefined ? 0 : previousTimelineValue.count;
                 return `${currentCount} (+${currentCount - previousTimelineValue})`;
