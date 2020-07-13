@@ -68,6 +68,6 @@ class Handler extends ExceptionHandler
         return \Response::json([
             'errorCode' => 40000,
             'errorInfo' => $e->validator->getMessageBag()->getMessages()
-        ], 422);
+        ], 400);
     }
 }

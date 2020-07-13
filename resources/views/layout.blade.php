@@ -149,7 +149,7 @@
                 </p>
             </div>
             <footer class="footer-inner text-center p-3">
-                <div class="container">© 2018 ~ 2019 n0099</div>
+                <div class="container">© 2018 ~ 2020 n0099</div>
             </footer>
         </footer>
         <script src="https://www.recaptcha.net/recaptcha/api.js?render={{ $reCAPTCHASiteKey }}"></script>
@@ -209,6 +209,7 @@
             const $$baseUrlDir = '{{ $baseUrlDir }}';
             const $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
             const $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
+                @if(\App::environment('production'))
                 NProgress.start();
                 $('body').css('cursor', 'progress');
                 grecaptcha.ready(() => {
@@ -222,6 +223,9 @@
                             new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'}).show();
                         });
                 });
+                @else
+                resolve({ reCAPTCHA: null});
+                @endif
             });
             const $$initialNavBar = (activeNav) => {
                 window.navBarVue = new Vue({
