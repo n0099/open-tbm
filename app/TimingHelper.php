@@ -4,9 +4,9 @@ namespace App;
 
 class TimingHelper
 {
-    private $startTime = 0;
+    private float $startTime = 0;
 
-    private $stopTime = 0;
+    private float $stopTime = 0;
 
     public function __construct()
     {

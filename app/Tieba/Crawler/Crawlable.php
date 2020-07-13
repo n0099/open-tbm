@@ -4,13 +4,13 @@ namespace App\Tieba\Crawler;
 
 abstract class Crawlable
 {
-    protected $fid;
+    protected int $fid;
 
-    protected $clientVersion;
+    protected string $clientVersion;
 
-    protected $indexesInfo = [];
+    protected array $indexesInfo = [];
 
-    protected $profiles = [
+    protected array $profiles = [
         'webRequestTiming' => 0,
         'savePostsTiming' => 0,
         'webRequestTimes' => 0,
@@ -18,11 +18,11 @@ abstract class Crawlable
         'parsedUserTimes' => 0,
     ];
 
-    protected $pagesInfo = [];
+    protected array $pagesInfo = [];
 
-    public $startPage;
+    public int $startPage;
 
-    public $endPage;
+    public int $endPage;
 
     abstract public function doCrawl();
 
@@ -71,16 +71,14 @@ abstract class Crawlable
      *
      * @param array $arrayToGroup
      * @param array $nullableFields
-     *
+     * @todo might have bugs
      * @return array
      */
     public static function groupNullableColumnArray(array $arrayToGroup, array $nullableFields): array
     {
         $arrayAfterGroup = [];
         foreach ($arrayToGroup as $item) {
-            $nullValueFields = array_map(function () {
-                return false;
-            }, array_flip($nullableFields));
+            $nullValueFields = array_map(fn() => false, array_flip($nullableFields));
             foreach ($nullValueFields as $nullableFieldName => $isNull) {
                 $nullValueFields[$nullableFieldName] = $item[$nullableFieldName] ?? null === null;
             }
@@ -90,7 +88,7 @@ abstract class Crawlable
             } elseif ($nullValueFieldsCount == 0) {
                 $arrayAfterGroup['notAllNull'][] = $item;
             } else {
-                $nullValueFieldName = implode(array_keys($nullValueFields, true), '+'); // if there's multi fields having null value, we should group them together
+                $nullValueFieldName = implode('+', array_keys($nullValueFields, true)); // if there's multi fields having null value, we should group them together
                 $arrayAfterGroup[$nullValueFieldName][] = $item;
             }
         }

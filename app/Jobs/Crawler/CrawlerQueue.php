@@ -4,9 +4,11 @@ namespace App\Jobs\Crawler;
 
 class CrawlerQueue
 {
-    public $tries = 5;
+    public int $tries = 5;
 
-    protected $fid;
+    protected int $fid;
 
-    protected $queueDeleteAfter = '-5 mins';
+    protected int $startPage;
+
+    protected string $queueDeleteAfter = '-5 mins';
 }

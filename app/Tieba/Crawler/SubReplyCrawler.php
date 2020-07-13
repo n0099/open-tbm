@@ -15,25 +15,25 @@ use function GuzzleHttp\json_encode;
 
 class SubReplyCrawler extends Crawlable
 {
-    protected $clientVersion = '8.8.8';
+    protected string $clientVersion = '8.8.8';
 
-    protected $fid;
+    protected int $fid;
 
-    protected $tid;
+    protected int $tid;
 
-    protected $pid;
+    protected int $pid;
 
-    protected $usersInfo;
+    protected UsersInfoParser $usersInfo;
 
-    protected $subRepliesInfo = [];
+    protected array $subRepliesInfo = [];
 
-    protected $indexesInfo = [];
+    protected array $indexesInfo = [];
 
-    protected $pagesInfo = [];
+    protected array $pagesInfo = [];
 
-    public $startPage;
+    public int $startPage;
 
-    public $endPage;
+    public int $endPage;
 
     public function doCrawl(): self
     {
@@ -200,14 +200,14 @@ class SubReplyCrawler extends Crawlable
         return $this;
     }
 
-    public function __construct(int $fid, int $tid, int $pid, int $startPage, int $endPage = null)
+    public function __construct(int $fid, int $tid, int $pid, int $startPage, ?int $endPage = null)
     {
         $this->fid = $fid;
         $this->tid = $tid;
         $this->pid = $pid;
         $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only first and last one
+        $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only the first and last one
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([

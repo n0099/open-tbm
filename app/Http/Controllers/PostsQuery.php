@@ -16,9 +16,9 @@ use Illuminate\Validation\Rule;
 
 class PostsQuery extends Controller
 {
-    private $pagingPerPageItems = 200;
+    private int $pagingPerPageItems = 200;
 
-    private $postsAuthorUid = [];
+    private array $postsAuthorUid = [];
 
     private function getNestedPostsInfoByID(array $postsInfo, bool $isInfoOnlyContainsPostsID, $orderBy, $orderDirection): array
     {
@@ -47,11 +47,10 @@ class PostsQuery extends Controller
                 ? $postsModel['subReply']->spid($spids->toArray())->orderBy($orderBy ?? 'spid', $orderDirection)->hidePrivateFields()->get()
                 : $postsInfo['subReply']
             );
-        $isSubIDsMissInOriginIDs = function (Collection $originIDs, Collection $subIDs): bool {
-            return $subIDs->contains(function ($subID) use ($originIDs): bool {
-                return ! $originIDs->contains($subID);
-            });
-        };
+        $isSubIDsMissInOriginIDs = fn(Collection $originIDs, Collection $subIDs): bool
+        => $subIDs->contains(
+            fn($subID): bool => ! $originIDs->contains($subID)
+        );
 
         $tidsInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();
         // $tids must be first argument to ensure the diffed $tidsInReplies existing
@@ -233,9 +232,9 @@ class PostsQuery extends Controller
                             if ($userInfoFieldName == 'uid') {
                                 $uids = [$paramValue]; // query user by user defined id param directly
                             } else {
-                                $uids = \Cache::remember("postsQuery-UserInfoParam-{$userInfoFieldName}={$paramValue}", 1, function () use ($userInfoFieldName, $paramValue) {
-                                    return UserModel::where($userInfoFieldName, $paramValue)->pluck('uid'); // cache previous user info params query for 1 mins to prevent duplicate query in a single query
-                                });
+                                // cache previous user info params query for 1 mins to prevent duplicate query in a single query
+                                // todo: remove this cache
+                                $uids = \Cache::remember("postsQuery-UserInfoParam-{$userInfoFieldName}={$paramValue}", 1, fn() => UserModel::where($userInfoFieldName, $paramValue)->pluck('uid'));
                             }
                             foreach ($userTypes as $userType) {
                                 if ($userType == 'latestReplier') {
@@ -250,12 +249,11 @@ class PostsQuery extends Controller
                             }
                             return $postModel;
                         };
-                        $applyDateTimeRangeParamOnQuery = function ($postModel, string $dateTimeFieldName, string $dateTimeRangeStart, $dateTimeRangeEnd): Builder {
-                            return $postModel->whereBetween($dateTimeFieldName, [
-                                $dateTimeRangeStart,
-                                $dateTimeRangeEnd ?? Carbon::parse($dateTimeRangeStart)->addDay()->toDateTimeString()
-                            ]);
-                        };
+                        $applyDateTimeRangeParamOnQuery = fn($postModel, string $dateTimeFieldName, string $dateTimeRangeStart, $dateTimeRangeEnd): Builder
+                        => $postModel->whereBetween($dateTimeFieldName, [
+                            $dateTimeRangeStart,
+                            $dateTimeRangeEnd ?? Carbon::parse($dateTimeRangeStart)->addDay()->toDateTimeString()
+                        ]);
                         switch ($paramName) {
                             case 'tid':
                                 return $postModel->where('tid', $queryParams['tidRange'] ?? '=', $paramValue);
@@ -426,15 +424,9 @@ class PostsQuery extends Controller
                 return $unionStatement($unionValues == [] ? [0] : $unionValues); // prevent empty array
             };
             $pagesInfo = [
-                'firstItem' => $pageInfoUnion($postsQueryBuilder, 'firstItem', function ($unionValues) {
-                    return min($unionValues);
-                }),
-                'currentItems' => $pageInfoUnion($postsQueryBuilder, 'count', function ($unionValues) {
-                    return array_sum($unionValues);
-                }),
-                'currentPage' => $pageInfoUnion($postsQueryBuilder, 'currentPage', function ($unionValues) {
-                    return min($unionValues);
-                })
+                'firstItem' => $pageInfoUnion($postsQueryBuilder, 'firstItem', fn($unionValues) => min($unionValues)),
+                'currentItems' => $pageInfoUnion($postsQueryBuilder, 'count', fn($unionValues) => array_sum($unionValues)),
+                'currentPage' => $pageInfoUnion($postsQueryBuilder, 'currentPage', fn($unionValues) => min($unionValues))
             ];
         } elseif ($isIndexQuery) {
             $indexesModel = IndexModel::where($indexesQueryParams->toArray());

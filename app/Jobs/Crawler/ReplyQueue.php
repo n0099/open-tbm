@@ -16,17 +16,20 @@ use Illuminate\Queue\SerializesModels;
 
 class ReplyQueue extends CrawlerQueue implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    protected $fid;
+    protected int $fid;
 
-    protected $tid;
+    protected int $tid;
 
-    protected $startPage;
+    protected int $startPage;
 
     public function __construct(int $fid, int $tid, int $startPage)
     {
-        \Log::channel('crawler-info')->info("Reply crawler queue dispatched with {$tid} in forum {$fid}, starts from page {$startPage}");
+        \Log::channel('crawler-info')->info("Reply crawler queue dispatched, fid:{$fid}, tid:{$tid}, startPage:{$startPage}");
 
         $this->fid = $fid;
         $this->tid = $tid;
@@ -100,7 +103,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             }
 
             // dispatch next page range crawler if there's un-crawled pages
-            if ($repliesCrawler->endPage < ($repliesCrawler->getPages()['total_page'] ?? 0)) { // give up next page range crawl when TiebaException thrown within crawler parser
+            if ($repliesCrawler->endPage < ($repliesCrawler->getPages()['total_page'] ?? 0)) {
                 $newCrawlerStartPage = $repliesCrawler->endPage + 1;
                 CrawlingPostModel::insert([
                     'type' => 'reply',

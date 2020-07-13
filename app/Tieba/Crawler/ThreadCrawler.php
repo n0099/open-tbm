@@ -15,25 +15,25 @@ use function GuzzleHttp\json_encode;
 
 class ThreadCrawler extends Crawlable
 {
-    protected $clientVersion = '6.0.2';
+    protected string $clientVersion = '6.0.2';
 
-    protected $fid;
+    protected int $fid;
 
-    protected $forumName;
+    protected string $forumName;
 
-    protected $usersInfo;
+    protected UsersInfoParser $usersInfo;
 
-    protected $threadsInfo = [];
+    protected array $threadsInfo = [];
 
-    protected $indexesInfo = [];
+    protected array $indexesInfo = [];
 
-    protected $updatedPostsInfo = [];
+    protected array $updatedPostsInfo = [];
 
-    protected $pagesInfo = [];
+    protected array $pagesInfo = [];
 
-    public $startPage;
+    public int $startPage;
 
-    public $endPage;
+    public int $endPage;
 
     public function doCrawl(): self
     {
@@ -143,11 +143,11 @@ class ThreadCrawler extends Crawlable
                 'threadType' => $thread['thread_types'],
                 'stickyType' => $thread['is_membertop'] == 1
                     ? 'membertop'
-                    : isset($thread['is_top'])
-                        ? $thread['is_top'] == 0
+                    : (isset($thread['is_top'])
+                        ? ($thread['is_top'] == 0
                             ? null
-                            : 'top'
-                        : 'top', // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
+                            : 'top')
+                        : 'top'), // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
                 'isGood' => $thread['is_good'],
                 'topicType' => isset($thread['is_livepost']) ? $thread['live_post_type'] : null,
                 'title' => $thread['title'],
@@ -231,17 +231,14 @@ class ThreadCrawler extends Crawlable
         return $this->updatedPostsInfo;
     }
 
-    public function __construct(int $fid, string $forumName, int $startPage, $endPage)
+    public function __construct(int $fid, string $forumName, int $startPage, ?int $endPage = null)
     {
         $this->fid = $fid;
         $this->forumName = $forumName;
         $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
-        $crawlPageRange = $endPage == null ? 0 : 100; // by default we don't have to crawl every threads pages, only first one
-        $this->endPage = $this->startPage + $crawlPageRange; // $this->endPage will be either $startPage or $startPage + 100 (if $endPage determined)
-        if ($this->endPage > $endPage) { // $this->endPage shouldn't be larger than $endPage required
-            $this->endPage = $endPage;
-        }
+        $defaultCrawlPageRange = 0; // by default we don't have to crawl every threads pages, only the first one
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,

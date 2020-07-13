@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class UsersInfoParser
 {
-    protected $usersInfo = [];
+    protected array $usersInfo = [];
 
     public function parseUsersInfo(array $usersList): int
     {

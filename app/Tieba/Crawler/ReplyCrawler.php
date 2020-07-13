@@ -15,27 +15,27 @@ use function GuzzleHttp\json_encode;
 
 class ReplyCrawler extends Crawlable
 {
-    protected $clientVersion = '8.8.8';
+    protected string $clientVersion = '8.8.8';
 
-    protected $fid;
+    protected int $fid;
 
-    protected $tid;
+    protected int $tid;
 
-    protected $usersInfo;
+    protected UsersInfoParser $usersInfo;
 
-    protected $parentThreadInfo = [];
+    protected array $parentThreadInfo = [];
 
-    protected $repliesInfo = [];
+    protected array $repliesInfo = [];
 
-    protected $indexesInfo = [];
+    protected array $indexesInfo = [];
 
-    protected $updatedRepliesInfo = [];
+    protected array $updatedRepliesInfo = [];
 
-    protected $pagesInfo = [];
+    protected array $pagesInfo = [];
 
-    public $startPage;
+    public int $startPage;
 
-    public $endPage;
+    public int $endPage;
 
     public function doCrawl(): self
     {
@@ -231,7 +231,7 @@ class ReplyCrawler extends Crawlable
         return $this->updatedRepliesInfo;
     }
 
-    public function __construct(int $fid, int $tid, int $startPage, int $endPage = null)
+    public function __construct(int $fid, int $tid, int $startPage, ?int $endPage = null)
     {
         $this->fid = $fid;
         $this->tid = $tid;

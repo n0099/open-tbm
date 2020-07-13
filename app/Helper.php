@@ -81,9 +81,7 @@ class Helper
 
     public static function isArrayValuesAllEqualTo(array $haystack, $equalTo): bool
     {
-        return array_filter($haystack, function ($value) use ($equalTo) {
-            return $value !== $equalTo;
-        }) === [];
+        return array_filter($haystack, fn($value) => $value !== $equalTo) === [];
     }
 
     public static function getRawSqlGroupByTimeRange(string $fieldName, array $timeRanges = ['minute', 'hour', 'day', 'week', 'month', 'year']): array

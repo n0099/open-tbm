@@ -16,19 +16,22 @@ use Illuminate\Queue\SerializesModels;
 
 class ThreadQueue extends CrawlerQueue implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    protected $fid;
+    protected int $fid;
 
-    protected $forumName;
+    protected string $forumName;
 
-    protected $startPage;
+    protected int $startPage;
 
-    protected $endPage;
+    protected ?int $endPage;
 
-    public function __construct(int $fid, string $forumName, int $startPage = 1, int $endPage = null)
+    public function __construct(int $fid, string $forumName, int $startPage = 1, ?int $endPage = null)
     {
-        \Log::channel('crawler-info')->info("Thread crawler queue dispatched with {$fid}({$forumName})");
+        \Log::channel('crawler-info')->info("Thread crawler queue dispatched, fid:{$fid} {$forumName}, startPage:{$startPage}, endPage:{$endPage}");
         $this->fid = $fid;
         $this->forumName = $forumName;
         $this->startPage = $startPage;
@@ -131,7 +134,7 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
             }
 
             // dispatch next page range crawler if there's un-crawled pages
-            if ($threadsCrawler->endPage < ($this->endPage ?? 0)) { // give up next page range crawl when TiebaException thrown within crawler parser
+            if ($threadsCrawler->endPage < ($this->endPage ?? $this->startPage)) {
                 $newCrawlerStartPage = $threadsCrawler->endPage + 1;
                 CrawlingPostModel::insert([
                     'type' => 'thread',

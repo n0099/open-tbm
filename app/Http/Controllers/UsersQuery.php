@@ -7,7 +7,7 @@ use App\Tieba\Eloquent\UserModel;
 
 class UsersQuery extends Controller
 {
-    private $pagingPerPageItems = 200;
+    private int $pagingPerPageItems = 200;
 
     public function query(\Illuminate\Http\Request $request): array
     {

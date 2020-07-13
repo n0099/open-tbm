@@ -13,7 +13,7 @@ use function GuzzleHttp\json_encode;
  */
 class ExceptionAdditionInfo
 {
-    public static $info = [];
+    public static array $info = [];
 
     public static function set(array $info): void
     {

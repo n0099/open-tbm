@@ -13,19 +13,22 @@ use Illuminate\Queue\SerializesModels;
 
 class SubReplyQueue extends CrawlerQueue implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    protected $fid;
+    protected int $fid;
 
-    protected $tid;
+    protected int $tid;
 
-    protected $pid;
+    protected int $pid;
 
-    protected $startPage = 1; // hardcoded crawl start page
+    protected int $startPage = 1; // hardcoded crawl start page
 
     public function __construct(int $fid, int $tid, int $pid)
     {
-        \Log::channel('crawler-info')->info("Sub reply queue dispatched with {$tid} in forum {$fid}, starts from page {$this->startPage}");
+        \Log::channel('crawler-info')->info("Sub reply queue dispatched, fid:{$fid}, tid:{$tid}, pid:{$pid}");
 
         $this->fid = $fid;
         $this->tid = $tid;
@@ -38,17 +41,17 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $firstPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $this->startPage))->doCrawl()->savePostsInfo();
+        $lastPageCrawler = null;
+        // crawl last page sub reply if there's more than one page
+        $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;
+        if ($subRepliesListLastPage > $this->startPage) { // don't have to crawl every sub reply pages, only first and last one
+            $lastPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
+        }
 
         $queueTiming->stop();
-        \DB::transaction(function () use ($firstPageCrawler, $queueTiming) {
-            // crawl last page sub reply if there's un-crawled pages
-            $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;  // give up next page range crawl when TiebaException thrown within crawler parser
-            if ($subRepliesListLastPage > $this->startPage) { // don't have to crawl every sub reply pages, only first and last one
-                $lastPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
-            }
-
+        \DB::transaction(function () use ($firstPageCrawler, $lastPageCrawler, $queueTiming) {
             $crawlerProfiles = [];
-            if (isset($lastPageCrawler)) {
+            if ($lastPageCrawler != null) {
                 $firstPageProfiles = $firstPageCrawler->getProfiles();
                 $lastPageProfiles = $lastPageCrawler->getProfiles();
                 // sum up first and last page crawler's profiles value

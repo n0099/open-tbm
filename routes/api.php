@@ -16,9 +16,7 @@ use Illuminate\Validation\Rule;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/forumsList', function () {
-    echo App\Tieba\Eloquent\ForumModel::all()->toJson();
-});
+Route::get('/forumsList', fn() => App\Tieba\Eloquent\ForumModel::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(function () {
     Route::get('/postsQuery', 'PostsQuery@query');
@@ -92,6 +90,4 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
     Route::get('/bilibiliVote/allCandidatesVotesCount', 'Topic\BilibiliVote@allCandidatesVotesCount');
 });
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:api')->get('/user', fn(Request $request) => $request->user());
