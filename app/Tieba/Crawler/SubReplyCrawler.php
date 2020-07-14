@@ -23,27 +23,27 @@ class SubReplyCrawler extends Crawlable
 
     protected int $pid;
 
-    protected UsersInfoParser $usersInfo;
-
-    protected array $subRepliesInfo = [];
-
-    protected array $indexesInfo = [];
-
-    protected array $pagesInfo = [];
-
     public int $startPage;
 
     public int $endPage;
+
+    protected array $pagesInfo = [];
+
+    protected array $indexesInfo = [];
+
+    protected UsersInfoParser $usersInfo;
+
+    protected array $subRepliesInfo = [];
 
     public function __construct(int $fid, int $tid, int $pid, int $startPage, ?int $endPage = null)
     {
         $this->fid = $fid;
         $this->tid = $tid;
         $this->pid = $pid;
-        $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only the first and last one
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+        $this->usersInfo = new UsersInfoParser();
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,

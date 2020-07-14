@@ -4,9 +4,15 @@ namespace App\Tieba\Crawler;
 
 abstract class Crawlable
 {
+    protected string $clientVersion;
+
     protected int $fid;
 
-    protected string $clientVersion;
+    public int $startPage;
+
+    public int $endPage;
+
+    protected array $pagesInfo = [];
 
     protected array $indexesInfo = [];
 
@@ -17,12 +23,6 @@ abstract class Crawlable
         'parsedPostTimes' => 0,
         'parsedUserTimes' => 0,
     ];
-
-    protected array $pagesInfo = [];
-
-    public int $startPage;
-
-    public int $endPage;
 
     abstract public function doCrawl(): self;
 

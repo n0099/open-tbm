@@ -21,30 +21,30 @@ class ReplyCrawler extends Crawlable
 
     protected int $tid;
 
-    protected UsersInfoParser $usersInfo;
-
-    protected array $parentThreadInfo = [];
-
-    protected array $repliesInfo = [];
-
-    protected array $indexesInfo = [];
-
-    protected array $updatedPostsInfo = [];
-
-    protected array $pagesInfo = [];
-
     public int $startPage;
 
     public int $endPage;
+
+    protected array $pagesInfo = [];
+
+    protected array $indexesInfo = [];
+
+    protected UsersInfoParser $usersInfo;
+
+    protected array $repliesInfo = [];
+
+    protected array $updatedPostsInfo = [];
+
+    protected array $parentThreadInfo = [];
 
     public function __construct(int $fid, int $tid, int $startPage, ?int $endPage = null)
     {
         $this->fid = $fid;
         $this->tid = $tid;
-        $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 100;
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+        $this->usersInfo = new UsersInfoParser();
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,

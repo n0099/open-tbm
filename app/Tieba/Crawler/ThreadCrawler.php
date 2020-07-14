@@ -21,28 +21,28 @@ class ThreadCrawler extends Crawlable
 
     protected string $forumName;
 
+    public int $startPage;
+
+    public int $endPage;
+
+    protected array $pagesInfo = [];
+
+    protected array $indexesInfo = [];
+
     protected UsersInfoParser $usersInfo;
 
     protected array $threadsInfo = [];
 
-    protected array $indexesInfo = [];
-
     protected array $updatedPostsInfo = [];
-
-    protected array $pagesInfo = [];
-
-    public int $startPage;
-
-    public int $endPage;
 
     public function __construct(int $fid, string $forumName, int $startPage, ?int $endPage = null)
     {
         $this->fid = $fid;
         $this->forumName = $forumName;
-        $this->usersInfo = new UsersInfoParser();
         $this->startPage = $startPage;
         $defaultCrawlPageRange = 0; // by default we don't have to crawl every threads pages, only the first one
         $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+        $this->usersInfo = new UsersInfoParser();
 
         ExceptionAdditionInfo::set([
             'crawlingFid' => $fid,

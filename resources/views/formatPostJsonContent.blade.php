@@ -1,13 +1,6 @@
 <?php
 use Spatie\Regex\Regex;
 
-if (! function_exists('tiebaImageUrlProxy')) {
-    function tiebaImageUrlProxy(string $imageUrl)
-    {
-        $imageProxy = env('TIEBA_IMAGE_PROXY');
-        return str_replace(['https://', 'http://'], $imageProxy, $imageUrl);
-    }
-}
 try {
 ?>
 @spaceless
@@ -78,7 +71,7 @@ try {
                     http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
                 --}}
                 <div class="tieba-image-zoom-in">
-                    <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['origin_src'] ?? $item['src']) }}" />
+                    <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['origin_src'] ?? $item['src'] }}" />
                 </div>
                 @break
             @case (4) {{--@用户 {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
@@ -111,7 +104,7 @@ try {
                 <a href="{{ $item['link'] }}" target="_blank">
                     @if (isset($item['origin_src']))
                         <div class="tieba-image-zoom-in">
-                            <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['origin_src']) }}" />
+                            <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['origin_src'] }}" />
                         </div>
                     @else
                         外站视频：{{ $item['text'] }}
@@ -168,7 +161,7 @@ try {
                     }
                 --}}
                 <div class="tieba-image-zoom-in">
-                    <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
+                    <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['graffiti_info']['url'] }}" alt="贴吧涂鸦" />
                 </div>
                 @break
             @case (17) {{--活动 not found --}}
@@ -195,7 +188,7 @@ try {
                 --}}
                 <a href="{{ $item['meme_info']['detail_link'] }}" target="_blank">
                     <div class="tieba-image-zoom-in">
-                        <img class="tieba-image lazyload" data-src="{{ tiebaImageUrlProxy($item['src']) }}" />
+                        <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['src'] }}" />
                     </div>
                 </a>
                 @break
