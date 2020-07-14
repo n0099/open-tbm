@@ -29,13 +29,34 @@ class ReplyCrawler extends Crawlable
 
     protected array $indexesInfo = [];
 
-    protected array $updatedRepliesInfo = [];
+    protected array $updatedPostsInfo = [];
 
     protected array $pagesInfo = [];
 
     public int $startPage;
 
     public int $endPage;
+
+    public function __construct(int $fid, int $tid, int $startPage, ?int $endPage = null)
+    {
+        $this->fid = $fid;
+        $this->tid = $tid;
+        $this->usersInfo = new UsersInfoParser();
+        $this->startPage = $startPage;
+        $defaultCrawlPageRange = 100;
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+
+        ExceptionAdditionInfo::set([
+            'crawlingFid' => $fid,
+            'crawlingTid' => $tid,
+            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
+        ]);
+    }
+
+    public function getUpdatedPostsInfo(): array
+    {
+        return $this->updatedPostsInfo;
+    }
 
     public function doCrawl(): self
     {
@@ -177,7 +198,7 @@ class ReplyCrawler extends Crawlable
         // lazy saving to Eloquent model
         $usersInfo[$parentThreadInfo['author']['id']]['privacySettings'] = $parentThreadInfo['author']['priv_sets']; // parent thread author privacy settings
         $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo($usersInfo);
-        $this->updatedRepliesInfo = $updatedRepliesInfo + $this->updatedRepliesInfo; // newly added update info will override previous one by post id key
+        $this->updatedPostsInfo = $updatedRepliesInfo + $this->updatedPostsInfo; // newly added update info will override previous one by post id key
         $this->parentThreadInfo[$parentThreadInfo['id']] = [
             'tid' => $parentThreadInfo['id'],
             'antiSpamInfo' => Helper::nullableValidate($parentThreadInfo['thread_info']['antispam_info'] ?? null, true),
@@ -224,26 +245,5 @@ class ReplyCrawler extends Crawlable
         $this->repliesInfo = [];
         $this->indexesInfo = [];
         return $this;
-    }
-
-    public function getUpdatedPostsInfo(): array
-    {
-        return $this->updatedRepliesInfo;
-    }
-
-    public function __construct(int $fid, int $tid, int $startPage, ?int $endPage = null)
-    {
-        $this->fid = $fid;
-        $this->tid = $tid;
-        $this->usersInfo = new UsersInfoParser();
-        $this->startPage = $startPage;
-        $defaultCrawlPageRange = 100;
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
-
-        ExceptionAdditionInfo::set([
-            'crawlingFid' => $fid,
-            'crawlingTid' => $tid,
-            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
-        ]);
     }
 }

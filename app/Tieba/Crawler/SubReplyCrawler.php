@@ -35,6 +35,24 @@ class SubReplyCrawler extends Crawlable
 
     public int $endPage;
 
+    public function __construct(int $fid, int $tid, int $pid, int $startPage, ?int $endPage = null)
+    {
+        $this->fid = $fid;
+        $this->tid = $tid;
+        $this->pid = $pid;
+        $this->usersInfo = new UsersInfoParser();
+        $this->startPage = $startPage;
+        $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only the first and last one
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+
+        ExceptionAdditionInfo::set([
+            'crawlingFid' => $fid,
+            'crawlingTid' => $tid,
+            'crawlingPid' => $pid,
+            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
+        ]);
+    }
+
     public function doCrawl(): self
     {
         \Log::channel('crawler-info')->info("Start to fetch sub replies for pid {$this->pid}, tid {$this->tid}, page {$this->startPage}");
@@ -198,23 +216,5 @@ class SubReplyCrawler extends Crawlable
         $this->subRepliesInfo = [];
         $this->indexesInfo = [];
         return $this;
-    }
-
-    public function __construct(int $fid, int $tid, int $pid, int $startPage, ?int $endPage = null)
-    {
-        $this->fid = $fid;
-        $this->tid = $tid;
-        $this->pid = $pid;
-        $this->usersInfo = new UsersInfoParser();
-        $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only the first and last one
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
-
-        ExceptionAdditionInfo::set([
-            'crawlingFid' => $fid,
-            'crawlingTid' => $tid,
-            'crawlingPid' => $pid,
-            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
-        ]);
     }
 }

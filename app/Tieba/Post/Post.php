@@ -3,20 +3,13 @@
 namespace App\Tieba\Post;
 
 use Illuminate\Database\Eloquent\Model;
-use function GuzzleHttp\json_decode;
 
 abstract class Post
 {
-    public static function convertJsonContentToHtml(array $content): string
-    {
-        // remove spam \n and spaces due to blade @break directive
-        return str_replace("\n", null, trim(view('formatPostJsonContent', ['content' => $content])));
-    }
-
     /**
      * Create a post helper with PostModel or array
      *
-     * @param array|\Illuminate\Database\Eloquent\Model $postData
+     * @param array|Model $postData
      */
     public function __construct($postData)
     {
@@ -46,5 +39,17 @@ abstract class Post
         } else {
             throw new \InvalidArgumentException('Unexpected initial object: ' . gettype($postData));
         }
+    }
+
+    /**
+     * Format post content json to html using formatPostJsonContent view
+     *
+     * @param array $content
+     * @return string
+     */
+    public static function convertJsonContentToHtml(array $content): string
+    {
+        // remove spamming \n then trim spaces due to blade @break directive
+        return str_replace("\n", null, trim(view('formatPostJsonContent', ['content' => $content])));
     }
 }

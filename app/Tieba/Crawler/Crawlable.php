@@ -24,11 +24,11 @@ abstract class Crawlable
 
     public int $endPage;
 
-    abstract public function doCrawl();
-
-    abstract public function savePostsInfo();
+    abstract public function doCrawl(): self;
 
     abstract protected function checkThenParsePostsInfo(array $responseJson): void;
+
+    abstract public function savePostsInfo(): self;
 
     public function getPages() : array
     {

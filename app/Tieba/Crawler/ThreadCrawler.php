@@ -35,6 +35,27 @@ class ThreadCrawler extends Crawlable
 
     public int $endPage;
 
+    public function __construct(int $fid, string $forumName, int $startPage, ?int $endPage = null)
+    {
+        $this->fid = $fid;
+        $this->forumName = $forumName;
+        $this->usersInfo = new UsersInfoParser();
+        $this->startPage = $startPage;
+        $defaultCrawlPageRange = 0; // by default we don't have to crawl every threads pages, only the first one
+        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
+
+        ExceptionAdditionInfo::set([
+            'crawlingFid' => $fid,
+            'crawlingForumName' => $forumName,
+            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
+        ]);
+    }
+
+    public function getUpdatedPostsInfo(): array
+    {
+        return $this->updatedPostsInfo;
+    }
+
     public function doCrawl(): self
     {
         \Log::channel('crawler-info')->info("Start to fetch threads for forum {$this->forumName}, fid {$this->fid}, page {$this->startPage}");
@@ -224,26 +245,5 @@ class ThreadCrawler extends Crawlable
         $this->threadsInfo = [];
         $this->indexesInfo = [];
         return $this;
-    }
-
-    public function getUpdatedPostsInfo(): array
-    {
-        return $this->updatedPostsInfo;
-    }
-
-    public function __construct(int $fid, string $forumName, int $startPage, ?int $endPage = null)
-    {
-        $this->fid = $fid;
-        $this->forumName = $forumName;
-        $this->usersInfo = new UsersInfoParser();
-        $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we don't have to crawl every threads pages, only the first one
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
-
-        ExceptionAdditionInfo::set([
-            'crawlingFid' => $fid,
-            'crawlingForumName' => $forumName,
-            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
-        ]);
     }
 }
