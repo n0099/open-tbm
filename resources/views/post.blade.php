@@ -259,6 +259,7 @@
                                                 <div v-if="reply.authorManagerType != null">
                                                     <span v-if="reply.authorManagerType == 'manager'" class="badge badge-danger">吧主</span>
                                                     <span v-else-if="reply.authorManagerType == 'assist'" class="badge badge-info">小吧</span>
+                                                    <span v-else-if="reply.authorManagerType == 'voiceadmin'" class="badge badge-info">语音小编</span>
                                                 </div>
                                                 <div class="badge badge-pill badge-primary">Lv{{ reply.authorExpGrade }}</div>
                                             </div>
@@ -287,6 +288,7 @@
                                                                     <button v-else-if="author.uid == getUserData(reply.authorUid).uid" type="button" class="badge btn btn-info">层主</button>
                                                                     <button v-if="subReply.authorManagerType == 'manager'" type="button" class="badge btn btn-danger">吧主</button>
                                                                     <button v-else-if="subReply.authorManagerType == 'assist'" type="button" class="badge btn btn-info">小吧</button>
+                                                                    <button v-else-if="subReply.authorManagerType == 'voiceadmin'" type="button" class="badge btn btn-info">语音小编</button>
                                                                     <button type="button" class="badge btn btn-primary">Lv{{ subReply.authorExpGrade }}</button>
                                                                 </div>
                                                             </a>
@@ -582,7 +584,7 @@
                                     <select v-model="queryData.query.userManagerType"
                                             data-param="userManagerType" id="queryUserManagerType" class="custom-query-param form-control col-2">
                                         <option value="default">所有</option>
-                                        <option value="all">吧友</option>
+                                        <option value="NULL">吧友</option>
                                         <option value="manager">吧主</option>
                                         <option value="assist">小吧主</option>
                                         <option value="voiceadmin">语音小编</option>
@@ -785,7 +787,7 @@
                     }
                 }
             });
-            
+
             const postsNavComponent = Vue.component('posts-nav', {
                 template: '#posts-nav-template',
                 directives: {

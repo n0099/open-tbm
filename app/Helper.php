@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Support\Arr;
 use function GuzzleHttp\json_encode;
 
 class Helper
@@ -24,6 +25,7 @@ class Helper
                 40003 => '最后回复人用户参数仅支持主题贴查询',
                 40004 => '部分贴子用户信息查询参数不支持用于主题贴最后回复人',
                 40005 => '部分自定义贴子查询参数与查询贴子类型要求不匹配',
+                40006 => '排序方式与查询贴子类型要求不匹配'
             ],
             401 => [
                 40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试',
@@ -86,13 +88,13 @@ class Helper
 
     public static function getRawSqlGroupByTimeRange(string $fieldName, array $timeRanges = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
     {
-        return array_intersect_key([
+        return Arr::only([
             'minute' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:%i\") AS time",
             'hour' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:00\") AS time",
             'day' => "DATE({$fieldName}) AS time",
             'week' => "DATE_FORMAT({$fieldName}, \"%Y第%u周\") AS time",
             'month' => "DATE_FORMAT({$fieldName}, \"%Y-%m\") AS time",
             'year' => "DATE_FORMAT({$fieldName}, \"%Y年\") AS time"
-        ], array_flip($timeRanges));
+        ], $timeRanges);
     }
 }
