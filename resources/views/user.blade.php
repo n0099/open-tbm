@@ -210,7 +210,7 @@
             },
             methods: {
                 submitQueryForm: function (formData) {
-                    formData = _.mapValues(formData, (i) => _.omitBy(i, _.isEmpty)); // deep clone, remove falsy (like null) params value
+                    formData = _.mapValues(formData, (i) => _.omitBy(i, _.isEmpty)); // deep clone, remove falsy values
                     this.$router.push({
                         name: _.isEmpty(formData.param) ? 'emptyParam' : this.$data.selectUser.selectBy,
                         query: formData.query,

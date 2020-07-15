@@ -69,6 +69,168 @@ class PostsQuery extends Controller
         ])));
     }
 
+    /**
+     * Apply custom query param's condition on posts model
+     *
+     * @param string $postType
+     * @param Builder $postQuery
+     * @param string $paramName
+     * @param mixed $paramValue
+     * @param Collection $otherQueryParams
+     * @param array $queryUserType
+     * @param int $customQueryFid
+     * @return Builder
+     */
+    private function applyCustomQueryOnPostModel(string $postType, Builder $postQuery, string $paramName, $paramValue, Collection $otherQueryParams, array $queryUserType, int $customQueryFid): Builder
+    {
+        $applyUserInfoSubQuery = function (string $postType, Builder $postModel, array $userTypes, string $queryUserBy, $paramValue): Builder {
+            if ($queryUserBy === 'uid') {
+                $uids = [$paramValue]; // query user by user defined id param directly
+            } else {
+                $uids = UserModel::where($queryUserBy, $paramValue);
+            }
+            foreach ($userTypes as $userType) {
+                if ($userType === 'latestReplier') {
+                    if ($postType === 'thread') {
+                        $postModel = $postModel->whereIn('latestReplierUid', $uids);
+                    } else {
+                        Helper::abortAPI(40003); // todo: move this validate
+                    }
+                } elseif ($userType === 'author') {
+                    $postModel = $postModel->whereIn('authorUid', $uids);
+                }
+            }
+            return $postModel;
+        };
+        $applyDateTimeRangeParamOnQuery = fn(Builder $postModel, string $dateTimeFieldName, string $dateTimeRangeStart, ?string $dateTimeRangeEnd): Builder
+        => $postQuery->whereBetween($dateTimeFieldName, [
+            $dateTimeRangeStart,
+            $dateTimeRangeEnd ?? Carbon::parse($dateTimeRangeStart)->addDay()->toDateTimeString() // todo: move this validate
+        ]);
+
+        switch ($paramName) {
+            case 'tid':
+                return $postQuery->where('tid', $otherQueryParams['tidRange'] ?? '=', $paramValue);
+                break;
+            case 'pid':
+                if ($postType === 'reply' || $postType === 'subReply') {
+                    return $postQuery->where('pid', $otherQueryParams['pidRange'] ?? '=', $paramValue);
+                } else { // if post type is thread return null to prevent duplicated thread model
+                    return null;
+                }
+                break;
+            case 'spid':
+                if ($postType === 'subReply') {
+                    return $postQuery->where('spid', $otherQueryParams['spidRange'] ?? '=', $paramValue);
+                } else { // if post type is thread return null to prevent duplicated thread/reply model
+                    return null;
+                }
+                break;
+            case 'orderBy':
+                $orderByRequiredPostType = [
+                    'tid' => ['thread', 'reply', 'subReply'],
+                    'pid' => ['reply', 'subReply'],
+                    'spid' => ['subReply']
+                ];
+                if (in_array($postType, $orderByRequiredPostType[$paramValue], true)) {
+                    return $postQuery->orderBy($otherQueryParams['orderBy'], $otherQueryParams['orderDirection']);
+                } else {
+                    return null; // if post type is not complicated with order by required, return null to prevent duplicated post model
+                }
+                break;
+            case 'threadTitle':
+                return $postQuery->where([
+                    'title',
+                    ($otherQueryParams['threadTitleRegex'] ?? false) ? 'REGEXP' : 'LIKE',
+                    ($otherQueryParams['threadTitleRegex'] ?? false) ? $paramValue : "%{$paramValue}%",
+                ]);
+                break;
+            case 'postContent':
+                if ($otherQueryParams['postContentRegex'] ?? false) {
+                    return $postQuery->where('content', 'REGEXP', $paramValue);
+                } else {
+                    return $postQuery->where(function ($postModel) use ($paramValue) {
+                        foreach (explode(' ', $paramValue) as $splitedParamValue) { // split param by space char then append where cause on sql builder
+                            $postModel = $postModel->where('content', 'LIKE', "%{$splitedParamValue}%");
+                        }
+                    });
+                }
+                break;
+            case 'postTimeStart':
+                return $applyDateTimeRangeParamOnQuery($postQuery, 'postTime', $paramValue, $otherQueryParams['postTimeEnd'] ?? null);
+                break;
+            case 'latestReplyTimeStart':
+                return $applyDateTimeRangeParamOnQuery($postQuery, 'latestReplyTime', $paramValue, $otherQueryParams['latestReplyTimeEnd'] ?? null);
+                break;
+            case 'threadProperty':
+                foreach ($paramValue as $threadProperty) {
+                    switch ($threadProperty) {
+                        case 'good':
+                            return $postQuery->where('isGood', true);
+                            break;
+                        case 'sticky':
+                            return $postQuery->whereNotNull('stickyType');
+                            break;
+                    }
+                }
+                break;
+            case 'threadReplyNum':
+                return $postQuery->where('replyNum', $otherQueryParams['threadReplyNumRange'] ?? '=', $paramValue);
+                break;
+            case 'replySubReplyNum':
+                return $postQuery->where('subReplyNum', $otherQueryParams['replySubReplyNumRange'] ?? '=', $paramValue);
+                break;
+            case 'threadViewNum':
+                return $postQuery->where('viewNum', $otherQueryParams['threadViewNumRange'] ?? '=', $paramValue);
+                break;
+            case 'threadShareNum':
+                return $postQuery->where('shareNum', $otherQueryParams['threadShareNumRange'] ?? '=', $paramValue);
+                break;
+            case 'userID':
+                return $applyUserInfoSubQuery($postType, $postQuery, $queryUserType, 'uid', $paramValue);
+                break;
+            case 'userName':
+                return $applyUserInfoSubQuery($postType, $postQuery, $queryUserType, 'name', $paramValue);
+                break;
+            case 'userDisplayName':
+                return $applyUserInfoSubQuery($postType, $postQuery, $queryUserType, 'displayName', $paramValue);
+                break;
+            case 'userGender':
+                return $applyUserInfoSubQuery($postType, $postQuery, $queryUserType, 'gender', $paramValue);
+                break;
+            case 'userExpGrade':
+                if ($postType === 'thread') {
+                    return $postQuery->whereIn('firstPid', PostModelFactory::newReply($customQueryFid)->where([ // TODO: massive sub query
+                        ['floor', '=', 1],
+                        ['authorExpGrade', $otherQueryParams['userExpGradeRange'] ?? '=', $paramValue]
+                    ]));
+                } else {
+                    return $postQuery->where('authorExpGrade', $otherQueryParams['userExpGradeRange'] ?? '=', $paramValue);
+                }
+                break;
+            case 'userManagerType':
+                if ($paramValue === 'all') {
+                    return $postQuery->whereNull('authorManagerType');
+                } else {
+                    return $postQuery->where('authorManagerType', $paramValue);
+                }
+                break;
+            case 'orderDirection':
+            case 'tidRange':
+            case 'pidRange':
+            case 'spidRange':
+            case 'postTimeEnd':
+            case 'latestReplyTimeEnd':
+            case 'userExpGradeRange':
+            case 'threadReplyNumRange':
+            case 'replySubReplyNumRange':
+            case 'threadViewNumRange':
+            case 'threadShareNumRange':
+            default:
+                return $postQuery->newQuery();
+        }
+    }
+
     private function customQuery(Collection $queryParams, Collection $queryParamsName, array $queryPostType, array $queryUserType): array
     {
         $postsIDNamePair = [
@@ -80,17 +242,11 @@ class PostsQuery extends Controller
         $queryPostsID = $queryParams->only(['tid', 'pid', 'spid'])->filter()->toArray();
         $customQueryFid = $queryParams['fid']
             ?? (
-            $queryPostsID == []
-                ? Helper::abortAPI(40002)
+            $queryPostsID === []
+                ? Helper::abortAPI(40002) // todo: move this validate
                 : IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid']
             );
         $postsModel = PostModelFactory::getPostModelsByFid($customQueryFid);
-
-        $postsQueryBuilder = [
-            'thread' => [],
-            'reply' => [],
-            'subReply' => []
-        ];
 
         $customQueryParamsRequiredPostTypes = [
             'threadTitle' => ['thread'],
@@ -105,217 +261,47 @@ class PostsQuery extends Controller
         foreach ($customQueryParamsRequiredPostTypes as $paramName => $requiredPostTypes) {
             foreach ($requiredPostTypes as $requiredPostType) {
                 if (isset($queryParams[$paramName])) {
-                    Helper::abortAPIIf(40005, ! in_array($requiredPostType, $queryPostType, true));
+                    Helper::abortAPIIf(40005, ! in_array($requiredPostType, $queryPostType, true)); // todo: move this validate
                 }
             }
         }
 
-        /**
-         * Apply custom query params's condition on posts model
-         *
-         * @param string $postType
-         * @param PostModel|Builder $postModel
-         * @param Collection $queryParams
-         *
-         * @return Builder|PostModel|null
-         */
-        $applyCustomConditionOnPostModel = function (string $postType, PostModel $postModel, Collection $queryParams) use ($postsModel, $queryPostType, $queryUserType) {
-            if (in_array('latestReplier', $queryUserType, true)) {
-                Helper::abortAPIIf(40003, ! in_array('thread', $queryPostType, true));
-                $userInfoParamsExcludingLatestReplier = [
-                    'userExpGrade',
-                    'userExpGradeRange',
-                    'userManagerType'
-                ];
-                Helper::abortAPIIf(40004, $queryParams->intersect($userInfoParamsExcludingLatestReplier) != []);
-            }
+        if (in_array('latestReplier', $queryUserType, true)) {
+            Helper::abortAPIIf(40003, ! in_array('thread', $queryPostType, true)); // todo: move this validate
+            $userInfoParamsExcludingLatestReplier = [
+                'userExpGrade',
+                'userExpGradeRange',
+                'userManagerType'
+            ];
+            Helper::abortAPIIf(40004, $queryParams->intersect($userInfoParamsExcludingLatestReplier)->isNotEmpty()); // todo: move this validate
+        }
 
-            foreach ($queryParams as $paramName => $paramValue) {
-                $applyParamsQueryOnPostModel = function () use ($queryParams, $queryUserType, $paramName, $paramValue, $postType, $postModel, $postsModel) {
-                    $applyUserInfoSubQuery = function (array $userTypes, string $userInfoFieldName, $paramValue) use ($postType, $postModel, $postsModel): Builder {
-                        if ($userInfoFieldName == 'uid') {
-                            $uids = [$paramValue]; // query user by user defined id param directly
-                        } else {
-                            // cache previous user info params query for 1 mins to prevent duplicate query in a single query
-                            // todo: remove this cache
-                            $uids = \Cache::remember("postsQuery-UserInfoParam-{$userInfoFieldName}={$paramValue}", 1, fn() => UserModel::where($userInfoFieldName, $paramValue)->pluck('uid'));
-                        }
-                        foreach ($userTypes as $userType) {
-                            if ($userType == 'latestReplier') {
-                                if ($postType == 'thread') {
-                                    $postModel = $postModel->whereIn('latestReplierUid', $uids);
-                                } else {
-                                    Helper::abortAPI(40003);
-                                }
-                            } elseif ($userType == 'author') {
-                                $postModel = $postModel->whereIn('authorUid', $uids);
-                            }
-                        }
-                        return $postModel;
-                    };
-                    $applyDateTimeRangeParamOnQuery = fn($postModel, string $dateTimeFieldName, string $dateTimeRangeStart, $dateTimeRangeEnd): Builder
-                    => $postModel->whereBetween($dateTimeFieldName, [
-                        $dateTimeRangeStart,
-                        $dateTimeRangeEnd ?? Carbon::parse($dateTimeRangeStart)->addDay()->toDateTimeString()
-                    ]);
-                    switch ($paramName) {
-                        case 'tid':
-                            return $postModel->where('tid', $queryParams['tidRange'] ?? '=', $paramValue);
-                            break;
-                        case 'pid':
-                            if ($postType == 'reply' || $postType == 'subReply') {
-                                return $postModel->where('pid', $queryParams['pidRange'] ?? '=', $paramValue);
-                            } else { // if post type is thread return null to prevent duplicated thread model
-                                return null;
-                            }
-                            break;
-                        case 'spid':
-                            if ($postType == 'subReply') {
-                                return $postModel->where('spid', $queryParams['spidRange'] ?? '=', $paramValue);
-                            } else { // if post type is thread return null to prevent duplicated thread/reply model
-                                return null;
-                            }
-                            break;
-                        case 'orderBy':
-                            $orderByRequiredPostType = [
-                                'tid' => ['thread', 'reply', 'subReply'],
-                                'pid' => ['reply', 'subReply'],
-                                'spid' => ['subReply']
-                            ];
-                            if (in_array($postType, $orderByRequiredPostType[$paramValue], true)) {
-                                return $postModel->orderBy($queryParams['orderBy'], $queryParams['orderDirection']);
-                            } else {
-                                return null; // if post type is not complicated with order by required, return null to prevent duplicated post model
-                            }
-                            break;
-                        case 'threadTitle':
-                            return $postModel->where([
-                                'title',
-                                ($queryParams['threadTitleRegex'] ?? false) ? 'REGEXP' : 'LIKE',
-                                ($queryParams['threadTitleRegex'] ?? false) ? $paramValue : "%{$paramValue}%",
-                            ]);
-                            break;
-                        case 'postContent':
-                            if ($queryParams['postContentRegex'] ?? false) {
-                                $postModel = $postModel->where('content', 'REGEXP', $paramValue);
-                            } else {
-                                $postModel = $postModel->where(function ($postModel) use ($paramValue) {
-                                    foreach (explode(' ', $paramValue) as $splitedParamValue) { // split param by space char then append where cause on sql builder
-                                        $postModel = $postModel->where('content', 'LIKE', "%{$splitedParamValue}%");
-                                    }
-                                });
-                            }
-                            return $postModel;
-                            break;
-                        case 'postTimeStart':
-                            return $applyDateTimeRangeParamOnQuery($postModel, 'postTime', $paramValue, $queryParams['postTimeEnd'] ?? null);
-                            break;
-                        case 'latestReplyTimeStart':
-                            return $applyDateTimeRangeParamOnQuery($postModel, 'latestReplyTime', $paramValue, $queryParams['latestReplyTimeEnd'] ?? null);
-                            break;
-                        case 'threadProperty':
-                            foreach ($paramValue as $threadProperty) {
-                                switch ($threadProperty) {
-                                    case 'good':
-                                        return $postModel->where('isGood', true);
-                                        break;
-                                    case 'sticky':
-                                        return $postModel->whereNotNull('stickyType');
-                                        break;
-                                }
-                            }
-                            break;
-                        case 'threadReplyNum':
-                            return $postModel->where('replyNum', $queryParams['threadReplyNumRange'] ?? '=', $paramValue);
-                            break;
-                        case 'replySubReplyNum':
-                            return $postModel->where('subReplyNum', $queryParams['replySubReplyNumRange'] ?? '=', $paramValue);
-                            break;
-                        case 'threadViewNum':
-                            return $postModel->where('viewNum', $queryParams['threadViewNumRange'] ?? '=', $paramValue);
-                            break;
-                        case 'threadShareNum':
-                            return $postModel->where('shareNum', $queryParams['threadShareNumRange'] ?? '=', $paramValue);
-                            break;
-                        case 'userID':
-                            return $applyUserInfoSubQuery($queryUserType, 'uid', $paramValue);
-                            break;
-                        case 'userName':
-                            return $applyUserInfoSubQuery($queryUserType, 'name', $paramValue);
-                            break;
-                        case 'userDisplayName':
-                            return $applyUserInfoSubQuery($queryUserType, 'displayName', $paramValue);
-                            break;
-                        case 'userGender':
-                            return $applyUserInfoSubQuery($queryUserType, 'gender', $paramValue);
-                            break;
-                        case 'userExpGrade':
-                            if ($postType == 'thread') {
-                                return $postModel->whereIn('firstPid', $postsModel['reply']->where([ // TODO: massive sub query
-                                    ['floor', '=', 1],
-                                    ['authorExpGrade', $queryParams['userExpGradeRange'] ?? '=', $paramValue]
-                                ])->pluck('pid'));
-                            } else {
-                                return $postModel->where('authorExpGrade', $queryParams['userExpGradeRange'] ?? '=', $paramValue);
-                            }
-                            break;
-                        case 'userManagerType':
-                            if ($paramValue == 'all') {
-                                return $postModel->whereNull('authorManagerType');
-                            } else {
-                                return $postModel->where('authorManagerType', $paramValue);
-                            }
-                            break;
-                        case 'orderDirection':
-                        case 'tidRange':
-                        case 'pidRange':
-                        case 'spidRange':
-                        case 'postTimeEnd':
-                        case 'latestReplyTimeEnd':
-                        case 'userExpGradeRange':
-                        case 'threadReplyNumRange':
-                        case 'replySubReplyNumRange':
-                        case 'threadViewNumRange':
-                        case 'threadShareNumRange':
-                        default:
-                            return $postModel == null ? null : $postModel->newQuery();
-                    }
-                };
-                $postModel = $applyParamsQueryOnPostModel();
-            }
-            return $postModel;
-        };
-
+        $postsQueryBuilder = [];
         /** @var array $queryPostsTypeModel post models within query posts type **/
-        $queryPostsTypeModel = $queryPostType == null
+        $queryPostsTypeModel = $queryPostType === []
             ? $postsModel
-            : collect($postsModel)->intersectByKeys(collect($queryPostType)->flip());
+            : array_intersect_key($postsModel, array_flip($queryPostType));
         foreach ($queryPostsTypeModel as $postType => $postModel) {
-            $postsQueryBuilder[$postType] = $applyCustomConditionOnPostModel($postType, $postModel, $queryParams);
-        }
-
-        $customQueryDefaultOrderDirection = 'DESC';
-        foreach ($postsQueryBuilder as $postType => $postQueryBuilder) {
-            if ($postQueryBuilder != null) {
-                if (! $queryParamsName->contains('orderBy')) { // order by post type id desc by default
-                    $postQueryBuilder = $postQueryBuilder->orderBy($postsIDNamePair[$postType], $customQueryDefaultOrderDirection);
-                }
-                $postsQueryBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->simplePaginate($this->pagingPerPageItems);
+            $postModel = $postModel->newQuery();
+            foreach ($queryParams as $paramName => $paramValue) {
+                $postsQueryBuilder[$postType] = $this->applyCustomQueryOnPostModel($postType, $postModel, $paramName, $paramValue, $queryParams, $queryUserType, $queryParams['fid']);
             }
         }
 
         $postsQueriedInfo = [
-            'fid' => 0,
+            'fid' => $customQueryFid,
             'thread' => [],
             'reply' => [],
             'subReply' => []
         ];
-        $postsQueriedInfo['fid'] = $customQueryFid;
-        foreach ($postsIDNamePair as $postType => $postIDName) { // assign posts queried info from $postsQueryBuilder
-            $postQueryBuilder = $postsQueryBuilder[$postType];
-            $postsQueriedInfo[$postType] = $postQueryBuilder == null ? [] : $postQueryBuilder->toArray()['data'];
+
+        foreach ($postsQueryBuilder as $postType => $postQueryBuilder) {
+            if (! $queryParamsName->contains('orderBy')) { // order by post type id desc by default
+                $postQueryBuilder = $postQueryBuilder->orderBy($postsIDNamePair[$postType], 'DESC');
+            }
+            $postsQueryBuilder[$postType] = $postQueryBuilder->hidePrivateFields()->simplePaginate($this->pagingPerPageItems); // assign ordered posts query result
+            $postsQueriedInfo[$postType] = $postsQueryBuilder[$postType]->toArray()['data'];
         }
-        $postsQueryBuilder = array_filter($postsQueryBuilder); // array_filter() will remove falsy values
 
         /**
          * Union builders pagination $unionMethodName data by $unionStatement
@@ -332,15 +318,17 @@ class PostsQuery extends Controller
                 $unionValues[] = $queryBuilder->$unionMethodName();
             }
             $unionValues = array_filter($unionValues); // array_filter() will remove falsy values
-            return $unionStatement($unionValues == [] ? [0] : $unionValues); // prevent empty array
+            return $unionStatement($unionValues === [] ? [0] : $unionValues); // prevent empty array
         };
-        $pagesInfo = [
-            'firstItem' => $pageInfoUnion($postsQueryBuilder, 'firstItem', fn($unionValues) => min($unionValues)),
-            'currentItems' => $pageInfoUnion($postsQueryBuilder, 'count', fn($unionValues) => array_sum($unionValues)),
-            'currentPage' => $pageInfoUnion($postsQueryBuilder, 'currentPage', fn($unionValues) => min($unionValues))
-        ];
 
-        return ['result' => $postsQueriedInfo, 'pages' => $pagesInfo];
+        return [
+            'result' => $postsQueriedInfo,
+            'pages' => [
+                'firstItem' => $pageInfoUnion($postsQueryBuilder, 'firstItem', fn($unionValues) => min($unionValues)),
+                'currentItems' => $pageInfoUnion($postsQueryBuilder, 'count', fn($unionValues) => array_sum($unionValues)),
+                'currentPage' => $pageInfoUnion($postsQueryBuilder, 'currentPage', fn($unionValues) => min($unionValues))
+            ]
+        ];
     }
 
     private function indexQuery(Collection $queryParamsName, Collection $indexesQueryParams, Collection $queryParams, array $queryPostType): array

@@ -93,6 +93,6 @@ class Helper
             'week' => "DATE_FORMAT({$fieldName}, \"%Y第%u周\") AS time",
             'month' => "DATE_FORMAT({$fieldName}, \"%Y-%m\") AS time",
             'year' => "DATE_FORMAT({$fieldName}, \"%Y年\") AS time"
-        ], array_fill_keys($timeRanges, null));
+        ], array_flip($timeRanges));
     }
 }
