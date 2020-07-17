@@ -2,6 +2,8 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Tieba\ClientRequester;
+
 abstract class Crawlable
 {
     protected string $clientVersion;
@@ -42,7 +44,8 @@ abstract class Crawlable
 
     protected function getClientHelper(): ClientRequester
     {
-        /* enable guzzle laravel debugbar
+        // enable guzzle integrate with laravel debugbar
+        /*
         $debugBar = resolve('debugbar');
 
         $timeline = $debugBar->getCollector('time');
@@ -57,12 +60,8 @@ abstract class Crawlable
         */
 
         return new ClientRequester([
-            //'handler' => $stack,
-            'client_version' => $this->clientVersion,
-            'request.options' => [
-                'timeout' => 5,
-                'connect_timeout' => 5
-            ]
+            // 'handler' => $stack,
+            'client_version' => $this->clientVersion
         ]);
     }
 

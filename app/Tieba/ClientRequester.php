@@ -1,32 +1,28 @@
 <?php
 
-namespace App\Tieba\Crawler;
-
-use BadFunctionCallException;
-use GuzzleHttp\Client;
-use GuzzleHttp\Promise\PromiseInterface;
+namespace App\Tieba;
 
 /**
  * Class ClientRequester
  *
  * @package App\Tieba\WebHelper
  */
-class ClientRequester extends Client
+class ClientRequester extends \GuzzleHttp\Client
 {
     /**
      * @param $method
      * @param string $uri
      * @param array $options
      *
-     * @return PromiseInterface
+     * @return \GuzzleHttp\Promise\PromiseInterface
      */
-    public function requestAsync($method, $uri = '', array $options = []): PromiseInterface
+    public function requestAsync($method, $uri = '', array $options = []): \GuzzleHttp\Promise\PromiseInterface
     {
         if (! isset($options['form_params'])) {
             throw new \InvalidArgumentException('Post form params must be determined');
         }
-        if ($method != 'post') {
-            throw new BadFunctionCallException('Client request must be HTTP POST');
+        if ($method !== 'post') {
+            throw new \BadFunctionCallException('Client request must be HTTP POST');
         }
 
         $clientInfo = [
@@ -63,6 +59,7 @@ class ClientRequester extends Client
 
         //Note7 (￣▽￣)~*
         $config['headers']['User-Agent'] = 'Mozilla/5.0 (Linux; Android 6.0; SM-N930F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.81 Mobile Safari/537.36';
+        $config['timeout'] = 1; // default 1 sec timeout
 
         parent::__construct($config);
     }
