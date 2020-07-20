@@ -111,7 +111,7 @@
             },
             methods: {
                 evalItemAttrs: function (renderPosition, items, item, itemIndex) {
-                    let addItemPlaceholderClass = (renderPosition, evalAttrs) => { // add itemPlaceholderClass to class attr value when hiding item
+                    const addItemPlaceholderClass = (renderPosition, evalAttrs) => { // add itemPlaceholderClass to class attr value when hiding item
                         if (this.$props.itemPlaceholderClass != null
                             && renderPosition === 'outer'
                             && ! this.shouldDisplay(itemIndex)) {

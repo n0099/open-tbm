@@ -78,7 +78,7 @@
         </div>
         <div id="countByTimeChartDOM" class="echarts loading row mt-2"></div>
         <hr />
-        <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData">
+        <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData" :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }">
             <a slot="candidateName" slot-scope="text" :href="$data.$$getTiebaUserLink(text)">@{{ text }}</a>
         </a-table>
     </div>
@@ -91,7 +91,7 @@
 
         let top50CandidatesCountChartDOM;
         let top50CandidatesCountChart;
-        let initialTop50CandidatesCountChart = () => {
+        const initialTop50CandidatesCountChart = () => {
             top50CandidatesCountChartDOM = $('#top50CandidatesCountChartDOM');
             top50CandidatesCountChart = echarts.init(top50CandidatesCountChartDOM[0]);
             top50CandidatesCountChart.setOption({
@@ -221,7 +221,7 @@
                 ]
             });
         };
-        let loadTop50CandidatesCountChart = () => {
+        const loadTop50CandidatesCountChart = () => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50CandidatesVotesCount`, $.param(reCAPTCHAToken))
                     .done((ajaxData) => {
@@ -255,21 +255,19 @@
                             .value();
 
                         let validCount = _.map(dataset, 'validCount');
-                        let validCountDiffWithPrevious = _.map(validCount, (count, index) => {
-                            return [
-                                {
-                                    label: {
-                                        show: true,
-                                        position: 'middle',
-                                        formatter: (-(count - validCount[index - 1])).toString()
-                                    },
-                                    coord: [index, count]
+                        let validCountDiffWithPrevious = _.map(validCount, (count, index) => [
+                            {
+                                label: {
+                                    show: true,
+                                    position: 'middle',
+                                    formatter: (-(count - validCount[index - 1])).toString()
                                 },
-                                {
-                                    coord: [index - 1, validCount[index - 1]]
-                                }
-                            ];
-                        });
+                                coord: [index, count]
+                            },
+                            {
+                                coord: [index - 1, validCount[index - 1]]
+                            }
+                        ]);
                         validCountDiffWithPrevious.shift(); // first candidate doesn't needs to exceed anyone
 
                         top50CandidatesCountChart.setOption({
@@ -294,7 +292,7 @@
 
         let top5CandidatesCountByTimeChartDOM;
         let top5CandidatesCountByTimeChart;
-        let initialTop5CandidatesCountByTimeChart = () => {
+        const initialTop5CandidatesCountByTimeChart = () => {
             top5CandidatesCountByTimeChartDOM = $('#top5CandidatesCountByTimeChartDOM');
             top5CandidatesCountByTimeChart = echarts.init(top5CandidatesCountByTimeChartDOM[0]);
             top5CandidatesCountByTimeChart.setOption({
@@ -351,12 +349,12 @@
                 ]
             });
         };
-        let loadTop5CandidatesCountByTimeChart = (timeRange) => {
+        const loadTop5CandidatesCountByTimeChart = (timeRange) => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top5CandidatesVotesCountByTime`,
                     $.param(_.merge({ timeRange }, reCAPTCHAToken)))
                     .done((ajaxData) => {
-                        let top10Candidates = _.uniq(_.map(_.filter(ajaxData, { isValid: 1 }), 'voteFor')); // not order by votes count
+                        let top10Candidates = _.chain(ajaxData).filter({ isValid: 1 }).map('voteFor').uniq().value(); // not order by votes count
                         let validVotes = _.filter(ajaxData, { isValid: 1 });
                         let invalidVotes = _.filter(ajaxData, { isValid: 0 });
 
@@ -402,7 +400,7 @@
 
         let countByTimeChartDOM;
         let countByTimeChart;
-        let initialCountByTimeChart = () => {
+        const initialCountByTimeChart = () => {
             countByTimeChartDOM = $('#countByTimeChartDOM');
             countByTimeChart = echarts.init(countByTimeChartDOM[0]);
             countByTimeChart.setOption({
@@ -469,7 +467,7 @@
                 ]
             });
         };
-        let loadCountByTimeChart = (timeRange) => {
+        const loadCountByTimeChart = (timeRange) => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/allVotesCountByTime`,
                     $.param(_.merge({ timeRange }, reCAPTCHAToken)))
@@ -512,10 +510,10 @@
 
         let candidatesTimelineChartDOM;
         let candidatesTimelineChart;
-        let initialCandidatesTimelineChart = () => {
+        const initialCandidatesTimelineChart = () => {
             candidatesTimelineChartDOM = $('#candidatesTimelineChartDOM');
             candidatesTimelineChart = echarts.init(candidatesTimelineChartDOM[0]);
-            let votesCountSeriesLabelFormatter = (votesData, currentCount, candidateName) => {
+            const votesCountSeriesLabelFormatter = (votesData, currentCount, candidateName) => {
                 let timeline = candidatesTimelineChart.getOption().timeline[0];
                 let previousTimelineValue = _.find(votesData, {
                     endTime: moment(timeline.data[timeline.currentIndex - 1]).unix().toString(),
@@ -642,7 +640,7 @@
                 }
             });
         };
-        let loadCandidatesTimelineChart = () => {
+        const loadCandidatesTimelineChart = () => {
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesTimeline`, $.param(reCAPTCHAToken))
                     .done((ajaxData) => {
@@ -680,24 +678,22 @@
                                 .value();
 
                             let validCount = _.map(dataset, 'validCount');
-                            let validCountDiffWithPrevious = _.map(validCount, function (count, index) {
-                                return [
-                                    {
-                                        label: {
-                                            show: true,
-                                            position: 'middle',
-                                            formatter: (-(count - validCount[index + 1])).toString()
-                                        },
-                                        coord: [count, index]
+                            let validCountDiffWithPrevious = _.map(validCount, (count, index) => [
+                                {
+                                    label: {
+                                        show: true,
+                                        position: 'middle',
+                                        formatter: (-(count - validCount[index + 1])).toString()
                                     },
-                                    {
-                                        coord: [validCount[index + 1], index + 1]
-                                    }
-                                ];
-                            });
+                                    coord: [count, index]
+                                },
+                                {
+                                    coord: [validCount[index + 1], index + 1]
+                                }
+                            ]);
                             validCountDiffWithPrevious = validCountDiffWithPrevious.slice(-5, -1);
 
-                            let totalVotesCount = (isValid = null) => {
+                            const totalVotesCount = (isValid = null) => {
                                 let votesSumCount = _.chain(timeGroup);
                                 if (isValid != null) {
                                     votesSumCount = votesSumCount.filter({ isValid })
@@ -782,7 +778,7 @@
                             }
                         }));
 
-                        let timelineRanges = _.map(_.sortBy(_.uniq(_.map(ajaxData, 'endTime'))), (i) => moment.unix(i).format());
+                        let timelineRanges = _.chain(ajaxData).map('endTime').uniq().sortBy().map((i) => moment.unix(i).format()).value();
                         timelineRanges.push('2019-03-11T18:26:40+08:00'); // official votes count show time
                         candidatesTimelineChart.setOption({
                             baseOption: {
@@ -813,7 +809,7 @@
             });
         };
 
-        let bilibiliVoteVue = new Vue({
+        const bilibiliVoteVue = new Vue({
             el: '#bilibiliVote',
             data: {
                 $$getTiebaUserLink,
@@ -832,7 +828,8 @@
                     {
                         title: '候选人',
                         dataIndex: 'candidateName',
-                        scopedSlots: { customRender: 'candidateName' }
+                        scopedSlots: { customRender: 'candidateName' },
+                        sorter: (a, b) => ([a.candidateName, b.candidateName].sort().indexOf(a.candidateName) - 1) || 1 // convert 0 to 1 for using Array.sort() to sort strings
                     },
                     {
                         title: '有效票数',
@@ -847,7 +844,8 @@
                     },
                     {
                         title: '官方有效票数（仅前50）',
-                        dataIndex: 'officialValidCount'
+                        dataIndex: 'officialValidCount',
+                        sorter: (a, b) => (a.officialValidCount || 0) - (b.officialValidCount || 0)
                     }
                 ],
                 candidatesDetailData: []
@@ -922,7 +920,7 @@
                 });
             },
             methods: {
-                formatCandidateNameByID: function (id) {
+                formatCandidateNameByID (id) {
                     return `${id}号\n${this.$data.candidatesName[id - 1]}`;
                 }
             }

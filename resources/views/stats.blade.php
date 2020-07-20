@@ -75,7 +75,7 @@
 
         let statsChartDOM;
         let statsChart;
-        let initialStatsChart = () => {
+        const initialStatsChart = () => {
             statsChartDOM = $('#statsChartDOM');
             statsChart = echarts.init(statsChartDOM[0], 'light');
             statsChart.setOption({
@@ -145,7 +145,7 @@
                 ]
             });
         };
-        let loadStatsChart = (statsQuery, forumsList) => {
+        const loadStatsChart = (statsQuery, forumsList) => {
             statsChartDOM.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(statsQuery, reCAPTCHAToken)))
@@ -186,7 +186,7 @@
             });
         };
 
-        let statsChartVue = new Vue({
+        const statsChartVue = new Vue({
             el: '#statsForm',
             data: {
                 forumsList: [],

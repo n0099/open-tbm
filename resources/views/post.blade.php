@@ -917,7 +917,7 @@
                                         'queryUserTypeLatestReplier'
                                     ]
                                 ];
-                                let checkRadioLikeCheckboxParamsGroupValue = (event) => { // ensure there's at least one post type checked
+                                const checkRadioLikeCheckboxParamsGroupValue = (event) => { // ensure there's at least one post type checked
                                     _.each(radioLikeCheckboxParamsGroup, (paramsGroup) => {
                                         if (paramsGroup.includes(event.target.id)
                                             && _.map(paramsGroup, (domID) => {
@@ -933,7 +933,7 @@
                                     $(`#${domID}`).off('click').on('click', checkRadioLikeCheckboxParamsGroupValue);
                                 });
 
-                                let checkUserInfoParamExcludingLatestReplier = () => {
+                                const checkUserInfoParamExcludingLatestReplier = () => {
                                     let userInfoParamsExcludingLatestReplier = [
                                         'userExpGrade',
                                         'userExpGradeRange',
@@ -950,7 +950,7 @@
                                 checkUserInfoParamExcludingLatestReplier();
                                 $('#queryUserTypeLatestReplier').off('change').on('change', checkUserInfoParamExcludingLatestReplier);
 
-                                let checkQueryParamsRequiredPostType = () => {
+                                const checkQueryParamsRequiredPostType = () => {
                                     //let postType = _.sortBy(vue.$data.queryData.query.postType); // sort post type array to compare without effect from order
                                     let queryPostTypes = vue.$data.queryData.query.postType;
 
@@ -1006,7 +1006,7 @@
                                 checkQueryParamsRequiredPostType();
                                 $('[data-param=postType]').off('change').on('change', checkQueryParamsRequiredPostType);
 
-                                let checkCustomQueryAvailable = () => {
+                                const checkCustomQueryAvailable = () => {
                                     let isCustomQueryAvailable = $('#queryFid').prop('value') !== 'undefined'
                                         || ! _.isEmpty(vue.$data.queryData.params.tid)
                                         || ! _.isEmpty(vue.$data.queryData.params.pid)
@@ -1142,7 +1142,7 @@
                         this.$router.push({ path: `/post${queryParamsPath}`, query: customQueryParams });
                     },
                     loadPageData: function (routeParams, routeQueryStrings, shouldReplacePage) {
-                        let groupSubRepliesByAuthor = (data) => {
+                        const groupSubRepliesByAuthor = (data) => {
                             data.threads.forEach((thread) => {
                                 thread.replies.forEach((reply) => {
                                     reply.subReplies.forEach((subReply, index, subReplies) => {
@@ -1178,14 +1178,14 @@
                             this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
                         }
 
-                        if (window.$$previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
-                            window.$$previousPostsQueryAjax.abort();
+                        if (window.$previousPostsQueryAjax != null) { // cancel previous loading query ajax to prevent conflict
+                            window.$previousPostsQueryAjax.abort();
                         }
                         this.$data.loadingNewPosts = true;
                         $$reCAPTCHACheck().then((token) => {
                             ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
-                            window.$$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
-                            window.$$previousPostsQueryAjax
+                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
+                            window.$previousPostsQueryAjax
                                 .done((ajaxData) => {
                                     ajaxData = groupSubRepliesByAuthor(ajaxData);
                                     let pagesInfo = ajaxData.pages;
@@ -1297,7 +1297,7 @@
                 }
             });
 
-            let postListVue = new Vue({
+            const postListVue = new Vue({
                 el: '#post-list-pages',
                 data: function () {
                     return {

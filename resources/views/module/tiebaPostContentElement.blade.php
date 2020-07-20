@@ -35,13 +35,13 @@
         'use strict';
 
         const $$tiebaImageZoomEventRegister = () => {
-            let registerZoomInEvent = (event) => {
+            const registerZoomInEvent = (event) => {
                 let tiebaImageDOM = event.currentTarget;
                 $(tiebaImageDOM).removeClass('tieba-image-zoom-in').addClass('tieba-image-zoom-out');
                 $(tiebaImageDOM.children[0]).removeClass('tieba-image').addClass('tieba-image-expanded');
                 $(tiebaImageDOM).off().on('click', registerZoomOutEvent);
             };
-            let registerZoomOutEvent = (event) => {
+            const registerZoomOutEvent = (event) => {
                 let tiebaImageDOM = event.currentTarget;
                 $(tiebaImageDOM).addClass('tieba-image-zoom-in').removeClass('tieba-image-zoom-out');
                 $(tiebaImageDOM.children[0]).addClass('tieba-image').removeClass('tieba-image-expanded');

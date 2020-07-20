@@ -26,7 +26,7 @@ class PostsQuery extends Controller
             'userGender' => [0, 1, 2],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin']
         ];
-        $customQueryParamsValidate = [
+        $searchQueryParamsValidate = [
             'tidRange' => Rule::in($paramsValidValue['range']),
             'pidRange' => Rule::in($paramsValidValue['range']),
             'spidRange' => Rule::in($paramsValidValue['range']),
@@ -59,7 +59,7 @@ class PostsQuery extends Controller
         $paramsDefaultValue = [
             'postType' => ['thread', 'reply', 'subReply'], // todo: rename to postTypes
             'userType' => ['author'],
-            // belows are custom query params and they are belongs to another param
+            // belows are search query params and they are belongs to another param
             'tidRange' => '=',
             'pidRange' => '=',
             'spidRange' => '=',
@@ -81,15 +81,15 @@ class PostsQuery extends Controller
             'postType' => 'array',
             'orderBy' => 'string',
             'orderDirection' => Rule::in($paramsValidValue['orderDirection']),
-        ], $customQueryParamsValidate));
+        ], $searchQueryParamsValidate));
         $queryParams = collect(array_merge($paramsDefaultValue, $requestQueryParams)); // fill with default params value
 
-        $queryForumAndPostsID = $queryParams->only(['fid', 'tid', 'pid', 'spid'])->filter(); // filter() will remove falsy values
+        $queryForumAndPostsID = $queryParams->only(['fid', 'tid', 'pid', 'spid'])->filter(); // filter() will remove falsy values like empty param
         $isIndexQuery = $queryForumAndPostsID->isNotEmpty();
-        $isCustomQuery = array_intersect_key($requestQueryParams, $customQueryParamsValidate) !== [];
+        $isSearchQuery = array_intersect_key($requestQueryParams, $searchQueryParamsValidate) !== [];
 
         $queryParams['postType'] = array_sort($queryParams['postType']); // sort here to prevent further sort while validating
-        $queryParams['orderDirection'] ??= $isIndexQuery ? 'ASC' : 'DESC';
+        $queryParams['orderDirection'] ??= $isIndexQuery && $queryForumAndPostsID->keys()->toArray() !== ['fid'] ? 'ASC' : 'DESC'; // order by desc when it's search query or index query with only fid param
         $queryParams['orderBy'] ??= 'postTime'; // default values
         $orderByRequiredPostType = [
             'tid' => ['thread', 'reply', 'subReply'],
@@ -99,14 +99,14 @@ class PostsQuery extends Controller
         Helper::abortAPIIf(40006, Str::contains($queryParams['orderBy'], array_keys($orderByRequiredPostType))
             && array_sort($orderByRequiredPostType[$queryParams['orderBy']]) === $queryParams['postType']);
 
-        if ($isCustomQuery) {
-            // custom query params relation validate
+        if ($isSearchQuery) {
+            // search query params relation validate
             if (! $queryParams->has('fid')) {
                 $queryPostsID = $queryForumAndPostsID->except('fid');
                 Helper::abortAPIIf(40002, $queryPostsID->isEmpty());
                 $queryParams['fid'] = IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid'];
             }
-            $customQueryParamsRequiredPostTypes = [
+            $searchQueryParamsRequiredPostTypes = [
                 'pid' => ['reply', 'subReply'],
                 'spid' => ['subReply'],
                 'threadTitle' => ['thread'],
@@ -118,7 +118,7 @@ class PostsQuery extends Controller
                 'threadShareNum' => ['thread'],
                 'postContent' => ['reply', 'subReply']
             ];
-            foreach ($customQueryParamsRequiredPostTypes as $paramName => $requiredPostTypes) {
+            foreach ($searchQueryParamsRequiredPostTypes as $paramName => $requiredPostTypes) {
                 if ($queryParams->has($paramName)) {
                     Helper::abortAPIIf(40005, array_sort($requiredPostTypes) !== $queryParams['postType']);
                 }
@@ -132,7 +132,7 @@ class PostsQuery extends Controller
                 ])->isNotEmpty());
             }
 
-            $queryResult = $this->customQuery($queryParams);
+            $queryResult = $this->searchQuery($queryParams);
         } elseif ($isIndexQuery) {
             $queryResult = $this->indexQuery($queryParams, $queryForumAndPostsID);
         } else {
@@ -157,7 +157,7 @@ class PostsQuery extends Controller
     }
 
     /**
-     * Apply custom query param's condition on posts model
+     * Apply search query param's condition on posts model
      *
      * @param string $postType
      * @param Builder $postQuery
@@ -166,7 +166,7 @@ class PostsQuery extends Controller
      * @param Collection $otherQueryParams
      * @return Builder
      */
-    private function applyCustomQueryOnPostModel(string $postType, Builder $postQuery, string $paramName, $paramValue, Collection $otherQueryParams): Builder
+    private function applySearchQueryOnPostModel(string $postType, Builder $postQuery, string $paramName, $paramValue, Collection $otherQueryParams): Builder
     {
         $applyUserInfoSubQuery = function (Builder $postQuery, array $userTypes, string $queryUserBy, $paramValue): Builder {
             if ($queryUserBy === 'uid') {
@@ -284,7 +284,7 @@ class PostsQuery extends Controller
         }
     }
 
-    private function customQuery(Collection $queryParams): array
+    private function searchQuery(Collection $queryParams): array
     {
         $postsModel = PostModelFactory::getPostModelsByFid($queryParams['fid']);
         $postQueries = [];
@@ -293,7 +293,7 @@ class PostsQuery extends Controller
         foreach ($queryPostsTypeModel as $postType => $postQuery) {
             $postQuery = $postQuery->newQuery();
             foreach ($queryParams as $paramName => $paramValue) {
-                $postQueries[$postType] = $this->applyCustomQueryOnPostModel($postType, $postQuery, $paramName, $paramValue, $queryParams);
+                $postQueries[$postType] = $this->applySearchQueryOnPostModel($postType, $postQuery, $paramName, $paramValue, $queryParams);
             }
         }
 
@@ -344,7 +344,7 @@ class PostsQuery extends Controller
             'reply' => 'pid',
             'subReply' => 'spid'
         ];
-        $indexQuery = IndexModel::where($queryForumAndPostsID);
+        $indexQuery = IndexModel::where($queryForumAndPostsID->toArray()); // todo: it should be a laravel's bug that model's static method where() doesn't support collection as a param
 
         if ($queryParams->has('orderBy')) {
             $indexQuery->orderBy($queryParams['orderBy'], $queryParams['orderDirection']);

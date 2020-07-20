@@ -271,7 +271,7 @@
                 next();
             }
         });
-        let userQueryVue = new Vue({
+        const userQueryVue = new Vue({
             el: '#user-query',
             data: function () {
                 return {

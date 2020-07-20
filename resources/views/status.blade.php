@@ -65,7 +65,7 @@
 
         let statusChartDOM;
         let statusChart;
-        let initialStatusChart = () => {
+        const initialStatusChart = () => {
             statusChartDOM = $('#statusChartDOM');
             statusChart = echarts.init(statusChartDOM[0]);
             statusChart.setOption({
@@ -219,12 +219,12 @@
                 ]
             });
         };
-        let loadStatusChart = (statusQuery) => {
+        const loadStatusChart = (statusQuery) => {
             statusChartDOM.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHAToken) => {
                 $.getJSON(`${$$baseUrl}/api/status`, $.param(_.merge(statusQuery, reCAPTCHAToken)))
                     .done((ajaxData) => {
-                        let selectColumnFromStatus = (prop) => {
+                        const selectColumnFromStatus = (prop) => {
                             return _.map(ajaxData, (i) => {
                                 return [
                                     i.startTime,
@@ -249,7 +249,7 @@
             });
         };
 
-        let statusChartVue = new Vue({
+        const statusChartVue = new Vue({
             el: '#statusForm',
             data: {
                 autoRefresh: false,
