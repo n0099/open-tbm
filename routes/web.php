@@ -13,6 +13,7 @@
 
 Route::view('/', 'index')->name('index');
 Route::view('/post/{argu?}', 'post')->where('argu', '.*')->name('post');
+Route::view('/postMulti/{argu?}', 'postMulti')->where('argu', '.*')->name('postMulti');
 Route::view('/user/{argu?}', 'user')->where('argu', '.*')->name('user');
 Route::view('/status', 'status')->name('status');
 Route::view('/stats', 'stats')->name('stats');
