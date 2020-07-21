@@ -38,11 +38,20 @@
 
 @section('container')
     @verbatim
+        <template id="select-range-template">
+            <select :value="value" @input="$emit('input', $event.target.value)" class="col-1 form-control">
+                <option>&lt;</option>
+                <option>=</option>
+                <option>&gt;</option>
+                <option>IN</option>
+                <option>BETWEEN</option>
+            </select>
+        </template>
         <template id="select-param-template">
             <select @change="$emit('param-change', $event)" class="col-2 form-control">
                 <option selected="selected" value="add" disabled>New...</option>
                 <optgroup v-for="(group, groupName) in paramsGroup" :label="groupName">
-                    <option v-for="param in group" :selected="currentParam === param.name" :value="param.name" v-text="param.description"></option>
+                    <option v-for="param in group" :selected="currentParam === param.name" :value="param.name">{{ param.description }}</option>
                 </optgroup>
             </select>
         </template>
@@ -54,9 +63,9 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-filter"></i></span>
                         </div>
-                        <select v-model="uniqueParams.fid.value" id="paramFid" class="form-control">
+                        <select v-model.number="uniqueParams.fid.value" id="paramFid" class="form-control">
                             <option value="NULL">未指定</option>
-                            <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid" v-text="forum.name"></option>
+                            <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                         </select>
                     </div>
                     <label class="text-center col-1 col-form-label">贴子类型</label>
@@ -107,13 +116,7 @@
                                 'select-param-last-row': paramIndex === params.length - 1
                             }"></select-param>
                         <template v-if="param.name === 'tid'">
-                            <select v-model="param.subParam.range" class="col-1 form-control">
-                                <option>&lt;</option>
-                                <option>=</option>
-                                <option>&gt;</option>
-                                <option>IN</option>
-                                <option>BETWEEN</option>
-                            </select>
+                            <select-range v-model="param.subParam.range"></select-range>
                             <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
                                    type="text" class="col form-control" placeholder="5000000000,5000000001,5000000002,..." aria-label="tid" required pattern="\d+(,\d+)+" />
                             <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
@@ -122,13 +125,7 @@
                                    type="number" class="col-2 form-control" placeholder="5000000000" aria-label="tid" required />
                         </template>
                         <template v-if="param.name === 'pid'">
-                            <select v-model="param.subParam.range" class="col-1 form-control">
-                                <option>&lt;</option>
-                                <option>=</option>
-                                <option>&gt;</option>
-                                <option>IN</option>
-                                <option>BETWEEN</option>
-                            </select>
+                            <select-range v-model="param.subParam.range"></select-range>
                             <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
                                    type="text" class="col form-control" placeholder="15000000000,15000000001,15000000002,..." aria-label="pid" required pattern="\d+(,\d+)+" />
                             <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
@@ -137,13 +134,7 @@
                                    type="number" class="col-2 form-control" placeholder="15000000000" aria-label="pid" required />
                         </template>
                         <template v-if="param.name === 'spid'">
-                            <select v-model="param.subParam.range" class="col-1 form-control">
-                                <option>&lt;</option>
-                                <option>=</option>
-                                <option>&gt;</option>
-                                <option>IN</option>
-                                <option>BETWEEN</option>
-                            </select>
+                            <select-range v-model="param.subParam.range"></select-range>
                             <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
                                    type="text" class="col form-control" placeholder="15000000000,15000000001,15000000002,..." aria-label="spid" required pattern="\d+(,\d+)+" />
                             <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
@@ -164,12 +155,12 @@
                 <div class="form-group form-row">
                     <label class="col-1 col-form-label" for="paramPage">页数</label>
                     <input v-model="uniqueParams.page.value" id="paramPage" type="number" class="col-1 form-control" aria-label="page" />
-                    <label class="col-2 col-form-label" v-text="`route page: ${$route.params.page}`"></label>
+                    <label class="col-2 col-form-label">route page: {{ $route.params.page }}</label>
                 </div>
             </form>
         </template>
         <template id="posts-query-template">
-            <query-form :forum-list="forumList"></query-form>
+            <query-form :forum-list="forumList" ref="queryForm"></query-form>
         </template>
         <div id="posts-query">
             <router-view></router-view>
@@ -182,6 +173,13 @@
         <script>
             'use strict';
             $$initialNavBar('postMulti');
+
+            const selectRangeComponent = Vue.component('select-range', {
+                template: '#select-range-template',
+                props: {
+                    value: String
+                }
+            });
 
             const selectParamComponent = Vue.component('select-param', {
                 template: '#select-param-template',
@@ -410,9 +408,7 @@
                 computed: {
                 },
                 created () {
-                    $$loadForumList().then((forumList) => {
-                        this.$data.forumList = forumList;
-                    });
+                    $$loadForumList().then((forumList) => this.$data.forumList = forumList);
                 },
                 mounted () {
 

@@ -32,8 +32,8 @@
                     <div v-for="page in [usersData.pages]" class="w-auto">
                         <div class="p-2 badge badge-light">
                             <a v-if="page.currentPage > 1" class="badge badge-primary" :href="previousPageUrl">上一页</a>
-                            <p class="h4" v-text="`第 ${page.currentPage} 页`"></p>
-                            <span class="small" v-text="`第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条`"></span>
+                            <p class="h4">第 {{ page.currentPage }} 页</p>
+                            <span class="small">{{ `第 ${page.firstItem}~${page.firstItem + page.currentItems - 1} 条` }}</span>
                         </div>
                     </div>
                     <div class="col align-middle"><hr /></div>
@@ -64,10 +64,7 @@
                     <div class="row align-items-center">
                         <div class="col"><hr /></div>
                         <div class="w-auto" v-for="page in [usersData.pages]">
-                            <button @click="queryNewPage(page.currentPage + 1)"
-                                    type="button" class="btn btn-secondary">
-                                <span class="h4">下一页</span>
-                            </button>
+                            <button @click="queryNewPage(page.currentPage + 1)" type="button" class="btn btn-secondary"><span class="h4">下一页</span></button>
                         </div>
                         <div class="col"><hr /></div>
                     </div>
@@ -260,9 +257,7 @@
                                 this.$data.userPages = [];
                                 this.$parent.showError404Placeholder = true;
                             })
-                            .always(() => {
-                                this.$data.loadingNewUsers = false
-                            });
+                            .always(() => this.$data.loadingNewUsers = false);
                     });
                 }
             },

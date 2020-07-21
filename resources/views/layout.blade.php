@@ -245,14 +245,7 @@
                 });
             };
 
-            const $$loadForumList = () => new Promise((resolve, reject) => {
-                $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => {
-                    resolve(_.map(ajaxData, (forum) => { // convert every fid to string to fit with <select> value type
-                        forum.fid = forum.fid.toString();
-                        return forum;
-                    }));
-                });
-            });
+            const $$loadForumList = () => new Promise((resolve) => $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => resolve(ajaxData)));
 
             const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
                 if (spid != null) {
@@ -272,15 +265,9 @@
                     return `${$$baseUrl}/post/spid/${spid}`;
                 }
             };
-            const $$getTiebaUserLink = (username) => {
-                return `http://tieba.baidu.com/home/main?un=${username}`;
-            };
-            const $$getTBMUserLink = (username) => {
-                return `${$$baseUrl}/user/n/${username}`;
-            };
-            const $$getTiebaUserAvatarUrl = (avatarUrl) => {
-                return `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
-            };
+            const $$getTiebaUserLink = (username) => `http://tieba.baidu.com/home/main?un=${username}`;
+            const $$getTBMUserLink = (username) => `${$$baseUrl}/user/n/${username}`;
+            const $$getTiebaUserAvatarUrl = (avatarUrl) => `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
         </script>
         @yield('script')
     </body>

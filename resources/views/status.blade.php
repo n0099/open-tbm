@@ -263,9 +263,7 @@
             watch: {
                 autoRefresh (autoRefresh) {
                     if (autoRefresh) {
-                        this.$data.autoRefreshIntervalID = setInterval(() => {
-                            loadStatusChart(this.$data.statusQuery);
-                        }, 60000); // refresh data every minute
+                        this.$data.autoRefreshIntervalID = setInterval(() => loadStatusChart(this.$data.statusQuery), 60000); // refresh data every minute
                     } else {
                         clearInterval(this.$data.autoRefreshIntervalID);
                     }

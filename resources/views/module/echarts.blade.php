@@ -33,24 +33,12 @@
         };
 
         const $$echartsTimeRangeAxisPointerLabelFormatter = {
-            minute: (param) => {
-                return moment(param.value).format('YYYY-MM-DD HH:mm');
-            },
-            hour: (param) => {
-                return moment(param.value).format('YYYY-MM-DD HH:00~HH:60');
-            },
-            day: (param) => {
-                return moment(param.value).format('YYYY-MM-DD');
-            },
-            week: (param) => {
-                return param.value;
-            },
-            month: (param) => {
-                return param.value;
-            },
-            year: (param) => {
-                return param.value;
-            },
+            minute: (param) => moment(param.value).format('YYYY-MM-DD HH:mm'),
+            hour: (param) => moment(param.value).format('YYYY-MM-DD HH:00~HH:60'),
+            day: (param) => moment(param.value).format('YYYY-MM-DD'),
+            week: (param) => param.value,
+            month: (param) => param.value,
+            year: (param) => param.value
         };
     </script>
 @endsection

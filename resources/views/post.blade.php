@@ -432,7 +432,7 @@
                                     <i class="fas fa-filter"></i>
                                 </span>
                             </div>
-                            <select v-model="queryData.query.fid"
+                            <select v-model.number="queryData.query.fid"
                                     data-param="fid" id="queryFid" class="form-control">
                                 <option value="undefined">未指定</option>
                                 <option v-for="forum in forumsList" :key="forum.fid"
@@ -1204,9 +1204,7 @@
                                     this.$data.postPages = [];
                                     this.$parent.showError404Placeholder = true;
                                 })
-                                .always(() => {
-                                    this.$data.loadingNewPosts = false
-                                });
+                                .always(() => this.$data.loadingNewPosts = false);
                         });
                     },
                     changeDocumentTitle (route, newPage = null, threadTitle = null) {
