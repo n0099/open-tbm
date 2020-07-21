@@ -149,24 +149,24 @@
                 loadingNewUsers: Boolean,
                 isLastPageInPages: Boolean
             },
-            data: function () {
+            data () {
                 return {
                     $$getTiebaUserAvatarUrl,
                     displayingItemsID: []
                 };
             },
             computed: {
-                previousPageUrl: function () { // computed function will caching attr to ensure each list component's url won't be updated after page param change
+                previousPageUrl () { // computed function will caching attr to ensure each list component's url won't be updated after page param change
                     // generate an new absolute url with previous page params which based on current route path
                     let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                     return `${$$baseUrlDir}${urlWithNewPage}`;
                 }
             },
-            mounted: function () {
+            mounted () {
 
             },
             methods: {
-                getUserGender: function (gender) {
+                getUserGender (gender) {
                     let gendersList = {
                         0: '未指定（显示为男）',
                         1: '男 ♂',
@@ -174,7 +174,7 @@
                     };
                     return gendersList[gender];
                 },
-                queryNewPage : function (pageNum, nextPageButtonDOM) {
+                queryNewPage (pageNum, nextPageButtonDOM) {
 
                 }
             }
@@ -185,7 +185,7 @@
             props: {
 
             },
-            data: function () {
+            data () {
                 return {
                     formData: { query: {}, param: {} },
                     selectUser: {}
@@ -195,21 +195,21 @@
 
             },
             watch: {
-                selectUser: function (selectUser) {
+                selectUser (selectUser) {
                     this.$data.formData.param = selectUser.params;
                 }
             },
-            created: function () {
+            created () {
                 let queryCustomParams = _.cloneDeep(this.$route.query);
                 let queryPathParams = _.omit(_.cloneDeep(this.$route.params), 'pathMatch'); // prevent store pathMatch property into params due to https://github.com/vuejs/vue-router/issues/2503
                 this.$data.formData = { query: queryCustomParams, param: queryPathParams };
             },
-            beforeMount: function () {
+            beforeMount () {
                 this.$data.selectUser.selectBy = this.$route.name;
                 this.$data.selectUser.params = this.$route.params;
             },
             methods: {
-                submitQueryForm: function (formData) {
+                submitQueryForm (formData) {
                     formData = _.mapValues(formData, (i) => _.omitBy(i, _.isEmpty)); // deep clone, remove falsy values
                     this.$router.push({
                         name: _.isEmpty(formData.param) ? 'emptyParam' : this.$data.selectUser.selectBy,
@@ -222,25 +222,25 @@
 
         const userListPagesComponent = Vue.component('user-list-pages', {
             template: '#user-list-pages-template',
-            data: function () {
+            data () {
                 return {
                     userPages: [],
                     loadingNewUsers: false
                 };
             },
             watch: {
-                loadingNewUsers: function (loadingNewUsers) {
+                loadingNewUsers (loadingNewUsers) {
                     if (loadingNewUsers) {
                         this.$parent.showError404Placeholder = false;
                         this.$parent.showFirstLoadingPlaceholder = false;
                     }
                 }
             },
-            mounted: function () {
+            mounted () {
                 this.queryUsersData(this.$route);
             },
             methods: {
-                queryUsersData: function (route) {
+                queryUsersData (route) {
                     let ajaxStartTime = Date.now();
                     let ajaxQueryString = _.merge({}, route.params, route.query); // deep clone
                     if (_.isEmpty(ajaxQueryString)) {
@@ -273,7 +273,7 @@
         });
         const userQueryVue = new Vue({
             el: '#user-query',
-            data: function () {
+            data () {
                 return {
                     showFirstLoadingPlaceholder: true, // show by initially
                     showError404Placeholder: false

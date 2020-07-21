@@ -56,7 +56,7 @@
                         </div>
                         <select v-model="uniqueParams.fid.value" id="paramFid" class="form-control">
                             <option value="NULL">未指定</option>
-                            <option v-for="forum in forumsList" :key="forum.fid" :value="forum.fid" v-text="forum.name"></option>
+                            <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid" v-text="forum.name"></option>
                         </select>
                     </div>
                     <label class="text-center col-1 col-form-label">贴子类型</label>
@@ -169,7 +169,7 @@
             </form>
         </template>
         <template id="posts-query-template">
-            <query-form></query-form>
+            <query-form :forum-list="forumList"></query-form>
         </template>
         <div id="posts-query">
             <router-view></router-view>
@@ -188,7 +188,7 @@
                 props: {
                     currentParam: String
                 },
-                data: function () {
+                data () {
                     return {
                         paramsGroup: {
                             ID: [
@@ -201,7 +201,7 @@
                 },
                 computed: {
                 },
-                mounted: function () {
+                mounted () {
                 },
                 methods: {
                 }
@@ -210,11 +210,10 @@
             const queryFormComponent = Vue.component('query-form', {
                 template: '#query-form-template',
                 props: {
-
+                    forumList: Array
                 },
-                data: function () {
+                data () {
                     return {
-                        forumsList: {},
                         queryData: { query:{}, params:{} },
                         uniqueParams: {
                             fid: { name: 'fid' },
@@ -253,11 +252,11 @@
                         }
                     }
                 },
-                beforeMount: function () {
+                beforeMount () {
                     this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param));
                     this.$data.params = _.map(this.$data.params, (param) => this.fillParamWithDefaultValue(param));
                 },
-                mounted: function () {
+                mounted () {
                     // parse route path to params
                     if (this.$route.name.startsWith('param')) {
                         _.chain(this.$route.params.page == null ? this.$route.path : this.$route.params[1]) // when page is a route param, remaining params path will be params[1]
@@ -383,15 +382,15 @@
                         }
                         this.$router.push({ path: `/${this.formatCurrentParamsToPath()}` }); // param route
                     },
-                    addParam: function (event) {
+                    addParam (event) {
                         this.$data.params.push(this.fillParamWithDefaultValue({ name: event.target.value }));
                         event.target.value = 'add'; // reset to add option
                     },
-                    changeParam: function (beforeParamIndex, afterParamName) {
+                    changeParam (beforeParamIndex, afterParamName) {
                         _.pull(this.$data.invalidParamsIndex, beforeParamIndex);
                         this.$set(this.$data.params, beforeParamIndex, this.fillParamWithDefaultValue({ name: afterParamName }));
                     },
-                    deleteParam: function (paramIndex) {
+                    deleteParam (paramIndex) {
                         _.pull(this.$data.invalidParamsIndex, paramIndex);
                         this.$data.invalidParamsIndex = _.map(this.$data.invalidParamsIndex, (invalidParamIndex) => invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex) // move forward params index which is after current one
                         this.$delete(this.$data.params, paramIndex);
@@ -403,13 +402,19 @@
                 template: '#posts-query-template',
                 props: {
                 },
-                data: function () {
+                data () {
                     return {
+                        forumList: []
                     };
                 },
                 computed: {
                 },
-                mounted: function () {
+                created () {
+                    $$loadForumList().then((forumList) => {
+                        this.$data.forumList = forumList;
+                    });
+                },
+                mounted () {
 
                 },
                 methods: {
@@ -418,7 +423,7 @@
 
             const postsQueryVue = new Vue({
                 el: '#posts-query',
-                data: function () {
+                data () {
                     return {
                     };
                 },
@@ -445,7 +450,6 @@
                     ]
                 })
             });
-
         </script>
     @endverbatim
 @endsection

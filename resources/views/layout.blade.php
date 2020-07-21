@@ -232,7 +232,7 @@
                     el: '#navbar',
                     data: { $$baseUrl, activeNav },
                     methods: {
-                        isActiveNav: function (pageName) {
+                        isActiveNav (pageName) {
                             let isActive;
                             if (_.isArray(pageName)) {
                                 isActive = pageName.includes(this.$data.activeNav);
@@ -245,9 +245,9 @@
                 });
             };
 
-            const $$loadForumsList = () => new Promise((resolve, reject) => {
+            const $$loadForumList = () => new Promise((resolve, reject) => {
                 $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => {
-                    resolve(_.map(ajaxData, (forum) => { // convert every fid to string to ensure fid params value type
+                    resolve(_.map(ajaxData, (forum) => { // convert every fid to string to fit with <select> value type
                         forum.fid = forum.fid.toString();
                         return forum;
                     }));

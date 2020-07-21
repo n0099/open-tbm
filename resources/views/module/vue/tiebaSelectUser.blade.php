@@ -57,7 +57,7 @@
                 },
                 selectByOptionsName: {
                     type: Object,
-                    default: function () {
+                    default () {
                         return {
                             uid: 'uid',
                             name: 'name',
@@ -66,14 +66,14 @@
                     }
                 }
             },
-            data: function () {
+            data () {
                 return {
                     selectBy: '',
                     params: {}
                 }
             },
             watch: {
-                selectBy: function (selectBy) {
+                selectBy (selectBy) {
                     this.$data.params = {}; // empty params to prevent old value remains after selectBy changed
                     if (selectBy === 'uid') {
                         this.$data.params.uidComparison = '='; // reset to default value
@@ -81,13 +81,13 @@
                     this.$emit('changed', { selectBy, params: this.$data.params });
                 },
                 params: {
-                    handler: function (params) {
+                    handler (params) {
                         this.$emit('changed', { selectBy: this.$data.selectBy, params });
                     },
                     deep: true
                 }
             },
-            mounted: function () {
+            mounted () {
                 this.$data.selectBy = this.$props.initialParams.selectBy;
                 this.$data.params = this.$props.initialParams.params;
             }

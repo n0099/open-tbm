@@ -261,7 +261,7 @@
                 }
             },
             watch: {
-                autoRefresh: function (autoRefresh) {
+                autoRefresh (autoRefresh) {
                     if (autoRefresh) {
                         this.$data.autoRefreshIntervalID = setInterval(() => {
                             loadStatusChart(this.$data.statusQuery);
@@ -271,12 +271,12 @@
                     }
                 }
             },
-            mounted: function () {
+            mounted () {
                 initialStatusChart();
                 loadStatusChart(this.$data.statusQuery);
             },
             methods: {
-                submitQueryForm: function () {
+                submitQueryForm () {
                     // fully refresh to regenerate a new echarts instance
                     statusChart.clear();
                     initialStatusChart();

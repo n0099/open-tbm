@@ -866,7 +866,7 @@
                     loadCountByTimeChart(countByTimeTimeRange);
                 }
             },
-            mounted: function () {
+            mounted () {
                 $.getJSON(`${$$baseUrl}/api/bilibiliVote/candidatesName.json`).done((ajaxData) => {
                     this.$data.candidatesName = ajaxData;
                     this.$data.candidatesDetailData = _.map(ajaxData, (candidateName, candidateIndex) => {

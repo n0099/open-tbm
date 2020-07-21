@@ -750,7 +750,7 @@
                     loadingNewPosts: Boolean,
                     isLastPage: Boolean
                 },
-                data: function () {
+                data () {
                     return {
                         // import global variables
                         $$baseUrl,
@@ -762,14 +762,14 @@
                     };
                 },
                 computed: {
-                    previousPageUrl: function () { // cache attr to ensure each list component's url won't be updated after page param change
+                    previousPageUrl () { // cache attr to ensure each list component's url won't be updated after page param change
                         // generate an new absolute url with previous page params which based on current route path
                         let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
                         return `${$$baseUrlDir}${urlWithNewPage}`;
                     }
                 },
                 methods: {
-                    getUserData: function (uid) {
+                    getUserData (uid) {
                         return _.find(this.postsData.users, { uid: uid }) || [ // thread latest replier uid might be unknown
                             { id: 0 },
                             { uid: 0 },
@@ -781,7 +781,7 @@
                             { iconInfo: [] }
                         ];
                     },
-                    loadNewThreadsPage: function (eventDOM, newPage) {
+                    loadNewThreadsPage (eventDOM, newPage) {
                         let pagingRouteName = this.$route.name.endsWith('+p') ? this.$route.name : this.$route.name + '+p';
                         this.$router.push({ name: pagingRouteName, params: { page: newPage.toString() }, query: this.$route.query }); // route params value should always be string
                     }
@@ -792,7 +792,7 @@
                 template: '#posts-nav-template',
                 directives: {
                     'class-list': { // operate on real dom to prevent vue v-bind:class overriding other js changed class list (such as bootstrap collapse)
-                        update: function (el, binding) {
+                        update (el, binding) {
                             _.each(binding.value, (isAdd, className) => {
                                 if (isAdd === true) {
                                     $(el).addClass(className);
@@ -803,7 +803,7 @@
                         }
                     },
                     'scroll-into-view': {
-                        update: function (el, binding) {
+                        update (el, binding) {
                             if (binding.value === true) {
                                 el.scrollIntoView();
                                 if (! $(el).is(':last-child')) {
@@ -817,7 +817,7 @@
                     postPages: Array,
                     latestObservedReplyPid: Number
                 },
-                data: function () {
+                data () {
                     return {
                         showPostsNav: false,
                         latestObservedReplyLocation: { page: 0, tid: 0, pid: 0 }
@@ -827,7 +827,7 @@
 
                 },
                 watch: {
-                    latestObservedReplyPid: function (latestObservedReplyPid) {
+                    latestObservedReplyPid (latestObservedReplyPid) {
                         this.$data.latestObservedReplyLocation = _.map(this.$props.postPages, (postPage) => {
                             let replyParentThread = _.find(postPage.threads, (thread) => {
                                 return _.find(thread.replies, { pid: latestObservedReplyPid });
@@ -842,7 +842,7 @@
                         })[0];
                     }
                 },
-                created: function () {
+                created () {
 
                 },
                 methods: {
@@ -852,7 +852,7 @@
 
             const postListPagesComponent = Vue.component('post-list-pages', {
                 template: '#post-list-pages-template',
-                data: function () {
+                data () {
                     return {
                         postPages: [], // multi pages of posts list collection
                         loadingNewPosts: false,
@@ -884,13 +884,13 @@
                     };
                 },
                 watch: {
-                    loadingNewPosts: function (loadingNewPosts) {
+                    loadingNewPosts (loadingNewPosts) {
                         if (loadingNewPosts) {
                             this.$parent.showError404Placeholder = false;
                             this.$parent.showFirstLoadingPlaceholder = false;
                         }
                     },
-                    postPages: function () {
+                    postPages () {
                         this.$nextTick(() => { // run jquery on posts lists after vue components stop updating
                             let vue = this;
 
@@ -1048,7 +1048,7 @@
                         });
                     }
                 },
-                created: function () {
+                created () {
                     let customQueryParams = _.cloneDeep(this.$route.query);
                     let queryParams = _.omit(_.cloneDeep(this.$route.params), 'pathMatch'); // prevent store pathMatch property into params due to https://github.com/vuejs/vue-router/issues/2503
                     _.each(this.$data.arrayableCustomQueryParams, (arrayableParamName) => {
@@ -1061,13 +1061,13 @@
                     });
 
                     this.$data.queryData = { query: customQueryParams, params: queryParams };
-                    $$loadForumsList().then((forumsList) => {
+                    $$loadForumList().then((forumsList) => {
                         this.$data.forumsList = forumsList;
                         this.loadPageData(this.$data.queryData.params, this.$data.queryData.query, true); // wait for forums list finish loading
                     });
                 },
                 methods: {
-                    selectUserChanged: function (event) {
+                    selectUserChanged (event) {
                         let queryParams = this.$data.queryData.query;
                         // reset all user select params to prevent old value remains after <select-user> params changed
                         queryParams.userID = null;
@@ -1075,7 +1075,7 @@
                         queryParams.userDisplayName = null;
                         queryParams = _.merge(queryParams, event);
                     },
-                    submitQueryForm: function () {
+                    submitQueryForm () {
                         let queryParams = _.chain(this.$data.queryData.params)
                             .omit('page')
                             .omitBy(_.isEmpty) // omitBy will remove empty param values like empty string
@@ -1141,7 +1141,7 @@
 
                         this.$router.push({ path: `/post${queryParamsPath}`, query: customQueryParams });
                     },
-                    loadPageData: function (routeParams, routeQueryStrings, shouldReplacePage) {
+                    loadPageData (routeParams, routeQueryStrings, shouldReplacePage) {
                         const groupSubRepliesByAuthor = (data) => {
                             data.threads.forEach((thread) => {
                                 thread.replies.forEach((reply) => {
@@ -1209,7 +1209,7 @@
                                 });
                         });
                     },
-                    changeDocumentTitle: function (route, newPage = null, threadTitle = null) {
+                    changeDocumentTitle (route, newPage = null, threadTitle = null) {
                         newPage = newPage || route.params.page || 1;
                         if (! _.isEmpty(this.$data.postPages)) { // make sure it's not 404
                             let forumName = `${this.$data.postPages[0].forum.name}吧`;
@@ -1225,11 +1225,11 @@
                             }
                         }
                     },
-                    replyItemEventRegister: function () {
+                    replyItemEventRegister () {
                         $$tippyInital();
                         $$tiebaImageZoomEventRegister();
                     },
-                    replyItemObserveEvent: function (isVisible, observer) {
+                    replyItemObserveEvent (isVisible, observer) {
                         this.replyItemEventRegister();
                         let replyItem = $(observer.target);
                         let replyPid = parseInt(replyItem.prop('id'));
@@ -1245,14 +1245,14 @@
                             this.changeDocumentTitle(this.$route, currentPage, threadTitle);
                         }
                     },
-                    genPostListKey: function (currentListPage) {
+                    genPostListKey (currentListPage) {
                         let keyCache = this.$data.postListKeyCache[currentListPage];
                         if (keyCache == null) {
                             keyCache = this.$data.postListKeyCache[currentListPage] = `i-${currentListPage + 1}@${JSON.stringify(_.merge({}, this.$route.params, this.$route.query))}`; // deep clone
                         }
                         return keyCache;
                     },
-                    navigateToReplyItem: function (pid) {
+                    navigateToReplyItem (pid) {
                         pid = parseInt(pid);
                         _.each(this.$refs.postLists, (postList) => {
                             let scrollList = postList.$refs.threadItemsScrollList;
@@ -1299,7 +1299,7 @@
 
             const postListVue = new Vue({
                 el: '#post-list-pages',
-                data: function () {
+                data () {
                     return {
                         showFirstLoadingPlaceholder: true, // show by initially
                         showError404Placeholder: false

@@ -196,15 +196,15 @@
                     endTime: moment().format('YYYY-MM-DDTHH:mm')
                 }
             },
-            mounted: function () {
+            mounted () {
                 initialStatsChart();
-                $$loadForumsList().then((forumsList) => {
+                $$loadForumList().then((forumsList) => {
                     this.$data.forumsList = forumsList;
                 });
                 new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
             },
             methods: {
-                submitQueryForm: function () {
+                submitQueryForm () {
                     // fully refresh to regenerate a new echarts instance
                     statsChart.clear();
                     initialStatsChart();
