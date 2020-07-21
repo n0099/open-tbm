@@ -48,12 +48,9 @@
             <label class="col-2 col-form-label text-right" for="queryCandidateCountByTimeTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">
-                        <i class="far fa-clock"></i>
-                    </span>
+                    <span class="input-group-text"><i class="far fa-clock"></i></span>
                 </div>
-                <select v-model="statsQuery.candidateCountByTimeTimeRange"
-                        id="queryCandidateCountByTimeTimeRange" class="form-control">
+                <select v-model="statsQuery.candidateCountByTimeTimeRange" id="queryCandidateCountByTimeTimeRange" class="custom-select form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                 </select>
@@ -65,12 +62,9 @@
             <label class="col-2 col-form-label text-right" for="queryCountByTimeTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">
-                        <i class="far fa-clock"></i>
-                    </span>
+                    <span class="input-group-text"><i class="far fa-clock"></i></span>
                 </div>
-                <select v-model="statsQuery.countByTimeTimeRange"
-                        id="queryCountByTimeTimeRange" class="form-control">
+                <select v-model="statsQuery.countByTimeTimeRange" id="queryCountByTimeTimeRange" class="custom-select form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                 </select>

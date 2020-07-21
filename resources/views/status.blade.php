@@ -18,27 +18,18 @@
             <label class="col-2 col-form-label" for="queryStatusTime">时间范围</label>
             <div id="queryStatusTime" class="col-7 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">
-                        <i class="far fa-calendar-alt"></i>
-                    </span>
+                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
                 </div>
-                <input v-model="statusQuery.startTime"
-                       id="queryStatusStartTime" type="datetime-local" class="form-control">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">至</span>
-                </div>
-                <input v-model="statusQuery.endTime"
-                       id="queryStatusEndTime" type="datetime-local" class="form-control">
+                <input v-model="statusQuery.startTime" type="datetime-local" class="form-control">
+                <div class="input-group-prepend input-group-append"><span class="input-group-text">至</span></div>
+                <input v-model="statusQuery.endTime" type="datetime-local" class="form-control">
             </div>
-            <label class="border-left text-center col-1 col-form-label" for="queryStatusTimeRange">时间粒度</label>
+            <label class="col-1 col-form-label border-left text-center" for="queryStatusTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">
-                        <i class="far fa-clock"></i>
-                    </span>
+                    <span class="input-group-text"><i class="far fa-clock"></i></span>
                 </div>
-                <select v-model="statusQuery.timeRange"
-                        id="queryStatusTimeRange" class="form-control">
+                <select v-model="statusQuery.timeRange" id="queryStatusTimeRange" class="custom-select form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                     <option value="day">天</option>

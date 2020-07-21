@@ -19,16 +19,16 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text"><i class="fas fa-filter"></i></span>
                 </div>
-                <select v-model.number="statsQuery.fid" id="queryStatsForum" class="form-control">
+                <select v-model.number="statsQuery.fid" id="queryStatsForum" class="custom-select form-control">
                     <option v-for="forum in forumsList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                 </select>
             </div>
-            <label class="border-left text-center col-2 col-form-label" for="queryStatsTimeRange">时间粒度</label>
+            <label class="col-2 col-form-label border-left text-center" for="queryStatsTimeRange">时间粒度</label>
             <div class="col-2 input-group">
                 <div class="input-group-prepend">
                     <span class="input-group-text"><i class="far fa-clock"></i></span>
                 </div>
-                <select v-model="statsQuery.timeRange" id="queryStatsTimeRange" class="form-control">
+                <select v-model="statsQuery.timeRange" id="queryStatsTimeRange" class="custom-select form-control">
                     <option value="minute">分钟</option>
                     <option value="hour">小时</option>
                     <option value="day">天</option>
@@ -45,9 +45,7 @@
                     <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
                 </div>
                 <input v-model="statsQuery.startTime" id="queryStatsStartTime" type="datetime-local" class="form-control">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">至</span>
-                </div>
+                <div class="input-group-prepend input-group-append"><span class="input-group-text">至</span></div>
                 <input v-model="statsQuery.endTime" id="queryStatsEndTime" type="datetime-local" class="form-control">
             </div>
             <button type="submit" class="ml-auto btn btn-primary">查询</button>

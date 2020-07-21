@@ -76,8 +76,7 @@
                 <div class="form-inline form-group form-row">
                     <select-user v-model="selectUser"></select-user>
                     <label class="col-2 col-form-label" for="queryGender">性别</label>
-                    <select v-model="formData.query.gender"
-                            id="queryGender" class="form-control col-3">
+                    <select v-model="formData.query.gender" id="queryGender" class="col-3 custom-select form-control">
                         <option value="default">不限</option>
                         <option value="0">未指定（显示为男）</option>
                         <option value="1">男 ♂</option>

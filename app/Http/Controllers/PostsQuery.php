@@ -107,7 +107,7 @@ class PostsQuery extends Controller
                 $queryParams['fid'] = IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid'];
             }
             $searchQueryParamsRequiredPostTypes = [
-                'pid' => ['reply', 'subReply'],
+                'pid' => ['reply', 'subReply'], // todo: it's also index query's params
                 'spid' => ['subReply'],
                 'threadTitle' => ['thread'],
                 'latestReplyTimeStart' => ['thread'],

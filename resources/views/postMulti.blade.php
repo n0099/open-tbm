@@ -39,7 +39,7 @@
 @section('container')
     @verbatim
         <template id="select-range-template">
-            <select :value="value" @input="$emit('input', $event.target.value)" class="col-1 form-control">
+            <select :value="value" @input="$emit('input', $event.target.value)" class="col-1 custom-select form-control">
                 <option>&lt;</option>
                 <option>=</option>
                 <option>&gt;</option>
@@ -48,10 +48,10 @@
             </select>
         </template>
         <template id="select-param-template">
-            <select @change="$emit('param-change', $event)" class="col-2 form-control">
+            <select @change="$emit('param-change', $event)" class="col-2 custom-select form-control">
                 <option selected="selected" value="add" disabled>New...</option>
                 <optgroup v-for="(group, groupName) in paramsGroup" :label="groupName">
-                    <option v-for="param in group" :selected="currentParam === param.name" :value="param.name">{{ param.description }}</option>
+                    <option v-for="(paramDescription, paramName) in group" :selected="currentParam === paramName" :value="paramName">{{ paramDescription }}</option>
                 </optgroup>
             </select>
         </template>
@@ -63,24 +63,24 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-filter"></i></span>
                         </div>
-                        <select v-model.number="uniqueParams.fid.value" id="paramFid" class="form-control">
+                        <select v-model.number="uniqueParams.fid.value" id="paramFid" class="custom-select form-control">
                             <option value="NULL">未指定</option>
                             <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                         </select>
                     </div>
-                    <label class="text-center col-1 col-form-label">贴子类型</label>
+                    <label class="col-1 col-form-label text-center">贴子类型</label>
                     <div class="input-group my-auto col">
                         <div class="custom-checkbox custom-control custom-control-inline">
-                            <input v-model="uniqueParams.postTypes.value" id="paramPostTypeThread" type="checkbox" value="thread" class="custom-control-input">
-                            <label class="custom-control-label" for="paramPostTypeThread">主题贴</label>
+                            <input v-model="uniqueParams.postTypes.value" id="paramPostTypesThread" type="checkbox" value="thread" class="custom-control-input">
+                            <label class="custom-control-label" for="paramPostTypesThread">主题贴</label>
                         </div>
                         <div class="custom-checkbox custom-control custom-control-inline">
-                            <input v-model="uniqueParams.postTypes.value" id="paramPostTypeReply" type="checkbox" value="reply" class="custom-control-input">
-                            <label class="custom-control-label" for="paramPostTypeReply">回复贴</label>
+                            <input v-model="uniqueParams.postTypes.value" id="paramPostTypesReply" type="checkbox" value="reply" class="custom-control-input">
+                            <label class="custom-control-label" for="paramPostTypesReply">回复贴</label>
                         </div>
                         <div class="custom-checkbox custom-control custom-control-inline">
-                            <input v-model="uniqueParams.postTypes.value" id="paramPostTypeSubReply" type="checkbox" value="subReply" class="custom-control-input">
-                            <label class="custom-control-label" for="paramPostTypeSubReply">楼中楼</label>
+                            <input v-model="uniqueParams.postTypes.value" id="paramPostTypesSubReply" type="checkbox" value="subReply" class="custom-control-input">
+                            <label class="custom-control-label" for="paramPostTypesSubReply">楼中楼</label>
                         </div>
                     </div>
                 </div>
@@ -90,7 +90,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
                         </div>
-                        <select v-model="uniqueParams.orderBy.value" class="col form-control">
+                        <select v-model="uniqueParams.orderBy.value" class="col custom-select form-control">
                             <option value="default">默认（按贴索引查询按发贴时间正序，按吧索引/搜索查询倒序）</option>
                             <option value="postTime">发贴时间</option>
                             <optgroup label="贴子ID">
@@ -99,7 +99,7 @@
                                 <option value="spid">楼中楼spid</option>
                             </optgroup>
                         </select>
-                        <select v-if="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction" class="col-6 form-control">
+                        <select v-if="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction" class="col-6 custom-select form-control">
                             <option value="default">默认（按贴索引查询正序，按吧索引/搜索查询倒序）</option>
                             <option value="ASC">正序（从小到大，旧到新）</option>
                             <option value="DESC">倒序（从大到小，新到旧）</option>
@@ -141,6 +141,11 @@
                                    type="text" class="col-3 form-control" placeholder="15000000000,16000000000" aria-label="spid" required pattern="\d+,\d+" />
                             <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)"
                                    type="number" class="col-2 form-control" placeholder="15000000000" aria-label="spid" required />
+                        </template>
+                        <template v-if="param.name === 'postTime' || param.name === 'latestReplyTime'">
+                            <input v-model="param.subParam.start" type="datetime-local" class="col-3 form-control" required>
+                            <div class="input-group-prepend input-group-append"><span class="input-group-text">至</span></div>
+                            <input v-model="param.subParam.end" :class="getControlRowClass(paramIndex, params)" type="datetime-local" class="col-3 form-control" required>
                         </template>
                     </div>
                 </div>
@@ -189,11 +194,17 @@
                 data () {
                     return {
                         paramsGroup: {
-                            ID: [
-                                { name: 'tid', description: 'tid（主题贴ID）' },
-                                { name: 'pid', description: 'pid（回复贴ID）' },
-                                { name: 'spid', description: 'spid（楼中楼ID）' }
-                            ]
+                            贴子ID: {
+                                tid: 'tid（主题贴ID）',
+                                pid: 'pid（回复贴ID）',
+                                spid: 'spid（楼中楼ID）'
+                            },
+                            所有贴子类型: {
+                                postTime: '发帖时间'
+                            },
+                            仅主题贴: {
+                                latestReplyTime: '最后回复时间'
+                            }
                         }
                     };
                 },
@@ -212,7 +223,6 @@
                 },
                 data () {
                     return {
-                        queryData: { query:{}, params:{} },
                         uniqueParams: {
                             fid: { name: 'fid' },
                             postTypes: { name: 'postTypes' },
@@ -220,15 +230,18 @@
                             page: { name: 'page' }
                         },
                         params: [], // [{ name: '', value: '', subParam: { name: value } }, ...]
+                        invalidParamsIndex: [],
                         paramsDefaultValue: {
                             fid: { value: 'NULL' },
-                            postTypes: { value: _.sortBy(['thread', 'reply', 'subReply']) }, // sort here to prevent further sort while comparing
+                            postTypes: { value: ['thread', 'reply', 'subReply'] },
                             orderBy: { value: 'default', subParam: { direction: 'default' } },
                             page: { value: 1 },
                             // up above are unique params
                             tid: { subParam: { range: '=' } },
                             pid: { subParam: { range: '=' } },
                             spid: { subParam: { range: '=' } },
+                            postTime: { subParam : { start: undefined, end: undefined } },
+                            latestReplyTime: { subParam : { start: undefined, end: undefined } },
                             threadProperties: { value: [] },
                             userManagerTypes: { value: 'default' },
                             userGender: { value: 'default' },
@@ -238,16 +251,53 @@
                             threadViewNum: { subParam: { range: '=' } },
                             threadShareNum: { subParam: { range: '=' } }
                         },
-                        invalidParamsIndex: []
+                        paramsRequiredPostTypes: { // not set means this param accepts any post types
+                            pid: ['reply', 'subReply'],
+                            spid: ['subReply'],
+                            latestReplyTime: ['thread']
+                        },
+                        paramsPreprocessor: { // param is byref object so changes will sync
+                            postTypes (param) {
+                                param.value = param.value.split(',');
+                            },
+                            postTime (param) {
+                                [param.subParam.start, param.subParam.end] = param.value.split(',');
+                            },
+                            latestReplyTime (param) {
+                                [param.subParam.start, param.subParam.end] = param.value.split(',');
+                            }
+                        },
+                        paramsWatcher: { // param is byref object so changes will sync
+                            orderBy (param) {
+                                if (param.value === 'default') { // reset to default
+                                    param.subParam.direction = 'default';
+                                }
+                            },
+                            postTime (param) {
+                                param.value = `${param.subParam.start},${param.subParam.end}`; // combine sub params start and end time into root param's value
+                            },
+                            latestReplyTime (param) {
+                                param.value = `${param.subParam.start},${param.subParam.end}`; // combine sub params start and end time into root param's value
+                            }
+                        },
+                        paramWatcher (newParamsArray, oldParamsArray) {
+                            console.log(JSON.stringify(newParamsArray), JSON.stringify(oldParamsArray));
+                            _.map(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
+                                this.$data.paramsWatcher[param.name](param);
+                            })
+                        }
                     };
                 },
                 computed: {
                 },
                 watch: {
-                    'uniqueParams.orderBy.value': function (orderBy) {
-                        if (orderBy === 'default') { // reset to default
-                            this.$data.uniqueParams.orderBy.subParam.direction = 'default';
-                        }
+                    uniqueParams: {
+                        handler: 'paramWatcher',
+                        deep: true
+                    },
+                    params: {
+                        handler: 'paramWatcher',
+                        deep: true
                     }
                 },
                 beforeMount () {
@@ -260,11 +310,11 @@
                         _.chain(this.$route.params.page == null ? this.$route.path : this.$route.params[1]) // when page is a route param, remaining params path will be params[1]
                             .trim('/')
                             .split('/')
-                            .filter() // filter will remove falsy values like ''
+                            .filter() // filter() will remove falsy values like ''
                             .map((paramWithSub) => {
                                 let parsedParam = { subParam: {} };
                                 _.map(paramWithSub.split(';'), (params, paramIndex) => {
-                                    let paramPair = params.split(':');
+                                    let paramPair = [params.substr(0, params.indexOf(':')), params.substr(params.indexOf(':') + 1)]; // split kv pair by first :
                                     if (paramIndex === 0) { // main param
                                         [parsedParam.name, parsedParam.value] = paramPair;
                                     } else { // sub params
@@ -275,10 +325,10 @@
                             })
                             .map(this.fillParamWithDefaultValue)
                             .each((param) => {
+                                if (_.includes(_.keys(this.$data.paramsPreprocessor), param.name)) {
+                                    this.$data.paramsPreprocessor[param.name](param);
+                                }
                                 if (_.includes(_.keys(this.$data.uniqueParams), param.name)) { // is unique param
-                                    if (param.name === 'postTypes') { // array type param
-                                        param.value = param.value.split(',');
-                                    }
                                     this.$data.uniqueParams[param.name] = param;
                                 } else {
                                     this.$data.params.push(param);
@@ -322,7 +372,7 @@
                             delete param.value;
                         }
                         _.each(defaultParam.subParam, (value, name) => {
-                            if (param.subParam[name] === value) {
+                            if (param.subParam[name] === value || value === undefined) { // undefined means this sub param must be deleted, as part of the parent param value
                                 delete param.subParam[name];
                             }
                         });
@@ -331,39 +381,24 @@
                         }
                         return _.isEqual(_.keys(param), ['name']) ? null : param;  // return null for further filter()
                     },
-                    formatParamToPath (param) { // name:value;subParamName:subParamValue...
-                        return `${param.name}:${this.escapeParamValue(_.isArray(param.value) ? param.value.join(',') : param.value)}${_.map(param.subParam, (value, name) => `;${name}:${this.escapeParamValue(value)}`).join('')}`;
-                    },
-                    formatCurrentParamsToPath () {
-                        this.$data.invalidParamsIndex = []; // reset to prevent duplicate indexes
-                        return _.chain({ uniqueParams: _.values(this.$data.uniqueParams), params: this.$data.params })
-                            .map((params, paramsType) =>
-                                _.map(params, (param, paramIndex) => {
-                                    let clearedParam = this.clearParamDefaultValue(param);
-                                    if (clearedParam === null && paramsType === 'params') {
-                                        this.$data.invalidParamsIndex.push(paramIndex);
-                                    }
-                                    return clearedParam;
-                                })
-                            )
-                            .flatten()
-                            .filter() // filter will remove falsy values like null
-                            .map(this.formatParamToPath)
-                            .join('/')
-                            .value();
-                    },
                     submit () {
                         let newRouteWithPage = {
                             name: this.$data.uniqueParams.page.value !== 1 ? '+p' : '',
                             params: { page: this.$data.uniqueParams.page.value }
                         };
-                        // filter will remove falsy values like null
-                        let params = _.filter(_.map(this.$data.params, this.clearParamDefaultValue));
+                        let params = _.map(this.$data.params, this.clearParamDefaultValue); // we don't filter() here for post type validate
                         let uniqueParams = _.pickBy(_.mapValues(this.$data.uniqueParams, this.clearParamDefaultValue)); // remain keys, pickBy() like filter() for objects
-                        // return _.isEmpty(_.filter(this.$data.params, (param) => ! _.includes(['tid', 'pid', 'spid'], param.name)));
-                        // isParamsIndexQuery() ? (_.isEmpty(params) ? ( uniqueParams.fid.value === 'NULL' ? '全局索引查询' : '按吧索引查询') : '按贴索引查询') : '搜索查询'
-                        //let isOnlyPostsID = _.isEmpty(_.omit(params, 'tid', 'pid', 'spid'))
-                        //    && params.tid.subParam === null && params.pid.subParam === null && params.spid.subParam === null; // there's no range sub param
+                        this.$data.invalidParamsIndex = []; // reset to prevent duplicate indexes
+                        _.each(params, (param, paramIndex) => { // does uniqueParams.postTypes fits with all params required post types
+                            if (this.$data.paramsRequiredPostTypes[param.name] != null // not set means this param accepts any post types
+                                && ! _.isEqual(_.sortBy(this.$data.paramsRequiredPostTypes[param.name]), _.sortBy(this.$data.uniqueParams.postTypes.value))) {
+                                this.$data.invalidParamsIndex.push(paramIndex);
+                            }
+                        });
+                        if (! _.isEmpty(this.$data.invalidParamsIndex)) { // cancel submit when there's any invalid params
+                            return;
+                        }
+                        params = _.filter(params); // filter() will remove falsy values like null
                         if (_.isEmpty(_.omitBy(uniqueParams, { name: 'page' }))) { // post id route
                             for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
                                 let postIDParam = _.filter(params, (param) => param.name === postIDName);
@@ -378,7 +413,10 @@
                             this.$router.push({ name: `fid${newRouteWithPage.name}`, params: { fid: uniqueParams.fid.value, ...newRouteWithPage.params } });
                             return;
                         }
-                        this.$router.push({ path: `/${this.formatCurrentParamsToPath()}` }); // param route
+                        this.$router.push({ path: `/${_.chain([..._.values(uniqueParams), ...params]) // param route
+                            .map((param) => `${param.name}:${this.escapeParamValue(_.isArray(param.value) ? param.value.join(',') : param.value)}${_.map(param.subParam, (value, name) => `;${name}:${this.escapeParamValue(value)}`).join('')}`)  // format param to route path, e.g. name:value;subParamName:subParamValue...
+                            .join('/')
+                            .value()}` });
                     },
                     addParam (event) {
                         this.$data.params.push(this.fillParamWithDefaultValue({ name: event.target.value }));
