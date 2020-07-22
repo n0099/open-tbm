@@ -14,17 +14,24 @@ class Helper
         }
     }
 
+    public static function abortAPIIfNot(int $errorCode, bool $condidtion): void
+    {
+        if (! $condidtion) {
+            static::abortAPI($errorCode);
+        }
+    }
+
     public static function abortAPI(int $errorCode): void
     {
         $statusCodeAndErrorInfos = [
             // httpStatusCode => [ errorCode => errorInfo ]
             400 => [
                 // 40000 => App\Exceptions\Handler->convertValidationExceptionToResponse()
-                40001 => '贴子查询类型必须为索引或自定义搜索查询',
-                40002 => '自定义贴子查询必须指定查询贴吧',
+                40001 => '贴子查询类型必须为索引或搜索查询',
+                40002 => '搜索查询必须指定查询贴吧',
                 40003 => '最后回复人用户参数仅支持主题贴查询',
                 40004 => '部分贴子用户信息查询参数不支持用于主题贴最后回复人',
-                40005 => '部分自定义贴子查询参数与查询贴子类型要求不匹配',
+                40005 => '部分查询参数与查询贴子类型要求不匹配',
                 40006 => '排序方式与查询贴子类型要求不匹配'
             ],
             401 => [

@@ -89,15 +89,39 @@ class PostsQuery extends Controller
         $isSearchQuery = array_intersect_key($requestQueryParams, $searchQueryParamsValidate) !== [];
 
         $queryParams['postType'] = array_sort($queryParams['postType']); // sort here to prevent further sort while validating
+        $paramsRequiredPostTypes = [
+            'pid' => [['reply', 'subReply'], 'OR'],
+            'spid' => [['subReply'], 'AND'],
+            'threadTitle' => [['thread'], 'AND'],
+            'postContent' => [['reply', 'subReply'], 'OR'],
+            'latestReplyTimeStart' => [['thread'], 'AND'],
+            'replySubReplyNum' => [['reply'], 'AND'],
+            'threadProperty' => [['thread'], 'AND'],
+            'threadReplyNum' => [['thread'], 'AND'],
+            'threadViewNum' => [['thread'], 'AND'],
+            'threadShareNum' => [['thread'], 'AND']
+        ];
+        foreach ($paramsRequiredPostTypes as $orderBy => $requiredPostTypes) {
+            if ($queryParams->has($orderBy)) {
+                Helper::abortAPIIfNot(40005, $requiredPostTypes[1] === 'OR'
+                    ? array_diff($queryParams['postType'], $requiredPostTypes[0]) === []
+                    : $queryParams['postType'] === array_sort($requiredPostTypes[0]));
+            }
+        }
+
         $queryParams['orderDirection'] ??= $isIndexQuery && $queryForumAndPostsID->keys()->toArray() !== ['fid'] ? 'ASC' : 'DESC'; // order by desc when it's search query or index query with only fid param
         $queryParams['orderBy'] ??= 'postTime'; // default values
-        $orderByRequiredPostType = [
-            'tid' => ['thread', 'reply', 'subReply'],
-            'pid' => ['reply', 'subReply'],
-            'spid' => ['subReply']
+        $orderByRequiredPostTypes = [
+            'tid' => [['thread', 'reply', 'subReply'], 'OR'],
+            'pid' => [['reply', 'subReply'], 'OR'],
+            'spid' => [['subReply'], 'OR']
         ];
-        Helper::abortAPIIf(40006, Str::contains($queryParams['orderBy'], array_keys($orderByRequiredPostType))
-            && array_sort($orderByRequiredPostType[$queryParams['orderBy']]) === $queryParams['postType']);
+        if (in_array($queryParams['orderBy'], array_keys($orderByRequiredPostTypes), true)) {
+            $currentOrderByRequiredPostTypes = $orderByRequiredPostTypes[$queryParams['orderBy']];
+            Helper::abortAPIIfNot(40006, $currentOrderByRequiredPostTypes[1] === 'OR'
+                ? array_diff($queryParams['postType'], $currentOrderByRequiredPostTypes[0]) === []
+                : $queryParams['postType'] === array_sort($currentOrderByRequiredPostTypes[0]));
+        }
 
         if ($isSearchQuery) {
             // search query params relation validate
@@ -106,25 +130,8 @@ class PostsQuery extends Controller
                 Helper::abortAPIIf(40002, $queryPostsID->isEmpty());
                 $queryParams['fid'] = IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid'];
             }
-            $searchQueryParamsRequiredPostTypes = [
-                'pid' => ['reply', 'subReply'], // todo: it's also index query's params
-                'spid' => ['subReply'],
-                'threadTitle' => ['thread'],
-                'latestReplyTimeStart' => ['thread'],
-                'threadProperty' => ['thread'],
-                'threadReplyNum' => ['thread'],
-                'replySubReplyNum' => ['reply'],
-                'threadViewNum' => ['thread'],
-                'threadShareNum' => ['thread'],
-                'postContent' => ['reply', 'subReply']
-            ];
-            foreach ($searchQueryParamsRequiredPostTypes as $paramName => $requiredPostTypes) {
-                if ($queryParams->has($paramName)) {
-                    Helper::abortAPIIf(40005, array_sort($requiredPostTypes) !== $queryParams['postType']);
-                }
-            }
             if (in_array('latestReplier', $queryParams['userType'], true)) {
-                Helper::abortAPIIf(40003, ! in_array('thread', $queryParams['postType'], true));
+                Helper::abortAPIIfNot(40003, in_array('thread', $queryParams['postType'], true));
                 Helper::abortAPIIf(40004, $queryParams->only([
                     'userExpGrade',
                     'userExpGradeRange',
@@ -157,7 +164,7 @@ class PostsQuery extends Controller
     }
 
     /**
-     * Apply search query param's condition on posts model
+     * Apply search query param's condition on posts model's query builder
      *
      * @param string $postType
      * @param Builder $postQuery
@@ -202,19 +209,14 @@ class PostsQuery extends Controller
                 return $postQuery->orderBy($otherQueryParams['orderBy'], $otherQueryParams['orderDirection']);
                 break;
             case 'threadTitle':
-                return $postQuery->where([
-                    'title',
-                    $otherQueryParams['threadTitleRegex'] ? 'REGEXP' : 'LIKE',
-                    $otherQueryParams['threadTitleRegex'] ? $paramValue : "%{$paramValue}%",
-                ]);
-                break;
             case 'postContent':
-                if ($otherQueryParams['postContentRegex']) {
-                    return $postQuery->where('content', 'REGEXP', $paramValue);
+                $fieldName = $paramName === 'threadTitle' ? 'title' : 'content';
+                if ($otherQueryParams["{$paramName}Regex"]) {
+                    return $postQuery->where($fieldName, 'REGEXP', $paramValue);
                 } else {
-                    return $postQuery->where(function ($postModel) use ($paramValue) {
-                        foreach (explode(' ', $paramValue) as $splitedParamValue) { // split param value by space char
-                            $postModel = $postModel->where('content', 'LIKE', "%{$splitedParamValue}%");
+                    return $postQuery->where(function ($query) use ($paramValue, $fieldName) {
+                        foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multi search keyword by space char
+                            $query = $query->orWhere($fieldName, 'LIKE', "%{$splitedKeyword}%");
                         }
                     });
                 }
