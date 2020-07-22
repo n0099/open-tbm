@@ -3,6 +3,7 @@
 @include('module.tiebaPostContentElement')
 @include('module.vue.scrollList')
 @include('module.vue.tiebaSelectUser')
+@include('module.vue.antd')
 
 @section('title', '贴子查询')
 
@@ -12,6 +13,9 @@
             margin-top: -1px;
         }
 
+        .select-param.is-invalid {
+            z-index: 1; /* let border overlaps other selects */
+        }
         .select-param-first-row {
             border-top-left-radius: 0.25rem !important;
         }
@@ -32,6 +36,15 @@
         .add-param-button { /* fa-plus is wider than fa-times 3px */
             padding-left: 10px;
             padding-right: 11px;
+        }
+
+        .a-datetime-range {
+            margin-left: -1px;
+        }
+        .ant-calendar-picker-input {
+            height: 38px;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
         }
     </style>
 @endsection
@@ -90,7 +103,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
                         </div>
-                        <select v-model="uniqueParams.orderBy.value" class="col custom-select form-control">
+                        <select v-model="uniqueParams.orderBy.value" :class="{ 'is-invalid': isOrderByInvalid }" class="col custom-select form-control">
                             <option value="default">默认（按贴索引查询按发贴时间正序，按吧索引/搜索查询倒序）</option>
                             <option value="postTime">发贴时间</option>
                             <optgroup label="贴子ID">
@@ -113,39 +126,44 @@
                             :class="{
                                 'is-invalid': invalidParamsIndex.includes(paramIndex),
                                 'select-param-first-row': paramIndex === 0,
-                                'select-param-last-row': paramIndex === params.length - 1
+                                'select-param-last-row': paramIndex === params.length - 1,
+                                'select-param': true
                             }"></select-param>
-                        <template v-if="param.name === 'tid'">
+                        <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
                             <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="text" class="col form-control" placeholder="5000000000,5000000001,5000000002,..." aria-label="tid" required pattern="\d+(,\d+)+" />
+                                   :placeholder="param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...'" :aria-label="param.name"
+                                   type="text" class="col form-control" required pattern="\d+(,\d+)+" />
                             <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="text" class="col-3 form-control" placeholder="5000000000,6000000000" aria-label="tid" required pattern="\d+,\d+" />
+                                   :placeholder="param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000'" :aria-label="param.name"
+                                   type="text" class="col-3 form-control" required pattern="\d+,\d+" />
                             <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="number" class="col-2 form-control" placeholder="5000000000" aria-label="tid" required />
+                                   :placeholder="param.name === 'tid' ? 5000000000 : 15000000000" :aria-label="param.name"
+                                   type="number" class="col-2 form-control" required />
                         </template>
-                        <template v-if="param.name === 'pid'">
+                        <template v-if="_.includes(['postTime', 'latestReplyTime'], param.name)">
+                            <a-range-picker v-model="param.subParam.range" :locale="antd.locales.zh_CN.DatePicker" :show-time="true"
+                                            format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm" size="large" class="a-datetime-range"></a-range-picker>
+                        </template>
+                        <template v-if="_.includes(['threadTitle', 'postContent'], param.name)">
+                            <input v-model="param.value" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="form-control" required>
+                            <div class="input-group-append">
+                                <div :class="getControlRowClass(paramIndex, params)" class="input-group-text">
+                                    <div class="custom-checkbox custom-control">
+                                        <input v-model="param.subParam.regex" id="paramThreadTitleRegex" type="checkbox" class="custom-control-input">
+                                        <label class="custom-control-label" for="paramThreadTitleRegex">正则</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="text" class="col form-control" placeholder="15000000000,15000000001,15000000002,..." aria-label="pid" required pattern="\d+(,\d+)+" />
-                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="text" class="col-3 form-control" placeholder="15000000000,16000000000" aria-label="pid" required pattern="\d+,\d+" />
-                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="number" class="col-2 form-control" placeholder="15000000000" aria-label="pid" required />
-                        </template>
-                        <template v-if="param.name === 'spid'">
-                            <select-range v-model="param.subParam.range"></select-range>
-                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="text" class="col form-control" placeholder="15000000000,15000000001,15000000002,..." aria-label="spid" required pattern="\d+(,\d+)+" />
-                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="text" class="col-3 form-control" placeholder="15000000000,16000000000" aria-label="spid" required pattern="\d+,\d+" />
-                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   type="number" class="col-2 form-control" placeholder="15000000000" aria-label="spid" required />
-                        </template>
-                        <template v-if="param.name === 'postTime' || param.name === 'latestReplyTime'">
-                            <input v-model="param.subParam.start" type="datetime-local" class="col-3 form-control" required>
-                            <div class="input-group-prepend input-group-append"><span class="input-group-text">至</span></div>
-                            <input v-model="param.subParam.end" :class="getControlRowClass(paramIndex, params)" type="datetime-local" class="col-3 form-control" required>
+                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="100" type="text" class="col form-control" required pattern="\d+(,\d+)+" />
+                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="100" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
+                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="100" type="number" class="col-2 form-control" required />
                         </template>
                     </div>
                 </div>
@@ -203,7 +221,17 @@
                                 postTime: '发帖时间'
                             },
                             仅主题贴: {
-                                latestReplyTime: '最后回复时间'
+                                latestReplyTime: '最后回复时间',
+                                threadTitle: '主题贴标题',
+                                threadViewNum: '主题贴浏览量',
+                                threadShareNum: '主题贴分享量',
+                                threadReplyNum: '主题贴回复量'
+                            },
+                            仅回复贴: {
+                                replySubReplyNum: '楼中楼回复量'
+                            },
+                            仅回复贴或楼中楼: {
+                                postContent: '贴子内容'
                             }
                         }
                     };
@@ -223,6 +251,7 @@
                 },
                 data () {
                     return {
+                        antd,
                         uniqueParams: {
                             fid: { name: 'fid' },
                             postTypes: { name: 'postTypes' },
@@ -230,7 +259,6 @@
                             page: { name: 'page' }
                         },
                         params: [], // [{ name: '', value: '', subParam: { name: value } }, ...]
-                        invalidParamsIndex: [],
                         paramsDefaultValue: {
                             fid: { value: 'NULL' },
                             postTypes: { value: ['thread', 'reply', 'subReply'] },
@@ -240,49 +268,63 @@
                             tid: { subParam: { range: '=' } },
                             pid: { subParam: { range: '=' } },
                             spid: { subParam: { range: '=' } },
-                            postTime: { subParam : { start: undefined, end: undefined } },
-                            latestReplyTime: { subParam : { start: undefined, end: undefined } },
+                            postTime: { subParam: { range: undefined } },
+                            latestReplyTime: { subParam: { range: undefined } },
+                            threadTitle: { subParam: { regex: false } },
+                            postContent: { subParam: { regex: false } },
+                            threadViewNum: { subParam: { range: '=' } },
+                            threadShareNum: { subParam: { range: '=' } },
+                            threadReplyNum: { subParam: { range: '=' } },
+                            replySubReplyNum: { subParam: { range: '=' } },
+
                             threadProperties: { value: [] },
                             userManagerTypes: { value: 'default' },
                             userGender: { value: 'default' },
-                            userExpGrade: { subParam: { range: '=' } },
-                            threadReplyNum: { subParam: { range: '=' } },
-                            replySubReplyNum: { subParam: { range: '=' } },
-                            threadViewNum: { subParam: { range: '=' } },
-                            threadShareNum: { subParam: { range: '=' } }
+                            userExpGrade: { subParam: { range: '=' } }
                         },
-                        paramsRequiredPostTypes: { // not set means this param accepts any post types
-                            pid: ['reply', 'subReply'],
-                            spid: ['subReply'],
-                            latestReplyTime: ['thread']
+                        paramsRequiredPostTypes: {
+                            pid: [['reply', 'subReply'], 'OR'],
+                            spid: [['subReply'], 'AND'],
+                            latestReplyTime: [['thread'], 'AND'],
+                            threadTitle: [['thread'], 'AND'],
+                            postContent: [['reply', 'subReply'], 'OR'],
+                            threadViewNum: [['thread'], 'AND'],
+                            threadShareNum: [['thread'], 'AND'],
+                            threadReplyNum: [['thread'], 'AND'],
+                            replySubReplyNum: [['reply'], 'AND'],
                         },
+                        orderByRequiredPostTypes :{
+                            tid: [['thread', 'reply', 'subReply'], 'OR'],
+                            pid: [['reply', 'subReply'], 'OR'],
+                            spid: [['subReply'], 'OR']
+                        },
+                        invalidParamsIndex: [],
+                        isOrderByInvalid: false,
                         paramsPreprocessor: { // param is byref object so changes will sync
+                            dateTimeRangeParams (param) {
+                                param.subParam.range = param.value.split(',');
+                            },
                             postTypes (param) {
                                 param.value = param.value.split(',');
                             },
-                            postTime (param) {
-                                [param.subParam.start, param.subParam.end] = param.value.split(',');
-                            },
-                            latestReplyTime (param) {
-                                [param.subParam.start, param.subParam.end] = param.value.split(',');
-                            }
+                            get postTime () { return this.dateTimeRangeParams },
+                            get latestReplyTime () { return this.dateTimeRangeParams }
                         },
                         paramsWatcher: { // param is byref object so changes will sync
+                            dateTimeRangeParams (param) {
+                                param.value = (param.subParam.range || []).join(','); // combine datetime range into root param's value
+                            },
                             orderBy (param) {
                                 if (param.value === 'default') { // reset to default
                                     param.subParam.direction = 'default';
                                 }
                             },
-                            postTime (param) {
-                                param.value = `${param.subParam.start},${param.subParam.end}`; // combine sub params start and end time into root param's value
-                            },
-                            latestReplyTime (param) {
-                                param.value = `${param.subParam.start},${param.subParam.end}`; // combine sub params start and end time into root param's value
-                            }
+                            get postTime () { return this.dateTimeRangeParams },
+                            get latestReplyTime ()  { return this.dateTimeRangeParams }
                         },
                         paramWatcher (newParamsArray, oldParamsArray) {
                             console.log(JSON.stringify(newParamsArray), JSON.stringify(oldParamsArray));
-                            _.map(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
+                            _.each(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
                                 this.$data.paramsWatcher[param.name](param);
                             })
                         }
@@ -313,7 +355,7 @@
                             .filter() // filter() will remove falsy values like ''
                             .map((paramWithSub) => {
                                 let parsedParam = { subParam: {} };
-                                _.map(paramWithSub.split(';'), (params, paramIndex) => {
+                                _.each(paramWithSub.split(';'), (params, paramIndex) => {
                                     let paramPair = [params.substr(0, params.indexOf(':')), params.substr(params.indexOf(':') + 1)]; // split kv pair by first :
                                     if (paramIndex === 0) { // main param
                                         [parsedParam.name, parsedParam.value] = paramPair;
@@ -368,7 +410,9 @@
                     clearParamDefaultValue (param) {
                         param = _.cloneDeep(param); // prevent changing origin param
                         let defaultParam = this.$data.paramsDefaultValue[param.name];
-                        if (_.isArray(param.value) ? _.isEqual(_.sortBy(param.value), defaultParam.value) : param.value === defaultParam.value) {
+                        if (_.isEmpty(param.value) || _.isArray(param.value)
+                            ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value))
+                            : param.value === defaultParam.value) { // sort array type param value for comparing
                             delete param.value;
                         }
                         _.each(defaultParam.subParam, (value, name) => {
@@ -388,10 +432,22 @@
                         };
                         let params = _.map(this.$data.params, this.clearParamDefaultValue); // we don't filter() here for post type validate
                         let uniqueParams = _.pickBy(_.mapValues(this.$data.uniqueParams, this.clearParamDefaultValue)); // remain keys, pickBy() like filter() for objects
+
+                        // check params and order by required post type
+                        let postTypes = _.sortBy(this.$data.uniqueParams.postTypes.value);
                         this.$data.invalidParamsIndex = []; // reset to prevent duplicate indexes
-                        _.each(params, (param, paramIndex) => { // does uniqueParams.postTypes fits with all params required post types
-                            if (this.$data.paramsRequiredPostTypes[param.name] != null // not set means this param accepts any post types
-                                && ! _.isEqual(_.sortBy(this.$data.paramsRequiredPostTypes[param.name]), _.sortBy(this.$data.uniqueParams.postTypes.value))) {
+                        this.$data.isOrderByInvalid = false;
+                        _.each(params, (param, paramIndex) => {
+                            if (param !== null) { // is param have no diff with default value
+                                let paramRequiredPostTypes = this.$data.paramsRequiredPostTypes[param.name];
+                                if (paramRequiredPostTypes !== undefined) { // not set means this param accepts any post types
+                                    if (! (paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
+                                        ? _.isEmpty(_.difference(postTypes, _.sortBy(paramRequiredPostTypes[0])))
+                                        : _.isEqual(_.sortBy(paramRequiredPostTypes[0]), postTypes))) {
+                                        this.$data.invalidParamsIndex.push(paramIndex);
+                                    }
+                                }
+                            } else {
                                 this.$data.invalidParamsIndex.push(paramIndex);
                             }
                         });
@@ -399,6 +455,17 @@
                             return;
                         }
                         params = _.filter(params); // filter() will remove falsy values like null
+                        let orderBy = this.$data.uniqueParams.orderBy.value;
+                        if (_.includes(_.keys(this.$data.orderByRequiredPostTypes), orderBy)) {
+                            let orderByRequiredPostTypes = this.$data.orderByRequiredPostTypes[orderBy];
+                            if (! (orderByRequiredPostTypes[1] === 'OR'
+                                ? _.isEmpty(_.difference(postTypes, _.sortBy(orderByRequiredPostTypes[0])))
+                                : _.isEqual(_.sortBy(orderByRequiredPostTypes[0]), postTypes))) {
+                                this.$data.isOrderByInvalid = true;
+                            }
+                        }
+
+                        // decide which route to go
                         if (_.isEmpty(_.omitBy(uniqueParams, { name: 'page' }))) { // post id route
                             for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
                                 let postIDParam = _.filter(params, (param) => param.name === postIDName);
@@ -452,6 +519,19 @@
 
                 },
                 methods: {
+                },
+                beforeRouteUpdate (to, from, next) {
+                    console.log(to, from);
+                    const flatParam = (param) => {
+                        let flatted = {};
+                        flatted[param.name] = param.value;
+                        return _.merge(flatted, param.subParam);
+                    };
+                    console.log(JSON.stringify([
+                        ..._.chain(this.$refs.queryForm.uniqueParams).map(this.$refs.queryForm.clearParamDefaultValue).filter().map(flatParam).values().value(),
+                        ..._.chain(this.$refs.queryForm.params).map(this.$refs.queryForm.clearParamDefaultValue).filter().map(flatParam).value()
+                    ]));
+                    next();
                 }
             });
 
