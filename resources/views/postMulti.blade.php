@@ -23,14 +23,14 @@
             border-bottom-left-radius: 0.25rem !important;
         }
         .param-control-first-row {
-            border-bottom-right-radius: 0 !important;
+            border-bottom-right-radius: 0;
         }
         .param-control-middle-row {
-            border-bottom-right-radius: 0 !important;
-            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
         }
         .param-control-last-row {
-            border-top-right-radius: 0 !important;
+            border-top-right-radius: 0;
         }
 
         .add-param-button { /* fa-plus is wider than fa-times 3px */
@@ -45,6 +45,10 @@
             height: 38px;
             border-bottom-left-radius: 0;
             border-top-left-radius: 0;
+        }
+
+        .param-intput-group-text {
+            background-color: unset;
         }
     </style>
 @endsection
@@ -62,7 +66,7 @@
         </template>
         <template id="select-param-template">
             <select @change="$emit('param-change', $event)" class="col-2 custom-select form-control">
-                <option selected="selected" value="add" disabled>New...</option>
+                <option selected value="add" disabled>New...</option>
                 <optgroup v-for="(group, groupName) in paramsGroup" :label="groupName">
                     <option v-for="(paramDescription, paramName) in group" :selected="currentParam === paramName" :value="paramName">{{ paramDescription }}</option>
                 </optgroup>
@@ -150,8 +154,8 @@
                             <div class="input-group-append">
                                 <div :class="getControlRowClass(paramIndex, params)" class="input-group-text">
                                     <div class="custom-checkbox custom-control">
-                                        <input v-model="param.subParam.regex" id="paramThreadTitleRegex" type="checkbox" class="custom-control-input">
-                                        <label class="custom-control-label" for="paramThreadTitleRegex">正则</label>
+                                        <input v-model="param.subParam.regex" :id="`param${_.upperFirst(param.name)}Regex`" type="checkbox" class="custom-control-input">
+                                        <label :for="`param${_.upperFirst(param.name)}Regex`" class="custom-control-label" >正则</label>
                                     </div>
                                 </div>
                             </div>
@@ -159,11 +163,73 @@
                         <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
                             <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="100" type="text" class="col form-control" required pattern="\d+(,\d+)+" />
+                                   placeholder="100,101,102,..." type="text" class="col form-control" required pattern="\d+(,\d+)+" />
                             <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="100" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
+                                   placeholder="100,200" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
                             <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
                                    placeholder="100" type="number" class="col-2 form-control" required />
+                        </template>
+                        <template v-if="param.name === 'threadProperties'">
+                            <div class="input-group-append">
+                                <div class="param-intput-group-text input-group-text">
+                                    <div class="custom-checkbox custom-control">
+                                        <input v-model="param.value" id="paramThreadPropertiesGood" type="checkbox" value="good" class="custom-control-input">
+                                        <label class="text-danger font-weight-normal custom-control-label" for="paramThreadPropertiesGood">精品</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group-append">
+                                <div :class="getControlRowClass(paramIndex, params)" class="param-intput-group-text input-group-text">
+                                    <div class="custom-checkbox custom-control">
+                                        <input v-model="param.value" id="paramThreadPropertiesSticky" type="checkbox" value="sticky" class="custom-control-input">
+                                        <label class="text-primary font-weight-normal custom-control-label" for="paramThreadPropertiesSticky">置顶</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-if="_.includes(['authorUID', 'latestReplierUID'], param.name)">
+                            <select-range v-model="param.subParam.range"></select-range>
+                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="4000000000,4000000001,4000000002,..." type="text" class="col form-control" required pattern="\d+(,\d+)+" />
+                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="4000000000,5000000000" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
+                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="4000000000" type="number" class="col-2 form-control" required />
+                        </template>
+                        <template v-if="_.includes(['authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
+                            <input v-model="param.value" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="form-control" required>
+                            <div class="input-group-append">
+                                <div :class="getControlRowClass(paramIndex, params)" class="input-group-text">
+                                    <div class="custom-checkbox custom-control">
+                                        <input v-model="param.subParam.regex" :id="`param${_.upperFirst(param.name)}Regex`" type="checkbox" class="custom-control-input">
+                                        <label :for="`param${_.upperFirst(param.name)}Regex`" class="custom-control-label">正则</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-if="param.name === 'authorManagerType'">
+                            <select value="NULL" v-model="param.value" class="col-2 form-control">
+                                <option value="NULL">吧友</option>
+                                <option value="manager">吧主</option>
+                                <option value="assist">小吧主</option>
+                                <option value="voiceadmin">语音小编</option>
+                            </select>
+                        </template>
+                        <template v-if="_.includes(['authorGender', 'latestReplierGender'], param.name)">
+                            <select v-model="param.value" class="col-2 form-control">
+                                <option selected value="0">未设置（显示为男）</option>
+                                <option value="1">男 ♂</option>
+                                <option value="2">女 ♀</option>
+                            </select>
+                        </template>
+                        <template v-if="param.name === 'authorExpGrade'">
+                            <select-range v-model="param.subParam.range"></select-range>
+                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="9,10,11,..." type="text" class="col form-control" required pattern="\d+(,\d+)+" />
+                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="9,18" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
+                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
+                                   placeholder="18" type="number" class="col-2 form-control" required />
                         </template>
                     </div>
                 </div>
@@ -218,29 +284,34 @@
                                 spid: 'spid（楼中楼ID）'
                             },
                             所有贴子类型: {
-                                postTime: '发帖时间'
+                                postTime: '发帖时间',
+                                authorUID: '发帖人UID',
+                                authorName: '发帖人用户名',
+                                authorDisplayName: '发帖人覆盖名',
+                                authorGender: '发帖人性别',
+                                authorManagerType: '发帖人吧务级别'
                             },
                             仅主题贴: {
                                 latestReplyTime: '最后回复时间',
                                 threadTitle: '主题贴标题',
                                 threadViewNum: '主题贴浏览量',
                                 threadShareNum: '主题贴分享量',
-                                threadReplyNum: '主题贴回复量'
+                                threadReplyNum: '主题贴回复量',
+                                threadProperties: '主题贴属性',
+                                latestReplierUID: '最后回复人UID',
+                                latestReplierName: '最后回复人用户名',
+                                latestReplierDisplayName: '最后回复人覆盖名',
+                                latestReplierGender: '最后回复人性别'
                             },
                             仅回复贴: {
                                 replySubReplyNum: '楼中楼回复量'
                             },
                             仅回复贴或楼中楼: {
-                                postContent: '贴子内容'
+                                postContent: '贴子内容',
+                                authorExpGrade: '发帖人经验等级'
                             }
                         }
                     };
-                },
-                computed: {
-                },
-                mounted () {
-                },
-                methods: {
                 }
             });
 
@@ -264,7 +335,6 @@
                             postTypes: { value: ['thread', 'reply', 'subReply'] },
                             orderBy: { value: 'default', subParam: { direction: 'default' } },
                             page: { value: 1 },
-                            // up above are unique params
                             tid: { subParam: { range: '=' } },
                             pid: { subParam: { range: '=' } },
                             spid: { subParam: { range: '=' } },
@@ -276,11 +346,14 @@
                             threadShareNum: { subParam: { range: '=' } },
                             threadReplyNum: { subParam: { range: '=' } },
                             replySubReplyNum: { subParam: { range: '=' } },
-
                             threadProperties: { value: [] },
-                            userManagerTypes: { value: 'default' },
-                            userGender: { value: 'default' },
-                            userExpGrade: { subParam: { range: '=' } }
+                            authorUID: { subParam: { range: '='} },
+                            authorName: { subParam: { regex: false } },
+                            authorDisplayName: { subParam: { regex: false } },
+                            authorExpGrade: { subParam: { range: '='} },
+                            latestReplierUID: { subParam: { range: '='} },
+                            latestReplierName: { subParam: { regex: false } },
+                            latestReplierDisplayName: { subParam: { regex: false } },
                         },
                         paramsRequiredPostTypes: {
                             pid: [['reply', 'subReply'], 'OR'],
@@ -292,6 +365,12 @@
                             threadShareNum: [['thread'], 'AND'],
                             threadReplyNum: [['thread'], 'AND'],
                             replySubReplyNum: [['reply'], 'AND'],
+                            threadProperties: [['thread'], 'AND'],
+                            authorExpGrade: [['reply', 'subReply'], 'OR'],
+                            latestReplierUID: [['thread'], 'AND'],
+                            latestReplierName: [['thread'], 'AND'],
+                            latestReplierDisplayName: [['thread'], 'AND'],
+                            latestReplierGender: [['thread'], 'AND']
                         },
                         orderByRequiredPostTypes :{
                             tid: [['thread', 'reply', 'subReply'], 'OR'],
@@ -304,11 +383,13 @@
                             dateTimeRangeParams (param) {
                                 param.subParam.range = param.value.split(',');
                             },
-                            postTypes (param) {
+                            arrayTypeParams (param) {
                                 param.value = param.value.split(',');
                             },
+                            get postTypes () { return this.arrayTypeParams },
                             get postTime () { return this.dateTimeRangeParams },
-                            get latestReplyTime () { return this.dateTimeRangeParams }
+                            get latestReplyTime () { return this.dateTimeRangeParams },
+                            get threadProperties () { return this.arrayTypeParams }
                         },
                         paramsWatcher: { // param is byref object so changes will sync
                             dateTimeRangeParams (param) {
@@ -410,9 +491,16 @@
                     clearParamDefaultValue (param) {
                         param = _.cloneDeep(param); // prevent changing origin param
                         let defaultParam = this.$data.paramsDefaultValue[param.name];
-                        if (_.isEmpty(param.value) || _.isArray(param.value)
-                            ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value))
-                            : param.value === defaultParam.value) { // sort array type param value for comparing
+                        if (defaultParam === undefined) {
+                            if (_.isEmpty(param.subParam)) {
+                                delete param.subParam;
+                            }
+                            return param;
+                        }
+                        if (_.isEmpty(param.value)
+                            || (_.isArray(param.value)
+                                ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
+                                : param.value === defaultParam.value)) {
                             delete param.value;
                         }
                         _.each(defaultParam.subParam, (value, name) => {
@@ -438,7 +526,7 @@
                         this.$data.invalidParamsIndex = []; // reset to prevent duplicate indexes
                         this.$data.isOrderByInvalid = false;
                         _.each(params, (param, paramIndex) => {
-                            if (param !== null) { // is param have no diff with default value
+                            if (param !== null && param.value != null) { // is param have no diff with default value and have value
                                 let paramRequiredPostTypes = this.$data.paramsRequiredPostTypes[param.name];
                                 if (paramRequiredPostTypes !== undefined) { // not set means this param accepts any post types
                                     if (! (paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
