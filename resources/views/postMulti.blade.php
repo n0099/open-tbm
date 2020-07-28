@@ -55,8 +55,45 @@
 
 @section('container')
     @verbatim
+        <template id="input-text-match-param-template">
+            <div class="input-group-append">
+                <div :class="classes" class="input-group-text">
+                    <div class="custom-radio custom-control custom-control-inline">
+                        <input @input="modelEvent('matchBy', $event.target.value)" :checked="param.subParam.matchBy === 'implicit'" :id="`param${_.upperFirst(param.name)}Implicit-${paramIndex}`"
+                               :name="`param${_.upperFirst(param.name)}-${paramIndex}`" value="implicit" type="radio" class="custom-control-input">
+                        <label :for="`param${_.upperFirst(param.name)}Implicit-${paramIndex}`" class="custom-control-label">模糊</label>
+                    </div>
+                    <div class="custom-radio custom-control custom-control-inline">
+                        <input @input="modelEvent('matchBy', $event.target.value)" :checked="param.subParam.matchBy === 'explicit'" :id="`param${_.upperFirst(param.name)}Explicit-${paramIndex}`"
+                               :name="`param${_.upperFirst(param.name)}-${paramIndex}`" value="explicit" type="radio" class="custom-control-input">
+                        <label :for="`param${_.upperFirst(param.name)}Explicit-${paramIndex}`" class="custom-control-label">精确</label>
+                    </div>
+                    <div class="custom-checkbox custom-control custom-control-inline">
+                        <input @input="modelEvent('spaceSplit', $event.target.checked)" :checked="param.subParam.spaceSplit" :id="`param${_.upperFirst(param.name)}SpaceSplit-${paramIndex}`"
+                               :disabled="param.subParam.matchBy === 'regex'" type="checkbox" class="custom-control-input">
+                        <label :for="`param${_.upperFirst(param.name)}SpaceSplit-${paramIndex}`" class="custom-control-label">空格分隔</label>
+                    </div>
+                    <div class="custom-radio custom-control">
+                        <input @input="modelEvent('matchBy', $event.target.value)" :checked="param.subParam.matchBy === 'regex'" :id="`param${_.upperFirst(param.name)}Regex-${paramIndex}`"
+                               :name="`param${_.upperFirst(param.name)}-${paramIndex}`" value="regex" type="radio" class="custom-control-input">
+                        <label :for="`param${_.upperFirst(param.name)}Regex-${paramIndex}`" class="custom-control-label">正则</label>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template id="input-numeric-param-template">
+            <input v-if="param.subParam.range === 'IN'" @input="modelEvent($event.target.value)" :value="param.value"
+                   :class="classes" :placeholder="placeholders.IN" :aria-label="param.name"
+                   type="text" class="col form-control" required pattern="\d+(,\d+)+" />
+            <input v-else-if="param.subParam.range === 'BETWEEN'" @input="modelEvent($event.target.value)" :value="param.value"
+                   :class="classes" :placeholder="placeholders.BETWEEN" :aria-label="param.name"
+                   type="text" class="col-3 form-control" required pattern="\d+,\d+" />
+            <input v-else @input="modelEvent($event.target.value)" :value="param.value"
+                   :class="classes" :placeholder="placeholders.number" :aria-label="param.name"
+                   type="number" class="col-2 form-control" required />
+        </template>
         <template id="select-range-template">
-            <select :value="value" @input="$emit('input', $event.target.value)" class="col-1 custom-select form-control">
+            <select @input="$emit('input', $event.target.value)" :value="value" class="col-1 custom-select form-control">
                 <option>&lt;</option>
                 <option>=</option>
                 <option>&gt;</option>
@@ -127,85 +164,64 @@
                     <div class="input-group">
                         <button @click="deleteParam(paramIndex)" type="button" class="btn btn-link"><i class="fas fa-times"></i></button>
                         <select-param @param-change="changeParam(paramIndex, $event.target.value)" :current-param="param.name"
-                            :class="{
-                                'is-invalid': invalidParamsIndex.includes(paramIndex),
-                                'select-param-first-row': paramIndex === 0,
-                                'select-param-last-row': paramIndex === params.length - 1,
-                                'select-param': true
-                            }"></select-param>
+                                      :class="{
+                                        'is-invalid': invalidParamsIndex.includes(paramIndex),
+                                        'select-param-first-row': paramIndex === 0,
+                                        'select-param-last-row': paramIndex === params.length - 1,
+                                        'select-param': true
+                                      }"></select-param>
                         <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   :placeholder="param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...'" :aria-label="param.name"
-                                   type="text" class="col form-control" required pattern="\d+(,\d+)+" />
-                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   :placeholder="param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000'" :aria-label="param.name"
-                                   type="text" class="col-3 form-control" required pattern="\d+,\d+" />
-                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)"
-                                   :placeholder="param.name === 'tid' ? 5000000000 : 15000000000" :aria-label="param.name"
-                                   type="number" class="col-2 form-control" required />
+                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                                                 :placeholders="{
+                                                    IN: param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
+                                                    BETWEEN: param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
+                                                    number: param.name === 'tid' ? 5000000000 : 15000000000
+                                                 }"></input-numeric-param>
                         </template>
                         <template v-if="_.includes(['postTime', 'latestReplyTime'], param.name)">
                             <a-range-picker v-model="param.subParam.range" :locale="antd.locales.zh_CN.DatePicker" :show-time="true"
                                             format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm" size="large" class="a-datetime-range"></a-range-picker>
                         </template>
-                        <template v-if="_.includes(['threadTitle', 'postContent'], param.name)">
-                            <input v-model="param.value" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="form-control" required>
-                            <div class="input-group-append">
-                                <div :class="getControlRowClass(paramIndex, params)" class="input-group-text">
-                                    <div class="custom-checkbox custom-control">
-                                        <input v-model="param.subParam.regex" :id="`param${_.upperFirst(param.name)}Regex`" type="checkbox" class="custom-control-input">
-                                        <label :for="`param${_.upperFirst(param.name)}Regex`" class="custom-control-label" >正则</label>
-                                    </div>
-                                </div>
-                            </div>
+                        <template v-if="_.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
+                            <input v-model="param.value" :placeholder="`${param.subParam.matchBy === 'implicit' ? '模糊' : (param.subParam.matchBy === 'explicit' ? '精确' : '正则')}匹配 空格${param.subParam.spaceSplit ? '不' : ''}分割关键词`" type="text" class="form-control" required>
+                            <input-text-match-param v-model="params[paramIndex]" :param-index="paramIndex" :classes="getControlRowClass(paramIndex, params)"></input-text-match-param>
                         </template>
                         <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="100,101,102,..." type="text" class="col form-control" required pattern="\d+(,\d+)+" />
-                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="100,200" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
-                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="100" type="number" class="col-2 form-control" required />
+                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                                                 :placeholders="{
+                                                    IN: '100,101,102,...',
+                                                    BETWEEN: '100,200',
+                                                    number: 100
+                                                 }"></input-numeric-param>
                         </template>
                         <template v-if="param.name === 'threadProperties'">
                             <div class="input-group-append">
                                 <div class="param-intput-group-text input-group-text">
                                     <div class="custom-checkbox custom-control">
-                                        <input v-model="param.value" id="paramThreadPropertiesGood" type="checkbox" value="good" class="custom-control-input">
-                                        <label class="text-danger font-weight-normal custom-control-label" for="paramThreadPropertiesGood">精品</label>
+                                        <input v-model="param.value" :id="`paramThreadPropertiesGood-${paramIndex}`" type="checkbox" value="good" class="custom-control-input">
+                                        <label :for="`paramThreadPropertiesGood-${paramIndex}`" class="text-danger font-weight-normal custom-control-label">精品</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="input-group-append">
                                 <div :class="getControlRowClass(paramIndex, params)" class="param-intput-group-text input-group-text">
                                     <div class="custom-checkbox custom-control">
-                                        <input v-model="param.value" id="paramThreadPropertiesSticky" type="checkbox" value="sticky" class="custom-control-input">
-                                        <label class="text-primary font-weight-normal custom-control-label" for="paramThreadPropertiesSticky">置顶</label>
+                                        <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`" type="checkbox" value="sticky" class="custom-control-input">
+                                        <label :for="`paramThreadPropertiesSticky-${paramIndex}`" class="text-primary font-weight-normal custom-control-label">置顶</label>
                                     </div>
                                 </div>
                             </div>
                         </template>
                         <template v-if="_.includes(['authorUID', 'latestReplierUID'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="4000000000,4000000001,4000000002,..." type="text" class="col form-control" required pattern="\d+(,\d+)+" />
-                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="4000000000,5000000000" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
-                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="4000000000" type="number" class="col-2 form-control" required />
-                        </template>
-                        <template v-if="_.includes(['authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
-                            <input v-model="param.value" type="text" placeholder="模糊匹配 非正则下空格分割关键词" class="form-control" required>
-                            <div class="input-group-append">
-                                <div :class="getControlRowClass(paramIndex, params)" class="input-group-text">
-                                    <div class="custom-checkbox custom-control">
-                                        <input v-model="param.subParam.regex" :id="`param${_.upperFirst(param.name)}Regex`" type="checkbox" class="custom-control-input">
-                                        <label :for="`param${_.upperFirst(param.name)}Regex`" class="custom-control-label">正则</label>
-                                    </div>
-                                </div>
-                            </div>
+                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                                                 :placeholders="{
+                                                    IN: '4000000000,4000000001,4000000002,...',
+                                                    BETWEEN: '4000000000,5000000000',
+                                                    number: 4000000000
+                                                 }"></input-numeric-param>
                         </template>
                         <template v-if="param.name === 'authorManagerType'">
                             <select value="NULL" v-model="param.value" class="col-2 form-control">
@@ -224,12 +240,12 @@
                         </template>
                         <template v-if="param.name === 'authorExpGrade'">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input v-if="param.subParam.range === 'IN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="9,10,11,..." type="text" class="col form-control" required pattern="\d+(,\d+)+" />
-                            <input v-else-if="param.subParam.range === 'BETWEEN'" v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="9,18" type="text" class="col-3 form-control" required pattern="\d+,\d+" />
-                            <input v-else v-model="param.value" :class="getControlRowClass(paramIndex, params)" :aria-label="param.name"
-                                   placeholder="18" type="number" class="col-2 form-control" required />
+                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                                                 :placeholders="{
+                                                    IN: '9,10,11,...',
+                                                    BETWEEN: '9,18',
+                                                    number: 18
+                                                 }"></input-numeric-param>
                         </template>
                     </div>
                 </div>
@@ -262,6 +278,42 @@
         <script>
             'use strict';
             $$initialNavBar('postMulti');
+
+            const inputTextMatchParamComponent = Vue.component('input-text-match-param', {
+                template: '#input-text-match-param-template',
+                model: {
+                    prop: 'param'
+                },
+                props: {
+                    param: Object,
+                    paramIndex: Number,
+                    classes: Object
+                },
+                methods: {
+                    modelEvent (name, value) {
+                        this.$props.param.subParam[name] = value;
+                        this.$emit('input', this.$props.param);
+                    }
+                }
+            });
+
+            const inputNumericParamComponent = Vue.component('input-numeric-param', {
+                template: '#input-numeric-param-template',
+                model: {
+                    prop: 'param'
+                },
+                props: {
+                    param: Object,
+                    classes: Object,
+                    placeholders: Object
+                },
+                methods: {
+                    modelEvent (value) {
+                        this.$props.param.value = value;
+                        this.$emit('input', this.$props.param);
+                    }
+                }
+            });
 
             const selectRangeComponent = Vue.component('select-range', {
                 template: '#select-range-template',
@@ -331,29 +383,31 @@
                         },
                         params: [], // [{ name: '', value: '', subParam: { name: value } }, ...]
                         paramsDefaultValue: {
+                            numericParams: { subParam: { range: '=' } },
+                            textMatchParmas: { subParam: { matchBy: 'implicit', spaceSplit: false } },
                             fid: { value: 'NULL' },
                             postTypes: { value: ['thread', 'reply', 'subReply'] },
                             orderBy: { value: 'default', subParam: { direction: 'default' } },
                             page: { value: 1 },
-                            tid: { subParam: { range: '=' } },
-                            pid: { subParam: { range: '=' } },
-                            spid: { subParam: { range: '=' } },
+                            get tid () { return this.numericParams },
+                            get pid () { return this.numericParams },
+                            get spid () { return this.numericParams },
                             postTime: { subParam: { range: undefined } },
                             latestReplyTime: { subParam: { range: undefined } },
-                            threadTitle: { subParam: { regex: false } },
-                            postContent: { subParam: { regex: false } },
-                            threadViewNum: { subParam: { range: '=' } },
-                            threadShareNum: { subParam: { range: '=' } },
-                            threadReplyNum: { subParam: { range: '=' } },
-                            replySubReplyNum: { subParam: { range: '=' } },
+                            get threadTitle () { return this.textMatchParmas },
+                            get postContent () { return this.textMatchParmas },
+                            get threadViewNum () { return this.numericParams },
+                            get threadShareNum () { return this.numericParams },
+                            get threadReplyNum () { return this.numericParams },
+                            get replySubReplyNum () { return this.numericParams },
                             threadProperties: { value: [] },
-                            authorUID: { subParam: { range: '='} },
-                            authorName: { subParam: { regex: false } },
-                            authorDisplayName: { subParam: { regex: false } },
-                            authorExpGrade: { subParam: { range: '='} },
-                            latestReplierUID: { subParam: { range: '='} },
-                            latestReplierName: { subParam: { regex: false } },
-                            latestReplierDisplayName: { subParam: { regex: false } },
+                            get authorUID () { return this.numericParams },
+                            get authorName () { return this.textMatchParmas },
+                            get authorDisplayName () { return this.textMatchParmas },
+                            get authorExpGrade () { return this.numericParams },
+                            get latestReplierUID () { return this.numericParams },
+                            get latestReplierName () { return this.textMatchParmas },
+                            get latestReplierDisplayName () { return this.textMatchParmas }
                         },
                         paramsRequiredPostTypes: {
                             pid: [['reply', 'subReply'], 'OR'],
@@ -386,22 +440,42 @@
                             arrayTypeParams (param) {
                                 param.value = param.value.split(',');
                             },
+                            textMatchParams (param) {
+                                param.subParam.spaceSplit = param.subParam.spaceSplit === 'true'; // literal string to bool convert
+                            },
                             get postTypes () { return this.arrayTypeParams },
                             get postTime () { return this.dateTimeRangeParams },
                             get latestReplyTime () { return this.dateTimeRangeParams },
-                            get threadProperties () { return this.arrayTypeParams }
+                            get threadProperties () { return this.arrayTypeParams },
+                            get threadTitle () { return this.textMatchParams },
+                            get postContent () { return this.textMatchParams },
+                            get authorName () { return this.textMatchParams },
+                            get authorDisplayName () { return this.textMatchParams },
+                            get latestReplierName () { return this.textMatchParams },
+                            get latestReplierDisplayName () { return this.textMatchParams },
                         },
                         paramsWatcher: { // param is byref object so changes will sync
                             dateTimeRangeParams (param) {
                                 param.value = (param.subParam.range || []).join(','); // combine datetime range into root param's value
                             },
+                            textMatchParams (param) {
+                                if (param.subParam.matchBy === 'regex') {
+                                    param.subParam.spaceSplit = false;
+                                }
+                            },
+                            get postTime () { return this.dateTimeRangeParams },
+                            get latestReplyTime ()  { return this.dateTimeRangeParams },
+                            get threadTitle () { return this.textMatchParams },
+                            get postContent () { return this.textMatchParams },
+                            get authorName () { return this.textMatchParams },
+                            get authorDisplayName () { return this.textMatchParams },
+                            get latestReplierName () { return this.textMatchParams },
+                            get latestReplierDisplayName () { return this.textMatchParams },
                             orderBy (param) {
                                 if (param.value === 'default') { // reset to default
                                     param.subParam.direction = 'default';
                                 }
-                            },
-                            get postTime () { return this.dateTimeRangeParams },
-                            get latestReplyTime ()  { return this.dateTimeRangeParams }
+                            }
                         },
                         paramWatcher (newParamsArray, oldParamsArray) {
                             console.log(JSON.stringify(newParamsArray), JSON.stringify(oldParamsArray));
