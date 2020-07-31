@@ -89,7 +89,7 @@
         <template id="user-list-pages-template">
             <div>
                 <user-list v-for="(usersData, currentListPage) in userPages"
-                           :key="`page${currentListPage + 1}@${JSON.stringify(_.merge({}, $route.params, $route.query))}`"
+                           :key="`page${currentListPage + 1}@${JSON.stringify({ ...$route.params, ...$route.query })}`"
                            :users-data="usersData"
                            :loading-new-users="loadingNewUsers"
                            :is-last-page-in-pages="currentListPage == userPages.length - 1"></user-list>
@@ -238,16 +238,15 @@
             methods: {
                 queryUsersData (route) {
                     let ajaxStartTime = Date.now();
-                    let ajaxQueryString = _.merge({}, route.params, route.query); // deep clone
+                    let ajaxQueryString = { ...route.params, ...route.query }; // deep clone
                     if (_.isEmpty(ajaxQueryString)) {
-                        new Noty({ timeout: 3000, type: 'info', text: '请输入用户查询参数'}).show();
+                        new Noty({ timeout: 3000, type: 'warning', text: '请输入用户查询参数'}).show();
                         this.$parent.showFirstLoadingPlaceholder = false;
                         return;
                     }
                     this.$data.loadingNewUsers = true;
-                    $$reCAPTCHACheck().then((token) => {
-                        ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
-                        $.getJSON(`${$$baseUrl}/api/usersQuery`, ajaxQueryString)
+                    $$reCAPTCHACheck().then((reCAPTCHA) => {
+                        $.getJSON(`${$$baseUrl}/api/usersQuery`, $.param({ ...ajaxQueryString, reCAPTCHA }))
                             .done((ajaxData) => {
                                 this.$data.userPages = [ajaxData];
                                 new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.currentItems}条记录 耗时${Date.now() - ajaxStartTime}ms`}).show();

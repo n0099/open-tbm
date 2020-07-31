@@ -215,7 +215,7 @@
                 grecaptcha.ready(() => {
                     grecaptcha.execute($$reCAPTCHASiteKey)
                         .then((token) => {
-                            resolve({ reCAPTCHA: token });
+                            resolve(token);
                             $$changePageLoading(false);
                         }, () => {
                             reject();

@@ -265,16 +265,12 @@
                     <button type="submit" class="btn btn-primary">查询</button>
                     <button class="ml-2 disabled btn btn-text" type="button" v-text="isParamsIndexQuery() ? (_.isEmpty(params) ? ( uniqueParams.fid.value === 'NULL' ? '全局索引查询' : '按吧索引查询') : '按贴索引查询') : '搜索查询'"></button>
                 </div>
-                <div class="form-group form-row">
-                    <label class="col-1 col-form-label" for="paramPage">页数</label>
-                    <input v-model="uniqueParams.page.value" id="paramPage" type="number" class="col-1 form-control" aria-label="page" />
-                    <label class="col-2 col-form-label">route page: {{ $route.params.page }}</label>
-                </div>
             </form>
         </template>
         <template id="posts-query-template">
             <div>
-                <query-form @new-query="query($event, true)" :forum-list="forumList" ref="queryForm"></query-form>
+                <query-form @new-query="query($event, true)" :forum-list="forumList"></query-form>
+                <span>当前页数：{{ currentPage }}</span>
                 <error-404-placeholder v-show="showError404Placeholder"></error-404-placeholder>
                 <loading-list-placeholder v-show="isLoadingNewPosts"></loading-list-placeholder>
             </div>
@@ -406,28 +402,194 @@
                 }
             });
 
-            const queryFormComponent = Vue.component('query-form', {
+            const baseQueryFormMixin = {
                 template: '#query-form-template',
+                data () {
+                    return {
+                        antd,
+                        uniqueParams: {},
+                        params: [], // [{ name: '', value: '', subParam: { name: value } },...]
+                        invalidParamsIndex: [],
+                        paramsDefaultValue: {},
+                        paramsPreprocessor: {},
+                        paramsWatcher: {},
+                        paramWatcher (newParamsArray, oldParamsArray) {
+                            _.each(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
+                                this.$data.paramsWatcher[param.name](param);
+                            })
+                        }
+                    };
+                },
+                watch: {
+                    uniqueParams: {
+                        handler: 'paramWatcher',
+                        deep: true
+                    },
+                    params: 'paramWatcher',
+                    $route: function (to, from) {
+                        if (_.isEqual(to.path, from.path)) {
+                            return; // ignore when only hash has changed
+                        }
+                        // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
+                        let isOnlyPageChanged = _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page'));
+                        this.parseRoute(to);
+                        if (this.checkParams()) {
+                            this.$parent.query(this.flattenParams(), isOnlyPageChanged);
+                        }
+                    }
+                },
+                beforeMount () {
+                    this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, false));
+                    this.$data.params = _.map(this.$data.params, (param) => this.fillParamWithDefaultValue(param, false));
+                },
+                mounted () {
+                    this.parseRoute(this.$route); // first time parse
+                    if (this.checkParams()) { // query manually since route update event can't be triggered while first load
+                        this.$emit('new-query', this.flattenParams());
+                    }
+                },
+                methods: {
+                    submit () {
+                        if (this.checkParams()) { // check here to stop route submit
+                            let beforeRoutePath = this.$route.path;
+                            this.submitRoute();
+                            if (beforeRoutePath === this.$route.path) {
+                                this.$emit('new-query', this.flattenParams()); // force emit event to refresh new query since route update event will ignore same route path change
+                            }
+                        }
+                    },
+                    parseRoute (route) { throw('component must implements mixin abstruct method') },
+                    checkParams () { throw('component must implements mixin abstruct method') },
+                    submitRoute () { throw('component must implements mixin abstruct method') },
+                    getControlRowClass (paramIndex, params) {
+                        return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
+                            'param-control-first-row': paramIndex === 0,
+                            'param-control-middle-row': ! (paramIndex === 0 || paramIndex === params.length - 1),
+                            'param-control-last-row': paramIndex === params.length - 1
+                        }
+                    },
+                    escapeParamValue (value, unescape = false) {
+                        if (_.isString(value)) {
+                            _.map({ // we don't escape ',' since array type params is already known
+                                '/': '%2F',
+                                ';': '%3B'
+                            }, (encode, char) => value = value.replace(unescape ? encode : char, unescape ? char : encode));
+                        }
+                        return value;
+                    },
+                    addParam (event) {
+                        this.$data.params.push(this.fillParamWithDefaultValue({ name: event.target.value }, false));
+                        event.target.value = 'add'; // reset to add option
+                    },
+                    changeParam (beforeParamIndex, afterParamName) {
+                        _.pull(this.$data.invalidParamsIndex, beforeParamIndex);
+                        this.$set(this.$data.params, beforeParamIndex, this.fillParamWithDefaultValue({ name: afterParamName }, false));
+                    },
+                    deleteParam (paramIndex) {
+                        _.pull(this.$data.invalidParamsIndex, paramIndex);
+                        this.$data.invalidParamsIndex = _.map(this.$data.invalidParamsIndex, (invalidParamIndex) => invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex) // move forward params index which is after current one
+                        this.$delete(this.$data.params, paramIndex);
+                    },
+                    fillParamWithDefaultValue (param, resetToDefault) {
+                        if (resetToDefault) { // cloneDeep to prevent defaultsDeep mutates origin object
+                            return _.defaultsDeep(_.cloneDeep(this.$data.paramsDefaultValue[param.name]), param);
+                        } else {
+                            return _.defaultsDeep(_.cloneDeep(param), this.$data.paramsDefaultValue[param.name]);
+                        }
+                    },
+                    clearParamDefaultValue (param) {
+                        param = _.cloneDeep(param); // prevent changing origin param
+                        let defaultParam = this.$data.paramsDefaultValue[param.name];
+                        if (defaultParam === undefined) {
+                            if (_.isEmpty(param.subParam)) {
+                                delete param.subParam;
+                            }
+                            return param;
+                        }
+                        if (! (_.isNumber(param.value) || ! _.isEmpty(param.value)) // number is consider as empty in _.isEmpty(), to prevent this here we use complex boolean expression
+                            || (_.isArray(param.value)
+                                ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
+                                : param.value === defaultParam.value)) {
+                            delete param.value;
+                        }
+                        _.each(defaultParam.subParam, (value, name) => {
+                            if (param.subParam[name] === value || value === undefined) { // undefined means this sub param must be deleted, as part of the parent param value
+                                delete param.subParam[name];
+                            }
+                        });
+                        if (_.isEmpty(param.subParam)) {
+                            delete param.subParam;
+                        }
+                        return _.isEqual(_.keys(param), ['name']) ? null : param;  // return null for further filter()
+                    },
+                    parseParamRoute (routePath) {
+                        _.chain(routePath)
+                            .trim('/')
+                            .split('/')
+                            .filter() // filter() will remove falsy values like ''
+                            .map((paramWithSub) => {
+                                let parsedParam = { subParam: {} };
+                                _.each(paramWithSub.split(';'), (params, paramIndex) => { // split multiple params
+                                    let paramPair = [params.substr(0, params.indexOf(':')), this.escapeParamValue(params.substr(params.indexOf(':') + 1), true)]; // split kv pair by first colon, using substr to prevent split array type param value
+                                    if (paramIndex === 0) { // main param
+                                        [parsedParam.name, parsedParam.value] = paramPair;
+                                    } else { // sub params
+                                        parsedParam.subParam[paramPair[0]] = paramPair[1];
+                                    }
+                                })
+                                return parsedParam;
+                            })
+                            .map((param) => this.fillParamWithDefaultValue(param, false))
+                            .each((param) => {
+                                if (_.includes(_.keys(this.$data.paramsPreprocessor), param.name)) {
+                                    this.$data.paramsPreprocessor[param.name](param);
+                                }
+                                if (_.includes(_.keys(this.$data.uniqueParams), param.name)) { // is unique param
+                                    this.$data.uniqueParams[param.name] = param;
+                                } else {
+                                    this.$data.params.push(param);
+                                }
+                            })
+                            .value()
+                    },
+                    submitParamRoute (filteredUniqueParams, filteredParams) {
+                        this.$router.push({ path: `/${_.chain([..._.values(filteredUniqueParams), ...filteredParams])
+                            .map((param) => `${param.name}:${this.escapeParamValue(_.isArray(param.value) ? param.value.join(',') : param.value)}${_.map(param.subParam, (value, name) => `;${name}:${this.escapeParamValue(value)}`).join('')}`)  // format param to route path, e.g. name:value;subParamName:subParamValue...
+                            .join('/')
+                            .value()}` });
+                    },
+                    flattenParams () {
+                        const flattenParam = (param) => {
+                            let flatted = {};
+                            flatted[param.name] = param.value;
+                            return { ...flatted, ...param.subParam };
+                        };
+                        return [
+                            ..._.chain(this.$data.uniqueParams).map(this.clearParamDefaultValue).filter().map(flattenParam).values().value(),
+                            ..._.chain(this.$data.params).map(this.clearParamDefaultValue).filter().map(flattenParam).value()
+                        ];
+                    }
+                }
+            };
+
+            const queryFormComponent = Vue.component('query-form', {
+                mixins: [baseQueryFormMixin],
                 props: {
                     forumList: Array
                 },
                 data () {
                     return {
-                        antd,
                         uniqueParams: {
                             fid: { name: 'fid' },
                             postTypes: { name: 'postTypes' },
-                            orderBy: { name: 'orderBy' },
-                            page: { name: 'page' }
+                            orderBy: { name: 'orderBy' }
                         },
-                        params: [], // [{ name: '', value: '', subParam: { name: value } },...]
                         paramsDefaultValue: {
                             numericParams: { subParam: { range: '=' } },
                             textMatchParmas: { subParam: { matchBy: 'implicit', spaceSplit: false } },
                             fid: { value: 'NULL' },
                             postTypes: { value: ['thread', 'reply', 'subReply'] },
                             orderBy: { value: 'default', subParam: { direction: 'default' } },
-                            page: { value: 1 },
                             get tid () { return this.numericParams },
                             get pid () { return this.numericParams },
                             get spid () { return this.numericParams },
@@ -470,7 +632,6 @@
                             pid: [['reply', 'subReply'], 'OR'],
                             spid: [['subReply'], 'OR']
                         },
-                        invalidParamsIndex: [],
                         isOrderByInvalid: false,
                         isFidInvalid: false,
                         paramsPreprocessor: { // param is byref object so changes will sync
@@ -516,149 +677,38 @@
                                     param.subParam.direction = 'default';
                                 }
                             }
-                        },
-                        paramWatcher (newParamsArray, oldParamsArray) {
-                            _.each(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
-                                this.$data.paramsWatcher[param.name](param);
-                            })
                         }
                     };
                 },
-                watch: {
-                    uniqueParams: {
-                        handler: 'paramWatcher',
-                        deep: true
-                    },
-                    params: {
-                        handler: 'paramWatcher',
-                        deep: true
-                    }
-                },
-                beforeMount () {
-                    this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param));
-                    this.$data.params = _.map(this.$data.params, (param) => this.fillParamWithDefaultValue(param));
-                },
-                mounted () {
-                    this.parseRoute(this.$route); // first time parse
-                    if (this.checkParams()) { // query manually since route update event can't be triggered while first load
-                        this.$emit('new-query', this.flattenParams());
-                    }
-                },
                 methods: {
-                    addParam (event) {
-                        this.$data.params.push(this.fillParamWithDefaultValue({ name: event.target.value }));
-                        event.target.value = 'add'; // reset to add option
-                    },
-                    changeParam (beforeParamIndex, afterParamName) {
-                        _.pull(this.$data.invalidParamsIndex, beforeParamIndex);
-                        this.$set(this.$data.params, beforeParamIndex, this.fillParamWithDefaultValue({ name: afterParamName }));
-                    },
-                    deleteParam (paramIndex) {
-                        _.pull(this.$data.invalidParamsIndex, paramIndex);
-                        this.$data.invalidParamsIndex = _.map(this.$data.invalidParamsIndex, (invalidParamIndex) => invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex) // move forward params index which is after current one
-                        this.$delete(this.$data.params, paramIndex);
-                    },
-                    getControlRowClass (paramIndex, params) {
-                        return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
-                            'param-control-first-row': paramIndex === 0,
-                            'param-control-middle-row': ! (paramIndex === 0 || paramIndex === params.length - 1),
-                            'param-control-last-row': paramIndex === params.length - 1
-                        }
-                    },
                     isParamsIndexQuery () { // is there only post id params
                         return _.isEmpty(_.filter(this.$data.params, (param) => ! _.includes(['tid', 'pid', 'spid'], param.name)));
-                    },
-                    escapeParamValue (value, unescape = false) {
-                        if (_.isString(value)) {
-                            _.map({ // we don't escape ',' since array type params is already known
-                                '/': '%2F',
-                                ';': '%3B'
-                            }, (encode, char) => value = value.replace(unescape ? encode : char, unescape ? char : encode));
-                        }
-                        return value;
-                    },
-                    fillParamWithDefaultValue (param, resetToDefault = false) {
-                        if (resetToDefault) { // cloneDeep to prevent defaultsDeep mutates origin object
-                            return _.defaultsDeep(_.cloneDeep(this.$data.paramsDefaultValue[param.name]), param);
-                        } else {
-                            return _.defaultsDeep(_.cloneDeep(param), this.$data.paramsDefaultValue[param.name]);
-                        }
-                    },
-                    clearParamDefaultValue (param) {
-                        param = _.cloneDeep(param); // prevent changing origin param
-                        let defaultParam = this.$data.paramsDefaultValue[param.name];
-                        if (defaultParam === undefined) {
-                            if (_.isEmpty(param.subParam)) {
-                                delete param.subParam;
-                            }
-                            return param;
-                        }
-                        if (! (_.isNumber(param.value) || ! _.isEmpty(param.value)) // number is consider as empty in _.isEmpty(), to prevent this here we use complex boolean expression
-                            || (_.isArray(param.value)
-                                ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
-                                : param.value === defaultParam.value)) {
-                            delete param.value;
-                        }
-                        _.each(defaultParam.subParam, (value, name) => {
-                            if (param.subParam[name] === value || value === undefined) { // undefined means this sub param must be deleted, as part of the parent param value
-                                delete param.subParam[name];
-                            }
-                        });
-                        if (_.isEmpty(param.subParam)) {
-                            delete param.subParam;
-                        }
-                        return _.isEqual(_.keys(param), ['name']) ? null : param;  // return null for further filter()
                     },
                     parseRoute (route) {
                         this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, true));
                         this.$data.params = [];
                         // parse route path to params
                         if (route.name.startsWith('param')) {
-                            _.chain(route.params.page == null ? route.path : route.params[1]) // when page is a route param, remaining params path will be params[1]
-                                .trim('/')
-                                .split('/')
-                                .filter() // filter() will remove falsy values like ''
-                                .map((paramWithSub) => {
-                                    let parsedParam = { subParam: {} };
-                                    _.each(paramWithSub.split(';'), (params, paramIndex) => { // split multiple params
-                                        let paramPair = [params.substr(0, params.indexOf(':')), this.escapeParamValue(params.substr(params.indexOf(':') + 1), true)]; // split kv pair by first colon, using substr to prevent split array type param value
-                                        if (paramIndex === 0) { // main param
-                                            [parsedParam.name, parsedParam.value] = paramPair;
-                                        } else { // sub params
-                                            parsedParam.subParam[paramPair[0]] = paramPair[1];
-                                        }
-                                    })
-                                    return parsedParam;
-                                })
-                                .map(this.fillParamWithDefaultValue)
-                                .each((param) => {
-                                    if (_.includes(_.keys(this.$data.paramsPreprocessor), param.name)) {
-                                        this.$data.paramsPreprocessor[param.name](param);
-                                    }
-                                    if (_.includes(_.keys(this.$data.uniqueParams), param.name)) { // is unique param
-                                        this.$data.uniqueParams[param.name] = param;
-                                    } else {
-                                        this.$data.params.push(param);
-                                    }
-                                })
-                                .value()
+                            this.parseParamRoute(route.params.pathMatch); // omit page param from route full path
                         } else if (route.name.startsWith('fid')) {
                             this.$data.uniqueParams.fid.value = route.params.fid;
                         } else { // post id routes
-                            this.$data.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => this.fillParamWithDefaultValue({ name, value }) );
+                            this.$data.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => this.fillParamWithDefaultValue({ name, value }, false) );
                         }
-                        this.$data.uniqueParams.page.value = route.params.page || this.$data.uniqueParams.page.value;
                     },
                     checkParams () {
                         // check whether index query or search query
                         this.$data.isFidInvalid = false;
                         if (this.isParamsIndexQuery()) {
-                            this.$data.uniqueParams.fid.value = this.$data.paramsDefaultValue['fid'].value; // reset fid to default value
+                            if (this.$data.uniqueParams.fid.value !== this.$data.paramsDefaultValue['fid'].value) {
+                                this.$data.uniqueParams.fid.value = this.$data.paramsDefaultValue['fid'].value; // reset fid to default value
+                                new Noty({ timeout: 3000, type: 'info', text: '已移除索引查询所不需要的查询贴吧参数'}).show();
+                            }
                             return true; // index query doesn't restrict on post types
                         } else {
                             if (_.isEmpty(this.clearParamDefaultValue(this.$data.uniqueParams.fid))) {
                                 this.$data.isFidInvalid = true; // search query require fid param
-                                new Noty({ timeout: 3000, type: 'info', text: '搜索查询必须指定查询贴吧'}).show();
+                                new Noty({ timeout: 3000, type: 'warning', text: '搜索查询必须指定查询贴吧'}).show();
                             }
                         }
                         // check params required post types
@@ -679,7 +729,7 @@
                             }
                         });
                         if (! _.isEmpty(this.$data.invalidParamsIndex)) {
-                            new Noty({ timeout: 3000, type: 'info', text: `第${_.map(this.$data.invalidParamsIndex, (i) => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配`}).show();
+                            new Noty({ timeout: 3000, type: 'warning', text: `第${_.map(this.$data.invalidParamsIndex, (i) => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配`}).show();
                         }
                         // check order by required post types
                         this.$data.isOrderByInvalid = false;
@@ -690,7 +740,7 @@
                                 ? _.isEmpty(_.difference(postTypes, _.sortBy(orderByRequiredPostTypes[0])))
                                 : _.isEqual(_.sortBy(orderByRequiredPostTypes[0]), postTypes))) {
                                 this.$data.isOrderByInvalid = true;
-                                new Noty({ timeout: 3000, type: 'info', text: '排序方式与查询贴子类型要求不匹配'}).show();
+                                new Noty({ timeout: 3000, type: 'warning', text: '排序方式与查询贴子类型要求不匹配'}).show();
                             }
                         }
 
@@ -698,46 +748,23 @@
                     },
                     submitRoute () {
                         // decide which route to go
-                        let newRouteWithPage = {
-                            name: this.$data.uniqueParams.page.value !== 1 ? '+p' : '',
-                            params: { page: this.$data.uniqueParams.page.value }
-                        };
                         let params = _.filter(_.map(this.$data.params, this.clearParamDefaultValue)); // filter() will remove falsy values like null
                         let uniqueParams = _.pickBy(_.mapValues(this.$data.uniqueParams, this.clearParamDefaultValue)); // remain keys, pickBy() like filter() for objects
-                        if (_.isEmpty(_.omitBy(uniqueParams, { name: 'page' }))) { // post id route
+                        if (_.isEmpty(uniqueParams)) { // might be post id route
                             for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
                                 let postIDParam = _.filter(params, (param) => param.name === postIDName);
                                 let isOnlyOnePostIDParam = _.isEmpty(_.filter(params, (param) => param.name !== postIDName)) && postIDParam.length === 1 && postIDParam[0].subParam == null;
                                 if (isOnlyOnePostIDParam) {
-                                    this.$router.push({ name: `${postIDName}${newRouteWithPage.name}`, params: { [postIDName]: postIDParam[0].value, ...newRouteWithPage.params } });
-                                    return; // exit early to prevent parse other post id params
+                                    this.$router.push({ name: postIDName, params: { [postIDName]: postIDParam[0].value } });
+                                    return; // exit early to prevent pushing other route
                                 }
                             }
                         }
-                        if (uniqueParams.fid !== undefined && _.isEmpty(params) && _.isEmpty(_.omit(uniqueParams, 'fid', 'page'))) { // fid route
-                            this.$router.push({ name: `fid${newRouteWithPage.name}`, params: { fid: uniqueParams.fid.value, ...newRouteWithPage.params } });
+                        if (uniqueParams.fid !== undefined && _.isEmpty(params) && _.isEmpty(_.omit(uniqueParams, 'fid'))) { // fid route
+                            this.$router.push({ name: 'fid', params: { fid: uniqueParams.fid.value } });
                             return;
                         }
-                        this.$router.push({ path: `/${_.chain([..._.values(uniqueParams), ...params]) // param route
-                            .map((param) => `${param.name}:${this.escapeParamValue(_.isArray(param.value) ? param.value.join(',') : param.value)}${_.map(param.subParam, (value, name) => `;${name}:${this.escapeParamValue(value)}`).join('')}`)  // format param to route path, e.g. name:value;subParamName:subParamValue...
-                            .join('/')
-                            .value()}` });
-                    },
-                    flattenParams () {
-                        const flatParam = (param) => {
-                            let flatted = {};
-                            flatted[param.name] = param.value;
-                            return _.merge(flatted, param.subParam);
-                        };
-                        return [
-                            ..._.chain(this.$data.uniqueParams).map(this.clearParamDefaultValue).filter().map(flatParam).values().value(),
-                            ..._.chain(this.$data.params).map(this.clearParamDefaultValue).filter().map(flatParam).value()
-                        ];
-                    },
-                    submit () {
-                        if (this.checkParams()) { // check here to stop route submit
-                            this.submitRoute(); // don't have to manually emit query event because route update event will do that
-                        }
+                        this.submitParamRoute(uniqueParams, params); // param route
                     }
                 }
             });
@@ -750,11 +777,17 @@
                     return {
                         forumList: [],
                         postPages: [],
+                        currentPage: this.$route.params.page || 1,
                         showError404Placeholder: false,
                         isLoadingNewPosts: false
                     };
                 },
-                created () {
+                watch: {
+                    $route: function (to, from) {
+                        this.$data.currentPage = to.params.page || 1;
+                    }
+                },
+                beforeMount () {
                     $$loadForumList().then((forumList) => this.$data.forumList = forumList);
                 },
                 methods: {
@@ -783,7 +816,7 @@
                         };
 
                         if (_.isEmpty(flatParams)) {
-                            new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
+                            new Noty({ timeout: 3000, type: 'warning', text: '请选择贴吧或/并输入查询参数'}).show();
                             this.$data.postPages = [];
                             return;
                         }
@@ -796,8 +829,8 @@
                             window.$previousPostsQueryAjax.abort();
                         }
                         this.$data.isLoadingNewPosts = true;
-                        $$reCAPTCHACheck().then((token) => {
-                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param(_.merge({ query: JSON.stringify(flatParams) }, token)));
+                        $$reCAPTCHACheck().then((reCAPTCHA) => {
+                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(flatParams), page: this.$data.currentPage, reCAPTCHA}));
                             window.$previousPostsQueryAjax
                                 .done((ajaxData) => {
                                     ajaxData = groupSubRepliesByAuthor(ajaxData);
@@ -815,17 +848,6 @@
                                 })
                                 .always(() => this.$data.isLoadingNewPosts = false);
                         });
-                    }
-                },
-                beforeRouteUpdate (to, from, next) {
-                    next();
-                    if (_.isEqual(to, from)) {
-                        return;
-                    }
-                    let isOnlyPageChanged = _.isEqual(_.omit(to, 'page'), _.omit(from, 'page'));
-                    this.$refs.queryForm.parseRoute(to); // unnecessary parse when route update is triggered by <query-form>.submit()
-                    if (this.$refs.queryForm.checkParams()) { // check will execute second times here when route update have triggered by <query-form>.submit()
-                        this.query(this.$refs.queryForm.flattenParams(), isOnlyPageChanged);
                     }
                 }
             });
@@ -849,6 +871,7 @@
                                 { name: 'pid+p', path: 'pid/:pid/page/:page' },
                                 { name: 'spid', path: 'spid/:spid' },
                                 { name: 'spid+p', path: 'spid/:spid/page/:page' },
+                                { name: 'param+p', path: 'page/:page/*' },
                                 { name: 'param', path: '*' },
                             ]
                         }

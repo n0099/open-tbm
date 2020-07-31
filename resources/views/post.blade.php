@@ -1167,7 +1167,7 @@
                         };
 
                         let ajaxStartTime = Date.now();
-                        let ajaxQueryString = _.merge({}, routeParams, routeQueryStrings); // deep clone
+                        let ajaxQueryString = { ...routeParams, ...routeQueryStrings }; // deep clone
                         if (_.isEmpty(ajaxQueryString)) {
                             new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
                             this.$data.postPages = []; // clear posts pages data will emit posts pages updated event after initial load
@@ -1182,9 +1182,8 @@
                             window.$previousPostsQueryAjax.abort();
                         }
                         this.$data.loadingNewPosts = true;
-                        $$reCAPTCHACheck().then((token) => {
-                            ajaxQueryString = $.param(_.merge(ajaxQueryString, token));
-                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, ajaxQueryString);
+                        $$reCAPTCHACheck().then((reCAPTCHA) => {
+                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ ...ajaxQueryString, reCAPTCHA }));
                             window.$previousPostsQueryAjax
                                 .done((ajaxData) => {
                                     ajaxData = groupSubRepliesByAuthor(ajaxData);

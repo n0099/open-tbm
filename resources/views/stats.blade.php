@@ -135,8 +135,8 @@
         };
         const loadStatsChart = (statsQuery, forumsList) => {
             statsChartDOM.addClass('loading');
-            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param(_.merge(statsQuery, reCAPTCHAToken)))
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param({ ...statsQuery, reCAPTCHA }))
                     .done((ajaxData) => {
                         let series = _.map(ajaxData, (datas, postType) => {
                             return {
@@ -183,7 +183,7 @@
             mounted () {
                 initialStatsChart();
                 $$loadForumList().then((forumsList) => this.$data.forumsList = forumsList);
-                new Noty({ timeout: 3000, type: 'info', text: '请选择贴吧或/并输入查询参数'}).show();
+                new Noty({ timeout: 3000, type: 'warning', text: '请选择贴吧或/并输入查询参数'}).show();
             },
             methods: {
                 submitQueryForm () {

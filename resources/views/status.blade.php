@@ -212,8 +212,8 @@
         };
         const loadStatusChart = (statusQuery) => {
             statusChartDOM.addClass('loading');
-            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/status`, $.param(_.merge(statusQuery, reCAPTCHAToken)))
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                $.getJSON(`${$$baseUrl}/api/status`, $.param({ ...statusQuery, reCAPTCHA }))
                     .done((ajaxData) => {
                         const selectColumnFromStatus = (prop) => {
                             return _.map(ajaxData, (i) => {

@@ -72,8 +72,10 @@
         </div>
         <div id="countByTimeChartDOM" class="echarts loading row mt-2"></div>
         <hr />
-        <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData" :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }">
-            <a slot="candidateName" slot-scope="text" :href="$data.$$getTiebaUserLink(text)">@{{ text }}</a>
+        <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData" :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }" row-key="candidateIndex">
+            <template #candidateName="text">
+                <a :href="$data.$$getTiebaUserLink(text)">@{{ text }}</a>
+            </template>
         </a-table>
     </div>
 @endsection
@@ -216,8 +218,8 @@
             });
         };
         const loadTop50CandidatesCountChart = () => {
-            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50CandidatesVotesCount`, $.param(reCAPTCHAToken))
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50CandidatesVotesCount`, $.param({ reCAPTCHA }))
                     .done((ajaxData) => {
                         /*
                             [
@@ -344,9 +346,8 @@
             });
         };
         const loadTop5CandidatesCountByTimeChart = (timeRange) => {
-            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top5CandidatesVotesCountByTime`,
-                    $.param(_.merge({ timeRange }, reCAPTCHAToken)))
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top5CandidatesVotesCountByTime`, $.param({ timeRange, reCAPTCHA }))
                     .done((ajaxData) => {
                         let top10Candidates = _.chain(ajaxData).filter({ isValid: 1 }).map('voteFor').uniq().value(); // not order by votes count
                         let validVotes = _.filter(ajaxData, { isValid: 1 });
@@ -462,9 +463,8 @@
             });
         };
         const loadCountByTimeChart = (timeRange) => {
-            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/allVotesCountByTime`,
-                    $.param(_.merge({ timeRange }, reCAPTCHAToken)))
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/allVotesCountByTime`, $.param({ timeRange , reCAPTCHA }))
                     .done((ajaxData) => {
                         /*
                             [
@@ -635,8 +635,8 @@
             });
         };
         const loadCandidatesTimelineChart = () => {
-            $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesTimeline`, $.param(reCAPTCHAToken))
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                $.getJSON(`${$$baseUrl}/api/bilibiliVote/top10CandidatesTimeline`, $.param({ reCAPTCHA }))
                     .done((ajaxData) => {
                         window.timelineValidVotes = _.filter(ajaxData, { isValid: 1 });
                         window.timelineInvalidVotes = _.filter(ajaxData, { isValid: 0 });
@@ -739,7 +739,7 @@
                         // clone last timeline option then transform it to official votes count option
                         let originTimelineOptions = _.cloneDeep(options[options.length - 1]);
                         _.remove(originTimelineOptions.series, { id: 'totalVotesValidation' });
-                        options.push(_.merge(originTimelineOptions, {
+                        options.push(_.merge(originTimelineOptions, { // deep merge
                             dataset: {
                                 source: _.chain(bilibiliVoteVue.$data.top50OfficialValidVotesCount)
                                     .orderBy('officialValidCount')
@@ -866,33 +866,37 @@
                     this.$data.candidatesDetailData = _.map(ajaxData, (candidateName, candidateIndex) => {
                         candidateIndex += 1;
                         return {
-                            key: candidateIndex,
                             candidateIndex,
                             candidateName
                         };
                     });
 
-                    $$reCAPTCHACheck().then((reCAPTCHAToken) => {
-                        $.getJSON(`${$$baseUrl}/api/bilibiliVote/allCandidatesVotesCount`, $.param(reCAPTCHAToken)).done((ajaxData) => {
-                            this.$data.candidatesDetailData = _.map(this.$data.candidatesDetailData, (candidate) => {
-                                let candidateVotes = _.filter(ajaxData, { voteFor: candidate.candidateIndex.toString() });
-                                if (candidateVotes != null) {
-                                    let validCount = _.find(candidateVotes, { isValid: 1 });
-                                    validCount = validCount == null ? 0 : validCount.count;
-                                    let invalidCount = _.find(candidateVotes, { isValid: 0 });
-                                    invalidCount = invalidCount == null ? 0 : invalidCount.count;
-                                    return _.merge(candidate, {
-                                        validCount,
-                                        invalidCount
-                                    });
-                                }
+                    $$reCAPTCHACheck().then((reCAPTCHA) => {
+                        $.getJSON(`${$$baseUrl}/api/bilibiliVote/allCandidatesVotesCount`, $.param({ reCAPTCHA }))
+                            .done((ajaxData) => {
+                                this.$data.candidatesDetailData = _.map(this.$data.candidatesDetailData, (candidate) => {
+                                    let candidateVotes = _.filter(ajaxData, { voteFor: candidate.candidateIndex.toString() });
+                                    if (candidateVotes != null) {
+                                        let validCount = _.find(candidateVotes, { isValid: 1 });
+                                        validCount = validCount == null ? 0 : validCount.count;
+                                        let invalidCount = _.find(candidateVotes, { isValid: 0 });
+                                        invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                        return {
+                                            ...candidate,
+                                            ...{
+                                                validCount,
+                                                invalidCount
+                                            }
+                                        };
+                                    }
+                                });
                             });
-                        });
                     });
 
                     $.getJSON(`${$$baseUrl}/api/bilibiliVote/top50OfficialValidVotesCount.json`).done((ajaxData) => {
                         this.$data.top50OfficialValidVotesCount = ajaxData;
-                        this.$data.candidatesDetailData = _.values(_.merge( // merge by key
+                        // add candidate index as keys then deep merge will combine same keys values, finally remove keys
+                        this.$data.candidatesDetailData = _.values(_.merge(
                             _.keyBy(this.$data.candidatesDetailData, 'candidateIndex'),
                             _.keyBy(_.map(ajaxData, (candidate) => {
                                 return {
