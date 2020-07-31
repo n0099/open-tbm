@@ -188,8 +188,12 @@
                 .ajaxError((event, jqXHR) => {
                     let errorInfo = '';
                     if (jqXHR.responseJSON != null) {
-                        let responseErrorInfo = jqXHR.responseJSON;
-                        errorInfo = `错误码：${responseErrorInfo.errorCode}<br />${responseErrorInfo.errorInfo}`;
+                        let error = jqXHR.responseJSON;
+                        if (_.isObject(error.errorInfo)) { // response when laravel failed validate
+                            errorInfo = `错误码：${error.errorCode}${_.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />')}`;
+                        } else {
+                            errorInfo = `错误码：${error.errorCode}<br />${error.errorInfo}`;
+                        }
                     }
                     new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
                 });

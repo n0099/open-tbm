@@ -8,6 +8,11 @@
 @section('title', '贴子查询')
 
 @section('style')
+    <style>/* error-placeholder component */
+        .error-code {
+            font-size: 4em;
+        }
+    </style>
     <style>/* select-param component */
         .select-param.is-invalid {
             z-index: 1; /* let border overlaps other selects */
@@ -271,13 +276,15 @@
             <div>
                 <query-form @new-query="query($event, true)" :forum-list="forumList"></query-form>
                 <span>当前页数：{{ currentPage }}</span>
-                <error-404-placeholder v-show="showError404Placeholder"></error-404-placeholder>
+                <error-placeholder v-show="queryError !== null" :error="queryError"></error-placeholder>
                 <loading-list-placeholder v-show="isLoadingNewPosts"></loading-list-placeholder>
             </div>
         </template>
-        <template id="error-404-placeholder-template">
-            <div class="text-center" style="font-size: 8em">
-                <hr />404
+        <template id="error-placeholder-template">
+            <div class="text-center">
+                <hr />
+                <p class="error-code">{{ error.code }}</p>
+                <p v-html="error.info"></p>
             </div>
         </template>
         <div id="posts-query">
@@ -310,8 +317,11 @@
                 template: '#loading-list-placeholder-template'
             });
 
-            const error404PlaceholderComponent = Vue.component('error-404-placeholder', {
-                template: '#error-404-placeholder-template'
+            const errorPlaceholderComponent = Vue.component('error-placeholder', {
+                template: '#error-placeholder-template',
+                props: {
+                    error: Object
+                }
             });
 
             const inputTextMatchParamComponent = Vue.component('input-text-match-param', {
@@ -439,8 +449,8 @@
                     }
                 },
                 beforeMount () {
-                    this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, false));
-                    this.$data.params = _.map(this.$data.params, (param) => this.fillParamWithDefaultValue(param, false));
+                    this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, _.unary(this.fillParamWithDefaultValue));
+                    this.$data.params = _.map(this.$data.params, _.unary(this.fillParamWithDefaultValue));
                 },
                 mounted () {
                     this.parseRoute(this.$route); // first time parse
@@ -478,19 +488,19 @@
                         return value;
                     },
                     addParam (event) {
-                        this.$data.params.push(this.fillParamWithDefaultValue({ name: event.target.value }, false));
+                        this.$data.params.push(this.fillParamWithDefaultValue({ name: event.target.value }));
                         event.target.value = 'add'; // reset to add option
                     },
                     changeParam (beforeParamIndex, afterParamName) {
                         _.pull(this.$data.invalidParamsIndex, beforeParamIndex);
-                        this.$set(this.$data.params, beforeParamIndex, this.fillParamWithDefaultValue({ name: afterParamName }, false));
+                        this.$set(this.$data.params, beforeParamIndex, this.fillParamWithDefaultValue({ name: afterParamName }));
                     },
                     deleteParam (paramIndex) {
                         _.pull(this.$data.invalidParamsIndex, paramIndex);
                         this.$data.invalidParamsIndex = _.map(this.$data.invalidParamsIndex, (invalidParamIndex) => invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex) // move forward params index which is after current one
                         this.$delete(this.$data.params, paramIndex);
                     },
-                    fillParamWithDefaultValue (param, resetToDefault) {
+                    fillParamWithDefaultValue (param, resetToDefault = false) {
                         if (resetToDefault) { // cloneDeep to prevent defaultsDeep mutates origin object
                             return _.defaultsDeep(_.cloneDeep(this.$data.paramsDefaultValue[param.name]), param);
                         } else {
@@ -539,7 +549,7 @@
                                 })
                                 return parsedParam;
                             })
-                            .map((param) => this.fillParamWithDefaultValue(param, false))
+                            .map(_.unary(this.fillParamWithDefaultValue))
                             .each((param) => {
                                 if (_.includes(_.keys(this.$data.paramsPreprocessor), param.name)) {
                                     this.$data.paramsPreprocessor[param.name](param);
@@ -685,7 +695,7 @@
                         return _.isEmpty(_.filter(this.$data.params, (param) => ! _.includes(['tid', 'pid', 'spid'], param.name)));
                     },
                     parseRoute (route) {
-                        this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, true));
+                        this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, _.unary(this.fillParamWithDefaultValue));
                         this.$data.params = [];
                         // parse route path to params
                         if (route.name.startsWith('param')) {
@@ -693,7 +703,7 @@
                         } else if (route.name.startsWith('fid')) {
                             this.$data.uniqueParams.fid.value = route.params.fid;
                         } else { // post id routes
-                            this.$data.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => this.fillParamWithDefaultValue({ name, value }, false) );
+                            this.$data.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => this.fillParamWithDefaultValue({ name, value }) );
                         }
                     },
                     checkParams () {
@@ -778,7 +788,7 @@
                         forumList: [],
                         postPages: [],
                         currentPage: this.$route.params.page || 1,
-                        showError404Placeholder: false,
+                        queryError: null,
                         isLoadingNewPosts: false
                     };
                 },
@@ -829,6 +839,7 @@
                             window.$previousPostsQueryAjax.abort();
                         }
                         this.$data.isLoadingNewPosts = true;
+                        this.$data.queryError = null;
                         $$reCAPTCHACheck().then((reCAPTCHA) => {
                             window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(flatParams), page: this.$data.currentPage, reCAPTCHA}));
                             window.$previousPostsQueryAjax
@@ -844,7 +855,14 @@
                                 })
                                 .fail((jqXHR) => {
                                     this.$data.postPages = [];
-                                    this.$data.showError404Placeholder = true;
+                                    if (jqXHR.responseJSON != null) {
+                                        let error = jqXHR.responseJSON;
+                                        if (_.isObject(error.errorInfo)) { // response when laravel failed validate, same with ajaxError jquery event @ layout.blade.php
+                                            this.$data.queryError = { code: error.errorCode, info: _.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />') };
+                                        } else {
+                                            this.$data.queryError = { code: error.errorCode, info: error.errorInfo };
+                                        }
+                                    }
                                 })
                                 .always(() => this.$data.isLoadingNewPosts = false);
                         });
