@@ -64,7 +64,7 @@
                     <div class="row align-items-center">
                         <div class="col"><hr /></div>
                         <div class="w-auto" v-for="page in [usersData.pages]">
-                            <button @click="queryNewPage(page.currentPage + 1)" type="button" class="btn btn-secondary"><span class="h4">下一页</span></button>
+                            <button @click="queryNewPage(page.currentPage + 1)" class="btn btn-secondary" type="button"><span class="h4">下一页</span></button>
                         </div>
                         <div class="col"><hr /></div>
                     </div>

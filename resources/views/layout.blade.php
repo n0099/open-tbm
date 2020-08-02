@@ -190,7 +190,7 @@
                     if (jqXHR.responseJSON != null) {
                         let error = jqXHR.responseJSON;
                         if (_.isObject(error.errorInfo)) { // response when laravel failed validate
-                            errorInfo = `错误码：${error.errorCode}${_.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />')}`;
+                            errorInfo = `错误码：${error.errorCode}<br />${_.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />')}`;
                         } else {
                             errorInfo = `错误码：${error.errorCode}<br />${error.errorInfo}`;
                         }

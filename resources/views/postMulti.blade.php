@@ -55,6 +55,21 @@
             padding-right: 11px;
         }
     </style>
+    <style>/* posts-query component */
+        .previous-page-button {
+            position: relative;
+            top: -1.5rem;
+            margin-bottom: -1rem;
+            padding-bottom: 4px;
+            padding-top: 4px;
+        }
+
+        .post-render-raw {
+            resize: both;
+            height: 50rem;
+            font-family: Consolas, Courier New, monospace;
+        }
+    </style>
     <style>/* common */
         .loading-list-placeholder .post-item-placeholder {
             height: 480px;
@@ -166,7 +181,7 @@
                                 <option value="spid">楼中楼spid</option>
                             </optgroup>
                         </select>
-                        <select v-if="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction" class="col-6 custom-select form-control">
+                        <select v-show="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction" class="col-6 custom-select form-control">
                             <option value="default">默认（按贴索引查询正序，按吧索引/搜索查询倒序）</option>
                             <option value="ASC">正序（从小到大，旧到新）</option>
                             <option value="DESC">倒序（从大到小，新到旧）</option>
@@ -175,7 +190,7 @@
                 </div>
                 <div class="query-param-row form-row" v-for="(param, paramIndex) in params">
                     <div class="input-group">
-                        <button @click="deleteParam(paramIndex)" type="button" class="btn btn-link"><i class="fas fa-times"></i></button>
+                        <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><i class="fas fa-times"></i></button>
                         <select-param @param-change="changeParam(paramIndex, $event.target.value)" :current-param="param.name"
                                       :class="{
                                         'is-invalid': invalidParamsIndex.includes(paramIndex),
@@ -185,7 +200,7 @@
                                       }"></select-param>
                         <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
                                                     BETWEEN: param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
@@ -198,11 +213,11 @@
                         </template>
                         <template v-if="_.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
                             <input v-model="param.value" :placeholder="`${param.subParam.matchBy === 'implicit' ? '模糊' : (param.subParam.matchBy === 'explicit' ? '精确' : '正则')}匹配 空格${param.subParam.spaceSplit ? '不' : ''}分割关键词`" type="text" class="form-control" required>
-                            <input-text-match-param v-model="params[paramIndex]" :param-index="paramIndex" :classes="getControlRowClass(paramIndex, params)"></input-text-match-param>
+                            <input-text-match-param v-model="params[paramIndex]" :param-index="paramIndex" :classes="paramRowLastDOMClass(paramIndex, params)"></input-text-match-param>
                         </template>
                         <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: '100,101,102,...',
                                                     BETWEEN: '100,200',
@@ -219,7 +234,7 @@
                                 </div>
                             </div>
                             <div class="input-group-append">
-                                <div :class="getControlRowClass(paramIndex, params)" class="param-intput-group-text input-group-text">
+                                <div :class="paramRowLastDOMClass(paramIndex, params)" class="param-intput-group-text input-group-text">
                                     <div class="custom-checkbox custom-control">
                                         <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`" type="checkbox" value="sticky" class="custom-control-input">
                                         <label :for="`paramThreadPropertiesSticky-${paramIndex}`" class="text-primary font-weight-normal custom-control-label">置顶</label>
@@ -229,7 +244,7 @@
                         </template>
                         <template v-if="_.includes(['authorUID', 'latestReplierUID'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: '4000000000,4000000001,4000000002,...',
                                                     BETWEEN: '4000000000,5000000000',
@@ -253,7 +268,7 @@
                         </template>
                         <template v-if="param.name === 'authorExpGrade'">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="getControlRowClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: '9,10,11,...',
                                                     BETWEEN: '9,18',
@@ -263,21 +278,73 @@
                     </div>
                 </div>
                 <div class="mt-1 form-group form-row">
-                    <button type="button" class="add-param-button disabled btn btn-link"><i class="fas fa-plus"></i></button>
+                    <button class="add-param-button disabled btn btn-link" type="button"><i class="fas fa-plus"></i></button>
                     <select-param @param-change="addParam($event)"></select-param>
                 </div>
                 <div class="form-group form-row">
-                    <button type="submit" class="btn btn-primary">查询</button>
-                    <button class="ml-2 disabled btn btn-text" type="button" v-text="isParamsIndexQuery() ? (_.isEmpty(params) ? ( uniqueParams.fid.value === 'NULL' ? '全局索引查询' : '按吧索引查询') : '按贴索引查询') : '搜索查询'"></button>
+                    <button :disabled="isRequesting" type="submit" class="btn btn-primary">
+                        查询 <span v-show="isRequesting" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                    </button>
+                    <button class="ml-2 disabled btn btn-text" type="button">{{ currentQueryType() === 'fid' ? '按吧索引查询' : (currentQueryType() === 'postID' ? '按贴索引查询' : (currentQueryType() === 'search' ? '搜索查询' : '空查询')) }}</button>
                 </div>
             </form>
         </template>
+        <template id="post-render-list-template">
+
+        </template>
+        <template id="post-render-table-template">
+
+        </template>
+        <template id="post-render-raw-template">
+            <textarea :value="JSON.stringify(posts)" class="post-render-raw border col"></textarea>
+        </template>
         <template id="posts-query-template">
             <div>
-                <query-form @new-query="query($event, true)" :forum-list="forumList"></query-form>
-                <span>当前页数：{{ currentPage }}</span>
-                <error-placeholder v-show="queryError !== null" :error="queryError"></error-placeholder>
-                <loading-list-placeholder v-show="isLoadingNewPosts"></loading-list-placeholder>
+                <query-form @query="query($event)" :forum-list="forumList" ref="queryForm"></query-form>
+                <p>当前页数：{{ currentRoutesPage }}</p>
+                <ul class="mb-3 nav nav-tabs">
+                    <li class="nav-item">
+                        <a @click="renderType = 'list'" :class="{ active: renderType === 'list' }" class="nav-link">列表视图</a>
+                    </li>
+                    <li class="nav-item">
+                        <a @click="renderType = 'table'" :class="{ active: renderType === 'table' }" class="nav-link">表格视图</a>
+                    </li>
+                    <li class="nav-item">
+                        <a @click="renderType = 'raw'" :class="{ active: renderType === 'raw' }" class="nav-link">RAW</a>
+                    </li>
+                </ul>
+                <template v-if="queryError === null">
+                    <template v-for="(posts, pageIndex) in postPages">
+                        <div v-scroll-to-page="{ postPage: posts.pages.currentPage, scrollToPage: currentRoutesPage }" class="mt-2 p-2 row align-items-center">
+                            <div class="col"><hr /></div>
+                            <div class="w-auto">
+                                <div class="p-2 badge badge-light">
+                                    <button v-if="posts.pages.currentPage > 1" @click="loadNewPage(posts.pages.currentPage - 1)" class="previous-page-button btn btn-primary" type="button">上一页</button>
+                                    <p class="h4">第 {{ posts.pages.currentPage }} 页</p>
+                                    <p class="small">第 {{ posts.pages.firstItem }}~{{ posts.pages.firstItem + posts.pages.currentItems - 1 }} 条</p>
+                                    <span class="h6">{{ posts.forum.name }}吧</span>
+                                </div>
+                            </div>
+                            <div class="col"><hr /></div>
+                        </div>
+                        <post-render-list v-if="renderType === 'list'" :posts="posts"></post-render-list>
+                        <post-render-table v-if="renderType === 'table'" :posts="posts"></post-render-table>
+                        <post-render-raw v-if="renderType === 'raw'" :posts="posts"></post-render-raw>
+                        <div v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" class="p-4">
+                            <div class="row align-items-center">
+                                <div class="col"><hr /></div>
+                                <div class="w-auto">
+                                    <button @click="loadNewPage(posts.pages.currentPage + 1)" class="btn btn-secondary" type="button">
+                                        <span class="h4">下一页</span>
+                                    </button>
+                                </div>
+                                <div class="col"><hr /></div>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+                <error-placeholder v-else :error="queryError"></error-placeholder>
+                <loading-list-placeholder v-show="($refs.queryForm || { $data: { isRequesting: false } }).$data.isRequesting"></loading-list-placeholder>
             </div>
         </template>
         <template id="error-placeholder-template">
@@ -312,6 +379,27 @@
         <script>
             'use strict';
             $$initialNavBar('postMulti');
+
+            const postsRenderListComponent = Vue.component('post-render-list', {
+                template: '#post-render-list-template',
+                props: {
+                    posts: Object
+                }
+            });
+
+            const postsRenderTableComponent = Vue.component('post-render-table', {
+                template: '#post-render-table-template',
+                props: {
+                    posts: Object
+                }
+            });
+
+            const postsRenderRawComponent = Vue.component('post-render-raw', {
+                template: '#post-render-raw-template',
+                props: {
+                    posts: Object
+                }
+            });
 
             const loadingListPlaceholderComponent = Vue.component('loading-list-placeholder', {
                 template: '#loading-list-placeholder-template'
@@ -417,6 +505,7 @@
                 data () {
                     return {
                         antd,
+                        isRequesting: false,
                         uniqueParams: {},
                         params: [], // [{ name: '', value: '', subParam: { name: value } },...]
                         invalidParamsIndex: [],
@@ -435,16 +524,22 @@
                         handler: 'paramWatcher',
                         deep: true
                     },
-                    params: 'paramWatcher',
+                    params: {
+                        handler: 'paramWatcher',
+                        deep: true
+                    },
                     $route: function (to, from) {
                         if (_.isEqual(to.path, from.path)) {
                             return; // ignore when only hash has changed
                         }
-                        // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
-                        let isOnlyPageChanged = _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page'));
-                        this.parseRoute(to);
-                        if (this.checkParams()) {
-                            this.$parent.query(this.flattenParams(), isOnlyPageChanged);
+                        if (! this.$data.isRequesting) { // isRequesting will be false when route change is not emit by <query-form>.submit()
+                            // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
+                            let isOnlyPageChanged = _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page'));
+                            this.parseRoute(to);
+                            if (this.checkParams()) {
+                                this.$data.isRequesting = true;
+                                this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: ! isOnlyPageChanged });
+                            }
                         }
                     }
                 },
@@ -455,23 +550,23 @@
                 mounted () {
                     this.parseRoute(this.$route); // first time parse
                     if (this.checkParams()) { // query manually since route update event can't be triggered while first load
-                        this.$emit('new-query', this.flattenParams());
+                        this.$data.isRequesting = true;
+                        this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: true });
                     }
                 },
                 methods: {
                     submit () {
                         if (this.checkParams()) { // check here to stop route submit
+                            this.$data.isRequesting = true;
                             let beforeRoutePath = this.$route.path;
                             this.submitRoute();
-                            if (beforeRoutePath === this.$route.path) {
-                                this.$emit('new-query', this.flattenParams()); // force emit event to refresh new query since route update event will ignore same route path change
-                            }
+                            this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: true }); // force emit event to refresh new query since route update event won't emit when isRequesting is true
                         }
                     },
                     parseRoute (route) { throw('component must implements mixin abstruct method') },
                     checkParams () { throw('component must implements mixin abstruct method') },
                     submitRoute () { throw('component must implements mixin abstruct method') },
-                    getControlRowClass (paramIndex, params) {
+                    paramRowLastDOMClass (paramIndex, params) {
                         return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
                             'param-control-first-row': paramIndex === 0,
                             'param-control-middle-row': ! (paramIndex === 0 || paramIndex === params.length - 1),
@@ -516,7 +611,7 @@
                             }
                             return param;
                         }
-                        if (! (_.isNumber(param.value) || ! _.isEmpty(param.value)) // number is consider as empty in _.isEmpty(), to prevent this here we use complex boolean expression
+                        if (! (_.isNumber(param.value) || ! _.isEmpty(param.value)) // number is consider as empty in isEmpty(), to prevent this here we use complex boolean expression
                             || (_.isArray(param.value)
                                 ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
                                 : param.value === defaultParam.value)) {
@@ -531,6 +626,12 @@
                             delete param.subParam;
                         }
                         return _.isEqual(_.keys(param), ['name']) ? null : param;  // return null for further filter()
+                    },
+                    clearedParamsDefaultValue () {
+                        return _.filter(_.map(this.$data.params, this.clearParamDefaultValue)); // filter() will remove falsy values like null
+                    },
+                    clearedUniqueParamsDefaultValue (...omitParams) {
+                        return _.pickBy(_.mapValues(_.omit(this.$data.uniqueParams, omitParams), this.clearParamDefaultValue)); // mapValues() return object which remains keys, pickBy() like filter() for objects
                     },
                     parseParamRoute (routePath) {
                         _.chain(routePath)
@@ -575,8 +676,8 @@
                             return { ...flatted, ...param.subParam };
                         };
                         return [
-                            ..._.chain(this.$data.uniqueParams).map(this.clearParamDefaultValue).filter().map(flattenParam).values().value(),
-                            ..._.chain(this.$data.params).map(this.clearParamDefaultValue).filter().map(flattenParam).value()
+                            ..._.map(_.values(this.clearedUniqueParamsDefaultValue()), flattenParam),
+                            ..._.map(this.clearedParamsDefaultValue(), flattenParam)
                         ];
                     }
                 }
@@ -691,8 +792,20 @@
                     };
                 },
                 methods: {
-                    isParamsIndexQuery () { // is there only post id params
-                        return _.isEmpty(_.filter(this.$data.params, (param) => ! _.includes(['tid', 'pid', 'spid'], param.name)));
+                    currentQueryType () {
+                        let clearedParams = this.clearedParamsDefaultValue();
+                        if (_.isEmpty(clearedParams)) { // is there no other params
+                            if (_.isEmpty(this.clearedUniqueParamsDefaultValue('postTypes'))) {
+                                return 'empty';
+                            } else if (_.isEmpty(this.clearedUniqueParamsDefaultValue('fid', 'postTypes'))) { // note when query with postTypes param, the route will goto params not the fid
+                                return 'fid';
+                            }
+                        }
+                        if (_.isEmpty(_.filter(clearedParams, (param) => ! _.includes(['tid', 'pid', 'spid'], param.name))) // is there no other params
+                            && _.filter(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name)).length === 1) { // is there only one post id params
+                            return 'postID';
+                        }
+                        return 'search';
                     },
                     parseRoute (route) {
                         this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, _.unary(this.fillParamWithDefaultValue));
@@ -707,19 +820,26 @@
                         }
                     },
                     checkParams () {
-                        // check whether index query or search query
+                        // check query type
                         this.$data.isFidInvalid = false;
-                        if (this.isParamsIndexQuery()) {
-                            if (this.$data.uniqueParams.fid.value !== this.$data.paramsDefaultValue['fid'].value) {
-                                this.$data.uniqueParams.fid.value = this.$data.paramsDefaultValue['fid'].value; // reset fid to default value
-                                new Noty({ timeout: 3000, type: 'info', text: '已移除索引查询所不需要的查询贴吧参数'}).show();
-                            }
-                            return true; // index query doesn't restrict on post types
-                        } else {
-                            if (_.isEmpty(this.clearParamDefaultValue(this.$data.uniqueParams.fid))) {
-                                this.$data.isFidInvalid = true; // search query require fid param
-                                new Noty({ timeout: 3000, type: 'warning', text: '搜索查询必须指定查询贴吧'}).show();
-                            }
+                        let clearedUniqueParams = this.clearedUniqueParamsDefaultValue();
+                        switch (this.currentQueryType()) {
+                            case 'empty':
+                                new Noty({ timeout: 3000, type: 'warning', text: '请选择贴吧或/并输入查询参数，勿只选择贴子类型参数'}).show();
+                                return false; // exit early
+                            case 'postID':
+                                if (clearedUniqueParams.fid !== undefined) {
+                                    this.$data.uniqueParams.fid.value = this.$data.paramsDefaultValue.fid.value; // reset fid to default value
+                                    new Noty({ timeout: 3000, type: 'info', text: '已移除按贴索引查询所不需要的查询贴吧参数'}).show();
+                                    this.submitRoute(); // update route to match new params without fid
+                                }
+                                return true; // index query doesn't restrict on post types
+                            case 'search':
+                                if (clearedUniqueParams.fid === undefined) {
+                                    this.$data.isFidInvalid = true; // search query require fid param
+                                    new Noty({ timeout: 3000, type: 'warning', text: '搜索查询必须指定查询贴吧'}).show();
+                                }
+                                break;
                         }
                         // check params required post types
                         let postTypes = _.sortBy(this.$data.uniqueParams.postTypes.value);
@@ -758,23 +878,23 @@
                     },
                     submitRoute () {
                         // decide which route to go
-                        let params = _.filter(_.map(this.$data.params, this.clearParamDefaultValue)); // filter() will remove falsy values like null
-                        let uniqueParams = _.pickBy(_.mapValues(this.$data.uniqueParams, this.clearParamDefaultValue)); // remain keys, pickBy() like filter() for objects
-                        if (_.isEmpty(uniqueParams)) { // might be post id route
+                        let clearedParams = this.clearedParamsDefaultValue();
+                        let clearedUniqueParams = this.clearedUniqueParamsDefaultValue();
+                        if (_.isEmpty(clearedUniqueParams)) { // might be post id route
                             for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
-                                let postIDParam = _.filter(params, (param) => param.name === postIDName);
-                                let isOnlyOnePostIDParam = _.isEmpty(_.filter(params, (param) => param.name !== postIDName)) && postIDParam.length === 1 && postIDParam[0].subParam == null;
+                                let postIDParam = _.filter(clearedParams, (param) => param.name === postIDName);
+                                let isOnlyOnePostIDParam = _.isEmpty(_.filter(clearedParams, (param) => param.name !== postIDName)) && postIDParam.length === 1 && postIDParam[0].subParam == null;
                                 if (isOnlyOnePostIDParam) {
                                     this.$router.push({ name: postIDName, params: { [postIDName]: postIDParam[0].value } });
                                     return; // exit early to prevent pushing other route
                                 }
                             }
                         }
-                        if (uniqueParams.fid !== undefined && _.isEmpty(params) && _.isEmpty(_.omit(uniqueParams, 'fid'))) { // fid route
-                            this.$router.push({ name: 'fid', params: { fid: uniqueParams.fid.value } });
+                        if (clearedUniqueParams.fid !== undefined && _.isEmpty(clearedParams) && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
+                            this.$router.push({ name: 'fid', params: { fid: clearedUniqueParams.fid.value } });
                             return;
                         }
-                        this.submitParamRoute(uniqueParams, params); // param route
+                        this.submitParamRoute(clearedUniqueParams, clearedParams); // param route
                     }
                 }
             });
@@ -787,21 +907,36 @@
                     return {
                         forumList: [],
                         postPages: [],
-                        currentPage: this.$route.params.page || 1,
+                        currentRoutesPage: parseInt(this.$route.params.page) || 1,
                         queryError: null,
-                        isLoadingNewPosts: false
+                        renderType: 'raw'
                     };
                 },
                 watch: {
                     $route: function (to, from) {
-                        this.$data.currentPage = to.params.page || 1;
+                        this.$data.currentRoutesPage = parseInt(to.params.page) || 1;
                     }
                 },
                 beforeMount () {
                     $$loadForumList().then((forumList) => this.$data.forumList = forumList);
                 },
+                directives: {
+                    'scroll-to-page': function (el, binding) {
+                        if (binding.value.postPage === binding.value.scrollToPage) {
+                            el.scrollIntoView();
+                        }
+                    }
+                },
                 methods: {
-                    query (flatParams, shouldReplacePage) {
+                    loadNewPage (pageNum) {
+                        this.$router.push(this.$route.name.startsWith('param')
+                            ? { path: `/page/${pageNum}/${this.$route.params.pathMatch}` }
+                            : {
+                                name: `${this.$route.name}${this.$route.name.endsWith('+p') ? '' : '+p'}`,
+                                params: { ...this.$route.params, page: pageNum }
+                            });
+                    },
+                    query ({ queryParams, shouldReplacePage }) {
                         const groupSubRepliesByAuthor = (postsData) => {
                             postsData.threads = _.map(postsData.threads, (thread) => {
                                 thread.replies = _.map(thread.replies, (reply) => {
@@ -825,30 +960,30 @@
                             return postsData;
                         };
 
-                        if (_.isEmpty(flatParams)) {
-                            new Noty({ timeout: 3000, type: 'warning', text: '请选择贴吧或/并输入查询参数'}).show();
-                            this.$data.postPages = [];
-                            return;
-                        }
+                        this.$data.queryError = null;
                         if (shouldReplacePage) {
                             this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
+                        } else {
+                            if (! _.isEmpty(_.filter(_.map(this.$data.postPages, 'pages.currentPage'), (i) => i === this.$data.currentRoutesPage))) {
+                                this.$refs.queryForm.$data.isRequesting = false;
+                                return; // cancel request when requesting page have already been loaded
+                            }
                         }
 
                         let ajaxStartTime = Date.now();
                         if (window.$previousPostsQueryAjax != null) { // cancel previous pending ajax to prevent conflict
                             window.$previousPostsQueryAjax.abort();
                         }
-                        this.$data.isLoadingNewPosts = true;
-                        this.$data.queryError = null;
                         $$reCAPTCHACheck().then((reCAPTCHA) => {
-                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(flatParams), page: this.$data.currentPage, reCAPTCHA}));
+                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(queryParams), page: this.$data.currentRoutesPage, reCAPTCHA}));
                             window.$previousPostsQueryAjax
                                 .done((ajaxData) => {
                                     ajaxData = groupSubRepliesByAuthor(ajaxData);
                                     if (shouldReplacePage) { // is loading next page data on the same query params or requesting new query with different params
                                         this.$data.postPages = [ajaxData];
                                     } else {
-                                        this.$data.postPages.push(ajaxData);
+                                        // insert after existing previous page, if not exist will be inserted at start
+                                        this.$data.postPages.splice(_.findIndex(this.$data.postPages, { pages: { currentPage: this.$data.currentRoutesPage - 1 } }) + 1, 0, ajaxData);
                                     }
                                     new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
                                     //this.changeDocumentTitle(this.$route);
@@ -864,7 +999,7 @@
                                         }
                                     }
                                 })
-                                .always(() => this.$data.isLoadingNewPosts = false);
+                                .always(() => this.$refs.queryForm.$data.isRequesting = false);
                         });
                     }
                 }
