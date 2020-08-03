@@ -8,12 +8,12 @@
 @section('title', '贴子查询')
 
 @section('style')
-    <style>/* error-placeholder component */
+    <style>/* <error-placeholder> */
         .error-code {
             font-size: 4em;
         }
     </style>
-    <style>/* select-param component */
+    <style>/* <select-param> */
         .select-param.is-invalid {
             z-index: 1; /* let border overlaps other selects */
         }
@@ -24,7 +24,7 @@
             border-bottom-left-radius: 0.25rem !important;
         }
     </style>
-    <style>/* query-form component */
+    <style>/* <query-form> */
         .query-param-row {
             margin-top: -1px;
         }
@@ -41,6 +41,7 @@
         .param-intput-group-text {
             background-color: unset;
         }
+
         .a-datetime-range {
             margin-left: -1px;
         }
@@ -55,19 +56,43 @@
             padding-right: 11px;
         }
     </style>
-    <style>/* posts-query component */
+    <style>/* <post-render-table> */
+        .ant-table {
+            width: fit-content;
+        }
+
+        .render-table-thread .ant-table { /* todo: should only select first appeared child */
+            width: auto;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .ant-table td, .ant-table th {
+            white-space: nowrap;
+            font-family: Consolas, Courier New, monospace;
+        }
+
+        .ant-table-expand-icon-th, .ant-table-row-expand-icon-cell {
+            width: 1px; /* any value other than 0px */
+            min-width: unset;
+            padding-left: 5px !important;
+            padding-right: 5px !important;
+        }
+    </style>
+    <style>/* <post-render-raw> */
+        .render-raw {
+            resize: both;
+            height: 50rem;
+            font-family: Consolas, Courier New, monospace;
+        }
+    </style>
+    <style>/* <post-page-previous-button> */
         .previous-page-button {
             position: relative;
             top: -1.5rem;
             margin-bottom: -1rem;
             padding-bottom: 4px;
             padding-top: 4px;
-        }
-
-        .post-render-raw {
-            resize: both;
-            height: 50rem;
-            font-family: Consolas, Courier New, monospace;
         }
     </style>
     <style>/* common */
@@ -242,7 +267,7 @@
                                 </div>
                             </div>
                         </template>
-                        <template v-if="_.includes(['authorUID', 'latestReplierUID'], param.name)">
+                        <template v-if="_.includes(['authorUid', 'latestReplierUid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
                             <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
                                                  :placeholders="{
@@ -293,57 +318,87 @@
 
         </template>
         <template id="post-render-table-template">
-
+            <div class="container-flow mb-2">
+                <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
+                    <template slot="expandedRowRender" slot-scope="record">
+                        <p v-html="record.title"></p>
+                        <a-table v-if="threadsReply[record.tid] !== undefined" :columns="replyColumns" :data-source="threadsReply[record.tid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                            <template slot="expandedRowRender" slot-scope="record">
+                                <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content"></div>
+                                <a-table v-if="repliesSubReply[record.pid] !== undefined" :columns="subReplyColumns" :data-source="repliesSubReply[record.pid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                                    <template slot="expandedRowRender" slot-scope="record">
+                                        <span v-html="record.content"></span>
+                                    </template>
+                                </a-table>
+                            </template>
+                        </a-table>
+                    </template>
+                </a-table>
+            </div>
         </template>
         <template id="post-render-raw-template">
-            <textarea :value="JSON.stringify(posts)" class="post-render-raw border col"></textarea>
+            <textarea :value="JSON.stringify(posts)" class="render-raw border col"></textarea>
+        </template>
+        <template id="post-page-previous-button-template">
+            <div v-scroll-to-page="{ currentPage: pageInfo.currentPage, scrollToPage: scrollToPage.value }" class="mt-3 p-2 row align-items-center">
+                <div class="col"><hr /></div>
+                <div class="w-auto">
+                    <div class="p-2 badge badge-light">
+                        <button v-if="pageInfo.currentPage > 1" @click="loadPage(pageInfo.currentPage - 1)" class="previous-page-button btn btn-primary" type="button">上一页</button>
+                        <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
+                        <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.currentItems - 1 }} 条</span>
+                    </div>
+                </div>
+                <div class="col"><hr /></div>
+            </div>
+        </template>
+        <template id="post-page-next-button-template">
+            <div class="p-4">
+                <div class="row align-items-center">
+                    <div class="col"><hr /></div>
+                    <div class="w-auto">
+                        <button @click="loadPage(currentPage + 1)" class="btn btn-secondary" type="button">
+                            <span class="h4">下一页</span>
+                        </button>
+                    </div>
+                    <div class="col"><hr /></div>
+                </div>
+            </div>
         </template>
         <template id="posts-query-template">
             <div>
                 <query-form @query="query($event)" :forum-list="forumList" ref="queryForm"></query-form>
                 <p>当前页数：{{ currentRoutesPage }}</p>
-                <ul class="mb-3 nav nav-tabs">
-                    <li class="nav-item">
-                        <a @click="renderType = 'list'" :class="{ active: renderType === 'list' }" class="nav-link">列表视图</a>
-                    </li>
-                    <li class="nav-item">
-                        <a @click="renderType = 'table'" :class="{ active: renderType === 'table' }" class="nav-link">表格视图</a>
-                    </li>
-                    <li class="nav-item">
-                        <a @click="renderType = 'raw'" :class="{ active: renderType === 'raw' }" class="nav-link">RAW</a>
-                    </li>
-                </ul>
-                <template v-if="queryError === null">
-                    <template v-for="(posts, pageIndex) in postPages">
-                        <div v-scroll-to-page="{ postPage: posts.pages.currentPage, scrollToPage: currentRoutesPage }" class="mt-2 p-2 row align-items-center">
-                            <div class="col"><hr /></div>
-                            <div class="w-auto">
-                                <div class="p-2 badge badge-light">
-                                    <button v-if="posts.pages.currentPage > 1" @click="loadNewPage(posts.pages.currentPage - 1)" class="previous-page-button btn btn-primary" type="button">上一页</button>
-                                    <p class="h4">第 {{ posts.pages.currentPage }} 页</p>
-                                    <p class="small">第 {{ posts.pages.firstItem }}~{{ posts.pages.firstItem + posts.pages.currentItems - 1 }} 条</p>
-                                    <span class="h6">{{ posts.forum.name }}吧</span>
-                                </div>
-                            </div>
-                            <div class="col"><hr /></div>
-                        </div>
-                        <post-render-list v-if="renderType === 'list'" :posts="posts"></post-render-list>
-                        <post-render-table v-if="renderType === 'table'" :posts="posts"></post-render-table>
-                        <post-render-raw v-if="renderType === 'raw'" :posts="posts"></post-render-raw>
-                        <div v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" class="p-4">
-                            <div class="row align-items-center">
-                                <div class="col"><hr /></div>
-                                <div class="w-auto">
-                                    <button @click="loadNewPage(posts.pages.currentPage + 1)" class="btn btn-secondary" type="button">
-                                        <span class="h4">下一页</span>
-                                    </button>
-                                </div>
-                                <div class="col"><hr /></div>
-                            </div>
-                        </div>
-                    </template>
-                </template>
-                <error-placeholder v-else :error="queryError"></error-placeholder>
+                <a-tabs v-model="renderType">
+                    <a-tab-pane key="list" tab="列表视图">
+                        <template v-if="renderType === 'list' && queryError === null">
+                            <template v-for="(posts, pageIndex) in postPages">
+                                <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
+                                <post-render-list :posts="posts"></post-render-list>
+                                <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
+                            </template>
+                        </template>
+                    </a-tab-pane>
+                    <a-tab-pane key="table" tab="表格视图">
+                        <template v-if="renderType === 'table' && queryError === null">
+                            <template v-for="(posts, pageIndex) in postPages">
+                                <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
+                                <post-render-table :posts="posts"></post-render-table>
+                                <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
+                            </template>
+                        </template>
+                    </a-tab-pane>
+                    <a-tab-pane key="raw" tab="RAW">
+                        <template v-if="renderType === 'raw' && queryError === null">
+                            <template v-for="(posts, pageIndex) in postPages">
+                                <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
+                                <post-render-raw :posts="posts"></post-render-raw>
+                                <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
+                            </template>
+                        </template>
+                    </a-tab-pane>
+                </a-tabs>
+                <error-placeholder v-if="queryError !== null" :error="queryError"></error-placeholder>
                 <loading-list-placeholder v-show="($refs.queryForm || { $data: { isRequesting: false } }).$data.isRequesting"></loading-list-placeholder>
             </div>
         </template>
@@ -380,10 +435,86 @@
             'use strict';
             $$initialNavBar('postMulti');
 
+            window.sharedDataBindings = {
+                scrollToPage: { value: 0 }
+            };
+
+            const postPagePreviousButtonComponent = Vue.component('post-page-previous-button', {
+                template: '#post-page-previous-button-template',
+                props: {
+                    pageInfo: Object,
+                },
+                data () {
+                    return {
+                        scrollToPage: window.sharedDataBindings.scrollToPage
+                    }
+                },
+                directives: {
+                    'scroll-to-page': function (el, binding, vnode) {
+                        let pageRenderVue = vnode.context;
+                        if (binding.value.currentPage === binding.value.scrollToPage) {
+                            pageRenderVue.$nextTick(() => el.scrollIntoView()); // when page haven't been requested before, new pageRenderVue.$el is not ready
+                            window.sharedDataBindings.scrollToPage.value = 0; // reset for next time scroll with same scrollToPage
+                        }
+                    }
+                },
+                methods: {
+                    loadPage (pageNum) {
+                        this.$data.scrollToPage.value = pageNum;
+                        this.$emit('load-page', pageNum);
+                    }
+                }
+            });
+
+            const postPageNextButtonComponent = Vue.component('post-page-next-button', {
+                template: '#post-page-next-button-template',
+                props: {
+                    currentPage: Number
+                },
+                data () {
+                    return {
+                        scrollToPage: window.sharedDataBindings.scrollToPage
+                    }
+                },
+                methods: {
+                    loadPage (pageNum) {
+                        this.$data.scrollToPage.value = pageNum;
+                        this.$emit('load-page', pageNum);
+                    }
+                }
+            });
+
             const postsRenderListComponent = Vue.component('post-render-list', {
                 template: '#post-render-list-template',
                 props: {
                     posts: Object
+                },
+                mounted () {
+                    this.$props.posts = this.groupSubRepliesByAuthor(this.$props.posts);
+                },
+                methods: {
+                    groupSubRepliesByAuthor (postsData) {
+                        postsData.threads = _.map(postsData.threads, (thread) => {
+                            thread.replies = _.map(thread.replies, (reply) => {
+                                reply.subReplies = _.reduce(reply.subReplies, (groupedSubReplies, subReply, index, subReplies) => {
+                                    // group sub replies item by continuous and same author info
+                                    let previousSubReply = subReplies[index - 1];
+                                    if (previousSubReply !== undefined
+                                        && subReply.authorUid === previousSubReply.authorUid
+                                        && subReply.authorManagerType === previousSubReply.authorManagerType
+                                        && subReply.authorExpGrade === previousSubReply.authorExpGrade) {
+                                        _.last(groupedSubReplies).push(subReply);
+                                    } else {
+                                        groupedSubReplies.push([subReply]);
+                                    }
+                                    return groupedSubReplies;
+                                }, []);
+                                return reply;
+                            });
+                            return thread;
+                        });
+                        return postsData;
+                    }
                 }
             });
 
@@ -391,6 +522,74 @@
                 template: '#post-render-table-template',
                 props: {
                     posts: Object
+                },
+                data () {
+                    return {
+                        threads: [],
+                        threadsReply: [],
+                        repliesSubReply: [],
+                        threadColumns: [
+                            { title: 'tid', dataIndex: 'tid' },
+                            { title: '回复量', dataIndex: 'replyNum' },
+                            { title: '浏览量', dataIndex: 'viewNum' },
+                            { title: '分享量', dataIndex: 'shareNum' },
+                            { title: '发帖人UID', dataIndex: 'authorUid' },
+                            { title: '发帖人吧务级别', dataIndex: 'authorManagerType' },
+                            { title: '发帖时间', dataIndex: 'postTime' },
+                            { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
+                            { title: '最后回复时间', dataIndex: 'latestReplyTime' },
+                            { title: '1楼pid', dataIndex: 'firstPid' },
+                            { title: '精品', dataIndex: 'isGood' },
+                            { title: '置顶', dataIndex: 'stickyType' },
+                            { title: '主题贴类型', dataIndex: 'threadType' },
+                            { title: '话题贴类型', dataIndex: 'topicType' },
+                            { title: '赞踩量', dataIndex: 'agreeInfo' },
+                            { title: '旧版赞踩量', dataIndex: 'zanInfo' },
+                            { title: '发帖位置', dataIndex: 'location' },
+                            { title: '首次收录时间', dataIndex: 'created_at' },
+                            { title: '最后更新时间', dataIndex: 'updated_at' }
+                        ],
+                        replyColumns: [
+                            { title: 'pid', dataIndex: 'pid' },
+                            { title: '楼层', dataIndex: 'floor' },
+                            { title: '楼中楼回复量', dataIndex: 'subReplyNum' },
+                            { title: '发帖人UID', dataIndex: 'authorUid' },
+                            { title: '发帖人吧务级别', dataIndex: 'authorManagerType' },
+                            { title: '发帖人经验等级', dataIndex: 'authorExpGrade' },
+                            { title: '发帖时间', dataIndex: 'postTime' },
+                            { title: '是否折叠', dataIndex: 'isFold' },
+                            { title: '赞踩量', dataIndex: 'agreeInfo' },
+                            { title: '客户端小尾巴', dataIndex: 'signInfo' },
+                            { title: '发帖来源', dataIndex: 'tailInfo' },
+                            { title: '发帖位置', dataIndex: 'location' },
+                            { title: '首次收录时间', dataIndex: 'created_at' },
+                            { title: '最后更新时间', dataIndex: 'updated_at' }
+                        ],
+                        subReplyColumns: [
+                            { title: 'spid', dataIndex: 'spid' },
+                            { title: '发帖人UID', dataIndex: 'authorUid' },
+                            { title: '发帖人吧务级别', dataIndex: 'authorManagerType' },
+                            { title: '发帖人经验等级', dataIndex: 'authorExpGrade' },
+                            { title: '发帖时间', dataIndex: 'postTime' },
+                            { title: '首次收录时间', dataIndex: 'created_at' },
+                            { title: '最后更新时间', dataIndex: 'updated_at' }
+                        ]
+                    };
+                },
+                mounted () {
+                    this.$data.threads = this.$props.posts.threads;
+                    this.$data.threadsReply = _.chain(this.$data.threads)
+                        .map('replies')
+                        .reject(_.isEmpty) // remove threads which haven't reply
+                        .mapKeys((replies) => replies[0].tid) // convert threads' reply array to object for adding tid key
+                        .value();
+                    this.$data.repliesSubReply = _.chain(this.$data.threadsReply)
+                        .toArray() // tid keyed object to array
+                        .flatten() // flatten every thread's replies
+                        .map('subReplies')
+                        .reject(_.isEmpty) // remove replies which haven't sub reply
+                        .mapKeys((subReplies) => subReplies[0].pid) // convert replies' sub reply array to object for adding pid key
+                        .value();
                 }
             });
 
@@ -470,7 +669,7 @@
                             },
                             所有贴子类型: {
                                 postTime: '发帖时间',
-                                authorUID: '发帖人UID',
+                                authorUid: '发帖人UID',
                                 authorName: '发帖人用户名',
                                 authorDisplayName: '发帖人覆盖名',
                                 authorGender: '发帖人性别',
@@ -483,7 +682,7 @@
                                 threadShareNum: '主题贴分享量',
                                 threadReplyNum: '主题贴回复量',
                                 threadProperties: '主题贴属性',
-                                latestReplierUID: '最后回复人UID',
+                                latestReplierUid: '最后回复人UID',
                                 latestReplierName: '最后回复人用户名',
                                 latestReplierDisplayName: '最后回复人覆盖名',
                                 latestReplierGender: '最后回复人性别'
@@ -520,14 +719,8 @@
                     };
                 },
                 watch: {
-                    uniqueParams: {
-                        handler: 'paramWatcher',
-                        deep: true
-                    },
-                    params: {
-                        handler: 'paramWatcher',
-                        deep: true
-                    },
+                    uniqueParams: { handler: 'paramWatcher', deep: true },
+                    params: { handler: 'paramWatcher', deep: true },
                     $route: function (to, from) {
                         if (_.isEqual(to.path, from.path)) {
                             return; // ignore when only hash has changed
@@ -713,11 +906,11 @@
                             get threadReplyNum () { return this.numericParams },
                             get replySubReplyNum () { return this.numericParams },
                             threadProperties: { value: [] },
-                            get authorUID () { return this.numericParams },
+                            get authorUid () { return this.numericParams },
                             get authorName () { return this.textMatchParmas },
                             get authorDisplayName () { return this.textMatchParmas },
                             get authorExpGrade () { return this.numericParams },
-                            get latestReplierUID () { return this.numericParams },
+                            get latestReplierUid () { return this.numericParams },
                             get latestReplierName () { return this.textMatchParmas },
                             get latestReplierDisplayName () { return this.textMatchParmas }
                         },
@@ -733,7 +926,7 @@
                             replySubReplyNum: [['reply'], 'AND'],
                             threadProperties: [['thread'], 'AND'],
                             authorExpGrade: [['reply', 'subReply'], 'OR'],
-                            latestReplierUID: [['thread'], 'AND'],
+                            latestReplierUid: [['thread'], 'AND'],
                             latestReplierName: [['thread'], 'AND'],
                             latestReplierDisplayName: [['thread'], 'AND'],
                             latestReplierGender: [['thread'], 'AND']
@@ -764,7 +957,7 @@
                             get authorName () { return this.textMatchParams },
                             get authorDisplayName () { return this.textMatchParams },
                             get latestReplierName () { return this.textMatchParams },
-                            get latestReplierDisplayName () { return this.textMatchParams },
+                            get latestReplierDisplayName () { return this.textMatchParams }
                         },
                         paramsWatcher: { // param is byref object so changes will sync
                             dateTimeRangeParams (param) {
@@ -801,8 +994,8 @@
                                 return 'fid';
                             }
                         }
-                        if (_.isEmpty(_.filter(clearedParams, (param) => ! _.includes(['tid', 'pid', 'spid'], param.name))) // is there no other params
-                            && _.filter(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name)).length === 1) { // is there only one post id params
+                        if (_.isEmpty(_.reject(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name))) // is there no other params
+                            && _.filter(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name)).length === 1) { // is there only one post id param
                             return 'postID';
                         }
                         return 'search';
@@ -883,7 +1076,9 @@
                         if (_.isEmpty(clearedUniqueParams)) { // might be post id route
                             for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
                                 let postIDParam = _.filter(clearedParams, (param) => param.name === postIDName);
-                                let isOnlyOnePostIDParam = _.isEmpty(_.filter(clearedParams, (param) => param.name !== postIDName)) && postIDParam.length === 1 && postIDParam[0].subParam == null;
+                                let isOnlyOnePostIDParam = _.isEmpty(_.reject(clearedParams, (param) => param.name === postIDName)) // is there no other params
+                                    && postIDParam.length === 1 // is there only one post id param
+                                    && postIDParam[0].subParam == null; // is range subParam not set
                                 if (isOnlyOnePostIDParam) {
                                     this.$router.push({ name: postIDName, params: { [postIDName]: postIDParam[0].value } });
                                     return; // exit early to prevent pushing other route
@@ -901,15 +1096,13 @@
 
             const postsQueryComponent = Vue.component('posts-query', {
                 template: '#posts-query-template',
-                props: {
-                },
                 data () {
                     return {
                         forumList: [],
                         postPages: [],
                         currentRoutesPage: parseInt(this.$route.params.page) || 1,
                         queryError: null,
-                        renderType: 'raw'
+                        renderType: 'table'
                     };
                 },
                 watch: {
@@ -920,15 +1113,8 @@
                 beforeMount () {
                     $$loadForumList().then((forumList) => this.$data.forumList = forumList);
                 },
-                directives: {
-                    'scroll-to-page': function (el, binding) {
-                        if (binding.value.postPage === binding.value.scrollToPage) {
-                            el.scrollIntoView();
-                        }
-                    }
-                },
                 methods: {
-                    loadNewPage (pageNum) {
+                    loadPage (pageNum) {
                         this.$router.push(this.$route.name.startsWith('param')
                             ? { path: `/page/${pageNum}/${this.$route.params.pathMatch}` }
                             : {
@@ -937,29 +1123,6 @@
                             });
                     },
                     query ({ queryParams, shouldReplacePage }) {
-                        const groupSubRepliesByAuthor = (postsData) => {
-                            postsData.threads = _.map(postsData.threads, (thread) => {
-                                thread.replies = _.map(thread.replies, (reply) => {
-                                    reply.subReplies = _.reduce(reply.subReplies, (groupedSubReplies, subReply, index, subReplies) => {
-                                        // group sub replies item by continuous and same author info
-                                        let previousSubReply = subReplies[index - 1];
-                                        if (previousSubReply !== undefined
-                                            && subReply.authorUid === previousSubReply.authorUid
-                                            && subReply.authorManagerType === previousSubReply.authorManagerType
-                                            && subReply.authorExpGrade === previousSubReply.authorExpGrade) {
-                                            _.last(groupedSubReplies).push(subReply);
-                                        } else {
-                                            groupedSubReplies.push([subReply]);
-                                        }
-                                        return groupedSubReplies;
-                                    }, []);
-                                    return reply;
-                                });
-                                return thread;
-                            });
-                            return postsData;
-                        };
-
                         this.$data.queryError = null;
                         if (shouldReplacePage) {
                             this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
@@ -978,7 +1141,6 @@
                             window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(queryParams), page: this.$data.currentRoutesPage, reCAPTCHA}));
                             window.$previousPostsQueryAjax
                                 .done((ajaxData) => {
-                                    ajaxData = groupSubRepliesByAuthor(ajaxData);
                                     if (shouldReplacePage) { // is loading next page data on the same query params or requesting new query with different params
                                         this.$data.postPages = [ajaxData];
                                     } else {
