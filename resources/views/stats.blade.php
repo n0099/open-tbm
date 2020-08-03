@@ -67,9 +67,7 @@
             statsChartDOM = $('#statsChartDOM');
             statsChart = echarts.init(statsChartDOM[0], 'light');
             statsChart.setOption({
-                title: {
-                    text: '吧贴量统计'
-                },
+                title: { text: '吧贴量统计' },
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: { type: 'shadow' }
@@ -80,7 +78,7 @@
                         restore: { show: true },
                         dataView: { show: true },
                         saveAsImage: { show: true },
-                        magicType: { show: true, type: ['stack', 'tiled'] },
+                        magicType: { show: true, type: ['stack', 'tiled'] }
                     }
                 },
                 dataZoom: [
@@ -90,18 +88,11 @@
                         start: 0,
                         bottom: 0
                     },
-                    {
-                        type: 'inside',
-                        filterMode: 'filter'
-                    }
+                    { type: 'inside', filterMode: 'filter' }
                 ],
                 legend: {},
-                xAxis: {
-                    type: 'time'
-                },
-                yAxis: {
-                    type: 'value',
-                },
+                xAxis: { type: 'time' },
+                yAxis: { type: 'value' },
                 series: [
                     {
                         id: 'thread',
@@ -139,10 +130,7 @@
                 $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param({ ...statsQuery, reCAPTCHA }))
                     .done((ajaxData) => {
                         let series = _.map(ajaxData, (datas, postType) => {
-                            return {
-                                id: postType,
-                                data: _.map(datas, _.values)
-                            };
+                            return { id: postType, data: _.map(datas, _.values) };
                         });
                         let timeCategories = _.chain(ajaxData)
                             .map((counts) => _.map(counts, (count) => count.time))
@@ -151,17 +139,11 @@
                             .uniq()
                             .value();
                         statsChart.setOption({
-                            title: {
-                                text: `${_.find(forumsList, { fid: statsQuery.fid }).name}吧贴量统计`
-                            },
+                            title: { text: `${_.find(forumsList, { fid: statsQuery.fid }).name}吧贴量统计` },
                             xAxis: {
                                 data: timeCategories,
                                 type: $$echartsTimeRangeAxisType[statsQuery.timeRange],
-                                axisPointer: {
-                                    label: {
-                                        formatter: $$echartsTimeRangeAxisPointerLabelFormatter[statsQuery.timeRange]
-                                    }
-                                }
+                                axisPointer: { label: { formatter: $$echartsTimeRangeAxisPointerLabelFormatter[statsQuery.timeRange] } }
                             },
                             series
                         });

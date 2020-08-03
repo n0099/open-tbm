@@ -60,15 +60,9 @@
             statusChartDOM = $('#statusChartDOM');
             statusChart = echarts.init(statusChartDOM[0]);
             statusChart.setOption({
-                title: {
-                    text: '近期性能统计'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                },
-                axisPointer: {
-                    link: { xAxisIndex: 'all' }
-                },
+                title: { text: '近期性能统计' },
+                tooltip: { trigger: 'axis' },
+                axisPointer: { link: { xAxisIndex: 'all' } },
                 toolbox: {
                     feature: {
                         dataZoom: { show: true, yAxisIndex: 'none' },
@@ -113,9 +107,7 @@
                     { height: '35%', top: '60%' }
                 ],
                 xAxis: [
-                    {
-                        type: 'time'
-                    },
+                    { type: 'time' },
                     {
                         type: 'time',
                         gridIndex: 1,
@@ -196,7 +188,7 @@
                         yAxisIndex: 1,
                         type: 'line',
                         symbolSize: 2,
-                        sampling: 'average',
+                        sampling: 'average'
                     },
                     {
                         id: 'parsedUserTimes',
@@ -205,7 +197,7 @@
                         yAxisIndex: 1,
                         type: 'line',
                         symbolSize: 2,
-                        sampling: 'average',
+                        sampling: 'average'
                     }
                 ]
             });
@@ -226,15 +218,10 @@
                         let series = _.chain(statusChart.getOption().series)
                             .map('id')
                             .map((seriesName) => {
-                                return {
-                                    id: seriesName,
-                                    data: selectColumnFromStatus(seriesName)
-                                };
+                                return { id: seriesName, data: selectColumnFromStatus(seriesName) };
                             })
                             .value();
-                        statusChart.setOption({
-                            series
-                        });
+                        statusChart.setOption({ series });
                     })
                     .always(() => statusChartDOM.removeClass('loading'));
             });
