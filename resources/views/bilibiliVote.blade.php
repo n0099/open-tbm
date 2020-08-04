@@ -209,13 +209,13 @@
                             .sortBy((candidate) => -_.sumBy(candidate, 'count')) // sort grouped candidate by it's total votes count descend
                             .map((candidateVotes) => {
                                 let validVotes = _.find(candidateVotes, { isValid: 1 });
-                                let validCount = validVotes == null ? 0 : validVotes.count;
-                                let validAvgGrade = validVotes == null ? 0 : validVotes.voterAvgGrade;
+                                let validCount = validVotes === undefined ? 0 : validVotes.count;
+                                let validAvgGrade = validVotes === undefined ? 0 : validVotes.voterAvgGrade;
                                 let invalidVotes = _.find(candidateVotes, { isValid: 0 });
-                                let invalidCount = invalidVotes == null ? 0 : invalidVotes.count;
-                                let invalidAvgGrade = invalidVotes == null ? 0 : invalidVotes.voterAvgGrade;
+                                let invalidCount = invalidVotes === undefined ? 0 : invalidVotes.count;
+                                let invalidAvgGrade = invalidVotes === undefined ? 0 : invalidVotes.voterAvgGrade;
                                 let officialValidCount = _.find(bilibiliVoteVue.$data.top50OfficialValidVotesCount, { voteFor: parseInt(candidateVotes[0].voteFor) })
-                                officialValidCount = officialValidCount == null ? 0 : officialValidCount.officialValidCount;
+                                officialValidCount = officialValidCount === undefined ? 0 : officialValidCount.officialValidCount;
                                 return {
                                     voteFor: bilibiliVoteVue.formatCandidateNameByID(candidateVotes[0].voteFor),
                                     validCount, validAvgGrade,
@@ -413,9 +413,9 @@
                             .groupBy('time')
                             .map((count, time) => {
                                 let validCount = _.find(count, { isValid: 1 });
-                                validCount = validCount == null ? 0 : validCount.count;
+                                validCount = validCount === undefined ? 0 : validCount.count;
                                 let invalidCount = _.find(count, { isValid: 0 });
-                                invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                invalidCount = invalidCount === undefined ? 0 : invalidCount.count;
                                 return { time, validCount, invalidCount };
                             })
                             .value();
@@ -566,9 +566,9 @@
                                 )
                                 .map((candidateVotes) => {
                                     let validCount = _.find(candidateVotes, { isValid: 1 });
-                                    validCount = validCount == null ? 0 : validCount.count;
+                                    validCount = validCount === undefined ? 0 : validCount.count;
                                     let invalidCount = _.find(candidateVotes, { isValid: 0 });
-                                    invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                    invalidCount = invalidCount === undefined ? 0 : invalidCount.count;
                                     return {
                                         voteFor: bilibiliVoteVue.formatCandidateNameByID(candidateVotes[0].voteFor),
                                         validCount, invalidCount,
@@ -593,7 +593,7 @@
 
                             const totalVotesCount = (isValid = null) => {
                                 let votesSumCount = _.chain(timeGroup);
-                                if (isValid != null) {
+                                if (isValid !== null) {
                                     votesSumCount = votesSumCount.filter({ isValid })
                                 }
                                 return votesSumCount
@@ -742,11 +742,11 @@
                         $.getJSON(`${$$baseUrl}/api/bilibiliVote/allCandidatesVotesCount`, $.param({ reCAPTCHA })).done((ajaxData) => {
                             this.$data.candidatesDetailData = _.map(this.$data.candidatesDetailData, (candidate) => {
                                 let candidateVotes = _.filter(ajaxData, { voteFor: candidate.candidateIndex.toString() });
-                                if (candidateVotes != null) {
+                                if (candidateVotes !== undefined) {
                                     let validCount = _.find(candidateVotes, { isValid: 1 });
-                                    validCount = validCount == null ? 0 : validCount.count;
+                                    validCount = validCount === undefined ? 0 : validCount.count;
                                     let invalidCount = _.find(candidateVotes, { isValid: 0 });
-                                    invalidCount = invalidCount == null ? 0 : invalidCount.count;
+                                    invalidCount = invalidCount === undefined ? 0 : invalidCount.count;
                                     return {
                                         ...candidate,
                                         ...{ validCount, invalidCount }

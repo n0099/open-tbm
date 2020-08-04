@@ -17,7 +17,7 @@
         $(window).on('resize', _.throttle(() => {
             $('.echarts').each((k, echartsDOM) => {
                 let echartsInstance = echarts.getInstanceByDom(echartsDOM);
-                if (echartsInstance != null) { // instance might be undefined when echarts haven't been initialed
+                if (echartsInstance !== undefined) { // instance might be undefined when echarts haven't been initialed
                     echartsInstance.resize();
                 }
             });

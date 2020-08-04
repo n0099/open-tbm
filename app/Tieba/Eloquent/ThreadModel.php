@@ -19,7 +19,7 @@ class ThreadModel extends PostModel
     protected $casts = [
         'agreeInfo' => 'array',
         'zanInfo' => 'array',
-        'locationInfo' => 'array'
+        'location' => 'array'
     ];
 
     protected $fields = [

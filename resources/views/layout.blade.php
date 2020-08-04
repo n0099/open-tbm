@@ -187,7 +187,7 @@
                 .ajaxStop(() => $$changePageLoading(false))
                 .ajaxError((event, jqXHR) => {
                     let errorInfo = '';
-                    if (jqXHR.responseJSON != null) {
+                    if (jqXHR.responseJSON !== undefined) {
                         let error = jqXHR.responseJSON;
                         if (_.isObject(error.errorInfo)) { // response when laravel failed validate
                             errorInfo = `错误码：${error.errorCode}<br />${_.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />')}`;
@@ -252,18 +252,18 @@
             const $$loadForumList = () => new Promise((resolve) => $.getJSON(`${$$baseUrl}/api/forumsList`).done((ajaxData) => resolve(ajaxData)));
 
             const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
-                if (spid != null) {
+                if (spid !== null) {
                     return `https://tieba.baidu.com/p/${tid}?pid=${spid}#${spid}`;
-                } else if (pid != null) {
+                } else if (pid !== null) {
                     return `https://tieba.baidu.com/p/${tid}?pid=${pid}#${pid}`;
                 } else {
                     return `https://tieba.baidu.com/p/${tid}`;
                 }
             };
             const $$getTBMPostLink = (tid, pid = null, spid = null) => {
-                if (spid != null) {
+                if (spid !== null) {
                     return `${$$baseUrl}/post/tid/${tid}`;
-                } else if (pid != null) {
+                } else if (pid !== null) {
                     return `${$$baseUrl}/post/pid/${pid}`;
                 } else {
                     return `${$$baseUrl}/post/spid/${spid}`;

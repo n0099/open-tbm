@@ -51,12 +51,12 @@
                             </div>
                             <div class="col">
                                 <p>UID：{{ user.uid }}</p>
-                                <p v-if="user.displayName != null">覆盖ID：{{ user.displayName }}</p>
-                                <p v-if="user.name != null">用户名：{{ user.name }}</p>
+                                <p v-if="user.displayName !== null">覆盖ID：{{ user.displayName }}</p>
+                                <p v-if="user.name !== null">用户名：{{ user.name }}</p>
                                 <p>性别：{{ getUserGender(user.gender) }}</p>
-                                <p v-if="user.fansNickname != null">粉丝头衔：{{ user.fansNickname }}</p>
+                                <p v-if="user.fansNickname !== null">粉丝头衔：{{ user.fansNickname }}</p>
                             </div>
-                            <div v-if="slotProps.itemIndex != usersData.users.length - 1" class="w-100"><hr /></div>
+                            <div v-if="slotProps.itemIndex !== usersData.users.length - 1" class="w-100"><hr /></div>
                         </template>
                     </template>
                 </scroll-list>
@@ -92,7 +92,7 @@
                            :key="`page${currentListPage + 1}@${JSON.stringify({ ...$route.params, ...$route.query })}`"
                            :users-data="usersData"
                            :loading-new-users="loadingNewUsers"
-                           :is-last-page-in-pages="currentListPage == userPages.length - 1"></user-list>
+                           :is-last-page-in-pages="currentListPage === userPages.length - 1"></user-list>
                 <loading-list-placeholder v-if="loadingNewUsers"></loading-list-placeholder>
             </div>
         </template>

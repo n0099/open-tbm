@@ -7,16 +7,16 @@
                 <option value="name">用户名</option>
                 <option value="displayName">覆盖名</option>
             </select>
-            <select v-if="selectBy == 'uid'" v-model="params.uidComparison" class="col-2 custom-select form-control">
+            <select v-if="selectBy === 'uid'" v-model="params.uidComparison" class="col-2 custom-select form-control">
                 <option>&lt;</option>
                 <option>=</option>
                 <option>&gt;</option>
             </select>
-            <input v-if="selectBy == 'uid'" v-model="params[selectByOptionsName.uid]"
+            <input v-if="selectBy === 'uid'" v-model="params[selectByOptionsName.uid]"
                     type="number" placeholder="4000000000" aria-label="UID" class="col form-control">
-            <input v-if="selectBy == 'name'" v-model="params[selectByOptionsName.name]"
+            <input v-if="selectBy === 'name'" v-model="params[selectByOptionsName.name]"
                    type="text" placeholder="n0099" aria-label="用户名" class="col form-control">
-            <div v-if="selectBy == 'name'" class="input-group-append">
+            <div v-if="selectBy === 'name'" class="input-group-append">
                 <div class="input-group-text">
                     <div class="custom-checkbox custom-control">
                         <input v-model="params.nameUseRegex" id="selectUserNameUseRegex" type="checkbox" class="custom-control-input">
@@ -24,9 +24,9 @@
                     </div>
                 </div>
             </div>
-            <input v-if="selectBy == 'displayName'" v-model="params[selectByOptionsName.displayName]"
+            <input v-if="selectBy === 'displayName'" v-model="params[selectByOptionsName.displayName]"
                    type="text" placeholder="神奇🍀" aria-label="覆盖名" class="col form-control">
-            <div v-if="selectBy == 'displayName'" class="input-group-append">
+            <div v-if="selectBy === 'displayName'" class="input-group-append">
                 <div class="input-group-text">
                     <div class="custom-checkbox custom-control">
                         <input v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex" type="checkbox" class="custom-control-input">

@@ -18,10 +18,10 @@
             z-index: 1; /* let border overlaps other selects */
         }
         .select-param-first-row {
-            border-top-left-radius: 0.25rem !important;
+            border-top-left-radius: 0.25em !important;
         }
         .select-param-last-row {
-            border-bottom-left-radius: 0.25rem !important;
+            border-bottom-left-radius: 0.25em !important;
         }
     </style>
     <style>/* <query-form> */
@@ -76,21 +76,21 @@
             width: 1px; /* any value other than 0px */
             min-width: unset;
             padding-left: 5px !important;
-            padding-right: 5px !important;
+            padding-right: 0px !important;
         }
     </style>
     <style>/* <post-render-raw> */
         .render-raw {
             resize: both;
-            height: 50rem;
+            height: 50em;
             font-family: Consolas, Courier New, monospace;
         }
     </style>
     <style>/* <post-page-previous-button> */
         .previous-page-button {
             position: relative;
-            top: -1.5rem;
-            margin-bottom: -1rem;
+            top: -1.5em;
+            margin-bottom: -1em;
             padding-bottom: 4px;
             padding-top: 4px;
         }
@@ -318,7 +318,7 @@
 
         </template>
         <template id="post-render-table-template">
-            <div class="container-flow mb-2">
+            <div class="container-flow pb-2">
                 <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
                     <template slot="expandedRowRender" slot-scope="record">
                         <p v-html="record.title"></p>
@@ -340,7 +340,7 @@
             <textarea :value="JSON.stringify(posts)" class="render-raw border col"></textarea>
         </template>
         <template id="post-page-previous-button-template">
-            <div v-scroll-to-page="{ currentPage: pageInfo.currentPage, scrollToPage: scrollToPage.value }" class="mt-3 p-2 row align-items-center">
+            <div v-scroll-to-page="{ currentPage: pageInfo.currentPage, scrollToPage: scrollToPage.value }" class="mt-2 p-2 row align-items-center">
                 <div class="col"><hr /></div>
                 <div class="w-auto">
                     <div class="p-2 badge badge-light">
@@ -503,9 +503,9 @@
                                         && subReply.authorUid === previousSubReply.authorUid
                                         && subReply.authorManagerType === previousSubReply.authorManagerType
                                         && subReply.authorExpGrade === previousSubReply.authorExpGrade) {
-                                        _.last(groupedSubReplies).push(subReply);
+                                        _.last(groupedSubReplies).push(subReply); // append to last group
                                     } else {
-                                        groupedSubReplies.push([subReply]);
+                                        groupedSubReplies.push([subReply]); // new group
                                     }
                                     return groupedSubReplies;
                                 }, []);
@@ -729,7 +729,7 @@
                             // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
                             let isOnlyPageChanged = _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page'));
                             this.parseRoute(to);
-                            if (this.checkParams()) {
+                            if (isOnlyPageChanged || this.checkParams()) { // skip checkParams() when there's only page changed
                                 this.$data.isRequesting = true;
                                 this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: ! isOnlyPageChanged });
                             }
@@ -1038,7 +1038,7 @@
                         let postTypes = _.sortBy(this.$data.uniqueParams.postTypes.value);
                         this.$data.invalidParamsIndex = []; // reset to prevent duplicate indexes
                         _.each(_.map(this.$data.params, this.clearParamDefaultValue), (param, paramIndex) => { // we don't filter() here for post types validate
-                            if (param !== null && param.value != null) { // is param have no diff with default value and have value
+                            if (param !== null && param.value !== undefined) { // is param have no diff with default value and have value
                                 let paramRequiredPostTypes = this.$data.paramsRequiredPostTypes[param.name];
                                 if (paramRequiredPostTypes !== undefined) { // not set means this param accepts any post types
                                     if (! (paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
@@ -1078,7 +1078,7 @@
                                 let postIDParam = _.filter(clearedParams, (param) => param.name === postIDName);
                                 let isOnlyOnePostIDParam = _.isEmpty(_.reject(clearedParams, (param) => param.name === postIDName)) // is there no other params
                                     && postIDParam.length === 1 // is there only one post id param
-                                    && postIDParam[0].subParam == null; // is range subParam not set
+                                    && postIDParam[0].subParam === undefined; // is range subParam not set
                                 if (isOnlyOnePostIDParam) {
                                     this.$router.push({ name: postIDName, params: { [postIDName]: postIDParam[0].value } });
                                     return; // exit early to prevent pushing other route
@@ -1134,7 +1134,7 @@
                         }
 
                         let ajaxStartTime = Date.now();
-                        if (window.$previousPostsQueryAjax != null) { // cancel previous pending ajax to prevent conflict
+                        if (window.$previousPostsQueryAjax !== undefined) { // cancel previous pending ajax to prevent conflict
                             window.$previousPostsQueryAjax.abort();
                         }
                         $$reCAPTCHACheck().then((reCAPTCHA) => {
@@ -1152,7 +1152,7 @@
                                 })
                                 .fail((jqXHR) => {
                                     this.$data.postPages = [];
-                                    if (jqXHR.responseJSON != null) {
+                                    if (jqXHR.responseJSON !== undefined) {
                                         let error = jqXHR.responseJSON;
                                         if (_.isObject(error.errorInfo)) { // response when laravel failed validate, same with ajaxError jquery event @ layout.blade.php
                                             this.$data.queryError = { code: error.errorCode, info: _.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />') };

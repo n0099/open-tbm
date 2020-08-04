@@ -9,7 +9,7 @@
                        v-initial-item-dimensions="itemInitialDimensions"
                        v-bind="evalItemAttrs('outer', items, item, itemIndex)"
                        :data-item-index="itemIndex">
-                <transition v-if="itemTransitionName != null" :name="itemTransitionName">
+                <transition v-if="itemTransitionName !== undefined" :name="itemTransitionName">
                     <component :is="itemInnerTagsName" v-if="shouldDisplay(itemIndex)"
                                v-bind="evalItemAttrs('inner', items, item, itemIndex)">
                         <slot :item="item" :item-index="itemIndex"></slot>
@@ -48,8 +48,8 @@
                                 } else { // remain origin item dom's height and width to ensure viewport dimensions not change (height sink)
                                     let itemIndex = parseInt(el.getAttribute('data-item-index')); // fetch dimensions from previous cache
                                     let cachedItemDimensions = vue.$data.itemDOMDimensionsCache[itemIndex];
-                                    el.style.height = cachedItemDimensions == null ? null : `${cachedItemDimensions.height}px`;
-                                    el.style.width = cachedItemDimensions == null ? null : `${cachedItemDimensions.width}px`;
+                                    el.style.height = cachedItemDimensions === undefined ? null : `${cachedItemDimensions.height}px`;
+                                    el.style.width = cachedItemDimensions === undefined ? null : `${cachedItemDimensions.width}px`;
                                 }
                             }
                         }
@@ -112,11 +112,11 @@
             methods: {
                 evalItemAttrs: function (renderPosition, items, item, itemIndex) {
                     const addItemPlaceholderClass = (renderPosition, evalAttrs) => { // add itemPlaceholderClass to class attr value when hiding item
-                        if (this.$props.itemPlaceholderClass != null
+                        if (this.$props.itemPlaceholderClass !== undefined
                             && renderPosition === 'outer'
                             && ! this.shouldDisplay(itemIndex)) {
                             evalAttrs = Object.assign({}, evalAttrs); // shallow copy to prevent mutate cache
-                            if (evalAttrs.class == null) {
+                            if (evalAttrs.class === undefined) {
                                 evalAttrs.class = this.$props.itemPlaceholderClass;
                             } else {
                                 evalAttrs.class += ` ${this.$props.itemPlaceholderClass}`;
@@ -125,7 +125,7 @@
                         return evalAttrs
                     };
                     let cachedEvalAttrs = this.$data.itemEvaledAttrsCache[renderPosition][itemIndex];
-                    if (cachedEvalAttrs == null) {
+                    if (cachedEvalAttrs === undefined) {
                         let itemsAttrs = renderPosition === 'outer'
                             ? this.$props.itemOuterAttrs
                             : (renderPosition === 'inner'
@@ -171,9 +171,8 @@
                     }
 
                     // call user defined parent component event
-                    let parentCompentEventName = this.$props.itemObserveEvent;
-                    if (parentCompentEventName != null) {
-                        this.$emit(parentCompentEventName, isVisible, observer);
+                    if (this.$props.itemObserveEvent !== undefined) {
+                        this.$emit(this.$props.itemObserveEvent, isVisible, observer);
                     }
                 },
                 range: function (start, end) { // [start, end)
