@@ -56,12 +56,81 @@
             padding-right: 11px;
         }
     </style>
+    <style>/* <post-render-list> */
+        .ant-tabs {
+            overflow: unset; /* override overflow: hidden for let bootstrap .sticky-top work proper */
+        }
+
+        .thread-item {
+            margin-top: 1em;
+        }
+        /*
+        .thread-item-enter-active, .thread-item-leave-active {
+            transition: opacity .3s;
+        }
+        .thread-item-enter, .thread-item-leave-to {
+            opacity: 0;
+        }
+        */
+        .thread-title {
+            padding: .75em 1em .5em 1em;
+            background-color: #f2f2f2;
+        }
+
+        .reply-title {
+            z-index: 1019;
+            top: 62px;
+            margin-top: .625em;
+            border-top: 1px solid #ededed;
+            border-bottom: 0;
+            background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
+        }
+        .reply-info {
+            padding: .625em;
+            margin: 0;
+            border-top: 0;
+        }
+        .reply-banner {
+            padding-left: 0;
+            padding-right: .5em;
+        }
+        .reply-body {
+            padding-left: .5em;
+            padding-right: .5em;
+        }
+        .reply-user-info {
+            z-index: 1018;
+            top: 8em;
+            padding: .25em;
+            font-size: 1em;
+            line-height: 140%;
+        }
+
+        .sub-reply-group {
+            margin: 0 0 .25em .5em !important;
+            padding: .25em;
+        }
+        .sub-reply-item {
+            padding: .125em .125em .125em .5em;
+        }
+        .sub-reply-item > * {
+            padding: .25em;
+        }
+        .sub-reply-user-info {
+            font-size: 0.9em;
+        }
+
+        .post-time-badge {
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+    </style>
     <style>/* <post-render-table> */
         .ant-table {
             width: fit-content;
         }
 
-        .render-table-thread .ant-table { /* todo: should only select first appeared child */
+        .render-table-thread .ant-table { /* fixme: should only select first appeared child */
             width: auto;
             border: 1px solid #e8e8e8;
             border-radius: 4px 4px 0 0;
@@ -77,11 +146,6 @@
             min-width: unset;
             padding-left: 5px !important;
             padding-right: 0px !important;
-        }
-
-        .tieba-user-avatar-small {
-            width: 25px;
-            height: 25px;
         }
     </style>
     <style>/* <post-render-raw> */
@@ -107,6 +171,15 @@
         .post-item-placeholder {
             background-image: url({{ asset('img/tombstone-post-list.svg') }});
             background-size: 100%;
+        }
+
+        .tieba-user-avatar-small {
+            width: 25px;
+            height: 25px;
+        }
+        .tieba-user-avatar-large {
+            width: 90px;
+            height: 90px;
         }
     </style>
 @endsection
@@ -339,10 +412,130 @@
             </div>
         </template>
         <template id="post-render-list-template">
-
+            <div class="pb-2">
+                <div v-for="thread in posts.threads" class="thread-item card">
+                    <div class="thread-title shadow-sm card-header sticky-top">
+                        <post-thread-tag :thread="thread"></post-thread-tag>
+                        <h6 class="d-inline">{{ thread.title }}</h6>
+                        <div class="float-right badge badge-light">
+                            <router-link :to="{ name: 'tid', params: { tid: thread.tid } }" class="badge badge-pill badge-light">只看此贴</router-link>
+                            <a :href="$data.$$getTiebaPostLink(thread.tid)" target="_blank" class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
+                            <a :data-tippy-content="`<h6>tid：${thread.tid}</h6><hr />
+                                最后回复人：${renderUsername(thread.latestReplierUid)}<br />
+                                最后回复时间：${moment(thread.latestReplyTime).fromNow()}（${thread.latestReplyTime}）<br />
+                                首次收录时间：${moment(thread.created_at).fromNow()}（${thread.created_at}）<br />
+                                最后更新时间：${moment(thread.updated_at).fromNow()}（${thread.updated_at}）`"
+                               class="badge badge-pill badge-light">
+                                <i class="fas fa-info"></i>
+                            </a>
+                            <span :data-tippy-content="thread.postTime" class="post-time-badge badge badge-pill badge-success">{{ moment(thread.postTime).fromNow() }}</span>
+                        </div>
+                        <div class="mt-1">
+                            <span data-tippy-content="回复量" class="badge badge-info">
+                                <i class="far fa-comment-alt"></i> {{ thread.replyNum }}
+                            </span>
+                                <span data-tippy-content="阅读量" class="badge badge-info">
+                                <i class="far fa-eye"></i> {{ thread.viewNum }}
+                            </span>
+                                <span data-tippy-content="分享量" class="badge badge-info">
+                                <i class="fas fa-share-alt"></i> {{ thread.shareNum }}
+                            </span>
+                                <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge badge-info">
+                                <i class="far fa-thumbs-up"></i>{{ thread.agreeInfo.agree_num }}
+                                <i class="far fa-thumbs-down"></i>{{ thread.agreeInfo.disagree_num }}
+                            </span>
+                                <span v-if="thread.zanInfo != null" :data-tippy-content="`
+                                    点赞量：${thread.zanInfo.num}<br />
+                                    最后点赞时间：${moment.unix(thread.zanInfo.last_time).fromNow()}（${moment.unix(thread.zanInfo.last_time).format()}）<br />
+                                    近期点赞用户：${thread.zanInfo.user_id_list}<br />`"
+                                      class="badge badge-info"><!-- todo: fetch users info in zanInfo.user_id_list -->
+                                <i class="far fa-thumbs-up"></i> 旧版客户端赞
+                            </span>
+                                <span data-tippy-content="发贴位置" class="badge badge-info">
+                                <i class="fas fa-location-arrow"></i> {{ thread.location }} <!-- todo: unknown json struct -->
+                            </span>
+                        </div>
+                    </div>
+                    <div v-for="reply in thread.replies">
+                        <div class="reply-title sticky-top card-header">
+                            <div class="d-inline h5">
+                                <span class="badge badge-info">{{ reply.floor }}楼</span>
+                                <span v-if="reply.subReplyNum > 0" class="badge badge-info">
+                                {{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i>
+                            </span>
+                            <!-- TODO: implement these reply's property
+                                <span>fold:{{ reply.isFold }}</span>
+                                <span>{{ reply.agreeInfo }}</span>
+                                <span>{{ reply.signInfo }}</span>
+                                <span>{{ reply.tailInfo }}</span>
+                            -->
+                            </div>
+                            <div class="float-right badge badge-light">
+                                <router-link :to="{ name: 'pid', params: { pid: reply.pid } }" class="badge badge-pill badge-light">只看此楼</router-link>
+                                <a :href="$data.$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank" class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
+                                <a :data-tippy-content="`
+                                    <h6>pid：${reply.pid}</h6><hr />
+                                    首次收录时间：${moment(reply.created_at).fromNow()}（${reply.created_at}）<br />
+                                    最后更新时间：${moment(reply.updated_at).fromNow()}（${reply.updated_at}）`"
+                                   class="badge badge-pill badge-light">
+                                    <i class="fas fa-info"></i>
+                                </a>
+                                <span :data-tippy-content="reply.postTime" class="post-time-badge badge badge-pill badge-primary">{{ moment(reply.postTime).fromNow() }}</span>
+                            </div>
+                        </div>
+                        <div class="reply-info shadow-sm row bs-callout bs-callout-info">
+                            <div v-for="author in [$data.$getUserInfo(reply.authorUid)]" class="reply-banner col-md-auto text-center">
+                                <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
+                                    <a :href="$data.$$getTiebaUserLink(author.name)" target="_blank" class="d-block">
+                                        <img :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-large lazyload d-block mx-auto badge badge-light"/>
+                                        <span>
+                                        {{ author.name }}
+                                        <br v-if="author.displayName !== null && author.name !== null" />
+                                        {{ author.displayName }}
+                                    </span>
+                                    </a>
+                                    <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: reply.authorUid, managerType: reply.authorManagerType, expGrade: reply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                </div>
+                            </div>
+                            <div class="reply-body col border-left">
+                                <div class="card-body p-2" v-html="reply.content"></div>
+                                <template v-if="reply.subReplies.length > 0">
+                                    <div v-for="subReplyGroup in reply.subReplies" class="sub-reply-group bs-callout bs-callout-success">
+                                        <ul class="list-group list-group-flush">
+                                            <li v-for="(subReply, subReplyIndex) in subReplyGroup" @mouseenter="hoveringSubReplyItem = subReply.spid" @mouseleave="hoveringSubReplyItem = null" class="sub-reply-item list-group-item">
+                                                <template v-for="author in [$data.$getUserInfo(subReply.authorUid)]">
+                                                    <a v-if="subReplyGroup[subReplyIndex - 1] === undefined" :href="$data.$$getTiebaUserLink(author.name)" target="_blank" class="sub-reply-user-info badge badge-light">
+                                                        <img :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
+                                                        <span>{{ renderUsername(subReply.authorUid) }}</span>
+                                                        <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                                    </a>
+                                                    <div class="float-right badge badge-light">
+                                                        <div v-show="hoveringSubReplyItem === subReply.spid" :class="{ 'd-inline': hoveringSubReplyItem === subReply.spid }"><!-- fixme: high cpu usage due to running vue js while quickly emitting hover event -->
+                                                            <a :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank" class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
+                                                            <a :data-tippy-content="`
+                                                                <h6>spid：${subReply.spid}</h6><hr />
+                                                                首次收录时间：${moment(subReply.created_at).fromNow()}（${subReply.created_at}）<br />
+                                                                最后更新时间：${moment(subReply.created_at).fromNow()}（${subReply.updated_at}）`"
+                                                               class="badge badge-pill badge-light">
+                                                                <i class="fas fa-info"></i>
+                                                            </a>
+                                                        </div>
+                                                        <span :data-tippy-content="subReply.postTime" class="post-time-badge badge badge-pill badge-info">{{ moment(subReply.postTime).fromNow() }}</span>
+                                                    </div>
+                                                </template>
+                                                <div v-html="subReply.content"></div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </template>
         <template id="post-render-table-template">
-            <div class="container-flow pb-2">
+            <div class="container-flow pb-2"><!-- fixme: use full width container to break out main parent container -->
                 <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
                     <template slot="tid" slot-scope="text, record">
                         <router-link :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</router-link>
@@ -585,8 +778,24 @@
                 props: {
                     posts: { type: Object, required: true }
                 },
+                data () {
+                    return {
+                        moment,
+                        $$getTiebaUserLink,
+                        $$getTiebaPostLink,
+                        $$getTiebaUserAvatarUrl,
+                        $getUserInfo: window.$getUserInfo(this.$props.posts.users),
+                        hoveringSubReplyItem: 0 // for display item's right floating hide buttons
+                    }
+                },
+                beforeMount () {
+                    this.$props.posts = this.groupSubRepliesByAuthor(_.cloneDeep(this.$props.posts)); // prevent mutates props in other post renders
+                },
                 mounted () {
-                    this.$props.posts = this.groupSubRepliesByAuthor(this.$props.posts);
+                    this.$nextTick(() => { // initial dom event after all dom and child components rendered
+                        $$tippyInital();
+                        $$tiebaImageZoomEventRegister();
+                    });
                 },
                 methods: {
                     groupSubRepliesByAuthor (postsData) {
@@ -610,6 +819,16 @@
                             return thread;
                         });
                         return postsData;
+                    },
+                    renderUsername (uid) {
+                        let user = this.$data.$getUserInfo(uid);
+                        let name = user.name;
+                        let displayName = user.displayName;
+                        if (name === null) {
+                            return `${displayName !== null ? `${displayName}` : `无用户名或覆盖名（UID：${user.uid}）`}`;
+                        } else {
+                            return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
+                        }
                     }
                 }
             });
@@ -639,11 +858,11 @@
                             { title: '发帖人UID', dataIndex: 'authorUid' },
                             { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
                             { title: '1楼pid', dataIndex: 'firstPid', scopedSlots: { customRender: 'firstPid' } },
-                            { title: '主题贴类型', dataIndex: 'threadType' },
+                            { title: '主题贴类型', dataIndex: 'threadType' },// todo: unknown value enum struct
                             { title: '分享量', dataIndex: 'shareNum' },
-                            { title: '赞踩量', dataIndex: 'agreeInfo' },
-                            { title: '旧版赞踩量', dataIndex: 'zanInfo' },
-                            { title: '发帖位置', dataIndex: 'location' },
+                            { title: '赞踩量', dataIndex: 'agreeInfo' },// todo: unknown json struct
+                            { title: '旧版客户端赞', dataIndex: 'zanInfo' },// todo: unknown json struct
+                            { title: '发帖位置', dataIndex: 'location' },// todo: unknown json struct
                             { title: '首次收录时间', dataIndex: 'created_at' },
                             { title: '最后更新时间', dataIndex: 'updated_at' }
                         ],
@@ -654,11 +873,11 @@
                             { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
                             { title: '发帖人UID', dataIndex: 'authorUid' },
                             { title: '发帖时间', dataIndex: 'postTime' },
-                            { title: '是否折叠', dataIndex: 'isFold' },
-                            { title: '赞踩量', dataIndex: 'agreeInfo' },
-                            { title: '客户端小尾巴', dataIndex: 'signInfo' },
-                            { title: '发帖来源', dataIndex: 'tailInfo' },
-                            { title: '发帖位置', dataIndex: 'location' },
+                            { title: '是否折叠', dataIndex: 'isFold' },// todo: unknown value enum struct
+                            { title: '赞踩量', dataIndex: 'agreeInfo' },// todo: unknown json struct
+                            { title: '客户端小尾巴', dataIndex: 'signInfo' },// todo: unknown json struct
+                            { title: '发帖来源', dataIndex: 'tailInfo' },// todo: unknown json struct
+                            { title: '发帖位置', dataIndex: 'location' },// todo: unknown json struct
                             { title: '首次收录时间', dataIndex: 'created_at' },
                             { title: '最后更新时间', dataIndex: 'updated_at' }
                         ],
@@ -1211,7 +1430,7 @@
                         postPages: [],
                         currentRoutesPage: parseInt(this.$route.params.page) || 1,
                         queryError: null,
-                        renderType: 'table'
+                        renderType: 'list'
                     };
                 },
                 watch: {
