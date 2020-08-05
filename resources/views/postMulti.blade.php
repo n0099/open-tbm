@@ -330,8 +330,8 @@
         </template>
         <template id="post-user-tag-template">
             <div class="btn-group" role="group">
-                <button v-if="userInfo.uid === $data.$getUserInfo((parentUid || {}).thread).uid" type="button" class="badge btn btn-success">楼主</button>
-                <button v-else-if="userInfo.uid === $data.$getUserInfo((parentUid || {}).reply).uid" type="button" class="badge btn btn-info">层主</button>
+                <button v-if="userInfo.uid === $data.$getUserInfo(parentUid.thread).uid" type="button" class="badge btn btn-success">楼主</button>
+                <button v-else-if="userInfo.uid === $data.$getUserInfo(parentUid.reply).uid" type="button" class="badge btn btn-info">层主</button>
                 <button v-if="userInfo.managerType === 'manager'" type="button" class="badge btn btn-danger">吧主</button>
                 <button v-else-if="userInfo.managerType === 'assist'" type="button" class="badge btn btn-info">小吧</button>
                 <button v-else-if="userInfo.managerType === 'voiceadmin'" type="button" class="badge btn btn-info">语音小编</button>
@@ -512,16 +512,21 @@
             const postThreadTagComponent = Vue.component('post-thread-tag', {
                 template: '#post-thread-tag-template',
                 props: {
-                    thread: Object
+                    thread: { type: Object, required: true }
                 }
             });
 
             const postUserTagComponent = Vue.component('post-user-tag', {
                 template: '#post-user-tag-template',
                 props: {
-                    usersInfoSource: Array,
-                    userInfo: Object,
-                    parentUid: Object
+                    usersInfoSource: { type: Array, required: true },
+                    userInfo: { type: Object, required: true },
+                    parentUid: {
+                        type: Object,
+                        default () {
+                            return {};
+                        }
+                    }
                 },
                 data () {
                     return {
@@ -533,7 +538,7 @@
             const postPagePreviousButtonComponent = Vue.component('post-page-previous-button', {
                 template: '#post-page-previous-button-template',
                 props: {
-                    pageInfo: Object,
+                    pageInfo: { type: Object, required: true }
                 },
                 data () {
                     return {
@@ -541,7 +546,7 @@
                     }
                 },
                 directives: {
-                    'scroll-to-page': function (el, binding, vnode) {
+                    'scroll-to-page' (el, binding, vnode) {
                         let pageRenderVue = vnode.context;
                         if (binding.value.currentPage === binding.value.scrollToPage) {
                             pageRenderVue.$nextTick(() => el.scrollIntoView()); // when page haven't been requested before, new pageRenderVue.$el is not ready
@@ -560,7 +565,7 @@
             const postPageNextButtonComponent = Vue.component('post-page-next-button', {
                 template: '#post-page-next-button-template',
                 props: {
-                    currentPage: Number
+                    currentPage: { type: Number, required: true }
                 },
                 data () {
                     return {
@@ -578,7 +583,7 @@
             const postRenderListComponent = Vue.component('post-render-list', {
                 template: '#post-render-list-template',
                 props: {
-                    posts: Object
+                    posts: { type: Object, required: true }
                 },
                 mounted () {
                     this.$props.posts = this.groupSubRepliesByAuthor(this.$props.posts);
@@ -612,7 +617,7 @@
             const postRenderTableComponent = Vue.component('post-render-table', {
                 template: '#post-render-table-template',
                 props: {
-                    posts: Object
+                    posts: { type: Object, required: true }
                 },
                 data () {
                     return {
@@ -699,7 +704,7 @@
             const postRenderRawComponent = Vue.component('post-render-raw', {
                 template: '#post-render-raw-template',
                 props: {
-                    posts: Object
+                    posts: { type: Object, required: true }
                 }
             });
 
@@ -710,7 +715,7 @@
             const errorPlaceholderComponent = Vue.component('error-placeholder', {
                 template: '#error-placeholder-template',
                 props: {
-                    error: Object
+                    error: { type: Object, required: true }
                 }
             });
 
@@ -720,9 +725,9 @@
                     prop: 'param'
                 },
                 props: {
-                    param: Object,
-                    paramIndex: Number,
-                    classes: Object
+                    param: { type: Object, required: true },
+                    paramIndex: { type: Number, required: true },
+                    classes: { type: Object, required: true }
                 },
                 methods: {
                     modelEvent (name, value) {
@@ -738,9 +743,9 @@
                     prop: 'param'
                 },
                 props: {
-                    param: Object,
-                    classes: Object,
-                    placeholders: Object
+                    param: { type: Object, required: true },
+                    classes: { type: Object, required: true },
+                    placeholders: { type: Object, required: true }
                 },
                 methods: {
                     modelEvent (value) {
@@ -753,7 +758,7 @@
             const selectRangeComponent = Vue.component('select-range', {
                 template: '#select-range-template',
                 props: {
-                    value: String
+                    value: { type: String, required: true }
                 }
             });
 
@@ -824,7 +829,7 @@
                 watch: {
                     uniqueParams: { handler: 'paramWatcher', deep: true },
                     params: { handler: 'paramWatcher', deep: true },
-                    $route: function (to, from) {
+                    $route (to, from) {
                         if (_.isEqual(to.path, from.path)) {
                             return; // ignore when only hash has changed
                         }
@@ -982,7 +987,7 @@
             const queryFormComponent = Vue.component('query-form', {
                 mixins: [baseQueryFormMixin],
                 props: {
-                    forumList: Array
+                    forumList: { type: Array, required: true }
                 },
                 data () {
                     return {
@@ -1210,7 +1215,7 @@
                     };
                 },
                 watch: {
-                    $route: function (to, from) {
+                    $route (to, from) {
                         this.$data.currentRoutesPage = parseInt(to.params.page) || 1;
                     }
                 },

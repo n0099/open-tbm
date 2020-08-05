@@ -141,9 +141,9 @@
         const userListComponent = Vue.component('user-list', {
             template: '#user-list-template',
             props: { // received from user list pages component
-                usersData: Object,
-                loadingNewUsers: Boolean,
-                isLastPageInPages: Boolean
+                usersData: { type: Object, required: true },
+                loadingNewUsers: { type: Boolean, required: true },
+                isLastPageInPages: { type: Boolean, required: true }
             },
             data () {
                 return {

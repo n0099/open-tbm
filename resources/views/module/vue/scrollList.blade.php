@@ -37,7 +37,7 @@
             template: '#scroll-list-template',
             directives: {
                 'eval-dynamic-dimensions': {
-                    update: function (el, binding, vnode) {
+                    update (el, binding, vnode) {
                         let vue = vnode.context;
                         if (vue.$props.itemDynamicDimensions === true) {
                             let isDisplaying =  binding.value;
@@ -56,7 +56,7 @@
                     }
                 },
                 'initial-item-dimensions': {
-                    bind: function (el, binding) {
+                    bind (el, binding) {
                         // set initial items height and width to prevent initialed hiding item stacked at one pixel
                         el.style.height = binding.value.height;
                         el.style.width = binding.value.width;
@@ -64,22 +64,10 @@
                 }
             },
             props: {
-                items: {
-                    type: Array,
-                    required: true
-                },
-                itemDynamicDimensions: {
-                    type: Boolean,
-                    required: true
-                },
-                itemInitialDimensions: {
-                    type: Object,
-                    required: true
-                },
-                itemMinDisplayNum: {
-                    type: Number,
-                    required: true
-                },
+                items: { type: Array, required: true },
+                itemDynamicDimensions: { type: Boolean, required: true },
+                itemInitialDimensions: { type: Object, required: true },
+                itemMinDisplayNum: { type: Number, required: true },
                 itemTransitionName: String,
                 itemOuterAttrs: Object,
                 itemInnerAttrs: Object,
@@ -88,7 +76,7 @@
                 itemObserveEvent: String,
                 itemPlaceholderClass: String
             },
-            data: function () {
+            data () {
                 return {
                     newDisplayItemsIndex: [],
                     scrollListID: '',
@@ -99,18 +87,18 @@
                     currentDisplayingItemsIndex: []
                 };
             },
-            created: function () {
+            created () {
                 // initial props and data's value with default value
                 let initialDimensions = this.$props.itemInitialDimensions;
                 initialDimensions.height = initialDimensions.height || '';
                 initialDimensions.width = initialDimensions.width || '';
                 this.$data.scrollListID = Math.random().toString(36).substring(5);
             },
-            mounted: function () {
+            mounted () {
                 this.$data.newDisplayItemsIndex = this.range(0, this.$props.itemMinDisplayNum); // initially display first itemMinDisplayNum items
             },
             methods: {
-                evalItemAttrs: function (renderPosition, items, item, itemIndex) {
+                evalItemAttrs (renderPosition, items, item, itemIndex) {
                     const addItemPlaceholderClass = (renderPosition, evalAttrs) => { // add itemPlaceholderClass to class attr value when hiding item
                         if (this.$props.itemPlaceholderClass !== undefined
                             && renderPosition === 'outer'
@@ -148,15 +136,15 @@
                         return addItemPlaceholderClass(renderPosition, cachedEvalAttrs);
                     }
                 },
-                shouldDisplay: function (itemIndex) {
+                shouldDisplay (itemIndex) {
                     return this.$data.newDisplayItemsIndex.includes(itemIndex);
                 },
-                listVisibilityChanged: function (isVisible, observer) {
+                listVisibilityChanged (isVisible, observer) {
                     if (! isVisible) { // hide all items when viewport is leaving whole scroll list
                         this.$data.newDisplayItemsIndex = [];
                     }
                 },
-                itemVisibilityChanged: function (isVisible, observer) {
+                itemVisibilityChanged (isVisible, observer) {
                     let itemDOM = observer.target;
                     let itemIndex = parseInt(itemDOM.getAttribute('data-item-index'));
                     if (isVisible) {
@@ -175,10 +163,10 @@
                         this.$emit(this.$props.itemObserveEvent, isVisible, observer);
                     }
                 },
-                range: function (start, end) { // [start, end)
+                range (start, end) { // [start, end)
                     return new Array(end - start).fill().map((d, i) => i + start);
                 },
-                getDisplayIndexRange: function (rangeLowerBound, rangeUpperBound, median, rangeSize) {
+                getDisplayIndexRange (rangeLowerBound, rangeUpperBound, median, rangeSize) {
                     /* output example
                      * (0, 20, 0, 5) => [0, 1, 2, 3, 4]
                      * (0, 20, 1, 4) => [0, 1, 2, 3]

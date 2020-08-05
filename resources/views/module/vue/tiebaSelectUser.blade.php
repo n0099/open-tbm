@@ -50,9 +50,7 @@
                 event: 'changed'
             },
             props: {
-                initialParams: {
-                    type: Object
-                },
+                initialParams: { type: Object },
                 selectByOptionsName: {
                     type: Object,
                     default () {
