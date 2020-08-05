@@ -67,7 +67,7 @@
             border-radius: 4px 4px 0 0;
         }
 
-        .ant-table td, .ant-table th {
+        .ant-table td, .ant-table td *, .ant-table th {
             white-space: nowrap;
             font-family: Consolas, Courier New, monospace;
         }
@@ -77,6 +77,11 @@
             min-width: unset;
             padding-left: 5px !important;
             padding-right: 0px !important;
+        }
+
+        .tieba-user-avatar-small {
+            width: 25px;
+            height: 25px;
         }
     </style>
     <style>/* <post-render-raw> */
@@ -314,18 +319,71 @@
                 </div>
             </form>
         </template>
+        <template id="post-thread-tag-template">
+            <div class="btn-group" role="group">
+                <button v-if="thread.stickyType === 'membertop'" class="badge btn btn-warning">会员置顶</button>
+                <button v-if="thread.stickyType === 'top'" class="badge btn btn-primary">置顶</button>
+                <button v-if="thread.isGood" class="badge btn btn-danger">精品</button>
+                <button v-if="thread.topicType === 'text'" class="badge btn btn-primary">文本话题</button>
+                <button v-if="thread.topicType === ''" class="badge btn btn-primary">图片话题</button><!-- TODO: fill unknown picture topic thread type -->
+            </div>
+        </template>
+        <template id="post-user-tag-template">
+            <div class="btn-group" role="group">
+                <button v-if="userInfo.uid === $data.$getUserInfo((parentUid || {}).thread).uid" type="button" class="badge btn btn-success">楼主</button>
+                <button v-else-if="userInfo.uid === $data.$getUserInfo((parentUid || {}).reply).uid" type="button" class="badge btn btn-info">层主</button>
+                <button v-if="userInfo.managerType === 'manager'" type="button" class="badge btn btn-danger">吧主</button>
+                <button v-else-if="userInfo.managerType === 'assist'" type="button" class="badge btn btn-info">小吧</button>
+                <button v-else-if="userInfo.managerType === 'voiceadmin'" type="button" class="badge btn btn-info">语音小编</button>
+                <button v-if="userInfo.expGrade !== undefined" type="button" class="badge btn btn-primary">Lv{{ userInfo.expGrade }}</button>
+            </div>
+        </template>
         <template id="post-render-list-template">
 
         </template>
         <template id="post-render-table-template">
             <div class="container-flow pb-2">
                 <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
+                    <template slot="tid" slot-scope="text, record">
+                        <router-link :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</router-link>
+                    </template>
+                    <template slot="firstPid" slot-scope="text, record">
+                        <router-link :to="{ name: 'pid', params: { pid: record.firstPid } }">{{ record.firstPid }}</router-link>
+                    </template>
+                    <template slot="titleWithTag" slot-scope="text, record">
+                        <post-thread-tag :thread="record"></post-thread-tag>
+                        <span>{{ record.title }}</span>
+                    </template>
+                    <template slot="authorInfo" slot-scope="text, record">
+                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
+                            <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                        </a>
+                        <post-user-tag :user-info="{ uid: record.authorUid, managerType: record.authorManagerType }" :users-info-source="posts.users"></post-user-tag>
+                    </template>
+                    <template slot="latestReplierInfo" slot-scope="text, record">
+                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.latestReplierUid).name)">
+                            <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                        </a>
+                        <post-user-tag :user-info="{ uid: record.latestReplierUid }" :users-info-source="posts.users"></post-user-tag>
+                    </template>
                     <template slot="expandedRowRender" slot-scope="record">
-                        <p v-html="record.title"></p>
-                        <a-table v-if="threadsReply[record.tid] !== undefined" :columns="replyColumns" :data-source="threadsReply[record.tid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                        <span v-if="threadsReply[record.tid] === undefined">无子回复帖</span>
+                        <a-table v-else :columns="replyColumns" :data-source="threadsReply[record.tid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                            <template v-for="thread in [record]" slot="authorInfo" slot-scope="text, record">
+                                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
+                                    <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                                </a>
+                                <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: record.authorUid, managerType: record.authorManagerType, expGrade: record.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                            </template>
                             <template slot="expandedRowRender" slot-scope="record">
                                 <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content"></div>
                                 <a-table v-if="repliesSubReply[record.pid] !== undefined" :columns="subReplyColumns" :data-source="repliesSubReply[record.pid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                                    <template v-for="reply in [record]" slot="authorInfo" slot-scope="text, record">
+                                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
+                                            <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                                        </a>
+                                        <post-user-tag :parent-uid="{ thread: _.find($props.posts.threads, { tid: reply.tid }).authorUid, reply: reply.authorUid }" :user-info="{ uid: record.authorUid, managerType: record.authorManagerType, expGrade: record.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                    </template>
                                     <template slot="expandedRowRender" slot-scope="record">
                                         <span v-html="record.content"></span>
                                     </template>
@@ -374,7 +432,7 @@
                         <template v-if="renderType === 'list' && queryError === null">
                             <template v-for="(posts, pageIndex) in postPages">
                                 <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-list :posts="posts"></post-render-list>
+                                <post-render-list :key="posts.pages.currentPage" :posts="posts"></post-render-list>
                                 <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
                             </template>
                         </template>
@@ -383,7 +441,7 @@
                         <template v-if="renderType === 'table' && queryError === null">
                             <template v-for="(posts, pageIndex) in postPages">
                                 <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-table :posts="posts"></post-render-table>
+                                <post-render-table :key="posts.pages.currentPage" :posts="posts"></post-render-table>
                                 <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
                             </template>
                         </template>
@@ -392,7 +450,7 @@
                         <template v-if="renderType === 'raw' && queryError === null">
                             <template v-for="(posts, pageIndex) in postPages">
                                 <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-raw :posts="posts"></post-render-raw>
+                                <post-render-raw :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
                                 <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
                             </template>
                         </template>
@@ -435,9 +493,42 @@
             'use strict';
             $$initialNavBar('postMulti');
 
-            window.sharedDataBindings = {
+            window.$previousPostsQueryAjax = undefined;
+            window.$sharedDataBindings = {
                 scrollToPage: { value: 0 }
             };
+            window.$getUserInfo = (dataSource) => (uid) => // curry invoke
+                _.find(dataSource, { uid }) || { // thread latest replier uid might be unknown
+                    id: 0,
+                    uid: 0,
+                    name: '未知用户',
+                    displayName: null,
+                    avatarUrl: null,
+                    gender: 0,
+                    fansNickname: null,
+                    iconInfo: []
+                };
+
+            const postThreadTagComponent = Vue.component('post-thread-tag', {
+                template: '#post-thread-tag-template',
+                props: {
+                    thread: Object
+                }
+            });
+
+            const postUserTagComponent = Vue.component('post-user-tag', {
+                template: '#post-user-tag-template',
+                props: {
+                    usersInfoSource: Array,
+                    userInfo: Object,
+                    parentUid: Object
+                },
+                data () {
+                    return {
+                        $getUserInfo: window.$getUserInfo(this.$props.usersInfoSource)
+                    }
+                }
+            });
 
             const postPagePreviousButtonComponent = Vue.component('post-page-previous-button', {
                 template: '#post-page-previous-button-template',
@@ -446,7 +537,7 @@
                 },
                 data () {
                     return {
-                        scrollToPage: window.sharedDataBindings.scrollToPage
+                        scrollToPage: window.$sharedDataBindings.scrollToPage
                     }
                 },
                 directives: {
@@ -454,7 +545,7 @@
                         let pageRenderVue = vnode.context;
                         if (binding.value.currentPage === binding.value.scrollToPage) {
                             pageRenderVue.$nextTick(() => el.scrollIntoView()); // when page haven't been requested before, new pageRenderVue.$el is not ready
-                            window.sharedDataBindings.scrollToPage.value = 0; // reset for next time scroll with same scrollToPage
+                            window.$sharedDataBindings.scrollToPage.value = 0; // reset for next time scroll with same scrollToPage
                         }
                     }
                 },
@@ -473,7 +564,7 @@
                 },
                 data () {
                     return {
-                        scrollToPage: window.sharedDataBindings.scrollToPage
+                        scrollToPage: window.$sharedDataBindings.scrollToPage
                     }
                 },
                 methods: {
@@ -484,7 +575,7 @@
                 }
             });
 
-            const postsRenderListComponent = Vue.component('post-render-list', {
+            const postRenderListComponent = Vue.component('post-render-list', {
                 template: '#post-render-list-template',
                 props: {
                     posts: Object
@@ -518,31 +609,33 @@
                 }
             });
 
-            const postsRenderTableComponent = Vue.component('post-render-table', {
+            const postRenderTableComponent = Vue.component('post-render-table', {
                 template: '#post-render-table-template',
                 props: {
                     posts: Object
                 },
                 data () {
                     return {
+                        $$getTiebaUserLink,
+                        $$getTiebaUserAvatarUrl,
+                        $getUserInfo: window.$getUserInfo(this.$props.posts.users),
                         threads: [],
                         threadsReply: [],
                         repliesSubReply: [],
                         threadColumns: [
-                            { title: 'tid', dataIndex: 'tid' },
+                            { title: 'tid', dataIndex: 'tid', scopedSlots: { customRender: 'tid' } },
+                            { title: '标题', dataIndex: 'title', scopedSlots: { customRender: 'titleWithTag' } },
                             { title: '回复量', dataIndex: 'replyNum' },
                             { title: '浏览量', dataIndex: 'viewNum' },
-                            { title: '分享量', dataIndex: 'shareNum' },
-                            { title: '发帖人UID', dataIndex: 'authorUid' },
-                            { title: '发帖人吧务级别', dataIndex: 'authorManagerType' },
+                            { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
                             { title: '发帖时间', dataIndex: 'postTime' },
-                            { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
+                            { title: '最后回复人', scopedSlots: { customRender: 'latestReplierInfo' } },
                             { title: '最后回复时间', dataIndex: 'latestReplyTime' },
-                            { title: '1楼pid', dataIndex: 'firstPid' },
-                            { title: '精品', dataIndex: 'isGood' },
-                            { title: '置顶', dataIndex: 'stickyType' },
+                            { title: '发帖人UID', dataIndex: 'authorUid' },
+                            { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
+                            { title: '1楼pid', dataIndex: 'firstPid', scopedSlots: { customRender: 'firstPid' } },
                             { title: '主题贴类型', dataIndex: 'threadType' },
-                            { title: '话题贴类型', dataIndex: 'topicType' },
+                            { title: '分享量', dataIndex: 'shareNum' },
                             { title: '赞踩量', dataIndex: 'agreeInfo' },
                             { title: '旧版赞踩量', dataIndex: 'zanInfo' },
                             { title: '发帖位置', dataIndex: 'location' },
@@ -553,9 +646,8 @@
                             { title: 'pid', dataIndex: 'pid' },
                             { title: '楼层', dataIndex: 'floor' },
                             { title: '楼中楼回复量', dataIndex: 'subReplyNum' },
+                            { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
                             { title: '发帖人UID', dataIndex: 'authorUid' },
-                            { title: '发帖人吧务级别', dataIndex: 'authorManagerType' },
-                            { title: '发帖人经验等级', dataIndex: 'authorExpGrade' },
                             { title: '发帖时间', dataIndex: 'postTime' },
                             { title: '是否折叠', dataIndex: 'isFold' },
                             { title: '赞踩量', dataIndex: 'agreeInfo' },
@@ -567,9 +659,8 @@
                         ],
                         subReplyColumns: [
                             { title: 'spid', dataIndex: 'spid' },
+                            { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
                             { title: '发帖人UID', dataIndex: 'authorUid' },
-                            { title: '发帖人吧务级别', dataIndex: 'authorManagerType' },
-                            { title: '发帖人经验等级', dataIndex: 'authorExpGrade' },
                             { title: '发帖时间', dataIndex: 'postTime' },
                             { title: '首次收录时间', dataIndex: 'created_at' },
                             { title: '最后更新时间', dataIndex: 'updated_at' }
@@ -590,10 +681,22 @@
                         .reject(_.isEmpty) // remove replies which haven't sub reply
                         .mapKeys((subReplies) => subReplies[0].pid) // convert replies' sub reply array to object for adding pid key
                         .value();
+                },
+                methods: {
+                    renderUsername (uid) {
+                        let user = this.$data.$getUserInfo(uid);
+                        let name = user.name;
+                        let displayName = user.displayName;
+                        if (name === null) {
+                            return `${displayName !== null ? `${displayName}` : `无用户名或覆盖名（UID：${user.uid}）`}`;
+                        } else {
+                            return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
+                        }
+                    }
                 }
             });
 
-            const postsRenderRawComponent = Vue.component('post-render-raw', {
+            const postRenderRawComponent = Vue.component('post-render-raw', {
                 template: '#post-render-raw-template',
                 props: {
                     posts: Object
@@ -1009,6 +1112,7 @@
                         } else if (route.name.startsWith('fid')) {
                             this.$data.uniqueParams.fid.value = route.params.fid;
                         } else { // post id routes
+                            this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, true)) // reset to default
                             this.$data.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => this.fillParamWithDefaultValue({ name, value }) );
                         }
                     },

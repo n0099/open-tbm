@@ -24,7 +24,7 @@
             }
             .lazyloaded {
                 opacity: 1;
-                transition: opacity 200ms;
+                transition: opacity .3s;
             }
             .loading-icon {
                 width: 100px;
@@ -42,6 +42,11 @@
             }
             .footer-inner {
                 background-color: rgba(0,0,0,.2);
+            }
+
+            a {
+                color: #1890ff; /* use antd color for clearly bootstrap hover animation */
+                text-decoration: none !important; /* override browser underline */
             }
 
             * {
