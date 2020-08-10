@@ -73,19 +73,16 @@
                 z-index: 1040;
             }
 
-            ::-webkit-scrollbar
-            {
+            ::-webkit-scrollbar {
                 width: 10px;
                 height: 10px;
                 background-color: #f5f5f5;
             }
-            ::-webkit-scrollbar-track
-            {
+            ::-webkit-scrollbar-track {
                 box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
                 background-color: #f5f5f5;
             }
-            ::-webkit-scrollbar-thumb
-            {
+            ::-webkit-scrollbar-thumb {
                 background-color: #f90;
                 background-image: -webkit-linear-gradient(
                     45deg,
@@ -203,9 +200,14 @@
                     new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
                 });
 
-            const $$tippyInital = () => {
-                //tippy('[data-tippy]');
-                tippy('[data-tippy-content]');
+            const $$registerTippy = (scopedRootDOM = '*', unregister = false) => {
+                if (unregister) {
+                    _.each($(scopedRootDOM).find('[data-tippy-content]'), (dom) => {
+                        dom._tippy.destroy();
+                    });
+                } else {
+                    tippy($(scopedRootDOM).find('[data-tippy-content]').get());
+                }
             };
             tippy.setDefaults({
                 animation: 'perspective',
@@ -214,8 +216,6 @@
             });
 
             const $$baseUrl = '{{ $baseUrl }}';
-            const $$httpDoamin = '{{ $httpDomain }}';
-            const $$baseUrlDir = '{{ $baseUrlDir }}';
             const $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
             const $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
                 @if(\App::environment('production'))

@@ -118,7 +118,7 @@
                             ? this.$props.itemOuterAttrs
                             : (renderPosition === 'inner'
                                 ? this.$props.itemInnerAttrs
-                                : (() => { throw 'items attr render position not valid'; })());
+                                : (() => { throw 'items attr render position is invalid'; })());
                         let evalAttrs = {};
                         Object.keys(itemsAttrs || {}).forEach((attrName) => {
                             let itemAttrs = itemsAttrs[attrName];
@@ -127,7 +127,7 @@
                             } else if (itemAttrs.type === 'string') {
                                 evalAttrs[attrName] = itemAttrs.value;
                             } else {
-                                throw 'item attrs render type not valid';
+                                throw 'item attrs render type is invalid';
                             }
                         });
                         this.$data.itemEvaledAttrsCache[renderPosition][itemIndex] = evalAttrs; // cache evaluated attrs value
@@ -158,7 +158,7 @@
                         }
                     }
 
-                    // call user defined parent component event
+                    // emit user defined parent component event
                     if (this.$props.itemObserveEvent !== undefined) {
                         this.$emit(this.$props.itemObserveEvent, isVisible, observer);
                     }

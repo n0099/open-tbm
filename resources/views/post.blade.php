@@ -765,7 +765,7 @@
                     previousPageUrl () { // cache attr to ensure each list component's url won't be updated after page param change
                         // generate an new absolute url with previous page params which based on current route path
                         let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
-                        return `${$$baseUrlDir}${urlWithNewPage}`;
+                        return `${$$baseUrl}${urlWithNewPage}`;
                     }
                 },
                 methods: {
@@ -1223,8 +1223,8 @@
                         }
                     },
                     replyItemEventRegister () {
-                        $$tippyInital();
-                        $$tiebaImageZoomEventRegister();
+                        $$registerTippy();
+                        $$registerTiebaImageZoomEvent();
                     },
                     replyItemObserveEvent (isVisible, observer) {
                         this.replyItemEventRegister();
@@ -1304,7 +1304,7 @@
                 },
                 router: new VueRouter({
                     mode: 'history',
-                    base: `${$$baseUrlDir}/`,
+                    base: `${$$baseUrl}/`,
                     routes: [
                         {
                             name: 'postsQuery',

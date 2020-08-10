@@ -155,7 +155,7 @@
                 previousPageUrl () { // computed function will caching attr to ensure each list component's url won't be updated after page param change
                     // generate an new absolute url with previous page params which based on current route path
                     let urlWithNewPage = this.$route.fullPath.replace(`/page/${this.$route.params.page}`, `/page/${this.$route.params.page - 1}`);
-                    return `${$$baseUrlDir}${urlWithNewPage}`;
+                    return `${$$baseUrl}${urlWithNewPage}`;
                 }
             },
             mounted () {
@@ -274,7 +274,7 @@
             },
             router: new VueRouter({
                 mode: 'history',
-                base: `${$$baseUrlDir}/`,
+                base: `${$$baseUrl}/`,
                 routes: [
                     {
                         name: 'emptyParam',

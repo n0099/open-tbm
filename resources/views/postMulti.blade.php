@@ -61,17 +61,16 @@
             overflow: unset; /* override overflow: hidden for let bootstrap .sticky-top work proper */
         }
 
+        .post-render-list-enter-active, .post-render-list-leave-active {
+            transition: opacity .3s;
+        }
+        .post-render-list-enter, .post-render-list-leave-to {
+            opacity: 0;
+        }
+
         .thread-item {
             margin-top: 1em;
         }
-        /*
-        .thread-item-enter-active, .thread-item-leave-active {
-            transition: opacity .3s;
-        }
-        .thread-item-enter, .thread-item-leave-to {
-            opacity: 0;
-        }
-        */
         .thread-title {
             padding: .75em 1em .5em 1em;
             background-color: #f2f2f2;
@@ -145,7 +144,17 @@
             width: 1px; /* any value other than 0px */
             min-width: unset;
             padding-left: 5px !important;
-            padding-right: 0px !important;
+            padding-right: 0 !important;
+        }
+    </style>
+    <style>/* <post-render-list> and <post-render-table> */
+        .tieba-user-avatar-small {
+            width: 25px;
+            height: 25px;
+        }
+        .tieba-user-avatar-large {
+            width: 90px;
+            height: 90px;
         }
     </style>
     <style>/* <post-render-raw> */
@@ -164,22 +173,24 @@
             padding-top: 4px;
         }
     </style>
-    <style>/* common */
-        .loading-list-placeholder .post-item-placeholder {
-            height: 480px;
-        }
+    <style>/* <loading-list-placeholder> */
         .post-item-placeholder {
-            background-image: url({{ asset('img/tombstone-post-list.svg') }});
-            background-size: 100%;
+            height: 480px;
+            animation-name: post-item-placeholder;
+            animation-play-state: running;
+            animation-iteration-count: 9999;
+            animation-duration: 3s;
         }
-
-        .tieba-user-avatar-small {
-            width: 25px;
-            height: 25px;
-        }
-        .tieba-user-avatar-large {
-            width: 90px;
-            height: 90px;
+        @keyframes post-item-placeholder {
+            0% {
+                opacity: .5;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: .5;
+            }
         }
     </style>
 @endsection
@@ -413,7 +424,7 @@
         </template>
         <template id="post-render-list-template">
             <div class="pb-2">
-                <div v-for="thread in posts.threads" class="thread-item card">
+                <div v-for="thread in postsData.threads" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
                         <post-thread-tag :thread="thread"></post-thread-tag>
                         <h6 class="d-inline">{{ thread.title }}</h6>
@@ -494,7 +505,7 @@
                                         {{ author.displayName }}
                                     </span>
                                     </a>
-                                    <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: reply.authorUid, managerType: reply.authorManagerType, expGrade: reply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                    <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: reply.authorUid, managerType: reply.authorManagerType, expGrade: reply.authorExpGrade }" :users-info-source="postsData.users"></post-user-tag>
                                 </div>
                             </div>
                             <div class="reply-body col border-left">
@@ -507,7 +518,7 @@
                                                     <a v-if="subReplyGroup[subReplyIndex - 1] === undefined" :href="$data.$$getTiebaUserLink(author.name)" target="_blank" class="sub-reply-user-info badge badge-light">
                                                         <img :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
                                                         <span>{{ renderUsername(subReply.authorUid) }}</span>
-                                                        <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                                        <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="postsData.users"></post-user-tag>
                                                     </a>
                                                     <div class="float-right badge badge-light">
                                                         <div v-show="hoveringSubReplyItem === subReply.spid" :class="{ 'd-inline': hoveringSubReplyItem === subReply.spid }"><!-- fixme: high cpu usage due to running vue js while quickly emitting hover event -->
@@ -575,7 +586,7 @@
                                         <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
                                             <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
                                         </a>
-                                        <post-user-tag :parent-uid="{ thread: _.find($props.posts.threads, { tid: reply.tid }).authorUid, reply: reply.authorUid }" :user-info="{ uid: record.authorUid, managerType: record.authorManagerType, expGrade: record.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                        <post-user-tag :parent-uid="{ thread: _.find(posts.threads, { tid: reply.tid }).authorUid, reply: reply.authorUid }" :user-info="{ uid: record.authorUid, managerType: record.authorManagerType, expGrade: record.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
                                     </template>
                                     <template slot="expandedRowRender" slot-scope="record">
                                         <span v-html="record.content"></span>
@@ -672,7 +683,11 @@
                     <div class="col"><hr /></div>
                     <div class="w-100"></div>
                     <div class="col">
-                        <div class="post-item-placeholder"></div>
+                        <div class="post-item-placeholder">
+    @endverbatim
+                            <img src="{{ asset('/img/tombstone-post-list.svg') }}" />
+    @verbatim
+                        </div>
                     </div>
                 </div>
             </div>
@@ -785,17 +800,23 @@
                         $$getTiebaPostLink,
                         $$getTiebaUserAvatarUrl,
                         $getUserInfo: window.$getUserInfo(this.$props.posts.users),
-                        hoveringSubReplyItem: 0 // for display item's right floating hide buttons
+                        hoveringSubReplyItem: 0, // for display item's right floating hide buttons
+                        postsData: {}
                     }
                 },
                 beforeMount () {
-                    this.$props.posts = this.groupSubRepliesByAuthor(_.cloneDeep(this.$props.posts)); // prevent mutates props in other post renders
+                    this.$data.postsData = this.groupSubRepliesByAuthor(_.cloneDeep(this.$props.posts)); // prevent mutates props in other post renders
                 },
                 mounted () {
                     this.$nextTick(() => { // initial dom event after all dom and child components rendered
-                        $$tippyInital();
-                        $$tiebaImageZoomEventRegister();
+                        $$registerTippy();
+                        $$registerTiebaImageZoomEvent();
                     });
+                },
+                beforeDestroy () {
+                    // this.$el is already unmounted from document while beforeDestory()
+                    $$registerTippy(this.$el, true);
+                    $$registerTiebaImageZoomEvent(this.$el, true);
                 },
                 methods: {
                     groupSubRepliesByAuthor (postsData) {
@@ -1499,7 +1520,7 @@
                 el: '#posts-query',
                 router: new VueRouter({
                     mode: 'history',
-                    base: `${$$baseUrlDir}/postMulti`,
+                    base: `${$$baseUrl}/postMulti`,
                     routes: [
                         {
                             name: 'root',
