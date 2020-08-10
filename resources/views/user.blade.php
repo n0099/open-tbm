@@ -170,7 +170,7 @@
                     };
                     return gendersList[gender];
                 },
-                queryNewPage (pageNum, nextPageButtonDOM) {
+                queryNewPage (pageNum, nextPageButtonDom) {
 
                 }
             }

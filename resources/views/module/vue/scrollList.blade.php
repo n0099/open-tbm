@@ -47,7 +47,7 @@
                                     el.style.width = null;
                                 } else { // remain origin item dom's height and width to ensure viewport dimensions not change (height sink)
                                     let itemIndex = parseInt(el.getAttribute('data-item-index')); // fetch dimensions from previous cache
-                                    let cachedItemDimensions = vue.$data.itemDOMDimensionsCache[itemIndex];
+                                    let cachedItemDimensions = vue.$data.itemDomDimensionsCache[itemIndex];
                                     el.style.height = cachedItemDimensions === undefined ? null : `${cachedItemDimensions.height}px`;
                                     el.style.width = cachedItemDimensions === undefined ? null : `${cachedItemDimensions.width}px`;
                                 }
@@ -80,7 +80,7 @@
                 return {
                     newDisplayItemsIndex: [],
                     scrollListID: '',
-                    itemDOMDimensionsCache: [],
+                    itemDomDimensionsCache: [],
                     itemEvaledAttrsCache: { outer: {}, inner: {} },
                     itemOuterTagsName: this.$props.itemOuterTags || 'div',
                     itemInnerTagsName: this.$props.itemOuterTags || 'div',
@@ -145,8 +145,8 @@
                     }
                 },
                 itemVisibilityChanged (isVisible, observer) {
-                    let itemDOM = observer.target;
-                    let itemIndex = parseInt(itemDOM.getAttribute('data-item-index'));
+                    let itemDom = observer.target;
+                    let itemIndex = parseInt(itemDom.getAttribute('data-item-index'));
                     if (isVisible) {
                         let newDisplayItemsID = this.getDisplayIndexRange(0, this.$props.items.length, itemIndex, this.$props.itemMinDisplayNum);
                         this.$data.currentDisplayingItemsIndex.push(itemIndex); // make sure remain current displaying items
@@ -154,7 +154,7 @@
                     } else {
                         this.$data.currentDisplayingItemsIndex = this.$data.currentDisplayingItemsIndex.filter((i) => i !== itemIndex); // remove from currentDisplayingItemsIndex
                         if (this.$props.itemDynamicDimensions === true) { // cache current hiding item dom's height and width px before hided
-                            this.$data.itemDOMDimensionsCache[itemIndex] = { height: itemDOM.offsetHeight, width: itemDOM.offsetWidth };
+                            this.$data.itemDomDimensionsCache[itemIndex] = { height: itemDom.offsetHeight, width: itemDom.offsetWidth };
                         }
                     }
 

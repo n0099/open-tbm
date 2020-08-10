@@ -314,7 +314,7 @@
                                       }"></select-param>
                         <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
                                                     BETWEEN: param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
@@ -327,11 +327,11 @@
                         </template>
                         <template v-if="_.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
                             <input v-model="param.value" :placeholder="`${param.subParam.matchBy === 'implicit' ? '模糊' : (param.subParam.matchBy === 'explicit' ? '精确' : '正则')}匹配 空格${param.subParam.spaceSplit ? '不' : ''}分割关键词`" type="text" class="form-control" required>
-                            <input-text-match-param v-model="params[paramIndex]" :param-index="paramIndex" :classes="paramRowLastDOMClass(paramIndex, params)"></input-text-match-param>
+                            <input-text-match-param v-model="params[paramIndex]" :param-index="paramIndex" :classes="paramRowLastDomClass(paramIndex, params)"></input-text-match-param>
                         </template>
                         <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: '100,101,102,...',
                                                     BETWEEN: '100,200',
@@ -348,7 +348,7 @@
                                 </div>
                             </div>
                             <div class="input-group-append">
-                                <div :class="paramRowLastDOMClass(paramIndex, params)" class="param-intput-group-text input-group-text">
+                                <div :class="paramRowLastDomClass(paramIndex, params)" class="param-intput-group-text input-group-text">
                                     <div class="custom-checkbox custom-control">
                                         <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`" type="checkbox" value="sticky" class="custom-control-input">
                                         <label :for="`paramThreadPropertiesSticky-${paramIndex}`" class="text-primary font-weight-normal custom-control-label">置顶</label>
@@ -358,7 +358,7 @@
                         </template>
                         <template v-if="_.includes(['authorUid', 'latestReplierUid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: '4000000000,4000000001,4000000002,...',
                                                     BETWEEN: '4000000000,5000000000',
@@ -382,7 +382,7 @@
                         </template>
                         <template v-if="param.name === 'authorExpGrade'">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDOMClass(paramIndex, params)"
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
                                                  :placeholders="{
                                                     IN: '9,10,11,...',
                                                     BETWEEN: '9,18',
@@ -1107,7 +1107,7 @@
                     parseRoute (route) { throw('component must implements mixin abstruct method') },
                     checkParams () { throw('component must implements mixin abstruct method') },
                     submitRoute () { throw('component must implements mixin abstruct method') },
-                    paramRowLastDOMClass (paramIndex, params) {
+                    paramRowLastDomClass (paramIndex, params) {
                         return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
                             'param-control-first-row': paramIndex === 0,
                             'param-control-middle-row': ! (paramIndex === 0 || paramIndex === params.length - 1),

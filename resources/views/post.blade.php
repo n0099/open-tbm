@@ -781,7 +781,7 @@
                             { iconInfo: [] }
                         ];
                     },
-                    loadNewThreadsPage (eventDOM, newPage) {
+                    loadNewThreadsPage (eventDom, newPage) {
                         let pagingRouteName = this.$route.name.endsWith('+p') ? this.$route.name : this.$route.name + '+p';
                         this.$router.push({ name: pagingRouteName, params: { page: newPage.toString() }, query: this.$route.query }); // route params value should always be string
                     }
@@ -969,13 +969,13 @@
                                     ];
                                     _.each(paramsRequiredPostType, (param) => {
                                         let enabledParams = [];
-                                        let queryParamDOM = $(`#${param.domID}`);
+                                        let queryParamDom = $(`#${param.domID}`);
                                         if (_.isEqual(_.difference(queryPostTypes, param.postType), [])) {
-                                            queryParamDOM.prop('disabled', false);
+                                            queryParamDom.prop('disabled', false);
                                             enabledParams.push(param.domID);
                                         } else if (! enabledParams.includes(param.domID)) { // ensure disabling param hadn't enabled before
-                                            queryParamDOM.prop('disabled', true);
-                                            let queryParamName = queryParamDOM.data('param');
+                                            queryParamDom.prop('disabled', true);
+                                            let queryParamName = queryParamDom.data('param');
                                             let queryParamNullValue = vue.$data.arrayableCustomQueryParams.includes(queryParamName) ? [] : ''; // arrayable query param's default value should be []
                                             Reflect.set(vue.$data.queryData.query, queryParamName, queryParamNullValue);
                                         }
@@ -988,13 +988,13 @@
                                     ];
                                     _.each(orderByParamRequiredPostType, (param) => {
                                         let enabledOrderBy = [];
-                                        let orderByOptionDOM = $(`#queryOrderBy [value=${param.orderName}]`);
+                                        let orderByOptionDom = $(`#queryOrderBy [value=${param.orderName}]`);
                                         _.each(queryPostTypes, (queryPostType) => {
                                             if (param.postType.includes(queryPostType)) {
-                                                orderByOptionDOM.prop('disabled', false);
+                                                orderByOptionDom.prop('disabled', false);
                                                 enabledOrderBy.push(param.orderName);
                                             } else if (! enabledOrderBy.includes(param.orderName)) { // ensure disabling orderBy hadn't enabled before
-                                                orderByOptionDOM.prop('disabled', true);
+                                                orderByOptionDom.prop('disabled', true);
                                             }
                                         });
                                     });
@@ -1011,9 +1011,9 @@
                                         || ! _.isEmpty(vue.$data.queryData.params.tid)
                                         || ! _.isEmpty(vue.$data.queryData.params.pid)
                                         || ! _.isEmpty(vue.$data.queryData.params.spid);
-                                    let customQueryParamsDOM = $('.custom-query-param');
-                                    customQueryParamsDOM.prop('disabled', ! isCustomQueryAvailable);
-                                    _.each(customQueryParamsDOM, (dom) => {
+                                    let customQueryParamsDom = $('.custom-query-param');
+                                    customQueryParamsDom.prop('disabled', ! isCustomQueryAvailable);
+                                    _.each(customQueryParamsDom, (dom) => {
                                         let customQueryParamName = $(dom).data('param');
                                         if (isCustomQueryAvailable) {
                                             let customQueryParamDefaultValue = _.find(vue.$data.customQueryParamsDefaultValue, { param: customQueryParamName });

@@ -6,7 +6,7 @@
 
 @section('style')
     <style>
-        #statusChartDOM {
+        #statusChartDom {
             height: 40em;
         }
     </style>
@@ -45,7 +45,7 @@
         </div>
     </form>
     <div id="statusChart" class="row mt-2">
-        <div id="statusChartDOM" class="echarts col mt-2"></div>
+        <div id="statusChartDom" class="echarts col mt-2"></div>
     </div>
 @endsection
 
@@ -54,11 +54,11 @@
         'use strict';
         $$initialNavBar('status');
 
-        let statusChartDOM;
+        let statusChartDom;
         let statusChart;
         const initialStatusChart = () => {
-            statusChartDOM = $('#statusChartDOM');
-            statusChart = echarts.init(statusChartDOM[0]);
+            statusChartDom = $('#statusChartDom');
+            statusChart = echarts.init(statusChartDom[0]);
             statusChart.setOption({
                 title: { text: '近期性能统计' },
                 tooltip: { trigger: 'axis' },
@@ -203,7 +203,7 @@
             });
         };
         const loadStatusChart = (statusQuery) => {
-            statusChartDOM.addClass('loading');
+            statusChartDom.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHA) => {
                 $.getJSON(`${$$baseUrl}/api/status`, $.param({ ...statusQuery, reCAPTCHA }))
                     .done((ajaxData) => {
@@ -223,7 +223,7 @@
                             .value();
                         statusChart.setOption({ series });
                     })
-                    .always(() => statusChartDOM.removeClass('loading'));
+                    .always(() => statusChartDom.removeClass('loading'));
             });
         };
 

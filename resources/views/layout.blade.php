@@ -200,13 +200,13 @@
                     new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
                 });
 
-            const $$registerTippy = (scopedRootDOM = '*', unregister = false) => {
+            const $$registerTippy = (scopedRootDom = '*', unregister = false) => {
                 if (unregister) {
-                    _.each($(scopedRootDOM).find('[data-tippy-content]'), (dom) => {
+                    _.each($(scopedRootDom).find('[data-tippy-content]'), (dom) => {
                         dom._tippy.destroy();
                     });
                 } else {
-                    tippy($(scopedRootDOM).find('[data-tippy-content]').get());
+                    tippy($(scopedRootDom).find('[data-tippy-content]').get());
                 }
             };
             tippy.setDefaults({

@@ -5,7 +5,7 @@
 
 @section('style')
     <style>
-        #statsChartDOM {
+        #statsChartDom {
             height: 20em;
         }
     </style>
@@ -52,7 +52,7 @@
         </div>
     </form>
     <div id="statsChart" class="row mt-2">
-        <div id="statsChartDOM" class="echarts col mt-2"></div>
+        <div id="statsChartDom" class="echarts col mt-2"></div>
     </div>
 @endsection
 
@@ -61,11 +61,11 @@
         'use strict';
         $$initialNavBar('stats');
 
-        let statsChartDOM;
+        let statsChartDom;
         let statsChart;
         const initialStatsChart = () => {
-            statsChartDOM = $('#statsChartDOM');
-            statsChart = echarts.init(statsChartDOM[0], 'light');
+            statsChartDom = $('#statsChartDom');
+            statsChart = echarts.init(statsChartDom[0], 'light');
             statsChart.setOption({
                 title: { text: '吧贴量统计' },
                 tooltip: {
@@ -125,7 +125,7 @@
             });
         };
         const loadStatsChart = (statsQuery, forumsList) => {
-            statsChartDOM.addClass('loading');
+            statsChartDom.addClass('loading');
             $$reCAPTCHACheck().then((reCAPTCHA) => {
                 $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param({ ...statsQuery, reCAPTCHA }))
                     .done((ajaxData) => {
@@ -148,7 +148,7 @@
                             series
                         });
                     })
-                    .always(() => statsChartDOM.removeClass('loading'));
+                    .always(() => statsChartDom.removeClass('loading'));
             });
         };
 

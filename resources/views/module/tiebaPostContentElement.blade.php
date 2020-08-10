@@ -34,26 +34,26 @@
     <script>
         'use strict';
 
-        const $$registerTiebaImageZoomEvent = (scopedRootDOM = '*', unregister = false) => {
+        const $$registerTiebaImageZoomEvent = (scopedRootDom = '*', unregister = false) => {
             if (unregister) {
-                $(scopedRootDOM).find('.tieba-image-zoom-in, .tieba-image-zoom-out').off('click');
+                $(scopedRootDom).find('.tieba-image-zoom-in, .tieba-image-zoom-out').off('click');
                 return;
             }
 
             const registerZoomInEvent = (event) => {
-                let tiebaImageDOM = $(event.currentTarget);
-                tiebaImageDOM.removeClass('tieba-image-zoom-in').addClass('tieba-image-zoom-out');
-                tiebaImageDOM.children().removeClass('tieba-image').addClass('tieba-image-expanded');
-                tiebaImageDOM.off().on('click', registerZoomOutEvent);
+                let tiebaImageDom = $(event.currentTarget);
+                tiebaImageDom.removeClass('tieba-image-zoom-in').addClass('tieba-image-zoom-out');
+                tiebaImageDom.children().removeClass('tieba-image').addClass('tieba-image-expanded');
+                tiebaImageDom.off().on('click', registerZoomOutEvent);
             };
             const registerZoomOutEvent = (event) => {
-                let tiebaImageDOM = $(event.currentTarget);
-                tiebaImageDOM.addClass('tieba-image-zoom-in').removeClass('tieba-image-zoom-out');
-                tiebaImageDOM.children().addClass('tieba-image').removeClass('tieba-image-expanded');
-                tiebaImageDOM.off().on('click', registerZoomInEvent);
+                let tiebaImageDom = $(event.currentTarget);
+                tiebaImageDom.addClass('tieba-image-zoom-in').removeClass('tieba-image-zoom-out');
+                tiebaImageDom.children().addClass('tieba-image').removeClass('tieba-image-expanded');
+                tiebaImageDom.off().on('click', registerZoomInEvent);
             };
-            $(scopedRootDOM).find('.tieba-image-zoom-in').on('click', registerZoomInEvent);
-            $(scopedRootDOM).find('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
+            $(scopedRootDom).find('.tieba-image-zoom-in').on('click', registerZoomInEvent);
+            $(scopedRootDom).find('.tieba-image-zoom-out').on('click', registerZoomOutEvent);
         };
     </script>
 @endsection

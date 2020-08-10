@@ -6,16 +6,16 @@
 
 @section('style')
     <style>
-        #top50CandidatesCountChartDOM {
+        #top50CandidatesCountChartDom {
             height: 32em;
         }
-        #candidatesTimelineChartDOM {
+        #candidatesTimelineChartDom {
             height: 40em;
         }
-        #top5CandidatesCountByTimeChartDOM {
+        #top5CandidatesCountByTimeChartDom {
             height: 40em;
         }
-        #countByTimeChartDOM {
+        #countByTimeChartDom {
             height: 20em;
         }
     </style>
@@ -40,9 +40,9 @@
         <p><a href="https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
         <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
         <hr />
-        <div id="top50CandidatesCountChartDOM" class="echarts loading row mt-2"></div>
+        <div id="top50CandidatesCountChartDom" class="echarts loading row mt-2"></div>
         <hr />
-        <div id="candidatesTimelineChartDOM" class="echarts loading row mt-2"></div>
+        <div id="candidatesTimelineChartDom" class="echarts loading row mt-2"></div>
         <hr />
         <div class="justify-content-end form-group form-row">
             <label class="col-2 col-form-label text-right" for="queryCandidateCountByTimeTimeRange">时间粒度</label>
@@ -56,7 +56,7 @@
                 </select>
             </div>
         </div>
-        <div id="top5CandidatesCountByTimeChartDOM" class="echarts loading row mt-2"></div>
+        <div id="top5CandidatesCountByTimeChartDom" class="echarts loading row mt-2"></div>
         <hr />
         <div class="justify-content-end form-group form-row">
             <label class="col-2 col-form-label text-right" for="queryCountByTimeTimeRange">时间粒度</label>
@@ -70,7 +70,7 @@
                 </select>
             </div>
         </div>
-        <div id="countByTimeChartDOM" class="echarts loading row mt-2"></div>
+        <div id="countByTimeChartDom" class="echarts loading row mt-2"></div>
         <hr />
         <a-table :columns="candidatesDetailColumns" :data-source="candidatesDetailData" :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }" row-key="candidateIndex">
             <template #candidateName="text">
@@ -85,11 +85,11 @@
         'use strict';
         $$initialNavBar('bilibiliVote');
 
-        let top50CandidatesCountChartDOM;
+        let top50CandidatesCountChartDom;
         let top50CandidatesCountChart;
         const initialTop50CandidatesCountChart = () => {
-            top50CandidatesCountChartDOM = $('#top50CandidatesCountChartDOM');
-            top50CandidatesCountChart = echarts.init(top50CandidatesCountChartDOM[0]);
+            top50CandidatesCountChartDom = $('#top50CandidatesCountChartDom');
+            top50CandidatesCountChart = echarts.init(top50CandidatesCountChartDom[0]);
             top50CandidatesCountChart.setOption({
                 title: {
                     text: 'bilibili吧吧主公投 前50候选人票数',
@@ -253,15 +253,15 @@
                             ]
                         });
                     })
-                    .always(() => top50CandidatesCountChartDOM.removeClass('loading'));
+                    .always(() => top50CandidatesCountChartDom.removeClass('loading'));
             });
         };
 
-        let top5CandidatesCountByTimeChartDOM;
+        let top5CandidatesCountByTimeChartDom;
         let top5CandidatesCountByTimeChart;
         const initialTop5CandidatesCountByTimeChart = () => {
-            top5CandidatesCountByTimeChartDOM = $('#top5CandidatesCountByTimeChartDOM');
-            top5CandidatesCountByTimeChart = echarts.init(top5CandidatesCountByTimeChartDOM[0]);
+            top5CandidatesCountByTimeChartDom = $('#top5CandidatesCountByTimeChartDom');
+            top5CandidatesCountByTimeChart = echarts.init(top5CandidatesCountByTimeChartDom[0]);
             top5CandidatesCountByTimeChart.setOption({
                 title: {
                     text: 'bilibili吧吧主公投 前5票数分时增量',
@@ -338,15 +338,15 @@
                             series
                         });
                     })
-                    .always(() => top5CandidatesCountByTimeChartDOM.removeClass('loading'));
+                    .always(() => top5CandidatesCountByTimeChartDom.removeClass('loading'));
             });
         };
 
-        let countByTimeChartDOM;
+        let countByTimeChartDom;
         let countByTimeChart;
         const initialCountByTimeChart = () => {
-            countByTimeChartDOM = $('#countByTimeChartDOM');
-            countByTimeChart = echarts.init(countByTimeChartDOM[0]);
+            countByTimeChartDom = $('#countByTimeChartDom');
+            countByTimeChart = echarts.init(countByTimeChartDom[0]);
             countByTimeChart.setOption({
                 title: {
                     text: 'bilibili吧吧主公投 总票数分时增量',
@@ -427,15 +427,15 @@
                             dataset: { source: dataset }
                         });
                     })
-                    .always(() => countByTimeChartDOM.removeClass('loading'));
+                    .always(() => countByTimeChartDom.removeClass('loading'));
             });
         };
 
-        let candidatesTimelineChartDOM;
+        let candidatesTimelineChartDom;
         let candidatesTimelineChart;
         const initialCandidatesTimelineChart = () => {
-            candidatesTimelineChartDOM = $('#candidatesTimelineChartDOM');
-            candidatesTimelineChart = echarts.init(candidatesTimelineChartDOM[0]);
+            candidatesTimelineChartDom = $('#candidatesTimelineChartDom');
+            candidatesTimelineChart = echarts.init(candidatesTimelineChartDom[0]);
             const votesCountSeriesLabelFormatter = (votesData, currentCount, candidateName) => {
                 let timeline = candidatesTimelineChart.getOption().timeline[0];
                 let previousTimelineValue = _.find(votesData, {
@@ -669,7 +669,7 @@
                             });
                         });
                     })
-                    .always(() => candidatesTimelineChartDOM.removeClass('loading'));
+                    .always(() => candidatesTimelineChartDom.removeClass('loading'));
             });
         };
 
@@ -719,14 +719,14 @@
                     // fully refresh to regenerate a new echarts instance
                     top5CandidatesCountByTimeChart.clear();
                     initialTop5CandidatesCountByTimeChart();
-                    top5CandidatesCountByTimeChartDOM.addClass('loading');
+                    top5CandidatesCountByTimeChartDom.addClass('loading');
                     loadTop5CandidatesCountByTimeChart(candidateCountByTimeTimeRange);
                 },
                 'statsQuery.countByTimeTimeRange': function (countByTimeTimeRange) {
                     // fully refresh to regenerate a new echarts instance
                     countByTimeChart.clear();
                     initialCountByTimeChart();
-                    countByTimeChartDOM.addClass('loading');
+                    countByTimeChartDom.addClass('loading');
                     loadCountByTimeChart(countByTimeTimeRange);
                 }
             },

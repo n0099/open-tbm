@@ -15,8 +15,8 @@
 
         // resize all echarts instance when viewport size changed
         $(window).on('resize', _.throttle(() => {
-            $('.echarts').each((k, echartsDOM) => {
-                let echartsInstance = echarts.getInstanceByDom(echartsDOM);
+            $('.echarts').each((k, echartsDom) => {
+                let echartsInstance = echarts.getInstanceByDom(echartsDom);
                 if (echartsInstance !== undefined) { // instance might be undefined when echarts haven't been initialed
                     echartsInstance.resize();
                 }
