@@ -274,7 +274,7 @@
             },
             router: new VueRouter({
                 mode: 'history',
-                base: `${$$baseUrl}/`,
+                base: `${$$baseUrlDir}/`,
                 routes: [
                     {
                         name: 'emptyParam',

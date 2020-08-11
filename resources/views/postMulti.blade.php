@@ -57,17 +57,6 @@
         }
     </style>
     <style>/* <post-render-list> */
-        .ant-tabs {
-            overflow: unset; /* override overflow: hidden for let bootstrap .sticky-top work proper */
-        }
-
-        .post-render-list-enter-active, .post-render-list-leave-active {
-            transition: opacity .3s;
-        }
-        .post-render-list-enter, .post-render-list-leave-to {
-            opacity: 0;
-        }
-
         .thread-item {
             margin-top: 1em;
         }
@@ -175,7 +164,6 @@
     </style>
     <style>/* <loading-list-placeholder> */
         .post-item-placeholder {
-            height: 480px;
             animation-name: post-item-placeholder;
             animation-play-state: running;
             animation-iteration-count: 9999;
@@ -193,9 +181,78 @@
             }
         }
     </style>
+    <style>/* <posts-nav> */
+        .ant-menu {
+            border: 0;
+        }
+        .ant-menu-item {
+            height: auto !important; /* to show reply nav buttons under thread menu items */
+            padding:0 10px 5px 32px !important;
+            padding-right: 10px !important;
+            padding-bottom: 5px !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            white-space: normal !important;
+            border-top: 1px solid #ededed;
+        }
+    </style>
+    <style>/* <posts-query> */
+        .posts-nav {
+            padding: 0;
+            overflow: hidden;
+            max-width: calc(100vw - 1010px); /* equals to full viewport width - <post-render-list> width */
+            border-right: 1px solid #ededed;
+        }
+        .posts-nav:hover {
+            overflow: auto;
+        }
+        .posts-nav-collapse {
+            padding: 2px;
+            font-size: 1.3em;
+            background-color: whitesmoke;
+        }
+
+        .post-render {
+            padding-left: 10px;
+        }
+        @media (max-width: 1200px) {
+            .post-render {
+                overflow: overlay; /* to prevent <posts-nav-collapse> warpping new line */
+            }
+            .posts-nav[aria-expanded=true] {
+                display: block !important;
+                position: sticky;
+                top: 0;
+                left: 0;
+                width: fit-content;
+                max-width: 35%;
+            }
+        }
+        @media (min-width: 1200px) {
+            .post-render {
+                padding-left: 15px;
+            }
+            .post-render-list {
+                display: table; /* fixme: why setting width not working unless display: table */
+                width: 1000px;
+            }
+        }
+
+        .post-render-list-placeholder {
+            padding: 0;
+        }
+        @media (min-width: 1500px) {
+            .posts-nav {
+                max-width: calc((100vw - 1010px) / 2); /* equals to full viewport width - <post-render-list> width - .post-render-list-placeholder width */
+            }
+            .post-render-list-placeholder {
+                display: block !important; /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
+            }
+        }
+    </style>
 @endsection
 
-@section('container')
+@section('body')
     @verbatim
         <template id="input-text-match-param-template">
             <div class="input-group-append">
@@ -424,7 +481,7 @@
         </template>
         <template id="post-render-list-template">
             <div class="pb-2">
-                <div v-for="thread in postsData.threads" class="thread-item card">
+                <div v-for="thread in posts.threads" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
                         <post-thread-tag :thread="thread"></post-thread-tag>
                         <h6 class="d-inline">{{ thread.title }}</h6>
@@ -455,7 +512,7 @@
                                 <i class="far fa-thumbs-up"></i>{{ thread.agreeInfo.agree_num }}
                                 <i class="far fa-thumbs-down"></i>{{ thread.agreeInfo.disagree_num }}
                             </span>
-                                <span v-if="thread.zanInfo != null" :data-tippy-content="`
+                                <span v-if="thread.zanInfo !== null" :data-tippy-content="`
                                     点赞量：${thread.zanInfo.num}<br />
                                     最后点赞时间：${moment.unix(thread.zanInfo.last_time).fromNow()}（${moment.unix(thread.zanInfo.last_time).format()}）<br />
                                     近期点赞用户：${thread.zanInfo.user_id_list}<br />`"
@@ -495,8 +552,8 @@
                             </div>
                         </div>
                         <div class="reply-info shadow-sm row bs-callout bs-callout-info">
-                            <div v-for="author in [$data.$getUserInfo(reply.authorUid)]" class="reply-banner col-md-auto text-center">
-                                <div class="reply-user-info col sticky-top shadow-sm badge badge-light">
+                            <div v-for="author in [$data.$getUserInfo(reply.authorUid)]" class="reply-banner text-center col-auto">
+                                <div class="reply-user-info sticky-top shadow-sm badge badge-light">
                                     <a :href="$data.$$getTiebaUserLink(author.name)" target="_blank" class="d-block">
                                         <img :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-large lazyload d-block mx-auto badge badge-light"/>
                                         <span>
@@ -505,7 +562,7 @@
                                         {{ author.displayName }}
                                     </span>
                                     </a>
-                                    <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: reply.authorUid, managerType: reply.authorManagerType, expGrade: reply.authorExpGrade }" :users-info-source="postsData.users"></post-user-tag>
+                                    <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: reply.authorUid, managerType: reply.authorManagerType, expGrade: reply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
                                 </div>
                             </div>
                             <div class="reply-body col border-left">
@@ -518,7 +575,7 @@
                                                     <a v-if="subReplyGroup[subReplyIndex - 1] === undefined" :href="$data.$$getTiebaUserLink(author.name)" target="_blank" class="sub-reply-user-info badge badge-light">
                                                         <img :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
                                                         <span>{{ renderUsername(subReply.authorUid) }}</span>
-                                                        <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="postsData.users"></post-user-tag>
+                                                        <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
                                                     </a>
                                                     <div class="float-right badge badge-light">
                                                         <div v-show="hoveringSubReplyItem === subReply.spid" :class="{ 'd-inline': hoveringSubReplyItem === subReply.spid }"><!-- fixme: high cpu usage due to running vue js while quickly emitting hover event -->
@@ -601,6 +658,17 @@
         <template id="post-render-raw-template">
             <textarea :value="JSON.stringify(posts)" class="render-raw border col"></textarea>
         </template>
+        <template id="posts-nav-template">
+            <a-menu :force-sub-menu-render="true" mode="inline" class="vh-100">
+                <a-sub-menu v-for="posts in pages" :title="`第${posts.pages.currentPage}页`" :key="`page-${posts.pages.currentPage}`">
+                    <a-menu-item v-for="thread in posts.threads" :key="`thread-${thread.tid}`" :title="thread.title">{{ thread.title }}
+                        <div class="d-block btn-group" role="group">
+                            <a v-for="reply in thread.replies" :href="`#${reply.pid}`" class="btn btn-light">{{ reply.floor }}L</a>
+                        </div>
+                    </a-menu-item>
+                </a-sub-menu>
+            </a-menu>
+        </template>
         <template id="post-page-previous-button-template">
             <div v-scroll-to-page="{ currentPage: pageInfo.currentPage, scrollToPage: scrollToPage.value }" class="mt-2 p-2 row align-items-center">
                 <div class="col"><hr /></div>
@@ -629,39 +697,45 @@
         </template>
         <template id="posts-query-template">
             <div>
-                <query-form @query="query($event)" :forum-list="forumList" ref="queryForm"></query-form>
-                <p>当前页数：{{ currentRoutesPage }}</p>
-                <a-tabs v-model="renderType">
-                    <a-tab-pane key="list" tab="列表视图">
-                        <template v-if="renderType === 'list' && queryError === null">
+                <div class="container">
+                    <query-form @query="query($event)" :forum-list="forumList" ref="queryForm"></query-form>
+                    <p>当前页数：{{ currentRoutesPage }}</p>
+                    <a-menu v-show="! _.isEmpty(postPages)" v-model="selectingRenderType" mode="horizontal">
+                        <a-menu-item key="list">列表视图</a-menu-item>
+                        <a-menu-item key="table">表格视图</a-menu-item>
+                        <a-menu-item key="raw">RAW</a-menu-item>
+                    </a-menu>
+                </div>
+                <div v-show="! _.isEmpty(postPages)" class="container-fluid">
+                    <div class="justify-content-center row">
+                        <div :aria-expanded="postsNavExpanded" class="posts-nav vh-100 sticky-top d-none d-xl-block col-xl">
+                            <posts-nav :pages="postPages"></posts-nav>
+                        </div>
+                        <a @click="postsNavExpanded = ! postsNavExpanded" class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col-auto">
+                            <i v-show="postsNavExpanded" class="fas fa-angle-left"></i>
+                            <i v-show="! postsNavExpanded" class="fas fa-angle-right"></i>
+                        </a>
+                        <div :class="{
+                                'post-render': true,
+                                'post-render-list': renderType === 'list',
+                                'col': true,
+                                'col-xl-10': renderType !== 'list' // let render, except <post-render-list>, takes over right margin spaces, aka .post-render-list-placeholder
+                            }">
                             <template v-for="(posts, pageIndex) in postPages">
                                 <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-list :key="posts.pages.currentPage" :posts="posts"></post-render-list>
+                                <post-render-list v-if="renderType === 'list'" :key="posts.pages.currentPage" :initial-posts="posts"></post-render-list>
+                                <post-render-table v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts"></post-render-table>
+                                <post-render-raw v-else-if="renderType === 'raw'" :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
                                 <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
                             </template>
-                        </template>
-                    </a-tab-pane>
-                    <a-tab-pane key="table" tab="表格视图">
-                        <template v-if="renderType === 'table' && queryError === null">
-                            <template v-for="(posts, pageIndex) in postPages">
-                                <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-table :key="posts.pages.currentPage" :posts="posts"></post-render-table>
-                                <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
-                            </template>
-                        </template>
-                    </a-tab-pane>
-                    <a-tab-pane key="raw" tab="RAW">
-                        <template v-if="renderType === 'raw' && queryError === null">
-                            <template v-for="(posts, pageIndex) in postPages">
-                                <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-raw :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
-                                <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
-                            </template>
-                        </template>
-                    </a-tab-pane>
-                </a-tabs>
-                <error-placeholder v-if="queryError !== null" :error="queryError"></error-placeholder>
-                <loading-list-placeholder v-show="($refs.queryForm || { $data: { isRequesting: false } }).$data.isRequesting"></loading-list-placeholder>
+                        </div>
+                        <div v-show="renderType === 'list'" class="post-render-list-placeholder d-none col-xl"></div>
+                    </div>
+                </div>
+                <div class="container">
+                    <error-placeholder v-if="queryError !== null" :error="queryError"></error-placeholder>
+                    <loading-list-placeholder v-show="($refs.queryForm || { $data: { isRequesting: false } }).$data.isRequesting"></loading-list-placeholder>
+                </div>
             </div>
         </template>
         <template id="error-placeholder-template">
@@ -671,10 +745,10 @@
                 <p v-html="error.info"></p>
             </div>
         </template>
-        <div id="posts-query">
+        <div id="root-vue">
             <router-view></router-view>
             <!-- use div instead of template to display dom before vue loaded, v-show=false to hide dom after vue finish load -->
-            <div v-show="false" id="loading-list-placeholder-template">
+            <div v-show="false" id="loading-list-placeholder-template" class="container">
                 <div class="loading-list-placeholder row align-items-center">
                     <div class="col"><hr /></div>
                     <div class="w-auto">
@@ -716,6 +790,13 @@
                     fansNickname: null,
                     iconInfo: []
                 };
+
+            const postsNavComponent = Vue.component('posts-nav', {
+                template: '#posts-nav-template',
+                props: {
+                    pages: { type: Array, required: true }
+                }
+            });
 
             const postThreadTagComponent = Vue.component('post-thread-tag', {
                 template: '#post-thread-tag-template',
@@ -791,7 +872,7 @@
             const postRenderListComponent = Vue.component('post-render-list', {
                 template: '#post-render-list-template',
                 props: {
-                    posts: { type: Object, required: true }
+                    initialPosts: { type: Object, required: true }
                 },
                 data () {
                     return {
@@ -799,27 +880,13 @@
                         $$getTiebaUserLink,
                         $$getTiebaPostLink,
                         $$getTiebaUserAvatarUrl,
-                        $getUserInfo: window.$getUserInfo(this.$props.posts.users),
+                        $getUserInfo: window.$getUserInfo(this.$props.initialPosts.users),
                         hoveringSubReplyItem: 0, // for display item's right floating hide buttons
-                        postsData: {}
                     }
                 },
-                beforeMount () {
-                    this.$data.postsData = this.groupSubRepliesByAuthor(_.cloneDeep(this.$props.posts)); // prevent mutates props in other post renders
-                },
-                mounted () {
-                    this.$nextTick(() => { // initial dom event after all dom and child components rendered
-                        $$registerTippy();
-                        $$registerTiebaImageZoomEvent();
-                    });
-                },
-                beforeDestroy () {
-                    // this.$el is already unmounted from document while beforeDestory()
-                    $$registerTippy(this.$el, true);
-                    $$registerTiebaImageZoomEvent(this.$el, true);
-                },
-                methods: {
-                    groupSubRepliesByAuthor (postsData) {
+                computed: {
+                    posts () {
+                        let postsData = _.cloneDeep(this.$props.initialPosts); // prevent mutates props in other post renders
                         postsData.threads = _.map(postsData.threads, (thread) => {
                             thread.replies = _.map(thread.replies, (reply) => {
                                 reply.subReplies = _.reduce(reply.subReplies, (groupedSubReplies, subReply, index, subReplies) => {
@@ -840,7 +907,20 @@
                             return thread;
                         });
                         return postsData;
-                    },
+                    }
+                },
+                mounted () {
+                    this.$nextTick(() => { // initial dom event after all dom and child components rendered
+                        $$registerTippy();
+                        $$registerTiebaImageZoomEvent();
+                    });
+                },
+                beforeDestroy () {
+                    // this.$el is already unmounted from document while beforeDestory()
+                    $$registerTippy(this.$el, true);
+                    $$registerTiebaImageZoomEvent(this.$el, true);
+                },
+                methods: {
                     renderUsername (uid) {
                         let user = this.$data.$getUserInfo(uid);
                         let name = user.name;
@@ -1070,7 +1150,7 @@
                     uniqueParams: { handler: 'paramWatcher', deep: true },
                     params: { handler: 'paramWatcher', deep: true },
                     $route (to, from) {
-                        if (_.isEqual(to.path, from.path)) {
+                        if (to.path === from.path) {
                             return; // ignore when only hash has changed
                         }
                         if (! this.$data.isRequesting) { // isRequesting will be false when route change is not emit by <query-form>.submit()
@@ -1451,8 +1531,19 @@
                         postPages: [],
                         currentRoutesPage: parseInt(this.$route.params.page) || 1,
                         queryError: null,
-                        renderType: 'list'
+                        renderType: 'list',
+                        postsNavExpanded: false
                     };
+                },
+                computed: {
+                    selectingRenderType: {
+                        get: function () {
+                            return [this.$data.renderType];
+                        },
+                        set: function (value) {
+                            this.$data.renderType = selectingRenderType[0];
+                        }
+                    }
                 },
                 watch: {
                     $route (to, from) {
@@ -1517,10 +1608,10 @@
             });
 
             const postsQueryVue = new Vue({
-                el: '#posts-query',
+                el: '#root-vue',
                 router: new VueRouter({
                     mode: 'history',
-                    base: `${$$baseUrl}/postMulti`,
+                    base: `${$$baseUrlDir}/postMulti`,
                     routes: [
                         {
                             name: 'root',

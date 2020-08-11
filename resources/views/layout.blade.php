@@ -3,7 +3,6 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $GATrackingID }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -141,6 +140,7 @@
         <div class="container">
             @yield('container')
         </div>
+        @yield('body')
         <footer class="footer-outer text-light pt-4 mt-4">
             <div class="text-center container">
                 <p>四叶重工QQ群：292311751</p>
@@ -216,6 +216,7 @@
             });
 
             const $$baseUrl = '{{ $baseUrl }}';
+            const $$baseUrlDir = $$baseUrl.substr($$baseUrl.indexOf('/', $$baseUrl.indexOf('://') + 3));
             const $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
             const $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
                 @if(\App::environment('production'))

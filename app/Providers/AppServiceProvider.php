@@ -22,8 +22,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // global view variables
-        $baseUrl = env('APP_URL');
-        View::share('baseUrl', $baseUrl);
+        View::share('baseUrl', env('APP_URL'));
         View::share('reCAPTCHASiteKey', env('reCAPTCHA_SITE_KEY'));
         View::share('GATrackingID', env('GA_TRACKING_ID'));
     }
