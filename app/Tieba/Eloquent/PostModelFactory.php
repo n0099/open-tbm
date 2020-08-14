@@ -30,19 +30,19 @@ class PostModelFactory
 
     public static function getThreadByID(int $tid): ThreadModel
     {
-        $fid = (new IndexModel())->where('tid', $tid)->value('fid');
+        $fid = (new IndexModel())::where('tid', $tid)->value('fid');
         return static::newThread($fid);
     }
 
     public static function getReplyByID(int $pid): ReplyModel
     {
-        $fid = (new IndexModel())->where('pid', $pid)->value('fid');
+        $fid = (new IndexModel())::where('pid', $pid)->value('fid');
         return static::newReply($fid);
     }
 
     public static function getSubReplyByID(int $spid): SubReplyModel
     {
-        $fid = (new IndexModel())->where('spid', $spid)->value('fid');
+        $fid = (new IndexModel())::where('spid', $spid)->value('fid');
         return static::newSubReply($fid);
     }
 }

@@ -75,7 +75,7 @@ class ReplyCrawler extends Crawlable
             ]
         )->getBody(), true);
         $webRequestTiming->stop();
-        $this->profiles['webRequestTimes'] += 1;
+        $this->profiles['webRequestTimes']++;
         $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
 
         try {
@@ -104,7 +104,7 @@ class ReplyCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTiming) {
                         $webRequestTiming->stop();
-                        $this->profiles['webRequestTimes'] += 1;
+                        $this->profiles['webRequestTimes']++;
                         $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
@@ -139,7 +139,7 @@ class ReplyCrawler extends Crawlable
         $parentThreadInfo = $responseJson['thread'];
         $repliesList = $responseJson['post_list'];
         $replyUsersList = Helper::setKeyWithItemsValue($responseJson['user_list'], 'id');
-        if (count($repliesList) == 0) {
+        if (\count($repliesList) == 0) {
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba');
         }
 
@@ -180,7 +180,7 @@ class ReplyCrawler extends Crawlable
                 'updated_at' => $now
             ];
 
-            $this->profiles['parsedPostTimes'] += 1;
+            $this->profiles['parsedPostTimes']++;
             $repliesInfo[] = $currentInfo;
             if ($reply['sub_post_number'] > 0) {
                 $updatedRepliesInfo[$reply['id']] = Helper::getArrayValuesByKeys($currentInfo, ['subReplyNum']);

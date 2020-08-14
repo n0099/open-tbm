@@ -79,10 +79,10 @@ abstract class Crawlable
         foreach ($arrayToGroup as $item) {
             $nullValueFields = array_map(fn() => false, array_flip($nullableFields));
             foreach ($nullValueFields as $nullableFieldName => $isNull) {
-                $nullValueFields[$nullableFieldName] = $item[$nullableFieldName] ?? null === null;
+                $nullValueFields[$nullableFieldName] = ($item[$nullableFieldName] ?? null) === null;
             }
             $nullValueFieldsCount = array_sum($nullValueFields); // counts all null value fields
-            if ($nullValueFieldsCount == count($nullValueFields)) {
+            if ($nullValueFieldsCount == \count($nullValueFields)) {
                 $arrayAfterGroup['allNull'][] = $item;
             } elseif ($nullValueFieldsCount == 0) {
                 $arrayAfterGroup['notAllNull'][] = $item;

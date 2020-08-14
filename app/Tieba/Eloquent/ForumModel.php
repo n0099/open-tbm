@@ -37,8 +37,8 @@ class ForumModel extends Model
         return static::where('fid', $fid)->value('name');
     }
 
-    public static function getFid(string $fourmName): Collection
+    public static function getFid(string $forumName): Collection
     {
-        return static::where('name', $fourmName)->value('fid');
+        return static::where('name', $forumName)->value('fid');
     }
 }

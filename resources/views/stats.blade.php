@@ -20,7 +20,7 @@
                     <span class="input-group-text"><i class="fas fa-filter"></i></span>
                 </div>
                 <select v-model.number="statsQuery.fid" id="queryStatsForum" class="custom-select form-control">
-                    <option v-for="forum in forumsList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
+                    <option v-for="forum in forumsList" :key="forum.fid" :value="forum.fid">@{{ forum.name }}</option>
                 </select>
             </div>
             <label class="col-2 col-form-label border-left text-center" for="queryStatsTimeRange">时间粒度</label>
@@ -129,9 +129,10 @@
             $$reCAPTCHACheck().then((reCAPTCHA) => {
                 $.getJSON(`${$$baseUrl}/api/stats/forumPostsCount`, $.param({ ...statsQuery, reCAPTCHA }))
                     .done((ajaxData) => {
-                        let series = _.map(ajaxData, (datas, postType) => {
-                            return { id: postType, data: _.map(datas, _.values) };
-                        });
+                        let series = _.map(ajaxData, (dates, postType) => ({
+                            id: postType,
+                            data: _.map(dates, _.values)
+                        }));
                         let timeCategories = _.chain(ajaxData)
                             .map((counts) => _.map(counts, (count) => count.time))
                             .flatten()

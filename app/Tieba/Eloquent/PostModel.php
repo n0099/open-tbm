@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Class Post
- * Parent abstract class for App\Tieba\Post\Thread|Reply|SubReply class.
+ * Parent abstract class for App\Tieba\Post\Thread|Reply|SubReply class
  *
  * @package App\Tieba\Eloquent
  */
@@ -21,18 +21,18 @@ abstract class PostModel extends Model
     use ModelHelper;
 
     /**
-     * @var string Default table name.
+     * @var string Default table name
      * @throw SQL:NoSuchTableException
      */
     protected $table = 'tbm_f0';
 
     /**
-     * @var array Let all model attributes fillable.
+     * @var array Let all model attributes assignable
      */
     protected $guarded = [];
 
     /**
-     * @var int|string Forum id of this post, might be 'me0407'.
+     * @var int Forum id of this post
      */
     protected $fid;
 
@@ -44,13 +44,13 @@ abstract class PostModel extends Model
 
     protected function scopeIDType(Builder $query, string $postIDName, $postID): Builder
     {
-        if (is_int($postID)) {
+        if (\is_int($postID)) {
             return $query->where($postIDName, $postID);
-        } elseif (is_array($postID) || $postID instanceof Collection) {
-            return $query->whereIn($postIDName, $postID);
-        } else {
-            throw new \InvalidArgumentException("{$postIDName} must be int or array");
         }
+        if (\is_array($postID) || $postID instanceof Collection) {
+            return $query->whereIn($postIDName, $postID);
+        }
+        throw new \InvalidArgumentException("{$postIDName} must be int or array");
     }
 
     public function scopeHidePrivateFields(Builder $query): Builder
@@ -63,7 +63,7 @@ abstract class PostModel extends Model
     abstract public function toPost(): Post;
 
     /**
-     * Override the parent relation instance method for passing valid forum id to new related model.
+     * Override the parent relation instance method for passing valid forum id to new related post model
      *
      * @param  string  $class
      * @return mixed
@@ -78,7 +78,7 @@ abstract class PostModel extends Model
     }
 
     /**
-     * Override the parent newInstance method for passing valid forum id to model's query builder.
+     * Override the parent newInstance method for passing valid forum id to model's query builder
      *
      * @param  array  $attributes
      * @param  bool  $exists
@@ -86,44 +86,27 @@ abstract class PostModel extends Model
      */
     public function newInstance($attributes = [], $exists = false)
     {
-        $model = new static((array) $attributes);
-
-        $model->exists = $exists;
-
-        $model->setConnection(
-            $this->getConnectionName()
-        );
-
-        $model->setFid($this->fid);
-
-        return $model;
+        return parent::newInstance(...\func_get_args())->setFid($this->fid);
     }
 
     /**
-     * Setting model table name by forum id and post type.
+     * Setting model table name by forum id and post type
      *
-     * @param int|string $fid
+     * @param int $fid
      *
      * @return PostModel
      */
-    public function setFid($fid): self
+    public function setFid(int $fid): self
     {
-        if (is_int($fid)) {
-            $tableNamePrefix = "tbm_f{$fid}_";
-        } elseif ($fid == 'me0407') {
-            $tableNamePrefix = 'tbm_me0407_';
-        } else {
-            throw new \InvalidArgumentException;
-        }
-
         $this->fid = $fid;
 
+        $tableNamePrefix = "tbm_f{$fid}_";
         $postTypeClassNamePlural = [
             ThreadModel::class => 'threads',
             ReplyModel::class => 'replies',
             SubReplyModel::class => 'subReplies'
         ];
-        $this->setTable($tableNamePrefix . $postTypeClassNamePlural[get_class($this)]);
+        $this->setTable($tableNamePrefix . $postTypeClassNamePlural[\get_class($this)]);
 
         return $this;
     }

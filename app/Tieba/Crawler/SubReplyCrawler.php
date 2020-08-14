@@ -71,7 +71,7 @@ class SubReplyCrawler extends Crawlable
             ]
         )->getBody(), true);
         $webRequestTiming->stop();
-        $this->profiles['webRequestTimes'] += 1;
+        $this->profiles['webRequestTimes']++;
         $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
 
         try {
@@ -102,7 +102,7 @@ class SubReplyCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTiming) {
                         $webRequestTiming->stop();
-                        $this->profiles['webRequestTimes'] += 1;
+                        $this->profiles['webRequestTimes']++;
                         $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
@@ -136,7 +136,7 @@ class SubReplyCrawler extends Crawlable
         }
 
         $subRepliesList = $responseJson['subpost_list'];
-        if (count($subRepliesList) == 0) {
+        if (\count($subRepliesList) == 0) {
             throw new TiebaException('Sub reply list is empty, posts might already deleted from tieba');
         }
 
@@ -172,7 +172,7 @@ class SubReplyCrawler extends Crawlable
                 'updated_at' => $now
             ];
 
-            $this->profiles['parsedPostTimes'] += 1;
+            $this->profiles['parsedPostTimes']++;
             $subRepliesInfo[] = $currentInfo;
             $indexesInfo[] = [
                 'created_at' => $now,

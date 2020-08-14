@@ -13,7 +13,7 @@ class UsersInfoParser
 
     public function parseUsersInfo(array $usersList): int
     {
-        if (count($usersList) == 0) {
+        if (\count($usersList) == 0) {
             throw new \LengthException('Users list is empty');
         }
 
@@ -24,7 +24,8 @@ class UsersInfoParser
             ExceptionAdditionInfo::set(['parsingUid' => $user['id']]);
             if ($user['id'] == '') {
                 return 0; // when thread's author user is anonymous, the first uid in users list will be empty string and will be re-recorded after next
-            } elseif ($user['id'] < 0) { // anonymous user
+            }
+            if ($user['id'] < 0) { // anonymous user
                 $usersInfo[] = [
                     'uid' => $user['id'],
                     'name' => $user['name_show'],
@@ -48,15 +49,15 @@ class UsersInfoParser
                     'iconInfo' => Helper::nullableValidate($user['iconinfo'], true),
                     'privacySettings' => null, // set by ReplyCrawler parent thread author info updating
                     'alaInfo' => ! isset($user['ala_info']['lat'])
-                        || Helper::nullableValidate($user['ala_info']) != null
-                        && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0)
+                        || (Helper::nullableValidate($user['ala_info']) != null
+                        && ($user['ala_info']['lat'] == 0 && $user['ala_info']['lng'] == 0))
                         ? null
                         : Helper::nullableValidate($user['ala_info'], true),
                     'created_at' => $now,
                     'updated_at' => $now
                 ];
             }
-            $parsedUserTimes += 1;
+            $parsedUserTimes++;
         }
         ExceptionAdditionInfo::remove('parsingUid');
         // lazy saving to Eloquent model
@@ -68,11 +69,12 @@ class UsersInfoParser
     private function pushUsersInfo($newUsersInfo): void
     {
         foreach ($newUsersInfo as $newUser) {
-            $existedUserInfoKey = array_search($newUser['uid'], array_column($this->usersInfo, 'uid'));
-            if ($existedUserInfoKey === false) {
-                $this->usersInfo[] = $newUser;
-            } else {
+            /** @var int $existedUserInfoKey */
+            $existedUserInfoKey = array_search($newUser['uid'], array_column($this->usersInfo, 'uid'), true);
+            if ($existedUserInfoKey !== false) {
                 $this->usersInfo[$existedUserInfoKey] = $newUser;
+            } else {
+                $this->usersInfo[] = $newUser;
             }
         }
     }

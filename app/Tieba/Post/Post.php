@@ -19,8 +19,8 @@ abstract class Post
                 Reply::class => 'pid',
                 SubReply::class => 'spid',
             ];
-            if (! isset($postProperties[$postIDByType[get_class($this)]])) {
-                throw new \DomainException('Initial object dosen\'t match with class type');
+            if (! isset($postProperties[$postIDByType[\get_class($this)]])) {
+                throw new \DomainException('Initial object doesn\'t match with class type');
             }
 
             foreach ($postProperties as $postPropertyName => $postPropertyValue) {
@@ -34,10 +34,10 @@ abstract class Post
             }*/
 
             $initialWith($postData->toArray());
-        } elseif (is_array($postData)) {
+        } elseif (\is_array($postData)) {
             $initialWith($postData);
         } else {
-            throw new \InvalidArgumentException('Unexpected initial object: ' . gettype($postData));
+            throw new \InvalidArgumentException('Unexpected initial object: ' . \gettype($postData));
         }
     }
 

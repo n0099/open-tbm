@@ -38,7 +38,7 @@
         .param-control-last-row {
             border-top-right-radius: 0;
         }
-        .param-intput-group-text {
+        .param-input-group-text {
             background-color: unset;
         }
 
@@ -219,7 +219,7 @@
 
         @media (max-width: 1200px) {
             .post-render {
-                width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warpps new row */
+                width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warps new row */
             }
             .posts-nav[aria-expanded=true] {
                 display: block !important;
@@ -386,7 +386,7 @@
                         </template>
                         <template v-if="param.name === 'threadProperties'">
                             <div class="input-group-append">
-                                <div class="param-intput-group-text input-group-text">
+                                <div class="param-input-group-text input-group-text">
                                     <div class="custom-checkbox custom-control">
                                         <input v-model="param.value" :id="`paramThreadPropertiesGood-${paramIndex}`" type="checkbox" value="good" class="custom-control-input">
                                         <label :for="`paramThreadPropertiesGood-${paramIndex}`" class="text-danger font-weight-normal custom-control-label">精品</label>
@@ -394,7 +394,7 @@
                                 </div>
                             </div>
                             <div class="input-group-append">
-                                <div :class="paramRowLastDomClass(paramIndex, params)" class="param-intput-group-text input-group-text">
+                                <div :class="paramRowLastDomClass(paramIndex, params)" class="param-input-group-text input-group-text">
                                     <div class="custom-checkbox custom-control">
                                         <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`" type="checkbox" value="sticky" class="custom-control-input">
                                         <label :for="`paramThreadPropertiesSticky-${paramIndex}`" class="text-primary font-weight-normal custom-control-label">置顶</label>
@@ -927,7 +927,7 @@
                     });
                 },
                 beforeDestroy () {
-                    // this.$el is already unmounted from document while beforeDestory()
+                    // this.$el is already unmounted from document while beforeDestroy()
                     $$registerTippy(this.$el, true);
                     $$registerTiebaImageZoomEvent(this.$el, true);
                 },
@@ -1156,9 +1156,10 @@
                         paramsPreprocessor: {},
                         paramsWatcher: {},
                         paramWatcher (newParamsArray, oldParamsArray) {
-                            _.each(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
-                                this.$data.paramsWatcher[param.name](param);
-                            });
+                            _.chain(newParamsArray)
+                                .filter((param) => _.includes(_.keys(this.$data.paramsWatcher), param.name))
+                                .each((param) => this.$data.paramsWatcher[param.name](param))
+                                .value();
                         }
                     };
                 },
@@ -1199,9 +1200,9 @@
                             this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: true }); // force emit event to refresh new query since route update event won't emit when isRequesting is true
                         }
                     },
-                    parseRoute (route) { throw('component must implements mixin abstruct method'); },
-                    checkParams () { throw('component must implements mixin abstruct method'); },
-                    submitRoute () { throw('component must implements mixin abstruct method'); },
+                    parseRoute (route) { throw('component must implements mixin abstract method'); },
+                    checkParams () { throw('component must implements mixin abstract method'); },
+                    submitRoute () { throw('component must implements mixin abstract method'); },
                     paramRowLastDomClass (paramIndex, params) {
                         return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
                             'param-control-first-row': paramIndex === 0,
@@ -1333,7 +1334,7 @@
                         },
                         paramsDefaultValue: {
                             numericParams: { subParam: { range: '=' } },
-                            textMatchParmas: { subParam: { matchBy: 'implicit', spaceSplit: false } },
+                            textMatchParams: { subParam: { matchBy: 'implicit', spaceSplit: false } },
                             fid: { value: 'NULL' },
                             postTypes: { value: ['thread', 'reply', 'subReply'] },
                             orderBy: { value: 'default', subParam: { direction: 'default' } },
@@ -1342,20 +1343,20 @@
                             get spid () { return this.numericParams; },
                             postTime: { subParam: { range: undefined } },
                             latestReplyTime: { subParam: { range: undefined } },
-                            get threadTitle () { return this.textMatchParmas; },
-                            get postContent () { return this.textMatchParmas; },
+                            get threadTitle () { return this.textMatchParams; },
+                            get postContent () { return this.textMatchParams; },
                             get threadViewNum () { return this.numericParams; },
                             get threadShareNum () { return this.numericParams; },
                             get threadReplyNum () { return this.numericParams; },
                             get replySubReplyNum () { return this.numericParams; },
                             threadProperties: { value: [] },
                             get authorUid () { return this.numericParams; },
-                            get authorName () { return this.textMatchParmas; },
-                            get authorDisplayName () { return this.textMatchParmas; },
+                            get authorName () { return this.textMatchParams; },
+                            get authorDisplayName () { return this.textMatchParams; },
                             get authorExpGrade () { return this.numericParams; },
                             get latestReplierUid () { return this.numericParams; },
-                            get latestReplierName () { return this.textMatchParmas; },
-                            get latestReplierDisplayName () { return this.textMatchParmas; }
+                            get latestReplierName () { return this.textMatchParams; },
+                            get latestReplierDisplayName () { return this.textMatchParams; }
                         },
                         paramsRequiredPostTypes: {
                             pid: [['reply', 'subReply'], 'OR'],

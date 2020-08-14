@@ -207,19 +207,12 @@
             $$reCAPTCHACheck().then((reCAPTCHA) => {
                 $.getJSON(`${$$baseUrl}/api/status`, $.param({ ...statusQuery, reCAPTCHA }))
                     .done((ajaxData) => {
-                        const selectColumnFromStatus = (prop) => {
-                            return _.map(ajaxData, (i) => {
-                                return [
-                                    i.startTime,
-                                    i[prop]
-                                ];
-                            });
-                        };
                         let series = _.chain(statusChart.getOption().series)
                             .map('id')
-                            .map((seriesName) => {
-                                return { id: seriesName, data: selectColumnFromStatus(seriesName) };
-                            })
+                            .map((seriesName) => ({
+                                id: seriesName,
+                                data: _.map(ajaxData, (i) => [i.startTime, i[seriesName]]) // select column from status
+                            }))
                             .value();
                         statusChart.setOption({ series });
                     })

@@ -45,13 +45,13 @@ class UserModel extends Model
 
     public function scopeUid(Builder $query, $uid): Builder
     {
-        if (is_int($uid)) {
+        if (\is_int($uid)) {
             return $query->where('uid', $uid);
-        } elseif (is_array($uid) || $uid instanceof Collection) {
-            return $query->whereIn('uid', $uid);
-        } else {
-            throw new \InvalidArgumentException("uid must be int or array");
         }
+        if (\is_array($uid) || $uid instanceof Collection) {
+            return $query->whereIn('uid', $uid);
+        }
+        throw new \InvalidArgumentException("uid must be int or array");
     }
 
     public function scopeHidePrivateFields(Builder $query): Builder

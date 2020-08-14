@@ -11,7 +11,6 @@ use App\Tieba\Post\Post;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PostsQuery extends Controller
@@ -116,7 +115,7 @@ class PostsQuery extends Controller
             'pid' => [['reply', 'subReply'], 'OR'],
             'spid' => [['subReply'], 'OR']
         ];
-        if (in_array($queryParams['orderBy'], array_keys($orderByRequiredPostTypes), true)) {
+        if (\array_key_exists($queryParams['orderBy'], $orderByRequiredPostTypes)) {
             $currentOrderByRequiredPostTypes = $orderByRequiredPostTypes[$queryParams['orderBy']];
             Helper::abortAPIIfNot(40006, $currentOrderByRequiredPostTypes[1] === 'OR'
                 ? array_diff($queryParams['postType'], $currentOrderByRequiredPostTypes[0]) === []
@@ -130,8 +129,8 @@ class PostsQuery extends Controller
                 Helper::abortAPIIf(40002, $queryPostsID->isEmpty());
                 $queryParams['fid'] = IndexModel::where($queryPostsID)->firstOrFail(['fid'])->toArray()['fid'];
             }
-            if (in_array('latestReplier', $queryParams['userType'], true)) {
-                Helper::abortAPIIfNot(40003, in_array('thread', $queryParams['postType'], true));
+            if (\in_array('latestReplier', $queryParams['userType'], true)) {
+                Helper::abortAPIIfNot(40003, \in_array('thread', $queryParams['postType'], true));
                 Helper::abortAPIIf(40004, $queryParams->only([
                     'userExpGrade',
                     'userExpGradeRange',
@@ -213,13 +212,12 @@ class PostsQuery extends Controller
                 $fieldName = $paramName === 'threadTitle' ? 'title' : 'content';
                 if ($otherQueryParams["{$paramName}Regex"]) {
                     return $postQuery->where($fieldName, 'REGEXP', $paramValue);
-                } else {
-                    return $postQuery->where(function ($query) use ($paramValue, $fieldName) {
-                        foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multi search keyword by space char
-                            $query = $query->orWhere($fieldName, 'LIKE', "%{$splitedKeyword}%");
-                        }
-                    });
                 }
+                return $postQuery->where(function ($query) use ($paramValue, $fieldName) {
+                    foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multi search keyword by space char
+                        $query = $query->orWhere($fieldName, 'LIKE', "%{$splitedKeyword}%");
+                    }
+                });
                 break;
             case 'postTimeStart':
                 return $applyDateTimeRangeParamOnQuery($postQuery, 'postTime', $paramValue, $otherQueryParams['postTimeEnd']);
@@ -270,16 +268,14 @@ class PostsQuery extends Controller
                         ['floor', '=', 1],
                         ['authorExpGrade', $otherQueryParams['userExpGradeRange'], $paramValue]
                     ]));
-                } else {
-                    return $postQuery->where('authorExpGrade', $otherQueryParams['userExpGradeRange'], $paramValue);
                 }
+                return $postQuery->where('authorExpGrade', $otherQueryParams['userExpGradeRange'], $paramValue);
                 break;
             case 'userManagerType':
                 if ($paramValue === 'NULL') {
                     return $postQuery->whereNull('authorManagerType');
-                } else {
-                    return $postQuery->where('authorManagerType', $paramValue);
                 }
+                return $postQuery->where('authorManagerType', $paramValue);
                 break;
             default:
                 return $postQuery;

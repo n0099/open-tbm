@@ -74,7 +74,7 @@ class ThreadCrawler extends Crawlable
             ]
         )->getBody(), true);
         $webRequestTiming->stop();
-        $this->profiles['webRequestTimes'] += 1;
+        $this->profiles['webRequestTimes']++;
         $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
 
         try {
@@ -105,7 +105,7 @@ class ThreadCrawler extends Crawlable
                     'concurrency' => 10,
                     'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTiming) {
                         $webRequestTiming->stop();
-                        $this->profiles['webRequestTimes'] += 1;
+                        $this->profiles['webRequestTimes']++;
                         $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
                         ExceptionAdditionInfo::set(['parsingPage' => $index]);
                         $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
@@ -135,7 +135,7 @@ class ThreadCrawler extends Crawlable
         }
 
         $threadsList = $responseJson['thread_list'];
-        if (count($threadsList) == 0) {
+        if (\count($threadsList) == 0) {
             throw new TiebaException('Forum threads list is empty, forum might doesn\'t existed');
         }
 
@@ -192,7 +192,7 @@ class ThreadCrawler extends Crawlable
                 'updated_at' => $now
             ];
 
-            $this->profiles['parsedPostTimes'] += 1;
+            $this->profiles['parsedPostTimes']++;
             $threadsInfo[] = $currentInfo;
             $updatedThreadsInfo[$thread['tid']] = Helper::getArrayValuesByKeys($currentInfo, ['latestReplyTime', 'replyNum']);
             $indexesInfo[] = [

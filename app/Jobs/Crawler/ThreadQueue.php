@@ -100,8 +100,8 @@ class ThreadQueue extends CrawlerQueue implements ShouldQueue
                     }
                 }
                 if (! isset($oldThreadsInfo[$tid]) // do we have to crawl new replies under thread
-                    || (strtotime($newThread['latestReplyTime']) != strtotime($oldThreadsInfo[$tid]['latestReplyTime']))
-                    || ($newThread['replyNum'] != $oldThreadsInfo[$tid]['replyNum'])) {
+                    || strtotime($newThread['latestReplyTime']) != strtotime($oldThreadsInfo[$tid]['latestReplyTime'])
+                    || $newThread['replyNum'] != $oldThreadsInfo[$tid]['replyNum']) {
                     $firstReplyCrawlPage = 1;
                     CrawlingPostModel::insert([
                         'type' => 'reply',

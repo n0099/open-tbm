@@ -504,7 +504,7 @@
                                 color: '#fe980e',
                                 formatter: (params) => votesCountSeriesLabelFormatter(window.timelineValidVotes, params.value.validCount, params.name)
                             },
-                            z: 1, // prevent label covered by invalidCount categroy
+                            z: 1, // prevent label covered by invalidCount category
                             encode: { x: 'validCount', y: 'voteFor' },
                             itemStyle: { color: '#c23531' }
                         },
@@ -636,12 +636,10 @@
                                 source: _.chain(bilibiliVoteVue.$data.top50OfficialValidVotesCount)
                                     .orderBy('officialValidCount')
                                     .takeRight(10)
-                                    .map((officialCount) => {
-                                        return {
-                                            voteFor: bilibiliVoteVue.formatCandidateNameByID(officialCount.voteFor),
-                                            officialValidCount: officialCount.officialValidCount
-                                        };
-                                    })
+                                    .map((officialCount) => ({
+                                        voteFor: bilibiliVoteVue.formatCandidateNameByID(officialCount.voteFor),
+                                        officialValidCount: officialCount.officialValidCount
+                                    }))
                                     .value()
                             },
                             series: originTimelineOptions.series.concat({
@@ -761,12 +759,10 @@
                         // add candidate index as keys then deep merge will combine same keys values, finally remove keys
                         this.$data.candidatesDetailData = _.values(_.merge(
                             _.keyBy(this.$data.candidatesDetailData, 'candidateIndex'),
-                            _.keyBy(_.map(ajaxData, (candidate) => {
-                                return {
-                                    candidateIndex: candidate.voteFor,
-                                    officialValidCount: candidate.officialValidCount
-                                };
-                            }), 'candidateIndex')
+                            _.keyBy(_.map(ajaxData, (candidate) => ({
+                                candidateIndex: candidate.voteFor,
+                                officialValidCount: candidate.officialValidCount
+                            })), 'candidateIndex')
                         ));
                     });
 

@@ -71,7 +71,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                     }
                 }
                 if (! isset($oldRepliesInfo[$pid]) // do we have to crawl new sub replies under reply
-                    || ($newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum'])) {
+                    || $newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum']) {
                     CrawlingPostModel::insert([
                         'type' => 'subReply',
                         'fid' => $this->fid,

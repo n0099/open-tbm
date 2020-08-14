@@ -7,16 +7,16 @@ use function GuzzleHttp\json_encode;
 
 class Helper
 {
-    public static function abortAPIIf(int $errorCode, bool $condidtion): void
+    public static function abortAPIIf(int $errorCode, bool $condition): void
     {
-        if ($condidtion) {
+        if ($condition) {
             static::abortAPI($errorCode);
         }
     }
 
-    public static function abortAPIIfNot(int $errorCode, bool $condidtion): void
+    public static function abortAPIIfNot(int $errorCode, bool $condition): void
     {
-        if (! $condidtion) {
+        if (! $condition) {
             static::abortAPI($errorCode);
         }
     }
@@ -47,7 +47,7 @@ class Helper
         $statusCode = 0;
         $errorInfo = null;
         foreach ($statusCodeAndErrorInfos as $infoStatusCode => $infoErrorInfo) {
-            if (array_key_exists($errorCode, $infoErrorInfo)) {
+            if (\array_key_exists($errorCode, $infoErrorInfo)) {
                 $statusCode = $infoStatusCode;
                 $errorInfo = $infoErrorInfo[$errorCode];
             }

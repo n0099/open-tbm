@@ -202,9 +202,7 @@
 
             const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
                 if (unregister) {
-                    _.each($(scopedRootDom).find('[data-tippy-content]'), (dom) => {
-                        dom._tippy.destroy();
-                    });
+                    _.each($(scopedRootDom).find('[data-tippy-content]'), (dom) => dom._tippy.destroy());
                 } else {
                     tippy($(scopedRootDom).find('[data-tippy-content]').get());
                 }

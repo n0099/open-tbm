@@ -51,7 +51,7 @@ class BilibiliVote extends Command
                     $isVoteValid = $voteRegex->hasMatch()
                         && $voteReply['authorExpGrade'] >= 4
                         // && $voteBy == ($votersUsername->where('uid', $voterUid)->first()['name'] ?? false)
-                        && in_array((int)$voteFor, $candidateIDRange, true)
+                        && \in_array((int)$voteFor, $candidateIDRange, true)
                         && $votersPreviousValidVotesCount->where('authorUid', $voterUid)->first() == null;
                     $voteResults[] = [
                         'pid' => $voteReply['pid'],
