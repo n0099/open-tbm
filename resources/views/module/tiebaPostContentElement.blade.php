@@ -34,7 +34,7 @@
     <script>
         'use strict';
 
-        const $$registerTiebaImageZoomEvent = (scopedRootDom = '*', unregister = false) => {
+        const $$registerTiebaImageZoomEvent = (scopedRootDom = 'body', unregister = false) => {
             if (unregister) {
                 $(scopedRootDom).find('.tieba-image-zoom-in, .tieba-image-zoom-out').off('click');
                 return;

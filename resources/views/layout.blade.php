@@ -200,7 +200,7 @@
                     new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
                 });
 
-            const $$registerTippy = (scopedRootDom = '*', unregister = false) => {
+            const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
                 if (unregister) {
                     _.each($(scopedRootDom).find('[data-tippy-content]'), (dom) => {
                         dom._tippy.destroy();

@@ -187,37 +187,39 @@
         }
         .ant-menu-item {
             height: auto !important; /* to show reply nav buttons under thread menu items */
-            padding:0 10px 5px 32px !important;
-            padding-right: 10px !important;
-            padding-bottom: 5px !important;
+            padding: 0 10px 0 32px !important;
             margin-top: 0 !important;
             margin-bottom: 0 !important;
             white-space: normal !important;
-            border-top: 1px solid #ededed;
+        }
+        .ant-menu-item hr {
+            margin: 7px 0 0 0;
         }
     </style>
     <style>/* <posts-query> */
         .posts-nav {
             padding: 0;
             overflow: hidden;
-            max-width: calc(100vw - 1010px); /* equals to full viewport width - <post-render-list> width */
             border-right: 1px solid #ededed;
         }
         .posts-nav:hover {
-            overflow: auto;
+            overflow-y: auto;
         }
         .posts-nav-collapse {
             padding: 2px;
             font-size: 1.3em;
             background-color: whitesmoke;
         }
-
         .post-render {
             padding-left: 10px;
         }
+        .post-render-list-placeholder {
+            padding: 0;
+        }
+
         @media (max-width: 1200px) {
             .post-render {
-                overflow: overlay; /* to prevent <posts-nav-collapse> warpping new line */
+                width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warpps new row */
             }
             .posts-nav[aria-expanded=true] {
                 display: block !important;
@@ -233,18 +235,10 @@
                 padding-left: 15px;
             }
             .post-render-list {
-                display: table; /* fixme: why setting width not working unless display: table */
-                width: 1000px;
+                max-width: 1000px;
             }
         }
-
-        .post-render-list-placeholder {
-            padding: 0;
-        }
-        @media (min-width: 1500px) {
-            .posts-nav {
-                max-width: calc((100vw - 1010px) / 2); /* equals to full viewport width - <post-render-list> width - .post-render-list-placeholder width */
-            }
+        @media (min-width: 1400px) {
             .post-render-list-placeholder {
                 display: block !important; /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
             }
@@ -470,8 +464,8 @@
             </div>
         </template>
         <template id="post-render-list-template">
-            <div class="pb-2">
-                <div v-for="thread in posts.threads" class="thread-item card">
+            <div class="pb-3">
+                <div v-for="thread in posts.threads" :id="`t${thread.tid}`" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
                         <post-thread-tag :thread="thread"></post-thread-tag>
                         <h6 class="d-inline">{{ thread.title }}</h6>
@@ -514,7 +508,7 @@
                             </span>
                         </div>
                     </div>
-                    <div v-for="reply in thread.replies">
+                    <div v-for="reply in thread.replies" v-observe-visibility="{ callback: replyObserved, throttle: 500 }" :id="reply.pid">
                         <div class="reply-title sticky-top card-header">
                             <div class="d-inline h5">
                                 <span class="badge badge-info">{{ reply.floor }}楼</span>
@@ -556,7 +550,7 @@
                                 </div>
                             </div>
                             <div class="reply-body col border-left">
-                                <div class="card-body p-2" v-html="reply.content"></div>
+                                <div class="p-2" v-html="reply.content"></div>
                                 <template v-if="reply.subReplies.length > 0">
                                     <div v-for="subReplyGroup in reply.subReplies" class="sub-reply-group bs-callout bs-callout-success">
                                         <ul class="list-group list-group-flush">
@@ -568,7 +562,10 @@
                                                         <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
                                                     </a>
                                                     <div class="float-right badge badge-light">
-                                                        <div v-show="hoveringSubReplyItem === subReply.spid" :class="{ 'd-inline': hoveringSubReplyItem === subReply.spid }"><!-- fixme: high cpu usage due to running vue js while quickly emitting hover event -->
+                                                        <div :class="{
+                                                                'd-none': hoveringSubReplyItem !== subReply.spid,
+                                                                'd-inline': hoveringSubReplyItem === subReply.spid
+                                                             }"><!-- fixme: high cpu usage due to js evaling while quickly emitting hover event -->
                                                             <a :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank" class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
                                                             <a :data-tippy-content="`
                                                                 <h6>spid：${subReply.spid}</h6><hr />
@@ -651,16 +648,24 @@
         <template id="posts-nav-template">
             <a-menu :force-sub-menu-render="true" mode="inline" class="vh-100">
                 <a-sub-menu v-for="posts in pages" :title="`第${posts.pages.currentPage}页`" :key="`page-${posts.pages.currentPage}`">
-                    <a-menu-item v-for="thread in posts.threads" :key="`thread-${thread.tid}`" :title="thread.title">{{ thread.title }}
+                    <a-menu-item v-for="thread in posts.threads" :key="`thread-${thread.tid}`" :title="thread.title">
+                        <a :href="`#t${thread.tid}`">{{ thread.title }}</a><!-- fixme: cannot use <router-link> here since history.pushState() won't auto scroll viewport into dom which id is same with hash -->
                         <div class="d-block btn-group" role="group">
-                            <a v-for="reply in thread.replies" :href="`#${reply.pid}`" class="btn btn-light">{{ reply.floor }}L</a>
+                            <a v-for="reply in thread.replies" v-scroll-to-reply="reply.pid === parseInt($route.hash.substr(1))" :href="`#${reply.pid}`" :class="{
+                                    'btn': true,
+                                    'btn-info': reply.pid === parseInt($route.hash.substr(1)),
+                                    'btn-light': reply.pid !== parseInt($route.hash.substr(1))
+                               }">
+                                {{ reply.floor }}L
+                            </a>
                         </div>
+                        <hr />
                     </a-menu-item>
                 </a-sub-menu>
             </a-menu>
         </template>
         <template id="post-page-previous-button-template">
-            <div v-scroll-to-page="{ currentPage: pageInfo.currentPage, scrollToPage: scrollToPage.value }" class="mt-2 p-2 row align-items-center">
+            <div v-scroll-to-page="pageInfo.currentPage === scrollToPage.value" class="mt-2 p-2 row align-items-center">
                 <div class="col"><hr /></div>
                 <div class="w-auto">
                     <div class="p-2 badge badge-light">
@@ -701,7 +706,7 @@
                         <div :aria-expanded="postsNavExpanded" class="posts-nav vh-100 sticky-top d-none d-xl-block col-xl">
                             <posts-nav :pages="postPages"></posts-nav>
                         </div>
-                        <a @click="postsNavExpanded = ! postsNavExpanded" class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col-auto">
+                        <a @click="postsNavExpanded = ! postsNavExpanded" class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col col-auto">
                             <i v-show="postsNavExpanded" class="fas fa-angle-left"></i>
                             <i v-show="! postsNavExpanded" class="fas fa-angle-right"></i>
                         </a>
@@ -709,13 +714,20 @@
                                 'post-render': true,
                                 'post-render-list': renderType === 'list',
                                 'col': true,
+                                'col-xl-auto': true,
                                 'col-xl-10': renderType !== 'list' // let render, except <post-render-list>, takes over right margin spaces, aka .post-render-list-placeholder
-                            }">
+                             }">
                             <template v-for="(posts, pageIndex) in postPages">
                                 <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-list v-if="renderType === 'list'" :key="posts.pages.currentPage" :initial-posts="posts"></post-render-list>
-                                <post-render-table v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts"></post-render-table>
-                                <post-render-raw v-else-if="renderType === 'raw'" :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
+                                <post-render-list v-if="renderType === 'list'"
+                                                  v-observe-visibility="{ callback: (isVisible) => isVisible ? changeTitle(posts.pages.currentPage) : null, throttle: 500 }"
+                                                  :key="posts.pages.currentPage" :initial-posts="posts"></post-render-list>
+                                <post-render-table v-else-if="renderType === 'table'"
+                                                   v-observe-visibility="{ callback: (isVisible) => isVisible ? changeTitle(posts.pages.currentPage) : null, throttle: 500 }"
+                                                   :key="posts.pages.currentPage" :posts="posts"></post-render-table>
+                                <post-render-raw v-else-if="renderType === 'raw'"
+                                                 v-observe-visibility="{ callback: (isVisible) => isVisible ? changeTitle(posts.pages.currentPage) : null, throttle: 500 }"
+                                                 :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
                                 <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
                             </template>
                         </div>
@@ -785,6 +797,16 @@
                 template: '#posts-nav-template',
                 props: {
                     pages: { type: Array, required: true }
+                },
+                directives: {
+                    'scroll-to-reply' (el, binding, vnode) {
+                        if (binding.value) {
+                            el.scrollIntoView();
+                            if (! $(el).is(':last-child')) {
+                                $('.posts-nav')[0].scrollTop -= 100; // scroll y axis of <posts-nav> by -100px after reply link scrolled into top of <posts-nav> for show thread title
+                            }
+                        }
+                    }
                 }
             });
 
@@ -826,9 +848,8 @@
                 },
                 directives: {
                     'scroll-to-page' (el, binding, vnode) {
-                        let pageRenderVue = vnode.context;
-                        if (binding.value.currentPage === binding.value.scrollToPage) {
-                            pageRenderVue.$nextTick(() => el.scrollIntoView()); // when page haven't been requested before, new pageRenderVue.$el is not ready
+                        if (binding.value) {
+                            vnode.context.$nextTick(() => el.scrollIntoView()); // when page haven't been requested before, new vueInstance.$el is not ready
                             window.$sharedDataBindings.scrollToPage.value = 0; // reset for next time scroll with same scrollToPage
                         }
                     }
@@ -911,7 +932,12 @@
                     $$registerTiebaImageZoomEvent(this.$el, true);
                 },
                 methods: {
-                    renderUsername (uid) {
+                    replyObserved (isVisible, observer) {
+                        if (isVisible) { // fixme: force reflows (Schedule Style Recalculation) with long execute time triggered when quickly scrolling page
+                            // this.$router.replace({ hash: `#${$(observer.target).prop('id') }` });
+                        }
+                    },
+                    renderUsername: function (uid) {
                         let user = this.$data.$getUserInfo(uid);
                         let name = user.name;
                         let displayName = user.displayName;
@@ -1543,6 +1569,19 @@
                     $$loadForumList().then((forumList) => this.$data.forumList = forumList);
                 },
                 methods: {
+                    changeTitle (page = this.$data.currentRoutesPage) {
+                        let forumName = `${this.$data.postPages[0].forum.name}吧`;
+                        let threadTitle = this.$data.postPages[0].threads[0].title;
+                        switch (this.$refs.queryForm.currentQueryType()) {
+                            case 'fid':
+                            case 'search':
+                                document.title = `第${page}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
+                                break;
+                            case 'postID':
+                                document.title = `第${page}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                                break;
+                        }
+                    },
                     loadPage (pageNum) {
                         this.$router.push(this.$route.name.startsWith('param')
                             ? { path: `/page/${pageNum}/${this.$route.params.pathMatch}` }
