@@ -110,7 +110,7 @@
                                 evalAttrs.class += ` ${this.$props.itemPlaceholderClass}`;
                             }
                         }
-                        return evalAttrs
+                        return evalAttrs;
                     };
                     let cachedEvalAttrs = this.$data.itemEvaledAttrsCache[renderPosition][itemIndex];
                     if (cachedEvalAttrs === undefined) {

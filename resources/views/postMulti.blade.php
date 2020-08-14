@@ -359,7 +359,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="query-param-row form-row" v-for="(param, paramIndex) in params">
+                <div v-for="(param, paramIndex) in params" class="query-param-row form-row">
                     <div class="input-group">
                         <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><i class="fas fa-times"></i></button>
                         <select-param @param-change="changeParam(paramIndex, $event.target.value)" :current-param="param.name"
@@ -388,12 +388,7 @@
                         </template>
                         <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
-                                                 :placeholders="{
-                                                    IN: '100,101,102,...',
-                                                    BETWEEN: '100,200',
-                                                    number: 100
-                                                 }"></input-numeric-param>
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: 100 }"></input-numeric-param>
                         </template>
                         <template v-if="param.name === 'threadProperties'">
                             <div class="input-group-append">
@@ -439,12 +434,7 @@
                         </template>
                         <template v-if="param.name === 'authorExpGrade'">
                             <select-range v-model="param.subParam.range"></select-range>
-                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
-                                                 :placeholders="{
-                                                    IN: '9,10,11,...',
-                                                    BETWEEN: '9,18',
-                                                    number: 18
-                                                 }"></input-numeric-param>
+                            <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: 18 }"></input-numeric-param>
                         </template>
                     </div>
                 </div>
@@ -603,7 +593,7 @@
             </div>
         </template>
         <template id="post-render-table-template">
-            <div class="container-flow pb-2"><!-- fixme: use full width container to break out main parent container -->
+            <div class="container-flow pb-2">
                 <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
                     <template slot="tid" slot-scope="text, record">
                         <router-link :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</router-link>
@@ -820,7 +810,7 @@
                 data () {
                     return {
                         $getUserInfo: window.$getUserInfo(this.$props.usersInfoSource)
-                    }
+                    };
                 }
             });
 
@@ -881,8 +871,8 @@
                         $$getTiebaPostLink,
                         $$getTiebaUserAvatarUrl,
                         $getUserInfo: window.$getUserInfo(this.$props.initialPosts.users),
-                        hoveringSubReplyItem: 0, // for display item's right floating hide buttons
-                    }
+                        hoveringSubReplyItem: 0 // for display item's right floating hide buttons
+                    };
                 },
                 computed: {
                     posts () {
@@ -1142,7 +1132,7 @@
                         paramWatcher (newParamsArray, oldParamsArray) {
                             _.each(_.filter(newParamsArray, (param) => _.includes(_.keys(this.$data.paramsWatcher), param.name)), (param) => {
                                 this.$data.paramsWatcher[param.name](param);
-                            })
+                            });
                         }
                     };
                 },
@@ -1179,20 +1169,19 @@
                     submit () {
                         if (this.checkParams()) { // check here to stop route submit
                             this.$data.isRequesting = true;
-                            let beforeRoutePath = this.$route.path;
                             this.submitRoute();
                             this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: true }); // force emit event to refresh new query since route update event won't emit when isRequesting is true
                         }
                     },
-                    parseRoute (route) { throw('component must implements mixin abstruct method') },
-                    checkParams () { throw('component must implements mixin abstruct method') },
-                    submitRoute () { throw('component must implements mixin abstruct method') },
+                    parseRoute (route) { throw('component must implements mixin abstruct method'); },
+                    checkParams () { throw('component must implements mixin abstruct method'); },
+                    submitRoute () { throw('component must implements mixin abstruct method'); },
                     paramRowLastDomClass (paramIndex, params) {
                         return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
                             'param-control-first-row': paramIndex === 0,
                             'param-control-middle-row': ! (paramIndex === 0 || paramIndex === params.length - 1),
                             'param-control-last-row': paramIndex === params.length - 1
-                        }
+                        };
                     },
                     escapeParamValue (value, unescape = false) {
                         if (_.isString(value)) {
@@ -1213,7 +1202,7 @@
                     },
                     deleteParam (paramIndex) {
                         _.pull(this.$data.invalidParamsIndex, paramIndex);
-                        this.$data.invalidParamsIndex = _.map(this.$data.invalidParamsIndex, (invalidParamIndex) => invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex) // move forward params index which is after current one
+                        this.$data.invalidParamsIndex = _.map(this.$data.invalidParamsIndex, (invalidParamIndex) => invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex); // move forward params index which is after current one
                         this.$delete(this.$data.params, paramIndex);
                     },
                     fillParamWithDefaultValue (param, resetToDefault = false) {
@@ -1268,7 +1257,7 @@
                                     } else { // sub params
                                         parsedParam.subParam[paramPair[0]] = paramPair[1];
                                     }
-                                })
+                                });
                                 return parsedParam;
                             })
                             .map(_.unary(this.fillParamWithDefaultValue))
@@ -1282,7 +1271,7 @@
                                     this.$data.params.push(param);
                                 }
                             })
-                            .value()
+                            .value();
                     },
                     submitParamRoute (filteredUniqueParams, filteredParams) {
                         this.$router.push({ path: `/${_.chain([..._.values(filteredUniqueParams), ...filteredParams])
@@ -1322,25 +1311,25 @@
                             fid: { value: 'NULL' },
                             postTypes: { value: ['thread', 'reply', 'subReply'] },
                             orderBy: { value: 'default', subParam: { direction: 'default' } },
-                            get tid () { return this.numericParams },
-                            get pid () { return this.numericParams },
-                            get spid () { return this.numericParams },
+                            get tid () { return this.numericParams; },
+                            get pid () { return this.numericParams; },
+                            get spid () { return this.numericParams; },
                             postTime: { subParam: { range: undefined } },
                             latestReplyTime: { subParam: { range: undefined } },
-                            get threadTitle () { return this.textMatchParmas },
-                            get postContent () { return this.textMatchParmas },
-                            get threadViewNum () { return this.numericParams },
-                            get threadShareNum () { return this.numericParams },
-                            get threadReplyNum () { return this.numericParams },
-                            get replySubReplyNum () { return this.numericParams },
+                            get threadTitle () { return this.textMatchParmas; },
+                            get postContent () { return this.textMatchParmas; },
+                            get threadViewNum () { return this.numericParams; },
+                            get threadShareNum () { return this.numericParams; },
+                            get threadReplyNum () { return this.numericParams; },
+                            get replySubReplyNum () { return this.numericParams; },
                             threadProperties: { value: [] },
-                            get authorUid () { return this.numericParams },
-                            get authorName () { return this.textMatchParmas },
-                            get authorDisplayName () { return this.textMatchParmas },
-                            get authorExpGrade () { return this.numericParams },
-                            get latestReplierUid () { return this.numericParams },
-                            get latestReplierName () { return this.textMatchParmas },
-                            get latestReplierDisplayName () { return this.textMatchParmas }
+                            get authorUid () { return this.numericParams; },
+                            get authorName () { return this.textMatchParmas; },
+                            get authorDisplayName () { return this.textMatchParmas; },
+                            get authorExpGrade () { return this.numericParams; },
+                            get latestReplierUid () { return this.numericParams; },
+                            get latestReplierName () { return this.textMatchParmas; },
+                            get latestReplierDisplayName () { return this.textMatchParmas; }
                         },
                         paramsRequiredPostTypes: {
                             pid: [['reply', 'subReply'], 'OR'],
@@ -1376,16 +1365,16 @@
                             textMatchParams (param) {
                                 param.subParam.spaceSplit = param.subParam.spaceSplit === 'true'; // literal string to bool convert
                             },
-                            get postTypes () { return this.arrayTypeParams },
-                            get postTime () { return this.dateTimeRangeParams },
-                            get latestReplyTime () { return this.dateTimeRangeParams },
-                            get threadProperties () { return this.arrayTypeParams },
-                            get threadTitle () { return this.textMatchParams },
-                            get postContent () { return this.textMatchParams },
-                            get authorName () { return this.textMatchParams },
-                            get authorDisplayName () { return this.textMatchParams },
-                            get latestReplierName () { return this.textMatchParams },
-                            get latestReplierDisplayName () { return this.textMatchParams }
+                            get postTypes () { return this.arrayTypeParams; },
+                            get postTime () { return this.dateTimeRangeParams; },
+                            get latestReplyTime () { return this.dateTimeRangeParams; },
+                            get threadProperties () { return this.arrayTypeParams; },
+                            get threadTitle () { return this.textMatchParams; },
+                            get postContent () { return this.textMatchParams; },
+                            get authorName () { return this.textMatchParams; },
+                            get authorDisplayName () { return this.textMatchParams; },
+                            get latestReplierName () { return this.textMatchParams; },
+                            get latestReplierDisplayName () { return this.textMatchParams; }
                         },
                         paramsWatcher: { // param is byref object so changes will sync
                             dateTimeRangeParams (param) {
@@ -1396,14 +1385,14 @@
                                     param.subParam.spaceSplit = false;
                                 }
                             },
-                            get postTime () { return this.dateTimeRangeParams },
-                            get latestReplyTime ()  { return this.dateTimeRangeParams },
-                            get threadTitle () { return this.textMatchParams },
-                            get postContent () { return this.textMatchParams },
-                            get authorName () { return this.textMatchParams },
-                            get authorDisplayName () { return this.textMatchParams },
-                            get latestReplierName () { return this.textMatchParams },
-                            get latestReplierDisplayName () { return this.textMatchParams },
+                            get postTime () { return this.dateTimeRangeParams; },
+                            get latestReplyTime ()  { return this.dateTimeRangeParams; },
+                            get threadTitle () { return this.textMatchParams; },
+                            get postContent () { return this.textMatchParams; },
+                            get authorName () { return this.textMatchParams; },
+                            get authorDisplayName () { return this.textMatchParams; },
+                            get latestReplierName () { return this.textMatchParams; },
+                            get latestReplierDisplayName () { return this.textMatchParams; },
                             orderBy (param) {
                                 if (param.value === 'default') { // reset to default
                                     param.subParam.direction = 'default';
@@ -1437,7 +1426,7 @@
                         } else if (route.name.startsWith('fid')) {
                             this.$data.uniqueParams.fid.value = route.params.fid;
                         } else { // post id routes
-                            this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, true)) // reset to default
+                            this.$data.uniqueParams = _.mapValues(this.$data.uniqueParams, (param) => this.fillParamWithDefaultValue(param, true)); // reset to default
                             this.$data.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => this.fillParamWithDefaultValue({ name, value }) );
                         }
                     },
@@ -1541,7 +1530,7 @@
                             return [this.$data.renderType];
                         },
                         set: function (value) {
-                            this.$data.renderType = selectingRenderType[0];
+                            this.$data.renderType = value[0];
                         }
                     }
                 },

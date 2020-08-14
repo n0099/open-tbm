@@ -66,7 +66,7 @@
                 return {
                     selectBy: '',
                     params: {}
-                }
+                };
             },
             watch: {
                 selectBy (selectBy) {

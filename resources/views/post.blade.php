@@ -921,7 +921,7 @@
                                     _.each(radioLikeCheckboxParamsGroup, (paramsGroup) => {
                                         if (paramsGroup.includes(event.target.id)
                                             && _.map(paramsGroup, (domID) => {
-                                                return $(`#${domID}`).prop('checked')
+                                                return $(`#${domID}`).prop('checked');
                                             }).every((postTypesCheck) => { // is all post type unchecked
                                                 return ! postTypesCheck;
                                             })) {

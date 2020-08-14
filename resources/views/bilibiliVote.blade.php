@@ -214,14 +214,14 @@
                                 let invalidVotes = _.find(candidateVotes, { isValid: 0 });
                                 let invalidCount = invalidVotes === undefined ? 0 : invalidVotes.count;
                                 let invalidAvgGrade = invalidVotes === undefined ? 0 : invalidVotes.voterAvgGrade;
-                                let officialValidCount = _.find(bilibiliVoteVue.$data.top50OfficialValidVotesCount, { voteFor: parseInt(candidateVotes[0].voteFor) })
+                                let officialValidCount = _.find(bilibiliVoteVue.$data.top50OfficialValidVotesCount, { voteFor: parseInt(candidateVotes[0].voteFor) });
                                 officialValidCount = officialValidCount === undefined ? 0 : officialValidCount.officialValidCount;
                                 return {
                                     voteFor: bilibiliVoteVue.formatCandidateNameByID(candidateVotes[0].voteFor),
                                     validCount, validAvgGrade,
                                     invalidCount, invalidAvgGrade,
                                     officialValidCount
-                                }
+                                };
                             })
                             .value();
 
@@ -573,7 +573,7 @@
                                         voteFor: bilibiliVoteVue.formatCandidateNameByID(candidateVotes[0].voteFor),
                                         validCount, invalidCount,
                                         officialValidCount: null
-                                    }
+                                    };
                                 })
                                 .value();
 
@@ -594,13 +594,13 @@
                             const totalVotesCount = (isValid = null) => {
                                 let votesSumCount = _.chain(timeGroup);
                                 if (isValid !== null) {
-                                    votesSumCount = votesSumCount.filter({ isValid })
+                                    votesSumCount = votesSumCount.filter({ isValid });
                                 }
                                 return votesSumCount
                                     .map('count')
                                     .map((i) => parseInt(i))
                                     .sum()
-                                    .value()
+                                    .value();
                             };
                             let totalValidVotes = totalVotesCount(1);
                             let totalInvalidVotes = totalVotesCount(0);
