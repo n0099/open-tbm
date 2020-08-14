@@ -6,7 +6,7 @@ use App\Eloquent\CrawlingPostModel;
 use App\Helper;
 use App\Tieba\Crawler;
 use App\Tieba\Eloquent\PostModelFactory;
-use App\TimingHelper;
+use App\Timer;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,11 +21,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    protected int $fid;
-
     protected int $tid;
-
-    protected int $startPage;
 
     public function __construct(int $fid, int $tid, int $startPage)
     {
@@ -36,9 +32,9 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
         $this->startPage = $startPage;
     }
 
-    public function handle()
+    public function handle(): void
     {
-        $queueTiming = new TimingHelper();
+        $queueTimer = new Timer();
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->fid, $this->tid, $this->startPage))->doCrawl();
@@ -62,7 +58,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             foreach ($newRepliesInfo as $pid => $newReply) {
                 // check for other parallelling sub reply crawler lock
                 foreach ($parallelCrawlingSubReplies as $parallelCrawlingSubReply) {
-                    if ($parallelCrawlingSubReply->pid == $pid) {
+                    if ($parallelCrawlingSubReply->pid === $pid) {
                         if ($parallelCrawlingSubReply->startTime < new Carbon($this->queueDeleteAfter)) {
                             $parallelCrawlingSubReply->delete(); // release latest parallel sub reply crawler lock then dispatch new one when it had started before $queueDeleteAfter ago
                         } else {
@@ -71,7 +67,7 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                     }
                 }
                 if (! isset($oldRepliesInfo[$pid]) // do we have to crawl new sub replies under reply
-                    || $newReply['subReplyNum'] != $oldRepliesInfo[$pid]['subReplyNum']) {
+                    || (int)$newReply['subReplyNum'] !== $oldRepliesInfo[$pid]['subReplyNum']) {
                     CrawlingPostModel::insert([
                         'type' => 'subReply',
                         'fid' => $this->fid,
@@ -84,8 +80,8 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             }
         });
 
-        $queueTiming->stop();
-        \DB::transaction(function () use ($repliesCrawler, $queueTiming) {
+        $queueTimer->stop();
+        \DB::transaction(function () use ($repliesCrawler, $queueTimer) {
             // report current crawl queue finished
             $currentCrawlingReply = CrawlingPostModel
                 ::select('id', 'startTime')
@@ -95,10 +91,10 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
                     'tid' => $this->tid
                 ])
                 ->lockForUpdate()->first();
-            if ($currentCrawlingReply != null) { // might already marked as finished by other concurrency queues
-                $currentCrawlingReply->fill([
-                    'queueTiming' => $queueTiming->getTiming()
-                ] + $repliesCrawler->getProfiles())->save();
+            if ($currentCrawlingReply !== null) { // might already marked as finished by other concurrency queues
+                $currentCrawlingReply->fill(array_merge($repliesCrawler->getProfiles(), [
+                    'queueTiming' => $queueTimer->getTime()
+                ]))->save();
                 $currentCrawlingReply->delete(); // release current crawl queue lock
             }
 
@@ -116,6 +112,6 @@ class ReplyQueue extends CrawlerQueue implements ShouldQueue
             }
         });
 
-        \Log::channel('crawler-info')->info('Reply crawler queue completed after ' . ($queueTiming->getTiming()));
+        \Log::channel('crawler-info')->info('Reply crawler queue completed after ' . ($queueTimer->getTime()));
     }
 }

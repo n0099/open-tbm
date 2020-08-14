@@ -2,7 +2,7 @@
 
 namespace App;
 
-class TimingHelper
+class Timer
 {
     private float $startTime = 0;
 
@@ -23,7 +23,7 @@ class TimingHelper
         $this->stopTime = microtime(true);
     }
 
-    public function getTiming(): float
+    public function getTime(): float
     {
         return $this->stopTime - $this->startTime;
     }

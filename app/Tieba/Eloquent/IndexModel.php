@@ -15,7 +15,7 @@ class IndexModel extends Model
 
     protected $guarded = [];
 
-    public $updateExpectFields = [
+    public array $updateExpectFields = [
         'created_at'
     ];
 }

@@ -21,9 +21,9 @@ try {
             @case (2) {{--表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"} --}}
                 <?php
                 $emoticonsIndex = [
-                    'image_emoticon' => ['class' => 'client', 'type' => 'png'], // 泡泡/客户端新版表情（>=61）
-                    //'image_emoticon' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 旧版泡泡
-                    'image_emoticon>51' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 泡泡-贴吧十周年
+                    'image_emoticon' => ['class' => 'client', 'type' => 'png'], // 泡泡(<51)/客户端新版表情(>61)
+                    // 'image_emoticon' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 旧版泡泡
+                    'image_emoticon>51' => ['class' => 'face', 'prefix' => 'i_f', 'type' => 'gif'], // 泡泡-贴吧十周年(51>=i<=61)
                     'bearchildren_' => ['class' => 'bearchildren', 'type' => 'gif'], // 贴吧熊孩子
                     'tiexing_' => ['class' => 'tiexing', 'type' => 'gif'], // 痒小贱
                     'ali_' => ['class' => 'ali', 'type' => 'gif'], // 阿狸
@@ -42,13 +42,14 @@ try {
                     '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
                 ];
                 $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item['text']);
-                $emoticonInfo = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2) ?? 1];
-                $emoticonInfo += ($emoticonInfo['prefix'] == 'image_emoticon' && $emoticonInfo['index'] <= 61 && $emoticonInfo['index'] >= 51)
-                    ? $emoticonsIndex['image_emoticon>51']
-                    : $emoticonsIndex[$emoticonInfo['prefix']];
-                if ($emoticonInfo['prefix'] == 'image_emoticon' && $emoticonInfo['index'] == null) {
+                $emoticonInfo = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2)];
+                if ($emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] === '') {
                     $emoticonInfo['index'] = 1; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
                 }
+                $emoticonInfo = array_merge($emoticonInfo,
+                    $emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] >= 51 && $emoticonInfo['index'] <= 61
+                        ? $emoticonsIndex['image_emoticon>51']
+                        : $emoticonsIndex[$emoticonInfo['prefix']]);
                 $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonInfo['class']}/{$emoticonInfo['prefix']}{$emoticonInfo['index']}.{$emoticonInfo['type']}";
                 ?>
                 <img class="lazyload" data-src="{{ $emoticonUrl }}" alt="{{ $item['c'] }}" />

@@ -2,54 +2,32 @@
 
 namespace App\Tieba\Crawler;
 
-use App\Tieba\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
-use App\TimingHelper;
+use App\Timer;
 use Carbon\Carbon;
-use GuzzleHttp;
-use function GuzzleHttp\json_decode;
-use function GuzzleHttp\json_encode;
 
 class SubReplyCrawler extends Crawlable
 {
     protected string $clientVersion = '8.8.8';
 
-    protected int $fid;
-
     protected int $tid;
 
     protected int $pid;
-
-    public int $startPage;
-
-    public int $endPage;
-
-    protected array $pagesInfo = [];
-
-    protected array $indexesInfo = [];
-
-    protected UsersInfoParser $usersInfo;
 
     protected array $subRepliesInfo = [];
 
     public function __construct(int $fid, int $tid, int $pid, int $startPage, ?int $endPage = null)
     {
-        $this->fid = $fid;
+        parent::__construct($fid, $startPage, $endPage); // by default we don't have to crawl every sub reply pages, only the first and last one
         $this->tid = $tid;
         $this->pid = $pid;
-        $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we don't have to crawl every sub reply pages, only the first and last one
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
-        $this->usersInfo = new UsersInfoParser();
 
         ExceptionAdditionInfo::set([
-            'crawlingFid' => $fid,
             'crawlingTid' => $tid,
             'crawlingPid' => $pid,
-            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
         ]);
     }
 
@@ -59,7 +37,7 @@ class SubReplyCrawler extends Crawlable
         ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
 
         $tiebaClient = $this->getClientHelper();
-        $webRequestTiming = new TimingHelper();
+        $webRequestTimer = new Timer();
         $startPageSubRepliesInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/floor',
             [
@@ -69,17 +47,15 @@ class SubReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody(), true);
-        $webRequestTiming->stop();
-        $this->profiles['webRequestTimes']++;
-        $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
+        )->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->profileWebRequestStopped($webRequestTimer);
 
         try {
             $this->checkThenParsePostsInfo($startPageSubRepliesInfo);
 
-            $webRequestTiming->start();
+            $webRequestTimer->start();
             // by default we don't have to crawl every sub reply pages, only first and last one
-            (new GuzzleHttp\Pool(
+            (new \GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
@@ -98,21 +74,7 @@ class SubReplyCrawler extends Crawlable
                         };
                     }
                 })(),
-                [
-                    'concurrency' => 10,
-                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTiming) {
-                        $webRequestTiming->stop();
-                        $this->profiles['webRequestTimes']++;
-                        $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
-                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
-                        $webRequestTiming->start(); // resume timing for possible succeed web request
-                    },
-                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
-                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        report($e);
-                    }
-                ]
+                $this->getGuzzleHttpPoolConfig($webRequestTimer)
             ))->promise()->wait();
         } catch (TiebaException $regularException) {
             \Log::channel('crawler-notice')->notice($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
@@ -132,20 +94,15 @@ class SubReplyCrawler extends Crawlable
             case 28: // {"error_code": "28", "error_msg": "您浏览的主题已不存在，去看看其他贴子吧"}
                 throw new TiebaException('Thread already deleted when crawling sub reply');
             default:
-                throw new \RuntimeException('Error from tieba client when crawling sub reply, raw json: ' . json_encode($responseJson));
+                throw new \RuntimeException('Error from tieba client when crawling sub reply, raw json: ' . json_encode($responseJson, JSON_THROW_ON_ERROR));
         }
 
         $subRepliesList = $responseJson['subpost_list'];
-        if (\count($subRepliesList) == 0) {
+        if (\count($subRepliesList) === 0) {
             throw new TiebaException('Sub reply list is empty, posts might already deleted from tieba');
         }
 
-        $this->pagesInfo = $responseJson['page'];
-        $totalPages = $responseJson['page']['total_page'];
-        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
-            $this->endPage = $totalPages;
-        }
-
+        $this->cachePageInfoAndTrimEndPage($responseJson['page']);
         $this->parsePostsInfo($subRepliesList);
     }
 
@@ -157,7 +114,7 @@ class SubReplyCrawler extends Crawlable
         $now = Carbon::now();
         foreach ($subRepliesList as $subReply) {
             ExceptionAdditionInfo::set(['parsingSpid' => $subReply['id']]);
-            $usersInfo[] = $subReply['author'];
+            $usersInfo[$subReply['author']['id']] = $subReply['author'];
             $currentInfo = [
                 'tid' => $this->tid,
                 'pid' => $this->pid,
@@ -174,44 +131,39 @@ class SubReplyCrawler extends Crawlable
 
             $this->profiles['parsedPostTimes']++;
             $subRepliesInfo[] = $currentInfo;
-            $indexesInfo[] = [
+            $indexesInfo[] = array_merge(Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'spid', 'authorUid']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],
                 'type' => 'subReply',
                 'fid' => $this->fid
-            ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'spid', 'authorUid']);
+            ]);
         }
         ExceptionAdditionInfo::remove('parsingSpid');
 
         // lazy saving to Eloquent model
-        $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo(collect($usersInfo)->unique('id')->toArray());
+        $this->cacheIndexesAndUsersInfo($indexesInfo, $usersInfo);
         $this->subRepliesInfo = array_merge($this->subRepliesInfo, $subRepliesInfo);
-        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
 
     public function savePostsInfo(): self
     {
-        $savePostsTiming = new TimingHelper();
-        if ($this->indexesInfo != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+        $savePostsTimer = new Timer();
+        if ($this->indexesInfo !== []) { // if TiebaException thrown while parsing posts, indexes list might be []
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
                 $chunkInsertBufferSize = 2000;
                 $subReplyModel = PostModelFactory::newSubReply($this->fid);
-                $subReplyUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->subRepliesInfo[0], $subReplyModel);
+                $subReplyUpdateFields = static::getUpdateFieldsWithoutExpected($this->subRepliesInfo[0], $subReplyModel);
                 $subReplyModel->chunkInsertOnDuplicate($this->subRepliesInfo, $subReplyUpdateFields, $chunkInsertBufferSize);
-
-                $indexModel = new IndexModel();
-                $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
-                $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingSubReplies');
 
-                $this->usersInfo->saveUsersInfo();
+                $this->saveIndexesAndUsersInfo($chunkInsertBufferSize);
             }, 5);
         }
-        $savePostsTiming->stop();
+        $savePostsTimer->stop();
 
-        $this->profiles['savePostsTiming'] += $savePostsTiming->getTiming();
+        $this->profiles['savePostsTiming'] += $savePostsTimer->getTime();
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid', 'crawlingPid');
         $this->subRepliesInfo = [];
         $this->indexesInfo = [];

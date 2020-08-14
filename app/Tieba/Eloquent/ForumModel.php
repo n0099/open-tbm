@@ -12,13 +12,13 @@ class ForumModel extends Model
 
     protected $guarded = [];
 
-    protected $fields = [
+    protected array $fields = [
         'id',
         'fid',
         'name'
     ];
 
-    protected $hidedFields = [
+    protected array $hidedFields = [
         'id',
     ];
 

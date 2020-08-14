@@ -9,7 +9,6 @@ use App\Tieba\Eloquent\UserModel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Spatie\Regex\Regex;
-use function GuzzleHttp\json_encode;
 
 class BilibiliVote extends Command
 {
@@ -22,7 +21,7 @@ class BilibiliVote extends Command
         parent::__construct();
     }
 
-    public function handle()
+    public function handle(): void
     {
         $bilibiliFid = 2265748;
         $voteTid = 6062186860;
@@ -45,14 +44,14 @@ class BilibiliVote extends Command
                 // $votersUsername = UserModel::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
                 foreach ($voteReplies as $voteReply) {
                     $voterUid = $voteReply['authorUid'];
-                    $voteRegex = Regex::match('/"text":"(.*?)投(.*?)号候选人/', json_encode($voteReply['content']) ?? '');
+                    $voteRegex = Regex::match('/"text":"(.*?)投(.*?)号候选人/', json_encode($voteReply['content'], JSON_THROW_ON_ERROR) ?? '');
                     $voteBy = $voteRegex->groupOr(1, '');
                     $voteFor = trim($voteRegex->groupOr(2, ''));
                     $isVoteValid = $voteRegex->hasMatch()
                         && $voteReply['authorExpGrade'] >= 4
-                        // && $voteBy == ($votersUsername->where('uid', $voterUid)->first()['name'] ?? false)
+                        // && $voteBy === ($votersUsername->where('uid', $voterUid)->first()['name'] ?? null)
                         && \in_array((int)$voteFor, $candidateIDRange, true)
-                        && $votersPreviousValidVotesCount->where('authorUid', $voterUid)->first() == null;
+                        && $votersPreviousValidVotesCount->where('authorUid', $voterUid)->first() === null;
                     $voteResults[] = [
                         'pid' => $voteReply['pid'],
                         'authorUid' => $voteReply['authorUid'],

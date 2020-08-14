@@ -22,7 +22,7 @@ class ThreadModel extends PostModel
         'location' => 'array'
     ];
 
-    protected $fields = [
+    protected array $fields = [
         'id',
         'tid',
         'firstPid',
@@ -47,12 +47,12 @@ class ThreadModel extends PostModel
         'updated_at'
     ];
 
-    protected $hidedFields = [
+    protected array $hidedFields = [
         'id',
         'clientVersion'
     ];
 
-    public $updateExpectFields = [
+    public array $updateExpectFields = [
         'tid',
         'title',
         'postTime',
@@ -60,7 +60,7 @@ class ThreadModel extends PostModel
         'created_at'
     ];
 
-    public function replies()
+    public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ReplyModel::class, 'tid', 'tid');
     }

@@ -16,7 +16,7 @@ class BatchTableSQLGenerator extends Command
         parent::__construct();
     }
 
-    public function handle()
+    public function handle(): void
     {
         $input = $this->ask('请输入需替换表名SQL 不支持多行文本
         占位符：

@@ -2,8 +2,6 @@
 
 namespace App\Exceptions;
 
-use function GuzzleHttp\json_encode;
-
 /**
  * Class ExceptionAdditionInfo
  *
@@ -17,7 +15,7 @@ class ExceptionAdditionInfo
 
     public static function set(array $info): void
     {
-        static::$info = $info + static::$info;
+        static::$info = array_merge(static::$info, $info);
     }
 
     public static function remove(...$infoNames): void
@@ -29,6 +27,6 @@ class ExceptionAdditionInfo
 
     public static function format(): string
     {
-        return json_encode(static::$info ?? [], JSON_UNESCAPED_UNICODE);
+        return json_encode(static::$info ?? [], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
     }
 }

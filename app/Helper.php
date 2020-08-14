@@ -3,7 +3,6 @@
 namespace App;
 
 use Illuminate\Support\Arr;
-use function GuzzleHttp\json_encode;
 
 class Helper
 {
@@ -85,7 +84,7 @@ class Helper
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
         }
-        return $isJson ? json_encode($value) : $value;
+        return $isJson ? json_encode($value, JSON_THROW_ON_ERROR) : $value;
     }
 
     public static function isArrayValuesAllEqualTo(array $haystack, $equalTo): bool

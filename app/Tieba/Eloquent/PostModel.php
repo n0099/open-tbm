@@ -34,13 +34,13 @@ abstract class PostModel extends Model
     /**
      * @var int Forum id of this post
      */
-    protected $fid;
+    protected int $fid;
 
-    protected $fields;
+    protected array $fields;
 
-    protected $hidedFields;
+    protected array $hidedFields;
 
-    public $updateExpectFields;
+    public array $updateExpectFields;
 
     protected function scopeIDType(Builder $query, string $postIDName, $postID): Builder
     {
@@ -84,7 +84,7 @@ abstract class PostModel extends Model
      * @param  bool  $exists
      * @return static
      */
-    public function newInstance($attributes = [], $exists = false)
+    public function newInstance($attributes = [], $exists = false): self
     {
         return parent::newInstance(...\func_get_args())->setFid($this->fid);
     }

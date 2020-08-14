@@ -2,34 +2,18 @@
 
 namespace App\Tieba\Crawler;
 
-use App\Tieba\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
-use App\TimingHelper;
+use App\Timer;
 use Carbon\Carbon;
-use GuzzleHttp;
-use function GuzzleHttp\json_decode;
-use function GuzzleHttp\json_encode;
 
 class ThreadCrawler extends Crawlable
 {
     protected string $clientVersion = '6.0.2';
 
-    protected int $fid;
-
     protected string $forumName;
-
-    public int $startPage;
-
-    public int $endPage;
-
-    protected array $pagesInfo = [];
-
-    protected array $indexesInfo = [];
-
-    protected UsersInfoParser $usersInfo;
 
     protected array $threadsInfo = [];
 
@@ -37,17 +21,10 @@ class ThreadCrawler extends Crawlable
 
     public function __construct(int $fid, string $forumName, int $startPage, ?int $endPage = null)
     {
-        $this->fid = $fid;
+        parent::__construct($fid, $startPage, $endPage); // by default we don't have to crawl every threads pages, only the first one
         $this->forumName = $forumName;
-        $this->startPage = $startPage;
-        $defaultCrawlPageRange = 0; // by default we don't have to crawl every threads pages, only the first one
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
-        $this->usersInfo = new UsersInfoParser();
-
         ExceptionAdditionInfo::set([
-            'crawlingFid' => $fid,
             'crawlingForumName' => $forumName,
-            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
         ]);
     }
 
@@ -59,10 +36,10 @@ class ThreadCrawler extends Crawlable
     public function doCrawl(): self
     {
         \Log::channel('crawler-info')->info("Start to fetch threads for forum {$this->forumName}, fid {$this->fid}, page {$this->startPage}");
-        ExceptionAdditionInfo::set(['parsingPage' => 1]);
+        ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
 
         $tiebaClient = $this->getClientHelper();
-        $webRequestTiming = new TimingHelper();
+        $webRequestTimer = new Timer();
         $threadsInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/frs/page',
             [
@@ -72,17 +49,15 @@ class ThreadCrawler extends Crawlable
                     'rn' => 50
                 ]
             ]
-        )->getBody(), true);
-        $webRequestTiming->stop();
-        $this->profiles['webRequestTimes']++;
-        $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
+        )->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->profileWebRequestStopped($webRequestTimer);
 
         try {
             $this->checkThenParsePostsInfo($threadsInfo);
 
-            $webRequestTiming->start();
+            $webRequestTimer->start();
             // by default we don't have to crawl every sub reply pages, only first and last one
-            (new GuzzleHttp\Pool(
+            (new \GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
@@ -101,21 +76,7 @@ class ThreadCrawler extends Crawlable
                         };
                     }
                 })(),
-                [
-                    'concurrency' => 10,
-                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTiming) {
-                        $webRequestTiming->stop();
-                        $this->profiles['webRequestTimes']++;
-                        $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
-                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
-                        $webRequestTiming->start(); // resume timing for possible succeed web request
-                    },
-                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
-                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        report($e);
-                    }
-                ]
+                $this->getGuzzleHttpPoolConfig($webRequestTimer)
             ))->promise()->wait();
         } catch (TiebaException $regularException) {
             \Log::channel('crawler-notice')->notice($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
@@ -131,20 +92,15 @@ class ThreadCrawler extends Crawlable
             case 0: // no error
                 break;
             default:
-                throw new \RuntimeException("Error from tieba client when crawling thread, raw json: " . json_encode($responseJson));
+                throw new \RuntimeException('Error from tieba client when crawling thread, raw json: ' . json_encode($responseJson, JSON_THROW_ON_ERROR));
         }
 
         $threadsList = $responseJson['thread_list'];
-        if (\count($threadsList) == 0) {
+        if (\count($threadsList) === 0) {
             throw new TiebaException('Forum threads list is empty, forum might doesn\'t existed');
         }
 
-        $this->pagesInfo = $responseJson['page'];
-        $totalPages = $responseJson['page']['total_page'];
-        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
-            $this->endPage = $totalPages;
-        }
-
+        $this->cachePageInfoAndTrimEndPage($responseJson['page']);
         $this->parsePostsInfo($threadsList);
     }
 
@@ -157,15 +113,15 @@ class ThreadCrawler extends Crawlable
         $now = Carbon::now();
         foreach ($threadsList as $thread) {
             ExceptionAdditionInfo::set(['parsingTid' => $thread['tid']]);
-            $usersInfo[] = $thread['author'] + ['gender' => $thread['author']['sex'] ?? null]; // sb 6.0.2
+            $usersInfo[$thread['author']['id']] = array_merge($thread['author'], ['gender' => $thread['author']['sex'] ?? null]); // gender is named as sex in tieba client 6.0.2
             $currentInfo = [
                 'tid' => $thread['tid'],
                 'firstPid' => $thread['first_post_id'],
                 'threadType' => $thread['thread_types'],
-                'stickyType' => $thread['is_membertop'] == 1
+                'stickyType' => (int)$thread['is_membertop'] === 1
                     ? 'membertop'
                     : (isset($thread['is_top'])
-                        ? ($thread['is_top'] == 0
+                        ? ((int)$thread['is_top'] === 0
                             ? null
                             : 'top')
                         : 'top'), // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
@@ -195,26 +151,25 @@ class ThreadCrawler extends Crawlable
             $this->profiles['parsedPostTimes']++;
             $threadsInfo[] = $currentInfo;
             $updatedThreadsInfo[$thread['tid']] = Helper::getArrayValuesByKeys($currentInfo, ['latestReplyTime', 'replyNum']);
-            $indexesInfo[] = [
+            $indexesInfo[] = array_merge(Helper::getArrayValuesByKeys($currentInfo, ['tid', 'authorUid', 'postTime']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',
                 'fid' => $this->fid
-            ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'authorUid', 'postTime']);
+            ]);
         }
         ExceptionAdditionInfo::remove('parsingTid');
 
         // lazy saving to Eloquent model
-        $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo(collect($usersInfo)->unique('id')->toArray());
-        $this->updatedPostsInfo = $updatedThreadsInfo + $this->updatedPostsInfo; // newly added update info will override previous one by post id key
+        $this->cacheIndexesAndUsersInfo($indexesInfo, $usersInfo);
+        $this->updatedPostsInfo = array_replace($this->updatedPostsInfo, $updatedThreadsInfo); // newly added update info will override previous one by post id key
         $this->threadsInfo = array_merge($this->threadsInfo, $threadsInfo);
-        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
 
     public function savePostsInfo(): self
     {
-        $savePostsTiming = new TimingHelper();
-        if ($this->indexesInfo != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+        $savePostsTimer = new Timer();
+        if ($this->indexesInfo !== []) { // if TiebaException have thrown while parsing posts, indexes list might be []
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingThreads' => true]);
                 $chunkInsertBufferSize = 2000;
@@ -226,21 +181,17 @@ class ThreadCrawler extends Crawlable
                     'shareNum',
                     'agreeInfo'
                 ]) as $threadsInfoGroup) {
-                    $threadUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($threadsInfoGroup[0], $threadModel);
+                    $threadUpdateFields = static::getUpdateFieldsWithoutExpected($threadsInfoGroup[0], $threadModel);
                     $threadModel->chunkInsertOnDuplicate($threadsInfoGroup, $threadUpdateFields, $chunkInsertBufferSize);
                 }
-
-                $indexModel = new IndexModel();
-                $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
-                $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingThreads');
 
-                $this->usersInfo->saveUsersInfo();
+                $this->saveIndexesAndUsersInfo($chunkInsertBufferSize);
             }, 5);
         }
-        $savePostsTiming->stop();
+        $savePostsTimer->stop();
 
-        $this->profiles['savePostsTiming'] += $savePostsTiming->getTiming();
+        $this->profiles['savePostsTiming'] += $savePostsTimer->getTime();
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingForumName');
         $this->threadsInfo = [];
         $this->indexesInfo = [];

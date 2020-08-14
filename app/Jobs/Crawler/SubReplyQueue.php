@@ -4,7 +4,7 @@ namespace App\Jobs\Crawler;
 
 use App\Eloquent\CrawlingPostModel;
 use App\Tieba\Crawler;
-use App\TimingHelper;
+use App\Timer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,8 +17,6 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
-
-    protected int $fid;
 
     protected int $tid;
 
@@ -35,9 +33,9 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $this->pid = $pid;
     }
 
-    public function handle()
+    public function handle(): void
     {
-        $queueTiming = new TimingHelper();
+        $queueTimer = new Timer();
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
         $firstPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $this->startPage))->doCrawl()->savePostsInfo();
@@ -48,10 +46,10 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
             $lastPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
         }
 
-        $queueTiming->stop();
-        \DB::transaction(function () use ($firstPageCrawler, $lastPageCrawler, $queueTiming) {
+        $queueTimer->stop();
+        \DB::transaction(function () use ($firstPageCrawler, $lastPageCrawler, $queueTimer) {
             $crawlerProfiles = [];
-            if ($lastPageCrawler != null) {
+            if ($lastPageCrawler !== null) {
                 $firstPageProfiles = $firstPageCrawler->getProfiles();
                 $lastPageProfiles = $lastPageCrawler->getProfiles();
                 // sum up first and last page crawler's profiles value
@@ -71,14 +69,14 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                     'pid' => $this->pid
                 ])
                 ->lockForUpdate()->first();
-            if ($currentCrawlingSubReply != null) { // might already marked as finished by other concurrency queues
-                $currentCrawlingSubReply->fill([
-                    'queueTiming' => $queueTiming->getTiming()
-                ] + $crawlerProfiles)->save();
+            if ($currentCrawlingSubReply !== null) { // might already marked as finished by other concurrency queues
+                $currentCrawlingSubReply->fill(array_merge($crawlerProfiles, [
+                    'queueTiming' => $queueTimer->getTime()
+                ]))->save();
                 $currentCrawlingSubReply->delete(); // release current crawl queue lock
             }
         });
 
-        \Log::channel('crawler-info')->info('Sub reply queue completed after ' . ($queueTiming->getTiming()));
+        \Log::channel('crawler-info')->info('Sub reply queue completed after ' . ($queueTimer->getTime()));
     }
 }

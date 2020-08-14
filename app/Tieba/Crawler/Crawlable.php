@@ -2,7 +2,9 @@
 
 namespace App\Tieba\Crawler;
 
+use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\ClientRequester;
+use App\Tieba\Eloquent\IndexModel;
 
 abstract class Crawlable
 {
@@ -14,9 +16,11 @@ abstract class Crawlable
 
     public int $endPage;
 
-    protected array $pagesInfo = [];
+    protected array $pageInfo = [];
 
     protected array $indexesInfo = [];
+
+    protected UsersInfoParser $usersInfo;
 
     protected array $profiles = [
         'webRequestTiming' => 0,
@@ -32,9 +36,21 @@ abstract class Crawlable
 
     abstract public function savePostsInfo(): self;
 
+    protected function __construct(int $fid, int $startPage, ?int $endPage = null, int $crawlPageRange = 0)
+    {
+        $this->fid = $fid;
+        $this->startPage = $startPage;
+        $this->endPage = $endPage ?? $this->startPage + $crawlPageRange; // if $endPage haven't been determined, only crawl $crawlPageRange pages after $startPage
+        $this->usersInfo = new UsersInfoParser();
+        ExceptionAdditionInfo::set([
+            'crawlingFid' => $fid,
+            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
+        ]);
+    }
+
     public function getPages() : array
     {
-        return $this->pagesInfo;
+        return $this->pageInfo;
     }
 
     public function getProfiles(): array
@@ -82,9 +98,9 @@ abstract class Crawlable
                 $nullValueFields[$nullableFieldName] = ($item[$nullableFieldName] ?? null) === null;
             }
             $nullValueFieldsCount = array_sum($nullValueFields); // counts all null value fields
-            if ($nullValueFieldsCount == \count($nullValueFields)) {
+            if ($nullValueFieldsCount === \count($nullValueFields)) {
                 $arrayAfterGroup['allNull'][] = $item;
-            } elseif ($nullValueFieldsCount == 0) {
+            } elseif ($nullValueFieldsCount === 0) {
                 $arrayAfterGroup['notAllNull'][] = $item;
             } else {
                 $nullValueFieldName = implode('+', array_keys($nullValueFields, true)); // if there's multi fields having null value, we should group them together
@@ -95,8 +111,55 @@ abstract class Crawlable
         return $arrayAfterGroup;
     }
 
-    public static function getUpdateFieldsWithoutExpected(array $updateItem, $model): array
+    public static function getUpdateFieldsWithoutExpected(array $updateItem, \Illuminate\Database\Eloquent\Model $model): array
     {
         return array_diff(array_keys($updateItem), $model->updateExpectFields);
+    }
+
+    protected function profileWebRequestStopped ($webRequestTimer): void
+    {
+        $webRequestTimer->stop();
+        $this->profiles['webRequestTimes']++;
+        $this->profiles['webRequestTiming'] += $webRequestTimer->getTiming();
+    }
+
+    protected function getGuzzleHttpPoolConfig ($webRequestTimer): array
+    {
+        return [
+            'concurrency' => 10,
+            'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTimer) {
+                $this->profileWebRequestStopped($webRequestTimer);
+                ExceptionAdditionInfo::set(['parsingPage' => $index]);
+                $this->checkThenParsePostsInfo(json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR));
+                $webRequestTimer->start(); // resume timing for possible succeed web request
+            },
+            'rejected' => function (\GuzzleHttp\Exception\RequestException $e, int $index) {
+                ExceptionAdditionInfo::set(['parsingPage' => $index]);
+                report($e);
+            }
+        ];
+    }
+
+    protected function cacheIndexesAndUsersInfo ($indexesInfo, $usersInfo): void
+    {
+        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
+        $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo($usersInfo);
+    }
+
+    protected function saveIndexesAndUsersInfo ($chunkInsertBufferSize): void
+    {
+        $indexModel = new IndexModel();
+        $indexUpdateFields = static::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
+        $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
+        $this->usersInfo->saveUsersInfo();
+    }
+
+    protected function cachePageInfoAndTrimEndPage ($pageInfo): void
+    {
+        $this->pageInfo = $pageInfo;
+        $totalPages = $pageInfo['total_page'];
+        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
+            $this->endPage = $totalPages;
+        }
     }
 }

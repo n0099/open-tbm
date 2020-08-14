@@ -434,7 +434,7 @@ class PostsQuery extends Controller
                 ->hidePrivateFields()->get();
         }
 
-        $convertJsonContentToHtml = function (?\ArrayAccess $post): ?\ArrayAccess {
+        $convertJsonContentToHtml = function (\ArrayAccess $post): \ArrayAccess {
             if ($post['content'] !== null) {
                 $post['content'] = Post::convertJsonContentToHtml($post['content']);
             }
@@ -459,7 +459,7 @@ class PostsQuery extends Controller
                 // values() and array_values() remove keys to simplify json data
                 $threadReplies[$pid]['subReplies'] = $subRepliesInfo->where('pid', $pid)->values()->toArray();
             }
-            $nestedPostsInfo[$tid] = $thread + ['replies' => array_values($threadReplies)];
+            $nestedPostsInfo[$tid] = array_merge($thread, ['replies' => array_values($threadReplies)]);
         }
 
         return array_values($nestedPostsInfo);

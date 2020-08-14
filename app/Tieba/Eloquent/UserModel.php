@@ -20,7 +20,7 @@ class UserModel extends Model
         'alaInfo' => 'array'
     ];
 
-    protected $fields = [
+    protected array $fields = [
         'id',
         'uid',
         'name',
@@ -32,14 +32,14 @@ class UserModel extends Model
         'alaInfo',
     ];
 
-    protected $hidedFields = [
+    protected array $hidedFields = [
         'id',
         'alaInfo',
         'created_at',
         'updated_at',
     ];
 
-    public $updateExpectFields = [
+    public array $updateExpectFields = [
         'created_at'
     ];
 
@@ -51,7 +51,7 @@ class UserModel extends Model
         if (\is_array($uid) || $uid instanceof Collection) {
             return $query->whereIn('uid', $uid);
         }
-        throw new \InvalidArgumentException("uid must be int or array");
+        throw new \InvalidArgumentException('Uid must be int or array');
     }
 
     public function scopeHidePrivateFields(Builder $query): Builder

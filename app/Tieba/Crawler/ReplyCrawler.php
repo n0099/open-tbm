@@ -2,34 +2,18 @@
 
 namespace App\Tieba\Crawler;
 
-use App\Tieba\Eloquent\IndexModel;
 use App\Exceptions\ExceptionAdditionInfo;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
-use App\TimingHelper;
+use App\Timer;
 use Carbon\Carbon;
-use GuzzleHttp;
-use function GuzzleHttp\json_decode;
-use function GuzzleHttp\json_encode;
 
 class ReplyCrawler extends Crawlable
 {
     protected string $clientVersion = '8.8.8';
 
-    protected int $fid;
-
     protected int $tid;
-
-    public int $startPage;
-
-    public int $endPage;
-
-    protected array $pagesInfo = [];
-
-    protected array $indexesInfo = [];
-
-    protected UsersInfoParser $usersInfo;
 
     protected array $repliesInfo = [];
 
@@ -39,17 +23,10 @@ class ReplyCrawler extends Crawlable
 
     public function __construct(int $fid, int $tid, int $startPage, ?int $endPage = null)
     {
-        $this->fid = $fid;
+        parent::__construct($fid, $startPage, $endPage, 100); // crawl 100 pages since $startPage by default, rather than thread and sub reply behaviour
         $this->tid = $tid;
-        $this->startPage = $startPage;
-        $defaultCrawlPageRange = 100;
-        $this->endPage = $endPage ?? $this->startPage + $defaultCrawlPageRange; // if $endPage haven't been determined, only crawl $defaultCrawlPageRange pages after $startPage
-        $this->usersInfo = new UsersInfoParser();
-
         ExceptionAdditionInfo::set([
-            'crawlingFid' => $fid,
             'crawlingTid' => $tid,
-            'profiles' => &$this->profiles // assign by reference will sync values change with addition info
         ]);
     }
 
@@ -64,7 +41,7 @@ class ReplyCrawler extends Crawlable
         ExceptionAdditionInfo::set(['parsingPage' => $this->startPage]);
 
         $tiebaClient = $this->getClientHelper();
-        $webRequestTiming = new TimingHelper();
+        $webRequestTimer = new Timer();
         $startPageRepliesInfo = json_decode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
             [
@@ -73,16 +50,14 @@ class ReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody(), true);
-        $webRequestTiming->stop();
-        $this->profiles['webRequestTimes']++;
-        $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
+        )->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->profileWebRequestStopped($webRequestTimer);
 
         try {
             $this->checkThenParsePostsInfo($startPageRepliesInfo);
 
-            $webRequestTiming->start();
-            (new GuzzleHttp\Pool(
+            $webRequestTimer->start();
+            (new \GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient) {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
@@ -100,21 +75,7 @@ class ReplyCrawler extends Crawlable
                         };
                     }
                 })(),
-                [
-                    'concurrency' => 10,
-                    'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTiming) {
-                        $webRequestTiming->stop();
-                        $this->profiles['webRequestTimes']++;
-                        $this->profiles['webRequestTiming'] += $webRequestTiming->getTiming();
-                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        $this->checkThenParsePostsInfo(json_decode($response->getBody(), true));
-                        $webRequestTiming->start(); // resume timing for possible succeed web request
-                    },
-                    'rejected' => function (GuzzleHttp\Exception\RequestException $e, int $index) {
-                        ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                        report($e);
-                    }
-                ]
+                $this->getGuzzleHttpPoolConfig($webRequestTimer)
             ))->promise()->wait();
         } catch (TiebaException $regularException) {
             \Log::channel('crawler-notice')->notice($regularException->getMessage() . ' ' . ExceptionAdditionInfo::format());
@@ -133,22 +94,17 @@ class ReplyCrawler extends Crawlable
             case 4: // {"error_code": "4", "error_msg": "贴子可能已被删除"}
                 throw new TiebaException('Thread already deleted when crawling reply');
             default:
-                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($responseJson));
+                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($responseJson, JSON_THROW_ON_ERROR));
         }
 
         $parentThreadInfo = $responseJson['thread'];
         $repliesList = $responseJson['post_list'];
         $replyUsersList = Helper::setKeyWithItemsValue($responseJson['user_list'], 'id');
-        if (\count($repliesList) == 0) {
+        if (\count($repliesList) === 0) {
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba');
         }
 
-        $this->pagesInfo = $responseJson['page'];
-        $totalPages = $responseJson['page']['total_page'];
-        if ($this->endPage > $totalPages) { // crawl end page should be trimmed when it's larger than replies total page
-            $this->endPage = $totalPages;
-        }
-
+        $this->cachePageInfoAndTrimEndPage($responseJson['page']);
         $this->parsePostsInfo($parentThreadInfo, $repliesList, $replyUsersList);
     }
 
@@ -185,20 +141,20 @@ class ReplyCrawler extends Crawlable
             if ($reply['sub_post_number'] > 0) {
                 $updatedRepliesInfo[$reply['id']] = Helper::getArrayValuesByKeys($currentInfo, ['subReplyNum']);
             }
-            $indexesInfo[] = [
+            $indexesInfo[] = array_merge(Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'authorUid']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],
                 'type' => 'reply',
                 'fid' => $this->fid
-            ] + Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'authorUid']);
+            ]);
         }
         ExceptionAdditionInfo::remove('parsingPid');
 
         // lazy saving to Eloquent model
-        $usersInfo[$parentThreadInfo['author']['id']]['privacySettings'] = $parentThreadInfo['author']['priv_sets']; // parent thread author privacy settings
-        $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo($usersInfo);
-        $this->updatedPostsInfo = $updatedRepliesInfo + $this->updatedPostsInfo; // newly added update info will override previous one by post id key
+        $usersInfo[$parentThreadInfo['author']['id']]['privacySettings'] = $parentThreadInfo['author']['priv_sets']; // update parent thread's author privacy settings
+        $this->cacheIndexesAndUsersInfo($indexesInfo, $usersInfo);
+        $this->updatedPostsInfo = array_replace($this->updatedPostsInfo, $updatedRepliesInfo); // newly added update info will override previous one by post id key
         $this->parentThreadInfo[$parentThreadInfo['id']] = [
             'tid' => $parentThreadInfo['id'],
             'antiSpamInfo' => Helper::nullableValidate($parentThreadInfo['thread_info']['antispam_info'] ?? null, true),
@@ -206,13 +162,12 @@ class ReplyCrawler extends Crawlable
             'updated_at' => $now
         ];
         $this->repliesInfo = array_merge($this->repliesInfo, $repliesInfo);
-        $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
     }
 
     public function savePostsInfo(): self
     {
-        $savePostsTiming = new TimingHelper();
-        if ($this->indexesInfo != null) { // if TiebaException thrown while parsing posts, indexes list might be null
+        $savePostsTimer = new Timer();
+        if ($this->indexesInfo !== []) { // if TiebaException thrown while parsing posts, indexes list might be []
             \DB::transaction(function () {
                 ExceptionAdditionInfo::set(['insertingReplies' => true]);
                 $chunkInsertBufferSize = 2000;
@@ -221,7 +176,7 @@ class ReplyCrawler extends Crawlable
                     'authorManagerType',
                     'authorExpGrade'
                 ]) as $repliesInfoGroup) {
-                    $replyUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($repliesInfoGroup[0], $replyModel);
+                    $replyUpdateFields = static::getUpdateFieldsWithoutExpected($repliesInfoGroup[0], $replyModel);
                     $replyModel->chunkInsertOnDuplicate($repliesInfoGroup, $replyUpdateFields, $chunkInsertBufferSize);
                 }
 
@@ -229,18 +184,14 @@ class ReplyCrawler extends Crawlable
                 foreach ($this->parentThreadInfo as $tid => $threadInfo) {
                     $threadModel->where('tid', $tid)->update($threadInfo);
                 }
-
-                $indexModel = new IndexModel();
-                $indexUpdateFields = Crawlable::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
-                $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingReplies');
 
-                $this->usersInfo->saveUsersInfo();
+                $this->saveIndexesAndUsersInfo($chunkInsertBufferSize);
             }, 5);
         }
-        $savePostsTiming->stop();
+        $savePostsTimer->stop();
 
-        $this->profiles['savePostsTiming'] += $savePostsTiming->getTiming();
+        $this->profiles['savePostsTiming'] += $savePostsTimer->getTime();
         ExceptionAdditionInfo::remove('crawlingFid', 'crawlingTid');
         $this->repliesInfo = [];
         $this->indexesInfo = [];

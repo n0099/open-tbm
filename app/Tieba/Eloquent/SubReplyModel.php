@@ -14,7 +14,7 @@ class SubReplyModel extends PostModel
         'content' => 'array'
     ];
 
-    protected $fields = [
+    protected array $fields = [
         'id',
         'tid',
         'pid',
@@ -29,12 +29,12 @@ class SubReplyModel extends PostModel
         'updated_at'
     ];
 
-    protected $hidedFields = [
+    protected array $hidedFields = [
         'id',
         'clientVersion'
     ];
 
-    public $updateExpectFields = [
+    public array $updateExpectFields = [
         'tid',
         'pid',
         'spid',
@@ -43,12 +43,12 @@ class SubReplyModel extends PostModel
         'created_at'
     ];
 
-    public function post()
+    public function post(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
     }
 
-    public function reply()
+    public function reply(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(ReplyModel::class, 'pid', 'pid');
     }

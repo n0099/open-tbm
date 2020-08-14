@@ -20,14 +20,14 @@ trait InsertOnDuplicateKey
      * @param array $updateColumns
      * @param int $chunkSize
      */
-    public function chunkInsertOnDuplicate(array $data, $updateColumns, int $chunkSize)
+    public function chunkInsertOnDuplicate(array $data, $updateColumns, int $chunkSize): void
     {
         foreach (array_chunk($data, $chunkSize) as $chunkData) {
             $this->insertOnDuplicateKey($chunkData, $updateColumns);
         }
     }
 
-    public function insertOnDuplicateKey(array $data, array $updateColumns = null)
+    public function insertOnDuplicateKey(array $data, array $updateColumns = null): bool
     {
         if (empty($data)) {
             return false;
@@ -44,8 +44,8 @@ trait InsertOnDuplicateKey
 
         return $this->getConnection()->affectingStatement($sql, $data);
     }
-    
-    public function insertIgnore(array $data)
+
+    public function insertIgnore(array $data): bool
     {
         if (empty($data)) {
             return false;
@@ -62,8 +62,8 @@ trait InsertOnDuplicateKey
 
         return $this->getConnection()->affectingStatement($sql, $data);
     }
-    
-    public function replace(array $data)
+
+    public function replace(array $data): bool
     {
         if (empty($data)) {
             return false;
@@ -74,14 +74,14 @@ trait InsertOnDuplicateKey
             $data = [$data];
         }
 
-        $sql = static::buildReplaceSql($data);
+        $sql = $this->buildReplaceSql($data);
 
         $data = static::inLineArray($data);
 
         return $this->getConnection()->affectingStatement($sql, $data);
     }
-    
-    protected function buildInsertOnDuplicateSql(array $data, array $updateColumns = null)
+
+    protected function buildInsertOnDuplicateSql(array $data, array $updateColumns = null): string
     {
         $first = static::getFirstRow($data);
 
@@ -97,8 +97,8 @@ trait InsertOnDuplicateKey
 
         return $sql;
     }
-    
-    protected function buildInsertIgnoreSql(array $data)
+
+    protected function buildInsertIgnoreSql(array $data): string
     {
         $first = static::getFirstRow($data);
 
@@ -107,8 +107,8 @@ trait InsertOnDuplicateKey
 
         return $sql;
     }
-    
-    protected function buildReplaceSql(array $data)
+
+    protected function buildReplaceSql(array $data): string
     {
         $first = static::getFirstRow($data);
 
