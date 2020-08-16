@@ -59,7 +59,7 @@ class ClientRequester extends \GuzzleHttp\Client
 
         //Note7 (￣▽￣)~*
         $config['headers']['User-Agent'] = 'Mozilla/5.0 (Linux; Android 6.0; SM-N930F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.81 Mobile Safari/537.36';
-        $config['timeout'] = 1; // default 1 sec timeout
+        $config['timeout'] = 3; // default 3 sec timeout
 
         parent::__construct($config);
     }

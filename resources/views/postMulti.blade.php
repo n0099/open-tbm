@@ -25,9 +25,19 @@
         }
     </style>
     <style>/* <query-form> */
+        .query-form .a-datetime-range {
+            margin-left: -1px;
+        }
+        .query-form .ant-calendar-picker-input {
+            height: 38px;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+        }
+
         .query-param-row {
             margin-top: -1px;
         }
+
         .param-control-first-row {
             border-bottom-right-radius: 0;
         }
@@ -38,17 +48,9 @@
         .param-control-last-row {
             border-top-right-radius: 0;
         }
+
         .param-input-group-text {
             background-color: unset;
-        }
-
-        .a-datetime-range {
-            margin-left: -1px;
-        }
-        .ant-calendar-picker-input {
-            height: 38px;
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
         }
 
         .add-param-button { /* fa-plus is wider than fa-times 3px */
@@ -114,7 +116,7 @@
         }
     </style>
     <style>/* <post-render-table> */
-        .ant-table {
+        .render-table-thread .ant-table {
             width: fit-content;
         }
 
@@ -124,12 +126,12 @@
             border-radius: 4px 4px 0 0;
         }
 
-        .ant-table td, .ant-table td *, .ant-table th {
+        .render-table-thread .ant-table td, .render-table-thread .ant-table td *, .render-table-thread .ant-table th {
             white-space: nowrap;
             font-family: Consolas, Courier New, monospace;
         }
 
-        .ant-table-expand-icon-th, .ant-table-row-expand-icon-cell {
+        .render-table-thread .ant-table-expand-icon-th, .render-table-thread .ant-table-row-expand-icon-cell {
             width: 1px; /* any value other than 0px */
             min-width: unset;
             padding-left: 5px !important;
@@ -182,27 +184,28 @@
         }
     </style>
     <style>/* <posts-nav> */
-        .ant-menu {
+        .posts-nav.ant-menu {
             border: 0;
         }
-        .ant-menu-item {
+        .posts-nav .ant-menu-item {
             height: auto !important; /* to show reply nav buttons under thread menu items */
             padding: 0 10px 0 32px !important;
             margin-top: 0 !important;
             margin-bottom: 0 !important;
             white-space: normal !important;
         }
-        .ant-menu-item hr {
+        .posts-nav .ant-menu-item hr {
             margin: 7px 0 0 0;
         }
     </style>
     <style>/* <posts-query> */
-        .posts-nav {
+        .posts-nav-wrapper {
             padding: 0;
+            margin-top: 1px;
             overflow: hidden;
             border-right: 1px solid #ededed;
         }
-        .posts-nav:hover {
+        .posts-nav-wrapper:hover {
             overflow-y: auto;
         }
         .posts-nav-collapse {
@@ -221,7 +224,7 @@
             .post-render {
                 width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warps new row */
             }
-            .posts-nav[aria-expanded=true] {
+            .posts-nav-wrapper[aria-expanded=true] {
                 display: block !important;
                 position: sticky;
                 top: 0;
@@ -303,7 +306,7 @@
             </select>
         </template>
         <template id="query-form-template">
-            <form @submit.prevent="submit()" class="mt-3">
+            <form @submit.prevent="submit()" class="query-form mt-3">
                 <div class="form-group form-row">
                     <label class="col-1 col-form-label" for="paramFid">贴吧</label>
                     <div class="col-3 input-group">
@@ -363,6 +366,14 @@
                                         'select-param-last-row': paramIndex === params.length - 1,
                                         'select-param': true
                                       }"></select-param>
+                        <div class="input-group-append">
+                            <div class="param-input-group-text input-group-text">
+                                <div class="custom-checkbox custom-control">
+                                    <input v-model="param.subParam.not" :id="`param${_.upperFirst(param.name)}Not-${paramIndex}`" type="checkbox" value="good" class="custom-control-input">
+                                    <label :for="`param${_.upperFirst(param.name)}Not-${paramIndex}`" class="text-secondary font-weight-bold custom-control-label">非</label>
+                                </div>
+                            </div>
+                        </div>
                         <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
                             <select-range v-model="param.subParam.range"></select-range>
                             <input-numeric-param v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
@@ -646,7 +657,7 @@
             <textarea :value="JSON.stringify(posts)" class="render-raw border col"></textarea>
         </template>
         <template id="posts-nav-template">
-            <a-menu :force-sub-menu-render="true" mode="inline" class="vh-100">
+            <a-menu :force-sub-menu-render="true" mode="inline" class="posts-nav">
                 <a-sub-menu v-for="posts in pages" :title="`第${posts.pages.currentPage}页`" :key="`page-${posts.pages.currentPage}`">
                     <a-menu-item v-for="thread in posts.threads" :key="`thread-${thread.tid}`" :title="thread.title">
                         <a :href="`#t${thread.tid}`">{{ thread.title }}</a><!-- fixme: cannot use <router-link> here since history.pushState() won't auto scroll viewport into dom which id is same with hash -->
@@ -703,7 +714,7 @@
                 </div>
                 <div v-show="! _.isEmpty(postPages)" class="container-fluid">
                     <div class="justify-content-center row">
-                        <div :aria-expanded="postsNavExpanded" class="posts-nav vh-100 sticky-top d-none d-xl-block col-xl">
+                        <div :aria-expanded="postsNavExpanded" class="posts-nav-wrapper vh-100 sticky-top d-none d-xl-block col-xl">
                             <posts-nav :pages="postPages"></posts-nav>
                         </div>
                         <a @click="postsNavExpanded = ! postsNavExpanded" class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col col-auto">
@@ -1152,7 +1163,9 @@
                         uniqueParams: {},
                         params: [], // [{ name: '', value: '', subParam: { name: value } },...]
                         invalidParamsIndex: [],
-                        paramsDefaultValue: {},
+                        paramsDefaultValue: {
+                            // { name: *, subParam: { not: false } }
+                        },
                         paramsPreprocessor: {},
                         paramsWatcher: {},
                         paramWatcher (newParamsArray, oldParamsArray) {
@@ -1233,10 +1246,13 @@
                         this.$delete(this.$data.params, paramIndex);
                     },
                     fillParamWithDefaultValue (param, resetToDefault = false) {
+                        let defaultParam = this.$data.paramsDefaultValue[param.name];
+                        defaultParam.subParam = defaultParam.subParam || {};
+                        defaultParam.subParam.not = false; // add default not subParam on every param
                         if (resetToDefault) { // cloneDeep to prevent defaultsDeep mutates origin object
-                            return _.defaultsDeep(_.cloneDeep(this.$data.paramsDefaultValue[param.name]), param);
+                            return _.defaultsDeep(_.cloneDeep(defaultParam), param);
                         } else {
-                            return _.defaultsDeep(_.cloneDeep(param), this.$data.paramsDefaultValue[param.name]);
+                            return _.defaultsDeep(_.cloneDeep(param), defaultParam);
                         }
                     },
                     clearParamDefaultValue (param) {
@@ -1248,7 +1264,7 @@
                             }
                             return param;
                         }
-                        if (! (_.isNumber(param.value) || ! _.isEmpty(param.value)) // number is consider as empty in isEmpty(), to prevent this here we use complex boolean expression
+                        if (! (_.isNumber(param.value) || ! _.isEmpty(param.value)) // number is consider as empty in isEmpty(), to prevent this here we use complex short circuit evaluate expression
                             || (_.isArray(param.value)
                                 ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
                                 : param.value === defaultParam.value)) {
@@ -1291,6 +1307,7 @@
                             .each((param) => {
                                 if (_.includes(_.keys(this.$data.paramsPreprocessor), param.name)) {
                                     this.$data.paramsPreprocessor[param.name](param);
+                                    param.subParam.not = param.subParam.not === 'true'; // literal string to bool convert
                                 }
                                 if (_.includes(_.keys(this.$data.uniqueParams), param.name)) { // is unique param
                                     this.$data.uniqueParams[param.name] = param;
