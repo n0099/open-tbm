@@ -85,6 +85,7 @@
             padding-right: .5em;
         }
         .reply-body {
+            overflow: auto;
             padding-left: .5em;
             padding-right: .5em;
         }
@@ -97,11 +98,11 @@
         }
 
         .sub-reply-group {
-            margin: 0 0 .25em .5em !important;
+            margin: .5em 0 .25em .5em;
             padding: .25em;
         }
         .sub-reply-item {
-            padding: .125em .125em .125em .5em;
+            padding: .125em;
         }
         .sub-reply-item > * {
             padding: .25em;
@@ -114,13 +115,19 @@
             padding-left: 1em;
             padding-right: 1em;
         }
+        .thread-latest-reply-time-badge {
+            height: 20px;
+            padding: 0.2em .4em;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
     </style>
     <style>/* <post-render-table> */
         .render-table-thread .ant-table {
             width: fit-content;
         }
 
-        .render-table-thread .ant-table { /* fixme: should only select first appeared child */
+        .render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table { /* dom struct might change in further antd updates */
             width: auto;
             border: 1px solid #e8e8e8;
             border-radius: 4px 4px 0 0;
@@ -155,8 +162,8 @@
             font-family: Consolas, Courier New, monospace;
         }
     </style>
-    <style>/* <post-page-previous-button> */
-        .previous-page-button {
+    <style>/* <post-page-previous> */
+        .post-previous-page-button {
             position: relative;
             top: -1.5em;
             margin-bottom: -1em;
@@ -168,7 +175,7 @@
         .post-item-placeholder {
             animation-name: post-item-placeholder;
             animation-play-state: running;
-            animation-iteration-count: 9999;
+            animation-iteration-count: infinite;
             animation-duration: 3s;
         }
         @keyframes post-item-placeholder {
@@ -184,12 +191,9 @@
         }
     </style>
     <style>/* <posts-nav> */
-        .posts-nav.ant-menu {
-            border: 0;
-        }
         .posts-nav .ant-menu-item {
             height: auto !important; /* to show reply nav buttons under thread menu items */
-            padding: 0 10px 0 32px !important;
+            padding: 0 5px 0 28px !important;
             margin-top: 0 !important;
             margin-bottom: 0 !important;
             white-space: normal !important;
@@ -197,34 +201,18 @@
         .posts-nav .ant-menu-item hr {
             margin: 7px 0 0 0;
         }
-    </style>
-    <style>/* <posts-query> */
-        .posts-nav-wrapper {
-            padding: 0;
-            margin-top: 1px;
+
+        .posts-nav {
+            padding: 0 10px 0 0;
             overflow: hidden;
             border-right: 1px solid #ededed;
         }
-        .posts-nav-wrapper:hover {
+        .posts-nav:hover {
+            padding: 0;
             overflow-y: auto;
         }
-        .posts-nav-collapse {
-            padding: 2px;
-            font-size: 1.3em;
-            background-color: whitesmoke;
-        }
-        .post-render {
-            padding-left: 10px;
-        }
-        .post-render-list-placeholder {
-            padding: 0;
-        }
-
         @media (max-width: 1200px) {
-            .post-render {
-                width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warps new row */
-            }
-            .posts-nav-wrapper[aria-expanded=true] {
+            .posts-nav[aria-expanded=true] {
                 display: block !important;
                 position: sticky;
                 top: 0;
@@ -233,16 +221,35 @@
                 max-width: 35%;
             }
         }
+    </style>
+    <style>/* <posts-query> */
+        .posts-nav-collapse {
+            padding: 2px;
+            font-size: 1.3em;
+            background-color: whitesmoke;
+        }
+        .post-render-wrapper {
+            padding-left: 10px;
+        }
+        .post-render-list-wrapper-placeholder {
+            padding: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .post-render-wrapper {
+                width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warps new row */
+            }
+        }
         @media (min-width: 1200px) {
-            .post-render {
+            .post-render-wrapper {
                 padding-left: 15px;
             }
-            .post-render-list {
+            .post-render-list-wrapper {
                 max-width: 1000px;
             }
         }
         @media (min-width: 1400px) {
-            .post-render-list-placeholder {
+            .post-render-list-wrapper-placeholder {
                 display: block !important; /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
             }
         }
@@ -341,8 +348,8 @@
                             <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
                         </div>
                         <select v-model="uniqueParams.orderBy.value" :class="{ 'is-invalid': isOrderByInvalid }" class="col custom-select form-control">
-                            <option value="default">默认（按贴索引查询按发贴时间正序，按吧索引/搜索查询倒序）</option>
-                            <option value="postTime">发贴时间</option>
+                            <option value="default">默认（按贴索引查询按发帖时间正序，按吧索引/搜索查询倒序）</option>
+                            <option value="postTime">发帖时间</option>
                             <optgroup label="贴子ID">
                                 <option value="tid">主题贴tid</option>
                                 <option value="pid">回复贴pid</option>
@@ -448,7 +455,7 @@
                     <select-param @param-change="addParam($event)"></select-param>
                 </div>
                 <div class="form-group form-row">
-                    <button :disabled="isRequesting" type="submit" class="btn btn-primary">
+                    <button :disabled="isRequesting" class="btn btn-primary" type="submit">
                         查询 <span v-show="isRequesting" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                     </button>
                     <button class="ml-2 disabled btn btn-text" type="button">{{ currentQueryType() === 'fid' ? '按吧索引查询' : (currentQueryType() === 'postID' ? '按贴索引查询' : (currentQueryType() === 'search' ? '搜索查询' : '空查询')) }}</button>
@@ -457,17 +464,19 @@
         </template>
         <template id="post-thread-tag-template">
             <div class="btn-group" role="group">
-                <button v-if="thread.stickyType === 'membertop'" class="badge btn btn-warning">会员置顶</button>
-                <button v-if="thread.stickyType === 'top'" class="badge btn btn-primary">置顶</button>
-                <button v-if="thread.isGood" class="badge btn btn-danger">精品</button>
-                <button v-if="thread.topicType === 'text'" class="badge btn btn-primary">文本话题</button>
-                <button v-if="thread.topicType === ''" class="badge btn btn-primary">图片话题</button><!-- TODO: fill unknown picture topic thread type -->
+                <button v-if="thread.stickyType === 'membertop'" class="badge btn btn-warning" type="button">会员置顶</button>
+                <button v-if="thread.stickyType === 'top'" class="badge btn btn-primary" type="button">置顶</button>
+                <button v-if="thread.isGood" class="badge btn btn-danger" type="button">精品</button>
+                <button v-if="thread.topicType === 'text'" class="badge btn btn-primary" type="button">文本话题</button>
+                <button v-if="thread.topicType === ''" class="badge btn btn-primary" type="button">图片话题</button><!-- TODO: fill unknown picture topic thread type -->
             </div>
         </template>
         <template id="post-user-tag-template">
             <div class="btn-group" role="group">
-                <button v-if="userInfo.uid === $data.$getUserInfo(parentUid.thread).uid" type="button" class="badge btn btn-success">楼主</button>
-                <button v-else-if="userInfo.uid === $data.$getUserInfo(parentUid.reply).uid" type="button" class="badge btn btn-info">层主</button>
+                <template v-if="userInfo.uid !== undefined">
+                    <button v-if="userInfo.uid.current === $data.$getUserInfo(userInfo.uid.thread).uid" type="button" class="badge btn btn-success">楼主</button>
+                    <button v-else-if="userInfo.uid.current === $data.$getUserInfo(userInfo.uid.reply).uid" type="button" class="badge btn btn-info">层主</button>
+                </template>
                 <button v-if="userInfo.managerType === 'manager'" type="button" class="badge btn btn-danger">吧主</button>
                 <button v-else-if="userInfo.managerType === 'assist'" type="button" class="badge btn btn-info">小吧</button>
                 <button v-else-if="userInfo.managerType === 'voiceadmin'" type="button" class="badge btn btn-info">语音小编</button>
@@ -475,7 +484,7 @@
             </div>
         </template>
         <template id="post-render-list-template">
-            <div class="pb-3">
+            <div :data-page="posts.pages.currentPage" class="post-render-list pb-3">
                 <div v-for="thread in posts.threads" :id="`t${thread.tid}`" class="thread-item card">
                     <div class="thread-title shadow-sm card-header sticky-top">
                         <post-thread-tag :thread="thread"></post-thread-tag>
@@ -484,42 +493,56 @@
                             <router-link :to="{ name: 'tid', params: { tid: thread.tid } }" class="badge badge-pill badge-light">只看此贴</router-link>
                             <a :href="$data.$$getTiebaPostLink(thread.tid)" target="_blank" class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
                             <a :data-tippy-content="`<h6>tid：${thread.tid}</h6><hr />
-                                最后回复人：${renderUsername(thread.latestReplierUid)}<br />
-                                最后回复时间：${moment(thread.latestReplyTime).fromNow()}（${thread.latestReplyTime}）<br />
                                 首次收录时间：${moment(thread.created_at).fromNow()}（${thread.created_at}）<br />
                                 最后更新时间：${moment(thread.updated_at).fromNow()}（${thread.updated_at}）`"
                                class="badge badge-pill badge-light">
                                 <i class="fas fa-info"></i>
                             </a>
-                            <span :data-tippy-content="thread.postTime" class="post-time-badge badge badge-pill badge-success">{{ moment(thread.postTime).fromNow() }}</span>
+                            <span :data-tippy-content="`发帖时间：${thread.postTime}`" class="post-time-badge badge badge-pill badge-success">{{ moment(thread.postTime).fromNow() }}</span>
                         </div>
                         <div class="mt-1">
                             <span data-tippy-content="回复量" class="badge badge-info">
                                 <i class="far fa-comment-alt"></i> {{ thread.replyNum }}
                             </span>
-                                <span data-tippy-content="阅读量" class="badge badge-info">
+                            <span data-tippy-content="浏览量" class="badge badge-info">
                                 <i class="far fa-eye"></i> {{ thread.viewNum }}
                             </span>
-                                <span data-tippy-content="分享量" class="badge badge-info">
+                            <span v-if="thread.shareNum !== 0" data-tippy-content="分享量" class="badge badge-info">
                                 <i class="fas fa-share-alt"></i> {{ thread.shareNum }}
                             </span>
-                                <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge badge-info">
-                                <i class="far fa-thumbs-up"></i>{{ thread.agreeInfo.agree_num }}
-                                <i class="far fa-thumbs-down"></i>{{ thread.agreeInfo.disagree_num }}
+                            <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge badge-info">
+                                <i class="far fa-thumbs-up"></i> {{ thread.agreeInfo.agree_num }}
+                                <i class="far fa-thumbs-down"></i> {{ thread.agreeInfo.disagree_num }}
                             </span>
-                                <span v-if="thread.zanInfo !== null" :data-tippy-content="`
+                            <span v-if="thread.zanInfo !== null" :data-tippy-content="`
                                     点赞量：${thread.zanInfo.num}<br />
-                                    最后点赞时间：${moment.unix(thread.zanInfo.last_time).fromNow()}（${moment.unix(thread.zanInfo.last_time).format()}）<br />
+                                    最后点赞时间：${moment.unix(thread.zanInfo.last_time).fromNow()}（${moment.unix(thread.zanInfo.last_time).format('YYYY-MM-DD HH:mm:ss')}）<br />
                                     近期点赞用户：${thread.zanInfo.user_id_list}<br />`"
-                                      class="badge badge-info"><!-- todo: fetch users info in zanInfo.user_id_list -->
+                                  class="badge badge-info"><!-- todo: fetch users info in zanInfo.user_id_list -->
                                 <i class="far fa-thumbs-up"></i> 旧版客户端赞
                             </span>
-                                <span data-tippy-content="发贴位置" class="badge badge-info">
+                            <span v-if="thread.location !== null" data-tippy-content="发帖位置" class="badge badge-info">
                                 <i class="fas fa-location-arrow"></i> {{ thread.location }} <!-- todo: unknown json struct -->
                             </span>
+                            <div class="float-right btn-group" role="group">
+                                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(thread.authorUid).name)" target="_blank" class="badge btn btn-light">
+                                    <span class="font-weight-bold text-info">楼主：</span>
+                                    <span class="font-weight-normal">{{ renderUsername(thread.authorUid) }}</span>
+                                </a>
+                                <post-user-tag v-if="thread.authorManagerType !== null" :user-info="{ managerType: thread.authorManagerType }" :users-info-source="posts.users"></post-user-tag>
+                                <template v-if="thread.latestReplierUid !== thread.authorUid">
+                                    <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(thread.latestReplierUid).name)" target="_blank" class="badge btn btn-light">
+                                        <span class="font-weight-bold text-secondary">最后回复：</span>
+                                        <span class="font-weight-normal">{{ renderUsername(thread.latestReplierUid) }}</span>
+                                    </a>
+                                </template>
+                                <div class="thread-latest-reply-time-badge d-inline badge badge-light">
+                                    <span :data-tippy-content="`最后回复时间：${thread.latestReplyTime}`" class="post-time-badge badge badge-pill badge-secondary">{{ moment(thread.latestReplyTime).fromNow() }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div v-for="reply in thread.replies" v-observe-visibility="{ callback: replyObserved, throttle: 500 }" :id="reply.pid">
+                    <div v-for="reply in thread.replies" :id="reply.pid">
                         <div class="reply-title sticky-top card-header">
                             <div class="d-inline h5">
                                 <span class="badge badge-info">{{ reply.floor }}楼</span>
@@ -557,7 +580,11 @@
                                         {{ author.displayName }}
                                     </span>
                                     </a>
-                                    <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: reply.authorUid, managerType: reply.authorManagerType, expGrade: reply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                    <post-user-tag :user-info="{
+                                                    uid: { current: reply.authorUid, thread: thread.authorUid },
+                                                    managerType: reply.authorManagerType,
+                                                    expGrade: reply.authorExpGrade
+                                                   }" :users-info-source="posts.users"></post-user-tag>
                                 </div>
                             </div>
                             <div class="reply-body col border-left">
@@ -565,17 +592,21 @@
                                 <template v-if="reply.subReplies.length > 0">
                                     <div v-for="subReplyGroup in reply.subReplies" class="sub-reply-group bs-callout bs-callout-success">
                                         <ul class="list-group list-group-flush">
-                                            <li v-for="(subReply, subReplyIndex) in subReplyGroup" @mouseenter="hoveringSubReplyItem = subReply.spid" @mouseleave="hoveringSubReplyItem = null" class="sub-reply-item list-group-item">
+                                            <li v-for="(subReply, subReplyIndex) in subReplyGroup" @mouseenter="hoveringSubReplyID = subReply.spid" @mouseleave="hoveringSubReplyID = 0" class="sub-reply-item list-group-item">
                                                 <template v-for="author in [$data.$getUserInfo(subReply.authorUid)]">
                                                     <a v-if="subReplyGroup[subReplyIndex - 1] === undefined" :href="$data.$$getTiebaUserLink(author.name)" target="_blank" class="sub-reply-user-info badge badge-light">
                                                         <img :data-src="$data.$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
                                                         <span>{{ renderUsername(subReply.authorUid) }}</span>
-                                                        <post-user-tag :parent-uid="{ thread: thread.authorUid, reply: reply.authorUid }" :user-info="{ uid: subReply.authorUid, managerType: subReply.authorManagerType, expGrade: subReply.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                                        <post-user-tag :user-info="{
+                                                                        uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
+                                                                        managerType: subReply.authorManagerType,
+                                                                        expGrade: subReply.authorExpGrade
+                                                                       }" :users-info-source="posts.users"></post-user-tag>
                                                     </a>
                                                     <div class="float-right badge badge-light">
                                                         <div :class="{
-                                                                'd-none': hoveringSubReplyItem !== subReply.spid,
-                                                                'd-inline': hoveringSubReplyItem === subReply.spid
+                                                                'd-none': hoveringSubReplyID !== subReply.spid,
+                                                                'd-inline': hoveringSubReplyID === subReply.spid
                                                              }"><!-- fixme: high cpu usage due to js evaling while quickly emitting hover event -->
                                                             <a :href="$data.$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank" class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
                                                             <a :data-tippy-content="`
@@ -601,7 +632,7 @@
             </div>
         </template>
         <template id="post-render-table-template">
-            <div class="container-flow pb-2">
+            <div class="container-flow">
                 <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
                     <template slot="tid" slot-scope="text, record">
                         <router-link :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</router-link>
@@ -614,34 +645,41 @@
                         <span>{{ record.title }}</span>
                     </template>
                     <template slot="authorInfo" slot-scope="text, record">
-                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
+                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)" target="_blank">
                             <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
                         </a>
-                        <post-user-tag :user-info="{ uid: record.authorUid, managerType: record.authorManagerType }" :users-info-source="posts.users"></post-user-tag>
+                        <post-user-tag :user-info="{ managerType: record.authorManagerType }" :users-info-source="posts.users"></post-user-tag>
                     </template>
                     <template slot="latestReplierInfo" slot-scope="text, record">
-                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.latestReplierUid).name)">
-                            <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.latestReplierUid).name)" target="_blank">
+                            <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.latestReplierUid).avatarUrl)" /> {{ renderUsername(record.latestReplierUid) }}
                         </a>
-                        <post-user-tag :user-info="{ uid: record.latestReplierUid }" :users-info-source="posts.users"></post-user-tag>
                     </template>
                     <template slot="expandedRowRender" slot-scope="record">
                         <span v-if="threadsReply[record.tid] === undefined">无子回复帖</span>
                         <a-table v-else :columns="replyColumns" :data-source="threadsReply[record.tid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
                             <template v-for="thread in [record]" slot="authorInfo" slot-scope="text, record">
-                                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
+                                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)" target="_blank">
                                     <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
                                 </a>
-                                <post-user-tag :parent-uid="{ thread: thread.authorUid }" :user-info="{ uid: record.authorUid, managerType: record.authorManagerType, expGrade: record.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                <post-user-tag :user-info="{
+                                                uid: { current: record.authorUid, thread: thread.authorUid },
+                                                managerType: record.authorManagerType,
+                                                expGrade: record.authorExpGrade
+                                               }" :users-info-source="posts.users"></post-user-tag>
                             </template>
                             <template slot="expandedRowRender" slot-scope="record">
                                 <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content"></div>
                                 <a-table v-if="repliesSubReply[record.pid] !== undefined" :columns="subReplyColumns" :data-source="repliesSubReply[record.pid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
                                     <template v-for="reply in [record]" slot="authorInfo" slot-scope="text, record">
-                                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)">
+                                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)" target="_blank">
                                             <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
                                         </a>
-                                        <post-user-tag :parent-uid="{ thread: _.find(posts.threads, { tid: reply.tid }).authorUid, reply: reply.authorUid }" :user-info="{ uid: record.authorUid, managerType: record.authorManagerType, expGrade: record.authorExpGrade }" :users-info-source="posts.users"></post-user-tag>
+                                        <post-user-tag :user-info="{
+                                                        uid: { current: record.authorUid, thread: _.find(posts.threads, { tid: reply.tid }).authorUid, reply: reply.authorUid },
+                                                        managerType: record.authorManagerType,
+                                                        expGrade: record.authorExpGrade
+                                                       }" :users-info-source="posts.users"></post-user-tag>
                                     </template>
                                     <template slot="expandedRowRender" slot-scope="record">
                                         <span v-html="record.content"></span>
@@ -657,30 +695,35 @@
             <textarea :value="JSON.stringify(posts)" class="render-raw border col"></textarea>
         </template>
         <template id="posts-nav-template">
-            <a-menu :force-sub-menu-render="true" mode="inline" class="posts-nav">
-                <a-sub-menu v-for="posts in pages" :title="`第${posts.pages.currentPage}页`" :key="`page-${posts.pages.currentPage}`">
-                    <a-menu-item v-for="thread in posts.threads" :key="`thread-${thread.tid}`" :title="thread.title">
-                        <a :href="`#t${thread.tid}`">{{ thread.title }}</a><!-- fixme: cannot use <router-link> here since history.pushState() won't auto scroll viewport into dom which id is same with hash -->
-                        <div class="d-block btn-group" role="group">
-                            <a v-for="reply in thread.replies" v-scroll-to-reply="reply.pid === parseInt($route.hash.substr(1))" :href="`#${reply.pid}`" :class="{
+            <a-menu v-model="selectedThread" @click="selectThread" :open-keys.sync="expandedPages" :force-sub-menu-render="true" :inline-indent="16" mode="inline" class="posts-nav">
+                <template v-for="posts in postPages">
+                    <a-sub-menu v-for="page in [posts.pages.currentPage]" @title-click="selectPage" :title="`第${page}页`" :key="`page-${page}`">
+                        <a-menu-item v-for="thread in posts.threads" v-scroll-to-post="firstPostInView.page === page && firstPostInView.tid === thread.tid"
+                                     :key="`page-${page}_t${thread.tid}`" :title="thread.title">
+                            {{ thread.title }}
+                            <div class="d-block btn-group" role="group">
+                                <a @click="navigate(page, null, reply.pid)"
+                                   v-for="reply in thread.replies" v-scroll-to-post="firstPostInView.page === page && firstPostInView.pid === reply.pid"
+                                   :class="{
                                     'btn': true,
-                                    'btn-info': reply.pid === parseInt($route.hash.substr(1)),
-                                    'btn-light': reply.pid !== parseInt($route.hash.substr(1))
-                               }">
-                                {{ reply.floor }}L
-                            </a>
-                        </div>
-                        <hr />
-                    </a-menu-item>
-                </a-sub-menu>
+                                    'btn-info': reply.pid === firstPostInView.pid,
+                                    'btn-light': reply.pid !== firstPostInView.pid
+                               }" href="#!">
+                                    {{ reply.floor }}L
+                                </a>
+                            </div>
+                            <hr />
+                        </a-menu-item>
+                    </a-sub-menu>
+                </template>
             </a-menu>
         </template>
-        <template id="post-page-previous-button-template">
-            <div v-scroll-to-page="pageInfo.currentPage === scrollToPage.value" class="mt-2 p-2 row align-items-center">
+        <template id="post-page-previous-template">
+            <div :data-page="pageInfo.currentPage" class="post-previous-page mt-3 p-2 row align-items-center">
                 <div class="col"><hr /></div>
                 <div class="w-auto">
                     <div class="p-2 badge badge-light">
-                        <button v-if="pageInfo.currentPage > 1" @click="loadPage(pageInfo.currentPage - 1)" class="previous-page-button btn btn-primary" type="button">上一页</button>
+                        <button v-if="pageInfo.currentPage > 1" @click="$emit('load-page', pageInfo.currentPage - 1)" class="post-previous-page-button btn btn-primary" type="button">上一页</button>
                         <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
                         <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.currentItems - 1 }} 条</span>
                     </div>
@@ -688,12 +731,12 @@
                 <div class="col"><hr /></div>
             </div>
         </template>
-        <template id="post-page-next-button-template">
-            <div class="p-4">
+        <template id="post-page-next-template">
+            <div class="p-3">
                 <div class="row align-items-center">
                     <div class="col"><hr /></div>
                     <div class="w-auto">
-                        <button @click="loadPage(currentPage + 1)" class="btn btn-secondary" type="button">
+                        <button @click="$emit('load-page', currentPage + 1)" class="btn btn-secondary" type="button">
                             <span class="h4">下一页</span>
                         </button>
                     </div>
@@ -705,8 +748,8 @@
             <div>
                 <div class="container">
                     <query-form @query="query($event)" :forum-list="forumList" ref="queryForm"></query-form>
-                    <p>当前页数：{{ currentRoutesPage }}</p>
-                    <a-menu v-show="! _.isEmpty(postPages)" v-model="selectingRenderType" mode="horizontal">
+                    <p>当前页数：{{ currentRoutePage }}</p>
+                    <a-menu v-show="! _.isEmpty(postPages)" v-model="selectedRenderType" mode="horizontal">
                         <a-menu-item key="list">列表视图</a-menu-item>
                         <a-menu-item key="table">表格视图</a-menu-item>
                         <a-menu-item key="raw">RAW</a-menu-item>
@@ -714,40 +757,32 @@
                 </div>
                 <div v-show="! _.isEmpty(postPages)" class="container-fluid">
                     <div class="justify-content-center row">
-                        <div :aria-expanded="postsNavExpanded" class="posts-nav-wrapper vh-100 sticky-top d-none d-xl-block col-xl">
-                            <posts-nav :pages="postPages"></posts-nav>
-                        </div>
+                        <posts-nav :post-pages="postPages" :aria-expanded="postsNavExpanded" class="posts-nav vh-100 sticky-top d-none d-xl-block col-xl"></posts-nav>
                         <a @click="postsNavExpanded = ! postsNavExpanded" class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col col-auto">
                             <i v-show="postsNavExpanded" class="fas fa-angle-left"></i>
                             <i v-show="! postsNavExpanded" class="fas fa-angle-right"></i>
                         </a>
                         <div :class="{
-                                'post-render': true,
-                                'post-render-list': renderType === 'list',
+                                'post-render-wrapper': true,
+                                'post-render-list-wrapper': renderType === 'list',
                                 'col': true,
                                 'col-xl-auto': true,
-                                'col-xl-10': renderType !== 'list' // let render, except <post-render-list>, takes over right margin spaces, aka .post-render-list-placeholder
+                                'col-xl-10': renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
                              }">
                             <template v-for="(posts, pageIndex) in postPages">
-                                <post-page-previous-button @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous-button>
-                                <post-render-list v-if="renderType === 'list'"
-                                                  v-observe-visibility="{ callback: (isVisible) => isVisible ? changeTitle(posts.pages.currentPage) : null, throttle: 500 }"
-                                                  :key="posts.pages.currentPage" :initial-posts="posts"></post-render-list>
-                                <post-render-table v-else-if="renderType === 'table'"
-                                                   v-observe-visibility="{ callback: (isVisible) => isVisible ? changeTitle(posts.pages.currentPage) : null, throttle: 500 }"
-                                                   :key="posts.pages.currentPage" :posts="posts"></post-render-table>
-                                <post-render-raw v-else-if="renderType === 'raw'"
-                                                 v-observe-visibility="{ callback: (isVisible) => isVisible ? changeTitle(posts.pages.currentPage) : null, throttle: 500 }"
-                                                 :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
-                                <post-page-next-button v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next-button>
+                                <post-page-previous @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous>
+                                <post-render-list v-if="renderType === 'list'" :key="posts.pages.currentPage" :initial-posts="posts"></post-render-list>
+                                <post-render-table v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts"></post-render-table>
+                                <post-render-raw v-else-if="renderType === 'raw'" :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
+                                <post-page-next v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next>
                             </template>
                         </div>
-                        <div v-show="renderType === 'list'" class="post-render-list-placeholder d-none col-xl"></div>
+                        <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder d-none col-xl"></div>
                     </div>
                 </div>
                 <div class="container">
                     <error-placeholder v-if="queryError !== null" :error="queryError"></error-placeholder>
-                    <loading-list-placeholder v-show="($refs.queryForm || { $data: { isRequesting: false } }).$data.isRequesting"></loading-list-placeholder>
+                    <loading-list-placeholder v-show="$refs.queryForm?.$data.isRequesting"></loading-list-placeholder>
                 </div>
             </div>
         </template>
@@ -789,8 +824,8 @@
             $$initialNavBar('postMulti');
 
             window.$previousPostsQueryAjax = undefined;
-            window.$sharedDataBindings = {
-                scrollToPage: { value: 0 }
+            window.$sharedData = {
+                firstPostInView: { tid: 0, pid: 0 }
             };
             window.$getUserInfo = (dataSource) => (uid) => // curry invoke
                 _.find(dataSource, { uid }) || { // thread latest replier uid might be unknown
@@ -807,16 +842,48 @@
             const postsNavComponent = Vue.component('posts-nav', {
                 template: '#posts-nav-template',
                 props: {
-                    pages: { type: Array, required: true }
+                    postPages: { type: Array, required: true }
+                },
+                data () {
+                    return {
+                        firstPostInView: window.$sharedData.firstPostInView,
+                        expandedPages: [],
+                        selectedThread: []
+                    };
                 },
                 directives: {
-                    'scroll-to-reply' (el, binding, vnode) {
-                        if (binding.value) {
-                            el.scrollIntoView();
-                            if (! $(el).is(':last-child')) {
-                                $('.posts-nav')[0].scrollTop -= 100; // scroll y axis of <posts-nav> by -100px after reply link scrolled into top of <posts-nav> for show thread title
-                            }
+                    'scroll-to-post' (el, binding, vnode) {
+                        if (binding.value !== binding.oldValue
+                            && binding.value === true
+                            && $('.posts-nav').css('display') !== 'none') { // don't scroll when <posts-nav> is collapsed
+                            $(el).parents('.ant-menu-sub').css('height', 'unset'); // force expand parent <a-sub-menu> to skip .ant-motion-collapse-legacy-active animation while page's first load
+                            el.scrollIntoViewIfNeeded();
                         }
+                    }
+                },
+                watch: {
+                    postPages (to, from) {
+                        this.$data.expandedPages = _.map(to, (i) => `page-${i.pages.currentPage}`);
+                    },
+                    firstPostInView: {
+                        handler: function (to, from) {
+                            this.$data.selectedThread = [`page-${to.page}_t${to.tid}`];
+                        },
+                        deep: true
+                    }
+                },
+                methods: {
+                    navigate (page, tid = null, pid = null) {
+                        this.$router.replace({ hash: `#${pid || (tid !== null ? 't' + tid : null)}`, params: { ...this.$route.params, 0: this.$route.params.pathMatch, page } }); // [vue-router] missing param for named route "param+p": Expected "0" to be defined
+                    },
+                    selectThread ({ domEvent, key }) {
+                        if (domEvent.target.tagName !== 'A') { // omit reply link click events
+                            let postPosition = /page-(\d+)_t(\d+)/.exec(key);
+                            this.navigate(postPosition[1], postPosition[2]);
+                        }
+                    },
+                    selectPage ({ key }) { // fixme: titleClick event on <a-menu> not triggered
+                        this.navigate(/page-(\d+)/.exec(key)[1]);
                     }
                 }
             });
@@ -832,13 +899,7 @@
                 template: '#post-user-tag-template',
                 props: {
                     usersInfoSource: { type: Array, required: true },
-                    userInfo: { type: Object, required: true },
-                    parentUid: {
-                        type: Object,
-                        default () {
-                            return {};
-                        }
-                    }
+                    userInfo: { type: Object, required: true }
                 },
                 data () {
                     return {
@@ -847,47 +908,17 @@
                 }
             });
 
-            const postPagePreviousButtonComponent = Vue.component('post-page-previous-button', {
-                template: '#post-page-previous-button-template',
+            const postPagePreviousButtonComponent = Vue.component('post-page-previous', {
+                template: '#post-page-previous-template',
                 props: {
                     pageInfo: { type: Object, required: true }
-                },
-                data () {
-                    return {
-                        scrollToPage: window.$sharedDataBindings.scrollToPage
-                    }
-                },
-                directives: {
-                    'scroll-to-page' (el, binding, vnode) {
-                        if (binding.value) {
-                            vnode.context.$nextTick(() => el.scrollIntoView()); // when page haven't been requested before, new vueInstance.$el is not ready
-                            window.$sharedDataBindings.scrollToPage.value = 0; // reset for next time scroll with same scrollToPage
-                        }
-                    }
-                },
-                methods: {
-                    loadPage (pageNum) {
-                        this.$data.scrollToPage.value = pageNum;
-                        this.$emit('load-page', pageNum);
-                    }
                 }
             });
 
-            const postPageNextButtonComponent = Vue.component('post-page-next-button', {
-                template: '#post-page-next-button-template',
+            const postPageNextButtonComponent = Vue.component('post-page-next', {
+                template: '#post-page-next-template',
                 props: {
                     currentPage: { type: Number, required: true }
-                },
-                data () {
-                    return {
-                        scrollToPage: window.$sharedDataBindings.scrollToPage
-                    }
-                },
-                methods: {
-                    loadPage (pageNum) {
-                        this.$data.scrollToPage.value = pageNum;
-                        this.$emit('load-page', pageNum);
-                    }
                 }
             });
 
@@ -903,12 +934,12 @@
                         $$getTiebaPostLink,
                         $$getTiebaUserAvatarUrl,
                         $getUserInfo: window.$getUserInfo(this.$props.initialPosts.users),
-                        hoveringSubReplyItem: 0 // for display item's right floating hide buttons
+                        hoveringSubReplyID: 0 // for display item's right floating hide buttons
                     };
                 },
                 computed: {
                     posts () {
-                        let postsData = _.cloneDeep(this.$props.initialPosts); // prevent mutates props in other post renders
+                        let postsData = _.cloneDeep(this.$props.initialPosts); // prevent mutates prop in other post renders
                         postsData.threads = _.map(postsData.threads, (thread) => {
                             thread.replies = _.map(thread.replies, (reply) => {
                                 reply.subReplies = _.reduce(reply.subReplies, (groupedSubReplies, subReply, index, subReplies) => {
@@ -932,6 +963,9 @@
                     }
                 },
                 mounted () {
+                    if (this.$route.hash !== '') {
+                        $(`.post-render-list[data-page='${this.$route.params.page || 1}'] #${this.$route.hash.substr(1)}`)[0]?.scrollIntoView(); // scroll to route hash determined reply or thread item after initial load
+                    }
                     this.$nextTick(() => { // initial dom event after all dom and child components rendered
                         $$registerTippy();
                         $$registerTiebaImageZoomEvent();
@@ -943,11 +977,6 @@
                     $$registerTiebaImageZoomEvent(this.$el, true);
                 },
                 methods: {
-                    replyObserved (isVisible, observer) {
-                        if (isVisible) { // fixme: force reflows (Schedule Style Recalculation) with long execute time triggered when quickly scrolling page
-                            // this.$router.replace({ hash: `#${$(observer.target).prop('id') }` });
-                        }
-                    },
                     renderUsername: function (uid) {
                         let user = this.$data.$getUserInfo(uid);
                         let name = user.name;
@@ -1562,14 +1591,15 @@
                     return {
                         forumList: [],
                         postPages: [],
-                        currentRoutesPage: parseInt(this.$route.params.page) || 1,
+                        currentRoutePage: parseInt(this.$route.params.page) || 1,
                         queryError: null,
                         renderType: 'list',
-                        postsNavExpanded: false
+                        postsNavExpanded: false,
+                        scrollStopDebounce: _.debounce(this.scrollStop, 200)
                     };
                 },
                 computed: {
-                    selectingRenderType: {
+                    selectedRenderType: {
                         get: function () {
                             return [this.$data.renderType];
                         },
@@ -1580,14 +1610,63 @@
                 },
                 watch: {
                     $route (to, from) {
-                        this.$data.currentRoutesPage = parseInt(to.params.page) || 1;
+                        this.$data.currentRoutePage = parseInt(to.params.page) || 1;
+                        delete to.params[0]; // fixme: [vue-router] missing param for named route "param+p": Expected "0" to be defined
+                        if (to.hash === '#') { // remove empty hash
+                            to.hash = '';
+                        }
+                    },
+                    renderType (to, from) {
+                        if (to === 'list') {
+                            window.addEventListener('scroll', this.$data.scrollStopDebounce, { passive: true });
+                        } else {
+                            window.removeEventListener('scroll', this.$data.scrollStopDebounce);
+                        }
                     }
                 },
                 beforeMount () {
                     $$loadForumList().then((forumList) => this.$data.forumList = forumList);
                 },
+                mounted () {
+                    window.addEventListener('scroll', this.$data.scrollStopDebounce, { passive: true });
+                },
                 methods: {
-                    changeTitle (page = this.$data.currentRoutesPage) {
+                    scrollStop () {
+                        let findFirstPostInView = (topOffset) => (result, dom) => { // curry invoke
+                            let top = dom.getBoundingClientRect().top - topOffset;
+                            result.top = result.top === undefined ? Infinity : result.top;
+                            if (top >= 0 && result.top > top) { // ignore doms which y coord is ahead of top of viewport
+                                return result = { dom, top };
+                            } else {
+                                return result;
+                            }
+                        };
+                        let firstThreadDomInView = $(_.reduce($('.thread-title'), findFirstPostInView(0), {}).dom);
+                        let firstThreadTidInView = parseInt(firstThreadDomInView.parent().prop('id').substr(1));
+                        let firstReplyDomInView = $(_.reduce($('.reply-title'), findFirstPostInView(62), {}).dom); // 62px is the top offset of reply title
+                        let firstReplyPidInView = parseInt(firstReplyDomInView.parent().prop('id'));
+                        let newRouteParams = { ...this.$route.params, 0: this.$route.params.pathMatch }; // [vue-router] missing param for named route "param+p": Expected "0" to be defined
+                        if (_.chain(this.$data.postPages)
+                            .map('threads')
+                            .flatten()
+                            .filter({ tid: firstThreadTidInView })
+                            .map('replies')
+                            .flatten()
+                            .filter({ pid: firstReplyPidInView })
+                            .isEmpty()
+                            .value()) { // is first reply belongs to first thread, true when first thread have no reply so the first reply will be some other threads reply which comes after first thread in view
+                            let page = firstThreadDomInView.parents('.post-render-list').data('page');
+                            window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: 0 });
+                            this.$router.replace({ hash: `#t${firstThreadTidInView}`, params: { ...newRouteParams, page } });
+                        } else { // _.merge() prevents vue data binding observer in prototypes being cleared
+                            let page = firstReplyDomInView.parents('.post-render-list').data('page');
+                            window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: firstReplyPidInView });
+                            this.$router.replace({ hash: `#${firstReplyPidInView}`, params: { ...newRouteParams, page } });
+                        }
+                        this.updateTitle();
+                    },
+                    updateTitle () {
+                        let page = this.$data.currentRoutePage;
                         let forumName = `${this.$data.postPages[0].forum.name}吧`;
                         let threadTitle = this.$data.postPages[0].threads[0].title;
                         switch (this.$refs.queryForm.currentQueryType()) {
@@ -1600,20 +1679,23 @@
                                 break;
                         }
                     },
-                    loadPage (pageNum) {
-                        this.$router.push(this.$route.name.startsWith('param')
-                            ? { path: `/page/${pageNum}/${this.$route.params.pathMatch}` }
+                    loadPage (page) {
+                        if (_.map(this.$data.postPages, 'pages.currentPage').includes(page)) {
+                            $(`.post-previous-page[data-page='${page}']`)[0].scrollIntoView(); // scroll to page if already loaded
+                        }
+                        this.$router.push(_.merge(this.$route.name.startsWith('param')
+                            ? { path: `/page/${page}/${this.$route.params.pathMatch}` }
                             : {
                                 name: `${this.$route.name}${this.$route.name.endsWith('+p') ? '' : '+p'}`,
-                                params: { ...this.$route.params, page: pageNum }
-                            });
+                                params: { ...this.$route.params, page }
+                            }));
                     },
                     query ({ queryParams, shouldReplacePage }) {
                         this.$data.queryError = null;
                         if (shouldReplacePage) {
                             this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
                         } else {
-                            if (! _.isEmpty(_.filter(_.map(this.$data.postPages, 'pages.currentPage'), (i) => i === this.$data.currentRoutesPage))) {
+                            if (! _.isEmpty(_.filter(_.map(this.$data.postPages, 'pages.currentPage'), (i) => i === this.$data.currentRoutePage))) {
                                 this.$refs.queryForm.$data.isRequesting = false;
                                 return; // cancel request when requesting page have already been loaded
                             }
@@ -1631,10 +1713,10 @@
                                         this.$data.postPages = [ajaxData];
                                     } else {
                                         // insert after existing previous page, if not exist will be inserted at start
-                                        this.$data.postPages.splice(_.findIndex(this.$data.postPages, { pages: { currentPage: this.$data.currentRoutesPage - 1 } }) + 1, 0, ajaxData);
+                                        this.$data.postPages.splice(_.findIndex(this.$data.postPages, { pages: { currentPage: this.$data.currentRoutePage - 1 } }) + 1, 0, ajaxData);
                                     }
                                     new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
-                                    //this.changeDocumentTitle(this.$route);
+                                    this.updateTitle();
                                 })
                                 .fail((jqXHR) => {
                                     this.$data.postPages = [];
@@ -1676,7 +1758,18 @@
                                 { name: 'param', path: '*' },
                             ]
                         }
-                    ]
+                    ],
+                    scrollBehavior (to, from, savedPosition) {
+                        if (to.hash !== '') {
+                            // skip scroll to dom when route update is triggered by scrollStop()
+                            if (! (window.$sharedData.firstPostInView.pid === parseInt(to.hash.substr(1))
+                                || window.$sharedData.firstPostInView.tid === parseInt(to.hash.substr(2)))) {
+                                return { selector: `.post-render-list[data-page='${to.params.page}'] [id='${to.hash.substr(1)}']` }; // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
+                            }
+                        } else if (savedPosition) {
+                            return savedPosition;
+                        }
+                    }
                 })
             });
         </script>
