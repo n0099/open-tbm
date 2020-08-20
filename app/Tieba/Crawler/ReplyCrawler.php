@@ -25,9 +25,7 @@ class ReplyCrawler extends Crawlable
     {
         parent::__construct($fid, $startPage, $endPage, 100); // crawl 100 pages since $startPage by default, rather than thread and sub reply behaviour
         $this->tid = $tid;
-        ExceptionAdditionInfo::set([
-            'crawlingTid' => $tid,
-        ]);
+        ExceptionAdditionInfo::set(['crawlingTid' => $tid]);
     }
 
     public function getUpdatedPostsInfo(): array

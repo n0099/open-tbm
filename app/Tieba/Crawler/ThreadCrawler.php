@@ -23,9 +23,7 @@ class ThreadCrawler extends Crawlable
     {
         parent::__construct($fid, $startPage, $endPage); // by default we don't have to crawl every threads pages, only the first one
         $this->forumName = $forumName;
-        ExceptionAdditionInfo::set([
-            'crawlingForumName' => $forumName,
-        ]);
+        ExceptionAdditionInfo::set(['crawlingForumName' => $forumName]);
     }
 
     public function getUpdatedPostsInfo(): array

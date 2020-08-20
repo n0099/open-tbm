@@ -28,7 +28,7 @@ abstract class Crawlable
         'savePostsTiming' => 0,
         'webRequestTimes' => 0,
         'parsedPostTimes' => 0,
-        'parsedUserTimes' => 0,
+        'parsedUserTimes' => 0
     ];
 
     abstract public function doCrawl(): self;

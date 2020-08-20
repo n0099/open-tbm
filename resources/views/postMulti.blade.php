@@ -1755,7 +1755,7 @@
                                 { name: 'spid', path: 'spid/:spid' },
                                 { name: 'spid+p', path: 'spid/:spid/page/:page' },
                                 { name: 'param+p', path: 'page/:page/*' },
-                                { name: 'param', path: '*' },
+                                { name: 'param', path: '*' }
                             ]
                         }
                     ],

@@ -29,14 +29,14 @@ class UserModel extends Model
         'gender',
         'fansNickname',
         'iconInfo',
-        'alaInfo',
+        'alaInfo'
     ];
 
     protected array $hidedFields = [
         'id',
         'alaInfo',
         'created_at',
-        'updated_at',
+        'updated_at'
     ];
 
     public array $updateExpectFields = [

@@ -53,7 +53,7 @@ class PostsQuery extends Controller
             'userExpGrade' => 'integer|required_with:userExpGradeRange',
             'userExpGradeRange' => Rule::in($paramsValidValue['range']),
             'userGender' => Rule::in($paramsValidValue['userGender']),
-            'userManagerType' => Rule::in($paramsValidValue['userManagerType']),
+            'userManagerType' => Rule::in($paramsValidValue['userManagerType'])
         ];
         $paramsDefaultValue = [
             'postType' => ['thread', 'reply', 'subReply'], // todo: rename to postTypes
@@ -68,7 +68,7 @@ class PostsQuery extends Controller
             'replySubReplyNumRange' => '=',
             'threadViewNumRange' => '=',
             'threadShareNumRange' => '=',
-            'userExpGradeRange' => '=',
+            'userExpGradeRange' => '='
         ];
 
         $requestQueryParams = $request->validate(array_merge([
@@ -79,7 +79,7 @@ class PostsQuery extends Controller
             'spid' => 'integer|required_with:spidRange',
             'postType' => 'array',
             'orderBy' => 'string',
-            'orderDirection' => Rule::in($paramsValidValue['orderDirection']),
+            'orderDirection' => Rule::in($paramsValidValue['orderDirection'])
         ], $searchQueryParamsValidate));
         $queryParams = collect(array_merge($paramsDefaultValue, $requestQueryParams)); // fill with default params value
 

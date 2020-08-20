@@ -28,7 +28,7 @@ class UsersQuery extends Controller
             'pages' => [
                 'firstItem' => $queriedInfo->firstItem(),
                 'currentItems' => $queriedInfo->count(),
-                'currentPage' => $queriedInfo->currentPage(),
+                'currentPage' => $queriedInfo->currentPage()
             ],
             'users' => $queriedInfo->toArray()['data']
         ];

@@ -27,7 +27,7 @@ class SubReplyCrawler extends Crawlable
 
         ExceptionAdditionInfo::set([
             'crawlingTid' => $tid,
-            'crawlingPid' => $pid,
+            'crawlingPid' => $pid
         ]);
     }
 

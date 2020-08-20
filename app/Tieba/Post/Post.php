@@ -17,7 +17,7 @@ abstract class Post
             $postIDByType = [
                 Thread::class => 'tid',
                 Reply::class => 'pid',
-                SubReply::class => 'spid',
+                SubReply::class => 'spid'
             ];
             if (! isset($postProperties[$postIDByType[\get_class($this)]])) {
                 throw new \DomainException('Initial object doesn\'t match with class type');

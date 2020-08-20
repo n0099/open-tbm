@@ -19,7 +19,7 @@ class ForumModel extends Model
     ];
 
     protected array $hidedFields = [
-        'id',
+        'id'
     ];
 
     public function scopeHidePrivateFields(Builder $query): Builder

@@ -10,7 +10,7 @@ class PostFactory
         $postsTypeName = [
             Thread::class => 'tid',
             Reply::class => 'pid',
-            SubReply::class => 'spid',
+            SubReply::class => 'spid'
         ];
 
         // could be replaced with \App\Helper::setKeyWithItemsValue()
