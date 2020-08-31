@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use App\Timer;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 
 class SubReplyCrawler extends Crawlable
 {
@@ -57,9 +58,9 @@ class SubReplyCrawler extends Crawlable
             // by default we don't have to crawl every sub reply pages, only first and last one
             (new \GuzzleHttp\Pool(
                 $tiebaClient,
-                (function () use ($tiebaClient) {
+                (function () use ($tiebaClient): \Generator {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
-                        yield function () use ($tiebaClient, $pn) {
+                        yield function () use ($tiebaClient, $pn): \GuzzleHttp\Promise\PromiseInterface {
                             \Log::channel('crawler-info')->info("Fetch sub replies for reply, pid {$this->pid}, tid {$this->tid}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/floor',
@@ -131,7 +132,7 @@ class SubReplyCrawler extends Crawlable
 
             $this->profiles['parsedPostTimes']++;
             $subRepliesInfo[] = $currentInfo;
-            $indexesInfo[] = array_merge(Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'spid', 'authorUid']), [
+            $indexesInfo[] = array_merge(Arr::only($currentInfo, ['tid', 'pid', 'spid', 'authorUid']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],

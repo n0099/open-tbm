@@ -232,7 +232,7 @@
                         });
                 });
                 @else
-                resolve({ reCAPTCHA: null});
+                resolve(null);
                 @endif
             });
             const $$initialNavBar = (activeNav) => {

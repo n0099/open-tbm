@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use App\Timer;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 
 class ThreadCrawler extends Crawlable
 {
@@ -57,9 +58,9 @@ class ThreadCrawler extends Crawlable
             // by default we don't have to crawl every sub reply pages, only first and last one
             (new \GuzzleHttp\Pool(
                 $tiebaClient,
-                (function () use ($tiebaClient) {
+                (function () use ($tiebaClient): \Generator {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
-                        yield function () use ($tiebaClient, $pn) {
+                        yield function () use ($tiebaClient, $pn): \GuzzleHttp\Promise\PromiseInterface {
                             \Log::channel('crawler-info')->info("Fetch threads for forum {$this->forumName}, fid {$this->fid}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/frs/page',
@@ -148,8 +149,8 @@ class ThreadCrawler extends Crawlable
 
             $this->profiles['parsedPostTimes']++;
             $threadsInfo[] = $currentInfo;
-            $updatedThreadsInfo[$thread['tid']] = Helper::getArrayValuesByKeys($currentInfo, ['latestReplyTime', 'replyNum']);
-            $indexesInfo[] = array_merge(Helper::getArrayValuesByKeys($currentInfo, ['tid', 'authorUid', 'postTime']), [
+            $updatedThreadsInfo[$thread['tid']] = Arr::only($currentInfo, ['latestReplyTime', 'replyNum']);
+            $indexesInfo[] = array_merge(Arr::only($currentInfo, ['tid', 'authorUid', 'postTime']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'type' => 'thread',

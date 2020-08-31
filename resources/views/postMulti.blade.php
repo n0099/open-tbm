@@ -348,7 +348,7 @@
                             <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
                         </div>
                         <select v-model="uniqueParams.orderBy.value" :class="{ 'is-invalid': isOrderByInvalid }" class="col custom-select form-control">
-                            <option value="default">默认（按贴索引查询按发帖时间正序，按吧索引/搜索查询倒序）</option>
+                            <option value="default">默认（按贴索引查询按贴子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
                             <option value="postTime">发帖时间</option>
                             <optgroup label="贴子ID">
                                 <option value="tid">主题贴tid</option>
@@ -357,7 +357,6 @@
                             </optgroup>
                         </select>
                         <select v-show="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction" class="col-6 custom-select form-control">
-                            <option value="default">默认（按贴索引查询正序，按吧索引/搜索查询倒序）</option>
                             <option value="ASC">正序（从小到大，旧到新）</option>
                             <option value="DESC">倒序（从大到小，新到旧）</option>
                         </select>
@@ -373,7 +372,7 @@
                                         'select-param-last-row': paramIndex === params.length - 1,
                                         'select-param': true
                                       }"></select-param>
-                        <div class="input-group-append">
+                        <div class="input-group-prepend input-group-append">
                             <div class="param-input-group-text input-group-text">
                                 <div class="custom-checkbox custom-control">
                                     <input v-model="param.subParam.not" :id="`param${_.upperFirst(param.name)}Not-${paramIndex}`" type="checkbox" value="good" class="custom-control-input">
@@ -526,7 +525,8 @@
                             </span>
                             <div class="float-right btn-group" role="group">
                                 <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(thread.authorUid).name)" target="_blank" class="badge btn btn-light">
-                                    <span class="font-weight-bold text-info">楼主：</span>
+                                    <span v-if="thread.latestReplierUid !== thread.authorUid" class="font-weight-bold text-success">楼主：</span>
+                                    <span v-else class="font-weight-bold text-info">楼主及最后回复：</span>
                                     <span class="font-weight-normal">{{ renderUsername(thread.authorUid) }}</span>
                                 </a>
                                 <post-user-tag v-if="thread.authorManagerType !== null" :user-info="{ managerType: thread.authorManagerType }" :users-info-source="posts.users"></post-user-tag>
@@ -725,7 +725,7 @@
                     <div class="p-2 badge badge-light">
                         <button v-if="pageInfo.currentPage > 1" @click="$emit('load-page', pageInfo.currentPage - 1)" class="post-previous-page-button btn btn-primary" type="button">上一页</button>
                         <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
-                        <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.currentItems - 1 }} 条</span>
+                        <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.itemsCount }} 条</span>
                     </div>
                 </div>
                 <div class="col"><hr /></div>
@@ -857,7 +857,7 @@
                             && binding.value === true
                             && $('.posts-nav').css('display') !== 'none') { // don't scroll when <posts-nav> is collapsed
                             $(el).parents('.ant-menu-sub').css('height', 'unset'); // force expand parent <a-sub-menu> to skip .ant-motion-collapse-legacy-active animation while page's first load
-                            el.scrollIntoViewIfNeeded();
+                            el.scrollIntoViewIfNeeded(); // fixme: should only scroll within <posts-nav> instead of whole window
                         }
                     }
                 },
@@ -1422,7 +1422,6 @@
                             latestReplierGender: [['thread'], 'AND']
                         },
                         orderByRequiredPostTypes :{
-                            tid: [['thread', 'reply', 'subReply'], 'OR'],
                             pid: [['reply', 'subReply'], 'OR'],
                             spid: [['subReply'], 'OR']
                         },
@@ -1441,9 +1440,9 @@
                             get postTypes () { return this.arrayTypeParams; },
                             get postTime () { return this.dateTimeRangeParams; },
                             get latestReplyTime () { return this.dateTimeRangeParams; },
-                            get threadProperties () { return this.arrayTypeParams; },
                             get threadTitle () { return this.textMatchParams; },
                             get postContent () { return this.textMatchParams; },
+                            get threadProperties () { return this.arrayTypeParams; },
                             get authorName () { return this.textMatchParams; },
                             get authorDisplayName () { return this.textMatchParams; },
                             get latestReplierName () { return this.textMatchParams; },
@@ -1478,14 +1477,16 @@
                     currentQueryType () {
                         let clearedParams = this.clearedParamsDefaultValue();
                         if (_.isEmpty(clearedParams)) { // is there no other params
-                            if (_.isEmpty(this.clearedUniqueParamsDefaultValue('postTypes'))) {
+                            let clearedUniqueParams = this.clearedUniqueParamsDefaultValue('postTypes', 'orderBy');
+                            if (_.isEmpty(clearedUniqueParams)) { // only fill unique param postTypes and/or orderBy doesn't query anything
                                 return 'empty';
-                            } else if (_.isEmpty(this.clearedUniqueParamsDefaultValue('fid', 'postTypes'))) { // note when query with postTypes param, the route will goto params not the fid
-                                return 'fid';
+                            } else if (clearedUniqueParams.fid !== undefined) {
+                                return 'fid'; // note when query with postTypes and/or orderBy param, the route will goto params not the fid
                             }
                         }
                         if (_.isEmpty(_.reject(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name))) // is there no other params
-                            && _.filter(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name)).length === 1) { // is there only one post id param
+                            && _.filter(clearedParams, (param) => _.includes(['tid', 'pid', 'spid'], param.name)).length === 1 // is there only one post id param
+                            && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is post id param haven't any sub param
                             return 'postID';
                         }
                         return 'search';
@@ -1567,10 +1568,9 @@
                         if (_.isEmpty(clearedUniqueParams)) { // might be post id route
                             for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
                                 let postIDParam = _.filter(clearedParams, (param) => param.name === postIDName);
-                                let isOnlyOnePostIDParam = _.isEmpty(_.reject(clearedParams, (param) => param.name === postIDName)) // is there no other params
+                                if (_.isEmpty(_.reject(clearedParams, (param) => param.name === postIDName)) // is there no other params
                                     && postIDParam.length === 1 // is there only one post id param
-                                    && postIDParam[0].subParam === undefined; // is range subParam not set
-                                if (isOnlyOnePostIDParam) {
+                                    && postIDParam[0].subParam === undefined) { // is range subParam not set
                                     this.$router.push({ name: postIDName, params: { [postIDName]: postIDParam[0].value } });
                                     return; // exit early to prevent pushing other route
                                 }
@@ -1632,7 +1632,7 @@
                 },
                 methods: {
                     scrollStop () {
-                        let findFirstPostInView = (topOffset) => (result, dom) => { // curry invoke
+                        let findFirstPostInView = (topOffset) => (result, dom) => { // partial invoke
                             let top = dom.getBoundingClientRect().top - topOffset;
                             result.top = result.top === undefined ? Infinity : result.top;
                             if (top >= 0 && result.top > top) { // ignore doms which y coord is ahead of top of viewport
@@ -1706,7 +1706,7 @@
                             window.$previousPostsQueryAjax.abort();
                         }
                         $$reCAPTCHACheck().then((reCAPTCHA) => {
-                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(queryParams), page: this.$data.currentRoutesPage, reCAPTCHA}));
+                            window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(queryParams), page: this.$data.currentRoutePage, reCAPTCHA }));
                             window.$previousPostsQueryAjax
                                 .done((ajaxData) => {
                                     if (shouldReplacePage) { // is loading next page data on the same query params or requesting new query with different params
@@ -1715,7 +1715,7 @@
                                         // insert after existing previous page, if not exist will be inserted at start
                                         this.$data.postPages.splice(_.findIndex(this.$data.postPages, { pages: { currentPage: this.$data.currentRoutePage - 1 } }) + 1, 0, ajaxData);
                                     }
-                                    new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.currentItems}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                                    new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.itemsCount}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
                                     this.updateTitle();
                                 })
                                 .fail((jqXHR) => {

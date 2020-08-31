@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use App\Timer;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 
 class ReplyCrawler extends Crawlable
 {
@@ -57,9 +58,9 @@ class ReplyCrawler extends Crawlable
             $webRequestTimer->start();
             (new \GuzzleHttp\Pool(
                 $tiebaClient,
-                (function () use ($tiebaClient) {
+                (function () use ($tiebaClient): \Generator {
                     for ($pn = $this->startPage + 1; $pn <= $this->endPage; $pn++) { // crawling page range [$startPage + 1, $endPage]
-                        yield function () use ($tiebaClient, $pn) {
+                        yield function () use ($tiebaClient, $pn): \GuzzleHttp\Promise\PromiseInterface {
                             \Log::channel('crawler-info')->info("Fetch replies for thread, tid {$this->tid}, page {$pn}");
                             return $tiebaClient->postAsync(
                                 'http://c.tieba.baidu.com/c/f/pb/page',
@@ -137,9 +138,9 @@ class ReplyCrawler extends Crawlable
             $this->profiles['parsedPostTimes']++;
             $repliesInfo[] = $currentInfo;
             if ($reply['sub_post_number'] > 0) {
-                $updatedRepliesInfo[$reply['id']] = Helper::getArrayValuesByKeys($currentInfo, ['subReplyNum']);
+                $updatedRepliesInfo[$reply['id']] = Arr::only($currentInfo, ['subReplyNum']);
             }
-            $indexesInfo[] = array_merge(Helper::getArrayValuesByKeys($currentInfo, ['tid', 'pid', 'authorUid']), [
+            $indexesInfo[] = array_merge(Arr::only($currentInfo, ['tid', 'pid', 'authorUid']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],

@@ -25,13 +25,12 @@ class Helper
         $statusCodeAndErrorInfos = [
             // httpStatusCode => [ errorCode => errorInfo ]
             400 => [
-                // 40000 => App\Exceptions\Handler->convertValidationExceptionToResponse()
+                // 40000 => App\Exceptions\Handler::convertValidationExceptionToResponse()
                 40001 => '贴子查询类型必须为索引或搜索查询',
                 40002 => '搜索查询必须指定查询贴吧',
-                40003 => '最后回复人用户参数仅支持主题贴查询',
-                40004 => '部分贴子用户信息查询参数不支持用于主题贴最后回复人',
-                40005 => '部分查询参数与查询贴子类型要求不匹配',
-                40006 => '排序方式与查询贴子类型要求不匹配'
+                40003 => '部分查询参数与查询贴子类型要求不匹配',
+                40004 => '排序方式与查询贴子类型要求不匹配',
+                40005 => '请只提供一个唯一查询参数'
             ],
             401 => [
                 40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'
@@ -63,20 +62,8 @@ class Helper
 
     public static function setKeyWithItemsValue(array $array, string $itemsKey): array
     {
-        $return = [];
-        foreach ($array as $item) {
-            $return[$item[$itemsKey]] = $item;
-        }
-        return $return;
-    }
-
-    public static function getArrayValuesByKeys(array $haystack, array $keys): array
-    {
-        $return = [];
-        foreach ($keys as $key) {
-            $return[$key] = $haystack[$key];
-        }
-        return $return;
+        // note array_column won't check is every item have determined key, if not it will fill with numeric key
+        return array_column($array, null, $itemsKey); // https://stackoverflow.com/questions/56108051/is-it-possible-to-assign-keys-to-array-elements-in-php-from-a-value-column-with
     }
 
     public static function nullableValidate($value, bool $isJson = false)
