@@ -29,25 +29,24 @@ class Handler extends ExceptionHandler
     /**
      * Report or log an exception.
      *
-     * @param  \Exception  $exception
+     * @param \Throwable $exception
      * @return void
      */
-    public function report(Exception $exception)
+    public function report(\Throwable $exception)
     {
         // report exception addition info
-        \Log::error('Exception addition info: ' . ExceptionAdditionInfo::format()
-            . " for exception:\n" . $exception->getMessage());
+        \Log::error('Exception addition info: ' . ExceptionAdditionInfo::format() . " for exception:\n" . $exception->getMessage());
         parent::report($exception);
     }
 
     /**
      * Render an exception into an HTTP response.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
+     * @param \Illuminate\Http\Request $request
+     * @param \Throwable $exception
      * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $exception)
+    public function render($request, \Throwable $exception)
     {
         return parent::render($request, $exception);
     }
