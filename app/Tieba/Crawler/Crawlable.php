@@ -134,7 +134,7 @@ abstract class Crawlable
                 $this->checkThenParsePostsInfo(json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR));
                 $webRequestTimer->start(); // resume timing for possible succeed web request
             },
-            'rejected' => function (\GuzzleHttp\Exception\RequestException $e, int $index) {
+            'rejected' => function (\GuzzleHttp\Exception\TransferException $e, int $index) {
                 ExceptionAdditionInfo::set(['parsingPage' => $index]);
                 report($e);
             }

@@ -21,7 +21,7 @@ class ClientRequester extends \GuzzleHttp\Client
         if (! isset($options['form_params'])) {
             throw new \InvalidArgumentException('Post form params must be determined');
         }
-        if ($method !== 'post') {
+        if ($method !== 'POST') {
             throw new \BadFunctionCallException('Client request must be HTTP POST');
         }
 
