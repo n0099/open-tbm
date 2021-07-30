@@ -16,11 +16,6 @@ class BilibiliVote extends Command
 
     protected $description = '专题-bilibili吧公投：生成投票记录';
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     public function handle(): void
     {
         $bilibiliFid = 2265748;
@@ -29,9 +24,10 @@ class BilibiliVote extends Command
         $voteEndTime = '2019-03-11T12:00:00';
         $replyModel = PostModelFactory::newReply($bilibiliFid);
         $voteResultModel = new BilibiliVoteModel();
-        $replyModel->where('tid', $voteTid)
+        $replyModel::where('tid', $voteTid)
             ->whereBetween('postTime', [$voteStartTime, $voteEndTime])
-            ->chunk(10, function (Collection $voteReplies) use ($voteResultModel) { // lower chunk size to minimize influence of ignoring previous valid vote
+            // set a lower chunk size to minimize influence of ignoring previous valid vote
+            ->chunk(10, function (Collection $voteReplies) use ($voteResultModel): void {
                 $voteResults = [];
                 $candidateIDRange = range(1, 1056);
                 $votersPreviousValidVotesCount = $voteResultModel

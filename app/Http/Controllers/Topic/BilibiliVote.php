@@ -12,13 +12,12 @@ use Illuminate\Validation\Rule;
  *
  * Controller for /api/bilibiliVote
  *
- * @todo staticize these api's result
  * @package App\Http\Controllers\Topic
  */
 class BilibiliVote
 {
     /**
-     * Generate a query builder which returns top $candidatesCount candidates based on valid votes
+     * Generate a query builder, which returns top $candidatesCount candidates based on valid votes
      *
      * @sql select `voteFor` from (select `voteFor`, COUNT(*) AS count from `tbm_bilibiliVote` where `isValid` = 1 group by `voteFor` order by `count` desc limit $candidatesCount) as `T`
      * @param int $candidatesCount
@@ -73,7 +72,7 @@ class BilibiliVote
     }
 
     /**
-     * Return votes count and average voters exp grade of top 50 candidates
+     * Return votes count and average voters' exp grade of top 50 candidates
      *
      * @sql select `isValid`, `voteFor`, COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade from `tbm_bilibiliVote` where `voteFor` in getTopVotesCandidatesSQL(50) group by `isValid`, `voteFor` order by `voteFor` asc
      * @param Request $request
@@ -112,7 +111,7 @@ class BilibiliVote
     }
 
     /**
-     * Return every 5 mins cumulative votes count sum group by candidate and validate
+     * Return every 5 mins sum of cumulative votes count, group by candidates and validate
      *
      * @sql select timeRangesRawSQL.endTime, isValid, voteFor, SUM(timeGroups.count) AS count
      * from (
