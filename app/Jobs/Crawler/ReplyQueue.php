@@ -9,27 +9,23 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Timer;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ReplyQueue extends CrawlerQueue implements ShouldQueue
+class ReplyQueue extends CrawlerQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
 
-    protected int $tid;
-
-    public function __construct(int $fid, int $tid, int $startPage)
-    {
+    public function __construct(
+        protected int $fid,
+        protected int $tid,
+        protected int $startPage
+    ) {
         \Log::channel('crawler-info')->info("Reply crawler queue dispatched, fid:{$fid}, tid:{$tid}, startPage:{$startPage}");
-
-        $this->fid = $fid;
-        $this->tid = $tid;
-        $this->startPage = $startPage;
     }
 
     public function handle(): void

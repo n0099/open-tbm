@@ -2,7 +2,9 @@
 
 namespace App\Jobs\Crawler;
 
-class CrawlerQueue
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+abstract class CrawlerQueue implements ShouldQueue
 {
     public int $tries = 5;
 

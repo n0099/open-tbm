@@ -9,29 +9,24 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Timer;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ThreadQueue extends CrawlerQueue implements ShouldQueue
+class ThreadQueue extends CrawlerQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
 
-    protected string $forumName;
-
-    protected ?int $endPage;
-
-    public function __construct(int $fid, string $forumName, int $startPage = 1, ?int $endPage = null)
-    {
+    public function __construct(
+        protected int $fid,
+        protected string $forumName,
+        protected int $startPage = 1,
+        protected ?int $endPage = null
+    ) {
         \Log::channel('crawler-info')->info("Thread crawler queue dispatched, fid:{$fid} {$forumName}, startPage:{$startPage}, endPage:{$endPage}");
-        $this->fid = $fid;
-        $this->forumName = $forumName;
-        $this->startPage = $startPage;
-        $this->endPage = $endPage;
     }
 
     public function handle(): void

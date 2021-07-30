@@ -6,31 +6,25 @@ use App\Eloquent\CrawlingPostModel;
 use App\Tieba\Crawler;
 use App\Timer;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class SubReplyQueue extends CrawlerQueue implements ShouldQueue
+class SubReplyQueue extends CrawlerQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
 
-    protected int $tid;
-
-    protected int $pid;
-
-    protected int $startPage = 1; // hardcoded crawl start page
-
-    public function __construct(int $fid, int $tid, int $pid)
-    {
+    public function __construct(
+        protected int $fid,
+        protected int $tid,
+        protected int $pid,
+        protected int $startPage
+    ) {
         \Log::channel('crawler-info')->info("Sub reply queue dispatched, fid:{$fid}, tid:{$tid}, pid:{$pid}");
-
-        $this->fid = $fid;
-        $this->tid = $tid;
-        $this->pid = $pid;
     }
 
     public function handle(): void
@@ -38,29 +32,13 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
         $queueTimer = new Timer();
         \DB::statement('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED'); // change present crawler queue session's transaction isolation level to reduce deadlock
 
-        $firstPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $this->startPage))->doCrawl()->savePostsInfo();
-        $lastPageCrawler = null;
-        // crawl last page sub reply if there's more than one page
-        $subRepliesListLastPage = $firstPageCrawler->getPages()['total_page'] ?? 0;
-        if ($subRepliesListLastPage > $this->startPage) { // don't have to crawl every sub reply pages, only first and last one
-            $lastPageCrawler = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $subRepliesListLastPage))->doCrawl()->savePostsInfo();
-        }
+        $crawlerProfiles = (new Crawler\SubReplyCrawler($this->fid, $this->tid, $this->pid, $this->startPage, PHP_INT_MAX))
+            ->doCrawl()->savePostsInfo()->getProfiles();
 
         $queueTimer->stop();
-        \DB::transaction(function () use ($firstPageCrawler, $lastPageCrawler, $queueTimer) {
-            $crawlerProfiles = [];
-            if ($lastPageCrawler !== null) {
-                $firstPageProfiles = $firstPageCrawler->getProfiles();
-                $lastPageProfiles = $lastPageCrawler->getProfiles();
-                // sum up first and last page crawler's profiles value
-                foreach ($firstPageProfiles as $profileName => $profileValue) {
-                    $crawlerProfiles[$profileName] = $profileValue + $lastPageProfiles[$profileName];
-                }
-            } else {
-                $crawlerProfiles = $firstPageCrawler->getProfiles();
-            }
-
+        \DB::transaction(function () use ($crawlerProfiles, $queueTimer): void {
             // report previous reply crawl finished
+            /** @var Model|null $currentCrawlingSubReply *//
             $currentCrawlingSubReply = CrawlingPostModel
                 ::select('id', 'startTime')
                 ->where([
@@ -69,7 +47,7 @@ class SubReplyQueue extends CrawlerQueue implements ShouldQueue
                     'pid' => $this->pid
                 ])
                 ->lockForUpdate()->first();
-            if ($currentCrawlingSubReply !== null) { // might already marked as finished by other concurrency queues
+            if ($currentCrawlingSubReply !== null) { // might already mark as finished by other concurrency queues
                 $currentCrawlingSubReply->fill(array_merge($crawlerProfiles, [
                     'queueTiming' => $queueTimer->getTime()
                 ]))->save();

@@ -23,6 +23,7 @@ abstract class Crawlable
 
     protected UsersInfoParser $usersInfo;
 
+    /** @var float[] */
     protected array $profiles = [
         'webRequestTiming' => 0,
         'savePostsTiming' => 0,
