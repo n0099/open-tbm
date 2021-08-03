@@ -18,7 +18,3 @@ Route::view('/user/{argu?}', 'user')->where('argu', '.*')->name('user');
 Route::view('/status', 'status')->name('status');
 Route::view('/stats', 'stats')->name('stats');
 Route::view('/bilibiliVote', 'bilibiliVote')->name('bilibiliVote');
-
-// In order to use the Auth::routes() method, please install the laravel/ui package.
-// Auth::routes();
-Route::get('/home', 'HomeController@index')->name('home');

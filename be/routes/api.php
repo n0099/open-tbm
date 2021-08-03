@@ -89,5 +89,3 @@ Route::middleware(ReCAPTCHACheck::class)->group(function () {
     Route::get('/bilibiliVote/allVotesCountByTime', 'Topic\BilibiliVote@allVotesCountByTime');
     Route::get('/bilibiliVote/allCandidatesVotesCount', 'Topic\BilibiliVote@allCandidatesVotesCount');
 });
-
-Route::middleware('auth:api')->get('/user', fn(Request $request) => $request->user());
