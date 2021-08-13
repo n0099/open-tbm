@@ -1,38 +1,40 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-light">
-        <RouterLink to="/" class="navbar-brand">贴吧云监控</RouterLink>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="navbar-collapse collapse" id="navbar">
-            <ul class="navbar-nav">
-                <li :class="`nav-item dropdown ${isActiveNav(['post', 'user'])}`">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarQueryDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-search"></i> 查询
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarQueryDropdown">
-                        <RouterLink to="/post" :class="`dropdown-item ${isActiveNav('post')}`" activeClass="active"><i class="far fa-comment-dots"></i> 贴子</RouterLink>
-                        <RouterLink to="/user" :class="`dropdown-item ${isActiveNav('user')}`" activeClass="active"><i class="fas fa-users"></i> 用户</RouterLink>
-                    </div>
-                </li>
-                <li :class="`nav-item ${isActiveNav('stats')}`">
-                    <RouterLink to="/stats" class="nav-link" activeClass="active"><i class="fas fa-chart-pie"></i> 统计</RouterLink>
-                </li>
-                <li :class="`nav-item ${isActiveNav('status')}`">
-                    <RouterLink to="/status" class="nav-link" activeClass="active"><i class="fas fa-satellite-dish"></i> 状态</RouterLink>
-                </li>
-                <li :class="`nav-item dropdown ${isActiveNav(['bilibiliVote'])}`">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarTopicDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-paper-plane"></i> 专题
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarTopicDropdown">
-                        <RouterLink to="/bilibiliVote" :class="`dropdown-item ${isActiveNav('bilibiliVote')}`" activeClass="active">bilibili吧公投</RouterLink>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐助</a>
-                </li>
-            </ul>
+        <div class="container-fluid">
+            <RouterLink to="/" class="navbar-brand">贴吧云监控</RouterLink>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse" id="navbar">
+                <ul class="navbar-nav">
+                    <li :class="`nav-item dropdown ${isActiveNav(['post', 'user'])}`">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarQueryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-search"></i> 查询
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarQueryDropdown">
+                            <RouterLink to="/post" :class="`dropdown-item ${isActiveNav('post')}`" activeClass="active"><i class="far fa-comment-dots"></i> 贴子</RouterLink>
+                            <RouterLink to="/user" :class="`dropdown-item ${isActiveNav('user')}`" activeClass="active"><i class="fas fa-users"></i> 用户</RouterLink>
+                        </div>
+                    </li>
+                    <li :class="`nav-item ${isActiveNav('stats')}`">
+                        <RouterLink to="/stats" class="nav-link" activeClass="active"><i class="fas fa-chart-pie"></i> 统计</RouterLink>
+                    </li>
+                    <li :class="`nav-item ${isActiveNav('status')}`">
+                        <RouterLink to="/status" class="nav-link" activeClass="active"><i class="fas fa-satellite-dish"></i> 状态</RouterLink>
+                    </li>
+                    <li :class="`nav-item dropdown ${isActiveNav(['bilibiliVote'])}`">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarTopicDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-paper-plane"></i> 专题
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarTopicDropdown">
+                            <RouterLink to="/bilibiliVote" :class="`dropdown-item ${isActiveNav('bilibiliVote')}`" activeClass="active">bilibili吧公投</RouterLink>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐助</a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
     <HorizontalMobileMessage />
@@ -56,12 +58,10 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { RouterLink } from 'vue-router';
 import NProgress from 'nprogress';
 import tippy from 'tippy.js';
 import _ from 'lodash';
-import { RouterLink } from 'vue-router';
-import bootstrap from 'bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
 
 export default defineComponent({
