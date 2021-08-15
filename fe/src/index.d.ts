@@ -1,5 +1,4 @@
-import { DateTime } from 'luxon';
-
+/* eslint-disable @typescript-eslint/naming-convention */
 declare global {
     namespace NodeJS {
         interface ProcessEnv {
@@ -9,13 +8,6 @@ declare global {
         }
     }
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
-export interface ApiQS {
-    [key: string]: any
-}
-export interface ApiStatus {}
-export interface ApiQSStatus extends ApiQS {
-    timeRange: 'minute' | 'hour' | 'day',
-    startTime: string,
-    endTime: string
-}
+export {};

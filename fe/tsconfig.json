@@ -11,10 +11,6 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": [
-      "webpack-env",
-      "node"
-    ],
     "paths": {
       "@/*": [
         "src/*"
@@ -32,7 +28,6 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "node_modules/@types/**/*.d.ts"
+    "tests/**/*.tsx"
   ]
 }
