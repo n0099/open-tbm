@@ -64,6 +64,9 @@ import tippy from 'tippy.js';
 import _ from 'lodash';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
 
+// window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
+NProgress.configure({ trickleSpeed: 200 });
+
 export default defineComponent({
     name: 'App',
     components: { RouterLink, HorizontalMobileMessage },
@@ -71,35 +74,6 @@ export default defineComponent({
         isActiveNav: () => ''
     }
 });
-
-// window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
-NProgress.configure({ trickleSpeed: 200 });
-const $$changePageLoading = isLoading => {
-    if (isLoading) {
-        NProgress.start();
-        $('body').css('cursor', 'progress');
-    } else {
-        NProgress.done();
-        $('body').css('cursor', '');
-    }
-};
-/*
- *$(document)
- *    .ajaxStart(() => $$changePageLoading(true))
- *    .ajaxStop(() => $$changePageLoading(false))
- *    .ajaxError((event, jqXHR) => {
- *        let errorInfo = '';
- *        if (jqXHR.responseJSON !== undefined) {
- *            let error = jqXHR.responseJSON;
- *            if (_.isObject(error.errorInfo)) { // response when laravel failed validate
- *                errorInfo = `错误码：${error.errorCode}<br />${_.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />')}`;
- *            } else {
- *                errorInfo = `错误码：${error.errorCode}<br />${error.errorInfo}`;
- *            }
- *        }
- *        new Noty({ timeout: 3000, type: 'error', text: `HTTP ${jqXHR.status} ${errorInfo}`}).show();
- *    });
- */
 
 const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
     if (unregister) _.each($(scopedRootDom).find('[data-tippy-content]'), dom => dom._tippy.destroy());
@@ -113,23 +87,7 @@ tippy.setDefaultProps({
 
 const $$baseUrl = '{{ $baseUrl }}';
 const $$baseUrlDir = $$baseUrl.substr($$baseUrl.indexOf('/', $$baseUrl.indexOf('://') + 3));
-const $$reCAPTCHASiteKey = '{{ $reCAPTCHASiteKey }}';
-const $$reCAPTCHACheck = () => new Promise((resolve, reject) => {
-    NProgress.start();
-    $('body').css('cursor', 'progress');
-    grecaptcha.ready(() => {
-        grecaptcha.execute($$reCAPTCHASiteKey)
-            .then(token => {
-                resolve(token);
-                $$changePageLoading(false);
-            }, () => {
-                reject();
-                $$changePageLoading(false);
-                new Noty({ timeout: 3000, type: 'error', text: 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试' }).show();
-            });
-    });
-    // todo: should skip requesting recaptcha under dev mode: resolve(null);
-});
+
 const $$initialNavBar = activeNav => {
     window.navBarVue = new Vue({
         el: '#navbar',

@@ -1,4 +1,4 @@
-export interface ApiError { error: string }
+export interface ApiError { errorCode: number; errorInfo: string | Record<string, unknown[]>; }
 export type ApiQS = Record<string, unknown>;
 
 export interface ApiStatus {

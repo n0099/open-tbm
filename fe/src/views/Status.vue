@@ -31,214 +31,186 @@
         </div>
     </form>
     <div class="row mt-2">
-        <div id="statusChartDom" class="echarts col mt-2"></div>
+        <div ref="statusChartDom" class="echarts col mt-2"></div>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { apiStatus, isApiError } from '@/api';
+import type { ApiQSStatus } from '@/api.d';
 import { DateTime } from 'luxon';
-import type { ApiQSStatus } from '@/index.d';
+import _ from 'lodash';
+import type { ECharts } from 'echarts/core';
+import * as echarts from 'echarts/core';
+import { LineChart, LineSeriesOption } from 'echarts/charts';
+import { AxisPointerComponent, AxisPointerComponentOption, DataZoomComponent, DataZoomComponentOption, GridComponent, GridComponentOption, LegendComponent, LegendComponentOption, TitleComponent, TitleComponentOption, ToolboxComponent, ToolboxComponentOption, TooltipComponent, TooltipComponentOption, VisualMapComponent, VisualMapComponentOption } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 
-let statusChartDom;
-let statusChart;
-const initialStatusChart = () => {
-    statusChartDom = $('#statusChartDom');
-    statusChart = echarts.init(statusChartDom[0]);
-    statusChart.setOption({
-        title: { text: '近期性能统计' },
-        tooltip: { trigger: 'axis' },
-        axisPointer: { link: { xAxisIndex: 'all' } },
-        toolbox: {
-            feature: {
-                dataZoom: { show: true, yAxisIndex: 'none' },
-                restore: { show: true },
-                dataView: { show: true },
-                saveAsImage: { show: true }
-            }
-        },
-        dataZoom: [
-            {
-                type: 'slider',
-                xAxisIndex: [0, 1],
-                filterMode: 'filter',
-                start: 90,
-                bottom: '46%'
-            },
-            {
-                type: 'inside',
-                xAxisIndex: [0, 1],
-                filterMode: 'filter'
-            }
+echarts.use([CanvasRenderer, LineChart, AxisPointerComponent, DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent]);
+const chartInitialOption: echarts.ComposeOption<LineSeriesOption | AxisPointerComponentOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption | VisualMapComponentOption> = {
+    title: { text: '近期性能统计' },
+    tooltip: { trigger: 'axis' },
+    axisPointer: { link: [{ xAxisIndex: 'all' }] },
+    toolbox: {
+        feature: {
+            dataZoom: { show: true, yAxisIndex: 'none' },
+            restore: { show: true },
+            dataView: { show: true },
+            saveAsImage: { show: true }
+        }
+    },
+    dataZoom: [{
+        type: 'slider',
+        xAxisIndex: [0, 1],
+        filterMode: 'filter',
+        start: 90,
+        bottom: '46%'
+    }, {
+        type: 'inside',
+        xAxisIndex: [0, 1],
+        filterMode: 'filter'
+    }],
+    visualMap: [{
+        seriesIndex: 0,
+        top: 30,
+        right: 0,
+        pieces: [
+            { gt: 0, lte: 30, color: '#096' },
+            { gt: 30, lte: 60, color: '#ffde33' },
+            { gt: 60, lte: 120, color: '#ff9933' },
+            { gt: 120, lte: 240, color: '#cc0033' },
+            { gt: 240, lte: 480, color: '#660099' },
+            { gt: 480, color: '#7e0023' }
         ],
-        visualMap: [
-            {
-                seriesIndex: 0,
-                top: 30,
-                right: 0,
-                pieces: [
-                    { gt: 0, lte: 30, color: '#096' },
-                    { gt: 30, lte: 60, color: '#ffde33' },
-                    { gt: 60, lte: 120, color: '#ff9933' },
-                    { gt: 120, lte: 240, color: '#cc0033' },
-                    { gt: 240, lte: 480, color: '#660099' },
-                    { gt: 480, color: '#7e0023' }
-                ],
-                outOfRange: { color: '#999' }
-            }
-        ],
-        legend: {},
-        grid: [
-            { height: '35%' },
-            { height: '35%', top: '60%' }
-        ],
-        xAxis: [
-            { type: 'time' },
-            {
-                type: 'time',
-                gridIndex: 1,
-                position: 'top'
-            }
-        ],
-        yAxis: [
-            {
-                type: 'value',
-                splitArea: { show: true },
-                splitLine: { show: false }
-            },
-            {
-                type: 'value',
-                gridIndex: 1,
-                inverse: true,
-                splitArea: { show: true },
-                splitLine: { show: false }
-            },
-            { // 网络请求量下表副Y轴
-                type: 'value',
-                gridIndex: 1,
-                splitLine: { show: false }
-            }
-        ],
-        series: [
-            {
-                id: 'queueTiming',
-                name: '单位总耗时',
-                type: 'line',
-                step: 'middle',
-                symbolSize: 2,
-                sampling: 'average',
-                markLine: {
-                    symbol: 'none',
-                    lineStyle: { type: 'dotted' },
-                    data: [
-                        { yAxis: 30 },
-                        { yAxis: 60 },
-                        { yAxis: 120 },
-                        { yAxis: 240 },
-                        { yAxis: 480 }
-                    ]
-                }
-            },
-            {
-                id: 'savePostsTiming',
-                name: '贴子保存耗时',
-                type: 'line',
-                symbolSize: 0,
-                sampling: 'average',
-                areaStyle: {},
-                stack: 'queueTiming'
-            },
-            {
-                id: 'webRequestTiming',
-                name: '网络请求耗时',
-                type: 'line',
-                symbolSize: 0,
-                sampling: 'average',
-                areaStyle: {},
-                stack: 'queueTiming'
-            },
-
-            {
-                id: 'webRequestTimes',
-                name: '网络请求量',
-                xAxisIndex: 1,
-                yAxisIndex: 2,
-                type: 'line',
-                symbolSize: 2,
-                sampling: 'average'
-            },
-            {
-                id: 'parsedPostTimes',
-                name: '处理贴子量',
-                xAxisIndex: 1,
-                yAxisIndex: 1,
-                type: 'line',
-                symbolSize: 2,
-                sampling: 'average'
-            },
-            {
-                id: 'parsedUserTimes',
-                name: '处理用户量',
-                xAxisIndex: 1,
-                yAxisIndex: 1,
-                type: 'line',
-                symbolSize: 2,
-                sampling: 'average'
-            }
-        ]
-    });
-};
-
-const loadStatusChart = statusQuery => {
-    statusChartDom.addClass('loading');
-    $$reCAPTCHACheck().then(reCAPTCHA => {
-        $.getJSON(`${$$baseUrl}/api/status`, $.param({ ...statusQuery, reCAPTCHA }))
-            .done(ajaxData => {
-                const series = _.chain(statusChart.getOption().series)
-                    .map('id')
-                    .map(seriesName => ({
-                        id: seriesName,
-                        data: _.map(ajaxData, i => [i.startTime, i[seriesName]]) // select column from status
-                    }))
-                    .value();
-                statusChart.setOption({ series });
-            })
-            .always(() => statusChartDom.removeClass('loading'));
-    });
+        outOfRange: { color: '#999' }
+    }],
+    legend: {},
+    grid: [
+        { height: '35%' },
+        { height: '35%', top: '60%' }
+    ],
+    xAxis: [{
+        type: 'time'
+    }, {
+        type: 'time',
+        gridIndex: 1,
+        position: 'top'
+    }],
+    yAxis: [{
+        type: 'value',
+        splitArea: { show: true },
+        splitLine: { show: false }
+    }, {
+        type: 'value',
+        gridIndex: 1,
+        inverse: true,
+        splitArea: { show: true },
+        splitLine: { show: false }
+    }, { // 网络请求量下表副Y轴
+        type: 'value',
+        gridIndex: 1,
+        splitLine: { show: false }
+    }],
+    series: [{
+        id: 'queueTiming',
+        name: '单位总耗时',
+        type: 'line',
+        step: 'middle',
+        symbolSize: 2,
+        sampling: 'average',
+        markLine: {
+            symbol: 'none',
+            lineStyle: { type: 'dotted' },
+            data: [{ yAxis: 30 }, { yAxis: 60 }, { yAxis: 120 }, { yAxis: 240 }, { yAxis: 480 }]
+        }
+    }, {
+        id: 'savePostsTiming',
+        name: '贴子保存耗时',
+        type: 'line',
+        symbolSize: 0,
+        sampling: 'average',
+        areaStyle: {},
+        stack: 'queueTiming'
+    }, {
+        id: 'webRequestTiming',
+        name: '网络请求耗时',
+        type: 'line',
+        symbolSize: 0,
+        sampling: 'average',
+        areaStyle: {},
+        stack: 'queueTiming'
+    }, {
+        id: 'webRequestTimes',
+        name: '网络请求量',
+        xAxisIndex: 1,
+        yAxisIndex: 2,
+        type: 'line',
+        symbolSize: 2,
+        sampling: 'average'
+    }, {
+        id: 'parsedPostTimes',
+        name: '处理贴子量',
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        type: 'line',
+        symbolSize: 2,
+        sampling: 'average'
+    }, {
+        id: 'parsedUserTimes',
+        name: '处理用户量',
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        type: 'line',
+        symbolSize: 2,
+        sampling: 'average'
+    }]
 };
 
 export default defineComponent({
-    name: 'Status',
-    data() {
-        return {
+    setup() {
+        const statusChartDom = ref<HTMLElement>();
+        const statusChart = ref<ECharts>();
+        const autoRefreshIntervalID = ref(0);
+        const state = reactive({
             autoRefresh: false,
-            autoRefreshIntervalID: 0,
             statusQuery: {
                 timeRange: 'minute',
-                startTime: DateTime.now().minus({ weeks: 1 }).toISO(),
-                endTime: DateTime.now().toISO()
+                startTime: DateTime.now().minus({ weeks: 1 }).startOf('second')
+                    .toISO({ includeOffset: false }),
+                endTime: DateTime.now().startOf('second')
+                    .toISO({ includeOffset: false })
             } as ApiQSStatus
-        };
-    },
-    watch: {
-        autoRefresh(autoRefresh) {
-            if (autoRefresh) this.$data.autoRefreshIntervalID = setInterval(() => loadStatusChart(this.$data.statusQuery), 60000); // refresh data every minute
-            else clearInterval(this.$data.autoRefreshIntervalID);
-        }
-    },
-    mounted() {
-        /*
-         * initialStatusChart();
-         * loadStatusChart(this.$data.statusQuery);
-         */
-    },
-    methods: {
-        submitQueryForm() {
+        });
+        const submitQueryForm = () => {
             // fully refresh to regenerate a new echarts instance
-            statusChart.clear();
-            initialStatusChart();
-            loadStatusChart(this.$data.statusQuery);
-        }
+            statusChart.value?.clear();
+            if (statusChartDom.value === undefined) return;
+            statusChart.value = echarts.init(statusChartDom.value);
+            statusChartDom.value.classList.add('loading');
+            statusChart.value.setOption(chartInitialOption);
+            (async () => {
+                const statusResult = await apiStatus(state.statusQuery);
+                if (isApiError(statusResult)) return;
+                const series = _.chain(chartInitialOption.series)
+                    .map('id')
+                    .map((seriesName: string) => ({
+                        id: seriesName,
+                        data: _.map(statusResult, i => [i.startTime, i[seriesName]]) // select column from status
+                    }))
+                    .value();
+                statusChart?.value?.setOption({ series });
+            })();
+            statusChartDom.value.classList.remove('loading');
+        };
+
+        watch(() => state.autoRefresh, autoRefresh => {
+            if (autoRefresh) autoRefreshIntervalID.value = window.setInterval(submitQueryForm, 100); // refresh data every minute
+            else clearInterval(autoRefreshIntervalID.value);
+        });
+        onMounted(submitQueryForm);
+
+        return { ...toRefs(state), statusChartDom };
     }
 });
 </script>
