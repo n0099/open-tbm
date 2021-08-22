@@ -2,6 +2,8 @@
 declare global {
     namespace NodeJS {
         interface ProcessEnv {
+            NODE_ENV: 'development' | 'production' | 'test',
+            BASE_URL: string,
             VUE_APP_PUBLIC_PATH: string,
             VUE_APP_API_URL_PREFIX: string,
             VUE_APP_GA_MEASUREMENT_ID: string,

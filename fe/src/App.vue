@@ -59,13 +59,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { RouterLink } from 'vue-router';
-import NProgress from 'nprogress';
-import tippy from 'tippy.js';
 import _ from 'lodash';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
-
-// window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
-NProgress.configure({ trickleSpeed: 200 });
 
 export default defineComponent({
     name: 'App',
@@ -79,11 +74,6 @@ const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
     if (unregister) _.each($(scopedRootDom).find('[data-tippy-content]'), dom => dom._tippy.destroy());
     else tippy($(scopedRootDom).find('[data-tippy-content]').get());
 };
-tippy.setDefaultProps({
-    animation: 'perspective',
-    interactive: true,
-    theme: 'light-border'
-});
 
 const $$baseUrl = '{{ $baseUrl }}';
 const $$baseUrlDir = $$baseUrl.substr($$baseUrl.indexOf('/', $$baseUrl.indexOf('://') + 3));
@@ -106,7 +96,7 @@ const $$initialNavBar = activeNav => {
     });
 };
 
-const $$loadForumList = () => new Promise(resolve => $.getJSON(`${$$baseUrl}/api/forumsList`).done(ajaxData => resolve(ajaxData)));
+const $$loadForumList = async () => new Promise(resolve => $.getJSON(`${$$baseUrl}/api/forumsList`).done(ajaxData => { resolve(ajaxData) }));
 
 const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
     if (spid !== null) return `https://tieba.baidu.com/p/${tid}?pid=${spid}#${spid}`;

@@ -34,6 +34,7 @@ function detectUndefined(node) {
             'bar',
             'peg',
             'spinner',
+            'noty_',
             'echarts'
         ].filter(i => cl.startsWith(i)).length !== 0) continue;
         // Ignore defined and already-seen classes
