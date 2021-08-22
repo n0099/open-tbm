@@ -29,7 +29,12 @@ function detectUndefined(node) {
             'svg-inline--fa',
             'grecaptcha',
             'g-recaptcha',
-            'router-link-exact'
+            'router-link-exact',
+            'nprogress',
+            'bar',
+            'peg',
+            'spinner',
+            'echarts'
         ].filter(i => cl.startsWith(i)).length !== 0) continue;
         // Ignore defined and already-seen classes
         if (defined.has(cl) || seen.has(cl)) continue;
@@ -66,6 +71,7 @@ export default function init() {
             if (mut.type === 'childList' && mut?.addedNodes) {
                 for (const el of mut.addedNodes) {
                     if (el.nodeType === 3) continue; // Ignore text nodes
+                    if (el.nodeType === 8) continue; // Ignore comment nodes
                     // Check sub-dom for undefined classes
                     detectUndefined(el);
                     for (const cel of el.querySelectorAll('*')) {

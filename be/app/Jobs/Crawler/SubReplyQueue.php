@@ -38,7 +38,7 @@ class SubReplyQueue extends CrawlerQueue
         $queueTimer->stop();
         \DB::transaction(function () use ($crawlerProfiles, $queueTimer): void {
             // report previous reply crawl finished
-            /** @var Model|null $currentCrawlingSubReply *//
+            /** @var Model|null $currentCrawlingSubReply */
             $currentCrawlingSubReply = CrawlingPostModel
                 ::select('id', 'startTime')
                 ->where([
