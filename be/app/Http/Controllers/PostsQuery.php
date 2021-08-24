@@ -106,7 +106,7 @@ class PostsQuery extends Controller
                 $queryParams[] = array_merge([$uniqueParamName => $uniqueParamDefaultValue['value']], $uniqueParamDefaultValue['subParam'] ?? []);
             }
         }
-        $setParamValue('postTypes', array_sort($getParamValue('postTypes'))); // sort here to prevent further sort while validating
+        $setParamValue('postTypes', Arr::sort($getParamValue('postTypes'))); // sort here to prevent further sort while validating
 
         $numericParamsDefaultValue = ['range' => '='];
         $textMatchParamsDefaultValue = ['matchBy' => 'implicit', 'spaceSplit' => false];
@@ -156,7 +156,7 @@ class PostsQuery extends Controller
             if ($filterParams($paramName) !== []) {
                 Helper::abortAPIIfNot(40003, $requiredPostTypes[1] === 'OR'
                     ? array_diff($getParamValue('postTypes'), $requiredPostTypes[0]) === []
-                    : $getParamValue('postTypes') === array_sort($requiredPostTypes[0]));
+                    : $getParamValue('postTypes') === Arr::sort($requiredPostTypes[0]));
             }
         }
 
@@ -168,7 +168,7 @@ class PostsQuery extends Controller
             $currentOrderByRequiredPostTypes = $orderByRequiredPostTypes[$getParamValue('orderBy')];
             Helper::abortAPIIfNot(40004, $currentOrderByRequiredPostTypes[1] === 'OR'
                 ? array_diff($getParamValue('postTypes'), $currentOrderByRequiredPostTypes[0]) === []
-                : $getParamValue('postTypes') === array_sort($currentOrderByRequiredPostTypes[0]));
+                : $getParamValue('postTypes') === Arr::sort($currentOrderByRequiredPostTypes[0]));
         }
 
         if ($isSearchQuery) {
@@ -311,7 +311,7 @@ class PostsQuery extends Controller
 
     private function searchQuery(array $queryParams): array
     {
-        $getUniqueParamValue = fn(string $name) => array_first($queryParams, fn(array $param): bool => array_keys($param)[0] === $name)[$name];
+        $getUniqueParamValue = fn(string $name) => Arr::first($queryParams, fn(array $param): bool => array_keys($param)[0] === $name)[$name];
         $postQueries = [];
         foreach (Arr::only(PostModelFactory::getPostModelsByFid($getUniqueParamValue('fid')), $getUniqueParamValue('postTypes')) as $postType => $postModel) {
             $postQuery = $postModel->newQuery();
