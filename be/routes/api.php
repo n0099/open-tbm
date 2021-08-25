@@ -5,6 +5,7 @@ use App\Http\Middleware\ReCAPTCHACheck;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +22,7 @@ Route::get('/forumsList', fn () => App\Tieba\Eloquent\ForumModel::all()->toJson(
 Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
     Route::get('/postsQuery', 'PostsQuery@query');
     Route::get('/usersQuery', 'UsersQuery@query');
-    Route::get('/status', function (): string {
+    Route::get('/status', function (Request $request): string {
         $groupTimeRangeRawSQL = [
             'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',
             'hour' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:00") AS startTime',
@@ -29,7 +30,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
         ];
 
         /** @var array{timeRange: string, startTime: string, endTime: string} $queryParams */
-        $queryParams = \request()::validate([
+        $queryParams = $request->validate([
             'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
             'startTime' => 'required|date',
             'endTime' => 'required|date'
@@ -61,9 +62,9 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
             ->groupBy('startTime')
             ->get()->toJson();
     });
-    Route::get('/stats/forumPostsCount', function (): array {
+    Route::get('/stats/forumPostsCount', function (Request $request): array {
         $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime');
-        $queryParams = \request()::validate([
+        $queryParams = $request->validate([
             'fid' => 'required|integer',
             'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
             'startTime' => 'required|date',

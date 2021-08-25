@@ -22,7 +22,7 @@ class SubReplyCrawler extends Crawlable
 
     public function __construct(int $fid, int $tid, int $pid, int $startPage, ?int $endPage = null)
     {
-        parent::__construct($fid, $startPage, $endPage); // by default we don't have to crawl every sub reply pages, only the first and last one
+        parent::__construct($fid, $startPage, $endPage);
         $this->tid = $tid;
         $this->pid = $pid;
 
@@ -48,14 +48,13 @@ class SubReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        )->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
             $this->checkThenParsePostsInfo($startPageSubRepliesInfo);
 
             $webRequestTimer->start();
-            // by default we don't have to crawl every sub reply pages, only first and last one
             (new \GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient): \Generator {

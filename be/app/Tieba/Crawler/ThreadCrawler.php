@@ -48,14 +48,13 @@ class ThreadCrawler extends Crawlable
                     'rn' => 50
                 ]
             ]
-        )->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        )->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
             $this->checkThenParsePostsInfo($threadsInfo);
 
             $webRequestTimer->start();
-            // by default we don't have to crawl every sub reply pages, only first and last one
             (new \GuzzleHttp\Pool(
                 $tiebaClient,
                 (function () use ($tiebaClient): \Generator {

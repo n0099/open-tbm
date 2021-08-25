@@ -18,11 +18,12 @@ class SubReplyQueue extends CrawlerQueue
     use Queueable;
     use SerializesModels;
 
+    protected int $startPage = 1; // hardcoded crawl start page
+
     public function __construct(
         protected int $fid,
         protected int $tid,
-        protected int $pid,
-        protected int $startPage
+        protected int $pid
     ) {
         \Log::channel('crawler-info')->info("Sub reply queue dispatched, fid:{$fid}, tid:{$tid}, pid:{$pid}");
     }

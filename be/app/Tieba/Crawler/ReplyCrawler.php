@@ -49,7 +49,7 @@ class ReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        )->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
