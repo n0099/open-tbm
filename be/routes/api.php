@@ -23,17 +23,17 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
     Route::get('/postsQuery', 'PostsQuery@query');
     Route::get('/usersQuery', 'UsersQuery@query');
     Route::get('/status', function (Request $request): string {
-        $groupTimeRangeRawSQL = [
+        $groupByTimeGranular = [
             'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',
             'hour' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:00") AS startTime',
             'day' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d") AS startTime',
         ];
 
-        /** @var array{timeRange: string, startTime: string, endTime: string} $queryParams */
+        /** @var array{timeGranular: string, startTime: string, endTime: string} $queryParams */
         $queryParams = $request->validate([
-            'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
-            'startTime' => 'required|date',
-            'endTime' => 'required|date'
+            'timeGranular' => ['required', 'string', Rule::in(array_keys($groupByTimeGranular))],
+            'startTime' => 'required|integer|numeric',
+            'endTime' => 'required|integer|numeric'
         ]);
 
         return \DB::query()
@@ -48,7 +48,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
             ')
             ->fromSub(fn (Builder $query) =>
                 $query->from('tbm_crawledPosts')
-                ->selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+                ->selectRaw($groupByTimeGranular[$queryParams['timeGranular']])
                 ->selectRaw('
                     queueTiming,
                     webRequestTiming,
@@ -57,7 +57,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
                     parsedPostTimes,
                     parsedUserTimes
                 ')
-                ->whereRaw("startTime BETWEEN UNIX_TIMESTAMP('{$queryParams['startTime']}') AND UNIX_TIMESTAMP('{$queryParams['endTime']}')")
+                ->whereBetween('startTime', [$queryParams['startTime'], $queryParams['endTime']])
                 ->orderBy('id', 'DESC'), 'T')
             ->groupBy('startTime')
             ->get()->toJson();

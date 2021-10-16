@@ -39,7 +39,9 @@
     </nav>
     <HorizontalMobileMessage />
     <div class="container">
-        <router-view/>
+        <AConfigProvider :locale="AntdZhCn">
+            <RouterView/>
+        </AConfigProvider>
     </div>
     <footer class="footer-outer text-light pt-4 mt-4">
         <div class="text-center container">
@@ -59,14 +61,15 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { RouterLink } from 'vue-router';
-import _ from 'lodash';
+import { ConfigProvider } from 'ant-design-vue';
+import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
+import _ from 'lodash';
 
 export default defineComponent({
-    name: 'App',
-    components: { RouterLink, HorizontalMobileMessage },
-    methods: {
-        isActiveNav: () => ''
+    setup() {
+        const isActiveNav = () => '';
+        return { RouterLink, ConfigProvider, AntdZhCn, HorizontalMobileMessage, isActiveNav };
     }
 });
 
@@ -126,6 +129,10 @@ const $$getTiebaUserAvatarUrl = avatarUrl => `https://himg.bdimg.com/sys/portrai
 </style>
 
 <style>
+.ant-input-lg {
+    height: 38px; /* adopt to bootstrap input group */
+}
+
 .lazyload, .lazyloading {
     opacity: 0;
     background: #f7f7f7 url('../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
@@ -135,11 +142,8 @@ const $$getTiebaUserAvatarUrl = avatarUrl => `https://himg.bdimg.com/sys/portrai
     transition: opacity .3s;
 }
 
-.loading-icon {
-    width: 100px;
-    height: 100px;
-    background-image: url('../public/assets/icon-huaji-loading-spinner.gif');
-    background-size: 100%;
+.loading {
+    background: url('../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
 }
 
 .grecaptcha-badge {

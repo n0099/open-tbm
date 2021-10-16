@@ -1,21 +1,26 @@
-import type { ApiError, ApiQSStatus, ApiStatus } from './api.d';
+import type { ApiError, ApiQSStatus, ApiStatus } from '@/api.d';
 import NProgress from 'nprogress';
 import qs from 'qs';
 import _ from 'lodash';
 import Noty from 'noty';
 
-const getRequester = async <T extends ApiError>(endpoint: string, queryString?: Record<string, unknown>): Promise<ApiError | T> => {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+export const isApiError = (r: any): r is ApiError => 'errorInfo' in r && typeof r.errorInfo === 'string';
+const getRequester = async <T = ApiError | unknown>(endpoint: string, queryString?: Record<string, unknown>): Promise<ApiError | T> => {
     NProgress.start();
     document.body.style.cursor = 'progress';
     try {
-        const res = await fetch(`${process.env.VUE_APP_API_URL_PREFIX}${endpoint}?${qs.stringify(queryString)}`);
+        const res = await fetch(
+            `${process.env.VUE_APP_API_URL_PREFIX}${endpoint}?${qs.stringify(queryString)}`,
+            { headers: { Accept: 'application/json' } }
+        );
         let error = null;
         if (!res.ok) {
             error = `GET ${endpoint} => HTTP ${res.status}`;
             throw Error(error);
         }
         const json = await res.json() as T;
-        if (json.errorInfo !== undefined) {
+        if (isApiError(json)) {
             error = `GET ${endpoint} => HTTP ${res.status} 错误码：${json.errorCode}<br />`;
             if (_.isObject(json.errorInfo)) {
                 error = _.map(json.errorInfo, (info, paramName) =>
@@ -34,27 +39,26 @@ const getRequester = async <T extends ApiError>(endpoint: string, queryString?: 
         }
         throw e;
     } finally {
-        NProgress.start();
+        NProgress.done();
         document.body.style.cursor = '';
     }
 };
-
-const reCAPTCHACheck = async (action = ''): Promise<string> => new Promise((reslove, reject) => {
-    // todo: should skip requesting recaptcha under dev mode via resolve(null);
-    grecaptcha.ready(() => {
-        grecaptcha.execute(process.env.VUE_APP_RECAPTCHA_SITE_KEY, { action }).then(
-            token => {
-                reslove(token);
-            }, (...args) => {
-                reject(new Error(JSON.stringify(args)));
-            }
-        );
-    });
+const reCAPTCHACheck = async (action = ''): Promise<Record<never, never> | { reCAPTCHA: string }> => new Promise((reslove, reject) => {
+    if (process.env.NODE_ENV === 'production') {
+        grecaptcha.ready(() => {
+            grecaptcha.execute(process.env.VUE_APP_RECAPTCHA_SITE_KEY, { action }).then(
+                token => {
+                    reslove(token);
+                }, (...args) => {
+                    reject(new Error(JSON.stringify(args)));
+                }
+            );
+        });
+    } else {
+        reslove({});
+    }
 });
+const getRequesterWithReCAPTCHA = async <T = ApiError | unknown>(endpoint: string, queryString?: Record<string, unknown>, action = '') =>
+    getRequester<T>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) });
 
-const getRequesterWithReCAPTCHA = async (endpoint: string, queryString?: Record<string, unknown>, action = '') =>
-    getRequester(endpoint, { ...queryString, reCAPTCHA: await reCAPTCHACheck(action) });
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-export const isApiError = (r: any): r is ApiError => 'errorInfo' in r && typeof r.error === 'string';
-export const apiStatus = async (statusQuery: ApiQSStatus): Promise<ApiError | ApiStatus> => getRequesterWithReCAPTCHA('/status', statusQuery);
+export const apiStatus = async (statusQuery: ApiQSStatus): Promise<ApiError | ApiStatus> => getRequesterWithReCAPTCHA<ApiStatus>('/status', statusQuery);

@@ -1,20 +1,29 @@
 <template>
     <form @submit.prevent="submitQueryForm()" class="mt-3">
         <div class="row">
-            <label class="col-2 col-form-label" for="queryStatusTime">时间范围</label>
-            <div class="col-7">
+            <label class="col-3 col-form-label text-end" for="queryStatusTime">时间范围</label>
+            <div class="col-5">
                 <div id="queryStatusTime" class="input-group">
                     <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                    <input v-model="statusQuery.startTime" type="datetime-local" class="form-control">
-                    <span class="input-group-text">至</span>
-                    <input v-model="statusQuery.endTime" type="datetime-local" class="form-control">
+                    <ARangePicker v-model:value="timeRange" :ranges="{
+                        昨天: [moment().subtract(1, 'day').startOf('day'), moment().subtract(1, 'day').endOf('day')],
+                        今天: [moment().startOf('day'), moment().endOf('day')],
+                        本周: [moment().startOf('week'), moment().endOf('week')],
+                        最近7天: [moment().subtract(7, 'days'), moment()],
+                        本月: [moment().startOf('month'), moment().endOf('momth')],
+                        最近30天: [moment().subtract(30, 'days'), moment()]
+                    }" :format="'YYYY-MM-DD HH:mm'" :showTime="{
+                        format: 'HH:mm',
+                        minuteStep: 5,
+                        secondStep: 10
+                    }" :allowClear="false" size="large" class="col" />
                 </div>
             </div>
-            <label class="col-1 col-form-label border-start text-center" for="queryStatusTimeRange">时间粒度</label>
+            <label class="col-1 col-form-label text-end" for="queryStatusTimeRange">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><i class="far fa-clock"></i></span>
-                    <select v-model="statusQuery.timeRange" id="queryStatusTimeRange" class="custom-select form-control">
+                    <select v-model="statusQuery.timeGranular" id="queryStatusTimeRange" class="form-control">
                         <option value="minute">分钟</option>
                         <option value="hour">小时</option>
                         <option value="day">天</option>
@@ -31,24 +40,31 @@
         </div>
     </form>
     <div class="row mt-2">
-        <div ref="statusChartDom" class="echarts col mt-2"></div>
+        <div ref="statusChartDom" id="statusChartDom" class="echarts col mt-2"></div>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { apiStatus, isApiError } from '@/api';
-import type { ApiQSStatus } from '@/api.d';
+import type { ApiQSStatus, ApiStatus } from '@/api.d';
+
+import { defineComponent, markRaw, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { RangePicker, Switch } from 'ant-design-vue';
+import type { ECharts } from 'echarts';
+import * as echarts from 'echarts/core';
+import type { LineSeriesOption } from 'echarts/charts';
+import { LineChart } from 'echarts/charts';
+import { CanvasRenderer } from 'echarts/renderers';
+import { UniversalTransition } from 'echarts/features';
+import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption, VisualMapComponentOption } from 'echarts/components';
+import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
+import type { Moment } from 'moment';
+import moment from 'moment';
 import { DateTime } from 'luxon';
 import _ from 'lodash';
-import type { ECharts } from 'echarts/core';
-import * as echarts from 'echarts/core';
-import { LineChart, LineSeriesOption } from 'echarts/charts';
-import { AxisPointerComponent, AxisPointerComponentOption, DataZoomComponent, DataZoomComponentOption, GridComponent, GridComponentOption, LegendComponent, LegendComponentOption, TitleComponent, TitleComponentOption, ToolboxComponent, ToolboxComponentOption, TooltipComponent, TooltipComponentOption, VisualMapComponent, VisualMapComponentOption } from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
 
-echarts.use([CanvasRenderer, LineChart, AxisPointerComponent, DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent]);
-const chartInitialOption: echarts.ComposeOption<LineSeriesOption | AxisPointerComponentOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption | VisualMapComponentOption> = {
+echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
+const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | MarkLineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption | VisualMapComponentOption> = {
     title: { text: '近期性能统计' },
     tooltip: { trigger: 'axis' },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
@@ -64,7 +80,7 @@ const chartInitialOption: echarts.ComposeOption<LineSeriesOption | AxisPointerCo
         type: 'slider',
         xAxisIndex: [0, 1],
         filterMode: 'filter',
-        start: 90,
+        start: 50,
         bottom: '46%'
     }, {
         type: 'inside',
@@ -94,31 +110,34 @@ const chartInitialOption: echarts.ComposeOption<LineSeriesOption | AxisPointerCo
         type: 'time'
     }, {
         type: 'time',
+        show: false,
         gridIndex: 1,
         position: 'top'
     }],
     yAxis: [{
         type: 'value',
+        splitLine: { show: false }
+    }, {
+        type: 'value',
+        gridIndex: 1,
         splitArea: { show: true },
         splitLine: { show: false }
     }, {
         type: 'value',
         gridIndex: 1,
-        inverse: true,
-        splitArea: { show: true },
-        splitLine: { show: false }
-    }, { // 网络请求量下表副Y轴
-        type: 'value',
-        gridIndex: 1,
+        splitArea: { show: false },
         splitLine: { show: false }
     }],
     series: [{
         id: 'queueTiming',
         name: '单位总耗时',
+        xAxisIndex: 0,
+        yAxisIndex: 0,
         type: 'line',
         step: 'middle',
         symbolSize: 2,
-        sampling: 'average',
+        sampling: 'lttb',
+        universalTransition: true,
         markLine: {
             symbol: 'none',
             lineStyle: { type: 'dotted' },
@@ -127,43 +146,50 @@ const chartInitialOption: echarts.ComposeOption<LineSeriesOption | AxisPointerCo
     }, {
         id: 'savePostsTiming',
         name: '贴子保存耗时',
+        xAxisIndex: 0,
+        yAxisIndex: 0,
         type: 'line',
         symbolSize: 0,
-        sampling: 'average',
-        areaStyle: {},
-        stack: 'queueTiming'
+        sampling: 'lttb',
+        universalTransition: true,
+        stack: 'queueTotalTiming'
     }, {
         id: 'webRequestTiming',
         name: '网络请求耗时',
+        xAxisIndex: 0,
+        yAxisIndex: 0,
         type: 'line',
         symbolSize: 0,
-        sampling: 'average',
-        areaStyle: {},
-        stack: 'queueTiming'
+        sampling: 'lttb',
+        universalTransition: true,
+        stack: 'queueTotalTiming'
     }, {
         id: 'webRequestTimes',
         name: '网络请求量',
         xAxisIndex: 1,
-        yAxisIndex: 2,
-        type: 'line',
-        symbolSize: 2,
-        sampling: 'average'
-    }, {
-        id: 'parsedPostTimes',
-        name: '处理贴子量',
-        xAxisIndex: 1,
         yAxisIndex: 1,
         type: 'line',
-        symbolSize: 2,
-        sampling: 'average'
+        symbolSize: 0,
+        sampling: 'lttb',
+        universalTransition: true
+    }, {
+        id: 'parsedPostTimes',
+        name: '处理贴子量（右轴）',
+        xAxisIndex: 1,
+        yAxisIndex: 2,
+        type: 'line',
+        symbolSize: 0,
+        sampling: 'lttb',
+        universalTransition: true
     }, {
         id: 'parsedUserTimes',
         name: '处理用户量',
         xAxisIndex: 1,
         yAxisIndex: 1,
         type: 'line',
-        symbolSize: 2,
-        sampling: 'average'
+        symbolSize: 0,
+        sampling: 'lttb',
+        universalTransition: true
     }]
 };
 
@@ -175,42 +201,46 @@ export default defineComponent({
         const state = reactive({
             autoRefresh: false,
             statusQuery: {
-                timeRange: 'minute',
-                startTime: DateTime.now().minus({ weeks: 1 }).startOf('second')
-                    .toISO({ includeOffset: false }),
-                endTime: DateTime.now().startOf('second')
-                    .toISO({ includeOffset: false })
-            } as ApiQSStatus
+                timeGranular: 'minute', // timeGranular
+                startTime: 0,
+                endTime: 0
+            } as ApiQSStatus,
+            timeRange: [
+                moment(DateTime.now().minus({ days: 1 }).startOf('minute').toISO()),
+                moment(DateTime.now().startOf('minute').toISO())
+            ] as Moment[]
         });
         const submitQueryForm = () => {
-            // fully refresh to regenerate a new echarts instance
-            statusChart.value?.clear();
             if (statusChartDom.value === undefined) return;
-            statusChart.value = echarts.init(statusChartDom.value);
             statusChartDom.value.classList.add('loading');
+            statusChart.value ??= markRaw(echarts.init(statusChartDom.value));
+            statusChart.value.clear();
             statusChart.value.setOption(chartInitialOption);
             (async () => {
                 const statusResult = await apiStatus(state.statusQuery);
                 if (isApiError(statusResult)) return;
                 const series = _.chain(chartInitialOption.series)
                     .map('id')
-                    .map((seriesName: string) => ({
+                    .map((seriesName: keyof ApiStatus[0]) => ({
                         id: seriesName,
                         data: _.map(statusResult, i => [i.startTime, i[seriesName]]) // select column from status
                     }))
                     .value();
-                statusChart?.value?.setOption({ series });
+                statusChart.value?.setOption({ series });
+                statusChartDom.value?.classList.remove('loading');
             })();
-            statusChartDom.value.classList.remove('loading');
         };
 
         watch(() => state.autoRefresh, autoRefresh => {
-            if (autoRefresh) autoRefreshIntervalID.value = window.setInterval(submitQueryForm, 100); // refresh data every minute
+            if (autoRefresh) autoRefreshIntervalID.value = window.setInterval(submitQueryForm, 60000); // refresh data every minute
             else clearInterval(autoRefreshIntervalID.value);
         });
+        watch(() => state.timeRange, timeRange => {
+            [state.statusQuery.startTime, state.statusQuery.endTime] = timeRange.map(i => i.unix());
+        }, { immediate: true });
         onMounted(submitQueryForm);
 
-        return { ...toRefs(state), statusChartDom };
+        return { RangePicker, Switch, moment, ...toRefs(state), statusChartDom, submitQueryForm };
     }
 });
 </script>
