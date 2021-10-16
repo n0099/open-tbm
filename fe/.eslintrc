@@ -98,7 +98,7 @@
     "multiline-ternary": ["error", "always-multiline"],
     "new-cap": "error",
     "new-parens": "error",
-    "newline-per-chained-call": ["error", { "ignoreChainWithDepth": 3 }],
+    // "newline-per-chained-call": ["error", { "ignoreChainWithDepth": 3 }],
     "no-array-constructor": "error",
     "no-bitwise": "error",
     "no-continue": "error",
