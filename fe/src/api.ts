@@ -1,4 +1,4 @@
-import type { ApiError, ApiQSStatus, ApiStatus } from '@/api.d';
+import type { ApiError, ApiForumList, ApiStatus, ApiStatusQP, ApiStats, ApiStatsQP } from '@/api.d';
 import NProgress from 'nprogress';
 import qs from 'qs';
 import _ from 'lodash';
@@ -6,36 +6,34 @@ import Noty from 'noty';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 export const isApiError = (r: any): r is ApiError => 'errorInfo' in r && typeof r.errorInfo === 'string';
+export const nullIfApiError = <T>(api: ApiError | T): T | null => (isApiError(api) ? null : api);
 const getRequester = async <T = ApiError | unknown>(endpoint: string, queryString?: Record<string, unknown>): Promise<ApiError | T> => {
     NProgress.start();
     document.body.style.cursor = 'progress';
+    let errorMessage = `GET ${endpoint}<br />`;
     try {
-        const res = await fetch(
+        const response = await fetch(
             `${process.env.VUE_APP_API_URL_PREFIX}${endpoint}?${qs.stringify(queryString)}`,
             { headers: { Accept: 'application/json' } }
         );
-        let error = null;
-        if (!res.ok) {
-            error = `GET ${endpoint} => HTTP ${res.status}`;
-            throw Error(error);
-        }
-        const json = await res.json() as T;
+        errorMessage += `HTTP ${response.status} `;
+        const json = await response.json() as T;
         if (isApiError(json)) {
-            error = `GET ${endpoint} => HTTP ${res.status} 错误码：${json.errorCode}<br />`;
+            errorMessage += `错误码：${json.errorCode}<br />`;
             if (_.isObject(json.errorInfo)) {
-                error = _.map(json.errorInfo, (info, paramName) =>
+                errorMessage += _.map(json.errorInfo, (info, paramName) =>
                     `参数 ${paramName}：${info.join('<br />')}`).join('<br />');
             } else {
-                error += json.errorInfo;
+                errorMessage += json.errorInfo;
             }
-            throw Error(error);
+            throw Error();
         }
         return json;
     } catch (e: unknown) {
         if (e instanceof Error) {
-            const { message } = e;
-            new Noty({ timeout: 3000, type: 'error', text: message }).show();
-            return { errorCode: 0, errorInfo: message };
+            const { message: exceptionMessage } = e;
+            new Noty({ timeout: 3000, type: 'error', text: `${errorMessage}<br />${exceptionMessage}` }).show();
+            return { errorCode: 0, errorInfo: exceptionMessage };
         }
         throw e;
     } finally {
@@ -61,4 +59,6 @@ const reCAPTCHACheck = async (action = ''): Promise<Record<never, never> | { reC
 const getRequesterWithReCAPTCHA = async <T = ApiError | unknown>(endpoint: string, queryString?: Record<string, unknown>, action = '') =>
     getRequester<T>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) });
 
-export const apiStatus = async (statusQuery: ApiQSStatus): Promise<ApiError | ApiStatus> => getRequesterWithReCAPTCHA<ApiStatus>('/status', statusQuery);
+export const apiStatus = async (qp: ApiStatusQP): Promise<ApiError | ApiStatus> => getRequesterWithReCAPTCHA<ApiStatus>('/status', qp);
+export const apiForumList = async (): Promise<ApiError | ApiForumList> => getRequester('/forumList');
+export const apiStats = async (qp: ApiStatsQP): Promise<ApiError | ApiStats> => getRequesterWithReCAPTCHA<ApiStats>('/stats/forumPostsCount', qp);

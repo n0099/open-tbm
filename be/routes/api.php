@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/forumsList', fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
+Route::get('/forumList', fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
     Route::get('/postsQuery', 'PostsQuery@query');
@@ -63,21 +63,22 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
             ->get()->toJson();
     });
     Route::get('/stats/forumPostsCount', function (Request $request): array {
-        $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime');
+        $groupByTimeGranular = Helper::getRawSqlGroupByTimeGranular('postTime');
         $queryParams = $request->validate([
             'fid' => 'required|integer',
-            'timeRange' => ['required', 'string', Rule::in(array_keys($groupTimeRangeRawSQL))],
-            'startTime' => 'required|date',
-            'endTime' => 'required|date'
+            'timeGranular' => ['required', 'string', Rule::in(array_keys($groupByTimeGranular))],
+            'startTime' => 'required|integer|numeric',
+            'endTime' => 'required|integer|numeric'
         ]);
 
         $forumPostsCount = [];
         foreach (PostModelFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
             $forumPostsCount[$postType] = $forumPostModel
-                ->selectRaw($groupTimeRangeRawSQL[$queryParams['timeRange']])
+                ->selectRaw($groupByTimeGranular[$queryParams['timeGranular']])
                 ->selectRaw('COUNT(*) AS count')
-                ->whereBetween('postTime', [$queryParams['startTime'], $queryParams['endTime']])
+                ->whereBetween('postTime', [Helper::timestampToLocalDateTime($queryParams['startTime']), Helper::timestampToLocalDateTime($queryParams['endTime'])])
                 ->groupBy('time')
+                ->orderBy('time')
                 ->get()->toArray();
         }
         Helper::abortAPIIf(40403, Helper::isArrayValuesAllEqualTo($forumPostsCount, []));

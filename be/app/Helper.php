@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Arr;
+use JetBrains\PhpStorm\Pure;
 
 class Helper
 {
@@ -79,7 +80,7 @@ class Helper
         return array_filter($haystack, fn($value) => $value !== $equalTo) === [];
     }
 
-    public static function getRawSqlGroupByTimeRange(string $fieldName, array $timeRanges = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
+    #[Pure] public static function getRawSqlGroupByTimeGranular(string $fieldName, array $timeGranular = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
     {
         return Arr::only([
             'minute' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:%i\") AS time",
@@ -88,6 +89,11 @@ class Helper
             'week' => "DATE_FORMAT({$fieldName}, \"%Y第%u周\") AS time",
             'month' => "DATE_FORMAT({$fieldName}, \"%Y-%m\") AS time",
             'year' => "DATE_FORMAT({$fieldName}, \"%Y年\") AS time"
-        ], $timeRanges);
+        ], $timeGranular);
+    }
+
+    public static function timestampToLocalDateTime(int $timestamp): string
+    {
+        return date("Y-m-d\TH:i:s\Z", $timestamp);
     }
 }

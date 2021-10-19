@@ -46,11 +46,11 @@
 
 <script lang="ts">
 import { apiStatus, isApiError } from '@/api';
-import type { ApiQSStatus, ApiStatus } from '@/api.d';
+import type { ApiStatus, ApiStatusQP } from '@/api.d';
+import { emptyChartSeriesData } from '@/shared/echarts';
 
-import { defineComponent, markRaw, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { RangePicker, Switch } from 'ant-design-vue';
-import type { ECharts } from 'echarts';
 import * as echarts from 'echarts/core';
 import type { LineSeriesOption } from 'echarts/charts';
 import { LineChart } from 'echarts/charts';
@@ -64,6 +64,7 @@ import { DateTime } from 'luxon';
 import _ from 'lodash';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
+let statusChart: echarts.ECharts | null = null;
 const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | MarkLineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption | VisualMapComponentOption> = {
     title: { text: '近期性能统计' },
     tooltip: { trigger: 'axis' },
@@ -196,26 +197,31 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 export default defineComponent({
     setup() {
         const statusChartDom = ref<HTMLElement>();
-        const statusChart = ref<ECharts>();
         const autoRefreshIntervalID = ref(0);
-        const state = reactive({
+        const state = reactive<{
+            autoRefresh: boolean,
+            statusQuery: ApiStatusQP,
+            timeRange: Moment[]
+        }>({
             autoRefresh: false,
             statusQuery: {
-                timeGranular: 'minute', // timeGranular
+                timeGranular: 'minute',
                 startTime: 0,
                 endTime: 0
-            } as ApiQSStatus,
+            },
             timeRange: [
                 moment(DateTime.now().minus({ days: 1 }).startOf('minute').toISO()),
                 moment(DateTime.now().startOf('minute').toISO())
-            ] as Moment[]
+            ]
         });
         const submitQueryForm = () => {
             if (statusChartDom.value === undefined) return;
             statusChartDom.value.classList.add('loading');
-            statusChart.value ??= markRaw(echarts.init(statusChartDom.value));
-            statusChart.value.clear();
-            statusChart.value.setOption(chartInitialOption);
+            if (statusChart === null) {
+                statusChart = echarts.init(statusChartDom.value);
+                statusChart.setOption(chartInitialOption);
+            }
+            emptyChartSeriesData(statusChart);
             (async () => {
                 const statusResult = await apiStatus(state.statusQuery);
                 if (isApiError(statusResult)) return;
@@ -226,9 +232,8 @@ export default defineComponent({
                         data: _.map(statusResult, i => [i.startTime, i[seriesName]]) // select column from status
                     }))
                     .value();
-                statusChart.value?.setOption({ series });
-                statusChartDom.value?.classList.remove('loading');
-            })();
+                statusChart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
+            })().finally(() => { statusChartDom.value?.classList.remove('loading') });
         };
 
         watch(() => state.autoRefresh, autoRefresh => {

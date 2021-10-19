@@ -60,11 +60,11 @@ class BilibiliVote
      */
     public static function allVotesCountByTime(Request $request): string
     {
-        $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime', ['minute', 'hour']);
+        $groupByTimeGranular = Helper::getRawSqlGroupByTimeGranular('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeRange' => ['required', Rule::in(array_keys($groupTimeRangeRawSQL))]
+            'timeGranular' => ['required', Rule::in(array_keys($groupByTimeGranular))]
         ]);
-        return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$request->query()['timeRange']])
+        return BilibiliVoteModel::selectRaw($groupByTimeGranular[$request->query()['timeGranular']])
             ->selectRaw('isValid, COUNT(*) AS count')
             ->groupBy('time', 'isValid')
             ->orderBy('time', 'ASC')
@@ -97,11 +97,11 @@ class BilibiliVote
      */
     public static function top5CandidatesVotesCountByTime(Request $request): string
     {
-        $groupTimeRangeRawSQL = Helper::getRawSqlGroupByTimeRange('postTime', ['minute', 'hour']);
+        $groupByTimeGranular = Helper::getRawSqlGroupByTimeGranular('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeRange' => ['required', Rule::in(array_keys($groupTimeRangeRawSQL))]
+            'timeGranular' => ['required', Rule::in(array_keys($groupByTimeGranular))]
         ]);
-        return BilibiliVoteModel::selectRaw($groupTimeRangeRawSQL[$request->query()['timeRange']])
+        return BilibiliVoteModel::selectRaw($groupByTimeGranular[$request->query()['timeGranular']])
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->whereIn('voteFor', static::getTopVotesCandidatesSQL(5))

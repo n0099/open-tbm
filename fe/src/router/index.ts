@@ -5,6 +5,7 @@ export default createRouter({
     history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
     routes: [
         { path: '/', component: Index },
-        { path: '/status', component: async () => import('@/views/Status.vue') }
+        { path: '/status', component: async () => import('@/views/Status.vue') },
+        { path: '/stats', component: async () => import('@/views/Stats.vue') }
     ]
 });
