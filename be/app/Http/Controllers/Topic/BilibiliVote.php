@@ -6,6 +6,8 @@ use App\Eloquent\BilibiliVoteModel;
 use App\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Collection;
+use Spatie\Regex\Regex;
 
 /**
  * Class BilibiliVote
@@ -44,11 +46,13 @@ class BilibiliVote
      */
     public static function allCandidatesVotesCount(Request $request): string
     {
-        return BilibiliVoteModel::select(['isValid', 'voteFor'])
+        return static::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
-            ->get()->toJson();
+            ->get())
+            ->values()
+            ->toJson();
     }
 
     /**
@@ -80,12 +84,17 @@ class BilibiliVote
      */
     public static function top50CandidatesVotesCount(Request $request): string
     {
-        return BilibiliVoteModel::select(['isValid', 'voteFor'])
+        return static::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade')
             ->whereIn('voteFor', static::getTopVotesCandidatesSQL(50))
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
-            ->get()->toJson();
+            ->get())
+            ->map(function ($i) {
+                $i['voterAvgGrade'] = (float)$i['voterAvgGrade'];
+                return $i;
+            })
+            ->toJson();
     }
 
     /**
@@ -101,19 +110,20 @@ class BilibiliVote
         $request->validate([
             'timeGranular' => ['required', Rule::in(array_keys($groupByTimeGranular))]
         ]);
-        return BilibiliVoteModel::selectRaw($groupByTimeGranular[$request->query()['timeGranular']])
+        return static::sanitizeVoteForField(BilibiliVoteModel::selectRaw($groupByTimeGranular[$request->query()['timeGranular']])
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->whereIn('voteFor', static::getTopVotesCandidatesSQL(5))
             ->groupBy('time', 'isValid', 'voteFor')
             ->orderBy('time', 'ASC')
-            ->get()->toJson();
+            ->get())
+            ->toJson();
     }
 
     /**
      * Return every 5 mins sum of cumulative votes count, group by candidates and validate
      *
-     * @sql select timeRangesRawSQL.endTime, isValid, voteFor, SUM(timeGroups.count) AS count
+     * @sql select CAST(timeRangesRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count
      * from (
      *   select FLOOR(UNIX_TIMESTAMP(postTime)/300)*300 as endTime, isValid, voteFor, COUNT(*) as count from `tbm_bilibiliVote`
      *   where `voteFor` in getTopVotesCandidatesSQL(10)
@@ -136,8 +146,8 @@ class BilibiliVote
             $timeRangesRawSQL[] = "SELECT \"{$time}\" AS endTime";
         }
         $timeRangesRawSQL = implode(' UNION ', $timeRangesRawSQL);
-        return \DB::query()
-            ->selectRaw('timeRangesRawSQL.endTime, isValid, voteFor, SUM(timeGroups.count) AS count')
+        return static::sanitizeVoteForField(\DB::query()
+            ->selectRaw('CAST(timeRangesRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
             ->fromSub(BilibiliVoteModel
                 ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeRange})*{$timeRange} as endTime, isValid, voteFor, COUNT(*) as count")
                 ->whereIn('voteFor', static::getTopVotesCandidatesSQL(10))
@@ -147,6 +157,20 @@ class BilibiliVote
             'timeGroups.endTime', '<', 'timeRangesRawSQL.endTime') // cumulative
             ->groupBy('endTime', 'isValid', 'voteFor')
             ->orderBy('endTime', 'ASC')
-            ->get()->toJson();
+            ->orderBy('voteFor', 'ASC')
+            ->get()
+            ->map(fn ($i) => (array)$i))
+            ->toJson();
+    }
+
+    private static function sanitizeVoteForField(Collection $collection): Collection
+    {
+        return $collection
+            ->filter(fn ($i) => Regex::match('/^(0|[1-9][0-9]*)$/', $i['voteFor'] ?? '')->hasMatch())
+            ->map(function ($i) {
+                $i['voteFor'] = (int)$i['voteFor'];
+                return $i;
+            })
+            ->filter(fn ($i) => $i['voteFor'] >= 1 && $i['voteFor'] <= 1056);
     }
 }

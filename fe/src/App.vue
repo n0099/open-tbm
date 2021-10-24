@@ -32,6 +32,7 @@
         </div>
     </nav>
     <HorizontalMobileMessage />
+    <img id="loadingBlocksRouteChange" :src="baseUrl + 'assets/icon-loading-blocks.svg'" class="d-none" />
     <div class="container">
         <AConfigProvider :locale="AntdZhCn">
             <RouterView />
