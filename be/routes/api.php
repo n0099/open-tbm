@@ -38,13 +38,13 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
 
         return \DB::query()
             ->selectRaw('
-                startTime,
+                CAST(UNIX_TIMESTAMP(startTime) AS UNSIGNED) AS startTime,
                 SUM(queueTiming) AS queueTiming,
                 SUM(webRequestTiming) AS webRequestTiming,
                 SUM(savePostsTiming) AS savePostsTiming,
-                SUM(webRequestTimes) AS webRequestTimes,
-                SUM(parsedPostTimes) AS parsedPostTimes,
-                SUM(parsedUserTimes) AS parsedUserTimes
+                CAST(SUM(webRequestTimes) AS UNSIGNED) AS webRequestTimes,
+                CAST(SUM(parsedPostTimes) AS UNSIGNED) AS parsedPostTimes,
+                CAST(SUM(parsedUserTimes) AS UNSIGNED) AS parsedUserTimes
             ')
             ->fromSub(fn (Builder $query) =>
                 $query->from('tbm_crawledPosts')
@@ -73,6 +73,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
 
         $forumPostsCount = [];
         foreach (PostModelFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
+            /** @var \Illuminate\Database\Eloquent\Model $forumPostModel */
             $forumPostsCount[$postType] = $forumPostModel
                 ->selectRaw($groupByTimeGranular[$queryParams['timeGranular']])
                 ->selectRaw('COUNT(*) AS count')

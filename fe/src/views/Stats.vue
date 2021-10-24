@@ -55,9 +55,9 @@
 </template>
 
 <script lang="ts">
-import type { ApiForumList, ApiStatsQP } from '@/api.d';
-import { apiForumList, apiStats, isApiError } from '@/api';
-import { emptyChartSeriesData, timeGranularAxisPointerLabelFormatter, timeGranularAxisType } from '@/shared/echarts';
+import type { ApiForumList, ApiStatsQP } from '@/api/index.d';
+import { apiForumList, apiStatsForumPostsCount, isApiError } from '@/api';
+import { emptyChartSeriesData, extendCommonToolbox, timeGranularAxisPointerLabelFormatter, timeGranularAxisType } from '@/shared/echarts';
 
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -75,21 +75,24 @@ import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, LineChart, BarChart, CanvasRenderer, UniversalTransition]);
 let statsChart: echarts.ECharts | null = null;
+const commonSeriesOption: LineSeriesOption = {
+    type: 'line',
+    symbolSize: 1,
+    smooth: true,
+    sampling: 'lttb',
+    universalTransition: true
+};
 const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption> = {
     title: { text: '吧贴量统计' },
-    tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
-    },
-    toolbox: {
-        feature: {
-            dataZoom: { show: true, yAxisIndex: 'none' },
-            restore: { show: true },
-            dataView: { show: true },
-            saveAsImage: { show: true },
-            magicType: { show: true, type: ['stack', 'line', 'bar'] }
+    axisPointer: { type: 'shadow' },
+    tooltip: { trigger: 'axis' },
+    ...extendCommonToolbox({
+        toolbox: {
+            feature: {
+                magicType: { show: true, type: ['stack', 'line', 'bar'] }
+            }
         }
-    },
+    }),
     dataZoom: [{
         type: 'slider',
         filterMode: 'filter',
@@ -104,31 +107,19 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
         { type: 'value', splitLine: { show: false } }
     ],
     series: [{
+        ...commonSeriesOption,
         id: 'thread',
         name: '主题贴（右轴）',
-        type: 'line',
-        symbolSize: 1,
-        smooth: true,
-        sampling: 'lttb',
-        universalTransition: true,
         yAxisIndex: 1
     }, {
+        ...commonSeriesOption,
         id: 'reply',
         name: '回复贴',
-        type: 'line',
-        symbolSize: 1,
-        smooth: true,
-        sampling: 'lttb',
-        universalTransition: true,
         stack: 'postsCount'
     }, {
+        ...commonSeriesOption,
         id: 'subReply',
         name: '楼中楼',
-        type: 'line',
-        symbolSize: 1,
-        smooth: true,
-        sampling: 'lttb',
-        universalTransition: true,
         stack: 'postsCount'
     }]
 };
@@ -165,7 +156,7 @@ export default defineComponent({
                 { title: { text: `${_.find(state.forumList, { fid: state.statsQuery.fid })?.name}吧贴量统计` } }
             );
             (async () => {
-                const statsResult = await apiStats(state.statsQuery);
+                const statsResult = await apiStatsForumPostsCount(state.statsQuery);
                 if (isApiError(statsResult)) return;
                 const series = _.map(statsResult, (dates, postType) => ({
                     id: postType,
@@ -181,7 +172,7 @@ export default defineComponent({
                                     .map(counts => _.map(counts, count => count.time))
                                     .flatten()
                                     .sort()
-                                    .uniq()
+                                    .sortedUniq()
                                     .value()
                             }
                             : {},

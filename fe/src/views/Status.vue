@@ -45,9 +45,9 @@
 </template>
 
 <script lang="ts">
+import type { ApiStatus, ApiStatusQP } from '@/api/index.d';
 import { apiStatus, isApiError } from '@/api';
-import type { ApiStatus, ApiStatusQP } from '@/api.d';
-import { emptyChartSeriesData } from '@/shared/echarts';
+import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { RangePicker, Switch } from 'ant-design-vue';
@@ -65,18 +65,17 @@ import _ from 'lodash';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
 let statusChart: echarts.ECharts | null = null;
+const commonSeriesOption: LineSeriesOption = {
+    type: 'line',
+    symbolSize: 0,
+    sampling: 'lttb',
+    universalTransition: true
+};
 const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | MarkLineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption | VisualMapComponentOption> = {
     title: { text: '近期性能统计' },
     tooltip: { trigger: 'axis' },
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
-    toolbox: {
-        feature: {
-            dataZoom: { show: true, yAxisIndex: 'none' },
-            restore: { show: true },
-            dataView: { show: true },
-            saveAsImage: { show: true }
-        }
-    },
+    ...commonToolboxFeatures,
     dataZoom: [{
         type: 'slider',
         xAxisIndex: [0, 1],
@@ -130,67 +129,50 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
         splitLine: { show: false }
     }],
     series: [{
+        ...commonSeriesOption,
         id: 'queueTiming',
         name: '单位总耗时',
         xAxisIndex: 0,
         yAxisIndex: 0,
-        type: 'line',
         step: 'middle',
         symbolSize: 2,
-        sampling: 'lttb',
-        universalTransition: true,
         markLine: {
             symbol: 'none',
             lineStyle: { type: 'dotted' },
             data: [{ yAxis: 30 }, { yAxis: 60 }, { yAxis: 120 }, { yAxis: 240 }, { yAxis: 480 }]
         }
     }, {
+        ...commonSeriesOption,
         id: 'savePostsTiming',
         name: '贴子保存耗时',
         xAxisIndex: 0,
         yAxisIndex: 0,
-        type: 'line',
-        symbolSize: 0,
-        sampling: 'lttb',
-        universalTransition: true,
         stack: 'queueTotalTiming'
     }, {
+        ...commonSeriesOption,
         id: 'webRequestTiming',
         name: '网络请求耗时',
         xAxisIndex: 0,
         yAxisIndex: 0,
-        type: 'line',
-        symbolSize: 0,
-        sampling: 'lttb',
-        universalTransition: true,
         stack: 'queueTotalTiming'
     }, {
+        ...commonSeriesOption,
         id: 'webRequestTimes',
         name: '网络请求量',
         xAxisIndex: 1,
-        yAxisIndex: 1,
-        type: 'line',
-        symbolSize: 0,
-        sampling: 'lttb',
-        universalTransition: true
+        yAxisIndex: 1
     }, {
+        ...commonSeriesOption,
         id: 'parsedPostTimes',
         name: '处理贴子量（右轴）',
         xAxisIndex: 1,
-        yAxisIndex: 2,
-        type: 'line',
-        symbolSize: 0,
-        sampling: 'lttb',
-        universalTransition: true
+        yAxisIndex: 2
     }, {
+        ...commonSeriesOption,
         id: 'parsedUserTimes',
         name: '处理用户量',
         xAxisIndex: 1,
-        yAxisIndex: 1,
-        type: 'line',
-        symbolSize: 0,
-        sampling: 'lttb',
-        universalTransition: true
+        yAxisIndex: 1
     }]
 };
 
@@ -229,7 +211,8 @@ export default defineComponent({
                     .map('id')
                     .map((seriesName: keyof ApiStatus[0]) => ({
                         id: seriesName,
-                        data: _.map(statusResult, i => [i.startTime, i[seriesName]]) // select column from status
+                        // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
+                        data: _.map(statusResult, i => [i.startTime * 1000, i[seriesName]])
                     }))
                     .value();
                 statusChart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });

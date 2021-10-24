@@ -86,7 +86,7 @@ class Helper
             'minute' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:%i\") AS time",
             'hour' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:00\") AS time",
             'day' => "DATE({$fieldName}) AS time",
-            'week' => "DATE_FORMAT({$fieldName}, \"%Y第%u周\") AS time",
+            'week' => "DATE_FORMAT({$fieldName}, \"%Y年第%u周\") AS time",
             'month' => "DATE_FORMAT({$fieldName}, \"%Y-%m\") AS time",
             'year' => "DATE_FORMAT({$fieldName}, \"%Y年\") AS time"
         ], $timeGranular);
@@ -94,6 +94,6 @@ class Helper
 
     public static function timestampToLocalDateTime(int $timestamp): string
     {
-        return date("Y-m-d\TH:i:s\Z", $timestamp);
+        return date("Y-m-d\TH:i:s", $timestamp);
     }
 }

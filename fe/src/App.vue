@@ -7,29 +7,23 @@
             </button>
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="navbar-nav">
-                    <li :class="`nav-item dropdown ${isActiveNav(['post', 'user'])}`">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarQueryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-search"></i> 查询
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarQueryDropdown">
-                            <RouterLink to="/post" :class="`dropdown-item ${isActiveNav('post')}`" activeClass="active"><i class="far fa-comment-dots"></i> 贴子</RouterLink>
-                            <RouterLink to="/user" :class="`dropdown-item ${isActiveNav('user')}`" activeClass="active"><i class="fas fa-users"></i> 用户</RouterLink>
-                        </div>
-                    </li>
-                    <li :class="`nav-item ${isActiveNav('stats')}`">
-                        <RouterLink to="/stats" class="nav-link" activeClass="active"><i class="fas fa-chart-pie"></i> 统计</RouterLink>
-                    </li>
-                    <li :class="`nav-item ${isActiveNav('status')}`">
-                        <RouterLink to="/status" class="nav-link" activeClass="active"><i class="fas fa-satellite-dish"></i> 状态</RouterLink>
-                    </li>
-                    <li :class="`nav-item dropdown ${isActiveNav(['bilibiliVote'])}`">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarTopicDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-paper-plane"></i> 专题
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarTopicDropdown">
-                            <RouterLink to="/bilibiliVote" :class="`dropdown-item ${isActiveNav('bilibiliVote')}`" activeClass="active">bilibili吧公投</RouterLink>
-                        </div>
-                    </li>
+                    <template v-for="nav in navs" :key="navs.indexOf(nav)">
+                        <li v-if="'routes' in nav" :class="'nav-item dropdown' + activeNavClass(nav.isActive)">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i v-if="nav.icon !== undefined" :class="'fas ' + nav.icon"></i> {{ nav.title }}
+                            </a>
+                            <div class="dropdown-menu">
+                                <RouterLink v-for="r in nav.routes" :key="r.route.name" :to="{ name: r.route }" class="nav-link">
+                                    <i v-if="r.icon !== undefined" :class="'fas ' + r.icon"></i> {{ r.title }}
+                                </RouterLink>
+                            </div>
+                        </li>
+                        <li v-else :class="'nav-item' + activeNavClass(nav.isActive)">
+                            <RouterLink :to="{ name: nav.route }" class="nav-link">
+                                <i v-if="nav.icon !== undefined" :class="'fas ' + nav.icon"></i> {{ nav.title }}
+                            </RouterLink>
+                        </li>
+                    </template>
                     <li class="nav-item">
                         <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐助</a>
                     </li>
@@ -40,11 +34,11 @@
     <HorizontalMobileMessage />
     <div class="container">
         <AConfigProvider :locale="AntdZhCn">
-            <RouterView/>
+            <RouterView />
         </AConfigProvider>
     </div>
     <footer class="footer-outer text-light pt-4 mt-4">
-        <div class="text-center container">
+        <div class="text-center">
             <p>四叶重工QQ群：292311751</p>
             <p>
                 Google <a class="text-white" href="https://www.google.com/analytics/terms/cn.html" target="_blank">Analytics 服务条款</a> |
@@ -53,14 +47,14 @@
             </p>
         </div>
         <footer class="footer-inner text-center p-3">
-            <div class="container">© 2018 ~ 2021 n0099</div>
+            <span>© 2018 ~ 2021 n0099</span>
         </footer>
     </footer>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { RouterLink } from 'vue-router';
+import { defineComponent, onMounted, reactive, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
@@ -68,8 +62,42 @@ import _ from 'lodash';
 
 export default defineComponent({
     setup() {
-        const isActiveNav = () => '';
-        return { RouterLink, ConfigProvider, AntdZhCn, HorizontalMobileMessage, isActiveNav };
+        const route = useRoute();
+        const baseUrl = process.env.BASE_URL;
+        interface Route { route: string, title: string, icon?: string, isActive?: true }
+        interface DropDown { title: string, icon: string, routes: Route[], isActive?: true }
+        const navs = reactive<Array<DropDown | Route>>([
+            {
+                title: '查询',
+                icon: 'fa-search',
+                routes: [
+                    { route: 'post', title: '帖子', icon: 'fa-comment-dots' },
+                    { route: 'user', title: '用户', icon: 'fa-users' }
+                ]
+            },
+            { route: 'stats', title: '统计', icon: 'fa-chart-pie' },
+            { route: 'status', title: '状态', icon: 'fa-satellite-dish' },
+            {
+                title: '专题',
+                icon: 'fa-paper-plane',
+                routes: [
+                    { route: 'bilibiliVote', title: 'bilibili吧公投' }
+                ]
+            }
+        ]);
+        const activeNavClass = (isActive?: boolean) => (isActive === true ? 'active' : '');
+
+        watch(() => route.name, () => {
+            navs.map(nav => ({
+                ...nav,
+                isActive: ('routes' in nav
+                    ? nav.routes.some(i => i.route === route.name)
+                    : nav.route === route.name) || undefined // false to undefined
+            }));
+        });
+        onMounted(() => document.getElementById('loadingBlocksInitial')?.remove());
+
+        return { RouterLink, ConfigProvider, AntdZhCn, HorizontalMobileMessage, baseUrl, navs, activeNavClass };
     }
 });
 
@@ -80,26 +108,6 @@ const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
 
 const $$baseUrl = '{{ $baseUrl }}';
 const $$baseUrlDir = $$baseUrl.substr($$baseUrl.indexOf('/', $$baseUrl.indexOf('://') + 3));
-
-const $$initialNavBar = activeNav => {
-    window.navBarVue = new Vue({
-        el: '#navbar',
-        data() {
-            return { $$baseUrl, activeNav };
-        },
-        methods: {
-            isActiveNav(pageName) {
-                let isActive;
-                if (_.isArray(pageName)) isActive = pageName.includes(this.$data.activeNav);
-                else isActive = this.$data.activeNav === pageName;
-
-                return isActive ? 'active' : null;
-            }
-        }
-    });
-};
-
-const $$loadForumList = async () => new Promise(resolve => $.getJSON(`${$$baseUrl}/api/forumsList`).done(ajaxData => { resolve(ajaxData) }));
 
 const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
     if (spid !== null) return `https://tieba.baidu.com/p/${tid}?pid=${spid}#${spid}`;
@@ -113,7 +121,6 @@ const $$getTBMPostLink = (tid, pid = null, spid = null) => {
 
     return `${$$baseUrl}/post/spid/${spid}`;
 };
-const $$getTiebaUserLink = username => `http://tieba.baidu.com/home/main?un=${username}`;
 const $$getTBMUserLink = username => `${$$baseUrl}/user/n/${username}`;
 const $$getTiebaUserAvatarUrl = avatarUrl => `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
 </script>
@@ -125,67 +132,5 @@ const $$getTiebaUserAvatarUrl = avatarUrl => `https://himg.bdimg.com/sys/portrai
 
 .footer-inner {
     background-color: rgba(0,0,0,.2);
-}
-</style>
-
-<style>
-.ant-input-lg {
-    height: 38px; /* adopt to bootstrap input group */
-}
-
-.lazyload, .lazyloading {
-    opacity: 0;
-    background: #f7f7f7 url('../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
-}
-.lazyloaded {
-    opacity: 1;
-    transition: opacity .3s;
-}
-
-.loading {
-    background: url('../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
-}
-
-.grecaptcha-badge {
-    visibility: hidden;
-}
-
-a {
-    color: #1890ff; /* use antd color for clearly bootstrap hover animation */
-    text-decoration: none !important; /* override browser underline */
-}
-
-* {
-    font-weight: 300;
-    font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
-}
-
-@media (max-width: 991.98px) {
-    .container {
-        max-width: 100%;
-    }
-}
-
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-    background-color: #f5f5f5;
-}
-::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-    background-color: #f5f5f5;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #f90;
-    background-image: -webkit-linear-gradient(
-        45deg,
-        rgba(255, 255, 255, .2) 25%,
-        transparent 25%,
-        transparent 50%,
-        rgba(255, 255, 255, .2) 50%,
-        rgba(255, 255, 255, .2) 75%,
-        transparent 75%,
-        transparent
-    )
 }
 </style>

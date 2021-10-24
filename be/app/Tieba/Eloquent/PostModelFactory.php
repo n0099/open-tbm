@@ -2,6 +2,8 @@
 
 namespace App\Tieba\Eloquent;
 
+use JetBrains\PhpStorm\ArrayShape;
+
 class PostModelFactory
 {
     public static function newThread(int $fid): ThreadModel
@@ -19,7 +21,15 @@ class PostModelFactory
         return (new SubReplyModel())->setFid($fid);
     }
 
-    public static function getPostModelsByFid($fid): array
+    /**
+     * @param int $fid
+     * @return array{thread: ThreadModel, reply: ReplyModel, subReply: SubReplyModel}
+     */
+    #[ArrayShape([
+        'thread' => "\App\Tieba\Eloquent\ThreadModel",
+        'reply' => "\App\Tieba\Eloquent\ReplyModel",
+        'subReply' => "\App\Tieba\Eloquent\SubReplyModel"
+    ])] public static function getPostModelsByFid(int $fid): array
     {
         return [
             'thread' => static::newThread($fid),

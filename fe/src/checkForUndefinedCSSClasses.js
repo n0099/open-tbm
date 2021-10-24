@@ -22,23 +22,29 @@ function detectUndefined(node) {
     node._cssChecked = true;
     for (const cl of node.classList) {
         if ([
+            // own usage start
+            'loading',
+            // own usage end
+            'grecaptcha',
+            'g-recaptcha',
+            'router-link-exact', // vue-router
+            'nprogress',
+            'noty_',
+            // fontawesome start
             'fa-',
             'far',
             'fas',
             'fontawesome',
             'svg-inline--fa',
-            'grecaptcha',
-            'g-recaptcha',
-            'router-link-exact',
-            'nprogress',
-            'bar',
-            'peg',
-            'spinner',
-            'noty_',
-            'echarts',
-            'loading',
+            // fontawesome end
+            // antd start
             'ant-',
-            'slide-up'
+            'slide-up',
+            'anticon-',
+            'off',
+            'scroll-div-append-to-body',
+            'undefined-hide-scrollbar'
+            // antd end
         ].filter(i => cl.startsWith(i)).length !== 0) continue;
         // Ignore defined and already-seen classes
         if (defined.has(cl) || seen.has(cl)) continue;

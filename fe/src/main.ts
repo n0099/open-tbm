@@ -5,8 +5,7 @@ import store from '@/store';
 import '@fortawesome/fontawesome-free/js/all.js';
 import antd from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.css';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import bootstrap from 'bootstrap';
+import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
