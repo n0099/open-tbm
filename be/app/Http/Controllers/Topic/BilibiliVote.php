@@ -64,11 +64,11 @@ class BilibiliVote
      */
     public static function allVotesCountByTime(Request $request): string
     {
-        $groupByTimeGranular = Helper::getRawSqlGroupByTimeGranular('postTime', ['minute', 'hour']);
+        $groupByTimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeGranular' => ['required', Rule::in(array_keys($groupByTimeGranular))]
+            'timeGranularity' => ['required', Rule::in(array_keys($groupByTimeGranularity))]
         ]);
-        return BilibiliVoteModel::selectRaw($groupByTimeGranular[$request->query()['timeGranular']])
+        return BilibiliVoteModel::selectRaw($groupByTimeGranularity[$request->query()['timeGranularity']])
             ->selectRaw('isValid, COUNT(*) AS count')
             ->groupBy('time', 'isValid')
             ->orderBy('time', 'ASC')
@@ -106,11 +106,11 @@ class BilibiliVote
      */
     public static function top5CandidatesVotesCountByTime(Request $request): string
     {
-        $groupByTimeGranular = Helper::getRawSqlGroupByTimeGranular('postTime', ['minute', 'hour']);
+        $groupBytimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeGranular' => ['required', Rule::in(array_keys($groupByTimeGranular))]
+            'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))]
         ]);
-        return static::sanitizeVoteForField(BilibiliVoteModel::selectRaw($groupByTimeGranular[$request->query()['timeGranular']])
+        return static::sanitizeVoteForField(BilibiliVoteModel::selectRaw($groupBytimeGranularity[$request->query()['timeGranularity']])
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->whereIn('voteFor', static::getTopVotesCandidatesSQL(5))
@@ -123,14 +123,14 @@ class BilibiliVote
     /**
      * Return every 5 mins sum of cumulative votes count, group by candidates and validate
      *
-     * @sql select CAST(timeRangesRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count
+     * @sql select CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count
      * from (
      *   select FLOOR(UNIX_TIMESTAMP(postTime)/300)*300 as endTime, isValid, voteFor, COUNT(*) as count from `tbm_bilibiliVote`
      *   where `voteFor` in getTopVotesCandidatesSQL(10)
      *   group by `endTime`, `isValid`, `voteFor`
      * ) as `timeGroups`
-     * inner join (SELECT "1552192500" AS endTime UNION ...every +300... UNION SELECT "1552276800" AS endTime) AS timeRangesRawSQL
-     * on `timeGroups`.`endTime` < `timeRangesRawSQL`.`endTime`
+     * inner join (SELECT "1552192500" AS endTime UNION ...every +300... UNION SELECT "1552276800" AS endTime) AS timeGranularityRawSQL
+     * on `timeGroups`.`endTime` < `timeGranularityRawSQL`.`endTime`
      * group by `endTime`, `isValid`, `voteFor`
      * order by `endTime` asc
      * @param Request $request
@@ -140,21 +140,21 @@ class BilibiliVote
     {
         $voteStartTime = '2019-03-10T12:35:00'; // exactly 2019-03-10T12:38:17
         $voteEndTime = '2019-03-11T12:00:00';
-        $timeRange = 5 * 60; // 5 mins
-        $timeRangesRawSQL = [];
-        for ($time = strtotime($voteStartTime); $time <= strtotime($voteEndTime); $time += $timeRange) {
-            $timeRangesRawSQL[] = "SELECT \"{$time}\" AS endTime";
+        $timeGranularity = 5 * 60; // 5 mins
+        $timeGranularityRawSQL = [];
+        for ($time = strtotime($voteStartTime); $time <= strtotime($voteEndTime); $time += $timeGranularity) {
+            $timeGranularityRawSQL[] = "SELECT \"{$time}\" AS endTime";
         }
-        $timeRangesRawSQL = implode(' UNION ', $timeRangesRawSQL);
+        $timeGranularityRawSQL = implode(' UNION ', $timeGranularityRawSQL);
         return static::sanitizeVoteForField(\DB::query()
-            ->selectRaw('CAST(timeRangesRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
+            ->selectRaw('CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
             ->fromSub(BilibiliVoteModel
-                ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeRange})*{$timeRange} as endTime, isValid, voteFor, COUNT(*) as count")
+                ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeGranularity})*{$timeGranularity} as endTime, isValid, voteFor, COUNT(*) as count")
                 ->whereIn('voteFor', static::getTopVotesCandidatesSQL(10))
                 ->groupBy('endTime', 'isValid', 'voteFor')
             , 'timeGroups')
-            ->join(\DB::raw("({$timeRangesRawSQL}) AS timeRangesRawSQL"),
-            'timeGroups.endTime', '<', 'timeRangesRawSQL.endTime') // cumulative
+            ->join(\DB::raw("({$timeGranularityRawSQL}) AS timeGranularityRawSQL"),
+            'timeGroups.endTime', '<', 'timeGranularityRawSQL.endTime') // cumulative
             ->groupBy('endTime', 'isValid', 'voteFor')
             ->orderBy('endTime', 'ASC')
             ->orderBy('voteFor', 'ASC')

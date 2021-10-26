@@ -24,6 +24,7 @@ function detectUndefined(node) {
         if ([
             // own usage start
             'loading',
+            'echarts',
             // own usage end
             'grecaptcha',
             'g-recaptcha',

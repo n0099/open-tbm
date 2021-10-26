@@ -23,15 +23,15 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
     Route::get('/postsQuery', 'PostsQuery@query');
     Route::get('/usersQuery', 'UsersQuery@query');
     Route::get('/status', function (Request $request): string {
-        $groupByTimeGranular = [
+        $groupByTimeGranularity = [
             'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',
             'hour' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:00") AS startTime',
             'day' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d") AS startTime',
         ];
 
-        /** @var array{timeGranular: string, startTime: string, endTime: string} $queryParams */
+        /** @var array{timeGranularity: string, startTime: string, endTime: string} $queryParams */
         $queryParams = $request->validate([
-            'timeGranular' => ['required', 'string', Rule::in(array_keys($groupByTimeGranular))],
+            'timeGranularity' => ['required', 'string', Rule::in(array_keys($groupByTimeGranularity))],
             'startTime' => 'required|integer|numeric',
             'endTime' => 'required|integer|numeric'
         ]);
@@ -48,7 +48,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
             ')
             ->fromSub(fn (Builder $query) =>
                 $query->from('tbm_crawledPosts')
-                ->selectRaw($groupByTimeGranular[$queryParams['timeGranular']])
+                ->selectRaw($groupByTimeGranularity[$queryParams['timeGranularity']])
                 ->selectRaw('
                     queueTiming,
                     webRequestTiming,
@@ -63,10 +63,10 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
             ->get()->toJson();
     });
     Route::get('/stats/forumPostsCount', function (Request $request): array {
-        $groupByTimeGranular = Helper::getRawSqlGroupByTimeGranular('postTime');
+        $groupByTimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime');
         $queryParams = $request->validate([
             'fid' => 'required|integer',
-            'timeGranular' => ['required', 'string', Rule::in(array_keys($groupByTimeGranular))],
+            'timeGranularity' => ['required', 'string', Rule::in(array_keys($groupByTimeGranularity))],
             'startTime' => 'required|integer|numeric',
             'endTime' => 'required|integer|numeric'
         ]);
@@ -75,7 +75,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
         foreach (PostModelFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
             /** @var \Illuminate\Database\Eloquent\Model $forumPostModel */
             $forumPostsCount[$postType] = $forumPostModel
-                ->selectRaw($groupByTimeGranular[$queryParams['timeGranular']])
+                ->selectRaw($groupByTimeGranularity[$queryParams['timeGranularity']])
                 ->selectRaw('COUNT(*) AS count')
                 ->whereBetween('postTime', [Helper::timestampToLocalDateTime($queryParams['startTime']), Helper::timestampToLocalDateTime($queryParams['endTime'])])
                 ->groupBy('time')

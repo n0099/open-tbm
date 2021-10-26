@@ -23,28 +23,22 @@
         <div ref="top10CandidatesTimeline" id="top10CandidatesTimeline" class="echarts"></div>
         <hr />
         <div class="row justify-content-end">
-            <label class="col-2 col-form-label text-end" for="top5CandidatesCountByTimeGranular">时间粒度</label>
+            <label class="col-2 col-form-label text-end" for="top5CandidatesCountByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <select v-model="query.top5CandidatesCountByTimeGranular" id="top5CandidatesCountByTimeGranular" class="form-control">
-                        <option value="minute">分钟</option>
-                        <option value="hour">小时</option>
-                    </select>
+                    <QueryTimeGranularity v-model="query.top5CandidatesCountByTimeGranularity" :granularities="['minute', 'hour']" id="top5CandidatesCountByTimeGranularity" />
                 </div>
             </div>
         </div>
         <div ref="top5CandidatesCountByTime" id="top5CandidatesCountByTime" class="echarts"></div>
         <hr />
         <div class="row justify-content-end">
-            <label class="col-2 col-form-label text-end" for="allVotesCountByTimeGranular">时间粒度</label>
+            <label class="col-2 col-form-label text-end" for="allVotesCountByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <select v-model="query.allVotesCountByTimeGranular" id="allVotesCountByTimeGranular" class="form-control">
-                        <option value="minute">分钟</option>
-                        <option value="hour">小时</option>
-                    </select>
+                    <QueryTimeGranularity v-model="query.allVotesCountByTimeGranularity" :granularities="['minute', 'hour']" id="allVotesCountByTimeGranularity" />
                 </div>
             </div>
         </div>
@@ -63,10 +57,11 @@
 
 <script lang="ts">
 import { isApiError } from '@/api';
-import type { ApiCandidatesName, ApiTop10CandidatesTimeline, ApiTop50OfficialValidVotesCount, CountByTimeGranular, IsValid } from '@/api/bilibiliVote';
+import type { ApiCandidatesName, ApiTop10CandidatesTimeline, ApiTop50OfficialValidVotesCount, CountByTimeGranularity, IsValid } from '@/api/bilibiliVote';
 import { apiAllCandidatesVotesCount, apiAllVotesCountByTime, apiCandidatesName, apiTop10CandidatesTimeline, apiTop50CandidatesVotesCount, apiTop50OfficialValidVotesCount, apiTop5CandidatesVotesCountByTime } from '@/api/bilibiliVote';
 import { tiebaUserLink } from '@/shared';
-import { echarts4ColorThemeFallback, timeGranularAxisPointerLabelFormatter, timeGranularAxisType } from '@/shared/echarts';
+import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
+import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import _ from 'lodash';
@@ -404,20 +399,20 @@ const chartsInitialOption: {
 };
 
 export default defineComponent({
-    components: { FontAwesomeIcon, Table },
+    components: { FontAwesomeIcon, Table, QueryTimeGranularity },
     setup() {
         const state = reactive<{
             query: {
-                top5CandidatesCountByTimeGranular: CountByTimeGranular,
-                allVotesCountByTimeGranular: CountByTimeGranular
+                top5CandidatesCountByTimeGranularity: CountByTimeGranularity,
+                allVotesCountByTimeGranularity: CountByTimeGranularity
             },
             candidatesName: ApiCandidatesName,
             candidatesDetailData: CandidatesDetailData,
             top50OfficialValidVotesCount: ApiTop50OfficialValidVotesCount
         }>({
             query: {
-                top5CandidatesCountByTimeGranular: 'hour',
-                allVotesCountByTimeGranular: 'hour'
+                top5CandidatesCountByTimeGranularity: 'hour',
+                allVotesCountByTimeGranularity: 'hour'
             },
             candidatesName: [],
             candidatesDetailData: [],
@@ -581,8 +576,8 @@ export default defineComponent({
                 });
             },
             top5CandidatesCountByTime: async () => {
-                const timeGranular = state.query.top5CandidatesCountByTimeGranular;
-                const top5CandidatesCountByTime = await apiTop5CandidatesVotesCountByTime({ timeGranular });
+                const timeGranularity = state.query.top5CandidatesCountByTimeGranularity;
+                const top5CandidatesCountByTime = await apiTop5CandidatesVotesCountByTime({ timeGranularity });
                 if (isApiError(top5CandidatesCountByTime)) return;
                 const top5CandidatesIndex = _.chain(top5CandidatesCountByTime).filter({ isValid: 1 }).map('voteFor').sort().sortedUniq().value(); // not order by votes count
                 const validVotes = _.filter(top5CandidatesCountByTime, { isValid: 1 });
@@ -607,14 +602,14 @@ export default defineComponent({
                     });
                 });
                 charts.top5CandidatesCountByTime?.setOption<echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>>({
-                    axisPointer: { label: { formatter: timeGranularAxisPointerLabelFormatter[timeGranular] } },
-                    xAxis: Array(2).fill({ type: timeGranularAxisType[timeGranular] }),
+                    axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
+                    xAxis: Array(2).fill({ type: timeGranularityAxisType[timeGranularity] }),
                     series
                 });
             },
             allVotesCountByTime: async () => {
-                const timeGranular = state.query.allVotesCountByTimeGranular;
-                const allVotesCountByTime = await apiAllVotesCountByTime({ timeGranular });
+                const timeGranularity = state.query.allVotesCountByTimeGranularity;
+                const allVotesCountByTime = await apiAllVotesCountByTime({ timeGranularity });
                 if (isApiError(allVotesCountByTime)) return;
                 // [{ time: '2019-03-11 12:00', validCount: 1, invalidCount: 0 }, ... ]
                 const dataset = _.chain(allVotesCountByTime)
@@ -626,15 +621,15 @@ export default defineComponent({
                     }))
                     .value();
                 charts.allVotesCountByTime?.setOption<echarts.ComposeOption<DatasetComponentOption | GridComponentOption>>({
-                    axisPointer: { label: { formatter: timeGranularAxisPointerLabelFormatter[timeGranular] } },
-                    xAxis: { type: timeGranularAxisType[timeGranular] },
+                    axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
+                    xAxis: { type: timeGranularityAxisType[timeGranularity] },
                     dataset: { source: dataset }
                 });
             }
         };
 
-        watch(() => state.query.top5CandidatesCountByTimeGranular, async () => loadCharts.top5CandidatesCountByTime());
-        watch(() => state.query.allVotesCountByTimeGranular, async () => loadCharts.allVotesCountByTime());
+        watch(() => state.query.top5CandidatesCountByTimeGranularity, async () => loadCharts.top5CandidatesCountByTime());
+        watch(() => state.query.allVotesCountByTimeGranularity, async () => loadCharts.allVotesCountByTime());
         onMounted(async () => {
             _.map(chartsDom, (i, k: Charts) => {
                 if (i.value === undefined) return;

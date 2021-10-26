@@ -49,9 +49,10 @@ export const emptyChartSeriesData = (chart: echarts.ECharts) => {
     });
 };
 
-const timeGranularList = ['minute', 'hour', 'day', 'week', 'month', 'year'];
-type TimeGranularList = 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year';
-export const timeGranularAxisType: { [P in TimeGranularList]: 'category' | 'time' } = {
+export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'year'];
+export type TimeGranularities = 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year';
+export type TimeGranularitiesStringMap = { [P in TimeGranularities]?: string };
+export const timeGranularityAxisType: { [P in TimeGranularities]: 'category' | 'time' } = {
     minute: 'time',
     hour: 'time',
     day: 'time',
@@ -62,7 +63,7 @@ export const timeGranularAxisType: { [P in TimeGranularList]: 'category' | 'time
 
 const getLuxonFromDateTimeUTC8 = (dateTime: SqlDateTimeUtcPlus8) => DateTime.fromSQL(dateTime, { zone: 'Asia/Shanghai' });
 const stringTypeGuard = (p: unknown): p is string => (_.isString(p) ? true : '');
-export const timeGranularAxisPointerLabelFormatter: { [P in TimeGranularList]: (params: { value: Date | number | string }) => string } = {
+export const timeGranularityAxisPointerLabelFormatter: { [P in TimeGranularities]: (params: { value: Date | number | string }) => string } = {
     minute: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATETIME_SHORT) : ''),
     hour: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString({ year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric' }) : ''),
     day: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY) : ''),

@@ -80,7 +80,7 @@ class Helper
         return array_filter($haystack, fn($value) => $value !== $equalTo) === [];
     }
 
-    #[Pure] public static function getRawSqlGroupByTimeGranular(string $fieldName, array $timeGranular = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
+    #[Pure] public static function getRawSqlGroupByTimeGranularity(string $fieldName, array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
     {
         return Arr::only([
             'minute' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:%i\") AS time",
@@ -89,7 +89,7 @@ class Helper
             'week' => "DATE_FORMAT({$fieldName}, \"%Y年第%u周\") AS time",
             'month' => "DATE_FORMAT({$fieldName}, \"%Y-%m\") AS time",
             'year' => "DATE_FORMAT({$fieldName}, \"%Y年\") AS time"
-        ], $timeGranular);
+        ], $timeGranularity);
     }
 
     public static function timestampToLocalDateTime(int $timestamp): string

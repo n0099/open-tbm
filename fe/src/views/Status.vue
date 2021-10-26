@@ -1,33 +1,18 @@
 <template>
     <form @submit.prevent="submitQueryForm()" class="mt-3">
         <div class="row">
-            <label class="col-3 col-form-label text-end" for="queryStatusTime">时间范围</label>
+            <label class="col-3 col-form-label text-end" for="queryTimeRange">时间范围</label>
             <div class="col-5">
-                <div id="queryStatusTime" class="input-group">
+                <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <RangePicker v-model:value="timeRange" :ranges="{
-                        昨天: [moment().subtract(1, 'day').startOf('day'), moment().subtract(1, 'day').endOf('day')],
-                        今天: [moment().startOf('day'), moment().endOf('day')],
-                        本周: [moment().startOf('week'), moment().endOf('week')],
-                        最近7天: [moment().subtract(7, 'days'), moment()],
-                        本月: [moment().startOf('month'), moment().endOf('momth')],
-                        最近30天: [moment().subtract(30, 'days'), moment()]
-                    }" :format="'YYYY-MM-DD HH:mm'" :showTime="{
-                        format: 'HH:mm',
-                        minuteStep: 5,
-                        secondStep: 10
-                    }" :allowClear="false" size="large" class="col" />
+                    <QueryTimeRange v-model:startTime="query.startTime" v-model:endTime="query.endTime" :timesAgo="{ day: 30 }" />
                 </div>
             </div>
-            <label class="col-1 col-form-label text-end" for="queryStatusTimeRange">时间粒度</label>
+            <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <select v-model="statusQuery.timeGranular" id="queryStatusTimeRange" class="form-control">
-                        <option value="minute">分钟</option>
-                        <option value="hour">小时</option>
-                        <option value="day">天</option>
-                    </select>
+                    <QueryTimeGranularity v-model="query.timeGranularity" :granularities="['minute', 'hour', 'day']" />
                 </div>
             </div>
         </div>
@@ -48,10 +33,11 @@
 import type { ApiStatus, ApiStatusQP } from '@/api/index.d';
 import { apiStatus, isApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
+import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
+import QueryTimeRange from '@/components/QueryTimeRange.vue';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import { RangePicker } from 'ant-design-vue/lib/date-picker';
-import Switch from 'ant-design-vue/lib/switch';
+import { Switch } from 'ant-design-vue';
 import * as echarts from 'echarts/core';
 import type { LineSeriesOption } from 'echarts/charts';
 import { LineChart } from 'echarts/charts';
@@ -179,25 +165,20 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 export default defineComponent({
-    components: { FontAwesomeIcon, RangePicker, Switch },
+    components: { FontAwesomeIcon, Switch, QueryTimeGranularity, QueryTimeRange },
     setup() {
         const chartDom = ref<HTMLElement>();
         const autoRefreshIntervalID = ref(0);
         const state = reactive<{
             autoRefresh: boolean,
-            statusQuery: ApiStatusQP,
-            timeRange: Moment[]
+            query: ApiStatusQP
         }>({
             autoRefresh: false,
-            statusQuery: {
-                timeGranular: 'minute',
+            query: {
+                timeGranularity: 'minute',
                 startTime: 0,
                 endTime: 0
-            },
-            timeRange: [
-                moment(DateTime.now().minus({ days: 1 }).startOf('minute').toISO()),
-                moment(DateTime.now().startOf('minute').toISO())
-            ]
+            }
         });
         const submitQueryForm = () => {
             if (chartDom.value === undefined) return;
@@ -208,7 +189,7 @@ export default defineComponent({
             }
             emptyChartSeriesData(chart);
             (async () => {
-                const statusResult = await apiStatus(state.statusQuery);
+                const statusResult = await apiStatus(state.query);
                 if (isApiError(statusResult)) return;
                 const series = _.chain(chartInitialOption.series)
                     .map('id')
@@ -226,9 +207,6 @@ export default defineComponent({
             if (autoRefresh) autoRefreshIntervalID.value = window.setInterval(submitQueryForm, 60000); // refresh data every minute
             else clearInterval(autoRefreshIntervalID.value);
         });
-        watch(() => state.timeRange, timeRange => {
-            [state.statusQuery.startTime, state.statusQuery.endTime] = timeRange.map(i => i.unix());
-        }, { immediate: true });
         onMounted(submitQueryForm);
 
         return { moment, ...toRefs(state), chartDom, submitQueryForm };

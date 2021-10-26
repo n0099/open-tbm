@@ -3,8 +3,8 @@ import { getRequester, getRequesterWithReCAPTCHA } from '@/api';
 import type { Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 
 export type IsValid = 0 | 1;
-export type CountByTimeGranular = 'hour' | 'minute';
-interface CountByTimeGranularQP extends ApiQueryParam { timeGranular: CountByTimeGranular }
+export type CountByTimeGranularity = 'hour' | 'minute';
+interface CountByTimeGranularityQP extends ApiQueryParam { timeGranularity: CountByTimeGranularity }
 export type ApiCandidatesName = string[];
 export type ApiAllCandidatesVotesCount = Array<{
     isValid: IsValid,
@@ -32,9 +32,9 @@ export const apiAllCandidatesVotesCount = async (): Promise<ApiAllCandidatesVote
     getRequesterWithReCAPTCHA('/bilibiliVote/allCandidatesVotesCount');
 export const apiTop50CandidatesVotesCount = async (): Promise<ApiError | ApiTop50CandidatesVotesCount> =>
     getRequesterWithReCAPTCHA('/bilibiliVote/top50CandidatesVotesCount');
-export const apiTop5CandidatesVotesCountByTime = async (qp: CountByTimeGranularQP): Promise<ApiError | ApiTop5CandidatesVotesCountByTime> =>
+export const apiTop5CandidatesVotesCountByTime = async (qp: CountByTimeGranularityQP): Promise<ApiError | ApiTop5CandidatesVotesCountByTime> =>
     getRequesterWithReCAPTCHA('/bilibiliVote/top5CandidatesVotesCountByTime', qp);
-export const apiAllVotesCountByTime = async (qp: CountByTimeGranularQP): Promise<ApiAllVotesCountByTime | ApiError> =>
+export const apiAllVotesCountByTime = async (qp: CountByTimeGranularityQP): Promise<ApiAllVotesCountByTime | ApiError> =>
     getRequesterWithReCAPTCHA('/bilibiliVote/allVotesCountByTime', qp);
 export const apiTop10CandidatesTimeline = async (): Promise<ApiError | ApiTop10CandidatesTimeline> =>
     getRequesterWithReCAPTCHA('/bilibiliVote/top10CandidatesTimeline');

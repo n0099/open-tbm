@@ -1,11 +1,11 @@
 <template>
     <form @submit.prevent="submitQueryForm()" class="mt-3">
         <div class="row">
-            <label class="col-2 col-form-label text-end" for="queryStatsForum">贴吧</label>
+            <label class="col-2 col-form-label text-end" for="queryFid">贴吧</label>
             <div class="col-3">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
-                    <select v-model.number="query.fid" id="queryStatsForum" class="form-control">
+                    <select v-model.number="query.fid" id="queryFid" class="form-control">
                         <option disabled value="0">请选择</option>
                         <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
@@ -15,36 +15,18 @@
             <button :disabled="query.fid === 0" type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
         <div class="row mt-2">
-            <label class="col-2 col-form-label text-end" for="queryStatusTime">时间范围</label>
+            <label class="col-2 col-form-label text-end" for="queryTimeRange">时间范围</label>
             <div class="col-5">
-                <div id="queryStatusTime" class="input-group">
+                <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <RangePicker v-model:value="timeRange" :ranges="{
-                        昨天: [moment().subtract(1, 'day').startOf('day'), moment().subtract(1, 'day').endOf('day')],
-                        今天: [moment().startOf('day'), moment().endOf('day')],
-                        本周: [moment().startOf('week'), moment().endOf('week')],
-                        最近7天: [moment().subtract(7, 'days'), moment()],
-                        本月: [moment().startOf('month'), moment().endOf('momth')],
-                        最近30天: [moment().subtract(30, 'days'), moment()]
-                    }" :format="'YYYY-MM-DD HH:mm'" :showTime="{
-                        format: 'HH:mm',
-                        minuteStep: 5,
-                        secondStep: 10
-                    }" :allowClear="false" size="large" class="col" />
+                    <QueryTimeRange v-model:startTime="query.startTime" v-model:endTime="query.endTime" :timesAgo="{ day: 1 }" />
                 </div>
             </div>
-            <label class="col-1 col-form-label text-end" for="queryStatusTimeRange">时间粒度</label>
+            <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <select v-model="query.timeGranular" id="queryStatusTimeRange" class="form-control">
-                        <option value="minute">分钟</option>
-                        <option value="hour">小时</option>
-                        <option value="day">天</option>
-                        <option value="week">周</option>
-                        <option value="month">月</option>
-                        <option value="year">年</option>
-                    </select>
+                    <QueryTimeGranularity v-model="query.timeGranularity" :granularities="timeGranularities" />
                 </div>
             </div>
         </div>
@@ -57,11 +39,12 @@
 <script lang="ts">
 import type { ApiForumList, ApiStatsQP } from '@/api/index.d';
 import { apiForumList, apiStatsForumPostsCount, isApiError } from '@/api';
-import { emptyChartSeriesData, extendCommonToolbox, timeGranularAxisPointerLabelFormatter, timeGranularAxisType } from '@/shared/echarts';
+import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
+import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
+import QueryTimeRange from '@/components/QueryTimeRange.vue';
 
 import _ from 'lodash';
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import { RangePicker } from 'ant-design-vue';
 import { DateTime } from 'luxon';
 import type { Moment } from 'moment';
 import moment from 'moment';
@@ -126,24 +109,19 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 export default defineComponent({
-    components: { FontAwesomeIcon, RangePicker },
+    components: { FontAwesomeIcon, QueryTimeGranularity, QueryTimeRange },
     setup() {
         const chartDom = ref<HTMLElement>();
         const state = reactive<{
             query: ApiStatsQP,
-            timeRange: Moment[],
             forumList: ApiForumList
         }>({
             query: {
                 fid: 0,
-                timeGranular: 'day',
+                timeGranularity: 'day',
                 startTime: 0,
                 endTime: 0
             },
-            timeRange: [
-                moment(DateTime.now().minus({ days: 30 }).startOf('minute').toISO()),
-                moment(DateTime.now().startOf('minute').toISO())
-            ],
             forumList: []
         });
         const submitQueryForm = () => {
@@ -164,7 +142,7 @@ export default defineComponent({
                     id: postType,
                     data: _.map(dates, _.values)
                 }));
-                const axisType = timeGranularAxisType[state.query.timeGranular];
+                const axisType = timeGranularityAxisType[state.query.timeGranularity];
                 chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
                     dataZoom: [{ start: 0, end: 100 }],
                     xAxis: {
@@ -179,23 +157,20 @@ export default defineComponent({
                             }
                             : {},
                         type: axisType,
-                        axisPointer: { label: { formatter: timeGranularAxisPointerLabelFormatter[state.query.timeGranular] } }
+                        axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[state.query.timeGranularity] } }
                     },
                     series
                 });
             })().finally(() => { chartDom.value?.classList.remove('loading') });
         };
 
-        watch(() => state.timeRange, timeRange => {
-            [state.query.startTime, state.query.endTime] = timeRange.map(i => i.unix());
-        }, { immediate: true });
         onMounted(async () => {
             const forumListResult = await apiForumList();
             if (isApiError(forumListResult)) return;
             state.forumList = forumListResult;
         });
 
-        return { moment, ...toRefs(state), chartDom, submitQueryForm };
+        return { moment, timeGranularities, ...toRefs(state), chartDom, submitQueryForm };
     }
 });
 </script>
