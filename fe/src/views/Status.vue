@@ -4,8 +4,8 @@
             <label class="col-3 col-form-label text-end" for="queryStatusTime">时间范围</label>
             <div class="col-5">
                 <div id="queryStatusTime" class="input-group">
-                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                    <ARangePicker v-model:value="timeRange" :ranges="{
+                    <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
+                    <RangePicker v-model:value="timeRange" :ranges="{
                         昨天: [moment().subtract(1, 'day').startOf('day'), moment().subtract(1, 'day').endOf('day')],
                         今天: [moment().startOf('day'), moment().endOf('day')],
                         本周: [moment().startOf('week'), moment().endOf('week')],
@@ -22,7 +22,7 @@
             <label class="col-1 col-form-label text-end" for="queryStatusTimeRange">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
                     <select v-model="statusQuery.timeGranular" id="queryStatusTimeRange" class="form-control">
                         <option value="minute">分钟</option>
                         <option value="hour">小时</option>
@@ -33,14 +33,14 @@
         </div>
         <div class="row justify-content-end mt-1">
             <div class="col-auto my-auto">
-                <span><ASwitch v-model:checked="autoRefresh" /></span>
+                <span><Switch v-model:checked="autoRefresh" /></span>
                 <span class="ms-1">每分钟自动刷新</span>
             </div>
             <button type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
     </form>
     <div class="row mt-2">
-        <div ref="statusChartDom" id="statusChartDom" class="echarts col mt-2"></div>
+        <div ref="chartDom" id="statusChartDom" class="echarts col mt-2"></div>
     </div>
 </template>
 
@@ -50,7 +50,8 @@ import { apiStatus, isApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import { RangePicker, Switch } from 'ant-design-vue';
+import { RangePicker } from 'ant-design-vue/lib/date-picker';
+import Switch from 'ant-design-vue/lib/switch';
 import * as echarts from 'echarts/core';
 import type { LineSeriesOption } from 'echarts/charts';
 import { LineChart } from 'echarts/charts';
@@ -58,13 +59,14 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { UniversalTransition } from 'echarts/features';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption, VisualMapComponentOption } from 'echarts/components';
 import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import type { Moment } from 'moment';
 import moment from 'moment';
 import { DateTime } from 'luxon';
 import _ from 'lodash';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
-let statusChart: echarts.ECharts | null = null;
+let chart: echarts.ECharts | null = null;
 const commonSeriesOption: LineSeriesOption = {
     type: 'line',
     symbolSize: 0,
@@ -177,8 +179,9 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 export default defineComponent({
+    components: { FontAwesomeIcon, RangePicker, Switch },
     setup() {
-        const statusChartDom = ref<HTMLElement>();
+        const chartDom = ref<HTMLElement>();
         const autoRefreshIntervalID = ref(0);
         const state = reactive<{
             autoRefresh: boolean,
@@ -197,13 +200,13 @@ export default defineComponent({
             ]
         });
         const submitQueryForm = () => {
-            if (statusChartDom.value === undefined) return;
-            statusChartDom.value.classList.add('loading');
-            if (statusChart === null) {
-                statusChart = echarts.init(statusChartDom.value);
-                statusChart.setOption(chartInitialOption);
+            if (chartDom.value === undefined) return;
+            chartDom.value.classList.add('loading');
+            if (chart === null) {
+                chart = echarts.init(chartDom.value);
+                chart.setOption(chartInitialOption);
             }
-            emptyChartSeriesData(statusChart);
+            emptyChartSeriesData(chart);
             (async () => {
                 const statusResult = await apiStatus(state.statusQuery);
                 if (isApiError(statusResult)) return;
@@ -212,11 +215,11 @@ export default defineComponent({
                     .map((seriesName: keyof ApiStatus[0]) => ({
                         id: seriesName,
                         // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
-                        data: _.map(statusResult, i => [i.startTime * 1000, i[seriesName]])
+                        data: statusResult.map(i => [i.startTime * 1000, i[seriesName]])
                     }))
                     .value();
-                statusChart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
-            })().finally(() => { statusChartDom.value?.classList.remove('loading') });
+                chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
+            })().finally(() => { chartDom.value?.classList.remove('loading') });
         };
 
         watch(() => state.autoRefresh, autoRefresh => {
@@ -228,7 +231,7 @@ export default defineComponent({
         }, { immediate: true });
         onMounted(submitQueryForm);
 
-        return { RangePicker, Switch, moment, ...toRefs(state), statusChartDom, submitQueryForm };
+        return { moment, ...toRefs(state), chartDom, submitQueryForm };
     }
 });
 </script>

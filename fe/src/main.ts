@@ -2,8 +2,6 @@ import { createApp } from 'vue';
 import App from '@/App.vue';
 import router from '@/router';
 import store from '@/store';
-import '@fortawesome/fontawesome-free/js/all.js';
-import antd from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.css';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -12,6 +10,11 @@ import 'noty/lib/themes/mint.css';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import tippy from 'tippy.js';
+import '@/shared/style.css';
+import * as antdComponents from '@/shared/antd';
+import * as fontAwesomeIcons from '@/shared/fontAwesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+library.add(...Object.values(fontAwesomeIcons));
 
 // window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
 NProgress.configure({ trickleSpeed: 200 });
@@ -27,8 +30,6 @@ if (process.env.NODE_ENV === 'development') {
     (await import('@/checkForUndefinedCSSClasses.js')).default();
 }
 
-createApp(App)
-    .use(store)
-    .use(router)
-    .use(antd)
-    .mount('#app');
+const app = createApp(App).use(store).use(router);
+Object.values(antdComponents).forEach(c => app.use(c));
+app.mount('#app');

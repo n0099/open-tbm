@@ -4,22 +4,22 @@
             <label class="col-2 col-form-label text-end" for="queryStatsForum">贴吧</label>
             <div class="col-3">
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-filter"></i></span>
-                    <select v-model.number="statsQuery.fid" id="queryStatsForum" class="form-control">
+                    <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
+                    <select v-model.number="query.fid" id="queryStatsForum" class="form-control">
                         <option disabled value="0">请选择</option>
                         <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
                 </div>
             </div>
             <div class="col-4"></div>
-            <button :disabled="statsQuery.fid === 0" type="submit" class="col-auto btn btn-primary">查询</button>
+            <button :disabled="query.fid === 0" type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
         <div class="row mt-2">
             <label class="col-2 col-form-label text-end" for="queryStatusTime">时间范围</label>
             <div class="col-5">
                 <div id="queryStatusTime" class="input-group">
-                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
-                    <ARangePicker v-model:value="timeRange" :ranges="{
+                    <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
+                    <RangePicker v-model:value="timeRange" :ranges="{
                         昨天: [moment().subtract(1, 'day').startOf('day'), moment().subtract(1, 'day').endOf('day')],
                         今天: [moment().startOf('day'), moment().endOf('day')],
                         本周: [moment().startOf('week'), moment().endOf('week')],
@@ -36,8 +36,8 @@
             <label class="col-1 col-form-label text-end" for="queryStatusTimeRange">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
-                    <select v-model="statsQuery.timeGranular" id="queryStatusTimeRange" class="form-control">
+                    <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
+                    <select v-model="query.timeGranular" id="queryStatusTimeRange" class="form-control">
                         <option value="minute">分钟</option>
                         <option value="hour">小时</option>
                         <option value="day">天</option>
@@ -50,7 +50,7 @@
         </div>
     </form>
     <div class="row mt-2">
-        <div ref="statsChartDom" id="statsChartDom" class="echarts col mt-2"></div>
+        <div ref="chartDom" id="statsChartDom" class="echarts col mt-2"></div>
     </div>
 </template>
 
@@ -60,11 +60,12 @@ import { apiForumList, apiStatsForumPostsCount, isApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularAxisPointerLabelFormatter, timeGranularAxisType } from '@/shared/echarts';
 
 import _ from 'lodash';
-import { DateTime } from 'luxon';
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { RangePicker } from 'ant-design-vue';
+import { DateTime } from 'luxon';
 import type { Moment } from 'moment';
 import moment from 'moment';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import * as echarts from 'echarts/core';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
 import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';
@@ -74,7 +75,7 @@ import { UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, LineChart, BarChart, CanvasRenderer, UniversalTransition]);
-let statsChart: echarts.ECharts | null = null;
+let chart: echarts.ECharts | null = null;
 const commonSeriesOption: LineSeriesOption = {
     type: 'line',
     symbolSize: 1,
@@ -125,14 +126,15 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 export default defineComponent({
+    components: { FontAwesomeIcon, RangePicker },
     setup() {
-        const statsChartDom = ref<HTMLElement>();
+        const chartDom = ref<HTMLElement>();
         const state = reactive<{
-            statsQuery: ApiStatsQP,
+            query: ApiStatsQP,
             timeRange: Moment[],
             forumList: ApiForumList
         }>({
-            statsQuery: {
+            query: {
                 fid: 0,
                 timeGranular: 'day',
                 startTime: 0,
@@ -145,31 +147,31 @@ export default defineComponent({
             forumList: []
         });
         const submitQueryForm = () => {
-            if (statsChartDom.value === undefined) return;
-            statsChartDom.value.classList.add('loading');
-            if (statsChart === null) {
-                statsChart = echarts.init(statsChartDom.value);
-                statsChart.setOption(chartInitialOption);
+            if (chartDom.value === undefined) return;
+            chartDom.value.classList.add('loading');
+            if (chart === null) {
+                chart = echarts.init(chartDom.value);
+                chart.setOption(chartInitialOption);
             }
-            emptyChartSeriesData(statsChart);
-            statsChart.setOption<echarts.ComposeOption<TitleComponentOption>>(
-                { title: { text: `${_.find(state.forumList, { fid: state.statsQuery.fid })?.name}吧贴量统计` } }
+            emptyChartSeriesData(chart);
+            chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
+                { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧贴量统计` } }
             );
             (async () => {
-                const statsResult = await apiStatsForumPostsCount(state.statsQuery);
+                const statsResult = await apiStatsForumPostsCount(state.query);
                 if (isApiError(statsResult)) return;
                 const series = _.map(statsResult, (dates, postType) => ({
                     id: postType,
                     data: _.map(dates, _.values)
                 }));
-                const axisType = timeGranularAxisType[state.statsQuery.timeGranular];
-                statsChart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
+                const axisType = timeGranularAxisType[state.query.timeGranular];
+                chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
                     dataZoom: [{ start: 0, end: 100 }],
                     xAxis: {
                         ...axisType === 'category'
                             ? {
                                 data: _.chain(statsResult)
-                                    .map(counts => _.map(counts, count => count.time))
+                                    .map(counts => _.map(counts, 'time'))
                                     .flatten()
                                     .sort()
                                     .sortedUniq()
@@ -177,24 +179,23 @@ export default defineComponent({
                             }
                             : {},
                         type: axisType,
-                        axisPointer: { label: { formatter: timeGranularAxisPointerLabelFormatter[state.statsQuery.timeGranular] } }
+                        axisPointer: { label: { formatter: timeGranularAxisPointerLabelFormatter[state.query.timeGranular] } }
                     },
                     series
                 });
-            })().finally(() => { statsChartDom.value?.classList.remove('loading') });
+            })().finally(() => { chartDom.value?.classList.remove('loading') });
         };
 
         watch(() => state.timeRange, timeRange => {
-            [state.statsQuery.startTime, state.statsQuery.endTime] = timeRange.map(i => i.unix());
+            [state.query.startTime, state.query.endTime] = timeRange.map(i => i.unix());
         }, { immediate: true });
-
         onMounted(async () => {
             const forumListResult = await apiForumList();
             if (isApiError(forumListResult)) return;
             state.forumList = forumListResult;
         });
 
-        return { RangePicker, moment, ...toRefs(state), statsChartDom, submitQueryForm };
+        return { moment, ...toRefs(state), chartDom, submitQueryForm };
     }
 });
 </script>

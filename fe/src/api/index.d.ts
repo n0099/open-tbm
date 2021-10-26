@@ -1,5 +1,5 @@
 import type { Float, UInt, UnixTimestamp } from '@/shared';
-
+import type { Mix } from '@/shared/groupByTimeGranularUtcPlus8';
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
 export type ApiQueryParam = Record<never, never>;
 
@@ -25,12 +25,12 @@ export interface ApiStatusQP extends ApiQueryParam {
     endTime: UnixTimestamp
 }
 
-interface TimeCountPair { time: GroupByTimeGranularUtcPlus8.Mix, count: UInt }
-export type ApiStatsForumPostsCount = Array<{
-    thread: TimeCountPair,
-    reply: TimeCountPair,
-    subReply: TimeCountPair
-}>;
+interface TimeCountPair { time: Mix, count: UInt }
+export interface ApiStatsForumPostsCount {
+    thread: TimeCountPair[],
+    reply: TimeCountPair[],
+    subReply: TimeCountPair[]
+}
 export interface ApiStatsQP extends ApiQueryParam {
     fid: UInt,
     timeGranular: 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year',

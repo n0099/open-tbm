@@ -4,5 +4,15 @@ module.exports = {
         experiments: {
             topLevelAwait: true
         }
+    },
+    devServer: {
+        client: {
+            webSocketURL: 'ws://0.0.0.0/ws'
+        }
+    },
+    pluginOptions: {
+        webpackBundleAnalyzer: {
+            analyzerMode: 'static'
+        }
     }
 };

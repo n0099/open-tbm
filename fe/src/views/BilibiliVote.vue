@@ -26,7 +26,7 @@
             <label class="col-2 col-form-label text-end" for="top5CandidatesCountByTimeGranular">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <select v-model="query.top5CandidatesCountByTimeGranular" id="top5CandidatesCountByTimeGranular" class="form-control">
                         <option value="minute">分钟</option>
                         <option value="hour">小时</option>
@@ -40,7 +40,7 @@
             <label class="col-2 col-form-label text-end" for="allVotesCountByTimeGranular">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><i class="far fa-clock"></i></span>
+                    <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
                     <select v-model="query.allVotesCountByTimeGranular" id="allVotesCountByTimeGranular" class="form-control">
                         <option value="minute">分钟</option>
                         <option value="hour">小时</option>
@@ -50,14 +50,14 @@
         </div>
         <div ref="allVotesCountByTime" id="allVotesCountByTime" class="echarts"></div>
         <hr />
-        <ATable :columns="candidatesDetailColumns"
+        <Table :columns="candidatesDetailColumns"
                 :data-source="candidatesDetailData"
                 :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }"
                 row-key="candidateIndex">
             <template #candidateName="{ text }">
                 <a :href="tiebaUserLink(text)">{{ text }}</a>
             </template>
-        </ATable>
+        </Table>
     </div>
 </template>
 
@@ -67,20 +67,21 @@ import type { ApiCandidatesName, ApiTop10CandidatesTimeline, ApiTop50OfficialVal
 import { apiAllCandidatesVotesCount, apiAllVotesCountByTime, apiCandidatesName, apiTop10CandidatesTimeline, apiTop50CandidatesVotesCount, apiTop50OfficialValidVotesCount, apiTop5CandidatesVotesCountByTime } from '@/api/bilibiliVote';
 import { tiebaUserLink } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularAxisPointerLabelFormatter, timeGranularAxisType } from '@/shared/echarts';
-import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { Table } from 'ant-design-vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import * as echarts from 'echarts/core';
+import type { OptionDataItem } from 'echarts/types/src/util/types';
+import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction';
 import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts/charts';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import type { AxisPointerComponentOption, DataZoomComponentOption, DatasetComponentOption, GraphicComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TimelineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
 import { DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';
 import { LabelLayout, UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { OptionDataItem } from 'echarts/types/src/util/types';
 
 echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent, UniversalTransition]);
 
@@ -403,6 +404,7 @@ const chartsInitialOption: {
 };
 
 export default defineComponent({
+    components: { FontAwesomeIcon, Table },
     setup() {
         const state = reactive<{
             query: {
@@ -421,11 +423,11 @@ export default defineComponent({
             candidatesDetailData: [],
             top50OfficialValidVotesCount: []
         });
-        const formatCandidateNameByID = (id: number) => `${id}号\n${state.candidatesName[id - 1]}`;
-
         interface Coord { coord: [number, number] }
         type DiffWithPreviousMarkLineFormatter = Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
         const findVotesCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) => _.find(votes, { isValid })?.count ?? 0;
+        const formatCandidateNameByID = (id: number) => `${id}号\n${state.candidatesName[id - 1]}`;
+
         const loadCharts = {
             top50CandidatesCount: async () => {
                 const top50CandidatesVotesCount = await apiTop50CandidatesVotesCount();
@@ -497,7 +499,7 @@ export default defineComponent({
 
                     const validCount = _.map(dataset, 'validCount');
                     const validCountDiffWithPrevious: DiffWithPreviousMarkLineFormatter
-                        = (_.map(validCount, (count, index) => [
+                        = (validCount.map((count, index) => [
                             {
                                 label: {
                                     show: true,
@@ -592,7 +594,7 @@ export default defineComponent({
                         type: 'line',
                         symbolSize: 2,
                         smooth: true,
-                        data: _.map(_.filter(validVotes, { voteFor: candidateIndex }), i => [i.time, i.count])
+                        data: _.filter(validVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
                     });
                     series.push({
                         name: `${candidateIndex}号无效票增量`,
@@ -601,7 +603,7 @@ export default defineComponent({
                         smooth: true,
                         xAxisIndex: 1,
                         yAxisIndex: 1,
-                        data: _.map(_.filter(invalidVotes, { voteFor: candidateIndex }), i => [i.time, i.count])
+                        data: _.filter(invalidVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
                     });
                 });
                 charts.top5CandidatesCountByTime?.setOption<echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>>({
@@ -644,11 +646,11 @@ export default defineComponent({
             const candidatesName = await apiCandidatesName();
             if (isApiError(candidatesName)) return;
             state.candidatesName = candidatesName;
-            state.candidatesDetailData = _.map(candidatesName, (candidateName, index) =>
+            state.candidatesDetailData = candidatesName.map((candidateName, index) =>
                 ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
             const allCandidatesVotesCount = await apiAllCandidatesVotesCount();
             if (isApiError(allCandidatesVotesCount)) return;
-            state.candidatesDetailData = _.map(state.candidatesDetailData, candidate => {
+            state.candidatesDetailData = state.candidatesDetailData.map(candidate => {
                 const candidateVotes = _.filter(allCandidatesVotesCount, { voteFor: candidate.candidateIndex });
                 return {
                     ...candidate,
@@ -663,7 +665,7 @@ export default defineComponent({
             // add candidate index as keys then deep merge will combine same keys values, finally remove keys
             state.candidatesDetailData = _.values(_.merge(
                 _.keyBy(state.candidatesDetailData, 'candidateIndex'),
-                _.keyBy(_.map(top50OfficialValidVotesCount, candidate => ({
+                _.keyBy(top50OfficialValidVotesCount.map(candidate => ({
                     candidateIndex: candidate.voteFor,
                     officialValidCount: candidate.officialValidCount
                 })), 'candidateIndex')
@@ -676,7 +678,7 @@ export default defineComponent({
             });
         });
 
-        return { Table, tiebaUserLink, ...toRefs(state), ...chartsDom, candidatesDetailColumns, formatCandidateNameByID };
+        return { ...toRefs(state), ...chartsDom, candidatesDetailColumns, tiebaUserLink, formatCandidateNameByID };
     }
 });
 </script>

@@ -1,16 +1,10 @@
-#loadingBlocksInitial, #loadingBlocksRouteChange {
-    display: block;
-    margin: auto;
-    padding: 15vh 0;
-}
-
 .ant-input-lg {
     height: 38px; /* adopt to bootstrap input group */
 }
 
 .lazyload, .lazyloading {
     opacity: 0;
-    background: #f7f7f7 url('./assets/icon-huaji-loading-spinner.gif') no-repeat center;
+    background: #f7f7f7 url('../../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
 }
 .lazyloaded {
     opacity: 1;
@@ -18,11 +12,7 @@
 }
 
 .loading {
-    background: url('./assets/icon-huaji-loading-spinner.gif') no-repeat center;
-}
-
-.grecaptcha-badge {
-    visibility: hidden;
+    background: url('../../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
 }
 
 a {
@@ -53,13 +43,13 @@ a {
 ::-webkit-scrollbar-thumb {
     background-color: #f90;
     background-image: -webkit-linear-gradient(
-            45deg,
-            rgba(255, 255, 255, .2) 25%,
-            transparent 25%,
-            transparent 50%,
-            rgba(255, 255, 255, .2) 50%,
-            rgba(255, 255, 255, .2) 75%,
-            transparent 75%,
-            transparent
+        45deg,
+        rgba(255, 255, 255, .2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, .2) 50%,
+        rgba(255, 255, 255, .2) 75%,
+        transparent 75%,
+        transparent
     )
 }

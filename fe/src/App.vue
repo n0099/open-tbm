@@ -10,22 +10,22 @@
                     <template v-for="nav in navs" :key="navs.indexOf(nav)">
                         <li v-if="'routes' in nav" :class="'nav-item dropdown' + activeNavClass(nav.isActive)">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i v-if="nav.icon !== undefined" :class="'fas ' + nav.icon"></i> {{ nav.title }}
+                                <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </a>
                             <div class="dropdown-menu">
                                 <RouterLink v-for="r in nav.routes" :key="r.route.name" :to="{ name: r.route }" class="nav-link">
-                                    <i v-if="r.icon !== undefined" :class="'fas ' + r.icon"></i> {{ r.title }}
+                                    <FontAwesomeIcon v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
                                 </RouterLink>
                             </div>
                         </li>
                         <li v-else :class="'nav-item' + activeNavClass(nav.isActive)">
                             <RouterLink :to="{ name: nav.route }" class="nav-link">
-                                <i v-if="nav.icon !== undefined" :class="'fas ' + nav.icon"></i> {{ nav.title }}
+                                <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </RouterLink>
                         </li>
                     </template>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://n0099.net/donor-list"><i class="fas fa-donate"></i> 捐助</a>
+                        <a class="nav-link" href="https://n0099.net/donor-list"><FontAwesomeIcon icon="donate" /> 捐助</a>
                     </li>
                 </ul>
             </div>
@@ -34,9 +34,9 @@
     <HorizontalMobileMessage />
     <img id="loadingBlocksRouteChange" :src="baseUrl + 'assets/icon-loading-blocks.svg'" class="d-none" />
     <div class="container">
-        <AConfigProvider :locale="AntdZhCn">
+        <ConfigProvider :locale="AntdZhCn">
             <RouterView />
-        </AConfigProvider>
+        </ConfigProvider>
     </div>
     <footer class="footer-outer text-light pt-4 mt-4">
         <div class="text-center">
@@ -58,10 +58,12 @@ import { defineComponent, onMounted, reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
 import _ from 'lodash';
 
 export default defineComponent({
+    components: { FontAwesomeIcon, RouterLink, ConfigProvider, HorizontalMobileMessage },
     setup() {
         const route = useRoute();
         const baseUrl = process.env.BASE_URL;
@@ -70,17 +72,17 @@ export default defineComponent({
         const navs = reactive<Array<DropDown | Route>>([
             {
                 title: '查询',
-                icon: 'fa-search',
+                icon: 'search',
                 routes: [
-                    { route: 'post', title: '帖子', icon: 'fa-comment-dots' },
-                    { route: 'user', title: '用户', icon: 'fa-users' }
+                    { route: 'post', title: '帖子', icon: 'comment-dots' },
+                    { route: 'user', title: '用户', icon: 'users' }
                 ]
             },
-            { route: 'stats', title: '统计', icon: 'fa-chart-pie' },
-            { route: 'status', title: '状态', icon: 'fa-satellite-dish' },
+            { route: 'stats', title: '统计', icon: 'chart-pie' },
+            { route: 'status', title: '状态', icon: 'satellite-dish' },
             {
                 title: '专题',
-                icon: 'fa-paper-plane',
+                icon: 'paper-plane',
                 routes: [
                     { route: 'bilibiliVote', title: 'bilibili吧公投' }
                 ]
@@ -98,7 +100,7 @@ export default defineComponent({
         });
         onMounted(() => document.getElementById('loadingBlocksInitial')?.remove());
 
-        return { RouterLink, ConfigProvider, AntdZhCn, HorizontalMobileMessage, baseUrl, navs, activeNavClass };
+        return { AntdZhCn, baseUrl, navs, activeNavClass };
     }
 });
 
