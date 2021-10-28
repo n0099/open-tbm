@@ -67,13 +67,11 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     dataZoom: [{
         type: 'slider',
         xAxisIndex: [0, 1],
-        filterMode: 'filter',
         start: 50,
         bottom: '46%'
     }, {
         type: 'inside',
-        xAxisIndex: [0, 1],
-        filterMode: 'filter'
+        xAxisIndex: [0, 1]
     }],
     visualMap: [{
         seriesIndex: 0,

@@ -150,7 +150,7 @@ const chartsInitialOption: {
             subtext: '候选人间线上数字为与前一人票差 数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
         },
         axisPointer: { link: [{ xAxisIndex: 'all' }] },
-        tooltip: { trigger: 'axis', alwaysShowContent: true },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
         toolbox: {
             feature: {
                 dataZoom: { show: true, yAxisIndex: 'none' },
@@ -161,22 +161,20 @@ const chartsInitialOption: {
         legend: { left: '30%' },
         dataZoom: [{
             type: 'slider',
-            filterMode: 'filter',
             xAxisIndex: [0, 1],
             startValue: 0,
-            endValue: 9
+            endValue: 7
         }, {
             type: 'inside',
-            xAxisIndex: [0, 1],
-            filterMode: 'filter'
+            xAxisIndex: [0, 1]
         }],
         grid: [
-            { height: '35%' },
-            { height: '40%', top: '58%' }
+            { height: '40%' },
+            { height: '28%', top: '65%' }
         ],
         xAxis: [{
             type: 'category',
-            axisLabel: { interval: 0, rotate: 30 }
+            axisLabel: { rotate: 30, margin: 14 }
         }, {
             type: 'category',
             axisLabel: { show: false },
@@ -192,7 +190,8 @@ const chartsInitialOption: {
             splitLine: { show: false },
             splitArea: { show: true },
             inverse: true,
-            gridIndex: 1
+            gridIndex: 1,
+            min: 4.5 // _.minBy(top50CandidatesVotesCount, 'voterAvgGrade') = 5
         }],
         series: [{
             id: 'officialValidCount',
@@ -218,7 +217,8 @@ const chartsInitialOption: {
             type: 'bar',
             xAxisIndex: 1,
             yAxisIndex: 1,
-            encode: { x: 'voteFor', y: 'validAvgGrade' }
+            encode: { x: 'voteFor', y: 'validAvgGrade' },
+            markLine: { data: [{ type: 'average', name: '窗口内平均有效投票者平均等级' }] }
         }, {
             id: 'invalidVotesVoterAvgGrade',
             name: '无效投票者平均等级',
@@ -226,7 +226,8 @@ const chartsInitialOption: {
             xAxisIndex: 1,
             yAxisIndex: 1,
             barGap: '0%',
-            encode: { x: 'voteFor', y: 'invalidAvgGrade' }
+            encode: { x: 'voteFor', y: 'invalidAvgGrade' },
+            markLine: { data: [{ type: 'average', name: '窗口内平均无均投票者平均等级' }] }
         }]
     },
     top10CandidatesTimeline: {
@@ -307,14 +308,15 @@ const chartsInitialOption: {
             }, {
                 id: 'totalVotesValidation',
                 type: 'pie',
-                center: ['85%', '65%'],
+                center: ['85%', '58%'],
                 radius: ['25%', '8%'],
                 label: { show: true, position: 'inside', formatter: '{b}\n{c}\n{d}%' }
             }],
             graphic: {
                 type: 'text',
                 right: '10%',
-                bottom: '15%'
+                bottom: '15%',
+                style: { fill: '#989898', textAlign: 'right', font: '28px "Microsoft YaHei"' } // https://github.com/apache/echarts/issues/15966
             }
         }
     },
@@ -329,13 +331,11 @@ const chartsInitialOption: {
         dataZoom: [{
             type: 'slider',
             xAxisIndex: [0, 1],
-            filterMode: 'filter',
             end: 100,
             bottom: '46%'
         }, {
             type: 'inside',
-            xAxisIndex: [0, 1],
-            filterMode: 'filter'
+            xAxisIndex: [0, 1]
         }],
         grid: [
             { height: '35%' },
@@ -371,12 +371,10 @@ const chartsInitialOption: {
         dataZoom: [{
             type: 'slider',
             xAxisIndex: 0,
-            filterMode: 'filter',
             end: 100
         }, {
             type: 'inside',
-            xAxisIndex: 0,
-            filterMode: 'filter'
+            xAxisIndex: 0
         }],
         xAxis: { type: 'time' },
         yAxis: { type: 'value' },
@@ -527,6 +525,9 @@ export default defineComponent({
                         }],
                         graphic: {
                             style: {
+                                fill: '#989898',
+                                textAlign: 'right',
+                                font: '28px "Microsoft YaHei"',
                                 text: `共${totalVotesCount()}票\n${DateTime.fromSeconds(Number(time)).toLocaleString(
                                     { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }
                                 )}`
@@ -557,7 +558,7 @@ export default defineComponent({
                             { name: '官方无效票', value: 473 }
                         ]
                     }),
-                    graphic: { style: { text: '贴吧官方统计共12720票\n有效12247票 无效473票\n3月11日 18:26' } }
+                    graphic: { style: { fill: '#989898', textAlign: 'right', font: '28px "Microsoft YaHei"', text: '贴吧官方统计共12720票\n有效12247票 无效473票\n3月11日 18:26' } }
                 }));
 
                 const timelineRanges = _.chain(top10CandidatesTimeline).map('endTime').sort().sortedUniq().value();

@@ -79,11 +79,8 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     }),
     dataZoom: [{
         type: 'slider',
-        filterMode: 'filter',
         start: 0
-    }, {
-        type: 'inside', filterMode: 'filter'
-    }],
+    }, { type: 'inside' }],
     legend: {},
     xAxis: { type: 'time' },
     yAxis: [

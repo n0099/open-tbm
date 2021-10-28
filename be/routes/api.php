@@ -86,9 +86,4 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
 
         return $forumPostsCount;
     });
-    Route::get('/bilibiliVote/top50CandidatesVotesCount', 'Topic\BilibiliVote@top50CandidatesVotesCount');
-    Route::get('/bilibiliVote/top5CandidatesVotesCountByTime', 'Topic\BilibiliVote@top5CandidatesVotesCountByTime');
-    Route::get('/bilibiliVote/top10CandidatesTimeline', 'Topic\BilibiliVote@top10CandidatesTimeline');
-    Route::get('/bilibiliVote/allVotesCountByTime', 'Topic\BilibiliVote@allVotesCountByTime');
-    Route::get('/bilibiliVote/allCandidatesVotesCount', 'Topic\BilibiliVote@allCandidatesVotesCount');
 });

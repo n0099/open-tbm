@@ -8,13 +8,13 @@ import Noty from 'noty';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 export const isApiError = (r: any): r is ApiError => 'errorInfo' in r && _.isString(r.errorInfo);
 export const nullIfApiError = <T>(api: ApiError | T): T | null => (isApiError(api) ? null : api);
-export const getRequester = async <T = ApiError | unknown>(endpoint: string, queryString?: Record<string, unknown>): Promise<ApiError | T> => {
+export const getRequester = async <T = ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam): Promise<ApiError | T> => {
     NProgress.start();
     document.body.style.cursor = 'progress';
     let errorMessage = `GET ${endpoint}<br />`;
     try {
         const response = await fetch(
-            process.env.VUE_APP_API_URL_PREFIX + endpoint + (queryString === undefined ? '' : '?') + qs.stringify(queryString),
+            process.env.VUE_APP_API_URL_PREFIX + endpoint + (_.isEmpty(queryString) ? '' : '?') + qs.stringify(queryString),
             { headers: { Accept: 'application/json' } }
         );
         errorMessage += `HTTP ${response.status} `;
@@ -29,6 +29,7 @@ export const getRequester = async <T = ApiError | unknown>(endpoint: string, que
             }
             throw Error();
         }
+        if (!response.ok) throw Error();
         return json;
     } catch (e: unknown) {
         if (e instanceof Error) {

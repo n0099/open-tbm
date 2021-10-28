@@ -1,5 +1,5 @@
 import type { ApiError, ApiQueryParam } from '@/api/index.d';
-import { getRequester, getRequesterWithReCAPTCHA } from '@/api';
+import { getRequester } from '@/api';
 import type { Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 
 export type IsValid = 0 | 1;
@@ -29,12 +29,12 @@ export const apiCandidatesName = async (): Promise<ApiCandidatesName | ApiError>
 export const apiTop50OfficialValidVotesCount = async (): Promise<ApiError | ApiTop50OfficialValidVotesCount> =>
     getRequester('/bilibiliVote/top50OfficialValidVotesCount.json');
 export const apiAllCandidatesVotesCount = async (): Promise<ApiAllCandidatesVotesCount | ApiError> =>
-    getRequesterWithReCAPTCHA('/bilibiliVote/allCandidatesVotesCount');
+    getRequester('/bilibiliVote/allCandidatesVotesCount.json');
 export const apiTop50CandidatesVotesCount = async (): Promise<ApiError | ApiTop50CandidatesVotesCount> =>
-    getRequesterWithReCAPTCHA('/bilibiliVote/top50CandidatesVotesCount');
-export const apiTop5CandidatesVotesCountByTime = async (qp: CountByTimeGranularityQP): Promise<ApiError | ApiTop5CandidatesVotesCountByTime> =>
-    getRequesterWithReCAPTCHA('/bilibiliVote/top5CandidatesVotesCountByTime', qp);
-export const apiAllVotesCountByTime = async (qp: CountByTimeGranularityQP): Promise<ApiAllVotesCountByTime | ApiError> =>
-    getRequesterWithReCAPTCHA('/bilibiliVote/allVotesCountByTime', qp);
+    getRequester('/bilibiliVote/top50CandidatesVotesCount.json');
 export const apiTop10CandidatesTimeline = async (): Promise<ApiError | ApiTop10CandidatesTimeline> =>
-    getRequesterWithReCAPTCHA('/bilibiliVote/top10CandidatesTimeline');
+    getRequester('/bilibiliVote/top10CandidatesTimeline.json');
+export const apiTop5CandidatesVotesCountByTime = async (qp: CountByTimeGranularityQP): Promise<ApiError | ApiTop5CandidatesVotesCountByTime> =>
+    getRequester(`/bilibiliVote/top5CandidatesVotesCountByTime${_.capitalize(qp.timeGranularity)}Granularity.json`);
+export const apiAllVotesCountByTime = async (qp: CountByTimeGranularityQP): Promise<ApiAllVotesCountByTime | ApiError> =>
+    getRequester(`/bilibiliVote/allVotesCountByTime${_.capitalize(qp.timeGranularity)}Granularity.json`);
