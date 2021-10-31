@@ -49,8 +49,8 @@ export const emptyChartSeriesData = (chart: echarts.ECharts) => {
     });
 };
 
-export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'year'];
-export type TimeGranularities = 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year';
+export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'year'] as const;
+export type TimeGranularities = typeof timeGranularities[number];
 export type TimeGranularitiesStringMap = { [P in TimeGranularities]?: string };
 export const timeGranularityAxisType: { [P in TimeGranularities]: 'category' | 'time' } = {
     minute: 'time',

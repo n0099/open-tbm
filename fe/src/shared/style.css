@@ -1,4 +1,4 @@
-.ant-input-lg {
+.ant-input-lg, .input-group-text {
     height: 38px; /* adopt to bootstrap input group */
 }
 

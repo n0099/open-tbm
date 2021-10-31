@@ -1,5 +1,4 @@
-import { ApiQueryParam } from '@/api/index.d';
-import type { ApiError, ApiForumList, ApiStatsForumPostsCount, ApiStatsQP, ApiStatus, ApiStatusQP } from '@/api/index.d';
+import type { ApiError, ApiForumList, ApiQueryParam, ApiStatsForumPostsCount, ApiStatsQP, ApiStatus, ApiStatusQP } from '@/api/index.d';
 import NProgress from 'nprogress';
 import qs from 'qs';
 import _ from 'lodash';

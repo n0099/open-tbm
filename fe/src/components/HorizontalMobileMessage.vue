@@ -5,11 +5,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-    name: 'HorizontalMobileMessage'
-});
+export default {};
 </script>
 
 <style scoped>

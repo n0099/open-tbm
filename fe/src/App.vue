@@ -125,7 +125,6 @@ const $$getTBMPostLink = (tid, pid = null, spid = null) => {
     return `${$$baseUrl}/post/spid/${spid}`;
 };
 const $$getTBMUserLink = username => `${$$baseUrl}/user/n/${username}`;
-const $$getTiebaUserAvatarUrl = avatarUrl => `https://himg.bdimg.com/sys/portrait/item/${avatarUrl}.jpg`;
 </script>
 
 <style scoped>

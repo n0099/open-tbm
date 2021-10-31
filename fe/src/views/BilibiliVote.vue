@@ -657,6 +657,7 @@ export default defineComponent({
 
             const top50OfficialValidVotesCount = await apiTop50OfficialValidVotesCount();
             if (isApiError(top50OfficialValidVotesCount)) return;
+            // eslint-disable-next-line require-atomic-updates
             state.top50OfficialValidVotesCount = top50OfficialValidVotesCount;
             // add candidate index as keys then deep merge will combine same keys values, finally remove keys
             state.candidatesDetailData = _.values(_.merge(
@@ -667,10 +668,9 @@ export default defineComponent({
                 })), 'candidateIndex')
             ));
 
-            _.map(charts, async (chart, chartName: Charts) => {
+            _.map(charts, (chart, chartName: Charts) => {
                 if (chart === null) return;
-                await loadCharts[chartName]();
-                chartsDom[chartName].value?.classList.remove('loading');
+                loadCharts[chartName]().finally(() => chartsDom[chartName].value?.classList.remove('loading'));
             });
         });
 
