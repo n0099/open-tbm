@@ -31,23 +31,18 @@
             </div>
         </div>
     </form>
-    <div class="row mt-2">
-        <div ref="chartDom" id="statsChartDom" class="echarts col mt-2"></div>
-    </div>
+    <div ref="chartDom" id="statsChartDom" class="echarts mt-4"></div>
 </template>
 
 <script lang="ts">
-import type { ApiForumList, ApiStatsQP } from '@/api/index.d';
+import type { ApiForumList, ApiStatsForumPostsCountQP } from '@/api/index.d';
 import { apiForumList, apiStatsForumPostsCount, isApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
 
 import _ from 'lodash';
-import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import { DateTime } from 'luxon';
-import type { Moment } from 'moment';
-import moment from 'moment';
+import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import * as echarts from 'echarts/core';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
@@ -110,7 +105,7 @@ export default defineComponent({
     setup() {
         const chartDom = ref<HTMLElement>();
         const state = reactive<{
-            query: ApiStatsQP,
+            query: ApiStatsForumPostsCountQP,
             forumList: ApiForumList
         }>({
             query: {
@@ -121,7 +116,7 @@ export default defineComponent({
             },
             forumList: []
         });
-        const submitQueryForm = () => {
+        const submitQueryForm = async () => {
             if (chartDom.value === undefined) return;
             chartDom.value.classList.add('loading');
             if (chart === null) {
@@ -132,33 +127,33 @@ export default defineComponent({
             chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
                 { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧贴量统计` } }
             );
-            (async () => {
-                const statsResult = await apiStatsForumPostsCount(state.query);
-                if (isApiError(statsResult)) return;
-                const series = _.map(statsResult, (dates, postType) => ({
-                    id: postType,
-                    data: _.map(dates, _.values)
-                }));
-                const axisType = timeGranularityAxisType[state.query.timeGranularity];
-                chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
-                    dataZoom: [{ start: 0, end: 100 }],
-                    xAxis: {
-                        ...axisType === 'category'
-                            ? {
-                                data: _.chain(statsResult)
-                                    .map(counts => _.map(counts, 'time'))
-                                    .flatten()
-                                    .sort()
-                                    .sortedUniq()
-                                    .value()
-                            }
-                            : {},
-                        type: axisType,
-                        axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[state.query.timeGranularity] } }
-                    },
-                    series
-                });
-            })().finally(() => { chartDom.value?.classList.remove('loading') });
+
+            const statsResult = await apiStatsForumPostsCount(state.query)
+                .finally(() => { chartDom.value?.classList.remove('loading') });
+            if (isApiError(statsResult)) return;
+            const series = _.map(statsResult, (dates, postType) => ({
+                id: postType,
+                data: _.map(dates, _.values)
+            }));
+            const axisType = timeGranularityAxisType[state.query.timeGranularity];
+            chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
+                dataZoom: [{ start: 0, end: 100 }],
+                xAxis: {
+                    ...axisType === 'category'
+                        ? {
+                            data: _.chain(statsResult)
+                                .map(counts => _.map(counts, 'time'))
+                                .flatten()
+                                .sort()
+                                .sortedUniq()
+                                .value()
+                        }
+                        : {},
+                    type: axisType,
+                    axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[state.query.timeGranularity] } }
+                },
+                series
+            });
         };
 
         onMounted(async () => {
@@ -167,7 +162,7 @@ export default defineComponent({
             state.forumList = forumListResult;
         });
 
-        return { moment, timeGranularities, ...toRefs(state), chartDom, submitQueryForm };
+        return { timeGranularities, ...toRefs(state), chartDom, submitQueryForm };
     }
 });
 </script>

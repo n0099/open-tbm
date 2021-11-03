@@ -10,13 +10,13 @@ import 'noty/lib/themes/mint.css';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import tippy from 'tippy.js';
+import 'lazysizes';
 import '@/shared/style.css';
 import * as antdComponents from '@/shared/antd';
 import * as fontAwesomeIcons from '@/shared/fontAwesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 library.add(...Object.values(fontAwesomeIcons));
 
-// window.noty = new Noty({ timeout: 3000 }); // https://github.com/needim/noty/issues/455
 NProgress.configure({ trickleSpeed: 200 });
 tippy.setDefaultProps({
     animation: 'perspective',

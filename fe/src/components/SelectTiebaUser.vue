@@ -2,9 +2,12 @@
     <div class="col-5">
         <div class="input-group">
             <select v-model="selectBy" class="selectUserBy form-select">
+                <option value="">请选择</option>
                 <option value="uid">UID</option>
                 <option value="name">用户名</option>
+                <option value="nameNULL">NULL用户名</option>
                 <option value="displayName">覆盖名</option>
+                <option value="displayNameNULL">NULL覆盖名</option>
             </select>
             <template v-if="selectBy === 'uid'">
                 <select v-model="params.uidCompareBy" class="uidCompareBy form-select">
@@ -38,17 +41,17 @@
 
 <script lang="ts">
 import type { PropType } from 'vue';
-import { defineComponent, reactive, toRefs, watch, watchEffect } from 'vue';
+import { defineComponent, onMounted, reactive, toRefs, watch } from 'vue';
 import _ from 'lodash';
 
-export const selectTiebaUserBy = ['uid', 'name', 'displayName'] as const;
+export const selectTiebaUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
 export type SelectTiebaUserBy = typeof selectTiebaUserBy[number];
 export type SelectTiebaUserParams = Partial<{
     uid: number,
     uidCompareBy: '<' | '=' | '>',
-    name: string,
+    name: string | 'NULL',
     nameUseRegex: boolean,
-    displayName: string,
+    displayName: string | 'NULL',
     displayNameUseRegex: boolean
 }>;
 const selectTiebaUserParamsNames = ['uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'] as const;
@@ -63,37 +66,40 @@ export default defineComponent({
     },
     setup(props, { emit }) {
         const state = reactive<{
-            selectBy: SelectTiebaUserBy,
+            selectBy: SelectTiebaUserBy | 'displayNameNULL' | 'nameNULL',
             params: SelectTiebaUserParams
         }>({
-            selectBy: 'name',
+            selectBy: '',
             params: {}
         });
 
         const emitChanged = () => {
-            // deep remove proxy added by Vue.reactive() on state, can't use _.cloneDeep() here since it won't remove proxy
-            // const eventValue: typeof state = JSON.parse(JSON.stringify(state));
-            const eventValue = state;
             if (props.paramsNameMap !== undefined) {
-                eventValue.params = _.mapKeys(eventValue.params, (_v, oldParamName) =>
+                state.params = _.mapKeys(state.params, (_v, oldParamName) =>
                     (props.paramsNameMap as Record<string, string>)[oldParamName]);
             }
-            emit('update:modelValue', eventValue);
+            emit('update:modelValue', state);
         };
 
         watch(() => state.params, emitChanged, { deep: true });
-        watchEffect(() => {
+        watch(() => props.modelValue, () => {
             // emit with default params value when parent haven't passing modelValue
             if (_.isEmpty(props.modelValue) || props.modelValue === undefined) emitChanged();
             else ({ selectBy: state.selectBy, params: state.params } = props.modelValue);
             // filter out unnecessary and undefined params
             state.params = _.omitBy(_.pick(state.params, selectTiebaUserParamsNames), (i?: SelectTiebaUserParamsValues) => i === undefined);
             // reset to default selectBy if it's a invalid value
-            if (!_.includes(selectTiebaUserBy, state.selectBy)) state.selectBy = 'name';
+            if (!_.includes(selectTiebaUserBy, state.selectBy)) state.selectBy = '';
             if (state.selectBy === 'uid') state.params.uidCompareBy ??= '='; // set to default value if it's undefined
-            watch(() => state.selectBy, () => { // defer listening to prevent watch triggered by assigning initial selectBy
+            if (state.params.name === 'NULL') state.selectBy = 'nameNULL';
+            if (state.params.displayName === 'NULL') state.selectBy = 'displayNameNULL';
+        }, { immediate: true });
+        onMounted(() => {
+            watch(() => state.selectBy, selectBy => { // defer listening to prevent watch triggered by assigning initial selectBy
                 state.params = {}; // empty params to prevent old value remains after selectBy changed
-                if (state.selectBy === 'uid') state.params.uidCompareBy = '='; // reset to default
+                if (selectBy === 'uid') state.params.uidCompareBy = '='; // reset to default
+                if (selectBy === 'nameNULL') state.params.name = 'NULL';
+                if (selectBy === 'displayNameNULL') state.params.displayName = 'NULL';
                 emitChanged();
             });
         });

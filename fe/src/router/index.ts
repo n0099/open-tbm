@@ -9,12 +9,11 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
     const [containerDom] = document.getElementsByClassName('container');
     loadingBlocksDom?.classList.remove('d-none');
     containerDom.classList.add('invisible');
-    component.finally(() => {
+    return component.finally(() => {
         NProgress.done();
         loadingBlocksDom?.classList.add('d-none');
         containerDom.classList.remove('invisible');
     });
-    return component;
 };
 
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };

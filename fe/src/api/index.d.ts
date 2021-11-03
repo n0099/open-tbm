@@ -1,3 +1,4 @@
+import type { SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
 import type { Float, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
@@ -31,9 +32,27 @@ export interface ApiStatsForumPostsCount {
     reply: TimeCountPair[],
     subReply: TimeCountPair[]
 }
-export interface ApiStatsQP extends ApiQueryParam {
+export interface ApiStatsForumPostsCountQP extends ApiQueryParam {
     fid: UInt,
     timeGranularity: 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year',
     startTime: UnixTimestamp,
     endTime: UnixTimestamp
 }
+
+export type Pagination = { [P in 'currentItems' | 'currentPage' | 'firstItem']: number };
+export type TiebaUserGender = 0 | 1 | 2 | null;
+export type TiebaUserGenderQP = '0' | '1' | '2' | 'NULL';
+export interface TiebaUserInfo {
+    uid: number,
+    avatarUrl: string,
+    name: string | null,
+    displayName: string | null,
+    fansNickname: string | null,
+    gender: TiebaUserGender,
+    iconInfo: Array<Record<string, unknown>> | null
+}
+export interface ApiUsersQuery {
+    pages: Pagination,
+    users: TiebaUserInfo[]
+}
+export type ApiUsersQueryQP = ApiQueryParam & SelectTiebaUserParams & { gender?: TiebaUserGenderQP };

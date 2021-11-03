@@ -45,9 +45,9 @@
         <div ref="allVotesCountByTime" id="allVotesCountByTime" class="echarts"></div>
         <hr />
         <Table :columns="candidatesDetailColumns"
-                :data-source="candidatesDetailData"
-                :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }"
-                row-key="candidateIndex">
+               :data-source="candidatesDetailData"
+               :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }"
+               row-key="candidateIndex">
             <template #candidateName="{ text }">
                 <a :href="tiebaUserLink(text)">{{ text }}</a>
             </template>

@@ -1,9 +1,11 @@
 <template>
     <div class="row align-items-center">
-        <div class="col"><hr /></div>
-        <div class="w-auto">
-            <div class="loading mx-auto"></div>
-        </div>
+        <template v-if="isLoading">
+            <div class="col"><hr /></div>
+            <div class="w-auto">
+                <div class="loading mx-auto"></div>
+            </div>
+        </template>
         <div class="col"><hr /></div>
         <div class="w-100"></div>
         <div class="col">
@@ -13,7 +15,14 @@
 </template>
 
 <script>
-export default {};
+export default {
+    props: {
+        isLoading: {
+            type: Boolean,
+            default: true
+        }
+    }
+};
 </script>
 
 <style scoped>

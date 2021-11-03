@@ -24,9 +24,7 @@
             <button type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
     </form>
-    <div class="row mt-2">
-        <div ref="chartDom" id="statusChartDom" class="echarts col mt-2"></div>
-    </div>
+    <div ref="chartDom" id="statusChartDom" class="echarts mt-4"></div>
 </template>
 
 <script lang="ts">
@@ -46,9 +44,6 @@ import { UniversalTransition } from 'echarts/features';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption, VisualMapComponentOption } from 'echarts/components';
 import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import type { Moment } from 'moment';
-import moment from 'moment';
-import { DateTime } from 'luxon';
 import _ from 'lodash';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
@@ -178,7 +173,7 @@ export default defineComponent({
                 endTime: 0
             }
         });
-        const submitQueryForm = () => {
+        const submitQueryForm = async () => {
             if (chartDom.value === undefined) return;
             chartDom.value.classList.add('loading');
             if (chart === null) {
@@ -186,19 +181,18 @@ export default defineComponent({
                 chart.setOption(chartInitialOption);
             }
             emptyChartSeriesData(chart);
-            (async () => {
-                const statusResult = await apiStatus(state.query);
-                if (isApiError(statusResult)) return;
-                const series = _.chain(chartInitialOption.series)
-                    .map('id')
-                    .map((seriesName: keyof ApiStatus[0]) => ({
-                        id: seriesName,
-                        // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
-                        data: statusResult.map(i => [i.startTime * 1000, i[seriesName]])
-                    }))
-                    .value();
-                chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
-            })().finally(() => { chartDom.value?.classList.remove('loading') });
+
+            const statusResult = await apiStatus(state.query).finally(() => { chartDom.value?.classList.remove('loading') });
+            if (isApiError(statusResult)) return;
+            const series = _.chain(chartInitialOption.series)
+                .map('id')
+                .map((seriesName: keyof ApiStatus[0]) => ({
+                    id: seriesName,
+                    // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
+                    data: statusResult.map(i => [i.startTime * 1000, i[seriesName]])
+                }))
+                .value();
+            chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
         };
 
         watch(() => state.autoRefresh, autoRefresh => {
@@ -207,7 +201,7 @@ export default defineComponent({
         });
         onMounted(submitQueryForm);
 
-        return { moment, ...toRefs(state), chartDom, submitQueryForm };
+        return { ...toRefs(state), chartDom, submitQueryForm };
     }
 });
 </script>

@@ -7,7 +7,7 @@ try {
     @foreach ($content as $item)
         @switch ($item['type'])
             @case (0) {{--文本 {"text": "content\n", "type": "0"} --}}
-                <span>{!! nl2br(trim($item['text'], "\n")) !!}</span>
+                <span>{{ nl2br(trim($item['text'], "\n")) }}</span>
                 @break
             @case (1)
                 {{--链接

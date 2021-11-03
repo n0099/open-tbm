@@ -15,13 +15,24 @@ class UsersQuery extends Controller
             'uid' => 'integer',
             'name' => 'string',
             'displayName' => 'string',
-            'gender' => 'integer|in:0,1,2'
+            'gender' => 'string|in:0,1,2,NULL'
         ]);
         Helper::abortAPIIf(40402, empty($queryParams));
 
-        $queriedInfo = UserModel::where($queryParams)
+        $queryBuilder = (new UserModel())->newQuery();
+
+        $nullableParams = ['name', 'displayName', 'gender'];
+        foreach ($nullableParams as $nullableParamName) {
+            if (array_key_exists($nullableParamName, $queryParams) && $queryParams[$nullableParamName] === 'NULL') {
+                $queryBuilder = $queryBuilder->whereNull($nullableParamName);
+                unset($queryParams[$nullableParamName]);
+            }
+        }
+
+        $queriedInfo = $queryBuilder->where($queryParams)
             ->orderBy('id', 'DESC')
-            ->hidePrivateFields()->simplePaginate($this->pagingPerPageItems);
+            ->hidePrivateFields()
+            ->simplePaginate($this->pagingPerPageItems);
         Helper::abortAPIIf(40402, $queriedInfo->isEmpty());
 
         return [
