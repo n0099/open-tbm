@@ -1,3 +1,4 @@
+import { RouteLocationNormalized } from 'vue-router';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import Noty from 'noty';
 import _ from 'lodash';
@@ -21,3 +22,5 @@ export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record
 export const routeNameStrAssert: (_name: RouteLocationNormalizedLoaded['name']) => asserts _name is string = _name => {
     if (!_.isString(_name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
 };
+export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
+    !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));

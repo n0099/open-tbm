@@ -35,5 +35,21 @@ export default {
     height: 480px;
     background-image: url('../../public/assets/tombstone-post-list.svg');
     background-size: 100%;
+    animation-name: tombstone-post-list;
+    animation-play-state: running;
+    animation-iteration-count: infinite;
+    animation-duration: 1.5s;
+}
+
+@keyframes tombstone-post-list {
+    0% {
+        opacity: .5;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: .5;
+    }
 }
 </style>

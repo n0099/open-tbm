@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { notyShow } from '@/shared';
+import { compareRouteIsNewQuery, notyShow } from '@/shared';
 import { apiUsersQuery, isApiError } from '@/api/index';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import PlaceholderError from '@/components/PlaceholderError.vue';
@@ -85,12 +85,9 @@ export default defineComponent({
         });
         onMounted(() => { fetchUsersData(route, true) });
         onBeforeRouteUpdate(async (to, from) => {
-            const isNewQuery = !(_.isEqual(to.query, from.query)
-                && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
-            if (!isNewQuery && !_.isEmpty(_.filter(state.userPages, i => i.pages.currentPage === Number(to.params.page)))) {
-                document.getElementById(`page${to.params.page}`)?.scrollIntoView();
-                return false;
-            }
+            const isNewQuery = compareRouteIsNewQuery(to, from);
+            if (!isNewQuery
+                && !_.isEmpty(_.filter(state.userPages, i => i.pages.currentPage === Number(to.params.page ?? 1)))) return true;
             const isFetchSuccess = await fetchUsersData(to, isNewQuery);
             return isNewQuery ? true : isFetchSuccess;
         });

@@ -1,7 +1,8 @@
-import NProgress from 'nprogress';
+import { compareRouteIsNewQuery } from '@/shared';
+import Index from '@/views/Index.vue';
 import type { Component } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import Index from '@/views/Index.vue';
+import NProgress from 'nprogress';
 
 const lazyLoadRouteView = async (component: Promise<Component>) => {
     NProgress.start();
@@ -21,7 +22,7 @@ export default createRouter({
     history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
     routes: [
         { path: '/', name: 'index', component: Index },
-        { path: '/post', name: 'post' },
+        { path: '/post', name: 'post', component: async () => lazyLoadRouteView(import('@/views/Post.vue')) },
         {
             path: '/user',
             name: 'user',
@@ -37,5 +38,12 @@ export default createRouter({
         { path: '/stats', name: 'stats', component: async () => lazyLoadRouteView(import('@/views/Stats.vue')) },
         { path: '/bilibiliVote', name: 'bilibiliVote', component: async () => lazyLoadRouteView(import('@/views/BilibiliVote.vue')) }
     ],
-    linkActiveClass: 'active'
+    linkActiveClass: 'active',
+    scrollBehavior(to, from, savedPosition) {
+        if (('page' in from.params || 'page' in to.params)
+            && !compareRouteIsNewQuery(to, from)) return { el: `#page${to.params.page ?? 1}`, top: 0 };
+        // the undocumented 'href' property will not in from when user refresh page
+        if (!('href' in from || savedPosition === null)) return savedPosition;
+        return { top: 0 };
+    }
 });

@@ -1,0 +1,30 @@
+<template>
+    <div class="btn-group" role="group">
+        <button v-if="thread.stickyType === 'membertop'" class="badge btn btn-warning" type="button">会员置顶</button>
+        <button v-if="thread.stickyType === 'top'" class="badge btn btn-primary" type="button">置顶</button>
+        <button v-if="thread.isGood" class="badge btn btn-danger" type="button">精品</button>
+        <button v-if="thread.topicType === 'text'" class="badge btn btn-primary" type="button">文本话题</button>
+        <button v-if="thread.topicType === ''" class="badge btn btn-primary" type="button">图片话题</button><!-- TODO: fill unknown picture topic thread type -->
+    </div>
+</template>
+
+<script>
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    setup() {
+
+    }
+});
+
+const postThreadTagComponent = Vue.component('post-thread-tag', {
+    template: '#post-thread-tag-template',
+    props: {
+        thread: { type: Object, required: true }
+    }
+});
+</script>
+
+<style scoped>
+
+</style>

@@ -31,6 +31,7 @@ function detectUndefined(node) {
             'router-link-exact', // vue-router
             'nprogress',
             'noty_',
+            'ls-is-cached', // lazysizes
             // fontawesome start
             'fa-',
             'far',

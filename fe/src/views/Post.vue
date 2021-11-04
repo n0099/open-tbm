@@ -1,0 +1,286 @@
+<template>
+    <div class="container">
+        <query-form @query="query($event)" :forum-list="forumList" ref="queryForm"></query-form>
+        <p>当前页数：{{ currentRoutePage }}</p>
+        <a-menu v-show="! _.isEmpty(postPages)" v-model="selectedRenderType" mode="horizontal">
+            <a-menu-item key="list">列表视图</a-menu-item>
+            <a-menu-item key="table">表格视图</a-menu-item>
+            <a-menu-item key="raw">RAW</a-menu-item>
+        </a-menu>
+    </div>
+    <div v-show="! _.isEmpty(postPages)" class="container-fluid">
+        <div class="justify-content-center row">
+            <posts-nav :post-pages="postPages" :aria-expanded="postsNavExpanded" class="posts-nav vh-100 sticky-top d-none d-xl-block col-xl"></posts-nav>
+            <a @click="postsNavExpanded = ! postsNavExpanded" class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col col-auto">
+                <i v-show="postsNavExpanded" class="fas fa-angle-left"></i>
+                <i v-show="! postsNavExpanded" class="fas fa-angle-right"></i>
+            </a>
+            <div :class="{
+                                'post-render-wrapper': true,
+                                'post-render-list-wrapper': renderType === 'list',
+                                'col': true,
+                                'col-xl-auto': true,
+                                'col-xl-10': renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
+                             }">
+                <template v-for="(posts, pageIndex) in postPages">
+                    <post-page-previous @load-page="loadPage($event)" :page-info="posts.pages"></post-page-previous>
+                    <post-render-list v-if="renderType === 'list'" :key="posts.pages.currentPage" :initial-posts="posts"></post-render-list>
+                    <post-render-table v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts"></post-render-table>
+                    <post-render-raw v-else-if="renderType === 'raw'" :key="posts.pages.currentPage" :posts="posts"></post-render-raw>
+                    <post-page-next v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1" @load-page="loadPage($event)" :current-page="posts.pages.currentPage"></post-page-next>
+                </template>
+            </div>
+            <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder d-none col-xl"></div>
+        </div>
+    </div>
+    <div class="container">
+        <error-placeholder v-if="queryError !== null" :error="queryError"></error-placeholder>
+        <loading-list-placeholder v-show="$refs.queryForm?.$data.isRequesting"></loading-list-placeholder>
+    </div>
+</template>
+
+<script>
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    setup() {
+
+    }
+});
+
+window.$previousPostsQueryAjax = undefined;
+window.$sharedData = {
+    firstPostInView: { tid: 0, pid: 0 }
+};
+window.$getUserInfo = (dataSource) => (uid) => // curry invoke
+    _.find(dataSource, { uid }) || { // thread latest replier uid might be unknown
+        id: 0,
+        uid: 0,
+        name: '未知用户',
+        displayName: null,
+        avatarUrl: null,
+        gender: 0,
+        fansNickname: null,
+        iconInfo: []
+    };
+
+const postsQueryComponent = Vue.component('posts-query', {
+    template: '#posts-query-template',
+    data () {
+        return {
+            forumList: [],
+            postPages: [],
+            currentRoutePage: parseInt(this.$route.params.page) || 1,
+            queryError: null,
+            renderType: 'list',
+            postsNavExpanded: false,
+            scrollStopDebounce: _.debounce(this.scrollStop, 200)
+        };
+    },
+    computed: {
+        selectedRenderType: {
+            get: function () {
+                return [this.$data.renderType];
+            },
+            set: function (value) {
+                this.$data.renderType = value[0];
+            }
+        }
+    },
+    watch: {
+        $route (to, from) {
+            this.$data.currentRoutePage = parseInt(to.params.page) || 1;
+            delete to.params[0]; // fixme: [vue-router] missing param for named route "param+p": Expected "0" to be defined
+            if (to.hash === '#') { // remove empty hash
+                to.hash = '';
+            }
+        },
+        renderType (to, from) {
+            if (to === 'list') {
+                window.addEventListener('scroll', this.$data.scrollStopDebounce, { passive: true });
+            } else {
+                window.removeEventListener('scroll', this.$data.scrollStopDebounce);
+            }
+        }
+    },
+    beforeMount () {
+        $$loadForumList().then((forumList) => this.$data.forumList = forumList);
+    },
+    mounted () {
+        window.addEventListener('scroll', this.$data.scrollStopDebounce, { passive: true });
+    },
+    methods: {
+        scrollStop () {
+            let findFirstPostInView = (topOffset) => (result, dom) => { // partial invoke
+                let top = dom.getBoundingClientRect().top - topOffset;
+                result.top = result.top === undefined ? Infinity : result.top;
+                if (top >= 0 && result.top > top) { // ignore doms which y coord is ahead of top of viewport
+                    return result = { dom, top };
+                } else {
+                    return result;
+                }
+            };
+            let firstThreadDomInView = $(_.reduce($('.thread-title'), findFirstPostInView(0), {}).dom);
+            let firstThreadTidInView = parseInt(firstThreadDomInView.parent().prop('id').substr(1));
+            let firstReplyDomInView = $(_.reduce($('.reply-title'), findFirstPostInView(62), {}).dom); // 62px is the top offset of reply title
+            let firstReplyPidInView = parseInt(firstReplyDomInView.parent().prop('id'));
+            let newRouteParams = { ...this.$route.params, 0: this.$route.params.pathMatch }; // [vue-router] missing param for named route "param+p": Expected "0" to be defined
+            if (_.chain(this.$data.postPages)
+                .map('threads')
+                .flatten()
+                .filter({ tid: firstThreadTidInView })
+                .map('replies')
+                .flatten()
+                .filter({ pid: firstReplyPidInView })
+                .isEmpty()
+                .value()) { // is first reply belongs to first thread, true when first thread have no reply so the first reply will be some other threads reply which comes after first thread in view
+                let page = firstThreadDomInView.parents('.post-render-list').data('page');
+                window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: 0 });
+                this.$router.replace({ hash: `#t${firstThreadTidInView}`, params: { ...newRouteParams, page } });
+            } else { // _.merge() prevents vue data binding observer in prototypes being cleared
+                let page = firstReplyDomInView.parents('.post-render-list').data('page');
+                window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: firstReplyPidInView });
+                this.$router.replace({ hash: `#${firstReplyPidInView}`, params: { ...newRouteParams, page } });
+            }
+            this.updateTitle();
+        },
+        updateTitle () {
+            let page = this.$data.currentRoutePage;
+            let forumName = `${this.$data.postPages[0].forum.name}吧`;
+            let threadTitle = this.$data.postPages[0].threads[0].title;
+            switch (this.$refs.queryForm.currentQueryType()) {
+            case 'fid':
+            case 'search':
+                document.title = `第${page}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
+                break;
+            case 'postID':
+                document.title = `第${page}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                break;
+            }
+        },
+        loadPage (page) {
+            if (_.map(this.$data.postPages, 'pages.currentPage').includes(page)) {
+                $(`.post-previous-page[data-page='${page}']`)[0].scrollIntoView(); // scroll to page if already loaded
+            }
+            this.$router.push(_.merge(this.$route.name.startsWith('param')
+                ? { path: `/page/${page}/${this.$route.params.pathMatch}` }
+                : {
+                    name: `${this.$route.name}${this.$route.name.endsWith('+p') ? '' : '+p'}`,
+                    params: { ...this.$route.params, page }
+                }));
+        },
+        query ({ queryParams, shouldReplacePage }) {
+            this.$data.queryError = null;
+            if (shouldReplacePage) {
+                this.$data.postPages = []; // clear posts pages data before request to show loading placeholder
+            } else {
+                if (! _.isEmpty(_.filter(_.map(this.$data.postPages, 'pages.currentPage'), (i) => i === this.$data.currentRoutePage))) {
+                    this.$refs.queryForm.$data.isRequesting = false;
+                    return; // cancel request when requesting page have already been loaded
+                }
+            }
+
+            let ajaxStartTime = Date.now();
+            if (window.$previousPostsQueryAjax !== undefined) { // cancel previous pending ajax to prevent conflict
+                window.$previousPostsQueryAjax.abort();
+            }
+            $$reCAPTCHACheck().then((reCAPTCHA) => {
+                window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(queryParams), page: this.$data.currentRoutePage, reCAPTCHA }));
+                window.$previousPostsQueryAjax
+                    .done((ajaxData) => {
+                        if (shouldReplacePage) { // is loading next page data on the same query params or requesting new query with different params
+                            this.$data.postPages = [ajaxData];
+                        } else {
+                            // insert after existing previous page, if not exist will be inserted at start
+                            this.$data.postPages.splice(_.findIndex(this.$data.postPages, { pages: { currentPage: this.$data.currentRoutePage - 1 } }) + 1, 0, ajaxData);
+                        }
+                        new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.itemsCount}条贴子 耗时${Date.now() - ajaxStartTime}ms`}).show();
+                        this.updateTitle();
+                    })
+                    .fail((jqXHR) => {
+                        this.$data.postPages = [];
+                        if (jqXHR.responseJSON !== undefined) {
+                            let error = jqXHR.responseJSON;
+                            if (_.isObject(error.errorInfo)) { // response when laravel failed validate, same with ajaxError jquery event @ layout.blade.php
+                                this.$data.queryError = { code: error.errorCode, info: _.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />') };
+                            } else {
+                                this.$data.queryError = { code: error.errorCode, info: error.errorInfo };
+                            }
+                        }
+                    })
+                    .always(() => this.$refs.queryForm.$data.isRequesting = false);
+            });
+        }
+    }
+});
+const postsQueryVue = new Vue({
+    el: '#root-vue',
+    router: new VueRouter({
+        mode: 'history',
+        base: `${$$baseUrlDir}/postMulti`,
+        routes: [
+            {
+                name: 'root',
+                path: '/',
+                component: postsQueryComponent,
+                children: [
+                    { name: 'fid', path: 'fid/:fid' },
+                    { name: 'fid+p', path: 'fid/:fid/page/:page' },
+                    { name: 'tid', path: 'tid/:tid' },
+                    { name: 'tid+p', path: 'tid/:tid/page/:page' },
+                    { name: 'pid', path: 'pid/:pid' },
+                    { name: 'pid+p', path: 'pid/:pid/page/:page' },
+                    { name: 'spid', path: 'spid/:spid' },
+                    { name: 'spid+p', path: 'spid/:spid/page/:page' },
+                    { name: 'param+p', path: 'page/:page/*' },
+                    { name: 'param', path: '*' }
+                ]
+            }
+        ],
+        scrollBehavior (to, from, savedPosition) {
+            if (to.hash !== '') {
+                // skip scroll to dom when route update is triggered by scrollStop()
+                if (! (window.$sharedData.firstPostInView.pid === parseInt(to.hash.substr(1))
+                    || window.$sharedData.firstPostInView.tid === parseInt(to.hash.substr(2)))) {
+                    return { selector: `.post-render-list[data-page='${to.params.page}'] [id='${to.hash.substr(1)}']` }; // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
+                }
+            } else if (savedPosition) {
+                return savedPosition;
+            }
+        }
+    })
+});
+</script>
+
+<style scoped>
+.posts-nav-collapse {
+    padding: 2px;
+    font-size: 1.3em;
+    background-color: whitesmoke;
+}
+.post-render-wrapper {
+    padding-left: 10px;
+}
+.post-render-list-wrapper-placeholder {
+    padding: 0;
+}
+
+@media (max-width: 1200px) {
+    .post-render-wrapper {
+        width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warps new row */
+    }
+}
+@media (min-width: 1200px) {
+    .post-render-wrapper {
+        padding-left: 15px;
+    }
+    .post-render-list-wrapper {
+        max-width: 1000px;
+    }
+}
+@media (min-width: 1400px) {
+    .post-render-list-wrapper-placeholder {
+        display: block !important; /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
+    }
+}
+</style>
