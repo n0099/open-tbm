@@ -18,13 +18,25 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
 };
 
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
+const postRoute = { component: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }, props: true };
 export default createRouter({
     history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
     routes: [
         { path: '/', name: 'index', component: Index },
-        { path: '/post', name: 'post', component: async () => lazyLoadRouteView(import('@/views/Post.vue')) },
         {
-            path: '/user',
+            path: '/p',
+            name: 'post',
+            ...postRoute,
+            children: [
+                { path: 'page/:page', name: 'post+p', ...postRoute },
+                { path: 'f/:fid', name: 'fid', ...postRoute, children: [{ path: 'page/:page', name: 'fid+p', ...postRoute }] },
+                { path: 't/:tid', name: 'tid', ...postRoute, children: [{ path: 'page/:page', name: 'tid+p', ...postRoute }] },
+                { path: 'p/:pid', name: 'pid', ...postRoute, children: [{ path: 'page/:page', name: 'pid+p', ...postRoute }] },
+                { path: 'sp/:spid', name: 'spid', ...postRoute, children: [{ path: 'page/:page', name: 'spid+p', ...postRoute }] }
+            ]
+        },
+        {
+            path: '/u',
             name: 'user',
             ...userRoute,
             children: [

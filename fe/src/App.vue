@@ -33,11 +33,12 @@
     </nav>
     <HorizontalMobileMessage />
     <img id="loadingBlocksRouteChange" :src="baseUrl + 'assets/icon-loading-blocks.svg'" class="d-none" />
-    <div class="container">
-        <ConfigProvider :locale="AntdZhCn">
+    <ConfigProvider :locale="AntdZhCn">
+        <div class="container">
             <RouterView />
-        </ConfigProvider>
-    </div>
+        </div>
+        <RouterView name="escapeContainer" />
+    </ConfigProvider>
     <footer class="footer-outer text-light pt-4 mt-4">
         <div class="text-center">
             <p>四叶重工QQ群：292311751</p>

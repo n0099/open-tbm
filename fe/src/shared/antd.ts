@@ -2,5 +2,8 @@ export {
     ConfigProvider,
     DatePicker,
     Switch,
-    Table
+    Table,
+    Menu,
+    MenuItem,
+    SubMenu
 } from 'ant-design-vue';

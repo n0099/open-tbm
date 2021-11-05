@@ -8,23 +8,12 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-    setup() {
-
-    }
-});
-
-const postThreadTagComponent = Vue.component('post-thread-tag', {
-    template: '#post-thread-tag-template',
     props: {
         thread: { type: Object, required: true }
     }
 });
 </script>
-
-<style scoped>
-
-</style>

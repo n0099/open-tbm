@@ -3,7 +3,8 @@
         <div class="col"><hr /></div>
         <div class="w-auto">
             <div class="p-2 badge badge-light">
-                <button v-if="pageInfo.currentPage > 1" @click="$emit('load-page', pageInfo.currentPage - 1)" class="post-previous-page-button btn btn-primary" type="button">上一页</button>
+                <button v-if="pageInfo.currentPage > 1" @click="$emit('load-page', pageInfo.currentPage - 1)"
+                        class="post-previous-page-button btn btn-primary" type="button">上一页</button>
                 <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
                 <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.itemsCount }} 条</span>
             </div>
@@ -12,17 +13,10 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-    setup() {
-
-    }
-});
-
-const postPagePreviousButtonComponent = Vue.component('post-page-previous', {
-    template: '#post-page-previous-template',
     props: {
         pageInfo: { type: Object, required: true }
     }

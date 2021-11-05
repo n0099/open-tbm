@@ -12,23 +12,12 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-    setup() {
-
-    }
-});
-
-const postPageNextButtonComponent = Vue.component('post-page-next', {
-    template: '#post-page-next-template',
     props: {
         currentPage: { type: Number, required: true }
     }
 });
 </script>
-
-<style scoped>
-
-</style>

@@ -8,23 +8,12 @@
     </select>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-    setup() {
-
-    }
-});
-
-const selectRangeComponent = Vue.component('select-range', {
-    template: '#select-range-template',
     props: {
         value: { type: String, required: true }
     }
 });
 </script>
-
-<style scoped>
-
-</style>

@@ -1,83 +1,94 @@
 <template>
     <div class="container-flow">
-        <a-table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }" size="middle" class="render-table-thread">
-            <template slot="tid" slot-scope="text, record">
-                <router-link :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</router-link>
+        <Table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true"
+               :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }"
+               size="middle" class="render-table-thread">
+            <template v-slot:tid="text, record" >
+                <RouterLink :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</RouterLink>
             </template>
-            <template slot="firstPid" slot-scope="text, record">
-                <router-link :to="{ name: 'pid', params: { pid: record.firstPid } }">{{ record.firstPid }}</router-link>
+            <template v-slot:firstPid="text, record" >
+                <RouterLink :to="{ name: 'pid', params: { pid: record.firstPid } }">{{ record.firstPid }}</RouterLink>
             </template>
-            <template slot="titleWithTag" slot-scope="text, record">
-                <post-thread-tag :thread="record"></post-thread-tag>
+            <template v-slot:titleWithTag="text, record" >
+                <ThreadTag :thread="record" />
                 <span>{{ record.title }}</span>
             </template>
-            <template slot="authorInfo" slot-scope="text, record">
-                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)" target="_blank">
-                    <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+            <template v-slot:authorInfo="text, record" >
+                <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
+                    <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
+                         class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.authorUid) }}
                 </a>
-                <post-user-tag :user-info="{ managerType: record.authorManagerType }" :users-info-source="posts.users"></post-user-tag>
+                <UserTag :user-info="{ managerType: record.authorManagerType }" :users-info-source="posts.users" />
             </template>
-            <template slot="latestReplierInfo" slot-scope="text, record">
-                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.latestReplierUid).name)" target="_blank">
-                    <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.latestReplierUid).avatarUrl)" /> {{ renderUsername(record.latestReplierUid) }}
+            <template v-slot:latestReplierInfo="text, record" >
+                <a :href="$$getTiebaUserLink($getUserInfo(record.latestReplierUid).name)" target="_blank">
+                    <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.latestReplierUid).avatarUrl)"
+                         class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.latestReplierUid) }}
                 </a>
             </template>
-            <template slot="expandedRowRender" slot-scope="record">
+            <template v-slot:expandedRowRender="record" >
                 <span v-if="threadsReply[record.tid] === undefined">无子回复帖</span>
-                <a-table v-else :columns="replyColumns" :data-source="threadsReply[record.tid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                <Table v-else :columns="replyColumns" :data-source="threadsReply[record.tid]"
+                       :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
                     <template v-for="thread in [record]" slot="authorInfo" slot-scope="text, record">
-                        <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)" target="_blank">
-                            <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                        <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
+                            <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
+                                 class="tieba-user-avatar-small lazyload"/> {{ renderUsername(record.authorUid) }}
                         </a>
-                        <post-user-tag :user-info="{
-                                                uid: { current: record.authorUid, thread: thread.authorUid },
-                                                managerType: record.authorManagerType,
-                                                expGrade: record.authorExpGrade
-                                               }" :users-info-source="posts.users"></post-user-tag>
+                        <UserTag :user-info="{
+                            uid: { current: record.authorUid, thread: thread.authorUid },
+                            managerType: record.authorManagerType,
+                            expGrade: record.authorExpGrade
+                        }" :users-info-source="posts.users" />
                     </template>
-                    <template slot="expandedRowRender" slot-scope="record">
-                        <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content"></div>
-                        <a-table v-if="repliesSubReply[record.pid] !== undefined" :columns="subReplyColumns" :data-source="repliesSubReply[record.pid]" :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                    <template v-slot:expandedRowRender="record" >
+                        <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content" />
+                        <Table v-if="repliesSubReply[record.pid] !== undefined"
+                               :columns="subReplyColumns" :data-source="repliesSubReply[record.pid]"
+                               :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
                             <template v-for="reply in [record]" slot="authorInfo" slot-scope="text, record">
-                                <a :href="$data.$$getTiebaUserLink($data.$getUserInfo(record.authorUid).name)" target="_blank">
-                                    <img class="tieba-user-avatar-small lazyload" :data-src="$data.$$getTiebaUserAvatarUrl($data.$getUserInfo(record.authorUid).avatarUrl)" /> {{ renderUsername(record.authorUid) }}
+                                <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
+                                    <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
+                                         class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.authorUid) }}
                                 </a>
-                                <post-user-tag :user-info="{
-                                                        uid: { current: record.authorUid, thread: _.find(posts.threads, { tid: reply.tid }).authorUid, reply: reply.authorUid },
-                                                        managerType: record.authorManagerType,
-                                                        expGrade: record.authorExpGrade
-                                                       }" :users-info-source="posts.users"></post-user-tag>
+                                <UserTag :user-info="{
+                                    uid: {
+                                        current: record.authorUid,
+                                        thread: _.find(posts.threads, { tid: reply.tid }).authorUid,
+                                        reply: reply.authorUid
+                                    },
+                                    managerType: record.authorManagerType,
+                                    expGrade: record.authorExpGrade
+                                }" :users-info-source="posts.users" />
                             </template>
-                            <template slot="expandedRowRender" slot-scope="record">
-                                <span v-html="record.content"></span>
+                            <template v-slot:expandedRowRender="record" >
+                                <span v-html="record.content" />
                             </template>
-                        </a-table>
+                        </Table>
                     </template>
-                </a-table>
+                </Table>
             </template>
-        </a-table>
+        </Table>
     </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
+<script lang="ts">
+import { ThreadTag, UserTag } from './';
+import { defineComponent, onMounted, reactive, toRefs } from 'vue';
+import { RouterLink } from 'vue-router';
+import { Table } from 'ant-design-vue';
+import _ from 'lodash';
 
 export default defineComponent({
-    setup() {
-
-    }
-});
-
-const postRenderTableComponent = Vue.component('post-render-table', {
-    template: '#post-render-table-template',
+    components: { RouterLink, Table, ThreadTag, UserTag },
     props: {
         posts: { type: Object, required: true }
     },
-    data () {
-        return {
+    setup(props) {
+        const state = reactive({
             $$getTiebaUserLink,
             $$getTiebaUserAvatarUrl,
-            $getUserInfo: window.$getUserInfo(this.$props.posts.users),
+            $getUserInfo: window.$getUserInfo(props.posts.users),
             threads: [],
             threadsReply: [],
             repliesSubReply: [],
@@ -93,11 +104,11 @@ const postRenderTableComponent = Vue.component('post-render-table', {
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
                 { title: '1楼pid', dataIndex: 'firstPid', scopedSlots: { customRender: 'firstPid' } },
-                { title: '主题贴类型', dataIndex: 'threadType' },// todo: unknown value enum struct
+                { title: '主题贴类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
                 { title: '分享量', dataIndex: 'shareNum' },
-                { title: '赞踩量', dataIndex: 'agreeInfo' },// todo: unknown json struct
-                { title: '旧版客户端赞', dataIndex: 'zanInfo' },// todo: unknown json struct
-                { title: '发帖位置', dataIndex: 'location' },// todo: unknown json struct
+                { title: '赞踩量', dataIndex: 'agreeInfo' }, // todo: unknown json struct
+                { title: '旧版客户端赞', dataIndex: 'zanInfo' }, // todo: unknown json struct
+                { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }
             ],
@@ -108,11 +119,11 @@ const postRenderTableComponent = Vue.component('post-render-table', {
                 { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '发帖时间', dataIndex: 'postTime' },
-                { title: '是否折叠', dataIndex: 'isFold' },// todo: unknown value enum struct
-                { title: '赞踩量', dataIndex: 'agreeInfo' },// todo: unknown json struct
-                { title: '客户端小尾巴', dataIndex: 'signInfo' },// todo: unknown json struct
-                { title: '发帖来源', dataIndex: 'tailInfo' },// todo: unknown json struct
-                { title: '发帖位置', dataIndex: 'location' },// todo: unknown json struct
+                { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
+                { title: '赞踩量', dataIndex: 'agreeInfo' }, // todo: unknown json struct
+                { title: '客户端小尾巴', dataIndex: 'signInfo' }, // todo: unknown json struct
+                { title: '发帖来源', dataIndex: 'tailInfo' }, // todo: unknown json struct
+                { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }
             ],
@@ -124,34 +135,32 @@ const postRenderTableComponent = Vue.component('post-render-table', {
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }
             ]
+        });
+        const renderUsername = uid => {
+            const user = state.$getUserInfo(uid);
+            const { name } = user;
+            const { displayName } = user;
+            if (name === null) return `${displayName !== null ? `${displayName}` : `无用户名或覆盖名（UID：${user.uid}）`}`;
+            return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
         };
-    },
-    mounted () {
-        this.$data.threads = this.$props.posts.threads;
-        this.$data.threadsReply = _.chain(this.$data.threads)
-            .map('replies')
-            .reject(_.isEmpty) // remove threads which haven't reply
-            .mapKeys((replies) => replies[0].tid) // convert threads' reply array to object for adding tid key
-            .value();
-        this.$data.repliesSubReply = _.chain(this.$data.threadsReply)
-            .toArray() // tid keyed object to array
-            .flatten() // flatten every thread's replies
-            .map('subReplies')
-            .reject(_.isEmpty) // remove replies which haven't sub reply
-            .mapKeys((subReplies) => subReplies[0].pid) // convert replies' sub reply array to object for adding pid key
-            .value();
-    },
-    methods: {
-        renderUsername (uid) {
-            let user = this.$data.$getUserInfo(uid);
-            let name = user.name;
-            let displayName = user.displayName;
-            if (name === null) {
-                return `${displayName !== null ? `${displayName}` : `无用户名或覆盖名（UID：${user.uid}）`}`;
-            } else {
-                return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
-            }
-        }
+
+        onMounted(() => {
+            state.threads = props.posts.threads;
+            state.threadsReply = _.chain(state.threads)
+                .map('replies')
+                .reject(_.isEmpty) // remove threads which haven't reply
+                .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
+                .value();
+            state.repliesSubReply = _.chain(state.threadsReply)
+                .toArray() // tid keyed object to array
+                .flatten() // flatten every thread's replies
+                .map('subReplies')
+                .reject(_.isEmpty) // remove replies which haven't sub reply
+                .mapKeys(subReplies => subReplies[0].pid) // convert replies' sub reply array to object for adding pid key
+                .value();
+        });
+
+        return { _, ...toRefs(state), renderUsername };
     }
 });
 </script>

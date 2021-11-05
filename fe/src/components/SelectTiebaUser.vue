@@ -72,8 +72,7 @@ export default defineComponent({
             selectBy: '',
             params: {}
         });
-
-        const emitChanged = () => {
+        const emitModelChange = () => {
             if (props.paramsNameMap !== undefined) {
                 state.params = _.mapKeys(state.params, (_v, oldParamName) =>
                     (props.paramsNameMap as Record<string, string>)[oldParamName]);
@@ -81,10 +80,10 @@ export default defineComponent({
             emit('update:modelValue', state);
         };
 
-        watch(() => state.params, emitChanged, { deep: true });
+        watch(() => state.params, emitModelChange, { deep: true });
         watch(() => props.modelValue, () => {
             // emit with default params value when parent haven't passing modelValue
-            if (_.isEmpty(props.modelValue) || props.modelValue === undefined) emitChanged();
+            if (_.isEmpty(props.modelValue) || props.modelValue === undefined) emitModelChange();
             else ({ selectBy: state.selectBy, params: state.params } = props.modelValue);
             // filter out unnecessary and undefined params
             state.params = _.omitBy(_.pick(state.params, selectTiebaUserParamsNames), (i?: SelectTiebaUserParamsValues) => i === undefined);
@@ -100,7 +99,7 @@ export default defineComponent({
                 if (selectBy === 'uid') state.params.uidCompareBy = '='; // reset to default
                 if (selectBy === 'nameNULL') state.params.name = 'NULL';
                 if (selectBy === 'displayNameNULL') state.params.displayName = 'NULL';
-                emitChanged();
+                emitModelChange();
             });
         });
 

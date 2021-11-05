@@ -1,43 +1,29 @@
 <template>
-    <input v-if="param.subParam.range === 'IN'" @input="modelEvent($event.target.value)" :value="param.value"
-           :class="classes" :placeholder="placeholders.IN" :aria-label="param.name"
+    <input v-if="modelValue.subParam.range === 'IN'"
+           @input="emitModelChange" :value="modelValue.value"
+           :class="classes" :placeholder="placeholders.IN" :aria-label="modelValue.name"
            type="text" class="col form-control" required pattern="\d+(,\d+)+" />
-    <input v-else-if="param.subParam.range === 'BETWEEN'" @input="modelEvent($event.target.value)" :value="param.value"
-           :class="classes" :placeholder="placeholders.BETWEEN" :aria-label="param.name"
+    <input v-else-if="modelValue.subParam.range === 'BETWEEN'"
+           @input="emitModelChange" :value="modelValue.value"
+           :class="classes" :placeholder="placeholders.BETWEEN" :aria-label="modelValue.name"
            type="text" class="col-3 form-control" required pattern="\d+,\d+" />
-    <input v-else @input="modelEvent($event.target.value)" :value="param.value"
-           :class="classes" :placeholder="placeholders.number" :aria-label="param.name"
+    <input v-else @input="emitModelChange" :value="modelValue.value"
+           :class="classes" :placeholder="placeholders.number" :aria-label="modelValue.name"
            type="number" class="col-2 form-control" required />
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-    setup() {
-
-    }
-});
-
-const inputNumericParamComponent = Vue.component('input-numeric-param', {
-    template: '#input-numeric-param-template',
-    model: {
-        prop: 'param'
-    },
     props: {
-        param: { type: Object, required: true },
+        modelValue: { type: Object, required: true },
         classes: { type: Object, required: true },
         placeholders: { type: Object, required: true }
     },
-    methods: {
-        modelEvent (value) {
-            this.$props.param.value = value;
-            this.$emit('input', this.$props.param);
-        }
+    setup(props, { emit }) {
+        const emitModelChange = e => { emit('update:modelValue', { ...props.modelValue, value: e.target.value }) };
+        return { emitModelChange };
     }
 });
 </script>
-
-<style scoped>
-
-</style>
