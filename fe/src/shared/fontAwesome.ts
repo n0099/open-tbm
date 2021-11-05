@@ -8,5 +8,18 @@ export {
     faPaperPlane,
     faSatelliteDish,
     faSearch,
-    faUsers
+    faUsers,
+    faSortAmountDown,
+    faTimes,
+    faPlus,
+    faAngleLeft,
+    faAngleRight,
+    faLink,
+    faInfo,
+    faCommentAlt,
+    faEye,
+    faShareAlt,
+    faThumbsUp,
+    faThumbsDown,
+    faLocationArrow
 } from '@fortawesome/free-solid-svg-icons';

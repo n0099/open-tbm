@@ -18,7 +18,7 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
 };
 
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
-const postRoute = { component: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }, props: true };
+const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }, props: true };
 export default createRouter({
     history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
     routes: [

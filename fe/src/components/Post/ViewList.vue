@@ -8,29 +8,29 @@
                     <RouterLink :to="{ name: 'tid', params: { tid: thread.tid } }"
                                 class="badge badge-pill badge-light">只看此贴</RouterLink>
                     <a :href="$$getTiebaPostLink(thread.tid)" target="_blank"
-                       class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
+                       class="badge badge-pill badge-light"><FontAwesomeIcon icon="link" /></a>
                     <a :data-tippy-content="`<h6>tid：${thread.tid}</h6><hr />
                                 首次收录时间：${moment(thread.created_at).fromNow()}（${thread.created_at}）<br />
                                 最后更新时间：${moment(thread.updated_at).fromNow()}（${thread.updated_at}）`"
                        class="badge badge-pill badge-light">
-                        <i class="fas fa-info"></i>
+                        <FontAwesomeIcon icon="info" />
                     </a>
                     <span :data-tippy-content="`发帖时间：${thread.postTime}`"
                           class="post-time-badge badge badge-pill badge-success">{{ moment(thread.postTime).fromNow() }}</span>
                 </div>
                 <div class="mt-1">
                     <span data-tippy-content="回复量" class="badge badge-info">
-                        <i class="far fa-comment-alt"></i> {{ thread.replyNum }}
+                        <FontAwesomeIcon icon="comment-alt" {{ thread.replyNum }}
                     </span>
                     <span data-tippy-content="浏览量" class="badge badge-info">
-                        <i class="far fa-eye"></i> {{ thread.viewNum }}
+                        <FontAwesomeIcon icon="eye"> {{ thread.viewNum }}
                     </span>
                     <span v-if="thread.shareNum !== 0" data-tippy-content="分享量" class="badge badge-info">
-                        <i class="fas fa-share-alt"></i> {{ thread.shareNum }}
+                        <FontAwesomeIcon icon="share-alt" {{ thread.shareNum }}
                     </span>
                     <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge badge-info">
-                        <i class="far fa-thumbs-up"></i> {{ thread.agreeInfo.agree_num }}
-                        <i class="far fa-thumbs-down"></i> {{ thread.agreeInfo.disagree_num }}
+                        <FontAwesomeIcon icon="thumbs-up" /> {{ thread.agreeInfo.agree_num }}
+                        <FontAwesomeIcon icon="thumbs-down" /> {{ thread.agreeInfo.disagree_num }}
                     </span>
                     <span v-if="thread.zanInfo !== null" :data-tippy-content="`
                         点赞量：${thread.zanInfo.num}<br />
@@ -38,10 +38,10 @@
                         （${moment.unix(thread.zanInfo.last_time).format('YYYY-MM-DD HH:mm:ss')}）<br />
                         近期点赞用户：${thread.zanInfo.user_id_list}<br />`" class="badge badge-info">
                         <!-- todo: fetch users info in zanInfo.user_id_list -->
-                        <i class="far fa-thumbs-up"></i> 旧版客户端赞
+                        <FontAwesomeIcon icon="thumbs-up" /> 旧版客户端赞
                     </span>
                     <span v-if="thread.location !== null" data-tippy-content="发帖位置" class="badge badge-info">
-                        <i class="fas fa-location-arrow"></i> {{ thread.location }} <!-- todo: unknown json struct -->
+                        <FontAwesomeIcon icon="location-arrow" {{ thread.location }} <!-- todo: unknown json struct -->
                     </span>
                     <div class="float-right btn-group" role="group">
                         <a :href="$$getTiebaUserLink($getUserInfo(thread.authorUid).name)"
@@ -72,7 +72,7 @@
                     <div class="d-inline h5">
                         <span class="badge badge-info">{{ reply.floor }}楼</span>
                         <span v-if="reply.subReplyNum > 0" class="badge badge-info">
-                            {{ reply.subReplyNum }}条<i class="far fa-comment-dots"></i>
+                            {{ reply.subReplyNum }}条<FontAwesomeIcon icon="comment-dots" />
                         </span>
                         <!-- TODO: implement these reply's property
                             <span>fold:{{ reply.isFold }}</span>
@@ -85,13 +85,13 @@
                         <RouterLink :to="{ name: 'pid', params: { pid: reply.pid } }"
                                     class="badge badge-pill badge-light">只看此楼</RouterLink>
                         <a :href="$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank"
-                           class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
+                           class="badge badge-pill badge-light"><FontAwesomeIcon icon="link" /></a>
                         <a :data-tippy-content="`
                             <h6>pid：${reply.pid}</h6><hr />
                             首次收录时间：${moment(reply.created_at).fromNow()}（${reply.created_at}）<br />
                             最后更新时间：${moment(reply.updated_at).fromNow()}（${reply.updated_at}）`"
                            class="badge badge-pill badge-light">
-                            <i class="fas fa-info"></i>
+                            <FontAwesomeIcon icon="info" />
                         </a>
                         <span :data-tippy-content="reply.postTime"
                               class="post-time-badge badge badge-pill badge-primary">{{ moment(reply.postTime).fromNow() }}</span>
@@ -144,13 +144,13 @@
                                                     'd-inline': hoveringSubReplyID === subReply.spid
                                                 }"><!-- fixme: high cpu usage due to js evaling while quickly emitting hover event -->
                                                     <a :href="$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank"
-                                                       class="badge badge-pill badge-light"><i class="fas fa-link"></i></a>
+                                                       class="badge badge-pill badge-light"><FontAwesomeIcon icon="link" /></a>
                                                     <a :data-tippy-content="`
                                                         <h6>spid：${subReply.spid}</h6><hr />
                                                         首次收录时间：${moment(subReply.created_at).fromNow()}（${subReply.created_at}）<br />
                                                         最后更新时间：${moment(subReply.created_at).fromNow()}（${subReply.updated_at}）`"
                                                        class="badge badge-pill badge-light">
-                                                        <i class="fas fa-info"></i>
+                                                        <FontAwesomeIcon icon="info" />
                                                     </a>
                                                 </div>
                                                 <span :data-tippy-content="subReply.postTime"
@@ -171,16 +171,19 @@
 
 <script lang="ts">
 import { ThreadTag, UserTag } from './';
-import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, toRefs } from 'vue';
+import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, toRefs } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 import moment from 'moment';
 
 export default defineComponent({
-    components: { ThreadTag, UserTag },
+    components: { RouterLink, FontAwesomeIcon, ThreadTag, UserTag },
     props: {
         initialPosts: { type: Object, required: true }
     },
     setup(props) {
+        const route = useRoute();
         const state = reactive({
             $$getTiebaUserLink,
             $$getTiebaPostLink,
@@ -218,9 +221,9 @@ export default defineComponent({
         };
 
         onMounted(() => {
-            if (this.$route.hash !== '') $(`.post-render-list[data-page='${this.$route.params.page || 1}'] #${this.$route.hash.substr(1)}`)[0].scrollIntoView(); // scroll to route hash determined reply or thread item after initial load
+            if (route.hash !== '') $(`.post-render-list[data-page='${route.params.page || 1}'] #${route.hash.substr(1)}`)[0].scrollIntoView(); // scroll to route hash determined reply or thread item after initial load
 
-            this.$nextTick(() => { // initial dom event after all dom and child components rendered
+            nextTick(() => { // initial dom event after all dom and child components rendered
                 $$registerTippy();
                 $$registerTiebaImageZoomEvent();
             });

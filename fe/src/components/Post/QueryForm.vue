@@ -4,7 +4,7 @@
             <label class="col-1 col-form-label" for="paramFid">贴吧</label>
             <div class="col-3 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="fas fa-filter"></i></span>
+                    <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
                 </div>
                 <select v-model.number="uniqueParams.fid.value" :class="{ 'is-invalid': isFidInvalid }"
                         id="paramFid" class="custom-select form-control">
@@ -35,7 +35,7 @@
             <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
             <div id="paramOrder" class="col-8 input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
+                    <span class="input-group-text"><FontAwesomeIcon icon="sort-amount-down" /></span>
                 </div>
                 <select v-model="uniqueParams.orderBy.value" :class="{ 'is-invalid': isOrderByInvalid }"
                         class="col custom-select form-control">
@@ -56,7 +56,7 @@
         </div>
         <div v-for="(param, paramIndex) in params" class="query-param-row form-row">
             <div class="input-group">
-                <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><i class="fas fa-times"></i></button>
+                <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
                 <SelectParam @param-change="changeParam(paramIndex, $event.target.value)" :current-param="param.name" :class="{
                     'is-invalid': invalidParamsIndex.includes(paramIndex),
                     'select-param-first-row': paramIndex === 0,
@@ -147,7 +147,7 @@
             </div>
         </div>
         <div class="mt-1 form-group form-row">
-            <button class="add-param-button disabled btn btn-link" type="button"><i class="fas fa-plus"></i></button>
+            <button class="add-param-button disabled btn btn-link" type="button"><FontAwesomeIcon icon="plus" /></button>
             <SelectParam @param-change="addParam($event)" />
         </div>
         <div class="form-group form-row">
@@ -165,6 +165,7 @@
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from './';
 import { defineComponent, reactive, toRefs } from 'vue';
 import { RangePicker } from 'ant-design-vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
 const baseQueryFormMixin = {
@@ -349,7 +350,7 @@ export default defineComponent({
     props: {
         forumList: { type: Array, required: true }
     },
-    components: { RangePicker, InputNumericParam, InputTextMatchParam, SelectParam, SelectRange },
+    components: { FontAwesomeIcon, RangePicker, InputNumericParam, InputTextMatchParam, SelectParam, SelectRange },
     setup(props, { emit }) {
         const router = useRouter();
         const state = reactive({

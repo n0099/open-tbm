@@ -21,8 +21,8 @@ export default defineComponent({
         usersInfoSource: { type: Array, required: true },
         userInfo: { type: Object, required: true }
     },
-    setup() {
-        const $getUserInfo = window.$getUserInfo(this.$props.usersInfoSource);
+    setup(props) {
+        const $getUserInfo = window.$getUserInfo(props.usersInfoSource);
         return { $getUserInfo };
     }
 });

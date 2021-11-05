@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { compareRouteIsNewQuery, notyShow } from '@/shared';
-import { apiUsersQuery, isApiError } from '@/api/index';
+import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';

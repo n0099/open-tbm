@@ -3,7 +3,5 @@ export {
     DatePicker,
     Switch,
     Table,
-    Menu,
-    MenuItem,
-    SubMenu
+    Menu
 } from 'ant-design-vue';
