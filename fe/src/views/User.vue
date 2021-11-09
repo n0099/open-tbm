@@ -6,7 +6,7 @@
               :usersData="usersQuery"
               :isLoadingNewPage="isLoading"
               :isLastPageInPages="pageIndex === userPages.length - 1" />
-    <PlaceholderError v-show="showPlaceholderError" :error="lastFetchError" />
+    <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" />
     <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
 </template>
 
@@ -20,7 +20,7 @@ import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/Sele
 import UserList from '@/components/UserList.vue';
 import UserQueryForm from '@/components/UserQueryForm.vue';
 
-import { defineComponent, onMounted, reactive, toRefs, watchEffect } from 'vue';
+import { defineComponent, reactive, toRefs, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import _ from 'lodash';
@@ -41,7 +41,6 @@ export default defineComponent({
             userPages: ApiUsersQuery[],
             isLoading: boolean,
             lastFetchError: ApiError | null,
-            showPlaceholderError: boolean,
             showPlaceholderPostList: boolean
         }>({
             params: {},
@@ -49,7 +48,6 @@ export default defineComponent({
             userPages: [],
             isLoading: false,
             lastFetchError: null,
-            showPlaceholderError: false,
             showPlaceholderPostList: false
         });
         const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery: boolean) => {
@@ -57,7 +55,6 @@ export default defineComponent({
             const queryString = { ..._route.params, ..._route.query };
             state.lastFetchError = null;
             state.showPlaceholderPostList = true;
-            state.showPlaceholderError = false;
             if (isNewQuery) state.userPages = [];
             if (_.isEmpty(queryString)) {
                 notyShow('warning', '请输入用户查询参数');
@@ -69,7 +66,6 @@ export default defineComponent({
                 state.isLoading = false;
             });
             if (isApiError(usersQuery)) {
-                state.showPlaceholderError = true;
                 state.lastFetchError = usersQuery;
                 return false;
             }
@@ -78,12 +74,12 @@ export default defineComponent({
             notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.currentItems}条记录 耗时${Date.now() - startTime}ms`);
             return true;
         };
+        fetchUsersData(route, true);
 
         watchEffect(() => {
             state.selectUserBy = _.trimEnd(route.name?.toString(), '+p') as SelectTiebaUserBy;
             state.params = { ..._.omit(props, 'page'), uid: props.uid === undefined ? undefined : Number(props.uid) };
         });
-        onMounted(() => { fetchUsersData(route, true) });
         onBeforeRouteUpdate(async (to, from) => {
             const isNewQuery = compareRouteIsNewQuery(to, from);
             if (!isNewQuery

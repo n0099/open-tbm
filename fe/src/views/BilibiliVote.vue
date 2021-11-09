@@ -660,7 +660,7 @@ export default defineComponent({
             // eslint-disable-next-line require-atomic-updates
             state.top50OfficialValidVotesCount = top50OfficialValidVotesCount;
             // add candidate index as keys then deep merge will combine same keys values, finally remove keys
-            state.candidatesDetailData = _.values(_.merge(
+            state.candidatesDetailData = Object.values(_.merge(
                 _.keyBy(state.candidatesDetailData, 'candidateIndex'),
                 _.keyBy(top50OfficialValidVotesCount.map(candidate => ({
                     candidateIndex: candidate.voteFor,

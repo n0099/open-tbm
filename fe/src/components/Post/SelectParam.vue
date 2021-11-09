@@ -1,8 +1,8 @@
 <template>
-    <select @change="$emit('param-change', $event)" class="col-2 custom-select form-control">
+    <select @change="$emit('paramChange', $event.target)" class="col-2 custom-select form-control">
         <option selected value="add" disabled>New...</option>
-        <optgroup v-for="(group, groupName) in paramsGroup" :label="groupName">
-            <option v-for="(paramDescription, paramName) in group"
+        <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
+            <option v-for="(paramDescription, paramName) in group" :key="paramName"
                     :selected="currentParam === paramName" :value="paramName">{{ paramDescription }}</option>
         </optgroup>
     </select>

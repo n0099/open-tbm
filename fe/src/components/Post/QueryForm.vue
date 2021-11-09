@@ -54,10 +54,10 @@
                 </select>
             </div>
         </div>
-        <div v-for="(param, paramIndex) in params" class="query-param-row form-row">
+        <div v-for="(param, paramIndex) in params" :key="paramIndex" class="query-param-row form-row">
             <div class="input-group">
                 <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
-                <SelectParam @param-change="changeParam(paramIndex, $event.target.value)" :current-param="param.name" :class="{
+                <SelectParam @paramChange="changeParam(paramIndex, $event.value)" :currentParam="param.name" :class="{
                     'is-invalid': invalidParamsIndex.includes(paramIndex),
                     'select-param-first-row': paramIndex === 0,
                     'select-param-last-row': paramIndex === params.length - 1,
@@ -148,11 +148,11 @@
         </div>
         <div class="mt-1 form-group form-row">
             <button class="add-param-button disabled btn btn-link" type="button"><FontAwesomeIcon icon="plus" /></button>
-            <SelectParam @param-change="addParam($event)" />
+            <SelectParam @paramChange="addParam($event)" />
         </div>
         <div class="form-group form-row">
-            <button :disabled="isRequesting" class="btn btn-primary" type="submit">
-                查询 <span v-show="isRequesting" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+            <button :disabled="isLoading" class="btn btn-primary" type="submit">
+                查询 <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
             </button>
             <button class="ml-2 disabled btn btn-text" type="button">
                 {{ currentQueryType() === 'fid' ? '按吧索引查询' : (currentQueryType() === 'postID' ? '按贴索引查询' : (currentQueryType() === 'search' ? '搜索查询' : '空查询')) }}
@@ -162,229 +162,35 @@
 </template>
 
 <script lang="ts">
+import type { ApiForumList } from '@/api/index.d';
+import type { ParamOmitName, ParamPreprocessorOrWatcher } from '@/components/Post/useQueryForm';
+import useQueryForm from '@/components/Post/useQueryForm';
+import { routeNameStrAssert } from '@/shared';
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from './';
+
+import type { PropType } from 'vue';
 import { defineComponent, reactive, toRefs } from 'vue';
+import type { RouteLocationNormalizedLoaded } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
+import Noty from 'noty';
 
-const baseQueryFormMixin = {
-    data() {
-        return {
-            isRequesting: false,
-            uniqueParams: {},
-            params: [], // [{ name: '', value: '', subParam: { name: value } },...]
-            invalidParamsIndex: [],
-            paramsDefaultValue: {
-                // { name: *, subParam: { not: false } }
-            },
-            paramsPreprocessor: {},
-            paramsWatcher: {},
-            paramWatcher(newParamsArray, oldParamsArray) {
-                _.chain(newParamsArray)
-                    .filter(param => _.includes(_.keys(state.paramsWatcher), param.name))
-                    .each(param => state.paramsWatcher[param.name](param))
-                    .value();
-            }
-        };
-    },
-    watch: {
-        uniqueParams: { handler: 'paramWatcher', deep: true },
-        params: { handler: 'paramWatcher', deep: true },
-        $route(to, from) {
-            if (to.path === from.path) return; // ignore when only hash has changed
-
-            if (!state.isRequesting) { // isRequesting will be false when route change is not emit by <query-form>.submit()
-                // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
-                const isOnlyPageChanged = _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page'));
-                this.parseRoute(to);
-                if (isOnlyPageChanged || this.checkParams()) { // skip checkParams() when there's only page changed
-                    state.isRequesting = true;
-                    this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: !isOnlyPageChanged });
-                }
-            }
-        }
-    },
-    beforeMount() {
-        state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(this.fillParamWithDefaultValue));
-        state.params = _.map(state.params, _.unary(this.fillParamWithDefaultValue));
-    },
-    mounted() {
-        this.parseRoute(this.$route); // first time parse
-        if (this.checkParams()) { // query manually since route update event can't be triggered while first load
-            state.isRequesting = true;
-            this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: true });
-        }
-    },
-    methods: {
-        submit() {
-            if (this.checkParams()) { // check here to stop route submit
-                state.isRequesting = true;
-                this.submitRoute();
-                this.$emit('query', { queryParams: this.flattenParams(), shouldReplacePage: true }); // force emit event to refresh new query since route update event won't emit when isRequesting is true
-            }
-        },
-        parseRoute(route) { throw 'component must implements mixin abstract method' },
-        checkParams() { throw 'component must implements mixin abstract method' },
-        submitRoute() { throw 'component must implements mixin abstract method' },
-        paramRowLastDomClass(paramIndex, params) {
-            return params.length === 1 ? {} : { // if it's the only row, class remains unchanged
-                'param-control-first-row': paramIndex === 0,
-                'param-control-middle-row': !(paramIndex === 0 || paramIndex === params.length - 1),
-                'param-control-last-row': paramIndex === params.length - 1
-            };
-        },
-        escapeParamValue(value, unescape = false) {
-            if (_.isString(value)) {
-                _.map({ // we don't escape ',' since array type params is already known
-                    '/': '%2F',
-                    ';': '%3B'
-                }, (encode, char) => value = value.replace(unescape ? encode : char, unescape ? char : encode));
-            }
-            return value;
-        },
-        addParam(event) {
-            state.params.push(this.fillParamWithDefaultValue({ name: event.target.value }));
-            event.target.value = 'add'; // reset to add option
-        },
-        changeParam(beforeParamIndex, afterParamName) {
-            _.pull(state.invalidParamsIndex, beforeParamIndex);
-            this.$set(state.params, beforeParamIndex, this.fillParamWithDefaultValue({ name: afterParamName }));
-        },
-        deleteParam(paramIndex) {
-            _.pull(state.invalidParamsIndex, paramIndex);
-            state.invalidParamsIndex = _.map(state.invalidParamsIndex, invalidParamIndex => (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex)); // move forward params index which is after current one
-            this.$delete(state.params, paramIndex);
-        },
-        fillParamWithDefaultValue(param, resetToDefault = false) {
-            const defaultParam = state.paramsDefaultValue[param.name];
-            defaultParam.subParam = defaultParam.subParam || {};
-            defaultParam.subParam.not = false; // add default not subParam on every param
-            if (resetToDefault) { // cloneDeep to prevent defaultsDeep mutates origin object
-                return _.defaultsDeep(_.cloneDeep(defaultParam), param);
-            }
-            return _.defaultsDeep(_.cloneDeep(param), defaultParam);
-        },
-        clearParamDefaultValue(param) {
-            param = _.cloneDeep(param); // prevent changing origin param
-            const defaultParam = state.paramsDefaultValue[param.name];
-            if (defaultParam === undefined) {
-                if (_.isEmpty(param.subParam)) delete param.subParam;
-
-                return param;
-            }
-            if (!(_.isNumber(param.value) || !_.isEmpty(param.value)) // number is consider as empty in isEmpty(), to prevent this here we use complex short circuit evaluate expression
-                || (_.isArray(param.value)
-                    ? _.isEqual(_.sortBy(param.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
-                    : param.value === defaultParam.value)) delete param.value;
-
-            _.each(defaultParam.subParam, (value, name) => {
-                if (param.subParam[name] === value || value === undefined) { // undefined means this sub param must be deleted, as part of the parent param value
-                    delete param.subParam[name];
-                }
-            });
-            if (_.isEmpty(param.subParam)) delete param.subParam;
-
-            return _.isEqual(_.keys(param), ['name']) ? null : param; // return null for further filter()
-        },
-        clearedParamsDefaultValue() {
-            return _.filter(_.map(state.params, this.clearParamDefaultValue)); // filter() will remove falsy values like null
-        },
-        clearedUniqueParamsDefaultValue(...omitParams) {
-            return _.pickBy(_.mapValues(_.omit(state.uniqueParams, omitParams), this.clearParamDefaultValue)); // mapValues() return object which remains keys, pickBy() like filter() for objects
-        },
-        parseParamRoute(routePath) {
-            _.chain(routePath)
-                .trim('/')
-                .split('/')
-                .filter() // filter() will remove falsy values like ''
-                .map(paramWithSub => {
-                    const parsedParam = { subParam: {} };
-                    _.each(paramWithSub.split(';'), (params, paramIndex) => { // split multiple params
-                        const paramPair = [params.substr(0, params.indexOf(':')), this.escapeParamValue(params.substr(params.indexOf(':') + 1), true)]; // split kv pair by first colon, using substr to prevent split array type param value
-                        if (paramIndex === 0) { // main param
-                            [parsedParam.name, parsedParam.value] = paramPair;
-                        } else { // sub params
-                            parsedParam.subParam[paramPair[0]] = paramPair[1];
-                        }
-                    });
-                    return parsedParam;
-                })
-                .map(_.unary(this.fillParamWithDefaultValue))
-                .each(param => {
-                    if (_.includes(_.keys(state.paramsPreprocessor), param.name)) {
-                        state.paramsPreprocessor[param.name](param);
-                        param.subParam.not = param.subParam.not === 'true'; // literal string to bool convert
-                    }
-                    if (_.includes(_.keys(state.uniqueParams), param.name)) { // is unique param
-                        state.uniqueParams[param.name] = param;
-                    } else {
-                        state.params.push(param);
-                    }
-                })
-                .value();
-        },
-        submitParamRoute(filteredUniqueParams, filteredParams) {
-            this.$router.push({
-                path: `/${_.chain([..._.values(filteredUniqueParams), ...filteredParams])
-                    .map(param => `${param.name}:${this.escapeParamValue(_.isArray(param.value) ? param.value.join(',') : param.value)}${_.map(param.subParam, (value, name) => `;${name}:${this.escapeParamValue(value)}`).join('')}`) // format param to route path, e.g. name:value;subParamName:subParamValue...
-                    .join('/')
-                    .value()}`
-            });
-        },
-        flattenParams() {
-            const flattenParam = param => {
-                const flatted = {};
-                flatted[param.name] = param.value;
-                return { ...flatted, ...param.subParam };
-            };
-            return [
-                ..._.map(_.values(this.clearedUniqueParamsDefaultValue()), flattenParam),
-                ..._.map(this.clearedParamsDefaultValue(), flattenParam)
-            ];
-        }
-    }
-};
 export default defineComponent({
-    mixins: [baseQueryFormMixin],
-    props: {
-        forumList: { type: Array, required: true }
-    },
     components: { FontAwesomeIcon, RangePicker, InputNumericParam, InputTextMatchParam, SelectParam, SelectRange },
+    props: {
+        forumList: { type: Array as PropType<ApiForumList>, required: true }
+    },
     setup(props, { emit }) {
         const router = useRouter();
-        const state = reactive({
-            uniqueParams: {
-                fid: { name: 'fid' },
-                postTypes: { name: 'postTypes' },
-                orderBy: { name: 'orderBy' }
-            },
-            paramsDefaultValue: {
-                numericParams: { subParam: { range: '=' } },
-                textMatchParams: { subParam: { matchBy: 'implicit', spaceSplit: false } },
-                fid: { value: 'NULL' },
-                postTypes: { value: ['thread', 'reply', 'subReply'] },
-                orderBy: { value: 'default', subParam: { direction: 'default' } },
-                get tid() { return this.numericParams },
-                get pid() { return this.numericParams },
-                get spid() { return this.numericParams },
-                postTime: { subParam: { range: undefined } },
-                latestReplyTime: { subParam: { range: undefined } },
-                get threadTitle() { return this.textMatchParams },
-                get postContent() { return this.textMatchParams },
-                get threadViewNum() { return this.numericParams },
-                get threadShareNum() { return this.numericParams },
-                get threadReplyNum() { return this.numericParams },
-                get replySubReplyNum() { return this.numericParams },
-                threadProperties: { value: [] },
-                get authorUid() { return this.numericParams },
-                get authorName() { return this.textMatchParams },
-                get authorDisplayName() { return this.textMatchParams },
-                get authorExpGrade() { return this.numericParams },
-                get latestReplierUid() { return this.numericParams },
-                get latestReplierName() { return this.textMatchParams },
-                get latestReplierDisplayName() { return this.textMatchParams }
-            },
+        type RequiredPostTypes = Record<string, [Array<'reply' | 'subReply' | 'thread'>, 'AND' | 'OR'] | undefined>;
+        const state = reactive<{
+            paramsRequiredPostTypes: RequiredPostTypes,
+            orderByRequiredPostTypes: RequiredPostTypes,
+            isOrderByInvalid: boolean,
+            isFidInvalid: boolean
+        }>({
             paramsRequiredPostTypes: {
                 pid: [['reply', 'subReply'], 'OR'],
                 spid: [['subReply'], 'AND'],
@@ -407,50 +213,111 @@ export default defineComponent({
                 spid: [['subReply'], 'OR']
             },
             isOrderByInvalid: false,
-            isFidInvalid: false,
-            paramsPreprocessor: { // param is byref object so changes will sync
-                dateTimeRangeParams(param) {
-                    param.subParam.range = param.value.split(',');
-                },
-                arrayTypeParams(param) {
-                    param.value = param.value.split(',');
-                },
-                textMatchParams(param) {
+            isFidInvalid: false
+        });
+        let useQueryFormLateBinding = {};
+        const {
+            state: useState,
+            paramRowLastDomClass,
+            escapeParamValue,
+            addParam,
+            changeParam,
+            deleteParam,
+            fillParamWithDefaultValue,
+            clearParamDefaultValue,
+            clearedParamsDefaultValue,
+            clearedUniqueParamsDefaultValue,
+            parseParamRoute,
+            submitParamRoute,
+            submit
+        } = useQueryForm(emit, useQueryFormLateBinding);
+        const paramTypes: Record<string, {
+            default?: ParamOmitName,
+            preprocessor?: ParamPreprocessorOrWatcher,
+            watcher?: ParamPreprocessorOrWatcher
+        }> = { // param is byref object so changes will sync
+            array: {
+                preprocessor: param => {
+                    if (_.isString(param.value)) param.value = param.value.split(',');
+                }
+            },
+            numeric: { default: { subParam: { range: '=' } } },
+            textMatch: {
+                default: { subParam: { matchBy: 'implicit', spaceSplit: false } },
+                preprocessor: param => {
                     param.subParam.spaceSplit = param.subParam.spaceSplit === 'true'; // literal string to bool convert
                 },
-                get postTypes() { return this.arrayTypeParams },
-                get postTime() { return this.dateTimeRangeParams },
-                get latestReplyTime() { return this.dateTimeRangeParams },
-                get threadTitle() { return this.textMatchParams },
-                get postContent() { return this.textMatchParams },
-                get threadProperties() { return this.arrayTypeParams },
-                get authorName() { return this.textMatchParams },
-                get authorDisplayName() { return this.textMatchParams },
-                get latestReplierName() { return this.textMatchParams },
-                get latestReplierDisplayName() { return this.textMatchParams }
+                watcher: param => {
+                    if (param.subParam?.matchBy === 'regex') param.subParam.spaceSplit = false;
+                }
             },
-            paramsWatcher: { // param is byref object so changes will sync
-                dateTimeRangeParams(param) {
-                    param.value = (param.subParam.range || []).join(','); // combine datetime range into root param's value
+            dateTimeRange: {
+                preprocessor: param => {
+                    if (param.subParam === undefined || !_.isString(param.value)) return;
+                    param.subParam.range = param.value.split(',');
                 },
-                textMatchParams(param) {
-                    if (param.subParam.matchBy === 'regex') param.subParam.spaceSplit = false;
-                },
-                get postTime() { return this.dateTimeRangeParams },
-                get latestReplyTime() { return this.dateTimeRangeParams },
-                get threadTitle() { return this.textMatchParams },
-                get postContent() { return this.textMatchParams },
-                get authorName() { return this.textMatchParams },
-                get authorDisplayName() { return this.textMatchParams },
-                get latestReplierName() { return this.textMatchParams },
-                get latestReplierDisplayName() { return this.textMatchParams },
-                orderBy(param) {
-                    if (param.value === 'default') { // reset to default
-                        param.subParam.direction = 'default';
-                    }
+                watcher: param => {
+                    // combine datetime range into root param's value
+                    param.value = _.isArray(param.subParam?.range) ? param.subParam?.range.join(',') : '';
                 }
             }
-        });
+        };
+        useState.uniqueParams = {
+            fid: { name: 'fid' },
+            postTypes: { name: 'postTypes' },
+            orderBy: { name: 'orderBy' }
+        };
+        useState.paramsDefaultValue = {
+            fid: { value: 'NULL' },
+            postTypes: { value: ['thread', 'reply', 'subReply'] },
+            orderBy: { value: 'default', subParam: { direction: 'default' } },
+            tid: paramTypes.numeric.default,
+            pid: paramTypes.numeric.default,
+            spid: paramTypes.numeric.default,
+            postTime: { subParam: { range: undefined } },
+            latestReplyTime: { subParam: { range: undefined } },
+            threadTitle: paramTypes.textMatch.default,
+            postContent: paramTypes.textMatch.default,
+            threadViewNum: paramTypes.numeric.default,
+            threadShareNum: paramTypes.numeric.default,
+            threadReplyNum: paramTypes.numeric.default,
+            replySubReplyNum: paramTypes.numeric.default,
+            threadProperties: { value: [] },
+            authorUid: paramTypes.numeric.default,
+            authorName: paramTypes.textMatch.default,
+            authorDisplayName: paramTypes.textMatch.default,
+            authorExpGrade: paramTypes.numeric.default,
+            latestReplierUid: paramTypes.numeric.default,
+            latestReplierName: paramTypes.textMatch.default,
+            latestReplierDisplayName: paramTypes.textMatch.default
+        };
+        useState.paramsPreprocessor = {
+            postTypes: paramTypes.array.preprocessor,
+            postTime: paramTypes.dateTimeRange.preprocessor,
+            latestReplyTime: paramTypes.dateTimeRange.preprocessor,
+            threadTitle: paramTypes.textMatch.preprocessor,
+            postContent: paramTypes.textMatch.preprocessor,
+            threadProperties: paramTypes.array.preprocessor,
+            authorName: paramTypes.textMatch.preprocessor,
+            authorDisplayName: paramTypes.textMatch.preprocessor,
+            latestReplierName: paramTypes.textMatch.preprocessor,
+            latestReplierDisplayName: paramTypes.textMatch.preprocessor
+        };
+        useState.paramsWatcher = {
+            postTime: paramTypes.dateTimeRange.watcher,
+            latestReplyTime: paramTypes.dateTimeRange.watcher,
+            threadTitle: paramTypes.textMatch.watcher,
+            postContent: paramTypes.textMatch.watcher,
+            authorName: paramTypes.textMatch.watcher,
+            authorDisplayName: paramTypes.textMatch.watcher,
+            latestReplierName: paramTypes.textMatch.watcher,
+            latestReplierDisplayName: paramTypes.textMatch.watcher,
+            orderBy(param) {
+                if (param.value === 'default') { // reset to default
+                    param.subParam = { ...param.subParam, direction: 'default' };
+                }
+            }
+        };
         const currentQueryType = () => {
             const clearedParams = clearedParamsDefaultValue();
             if (_.isEmpty(clearedParams)) { // is there no other params
@@ -468,17 +335,21 @@ export default defineComponent({
             }
             return 'search';
         };
-        const parseRoute = route => {
-            state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(fillParamWithDefaultValue));
-            state.params = [];
+        const parseRoute = (route: RouteLocationNormalizedLoaded) => {
+            routeNameStrAssert(route.name);
+            useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue));
+            useState.params = [];
             // parse route path to params
             if (route.name.startsWith('param')) {
-                this.parseParamRoute(route.params.pathMatch); // omit page param from route full path
+                parseParamRoute(route.params.pathMatch); // omit page param from route full path
             } else if (route.name.startsWith('fid')) {
-                state.uniqueParams.fid.value = route.params.fid;
+                useState.uniqueParams.fid.value = route.params.fid;
             } else { // post id routes
-                state.uniqueParams = _.mapValues(state.uniqueParams, param => fillParamWithDefaultValue(param, true)); // reset to default
-                state.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) => fillParamWithDefaultValue({ name, value }));
+                useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
+                    fillParamWithDefaultValue(param, true)); // reset to default
+                // eslint-disable-next-line @typescript-eslint/no-shadow
+                useState.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
+                    fillParamWithDefaultValue({ name, value }));
             }
         };
         const checkParams = () => {
@@ -491,7 +362,7 @@ export default defineComponent({
                     return false; // exit early
                 case 'postID':
                     if (clearedUniqueParams.fid !== undefined) {
-                        state.uniqueParams.fid.value = state.paramsDefaultValue.fid.value; // reset fid to default value
+                        useState.uniqueParams.fid.value = state.fid.value; // reset fid to default value.default,
                         new Noty({ timeout: 3000, type: 'info', text: '已移除按贴索引查询所不需要的查询贴吧参数' }).show();
                         submitRoute(); // update route to match new params without fid
                     }
@@ -502,28 +373,31 @@ export default defineComponent({
                         new Noty({ timeout: 3000, type: 'warning', text: '搜索查询必须指定查询贴吧' }).show();
                     }
                     break;
+                case 'fid':
             }
             // check params required post types
-            const postTypes = _.sortBy(state.uniqueParams.postTypes.value);
-            state.invalidParamsIndex = []; // reset to prevent duplicate indexes
-            _.each(_.map(state.params, clearParamDefaultValue), (param, paramIndex) => { // we don't filter() here for post types validate
-                if (param !== null && param.value !== undefined) { // is param have no diff with default value and have value
-                    const paramRequiredPostTypes = state.paramsRequiredPostTypes[param.name];
-                    if (paramRequiredPostTypes !== undefined) { // not set means this param accepts any post types
-                        if (!(paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
-                            ? _.isEmpty(_.difference(postTypes, _.sortBy(paramRequiredPostTypes[0])))
-                            : _.isEqual(_.sortBy(paramRequiredPostTypes[0]), postTypes))) state.invalidParamsIndex.push(paramIndex);
-                    }
+            const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
+            useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
+            _.each(_.map(useState.params, clearParamDefaultValue), (param, paramIndex) => { // we don't filter() here for post types validate
+                if (param?.value === undefined) {
+                    useState.invalidParamsIndex.push(paramIndex);
                 } else {
-                    state.invalidParamsIndex.push(paramIndex);
+                    const paramRequiredPostTypes = state.paramsRequiredPostTypes[param.name];
+                    if (paramRequiredPostTypes !== undefined// not set means this param accepts any post types
+                        && !(paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
+                            ? _.isEmpty(_.difference(postTypes, _.sortBy(paramRequiredPostTypes[0])))
+                            : _.isEqual(_.sortBy(paramRequiredPostTypes[0]), postTypes))) {
+                        // is this param have no diff with default value and have value
+                        useState.invalidParamsIndex.push(paramIndex);
+                    }
                 }
             });
-            if (!_.isEmpty(state.invalidParamsIndex)) new Noty({ timeout: 3000, type: 'warning', text: `第${_.map(state.invalidParamsIndex, i => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配` }).show();
+            if (!_.isEmpty(useState.invalidParamsIndex)) new Noty({ timeout: 3000, type: 'warning', text: `第${_.map(useState.invalidParamsIndex, i => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配` }).show();
 
             // check order by required post types
             state.isOrderByInvalid = false;
-            const orderBy = state.uniqueParams.orderBy.value;
-            if (_.includes(_.keys(state.orderByRequiredPostTypes), orderBy)) {
+            const orderBy = useState.uniqueParams.orderBy.value;
+            if (orderBy in state.orderByRequiredPostTypes) {
                 const orderByRequiredPostTypes = state.orderByRequiredPostTypes[orderBy];
                 if (!(orderByRequiredPostTypes[1] === 'OR'
                     ? _.isEmpty(_.difference(postTypes, _.sortBy(orderByRequiredPostTypes[0])))
@@ -533,7 +407,7 @@ export default defineComponent({
                 }
             }
 
-            return _.isEmpty(state.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid; // return false when there's any invalid params
+            return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid; // return false when there's any invalid params
         };
         const submitRoute = () => {
             // decide which route to go
@@ -550,13 +424,17 @@ export default defineComponent({
                     }
                 }
             }
-            if (clearedUniqueParams.fid !== undefined && _.isEmpty(clearedParams) && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
+            if (clearedUniqueParams.fid !== undefined
+                && _.isEmpty(clearedParams)
+                && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
                 router.push({ name: 'fid', params: { fid: clearedUniqueParams.fid.value } });
                 return;
             }
             submitParamRoute(clearedUniqueParams, clearedParams); // param route
         };
-        return { _, ...toRefs(state), currentQueryType };
+        useQueryFormLateBinding = { parseRoute, checkParams, submitRoute };
+
+        return { _, ...toRefs(state), ...toRefs(useState), currentQueryType, paramRowLastDomClass, escapeParamValue, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>

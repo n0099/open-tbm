@@ -216,7 +216,7 @@ export default defineComponent({
             const user = state.$getUserInfo(uid);
             const { name } = user;
             const { displayName } = user;
-            if (name === null) return `${displayName !== null ? `${displayName}` : `无用户名或覆盖名（UID：${user.uid}）`}`;
+            if (name === null) return `${displayName !== null ? displayName : `无用户名或覆盖名（UID：${user.uid}）`}`;
             return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
         };
 

@@ -42,7 +42,7 @@ import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
 
 import _ from 'lodash';
-import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
+import { defineComponent, reactive, ref, toRefs } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import * as echarts from 'echarts/core';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
@@ -133,7 +133,7 @@ export default defineComponent({
             if (isApiError(statsResult)) return;
             const series = _.map(statsResult, (dates, postType) => ({
                 id: postType,
-                data: _.map(dates, _.values)
+                data: _.map(dates, Object.values)
             }));
             const axisType = timeGranularityAxisType[state.query.timeGranularity];
             chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
@@ -156,11 +156,11 @@ export default defineComponent({
             });
         };
 
-        onMounted(async () => {
+        (async () => {
             const forumListResult = await apiForumList();
             if (isApiError(forumListResult)) return;
             state.forumList = forumListResult;
-        });
+        })();
 
         return { timeGranularities, ...toRefs(state), chartDom, submitQueryForm };
     }

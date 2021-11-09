@@ -1,11 +1,10 @@
 <template>
     <div class="container">
-        <QueryForm @query="query($event)" :forum-list="forumList" ref="queryForm" />
+        <QueryForm @query="query($event)" :forumList="forumList" ref="queryForm" />
         <p>当前页数：{{ currentRoutePage }}</p>
-        <Menu v-show="postPages.length !== 0" v-model="selectedRenderType" mode="horizontal">
+        <Menu v-show="postPages.length !== 0" v-model="renderType" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
             <MenuItem key="table">表格视图</MenuItem>
-            <MenuItem key="raw">RAW</MenuItem>
         </Menu>
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
@@ -15,7 +14,7 @@
             <a @click="postsNavExpanded = ! postsNavExpanded"
                class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col col-auto">
                 <FontAwesomeIcon v-show="postsNavExpanded" icon="angle-left" />
-                <FontAwesomeIcon v-else icon="angle-right" />
+                <FontAwesomeIcon v-show="!postsNavExpanded" icon="angle-right" />
             </a>
             <div :class="{
                 'post-render-wrapper': true,
@@ -28,7 +27,7 @@
                     <PagePreviousButton @load-page="loadPage($event)" :page-info="posts.pages" />
                     <ViewList v-if="renderType === 'list'" :key="posts.pages.currentPage" :initial-posts="posts" />
                     <ViewTable v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts" />
-                    <PageNextButton v-if="! $refs.queryForm.$data.isRequesting && pageIndex === postPages.length - 1"
+                    <PageNextButton v-if="!isLoading && pageIndex === postPages.length - 1"
                                     @load-page="loadPage($event)" :current-page="posts.pages.currentPage" />
                 </template>
             </div>
@@ -36,19 +35,19 @@
         </div>
     </div>
     <div class="container">
-        <PlaceholderError v-if="queryError !== null" :error="queryError" />
-        <PlaceholderPostList v-show="$refs.queryForm?.$data.isRequesting" />
+        <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" />
+        <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
     </div>
 </template>
 
 <script lang="ts">
-import type { ApiForumList } from '@/api/index.d';
+import type { ApiError, ApiForumList } from '@/api/index.d';
 import { apiForumList, isApiError } from '@/api';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
 import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post';
 
-import { computed, defineComponent, onBeforeMount, onMounted, reactive, toRefs, watch } from 'vue';
+import { computed, defineComponent, onBeforeMount, onMounted, reactive, toRefs, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -60,12 +59,22 @@ export default defineComponent({
         const route = useRoute();
         const router = useRouter();
         const state = reactive<{
-            forumList: ApiForumList
+            forumList: ApiForumList,
+            postPages: unknown[],
+            currentRoutePage: number,
+            isLoading: boolean,
+            lastFetchError: ApiError | null,
+            showPlaceholderPostList: boolean,
+            renderType: 'list' | 'raw' | 'table',
+            postsNavExpanded: boolean,
+            scrollStopDebounce: Function | null
         }>({
             forumList: [],
             postPages: [],
-            currentRoutePage: parseInt(route.params.page ?? '1'),
-            queryError: null,
+            currentRoutePage: 1,
+            isLoading: false,
+            lastFetchError: null,
+            showPlaceholderPostList: false,
             renderType: 'list',
             postsNavExpanded: false,
             scrollStopDebounce: null
@@ -124,16 +133,16 @@ export default defineComponent({
             router.push(_.merge(route.name.startsWith('param')
                 ? { path: `/page/${page}/${route.params.pathMatch}` }
                 : {
-                    name: `${route.name}${route.name.endsWith('+p') ? '' : '+p'}`,
+                    name: route.name.endsWith('+p') ? route.name : `${route.name}+p`,
                     params: { ...route.params, page }
                 }));
         };
         const query = ({ queryParams, shouldReplacePage }) => {
-            state.queryError = null;
+            state.lastFetchError = null;
             if (shouldReplacePage) {
                 state.postPages = []; // clear posts pages data before request to show loading placeholder
             } else if (!_.isEmpty(_.filter(_.map(state.postPages, 'pages.currentPage'), i => i === state.currentRoutePage))) {
-                this.$refs.queryForm.$data.isRequesting = false;
+                state.isLoading = false;
                 return; // cancel request when requesting page have already been loaded
             }
 
@@ -159,41 +168,37 @@ export default defineComponent({
                         if (jqXHR.responseJSON !== undefined) {
                             const error = jqXHR.responseJSON;
                             if (_.isObject(error.errorInfo)) { // response when laravel failed validate, same with ajaxError jquery event @ layout.blade.php
-                                state.queryError = { code: error.errorCode, info: _.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />') };
+                                state.lastFetchError = { code: error.errorCode, info: _.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />') };
                             } else {
-                                state.queryError = { code: error.errorCode, info: error.errorInfo };
+                                state.lastFetchError = { code: error.errorCode, info: error.errorInfo };
                             }
                         }
                     })
-                    .always(() => this.$refs.queryForm.$data.isRequesting = false);
+                    .always(() => { state.isLoading = false });
             });
         };
-        const selectedRenderType = computed({
-            get() { return [state.renderType] },
-            set(value) { state.renderType = value[0] }
-        });
 
         watch(route, (to) => {
-            state.currentRoutePage = parseInt(to.params.page) || 1;
             delete to.params[0]; // fixme: [vue-router] missing param for named route "param+p": Expected "0" to be defined
             if (to.hash === '#') { // remove empty hash
                 to.hash = '';
             }
         });
-        watch(() => state.renderType, (to, from) => {
-            if (to === 'list') window.addEventListener('scroll', state.scrollStopDebounce, { passive: true });
-            else window.removeEventListener('scroll', state.scrollStopDebounce);
+        watchEffect(() => {
+            state.currentRoutePage = parseInt(route.params.page ?? '1');
         });
-        onBeforeMount(async () => {
+        watch(() => state.renderType, renderType => {
+            if (state.scrollStopDebounce === null) return;
+            if (renderType === 'list') window.addEventListener('scroll', state.scrollStopDebounce, { passive: true });
+            else window.removeEventListener('scroll', state.scrollStopDebounce);
+        }, { immediate: true });
+        (async () => {
             const forumListResult = await apiForumList();
             if (isApiError(forumListResult)) return;
             state.forumList = forumListResult;
-        });
-        onMounted(() => {
-            window.addEventListener('scroll', state.scrollStopDebounce, { passive: true });
-        });
+        })();
 
-        return { ...toRefs(state) };
+        return { ...toRefs(state), query, loadPage };
     }
 });
 
