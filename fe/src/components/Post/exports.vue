@@ -1,4 +1,5 @@
-// import by files inside @/components/Post
+<script lang="ts">
+// import by files outside @/components/Post
 export { default as InputNumericParam } from './InputNumericParam.vue';
 export { default as InputTextMatchParam } from './InputTextMatchParam.vue';
 export { default as NavSidebar } from './NavSidebar.vue';
@@ -11,3 +12,5 @@ export { default as ThreadTag } from './ThreadTag.vue';
 export { default as UserTag } from './UserTag.vue';
 export { default as ViewList } from './ViewList.vue';
 export { default as ViewTable } from './ViewTable.vue';
+export default {};
+</script>

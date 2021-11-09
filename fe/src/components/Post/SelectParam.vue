@@ -1,5 +1,5 @@
 <template>
-    <select @change="$emit('paramChange', $event.target)" class="col-2 custom-select form-control">
+    <select @change="$emit('paramChange', $event.target)" class="form-select form-control flex-grow-0">
         <option selected value="add" disabled>New...</option>
         <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
             <option v-for="(paramDescription, paramName) in group" :key="paramName"
@@ -56,7 +56,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.select-param.is-invalid {
+select {
+    width: 20% !important;
+}
+.is-invalid {
     z-index: 1; /* let border overlaps other selects */
 }
 .select-param-first-row {

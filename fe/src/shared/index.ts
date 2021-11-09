@@ -1,5 +1,4 @@
-import { RouteLocationNormalized } from 'vue-router';
-import type { RouteLocationNormalizedLoaded } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationNormalizedLoaded } from 'vue-router';
 import Noty from 'noty';
 import _ from 'lodash';
 
@@ -9,6 +8,10 @@ export type Int = number;
 export type UInt = number;
 export type Float = number;
 export type UnixTimestamp = number;
+export type ObjUnknown = Record<string, unknown>;
+
+export type PostType = 'reply' | 'subReply' | 'thread';
+export type PostsID = 'pid' | 'spid' | 'tid';
 
 // we can't declare global timeout like `window.noty = new Noty({ timeout: 3000 });` due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 3000, type, text }).show() };

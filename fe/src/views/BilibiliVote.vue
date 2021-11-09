@@ -59,6 +59,7 @@
 import { isApiError } from '@/api';
 import type { ApiCandidatesName, ApiTop10CandidatesTimeline, ApiTop50OfficialValidVotesCount, CountByTimeGranularity, IsValid } from '@/api/bilibiliVote';
 import { apiAllCandidatesVotesCount, apiAllVotesCountByTime, apiCandidatesName, apiTop10CandidatesTimeline, apiTop50CandidatesVotesCount, apiTop50OfficialValidVotesCount, apiTop5CandidatesVotesCountByTime } from '@/api/bilibiliVote';
+import type { ObjUnknown } from '@/shared';
 import { tiebaUserLink } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
@@ -82,7 +83,7 @@ echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, Grap
 
 interface CandidateVotesCount { officialValidCount: number | null, validCount: number, invalidCount: number }
 type CandidatesDetailData = Array<CandidateVotesCount & { candidateIndex: number, candidateName: string }>;
-const candidatesDetailColumns: Array<Record<string, unknown> & {
+const candidatesDetailColumns: Array<ObjUnknown & {
     title: string,
     dataIndex: string,
     sorter: (a: CandidatesDetailData[0], b: CandidatesDetailData[0]) => number

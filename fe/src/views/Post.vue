@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm @query="query($event)" :forumList="forumList" ref="queryForm" />
+        <QueryForm @query="query($event)" :forumList="forumList" />
         <p>当前页数：{{ currentRoutePage }}</p>
         <Menu v-show="postPages.length !== 0" v-model="renderType" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -10,12 +10,13 @@
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="justify-content-center row">
             <NavSidebar :post-pages="postPages" :aria-expanded="postsNavExpanded"
-                         class="posts-nav vh-100 sticky-top d-none d-xl-block col-xl" />
-            <a @click="postsNavExpanded = ! postsNavExpanded"
-               class="posts-nav-collapse shadow-sm vh-100 sticky-top align-items-center d-flex d-xl-none col col-auto">
+                         class="posts-nav col-xl d-none d-xl-block vh-100 sticky-top" />
+            <!-- fixme: Cannot read property 'value' of undefined @ invokeDirectiveHook()
+            <a @click="postsNavExpanded = !postsNavExpanded"
+               class="posts-nav-collapse col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
                 <FontAwesomeIcon v-show="postsNavExpanded" icon="angle-left" />
                 <FontAwesomeIcon v-show="!postsNavExpanded" icon="angle-right" />
-            </a>
+            </a>-->
             <div :class="{
                 'post-render-wrapper': true,
                 'post-render-list-wrapper': renderType === 'list',
@@ -31,7 +32,7 @@
                                     @load-page="loadPage($event)" :current-page="posts.pages.currentPage" />
                 </template>
             </div>
-            <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder d-none col-xl"></div>
+            <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder col-xl d-none"></div>
         </div>
     </div>
     <div class="container">
@@ -45,7 +46,7 @@ import type { ApiError, ApiForumList } from '@/api/index.d';
 import { apiForumList, isApiError } from '@/api';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
-import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post';
+import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post/exports.vue';
 
 import { computed, defineComponent, onBeforeMount, onMounted, reactive, toRefs, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';

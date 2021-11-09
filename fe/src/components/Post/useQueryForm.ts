@@ -1,14 +1,15 @@
+import type { ObjUnknown } from '@/shared';
 import { onBeforeMount, onMounted, reactive, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import _ from 'lodash';
 
-export interface Param { name: string, value?: unknown, subParam?: Record<string, unknown> }
+export interface Param { name: string, value?: unknown, subParam?: ObjUnknown }
 export type ParamOmitName = Omit<Param, 'name'>;
 export type ParamPreprocessorOrWatcher = (p: Param) => void;
-export default (
+export default <UniqueParams = Record<string, Param>>(
     emit: (event: string, ...args: unknown[]) => void,
-    { parseRoute, checkParams, submitRoute }: {
+    deps: {
         parseRoute?: (route: RouteLocationNormalizedLoaded) => void,
         checkParams?: () => boolean,
         submitRoute?: () => void
@@ -16,14 +17,15 @@ export default (
 ) => {
     const route = useRoute();
     const router = useRouter();
+    type UniqueParamPreprocessorOrWatcher = { [P in keyof UniqueParams]: (p: UniqueParams[P]) => void };
     const state = reactive<{
         isLoading: boolean,
-        uniqueParams: Record<string, Param>,
+        uniqueParams: Record<string, Param> & UniqueParams,
         params: Param[],
         invalidParamsIndex: number[],
         paramsDefaultValue: Partial<Record<string, ParamOmitName>>,
-        paramsPreprocessor: Partial<Record<string, ParamPreprocessorOrWatcher>>,
-        paramsWatcher: Partial<Record<string, ParamPreprocessorOrWatcher>>
+        paramsPreprocessor: Partial<Record<string, ParamPreprocessorOrWatcher> & UniqueParamPreprocessorOrWatcher>,
+        paramsWatcher: Partial<Record<string, ParamPreprocessorOrWatcher> & UniqueParamPreprocessorOrWatcher>
     }>({
         isLoading: false,
         uniqueParams: {},
@@ -93,15 +95,15 @@ export default (
     const clearedUniqueParamsDefaultValue = (...omitParams: string[]): typeof state.uniqueParams =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
         _.pickBy(_.mapValues(_.omit(state.uniqueParams, omitParams), clearParamDefaultValue));
-    const flattenParams = (): Array<Record<string, unknown>> => {
+    const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Param) => {
-            const flatted: Record<string, unknown> = {};
+            const flatted: ObjUnknown = {};
             flatted[param.name] = param.value;
             return { ...flatted, ...param.subParam };
         };
         return [
             ..._.map(Object.values(clearedUniqueParamsDefaultValue()), flattenParam),
-            ..._.map<Param, Record<string, unknown>>(clearedParamsDefaultValue(), flattenParam)
+            ..._.map<Param, ObjUnknown>(clearedParamsDefaultValue(), flattenParam)
         ];
     };
     const escapeParamValue = (value: string | unknown, shouldUnescape = false) => {
@@ -164,10 +166,10 @@ export default (
         });
     };
     const submit = () => {
-        if (checkParams === undefined || submitRoute === undefined) throw Error();
-        if (checkParams()) { // check here to stop route submit
+        if (deps.checkParams === undefined || deps.submitRoute === undefined) throw Error();
+        if (deps.checkParams()) { // check here to stop route submit
             state.isLoading = true;
-            submitRoute();
+            deps.submitRoute();
             // force emit event to refresh new query since route update event won't emit when isLoading is true
             emit('query', { queryParams: flattenParams(), shouldReplacePage: true });
         }
@@ -181,13 +183,13 @@ export default (
             .value();
     }, { deep: true });
     watch(route, (to, from) => {
-        if (parseRoute === undefined || checkParams === undefined) throw Error();
+        if (deps.parseRoute === undefined || deps.checkParams === undefined) throw Error();
         if (to.path === from.path) return; // ignore when only hash has changed
         if (!state.isLoading) { // isLoading will be false when route change is not emit by <query-form>.submit()
             // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
             const isOnlyPageChanged = _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page'));
-            parseRoute(to);
-            if (isOnlyPageChanged || checkParams()) { // skip checkParams() when there's only page changed
+            deps.parseRoute(to);
+            if (isOnlyPageChanged || deps.checkParams()) { // skip checkParams() when there's only page changed
                 state.isLoading = true;
                 emit('query', { queryParams: flattenParams(), shouldReplacePage: !isOnlyPageChanged });
             }
@@ -199,9 +201,9 @@ export default (
         state.params = _.map(state.params, _.unary(fillParamWithDefaultValue));
     });
     onMounted(() => {
-        if (parseRoute === undefined || checkParams === undefined) throw Error();
-        parseRoute(route); // first time parse
-        if (checkParams()) { // query manually since route update event won't trigger while first load
+        if (deps.parseRoute === undefined || deps.checkParams === undefined) throw Error();
+        deps.parseRoute(route); // first time parse
+        if (deps.checkParams()) { // query manually since route update event won't trigger while first load
             state.isLoading = true;
             emit('query', { queryParams: flattenParams(), shouldReplacePage: true });
         }

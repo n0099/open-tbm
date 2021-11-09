@@ -1,36 +1,33 @@
 <template>
     <div :class="classes" class="input-group-text">
-        <div class="custom-radio custom-control custom-control-inline">
+        <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
                    :checked="modelValue.subParam.matchBy === 'implicit'"
-                   :id="`param${_.upperFirst(param.name)}Implicit-${paramIndex}`"
-                   :name="`param${_.upperFirst(param.name)}-${paramIndex}`"
-                   value="implicit" type="radio" class="custom-control-input">
-            <label :for="`param${_.upperFirst(param.name)}Implicit-${paramIndex}`" class="custom-control-label">模糊</label>
+                   :id="inputID('Implicit')" :name="inputName"
+                   value="implicit" type="radio" class="form-check-input">
+            <label :for="inputID('Implicit')" class="form-check-label">模糊</label>
         </div>
-        <div class="custom-radio custom-control custom-control-inline">
+        <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
                    :checked="modelValue.subParam.matchBy === 'explicit'"
-                   :id="`param${_.upperFirst(param.name)}Explicit-${paramIndex}`"
-                   :name="`param${_.upperFirst(param.name)}-${paramIndex}`"
-                   value="explicit" type="radio" class="custom-control-input">
-            <label :for="`param${_.upperFirst(param.name)}Explicit-${paramIndex}`" class="custom-control-label">精确</label>
+                   :id="inputID('Explicit')" :name="inputName"
+                   value="explicit" type="radio" class="form-check-input">
+            <label :for="inputID('Explicit')" class="form-check-label">精确</label>
         </div>
-        <div class="custom-checkbox custom-control custom-control-inline">
+        <div class="form-check form-check-inline">
             <input @input="emitModelChange('spaceSplit', $event.target.checked)"
                    :checked="modelValue.subParam.spaceSplit"
-                   :id="`param${_.upperFirst(param.name)}SpaceSplit-${paramIndex}`"
+                   :id="inputID('SpaceSplit')"
                    :disabled="modelValue.subParam.matchBy === 'regex'"
-                   type="checkbox" class="custom-control-input">
-            <label :for="`param${_.upperFirst(param.name)}SpaceSplit-${paramIndex}`" class="custom-control-label">空格分隔</label>
+                   type="checkbox" class="form-check-input">
+            <label :for="inputID('SpaceSplit')" class="form-check-label">空格分隔</label>
         </div>
-        <div class="custom-radio custom-control">
+        <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
                    :checked="modelValue.subParam.matchBy === 'regex'"
-                   :id="`param${_.upperFirst(param.name)}Regex-${paramIndex}`"
-                   :name="`param${_.upperFirst(param.name)}-${paramIndex}`"
-                   value="regex" type="radio" class="custom-control-input">
-            <label :for="`param${_.upperFirst(param.name)}Regex-${paramIndex}`" class="custom-control-label">正则</label>
+                   :id="inputID('Regex')" :name="inputName"
+                   value="regex" type="radio" class="form-check-input">
+            <label :for="inputID('Regex')" class="form-check-label">正则</label>
         </div>
     </div>
 </template>
@@ -41,7 +38,7 @@ import _ from 'lodash';
 
 export default defineComponent({
     props: {
-        modelValue: { type: Object, required: true },
+        modelValue: Object,
         paramIndex: { type: Number, required: true },
         classes: { type: Object, required: true }
     },
@@ -49,7 +46,19 @@ export default defineComponent({
         const emitModelChange = (name, value) => {
             emit('update:modelValue', { ...props.modelValue, ...{ subParam: { [name]: value } } });
         };
-        return { _, emitModelChange };
+        const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>
+            `param${_.upperFirst(props.modelValue?.name)}${type}-${props.paramIndex}`;
+        const inputName = `param${_.upperFirst(props.modelValue?.name)}-${props.paramIndex}`;
+        return { emitModelChange, inputID, inputName };
     }
 });
 </script>
+
+<style scoped>
+.form-check {
+    margin: 0;
+}
+.form-check-inline:not(:last-child) {
+    margin-right: 0.5rem;
+}
+</style>

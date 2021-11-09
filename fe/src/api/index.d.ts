@@ -1,5 +1,5 @@
 import type { SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
-import type { Float, UInt, UnixTimestamp } from '@/shared';
+import type { Float, ObjUnknown, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
 export type ApiQueryParam = Record<never, never>;
@@ -49,7 +49,7 @@ export interface TiebaUserInfo {
     displayName: string | null,
     fansNickname: string | null,
     gender: TiebaUserGender,
-    iconInfo: Array<Record<string, unknown>> | null
+    iconInfo: ObjUnknown[] | null
 }
 export interface ApiUsersQuery {
     pages: Pagination,

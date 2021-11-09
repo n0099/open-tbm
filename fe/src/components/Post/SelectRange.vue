@@ -1,5 +1,6 @@
 <template>
-    <select @input="$emit('input', $event.target.value)" :value="value" class="col-1 custom-select form-control">
+    <select @input="$emit('update:modelValue', $event.target.value)" :value="modelValue"
+            class="form-select form-control flex-grow-0">
         <option>&lt;</option>
         <option>=</option>
         <option>&gt;</option>
@@ -13,7 +14,13 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
-        value: { type: String, required: true }
+        modelValue: String
     }
 });
 </script>
+
+<style scoped>
+select {
+    width: 7% !important;
+}
+</style>
