@@ -39,7 +39,7 @@
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="sort-amount-down" /></span>
                     <select v-model="uniqueParams.orderBy.value" :class="{ 'is-invalid': isOrderByInvalid }"
-                            class="col form-select form-control">
+                            class="form-select form-control">
                         <option value="default">默认（按贴索引查询按贴子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
                         <option value="postTime">发帖时间</option>
                         <optgroup label="贴子ID">
@@ -49,7 +49,7 @@
                         </optgroup>
                     </select>
                     <select v-show="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction"
-                            class="col-6 form-select form-control">
+                            class="form-select form-control">
                         <option value="ASC">正序（从小到大，旧到新）</option>
                         <option value="DESC">倒序（从大到小，新到旧）</option>
                     </select>
@@ -69,7 +69,7 @@
                         <input v-model="param.subParam.not" :id="`param${_.upperFirst(param.name)}Not-${paramIndex}`"
                                type="checkbox" value="good" class="form-check-input">
                         <label :for="`param${_.upperFirst(param.name)}Not-${paramIndex}`"
-                               class="text-secondary font-weight-bold form-check-label">非</label>
+                               class="text-secondary fw-bold form-check-label">非</label>
                     </div>
                 </div>
                 <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
@@ -85,7 +85,7 @@
                                  format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="_.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
-                    <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder" type="text" class="form-control" required>
+                    <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required>
                     <InputTextMatchParam v-model="params[paramIndex]" :paramIndex="paramIndex" :classes="paramRowLastDomClass(paramIndex, params)" />
                 </template>
                 <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
@@ -94,13 +94,13 @@
                                        :classes="paramRowLastDomClass(paramIndex, params)"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: 100 }" />
                 </template>
-                <template v-if="param.name === 'threadProperties'">
+                <div v-if="param.name === 'threadProperties'" :class="paramRowLastDomClass(paramIndex, params)">
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
                             <input v-model="param.value" :id="`paramThreadPropertiesGood-${paramIndex}`"
                                    type="checkbox" value="good" class="form-check-input">
                             <label :for="`paramThreadPropertiesGood-${paramIndex}`"
-                                   class="text-danger font-weight-normal form-check-label">精品</label>
+                                   class="text-danger fw-normal form-check-label">精品</label>
                         </div>
                     </div>
                     <div :class="paramRowLastDomClass(paramIndex, params)" class="param-input-group-text input-group-text">
@@ -108,10 +108,10 @@
                             <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`"
                                    type="checkbox" value="sticky" class="form-check-input">
                             <label :for="`paramThreadPropertiesSticky-${paramIndex}`"
-                                   class="text-primary font-weight-normal form-check-label">置顶</label>
+                                   class="text-primary fw-normal form-check-label">置顶</label>
                         </div>
                     </div>
-                </template>
+                </div>
                 <template v-if="_.includes(['authorUid', 'latestReplierUid'], param.name)">
                     <SelectRange v-model="param.subParam.range"></SelectRange>
                     <InputNumericParam v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{
@@ -121,7 +121,7 @@
                     }" />
                 </template>
                 <template v-if="param.name === 'authorManagerType'">
-                    <select value="NULL" v-model="param.value" class="col-2 form-control">
+                    <select v-model="param.value" :class="paramRowLastDomClass(paramIndex, params)" class="form-control flex-grow-0 w-25">
                         <option value="NULL">吧友</option>
                         <option value="manager">吧主</option>
                         <option value="assist">小吧主</option>
@@ -129,7 +129,7 @@
                     </select>
                 </template>
                 <template v-if="_.includes(['authorGender', 'latestReplierGender'], param.name)">
-                    <select v-model="param.value" class="col-2 form-control">
+                    <select v-model="param.value" :class="paramRowLastDomClass(paramIndex, params)" class="form-control flex-grow-0 w-25">
                         <option selected value="0">未设置（显示为男）</option>
                         <option value="1">男 ♂</option>
                         <option value="2">女 ♀</option>
@@ -156,12 +156,12 @@
 </template>
 
 <script lang="ts">
-import type { ApiForumList } from '@/api/index.d';
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from './';
-import type { Param, ParamOmitName, ParamPreprocessorOrWatcher } from '@/components/Post/useQueryForm';
+import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from '@/components/Post/useQueryForm';
 import useQueryForm from '@/components/Post/useQueryForm';
-import type { PostType, PostsID } from '@/shared';
+import type { DeepWritable, ObjEmpty, PostType, PostsID } from '@/shared';
 import { routeNameStrAssert } from '@/shared';
+import type { ApiForumList } from '@/api/index.d';
 
 import type { PropType } from 'vue';
 import { computed, defineComponent, reactive, toRefs } from 'vue';
@@ -179,55 +179,37 @@ export default defineComponent({
     },
     setup(props, { emit }) {
         const router = useRouter();
-        type RequiredPostTypes = Record<string, [PostType[], 'AND' | 'OR'] | undefined>;
         const state = reactive<{
-            paramsRequiredPostTypes: RequiredPostTypes,
-            orderByRequiredPostTypes: RequiredPostTypes,
             isOrderByInvalid: boolean,
             isFidInvalid: boolean
         }>({
-            paramsRequiredPostTypes: {
-                pid: [['reply', 'subReply'], 'OR'],
-                spid: [['subReply'], 'AND'],
-                latestReplyTime: [['thread'], 'AND'],
-                threadTitle: [['thread'], 'AND'],
-                postContent: [['reply', 'subReply'], 'OR'],
-                threadViewNum: [['thread'], 'AND'],
-                threadShareNum: [['thread'], 'AND'],
-                threadReplyNum: [['thread'], 'AND'],
-                replySubReplyNum: [['reply'], 'AND'],
-                threadProperties: [['thread'], 'AND'],
-                authorExpGrade: [['reply', 'subReply'], 'OR'],
-                latestReplierUid: [['thread'], 'AND'],
-                latestReplierName: [['thread'], 'AND'],
-                latestReplierDisplayName: [['thread'], 'AND'],
-                latestReplierGender: [['thread'], 'AND']
-            },
-            orderByRequiredPostTypes: {
-                pid: [['reply', 'subReply'], 'OR'],
-                spid: [['subReply'], 'OR']
-            },
             isOrderByInvalid: false,
             isFidInvalid: false
         });
-        const useQueryFormLateBinding = {};
-        const {
-            state: useState,
-            paramRowLastDomClass,
-            escapeParamValue,
-            addParam,
-            changeParam,
-            deleteParam,
-            fillParamWithDefaultValue,
-            clearParamDefaultValue,
-            clearedParamsDefaultValue,
-            clearedUniqueParamsDefaultValue,
-            parseParamRoute,
-            submitParamRoute,
-            submit
-        } = useQueryForm<UniqueParams>(emit, useQueryFormLateBinding);
+        type RequiredPostTypes = Record<string, [PostType[], 'AND' | 'OR'] | undefined>;
+        const paramsRequiredPostTypes: RequiredPostTypes = {
+            pid: [['reply', 'subReply'], 'OR'],
+            spid: [['subReply'], 'AND'],
+            latestReplyTime: [['thread'], 'AND'],
+            threadTitle: [['thread'], 'AND'],
+            postContent: [['reply', 'subReply'], 'OR'],
+            threadViewNum: [['thread'], 'AND'],
+            threadShareNum: [['thread'], 'AND'],
+            threadReplyNum: [['thread'], 'AND'],
+            replySubReplyNum: [['reply'], 'AND'],
+            threadProperties: [['thread'], 'AND'],
+            authorExpGrade: [['reply', 'subReply'], 'OR'],
+            latestReplierUid: [['thread'], 'AND'],
+            latestReplierName: [['thread'], 'AND'],
+            latestReplierDisplayName: [['thread'], 'AND'],
+            latestReplierGender: [['thread'], 'AND']
+        };
+        const orderByRequiredPostTypes: RequiredPostTypes = {
+            pid: [['reply', 'subReply'], 'OR'],
+            spid: [['subReply'], 'OR']
+        };
         const paramTypes: { [P in 'array' | 'dateTimeRange' | 'numeric' | 'textMatch']: {
-            default?: ParamOmitName,
+            default?: ParamPartialValue,
             preprocessor?: ParamPreprocessorOrWatcher,
             watcher?: ParamPreprocessorOrWatcher
         } } = { // param is byref object so changes will sync
@@ -243,80 +225,115 @@ export default defineComponent({
                     param.subParam.spaceSplit = param.subParam.spaceSplit === 'true'; // literal string to bool convert
                 },
                 watcher: param => {
-                    if (param.subParam?.matchBy === 'regex') param.subParam.spaceSplit = false;
+                    if (param.subParam.matchBy === 'regex') param.subParam.spaceSplit = false;
                 }
             },
             dateTimeRange: {
+                default: { subParam: { range: undefined } },
                 preprocessor: param => {
-                    if (param.subParam === undefined || !_.isString(param.value)) return;
+                    if (!_.isString(param.value)) return;
                     param.subParam.range = param.value.split(',');
                 },
                 watcher: param => {
                     // combine datetime range into root param's value
-                    param.value = _.isArray(param.subParam?.range) ? param.subParam?.range.join(',') : '';
+                    param.value = _.isArray(param.subParam.range) ? param.subParam.range.join(',') : '';
                 }
             }
         };
+        const paramsNameByType = {
+            numeric: [
+                'tid',
+                'pid',
+                'spid',
+                'threadViewNum',
+                'threadShareNum',
+                'threadReplyNum',
+                'replySubReplyNum',
+                'authorUid',
+                'authorExpGrade',
+                'latestReplierUid'
+            ],
+            text: [
+                'threadTitle',
+                'postContent',
+                'authorName',
+                'authorDisplayName',
+                'latestReplierName',
+                'latestReplierDisplayName'
+            ],
+            dateTime: [
+                'postTime',
+                'latestReplyTime'
+            ]
+        } as const;
+        interface ParamTypeNum { value: number, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
+        interface ParamTypeText { value: string, subParam: { matchBy: 'eegex' | 'explicit' | 'implicit', spaceSplit: boolean } }
+        interface ParamTypeDateTime { value: string, subParam: { range: undefined } } // todo: fix type for subParam
+        interface ParamTypeGender { value: '0' | '1' | '2' }
+        interface ParamTypeOther {
+            threadProperties: { value: Array<'good' | 'sticky'> },
+            authorManagerType: { value: 'assist' | 'manager' | 'NULL' | 'voiceadmin' }
+        }
+        interface ParamsCommon<P> { name: P, subParam: Record<never, never> }
+        type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamsCommon<P> & ParamTypeGender }
+        & { [P in keyof ParamTypeOther]: ParamsCommon<P> & ParamTypeOther[P] }
+        & { [P in typeof paramsNameByType.dateTime[number]]: ParamsCommon<P> & ParamTypeDateTime }
+        & { [P in typeof paramsNameByType.numeric[number]]: ParamsCommon<P> & ParamTypeNum }
+        & { [P in typeof paramsNameByType.text[number]]: ParamsCommon<P> & ParamTypeText };
+        const paramsDefaultValue = {
+            fid: { value: 0, subParam: {} },
+            postTypes: { value: ['thread', 'reply', 'subReply'], subParam: {} },
+            orderBy: { value: 'default', subParam: { direction: 'default' } },
+            threadProperties: { value: [] },
+            authorManagerType: { value: 'NULL' },
+            authorGender: { value: '0' },
+            latestReplierGender: { value: '0' },
+            ..._.mapValues(_.keyBy(paramsNameByType.numeric), () => paramTypes.numeric.default),
+            ..._.mapValues(_.keyBy(paramsNameByType.text), () => paramTypes.textMatch.default),
+            ..._.mapValues(_.keyBy(paramsNameByType.dateTime), () => paramTypes.dateTimeRange.default)
+        } as const;
+        const useQueryFormLateBinding: Parameters<typeof useQueryForm>[1] = {
+            paramsDefaultValue,
+            paramsPreprocessor: {
+                postTypes: paramTypes.array.preprocessor,
+                threadProperties: paramTypes.array.preprocessor,
+                ..._.mapValues(_.keyBy(paramsNameByType.text), () => paramTypes.textMatch.preprocessor),
+                ..._.mapValues(_.keyBy(paramsNameByType.dateTime), () => paramTypes.dateTimeRange.preprocessor)
+            },
+            paramsWatcher: {
+                ..._.mapValues(_.keyBy(paramsNameByType.text), () => paramTypes.textMatch.watcher),
+                ..._.mapValues(_.keyBy(paramsNameByType.dateTime), () => paramTypes.dateTimeRange.watcher),
+                orderBy(param) {
+                    if (param.value === 'default' && param.subParam.direction !== 'default') { // reset to default
+                        param.subParam = { ...param.subParam, direction: 'default' };
+                    }
+                }
+            }
+        };
+        const {
+            state: useState,
+            paramRowLastDomClass,
+            escapeParamValue,
+            addParam,
+            changeParam,
+            deleteParam,
+            fillParamWithDefaultValue,
+            clearParamDefaultValue,
+            clearedParamsDefaultValue,
+            clearedUniqueParamsDefaultValue,
+            parseParamRoute,
+            submitParamRoute,
+            submit
+        } = useQueryForm<UniqueParams, Params>(emit, useQueryFormLateBinding);
         interface UniqueParams extends Record<string, Param> {
-            fid: { name: 'fid', value?: number },
-            postTypes: { name: 'postTypes', value?: PostType[] },
-            orderBy: { name: 'orderBy', value?: PostsID | 'default' | 'postTime', subParam?: { direction: 'ASC' | 'default' | 'DESC' } }
+            fid: { name: 'fid', value: number, subParam: ObjEmpty },
+            postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
+            orderBy: { name: 'orderBy', value: PostsID | 'default' | 'postTime', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
         }
         useState.uniqueParams = {
-            fid: { name: 'fid' },
-            postTypes: { name: 'postTypes' },
-            orderBy: { name: 'orderBy' }
-        };
-        useState.paramsDefaultValue = {
-            fid: { value: 'NULL' },
-            postTypes: { value: ['thread', 'reply', 'subReply'] },
-            orderBy: { value: 'default', subParam: { direction: 'default' } },
-            tid: paramTypes.numeric.default,
-            pid: paramTypes.numeric.default,
-            spid: paramTypes.numeric.default,
-            postTime: { subParam: { range: undefined } },
-            latestReplyTime: { subParam: { range: undefined } },
-            threadTitle: paramTypes.textMatch.default,
-            postContent: paramTypes.textMatch.default,
-            threadViewNum: paramTypes.numeric.default,
-            threadShareNum: paramTypes.numeric.default,
-            threadReplyNum: paramTypes.numeric.default,
-            replySubReplyNum: paramTypes.numeric.default,
-            threadProperties: { value: [] },
-            authorUid: paramTypes.numeric.default,
-            authorName: paramTypes.textMatch.default,
-            authorDisplayName: paramTypes.textMatch.default,
-            authorExpGrade: paramTypes.numeric.default,
-            latestReplierUid: paramTypes.numeric.default,
-            latestReplierName: paramTypes.textMatch.default,
-            latestReplierDisplayName: paramTypes.textMatch.default
-        };
-        useState.paramsPreprocessor = {
-            postTypes: paramTypes.array.preprocessor,
-            postTime: paramTypes.dateTimeRange.preprocessor,
-            latestReplyTime: paramTypes.dateTimeRange.preprocessor,
-            threadTitle: paramTypes.textMatch.preprocessor,
-            postContent: paramTypes.textMatch.preprocessor,
-            threadProperties: paramTypes.array.preprocessor,
-            authorName: paramTypes.textMatch.preprocessor,
-            authorDisplayName: paramTypes.textMatch.preprocessor,
-            latestReplierName: paramTypes.textMatch.preprocessor,
-            latestReplierDisplayName: paramTypes.textMatch.preprocessor
-        };
-        useState.paramsWatcher = {
-            postTime: paramTypes.dateTimeRange.watcher,
-            latestReplyTime: paramTypes.dateTimeRange.watcher,
-            threadTitle: paramTypes.textMatch.watcher,
-            postContent: paramTypes.textMatch.watcher,
-            authorName: paramTypes.textMatch.watcher,
-            authorDisplayName: paramTypes.textMatch.watcher,
-            latestReplierName: paramTypes.textMatch.watcher,
-            latestReplierDisplayName: paramTypes.textMatch.watcher,
-            orderBy(param) {
-                if (param.value === 'default' && param.subParam?.direction !== 'default') { // reset to default
-                    param.subParam = { ...param.subParam, direction: 'default' };
-                }
-            }
+            fid: { name: 'fid', ...paramsDefaultValue.fid },
+            postTypes: { name: 'postTypes', ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes> },
+            orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
         };
         const currentQueryType = () => {
             const clearedParams = clearedParamsDefaultValue();
@@ -337,16 +354,16 @@ export default defineComponent({
         };
         const parseRoute = (route: RouteLocationNormalizedLoaded) => {
             routeNameStrAssert(route.name);
-            useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue));
+            useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
             useState.params = [];
             // parse route path to params
-            if (route.name.startsWith('param')) {
+            if (route.name.startsWith('param') && !_.isArray(route.params.pathMatch)) {
                 parseParamRoute(route.params.pathMatch); // omit page param from route full path
-            } else if (route.name.startsWith('fid')) {
-                useState.uniqueParams.fid.value = route.params.fid;
+            } else if (route.name.startsWith('fid') && !_.isArray(route.params.fid)) {
+                useState.uniqueParams.fid.value = parseInt(route.params.fid);
             } else { // post id routes
                 useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
-                    fillParamWithDefaultValue(param, true)); // reset to default
+                    fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
                 // eslint-disable-next-line @typescript-eslint/no-shadow
                 useState.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
                     fillParamWithDefaultValue({ name, value }));
@@ -378,11 +395,11 @@ export default defineComponent({
             // check params required post types
             const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
             useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
-            _.each(_.map(useState.params, clearParamDefaultValue), (param, paramIndex) => { // we don't filter() here for post types validate
-                if (param?.value === undefined) {
+            _.each(useState.params.map(clearParamDefaultValue), (param, paramIndex) => { // we don't filter() here for post types validate
+                if (param === null || param.name === undefined || param.value === undefined) {
                     useState.invalidParamsIndex.push(paramIndex);
                 } else {
-                    const paramRequiredPostTypes = state.paramsRequiredPostTypes[param.name];
+                    const paramRequiredPostTypes = paramsRequiredPostTypes[param.name];
                     if (paramRequiredPostTypes !== undefined// not set means this param accepts any post types
                         && !(paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
                             ? _.isEmpty(_.difference(postTypes, _.sortBy(paramRequiredPostTypes[0])))
@@ -397,11 +414,11 @@ export default defineComponent({
             // check order by required post types
             state.isOrderByInvalid = false;
             const orderBy = useState.uniqueParams.orderBy.value;
-            if (orderBy in state.orderByRequiredPostTypes) {
-                const orderByRequiredPostTypes = state.orderByRequiredPostTypes[orderBy];
-                if (!(orderByRequiredPostTypes[1] === 'OR'
-                    ? _.isEmpty(_.difference(postTypes, _.sortBy(orderByRequiredPostTypes[0])))
-                    : _.isEqual(_.sortBy(orderByRequiredPostTypes[0]), postTypes))) {
+            if (orderBy in orderByRequiredPostTypes) {
+                const requiredPostTypes = orderByRequiredPostTypes[orderBy];
+                if (requiredPostTypes !== undefined && !(requiredPostTypes[1] === 'OR'
+                    ? _.isEmpty(_.difference(postTypes, _.sortBy(requiredPostTypes[0])))
+                    : _.isEqual(_.sortBy(requiredPostTypes[0]), postTypes))) {
                     state.isOrderByInvalid = true;
                     new Noty({ timeout: 3000, type: 'warning', text: '排序方式与查询贴子类型要求不匹配' }).show();
                 }
@@ -419,7 +436,7 @@ export default defineComponent({
                     if (_.isEmpty(_.reject(clearedParams, param => param.name === postIDName)) // is there no other params
                         && postIDParam.length === 1 // is there only one post id param
                         && postIDParam[0].subParam === undefined) { // is range subParam not set
-                        router.push({ name: postIDName, params: { [postIDName]: postIDParam[0].value } });
+                        router.push({ name: postIDName, params: { [postIDName]: String(postIDParam[0].value) } });
                         return; // exit early to prevent pushing other route
                     }
                 }
@@ -434,9 +451,10 @@ export default defineComponent({
         };
         Object.assign(useQueryFormLateBinding, { parseRoute, checkParams, submitRoute }); // assign() will prevent losing ref
 
-        const inputTextMatchParamPlaceholder = (p: Param) => (p.subParam?.matchBy === 'implicit'
-            ? '模糊'
-            : `${p.subParam?.matchBy === 'explicit' ? '精确' : '正则'}匹配 空格${p.subParam?.spaceSplit ? '不' : ''}分割关键词`);
+        const inputTextMatchParamPlaceholder = (p: Params[typeof paramsNameByType.text[number]]) => {
+            if (p.subParam.matchBy === 'implicit') return '模糊';
+            return `${p.subParam.matchBy === 'explicit' ? '精确' : '正则'}匹配 空格${p.subParam.spaceSplit ? '不' : ''}分割关键词`;
+        };
         const currentQueryTypeDesc = computed(() => {
             if (currentQueryType() === 'fid') return '按吧索引查询';
             if (currentQueryType() === 'postID') return '按贴索引查询';
@@ -444,7 +462,7 @@ export default defineComponent({
             return '空查询';
         });
 
-        return { _, ...toRefs(state), ...toRefs(useState), currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, escapeParamValue, addParam, changeParam, deleteParam, submit };
+        return { _, ...toRefs(state), ...toRefs(useState), currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>

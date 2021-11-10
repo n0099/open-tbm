@@ -4,37 +4,41 @@ import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import _ from 'lodash';
 
-export interface Param { name: string, value?: unknown, subParam?: ObjUnknown }
-export type ParamOmitName = Omit<Param, 'name'>;
+export interface Param { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
+export interface ParamPartialValue { value?: unknown, subParam?: ObjUnknown }
+export type ParamPartial = ParamPartialValue & { name: string };
 export type ParamPreprocessorOrWatcher = (p: Param) => void;
-export default <UniqueParams = Record<string, Param>>(
+export default <
+    UniqueParams extends Record<string, Param> = Record<string, Param>,
+    Params extends Record<string, Param> = Record<string, Param>
+>(
     emit: (event: string, ...args: unknown[]) => void,
     deps: {
+        paramsDefaultValue: Partial<Record<string, ParamPartialValue>>,
+        paramsPreprocessor: Partial<Record<string, ParamPreprocessorOrWatcher>>,
+        paramsWatcher: Partial<Record<string, ParamPreprocessorOrWatcher>>,
         parseRoute?: (route: RouteLocationNormalizedLoaded) => void,
         checkParams?: () => boolean,
         submitRoute?: () => void
     }
 ) => {
+    type ParamsFullForm = { [P in keyof Params]: Param };
+    type ParamFromGeneric = Params[keyof Params] | UniqueParams[keyof UniqueParams];
     const route = useRoute();
     const router = useRouter();
-    type UniqueParamPreprocessorOrWatcher = { [P in keyof UniqueParams]: (p: UniqueParams[P]) => void };
-    const state = reactive<{
+    type ParamsPreprocessorOrWatcher = { [P in string | keyof (Params & UniqueParams)]: (p: (Params & UniqueParams)[P] | Param) => void };
+    interface State {
         isLoading: boolean,
-        uniqueParams: Record<string, Param> & UniqueParams,
-        params: Param[],
-        invalidParamsIndex: number[],
-        paramsDefaultValue: Partial<Record<string, ParamOmitName>>,
-        paramsPreprocessor: Partial<Record<string, ParamPreprocessorOrWatcher> & UniqueParamPreprocessorOrWatcher>,
-        paramsWatcher: Partial<Record<string, ParamPreprocessorOrWatcher> & UniqueParamPreprocessorOrWatcher>
-    }>({
+        uniqueParams: UniqueParams,
+        params: ParamFromGeneric[],
+        invalidParamsIndex: number[]
+    }
+    const state = reactive<State>({
         isLoading: false,
-        uniqueParams: {},
+        uniqueParams: {} as UniqueParams,
         params: [], // [{ name: '', value: '', subParam: { name: value } },...]
-        invalidParamsIndex: [],
-        paramsDefaultValue: {}, // { name: *, subParam: { not: false } }
-        paramsPreprocessor: {},
-        paramsWatcher: {}
-    });
+        invalidParamsIndex: []
+    }) as State; // https://github.com/vuejs/vue-next/issues/1324, https://github.com/vuejs/vue-next/issues/2136
 
     const paramRowLastDomClass = (paramIndex: number, params: typeof state.params) =>
         (params.length === 1
@@ -44,11 +48,12 @@ export default <UniqueParams = Record<string, Param>>(
                 'param-control-middle-row': !(paramIndex === 0 || paramIndex === params.length - 1),
                 'param-control-last-row': paramIndex === params.length - 1
             });
-    const fillParamWithDefaultValue = (param: Param, resetToDefault = false): Param => {
-        const defaultParam = _.cloneDeep(state.paramsDefaultValue[param.name]);
-        if (defaultParam === undefined) return param;
+    const fillParamWithDefaultValue = <T extends ParamFromGeneric>
+    (param: Partial<Param> & { name: string }, resetToDefault = false): T => {
+        const defaultParam = deps.paramsDefaultValue[param.name];
+        if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
-        defaultParam.subParam.not = false; // add default not subParam on every param
+        if (!_.includes(_.keys(state.uniqueParams), param.name)) defaultParam.subParam.not = false; // add default not subParam on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
         if (resetToDefault) return _.defaultsDeep(defaultParam, param);
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
@@ -66,11 +71,12 @@ export default <UniqueParams = Record<string, Param>>(
         // move forward index of all params, which after current
         state.invalidParamsIndex = _.map(state.invalidParamsIndex, invalidParamIndex =>
             (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex));
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete state.params[paramIndex];
     };
-    const clearParamDefaultValue = (param: Param) => {
-        const newParam = _.cloneDeep(param); // prevent mutating origin param
-        const defaultParam = state.paramsDefaultValue[newParam.name];
+    const clearParamDefaultValue = <T extends Param>(param: Param): Partial<Param | T> | null => {
+        const newParam: Partial<Param> = _.cloneDeep(param); // prevent mutating origin param
+        const defaultParam = deps.paramsDefaultValue[param.name];
         if (defaultParam === undefined) {
             if (newParam.subParam === undefined) delete newParam.subParam;
             return newParam;
@@ -84,6 +90,7 @@ export default <UniqueParams = Record<string, Param>>(
         _.each(defaultParam.subParam, (value, _name) => {
             if (newParam.subParam === undefined) return;
             // undefined means this sub param must get deleted, as part of the parent param value
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             if (newParam.subParam[_name] === value || value === undefined) delete newParam.subParam[_name];
         });
         if (_.isEmpty(newParam.subParam)) delete newParam.subParam;
@@ -92,9 +99,9 @@ export default <UniqueParams = Record<string, Param>>(
     };
     const clearedParamsDefaultValue = (): Param[] =>
         _.filter(_.map(state.params, clearParamDefaultValue)) as Param[]; // filter() will remove falsy values like null
-    const clearedUniqueParamsDefaultValue = (...omitParams: string[]): typeof state.uniqueParams =>
+    const clearedUniqueParamsDefaultValue = (...omitParams: string[]): Partial<UniqueParams> =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
-        _.pickBy(_.mapValues(_.omit(state.uniqueParams, omitParams), clearParamDefaultValue));
+        _.pickBy(_.mapValues(_.omit(state.uniqueParams, omitParams), clearParamDefaultValue)) as Partial<UniqueParams>;
     const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Param) => {
             const flatted: ObjUnknown = {};
@@ -102,7 +109,7 @@ export default <UniqueParams = Record<string, Param>>(
             return { ...flatted, ...param.subParam };
         };
         return [
-            ..._.map(Object.values(clearedUniqueParamsDefaultValue()), flattenParam),
+            ..._.map<Param, ObjUnknown>(Object.values(clearedUniqueParamsDefaultValue()), flattenParam),
             ..._.map<Param, ObjUnknown>(clearedParamsDefaultValue(), flattenParam)
         ];
     };
@@ -124,7 +131,7 @@ export default <UniqueParams = Record<string, Param>>(
             .split('/')
             .filter() // filter() will remove falsy values like ''
             .map(paramWithSub => {
-                const parsedParam: Param = { name: '' };
+                const parsedParam: ParamPartial = { name: '', subParam: {} };
                 _.each(paramWithSub.split(';'), (params, paramIndex) => { // split multiple params
                     const paramPair: [string, unknown] = [
                         params.substr(0, params.indexOf(':')),
@@ -136,26 +143,26 @@ export default <UniqueParams = Record<string, Param>>(
                         parsedParam.subParam = { ...parsedParam.subParam, [paramPair[0]]: paramPair[1] };
                     }
                 });
-                return parsedParam;
+                return parsedParam as Param;
             })
             .map(_.unary(fillParamWithDefaultValue))
             .each(param => {
-                const preprocessor = state.paramsPreprocessor[param.name];
+                const preprocessor = deps.paramsPreprocessor[param.name];
                 if (preprocessor !== undefined) {
                     preprocessor(param);
                     param.subParam.not = param.subParam.not === 'true'; // literal string convert to bool
                 }
                 if (param.name in state.uniqueParams) { // is unique param
-                    state.uniqueParams[param.name] = param;
+                    state.uniqueParams[param.name as keyof UniqueParams] = param as unknown as UniqueParams[keyof UniqueParams];
                 } else {
                     state.params.push(param);
                 }
             })
             .value();
     };
-    const submitParamRoute = (filteredUniqueParams: typeof state.uniqueParams, filteredParams: typeof state.params) => {
+    const submitParamRoute = (filteredUniqueParams: Partial<UniqueParams>, filteredParams: typeof state.params) => {
         const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
-        const subParamValue = (subParam: Param['subParam']) =>
+        const subParamValue = (subParam?: Param['subParam']) =>
             _.map(subParam, (value, _name) => `;${_name}:${escapeParamValue(value)}`).join('');
         void router.push({
             path: `/${_.chain([...Object.values(filteredUniqueParams), ...filteredParams])
@@ -166,7 +173,7 @@ export default <UniqueParams = Record<string, Param>>(
         });
     };
     const submit = () => {
-        if (deps.checkParams === undefined || deps.submitRoute === undefined) throw Error();
+        if (deps.checkParams === undefined || deps.submitRoute === undefined) throw Error('Unimplmented method in deps');
         if (deps.checkParams()) { // check here to stop route submit
             state.isLoading = true;
             deps.submitRoute();
@@ -178,12 +185,12 @@ export default <UniqueParams = Record<string, Param>>(
     watch([() => state.uniqueParams, () => state.params], newParamsArray => {
         const [uniqueParams, params] = newParamsArray;
         _.chain([...Object.values(uniqueParams), ...params])
-            .filter(param => param.name in state.paramsWatcher)
-            .each(param => state.paramsWatcher[param.name]?.(param))
+            .filter(param => param.name in deps.paramsWatcher)
+            .each(param => deps.paramsWatcher[param.name]?.(param))
             .value();
     }, { deep: true });
     watch(route, (to, from) => {
-        if (deps.parseRoute === undefined || deps.checkParams === undefined) throw Error();
+        if (deps.parseRoute === undefined || deps.checkParams === undefined) throw Error('Unimplmented method in deps');
         if (to.path === from.path) return; // ignore when only hash has changed
         if (!state.isLoading) { // isLoading will be false when route change is not emit by <query-form>.submit()
             // these query logic is for route changes which is not trigger by <query-form>.submit(), such as user emitted history.back() or go()
@@ -197,11 +204,11 @@ export default <UniqueParams = Record<string, Param>>(
     });
 
     onBeforeMount(() => {
-        state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(fillParamWithDefaultValue));
+        state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
         state.params = _.map(state.params, _.unary(fillParamWithDefaultValue));
     });
     onMounted(() => {
-        if (deps.parseRoute === undefined || deps.checkParams === undefined) throw Error();
+        if (deps.parseRoute === undefined || deps.checkParams === undefined) throw Error('Unimplmented method in deps');
         deps.parseRoute(route); // first time parse
         if (deps.checkParams()) { // query manually since route update event won't trigger while first load
             state.isLoading = true;

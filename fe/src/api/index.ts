@@ -1,4 +1,5 @@
 import type { ApiError, ApiForumList, ApiQueryParam, ApiStatsForumPostsCount, ApiStatsForumPostsCountQP, ApiStatus, ApiStatusQP, ApiUsersQuery, ApiUsersQueryQP } from '@/api/index.d';
+import type { ObjEmpty } from '@/shared';
 import { notyShow } from '@/shared';
 import NProgress from 'nprogress';
 import qs from 'qs';
@@ -6,7 +7,7 @@ import _ from 'lodash';
 
 export const isApiError = <T>(r: ApiError | T): r is ApiError => 'errorInfo' in r && _.isString(r.errorInfo);
 export const nullIfApiError = <T>(api: ApiError | T): T | null => (isApiError(api) ? null : api);
-export const getRequester = async <T = ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam): Promise<ApiError | T> => {
+export const getRequester = async <T extends ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam): Promise<ApiError | T> => {
     NProgress.start();
     document.body.style.cursor = 'progress';
     let errorCode = 0;
@@ -45,7 +46,7 @@ export const getRequester = async <T = ApiError | unknown>(endpoint: string, que
         document.body.style.cursor = '';
     }
 };
-const reCAPTCHACheck = async (action = ''): Promise<Record<never, never> | { reCAPTCHA: string }> => new Promise((reslove, reject) => {
+const reCAPTCHACheck = async (action = ''): Promise<ObjEmpty | { reCAPTCHA: string }> => new Promise((reslove, reject) => {
     if (process.env.NODE_ENV === 'production') {
         grecaptcha.ready(() => {
             grecaptcha.execute(process.env.VUE_APP_RECAPTCHA_SITE_KEY, { action }).then(
@@ -60,14 +61,14 @@ const reCAPTCHACheck = async (action = ''): Promise<Record<never, never> | { reC
         reslove({});
     }
 });
-export const getRequesterWithReCAPTCHA = async <T = ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam, action = '') =>
+export const getRequesterWithReCAPTCHA = async <T extends ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam, action = '') =>
     getRequester<T>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) });
 
 export const apiForumList = async (): Promise<ApiError | ApiForumList> =>
     getRequester('/forumList');
 export const apiStatus = async (qp: ApiStatusQP): Promise<ApiError | ApiStatus> =>
-    getRequesterWithReCAPTCHA<ApiStatus>('/status', qp);
+    getRequesterWithReCAPTCHA('/status', qp);
 export const apiStatsForumPostsCount = async (qp: ApiStatsForumPostsCountQP): Promise<ApiError | ApiStatsForumPostsCount> =>
-    getRequesterWithReCAPTCHA<ApiStatsForumPostsCount>('/stats/forumPostsCount', qp);
+    getRequesterWithReCAPTCHA('/stats/forumPostsCount', qp);
 export const apiUsersQuery = async (qp: ApiUsersQueryQP): Promise<ApiError | ApiUsersQuery> =>
-    getRequesterWithReCAPTCHA<ApiUsersQuery>('/usersQuery', qp);
+    getRequesterWithReCAPTCHA('/usersQuery', qp);

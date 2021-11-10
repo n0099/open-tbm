@@ -9,6 +9,10 @@ export type UInt = number;
 export type Float = number;
 export type UnixTimestamp = number;
 export type ObjUnknown = Record<string, unknown>;
+export type ObjEmpty = Record<never, never>;
+// https://github.com/microsoft/TypeScript/issues/35660
+export type Writable<T> = { -readonly [P in keyof T]: T[P] };
+export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
 
 export type PostType = 'reply' | 'subReply' | 'thread';
 export type PostsID = 'pid' | 'spid' | 'tid';

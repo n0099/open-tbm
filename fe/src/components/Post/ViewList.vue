@@ -47,17 +47,17 @@
                         <a :href="$$getTiebaUserLink($getUserInfo(thread.authorUid).name)"
                            target="_blank" class="badge btn btn-light">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
-                                  class="font-weight-bold text-success">楼主：</span>
-                            <span v-else class="font-weight-bold text-info">楼主及最后回复：</span>
-                            <span class="font-weight-normal">{{ renderUsername(thread.authorUid) }}</span>
+                                  class="fw-bold text-success">楼主：</span>
+                            <span v-else class="fw-bold text-info">楼主及最后回复：</span>
+                            <span class="fw-normal">{{ renderUsername(thread.authorUid) }}</span>
                         </a>
                         <UserTag v-if="thread.authorManagerType !== null"
                                  :user-info="{ managerType: thread.authorManagerType }" :users-info-source="posts.users" />
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
                             <a :href="$$getTiebaUserLink($getUserInfo(thread.latestReplierUid).name)"
                                target="_blank" class="badge btn btn-light">
-                                <span class="font-weight-bold text-secondary">最后回复：</span>
-                                <span class="font-weight-normal">{{ renderUsername(thread.latestReplierUid) }}</span>
+                                <span class="fw-bold text-secondary">最后回复：</span>
+                                <span class="fw-normal">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </a>
                         </template>
                         <div class="thread-latest-reply-time-badge d-inline badge badge-light">
@@ -98,7 +98,7 @@
                     </div>
                 </div>
                 <div class="reply-info shadow-sm row bs-callout bs-callout-info">
-                    <div v-for="author in [$getUserInfo(reply.authorUid)]" class="reply-banner text-center col-auto">
+                    <div v-for="author in [$getUserInfo(reply.authorUid)]" class="col-auto text-center reply-banner">
                         <div class="reply-user-info sticky-top shadow-sm badge badge-light">
                             <a :href="$$getTiebaUserLink(author.name)" target="_blank" class="d-block">
                                 <img :data-src="$$getTiebaUserAvatarUrl(author.avatarUrl)"

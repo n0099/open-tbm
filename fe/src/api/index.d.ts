@@ -1,8 +1,8 @@
 import type { SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
-import type { Float, ObjUnknown, UInt, UnixTimestamp } from '@/shared';
+import type { Float, ObjEmpty, ObjUnknown, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
-export type ApiQueryParam = Record<never, never>;
+export type ApiQueryParam = ObjEmpty;
 
 export type ApiForumList = Array<{
     id: number,
