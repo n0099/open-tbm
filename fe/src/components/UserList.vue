@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="p-2 row align-items-center">
+        <div class="row align-items-center p-2">
             <div class="col align-middle"><hr /></div>
             <div v-for="(page, _i) in [usersData.pages]" :key="_i" class="w-auto">
                 <div class="p-2 badge bg-light text-dark">

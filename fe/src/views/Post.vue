@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm @query="query($event)" :forumList="forumList" />
+        <QueryForm @query="query($event)" :forumList="forumList" :isLoading="isLoading" />
         <p>当前页数：{{ currentRoutePage }}</p>
         <Menu v-show="postPages.length !== 0" v-model="renderType" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -47,6 +47,7 @@ import { apiForumList, isApiError } from '@/api';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
 import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post/exports.vue';
+import { notyShow } from '@/shared';
 
 import { computed, defineComponent, onBeforeMount, onMounted, reactive, toRefs, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -161,7 +162,7 @@ export default defineComponent({
                             // insert after existing previous page, if not exist will be inserted at start
                             state.postPages.splice(_.findIndex(state.postPages, { pages: { currentPage: state.currentRoutePage - 1 } }) + 1, 0, ajaxData);
                         }
-                        new Noty({ timeout: 3000, type: 'success', text: `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.itemsCount}条贴子 耗时${Date.now() - ajaxStartTime}ms` }).show();
+                        notyShow('success', `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.itemsCount}条贴子 耗时${Date.now() - ajaxStartTime}ms`);
                         this.updateTitle();
                     })
                     .fail(jqXHR => {
