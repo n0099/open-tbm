@@ -7,7 +7,7 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
                     <select v-model.number="uniqueParams.fid.value" :class="{ 'is-invalid': isFidInvalid }"
                             id="paramFid" class="form-select form-control">
-                        <option value="NULL">未指定</option>
+                        <option value="0">未指定</option>
                         <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
                 </div>
@@ -160,7 +160,7 @@ import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from
 import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from '@/components/Post/useQueryForm';
 import useQueryForm from '@/components/Post/useQueryForm';
 import type { DeepWritable, ObjEmpty, PostType, PostsID } from '@/shared';
-import { routeNameStrAssert } from '@/shared';
+import { boolStrToBool, routeNameStrAssert } from '@/shared';
 import type { ApiForumList } from '@/api/index.d';
 
 import type { PropType } from 'vue';
@@ -175,6 +175,7 @@ import Noty from 'noty';
 export default defineComponent({
     components: { FontAwesomeIcon, RangePicker, InputNumericParam, InputTextMatchParam, SelectParam, SelectRange },
     props: {
+        isLoading: { type: Boolean, required: true },
         forumList: { type: Array as PropType<ApiForumList>, required: true }
     },
     setup(props, { emit }) {
@@ -222,7 +223,7 @@ export default defineComponent({
             textMatch: {
                 default: { subParam: { matchBy: 'implicit', spaceSplit: false } },
                 preprocessor: param => {
-                    param.subParam.spaceSplit = param.subParam.spaceSplit === 'true'; // literal string to bool convert
+                    param.subParam.spaceSplit = boolStrToBool(param.subParam.spaceSplit);
                 },
                 watcher: param => {
                     if (param.subParam.matchBy === 'regex') param.subParam.spaceSplit = false;
@@ -268,13 +269,13 @@ export default defineComponent({
         } as const;
         interface ParamTypeNum { value: number, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
         interface ParamTypeText { value: string, subParam: { matchBy: 'eegex' | 'explicit' | 'implicit', spaceSplit: boolean } }
-        interface ParamTypeDateTime { value: string, subParam: { range: undefined } } // todo: fix type for subParam
+        interface ParamTypeDateTime { value: string, subParam: { range: undefined } }
         interface ParamTypeGender { value: '0' | '1' | '2' }
         interface ParamTypeOther {
             threadProperties: { value: Array<'good' | 'sticky'> },
             authorManagerType: { value: 'assist' | 'manager' | 'NULL' | 'voiceadmin' }
         }
-        interface ParamsCommon<P> { name: P, subParam: Record<never, never> }
+        interface ParamsCommon<P> { name: P, subParam: ObjEmpty }
         type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamsCommon<P> & ParamTypeGender }
         & { [P in keyof ParamTypeOther]: ParamsCommon<P> & ParamTypeOther[P] }
         & { [P in typeof paramsNameByType.dateTime[number]]: ParamsCommon<P> & ParamTypeDateTime }
@@ -292,7 +293,7 @@ export default defineComponent({
             ..._.mapValues(_.keyBy(paramsNameByType.text), () => paramTypes.textMatch.default),
             ..._.mapValues(_.keyBy(paramsNameByType.dateTime), () => paramTypes.dateTimeRange.default)
         } as const;
-        const useQueryFormLateBinding: Parameters<typeof useQueryForm>[1] = {
+        const useQueryFormLateBinding: Parameters<typeof useQueryForm>[0] = {
             paramsDefaultValue,
             paramsPreprocessor: {
                 postTypes: paramTypes.array.preprocessor,
@@ -313,7 +314,6 @@ export default defineComponent({
         const {
             state: useState,
             paramRowLastDomClass,
-            escapeParamValue,
             addParam,
             changeParam,
             deleteParam,
@@ -322,9 +322,8 @@ export default defineComponent({
             clearedParamsDefaultValue,
             clearedUniqueParamsDefaultValue,
             parseParamRoute,
-            submitParamRoute,
-            submit
-        } = useQueryForm<UniqueParams, Params>(emit, useQueryFormLateBinding);
+            submitParamRoute
+        } = useQueryForm<UniqueParams, Params>(useQueryFormLateBinding);
         interface UniqueParams extends Record<string, Param> {
             fid: { name: 'fid', value: number, subParam: ObjEmpty },
             postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
@@ -379,7 +378,7 @@ export default defineComponent({
                     return false; // exit early
                 case 'postID':
                     if (clearedUniqueParams.fid !== undefined) {
-                        useState.uniqueParams.fid.value = state.fid.value; // reset fid to default value.default,
+                        useState.uniqueParams.fid.value = 0; // reset fid to default,
                         new Noty({ timeout: 3000, type: 'info', text: '已移除按贴索引查询所不需要的查询贴吧参数' }).show();
                         submitRoute(); // update route to match new params without fid
                     }
@@ -409,7 +408,7 @@ export default defineComponent({
                     }
                 }
             });
-            if (!_.isEmpty(useState.invalidParamsIndex)) new Noty({ timeout: 3000, type: 'warning', text: `第${_.map(useState.invalidParamsIndex, i => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配` }).show();
+            if (!_.isEmpty(useState.invalidParamsIndex)) new Noty({ timeout: 3000, type: 'warning', text: `第${useState.invalidParamsIndex.map(i => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配` }).show();
 
             // check order by required post types
             state.isOrderByInvalid = false;
@@ -435,8 +434,8 @@ export default defineComponent({
                     const postIDParam = _.filter(clearedParams, param => param.name === postIDName);
                     if (_.isEmpty(_.reject(clearedParams, param => param.name === postIDName)) // is there no other params
                         && postIDParam.length === 1 // is there only one post id param
-                        && postIDParam[0].subParam === undefined) { // is range subParam not set
-                        router.push({ name: postIDName, params: { [postIDName]: String(postIDParam[0].value) } });
+                        && postIDParam[0]?.subParam === undefined) { // is range subParam not set
+                        router.push({ name: `post/${postIDName}`, params: { [postIDName]: postIDParam[0].value?.toString() } });
                         return; // exit early to prevent pushing other route
                     }
                 }
@@ -449,7 +448,10 @@ export default defineComponent({
             }
             submitParamRoute(clearedUniqueParams, clearedParams); // param route
         };
-        Object.assign(useQueryFormLateBinding, { parseRoute, checkParams, submitRoute }); // assign() will prevent losing ref
+        const submit = () => {
+            if (checkParams()) submitRoute();
+        };
+        Object.assign(useQueryFormLateBinding, { parseRoute }); // assign() will prevent losing ref
 
         const inputTextMatchParamPlaceholder = (p: Params[typeof paramsNameByType.text[number]]) => {
             if (p.subParam.matchBy === 'implicit') return '模糊';

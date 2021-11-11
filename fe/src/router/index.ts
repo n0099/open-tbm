@@ -1,6 +1,7 @@
 import { compareRouteIsNewQuery } from '@/shared';
 import Index from '@/views/Index.vue';
 import type { Component } from 'vue';
+import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import NProgress from 'nprogress';
 
@@ -17,6 +18,10 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
     });
 };
 
+const withPageRoute = <T extends { components: Record<string, () => Promise<Component>> }
+| { component: () => Promise<Component> } & { props: boolean }>
+(routeName: string, restRoute: T): T & { children: RouteRecordRaw[] } =>
+    ({ ...restRoute, children: [{ ...restRoute, path: 'page/:page', name: `${routeName}+p` }] });
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
 const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }, props: true };
 export default createRouter({
@@ -29,10 +34,11 @@ export default createRouter({
             ...postRoute,
             children: [
                 { path: 'page/:page', name: 'post+p', ...postRoute },
-                { path: 'f/:fid', name: 'fid', ...postRoute, children: [{ path: 'page/:page', name: 'fid+p', ...postRoute }] },
-                { path: 't/:tid', name: 'tid', ...postRoute, children: [{ path: 'page/:page', name: 'tid+p', ...postRoute }] },
-                { path: 'p/:pid', name: 'pid', ...postRoute, children: [{ path: 'page/:page', name: 'pid+p', ...postRoute }] },
-                { path: 'sp/:spid', name: 'spid', ...postRoute, children: [{ path: 'page/:page', name: 'spid+p', ...postRoute }] }
+                { path: 'f/:fid', name: 'post/fid', ...withPageRoute('post/fid', postRoute) },
+                { path: 't/:tid', name: 'post/tid', ...withPageRoute('post/tid', postRoute) },
+                { path: 'p/:pid', name: 'post/pid', ...withPageRoute('post/pid', postRoute) },
+                { path: 'sp/:spid', name: 'post/spid', ...withPageRoute('post/spid', postRoute) },
+                { path: ':pathMatch(.*)*', name: 'post/param', ...postRoute }
             ]
         },
         {
@@ -41,9 +47,9 @@ export default createRouter({
             ...userRoute,
             children: [
                 { path: 'page/:page', name: 'user+p', ...userRoute },
-                { path: 'id/:uid', name: 'uid', ...userRoute, children: [{ path: 'page/:page', name: 'uid+p', ...userRoute }] },
-                { path: 'n/:name', name: 'name', ...userRoute, children: [{ path: 'page/:page', name: 'name+p', ...userRoute }] },
-                { path: 'dn/:displayName', name: 'displayName', ...userRoute, children: [{ path: 'page/:page', name: 'displayName+p', ...userRoute }] }
+                { path: 'id/:uid', name: 'user/uid', ...withPageRoute('user/uid', userRoute) },
+                { path: 'n/:name', name: 'user/name', ...withPageRoute('user/name', userRoute) },
+                { path: 'dn/:displayName', name: 'user/displayName', ...withPageRoute('user/displayName', userRoute) }
             ]
         },
         { path: '/status', name: 'status', component: async () => lazyLoadRouteView(import('@/views/Status.vue')) },

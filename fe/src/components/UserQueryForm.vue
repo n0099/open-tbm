@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import type { TiebaUserGenderQP } from '@/api/index.d';
-import { boolPropToStr, boolStrPropToBool } from '@/shared';
+import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
 import SelectTiebaUser, { selectTiebaUserBy } from '@/components/SelectTiebaUser.vue';
 
@@ -68,9 +68,9 @@ export default defineComponent({
         const submitQueryForm = () => {
             const params = boolPropToStr<LocationQueryValueRaw>(state.selectUser.params);
             const { selectBy } = state.selectUser;
-            const routeName = _.endsWith(selectBy, 'NULL') ? _.trimEnd(selectBy, 'NULL') : selectBy;
+            const routeName = removeEnd(selectBy, 'NULL');
             router.push({
-                name: _.isEmpty(params) ? 'user' : routeName,
+                name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
                 query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: state.gender }),
                 params: _.pick(params, selectTiebaUserBy)
             });

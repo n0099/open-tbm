@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { compareRouteIsNewQuery, notyShow } from '@/shared';
+import { compareRouteIsNewQuery, notyShow, removeEnd, removeStart } from '@/shared';
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import PlaceholderError from '@/components/PlaceholderError.vue';
@@ -77,7 +77,7 @@ export default defineComponent({
         fetchUsersData(route, true);
 
         watchEffect(() => {
-            state.selectUserBy = _.trimEnd(route.name?.toString(), '+p') as SelectTiebaUserBy;
+            state.selectUserBy = removeStart(removeEnd(route.name?.toString() ?? '', '+p'), 'user/') as SelectTiebaUserBy;
             state.params = { ..._.omit(props, 'page'), uid: props.uid === undefined ? undefined : Number(props.uid) };
         });
         onBeforeRouteUpdate(async (to, from) => {

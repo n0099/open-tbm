@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import type { ApiUsersQuery, TiebaUserGender } from '@/api/index.d';
-import { routeNameStrAssert, tiebaUserPortraitUrl } from '@/shared';
+import { removeEnd, routeNameStrAssert, tiebaUserPortraitUrl } from '@/shared';
 
 import type { ComputedRef, PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
@@ -72,7 +72,7 @@ export default defineComponent({
             const routeNameWithPage = _.endsWith(route.name, '+p') ? route.name : `${route.name}+p`;
             return {
                 prev: currentPage - 1 === 1
-                    ? { ...route, name: _.trimEnd(route.name, '+p'), params: {} } // prevent '/page/1' occurs in route path
+                    ? { ...route, name: removeEnd(route.name, '+p'), params: {} } // prevent '/page/1' occurs in route path
                     : { ...route, name: routeNameWithPage, params: { page: currentPage - 1 } },
                 next: { ...route, name: routeNameWithPage, params: { page: currentPage + 1 } }
             };

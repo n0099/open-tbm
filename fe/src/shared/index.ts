@@ -21,10 +21,14 @@ export type PostsID = 'pid' | 'spid' | 'tid';
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 3000, type, text }).show() };
 export const tiebaUserLink = (username: string) => `https://tieba.baidu.com/home/main?un=${username}`;
 export const tiebaUserPortraitUrl = (portrait: string) => `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
+
+export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
+export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);
 export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<string, T | string> =>
     _.mapValues(object, i => (_.isBoolean(i) ? String(i) : i));
+export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'true';
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
-    _.mapValues(object, i => (_.includes(['true', 'false'], i) ? i === 'true' : i));
+    _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
 // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const routeNameStrAssert: (_name: RouteLocationNormalizedLoaded['name']) => asserts _name is string = _name => {
     if (!_.isString(_name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
