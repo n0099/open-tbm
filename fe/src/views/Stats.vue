@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import type { ApiForumList, ApiStatsForumPostsCountQP } from '@/api/index.d';
-import { apiForumList, apiStatsForumPostsCount, isApiError } from '@/api';
+import { apiForumList, apiStatsForumPostsCount, throwIfApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
@@ -128,9 +128,8 @@ export default defineComponent({
                 { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧贴量统计` } }
             );
 
-            const statsResult = await apiStatsForumPostsCount(state.query)
-                .finally(() => { chartDom.value?.classList.remove('loading') });
-            if (isApiError(statsResult)) return;
+            const statsResult = throwIfApiError(await apiStatsForumPostsCount(state.query)
+                .finally(() => { chartDom.value?.classList.remove('loading') }));
             const series = _.map(statsResult, (dates, postType) => ({
                 id: postType,
                 data: _.map(dates, Object.values)
@@ -157,9 +156,7 @@ export default defineComponent({
         };
 
         (async () => {
-            const forumListResult = await apiForumList();
-            if (isApiError(forumListResult)) return;
-            state.forumList = forumListResult;
+            state.forumList = throwIfApiError(await apiForumList());
         })();
 
         return { timeGranularities, ...toRefs(state), chartDom, submitQueryForm };

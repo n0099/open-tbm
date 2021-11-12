@@ -56,9 +56,8 @@
 </template>
 
 <script lang="ts">
-import { isApiError } from '@/api';
-import type { ApiCandidatesName, ApiTop10CandidatesTimeline, ApiTop50OfficialValidVotesCount, CountByTimeGranularity, IsValid } from '@/api/bilibiliVote';
-import { apiAllCandidatesVotesCount, apiAllVotesCountByTime, apiCandidatesName, apiTop10CandidatesTimeline, apiTop50CandidatesVotesCount, apiTop50OfficialValidVotesCount, apiTop5CandidatesVotesCountByTime } from '@/api/bilibiliVote';
+import type { CandidatesName, CountByTimeGranularity, IsValid, Top10CandidatesTimeline, Top50OfficialValidVotesCount } from '@/api/bilibiliVote';
+import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
 import { tiebaUserLink } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
@@ -125,12 +124,12 @@ const charts: { [P in Charts]: echarts.ECharts | null } = {
     allVotesCountByTime: null
 };
 
-let top10CandidatesTimelineVotes: { [P in 'invalid' | 'valid']: ApiTop10CandidatesTimeline } = { valid: [], invalid: [] };
+let top10CandidatesTimelineVotes: { [P in 'invalid' | 'valid']: Top10CandidatesTimeline } = { valid: [], invalid: [] };
 type Top10CandidatesTimelineDataset = Array<CandidateVotesCount & { voteFor: string }>;
 interface VotesCountSeriesLabelFormatterParams { data: OptionDataItem | Top10CandidatesTimelineDataset[0], name: string }
 const isCandidatesDetailData = (p: unknown): p is Top10CandidatesTimelineDataset[0] =>
     _.isObject(p) && 'officialValidCount' in p && 'validCount' in p && 'invalidCount' in p && 'voteFor' in p;
-const votesCountSeriesLabelFormatter = (votesData: ApiTop10CandidatesTimeline, currentCount: number, candidateIndex: string) => {
+const votesCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, currentCount: number, candidateIndex: string) => {
     const [timeline] = charts.top10CandidatesTimeline?.getOption()?.timeline as [{ data: number[], currentIndex: number }];
     const previousTimelineValue = _.find(votesData, {
         endTime: timeline.data[timeline.currentIndex - 1],
@@ -397,6 +396,18 @@ const chartsInitialOption: {
     }
 };
 
+const {
+    allCandidatesVotesCount,
+    allVotesCountByTimeHourGranularity,
+    allVotesCountByTimeMinuteGranularity,
+    candidatesName,
+    top5CandidatesVotesCountByTimeHourGranularity,
+    top5CandidatesVotesCountByTimeMinuteGranularity,
+    top10CandidatesTimeline,
+    top50CandidatesVotesCount,
+    top50OfficialValidVotesCount
+} = json;
+
 export default defineComponent({
     components: { FontAwesomeIcon, Table, QueryTimeGranularity },
     setup() {
@@ -405,9 +416,9 @@ export default defineComponent({
                 top5CandidatesCountByTimeGranularity: CountByTimeGranularity,
                 allVotesCountByTimeGranularity: CountByTimeGranularity
             },
-            candidatesName: ApiCandidatesName,
+            candidatesName: CandidatesName,
             candidatesDetailData: CandidatesDetailData,
-            top50OfficialValidVotesCount: ApiTop50OfficialValidVotesCount
+            top50OfficialValidVotesCount: Top50OfficialValidVotesCount
         }>({
             query: {
                 top5CandidatesCountByTimeGranularity: 'hour',
@@ -423,9 +434,7 @@ export default defineComponent({
         const formatCandidateNameByID = (id: number) => `${id}号\n${state.candidatesName[id - 1]}`;
 
         const loadCharts = {
-            top50CandidatesCount: async () => {
-                const top50CandidatesVotesCount = await apiTop50CandidatesVotesCount();
-                if (isApiError(top50CandidatesVotesCount)) return;
+            top50CandidatesCount: () => {
                 // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
                 const dataset = _.chain(top50CandidatesVotesCount)
                     .groupBy('voteFor')
@@ -468,9 +477,7 @@ export default defineComponent({
                     }]
                 });
             },
-            top10CandidatesTimeline: async () => {
-                const top10CandidatesTimeline = await apiTop10CandidatesTimeline();
-                if (isApiError(top10CandidatesTimeline)) return;
+            top10CandidatesTimeline: () => {
                 top10CandidatesTimelineVotes = {
                     valid: _.filter(top10CandidatesTimeline, { isValid: 1 }),
                     invalid: _.filter(top10CandidatesTimeline, { isValid: 0 })
@@ -577,10 +584,11 @@ export default defineComponent({
                     });
                 });
             },
-            top5CandidatesCountByTime: async () => {
+            top5CandidatesCountByTime: () => {
                 const timeGranularity = state.query.top5CandidatesCountByTimeGranularity;
-                const top5CandidatesCountByTime = await apiTop5CandidatesVotesCountByTime({ timeGranularity });
-                if (isApiError(top5CandidatesCountByTime)) return;
+                const top5CandidatesCountByTime = timeGranularity === 'minute'
+                    ? top5CandidatesVotesCountByTimeMinuteGranularity
+                    : top5CandidatesVotesCountByTimeHourGranularity;
                 const top5CandidatesIndex = _.chain(top5CandidatesCountByTime).filter({ isValid: 1 }).map('voteFor').sort().sortedUniq().value(); // not order by votes count
                 const validVotes = _.filter(top5CandidatesCountByTime, { isValid: 1 });
                 const invalidVotes = _.filter(top5CandidatesCountByTime, { isValid: 0 });
@@ -609,10 +617,9 @@ export default defineComponent({
                     series
                 });
             },
-            allVotesCountByTime: async () => {
+            allVotesCountByTime: () => {
                 const timeGranularity = state.query.allVotesCountByTimeGranularity;
-                const allVotesCountByTime = await apiAllVotesCountByTime({ timeGranularity });
-                if (isApiError(allVotesCountByTime)) return;
+                const allVotesCountByTime = timeGranularity === 'minute' ? allVotesCountByTimeMinuteGranularity : allVotesCountByTimeHourGranularity;
                 // [{ time: '2019-03-11 12:00', validCount: 1, invalidCount: 0 }, ... ]
                 const dataset = _.chain(allVotesCountByTime)
                     .groupBy('time')
@@ -630,9 +637,9 @@ export default defineComponent({
             }
         };
 
-        watch(() => state.query.top5CandidatesCountByTimeGranularity, async () => loadCharts.top5CandidatesCountByTime());
-        watch(() => state.query.allVotesCountByTimeGranularity, async () => loadCharts.allVotesCountByTime());
-        onMounted(async () => {
+        watch(() => state.query.top5CandidatesCountByTimeGranularity, () => { loadCharts.top5CandidatesCountByTime() });
+        watch(() => state.query.allVotesCountByTimeGranularity, () => { loadCharts.allVotesCountByTime() });
+        onMounted(() => {
             _.map(chartsDom, (i, k: Charts) => {
                 if (i.value === undefined) return;
                 i.value.classList.add('loading');
@@ -640,13 +647,9 @@ export default defineComponent({
                 chart.setOption(chartsInitialOption[k]);
                 charts[k] = chart;
             });
-            const candidatesName = await apiCandidatesName();
-            if (isApiError(candidatesName)) return;
             state.candidatesName = candidatesName;
             state.candidatesDetailData = candidatesName.map((candidateName, index) =>
                 ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
-            const allCandidatesVotesCount = await apiAllCandidatesVotesCount();
-            if (isApiError(allCandidatesVotesCount)) return;
             state.candidatesDetailData = state.candidatesDetailData.map(candidate => {
                 const candidateVotes = _.filter(allCandidatesVotesCount, { voteFor: candidate.candidateIndex });
                 return {
@@ -656,8 +659,6 @@ export default defineComponent({
                 };
             });
 
-            const top50OfficialValidVotesCount = await apiTop50OfficialValidVotesCount();
-            if (isApiError(top50OfficialValidVotesCount)) return;
             // eslint-disable-next-line require-atomic-updates
             state.top50OfficialValidVotesCount = top50OfficialValidVotesCount;
             // add candidate index as keys then deep merge will combine same keys values, finally remove keys
@@ -671,7 +672,8 @@ export default defineComponent({
 
             _.map(charts, (chart, chartName: Charts) => {
                 if (chart === null) return;
-                loadCharts[chartName]().finally(() => chartsDom[chartName].value?.classList.remove('loading'));
+                loadCharts[chartName]();
+                chartsDom[chartName].value?.classList.remove('loading');
             });
         });
 

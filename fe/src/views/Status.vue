@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import type { ApiStatus, ApiStatusQP } from '@/api/index.d';
-import { apiStatus, isApiError } from '@/api';
+import { apiStatus, throwIfApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
@@ -182,8 +182,8 @@ export default defineComponent({
             }
             emptyChartSeriesData(chart);
 
-            const statusResult = await apiStatus(state.query).finally(() => { chartDom.value?.classList.remove('loading') });
-            if (isApiError(statusResult)) return;
+            const statusResult = throwIfApiError(await apiStatus(state.query)
+                .finally(() => { chartDom.value?.classList.remove('loading') }));
             const series = _.chain(chartInitialOption.series)
                 .map('id')
                 .map((seriesName: keyof ApiStatus[0]) => ({

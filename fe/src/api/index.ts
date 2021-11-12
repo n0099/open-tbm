@@ -6,7 +6,10 @@ import qs from 'qs';
 import _ from 'lodash';
 
 export const isApiError = <T>(r: ApiError | T): r is ApiError => 'errorInfo' in r && _.isString(r.errorInfo);
-export const nullIfApiError = <T>(api: ApiError | T): T | null => (isApiError(api) ? null : api);
+export const throwIfApiError = <T>(api: ApiError | T): T => {
+    if (isApiError(api)) throw Error(JSON.stringify(api));
+    return api;
+};
 export const getRequester = async <T extends ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam): Promise<ApiError | T> => {
     NProgress.start();
     document.body.style.cursor = 'progress';

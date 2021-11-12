@@ -43,7 +43,7 @@
 
 <script lang="ts">
 import type { ApiError, ApiForumList } from '@/api/index.d';
-import { apiForumList, isApiError } from '@/api';
+import { apiForumList, throwIfApiError } from '@/api';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
 import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post/exports.vue';
@@ -195,9 +195,7 @@ export default defineComponent({
             else window.removeEventListener('scroll', state.scrollStopDebounce);
         }, { immediate: true });
         (async () => {
-            const forumListResult = await apiForumList();
-            if (isApiError(forumListResult)) return;
-            state.forumList = forumListResult;
+            state.forumList = throwIfApiError(await apiForumList());
         })();
 
         return { ...toRefs(state), query, loadPage };
