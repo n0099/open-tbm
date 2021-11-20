@@ -66,13 +66,13 @@
                 }" />
                 <div class="param-input-group-text input-group-text">
                     <div class="form-check">
-                        <input v-model="param.subParam.not" :id="`param${_.upperFirst(param.name)}Not-${paramIndex}`"
+                        <input v-model="param.subParam.not" :id="`param${lo.upperFirst(param.name)}Not-${paramIndex}`"
                                type="checkbox" value="good" class="form-check-input">
-                        <label :for="`param${_.upperFirst(param.name)}Not-${paramIndex}`"
+                        <label :for="`param${lo.upperFirst(param.name)}Not-${paramIndex}`"
                                class="text-secondary fw-bold form-check-label">非</label>
                     </div>
                 </div>
-                <template v-if="_.includes(['tid', 'pid', 'spid'], param.name)">
+                <template v-if="lo.includes(postsID, param.name)">
                     <SelectRange v-model="param.subParam.range" />
                     <InputNumericParam v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{
                         IN: param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
@@ -80,15 +80,15 @@
                         number: param.name === 'tid' ? 5000000000 : 15000000000
                     }" />
                 </template>
-                <template v-if="_.includes(['postTime', 'latestReplyTime'], param.name)">
+                <template v-if="lo.includes(['postTime', 'latestReplyTime'], param.name)">
                     <RangePicker v-model="param.subParam.range" :show-time="true"
                                  format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
-                <template v-if="_.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
+                <template v-if="lo.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
                     <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required>
                     <InputTextMatchParam v-model="params[paramIndex]" :paramIndex="paramIndex" :classes="paramRowLastDomClass(paramIndex, params)" />
                 </template>
-                <template v-if="_.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
+                <template v-if="lo.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                     <SelectRange v-model="param.subParam.range" />
                     <InputNumericParam v-model="params[paramIndex]" :paramIndex="paramIndex"
                                        :classes="paramRowLastDomClass(paramIndex, params)"
@@ -112,7 +112,7 @@
                         </div>
                     </div>
                 </div>
-                <template v-if="_.includes(['authorUid', 'latestReplierUid'], param.name)">
+                <template v-if="lo.includes(['authorUid', 'latestReplierUid'], param.name)">
                     <SelectRange v-model="param.subParam.range"></SelectRange>
                     <InputNumericParam v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{
                         IN: '4000000000,4000000001,4000000002,...',
@@ -128,7 +128,7 @@
                         <option value="voiceadmin">语音小编</option>
                     </select>
                 </template>
-                <template v-if="_.includes(['authorGender', 'latestReplierGender'], param.name)">
+                <template v-if="lo.includes(['authorGender', 'latestReplierGender'], param.name)">
                     <select v-model="param.value" :class="paramRowLastDomClass(paramIndex, params)" class="form-control flex-grow-0 w-25">
                         <option selected value="0">未设置（显示为男）</option>
                         <option value="1">男 ♂</option>
@@ -157,24 +157,10 @@
 
 <script lang="ts">
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from './';
-import type { Params, UniqueParams, paramsNameByType } from './queryParams';
-import {
-    addParam,
-    changeParam,
-    clearParamDefaultValue,
-    clearedParamsDefaultValue,
-    clearedUniqueParamsDefaultValue,
-    deleteParam,
-    fillParamWithDefaultValue,
-    orderByRequiredPostTypes,
-    paramRowLastDomClass,
-    paramsRequiredPostTypes,
-    parseParamRoute,
-    submitParamRoute,
-    useQueryFormLateBinding,
-    useState
-} from './queryParams';
-import { notyShow, routeNameStrAssert } from '@/shared';
+import type { Params, RequiredPostTypes, UniqueParams, paramsNameByType } from './queryParams';
+import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormLateBinding, useQueryFormWithUniqueParams } from './queryParams';
+import type { PostType } from '@/shared';
+import { notyShow, postsID, removeEnd, routeNameStrAssert } from '@/shared';
 import type { ApiForumList } from '@/api/index.d';
 
 import type { PropType } from 'vue';
@@ -192,6 +178,19 @@ export default defineComponent({
         forumList: { type: Array as PropType<ApiForumList>, required: true }
     },
     setup(props, { emit }) {
+        const {
+            state: useState,
+            paramRowLastDomClass,
+            addParam,
+            changeParam,
+            deleteParam,
+            fillParamWithDefaultValue,
+            clearParamDefaultValue,
+            clearedParamsDefaultValue,
+            clearedUniqueParamsDefaultValue,
+            parseParamRoute,
+            submitParamRoute
+        } = useQueryFormWithUniqueParams();
         const router = useRouter();
         const state = reactive<{
             isOrderByInvalid: boolean,
@@ -200,7 +199,6 @@ export default defineComponent({
             isOrderByInvalid: false,
             isFidInvalid: false
         });
-
         const currentQueryType = () => {
             const clearedParams = clearedParamsDefaultValue();
             if (_.isEmpty(clearedParams)) { // is there no other params
@@ -208,11 +206,11 @@ export default defineComponent({
                 if (_.isEmpty(clearedUniqueParams)) { // only fill unique param postTypes and/or orderBy doesn't query anything
                     return 'empty';
                 } else if (clearedUniqueParams.fid !== undefined) {
-                    return 'fid'; // note when query with postTypes and/or orderBy param, the route will goto params not the fid
+                    return 'fid'; // note when query with postTypes and/or orderBy param, the route will go params instead of fid
                 }
             }
-            if (_.isEmpty(_.reject(clearedParams, param => _.includes(['tid', 'pid', 'spid'], param.name))) // is there no other params
-                && _.filter(clearedParams, param => _.includes(['tid', 'pid', 'spid'], param.name)).length === 1 // is there only one post id param
+            if (_.isEmpty(_.reject(clearedParams, param => _.includes(postsID, param.name))) // is there no other params
+                && _.filter(clearedParams, param => _.includes(postsID, param.name)).length === 1 // is there only one post id param
                 && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is post id param haven't any sub param
                 return 'postID';
             }
@@ -222,10 +220,11 @@ export default defineComponent({
             routeNameStrAssert(route.name);
             useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
             useState.params = [];
+            const routeName = removeEnd(route.name, '+p');
             // parse route path to params
-            if (route.name.startsWith('param') && !_.isArray(route.params.pathMatch)) {
-                parseParamRoute(route.params.pathMatch); // omit page param from route full path
-            } else if (route.name.startsWith('fid') && !_.isArray(route.params.fid)) {
+            if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
+                parseParamRoute(route.params.pathMatch); // omit the page param from route full path
+            } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
                 useState.uniqueParams.fid.value = parseInt(route.params.fid);
             } else { // post id routes
                 useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
@@ -236,11 +235,11 @@ export default defineComponent({
             }
         };
         const submitRoute = () => {
-            // decide which route to go
+            // deciding which route to go
             const clearedParams = clearedParamsDefaultValue();
             const clearedUniqueParams = clearedUniqueParamsDefaultValue();
-            if (_.isEmpty(clearedUniqueParams)) { // might be post id route
-                for (const postIDName of ['spid', 'pid', 'tid']) { // todo: sub posts id goes first to simply verbose multi post id condition
+            if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
+                for (const postIDName of _.reverse(postsID)) { // todo: sub posts id goes first to simply verbose multi post id condition
                     const postIDParam = _.filter(clearedParams, param => param.name === postIDName);
                     if (_.isEmpty(_.reject(clearedParams, param => param.name === postIDName)) // is there no other params
                         && postIDParam.length === 1 // is there only one post id param
@@ -253,7 +252,7 @@ export default defineComponent({
             if (clearedUniqueParams.fid !== undefined
                 && _.isEmpty(clearedParams)
                 && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
-                router.push({ name: 'fid', params: { fid: clearedUniqueParams.fid.value } });
+                router.push({ name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } });
                 return;
             }
             submitParamRoute(clearedUniqueParams, clearedParams); // param route
@@ -281,40 +280,39 @@ export default defineComponent({
                     break;
                 case 'fid':
             }
+            const isRequiredPostTypes = (current: PostType[], required?: RequiredPostTypes[string]): required is undefined => {
+                if (required === undefined) return true; // not set means this param accepts any post types
+                if (required[1] === 'OR' && _.isEmpty(_.difference(current, _.sortBy(required[0])))) return true;
+                if (required[1] === 'AND' && _.isEqual(_.sortBy(required[0]), current)) return true;
+                return false;
+            };
+            const requiredPostTypesStringify = (required: NonNullable<RequiredPostTypes[string]>) =>
+                `${required[0].join(required[1] === 'OR' ? ' | ' : ' & ')}`;
             // check params required post types
             const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
             useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
-            _.each(useState.params.map(clearParamDefaultValue), (param, paramIndex) => { // we don't filter() here for post types validate
+            useState.params.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
                 if (param === null || param.name === undefined || param.value === undefined) {
                     useState.invalidParamsIndex.push(paramIndex);
                 } else {
-                    const paramRequiredPostTypes = paramsRequiredPostTypes[param.name];
-                    if (paramRequiredPostTypes !== undefined// not set means this param accepts any post types
-                        && !(paramRequiredPostTypes[1] === 'OR' // does uniqueParams.postTypes fits with params required post types
-                            ? _.isEmpty(_.difference(postTypes, _.sortBy(paramRequiredPostTypes[0])))
-                            : _.isEqual(_.sortBy(paramRequiredPostTypes[0]), postTypes))) {
-                        // is this param have no diff with default value and have value
+                    const required = paramsRequiredPostTypes[param.name];
+                    if (!isRequiredPostTypes(postTypes, required)) {
                         useState.invalidParamsIndex.push(paramIndex);
+                        notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求贴子类型为${requiredPostTypesStringify(required)}`);
                     }
                 }
             });
-            if (!_.isEmpty(useState.invalidParamsIndex)) {
-                notyShow('warning',
-                    `第${useState.invalidParamsIndex.map(i => i + 1).join(',')}项查询参数与查询贴子类型要求不匹配`);
-            }
             // check order by required post types
             state.isOrderByInvalid = false;
             const orderBy = useState.uniqueParams.orderBy.value;
             if (orderBy in orderByRequiredPostTypes) {
-                const requiredPostTypes = orderByRequiredPostTypes[orderBy];
-                if (requiredPostTypes !== undefined && !(requiredPostTypes[1] === 'OR'
-                    ? _.isEmpty(_.difference(postTypes, _.sortBy(requiredPostTypes[0])))
-                    : _.isEqual(_.sortBy(requiredPostTypes[0]), postTypes))) {
+                const required = orderByRequiredPostTypes[orderBy];
+                if (!isRequiredPostTypes(postTypes, required)) {
                     state.isOrderByInvalid = true;
-                    notyShow('warning', '排序方式与查询贴子类型要求不匹配');
+                    notyShow('warning', `排序方式与查询贴子类型要求不匹配，当前要求贴子类型为${requiredPostTypesStringify(required)}`);
                 }
             }
-            // return false when there's any invalid params
+            // return false when there have at least one invalid params
             return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid;
         };
         const submit = () => {
@@ -333,7 +331,7 @@ export default defineComponent({
             return '空查询';
         });
 
-        return { _, ...toRefs(state), ...toRefs(useState), currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, addParam, changeParam, deleteParam, submit };
+        return { lo: _, postsID, ...toRefs(state), ...toRefs(useState), currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>

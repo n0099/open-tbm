@@ -4,7 +4,7 @@ import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from './use
 import useQueryForm from './useQueryForm';
 import _ from 'lodash';
 
-type RequiredPostTypes = Record<string, [PostType[], 'AND' | 'OR'] | undefined>;
+export type RequiredPostTypes = Record<string, [PostType[], 'AND' | 'OR'] | undefined>;
 export const paramsRequiredPostTypes: RequiredPostTypes = {
     pid: [['reply', 'subReply'], 'OR'],
     spid: [['subReply'], 'AND'],
@@ -84,7 +84,7 @@ export const paramsNameByType = {
         'latestReplyTime'
     ]
 } as const;
-interface ParamTypeNum { value: number, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
+interface ParamTypeNum { value: string, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
 interface ParamTypeText { value: string, subParam: { matchBy: 'eegex' | 'explicit' | 'implicit', spaceSplit: boolean } }
 interface ParamTypeDateTime { value: string, subParam: { range: undefined } }
 interface ParamTypeGender { value: '0' | '1' | '2' }
@@ -128,26 +128,18 @@ export const useQueryFormLateBinding: Parameters<typeof useQueryForm>[0] = {
         }
     }
 };
-export const {
-    state: useState,
-    paramRowLastDomClass,
-    addParam,
-    changeParam,
-    deleteParam,
-    fillParamWithDefaultValue,
-    clearParamDefaultValue,
-    clearedParamsDefaultValue,
-    clearedUniqueParamsDefaultValue,
-    parseParamRoute,
-    submitParamRoute
-} = useQueryForm<UniqueParams, Params>(useQueryFormLateBinding);
 export interface UniqueParams extends Record<string, Param> {
     fid: { name: 'fid', value: number, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
     orderBy: { name: 'orderBy', value: PostsID | 'default' | 'postTime', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
 }
-useState.uniqueParams = {
-    fid: { name: 'fid', ...paramsDefaultValue.fid },
-    postTypes: { name: 'postTypes', ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes> },
-    orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
+// must get invoked with in the setup() of component
+export const useQueryFormWithUniqueParams = () => {
+    const ret = useQueryForm<UniqueParams, Params>(useQueryFormLateBinding);
+    ret.state.uniqueParams = {
+        fid: { name: 'fid', ...paramsDefaultValue.fid },
+        postTypes: { name: 'postTypes', ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes> },
+        orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
+    };
+    return ret;
 };

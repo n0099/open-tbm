@@ -1,5 +1,5 @@
-import { boolStrToBool } from '@/shared';
 import type { ObjUnknown } from '@/shared';
+import { boolStrToBool } from '@/shared';
 import { onBeforeMount, reactive, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
@@ -68,7 +68,7 @@ export default <
         state.invalidParamsIndex = state.invalidParamsIndex.map(invalidParamIndex =>
             (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex));
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete state.params[paramIndex];
+        state.params.splice(paramIndex, 1);
     };
     const clearParamDefaultValue = <T extends Param>(param: Param): Partial<Param | T> | null => {
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
@@ -120,14 +120,11 @@ export default <
         }
         return ret;
     };
-    const parseParamRoute = (routePath: string) => {
+    const parseParamRoute = (routePath: string[]) => {
         _.chain(routePath)
-            .trim('/')
-            .split('/')
-            .filter() // filter() will remove falsy values like ''
             .map(paramWithSub => {
                 const parsedParam: ParamPartial = { name: '', subParam: {} };
-                _.each(paramWithSub.split(';'), (params, paramIndex) => { // split multiple params
+                paramWithSub.split(';').forEach((params, paramIndex) => { // split multiple params
                     const paramPair: [string, unknown] = [
                         params.substr(0, params.indexOf(':')),
                         escapeParamValue(params.substr(params.indexOf(':') + 1), true)
@@ -148,11 +145,10 @@ export default <
                     param.subParam.not = boolStrToBool(param.subParam.not);
                 }
                 const isUniqueParam = (p: Param): p is TUniqueParam => p.name in state.uniqueParams;
-                const isParam = (p: Param): p is TParam => p.name in state.params;
                 if (isUniqueParam(param)) { // is unique param
                     state.uniqueParams[param.name as keyof UniqueParams] = param;
-                } else if (isParam(param)) {
-                    state.params.push(param);
+                } else {
+                    state.params.push(param as TParam);
                 }
             })
             .value();
