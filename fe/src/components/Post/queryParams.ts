@@ -4,27 +4,28 @@ import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from './use
 import useQueryForm from './useQueryForm';
 import _ from 'lodash';
 
-export type RequiredPostTypes = Record<string, [PostType[], 'AND' | 'OR'] | undefined>;
+// value of [0] will be either ALL: require exactly same post types, or SUB: requiring a subset of types
+export type RequiredPostTypes = Record<string, ['ALL' | 'SUB', PostType[]] | undefined>;
 export const paramsRequiredPostTypes: RequiredPostTypes = {
-    pid: [['reply', 'subReply'], 'OR'],
-    spid: [['subReply'], 'AND'],
-    latestReplyTime: [['thread'], 'AND'],
-    threadTitle: [['thread'], 'AND'],
-    postContent: [['reply', 'subReply'], 'OR'],
-    threadViewNum: [['thread'], 'AND'],
-    threadShareNum: [['thread'], 'AND'],
-    threadReplyNum: [['thread'], 'AND'],
-    replySubReplyNum: [['reply'], 'AND'],
-    threadProperties: [['thread'], 'AND'],
-    authorExpGrade: [['reply', 'subReply'], 'OR'],
-    latestReplierUid: [['thread'], 'AND'],
-    latestReplierName: [['thread'], 'AND'],
-    latestReplierDisplayName: [['thread'], 'AND'],
-    latestReplierGender: [['thread'], 'AND']
+    pid: ['SUB', ['reply', 'subReply']],
+    spid: ['ALL', ['subReply']],
+    latestReplyTime: ['ALL', ['thread']],
+    threadTitle: ['ALL', ['thread']],
+    postContent: ['SUB', ['reply', 'subReply']],
+    threadViewNum: ['ALL', ['thread']],
+    threadShareNum: ['ALL', ['thread']],
+    threadReplyNum: ['ALL', ['thread']],
+    replySubReplyNum: ['ALL', ['reply']],
+    threadProperties: ['ALL', ['thread']],
+    authorExpGrade: ['SUB', ['reply', 'subReply']],
+    latestReplierUid: ['ALL', ['thread']],
+    latestReplierName: ['ALL', ['thread']],
+    latestReplierDisplayName: ['ALL', ['thread']],
+    latestReplierGender: ['ALL', ['thread']]
 };
 export const orderByRequiredPostTypes: RequiredPostTypes = {
-    pid: [['reply', 'subReply'], 'OR'],
-    spid: [['subReply'], 'OR']
+    pid: ['SUB', ['reply', 'subReply']],
+    spid: ['SUB', ['subReply']]
 };
 const paramTypes: { [P in 'array' | 'dateTimeRange' | 'numeric' | 'textMatch']: {
     default?: ParamPartialValue,

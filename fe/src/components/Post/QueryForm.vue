@@ -282,12 +282,12 @@ export default defineComponent({
             }
             const isRequiredPostTypes = (current: PostType[], required?: RequiredPostTypes[string]): required is undefined => {
                 if (required === undefined) return true; // not set means this param accepts any post types
-                if (required[1] === 'OR' && _.isEmpty(_.difference(current, _.sortBy(required[0])))) return true;
-                if (required[1] === 'AND' && _.isEqual(_.sortBy(required[0]), current)) return true;
+                if (required[0] === 'SUB' && _.isEmpty(_.difference(current, _.sortBy(required[1])))) return true;
+                if (required[0] === 'ALL' && _.isEqual(_.sortBy(required[1]), current)) return true;
                 return false;
             };
             const requiredPostTypesStringify = (required: NonNullable<RequiredPostTypes[string]>) =>
-                `${required[0].join(required[1] === 'OR' ? ' | ' : ' & ')}`;
+                `${required[1].join(required[0] === 'SUB' ? ' | ' : ' & ')}`;
             // check params required post types
             const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
             useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
