@@ -1,16 +1,16 @@
-import type { ApiError, ApiForumList, ApiQueryParam, ApiStatsForumPostsCount, ApiStatsForumPostsCountQP, ApiStatus, ApiStatusQP, ApiUsersQuery, ApiUsersQueryQP } from '@/api/index.d';
-import type { ObjEmpty } from '@/shared';
+import type { ApiError, ApiForumList, ApiPostsQuery, ApiPostsQueryQP, ApiStatsForumPostsCount, ApiStatsForumPostsCountQP, ApiStatus, ApiStatusQP, ApiUsersQuery, ApiUsersQueryQP } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import NProgress from 'nprogress';
 import qs from 'qs';
 import _ from 'lodash';
 
-export const isApiError = <T>(r: ApiError | T): r is ApiError => 'errorInfo' in r && _.isString(r.errorInfo);
+export const isApiError = <T>(r: ApiError | T): r is ApiError => 'errorCode' in r && 'errorInfo' in r;
 export const throwIfApiError = <T>(api: ApiError | T): T => {
     if (isApiError(api)) throw Error(JSON.stringify(api));
     return api;
 };
-export const getRequester = async <T extends ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam): Promise<ApiError | T> => {
+export const getRequester = async <T extends ApiError | unknown, Q>
+(endpoint: string, queryString?: Q & { reCAPTCHA?: string }): Promise<ApiError | T> => {
     NProgress.start();
     document.body.style.cursor = 'progress';
     let errorCode = 0;
@@ -49,12 +49,12 @@ export const getRequester = async <T extends ApiError | unknown>(endpoint: strin
         document.body.style.cursor = '';
     }
 };
-const reCAPTCHACheck = async (action = ''): Promise<ObjEmpty | { reCAPTCHA: string }> => new Promise((reslove, reject) => {
+const reCAPTCHACheck = async (action = ''): Promise<{ reCAPTCHA?: string }> => new Promise((reslove, reject) => {
     if (process.env.NODE_ENV === 'production') {
         grecaptcha.ready(() => {
             grecaptcha.execute(process.env.VUE_APP_RECAPTCHA_SITE_KEY, { action }).then(
-                token => {
-                    reslove(token);
+                reCAPTCHA => {
+                    reslove({ reCAPTCHA });
                 }, (...args) => {
                     reject(new Error(JSON.stringify(args)));
                 }
@@ -64,8 +64,9 @@ const reCAPTCHACheck = async (action = ''): Promise<ObjEmpty | { reCAPTCHA: stri
         reslove({});
     }
 });
-export const getRequesterWithReCAPTCHA = async <T extends ApiError | unknown>(endpoint: string, queryString?: ApiQueryParam, action = '') =>
-    getRequester<T>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) });
+export const getRequesterWithReCAPTCHA = async <T extends ApiError | unknown, Q>
+(endpoint: string, queryString?: Q, action = '') =>
+    getRequester<T, Q>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) } as Q);
 
 export const apiForumList = async (): Promise<ApiError | ApiForumList> =>
     getRequester('/forumList');
@@ -75,3 +76,5 @@ export const apiStatsForumPostsCount = async (qp: ApiStatsForumPostsCountQP): Pr
     getRequesterWithReCAPTCHA('/stats/forumPostsCount', qp);
 export const apiUsersQuery = async (qp: ApiUsersQueryQP): Promise<ApiError | ApiUsersQuery> =>
     getRequesterWithReCAPTCHA('/usersQuery', qp);
+export const apiPostsQuery = async (qp: ApiPostsQueryQP): Promise<ApiError | ApiPostsQuery> =>
+    getRequesterWithReCAPTCHA('/postsQuery', qp);

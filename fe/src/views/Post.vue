@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm @query="query($event)" :forumList="forumList" :isLoading="isLoading" />
+        <QueryForm @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" />
         <p>当前页数：{{ currentRoutePage }}</p>
         <Menu v-show="postPages.length !== 0" v-model="renderType" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -43,10 +43,11 @@
 
 <script lang="ts">
 import type { ApiError, ApiForumList } from '@/api/index.d';
-import { apiForumList, throwIfApiError } from '@/api';
+import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
 import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post/exports.vue';
+import type { ObjUnknown } from '@/shared';
 import { notyShow } from '@/shared';
 
 import { computed, defineComponent, onBeforeMount, onMounted, reactive, toRefs, watch, watchEffect } from 'vue';
@@ -67,7 +68,7 @@ export default defineComponent({
             isLoading: boolean,
             lastFetchError: ApiError | null,
             showPlaceholderPostList: boolean,
-            renderType: 'list' | 'raw' | 'table',
+            renderType: 'list' | 'table',
             postsNavExpanded: boolean,
             scrollStopDebounce: Function | null
         }>({
@@ -139,45 +140,27 @@ export default defineComponent({
                     params: { ...route.params, page }
                 }));
         };
-        const query = ({ queryParams, shouldReplacePage }) => {
+        const fetchPosts = async (queryParams: ObjUnknown, isNewQuery: boolean) => {
+            const startTime = Date.now();
             state.lastFetchError = null;
-            if (shouldReplacePage) {
-                state.postPages = []; // clear posts pages data before request to show loading placeholder
-            } else if (!_.isEmpty(_.filter(_.map(state.postPages, 'pages.currentPage'), i => i === state.currentRoutePage))) {
+            state.showPlaceholderPostList = true;
+            if (isNewQuery) state.postPages = [];
+            state.isLoading = true;
+            const postsQuery = await apiPostsQuery({
+                query: JSON.stringify(queryParams),
+                page: isNewQuery ? 1 : parseInt(route.params.page ?? '1')
+            }).finally(() => {
+                state.showPlaceholderPostList = false;
                 state.isLoading = false;
-                return; // cancel request when requesting page have already been loaded
-            }
-
-            const ajaxStartTime = Date.now();
-            if (window.$previousPostsQueryAjax !== undefined) { // cancel previous pending ajax to prevent conflict
-                window.$previousPostsQueryAjax.abort();
-            }
-            $$reCAPTCHACheck().then(reCAPTCHA => {
-                window.$previousPostsQueryAjax = $.getJSON(`${$$baseUrl}/api/postsQuery`, $.param({ query: JSON.stringify(queryParams), page: state.currentRoutePage, reCAPTCHA }));
-                window.$previousPostsQueryAjax
-                    .done(ajaxData => {
-                        if (shouldReplacePage) { // is loading next page data on the same query params or requesting new query with different params
-                            state.postPages = [ajaxData];
-                        } else {
-                            // insert after existing previous page, if not exist will be inserted at start
-                            state.postPages.splice(_.findIndex(state.postPages, { pages: { currentPage: state.currentRoutePage - 1 } }) + 1, 0, ajaxData);
-                        }
-                        notyShow('success', `已加载第${ajaxData.pages.currentPage}页 ${ajaxData.pages.itemsCount}条贴子 耗时${Date.now() - ajaxStartTime}ms`);
-                        this.updateTitle();
-                    })
-                    .fail(jqXHR => {
-                        state.postPages = [];
-                        if (jqXHR.responseJSON !== undefined) {
-                            const error = jqXHR.responseJSON;
-                            if (_.isObject(error.errorInfo)) { // response when laravel failed validate, same with ajaxError jquery event @ layout.blade.php
-                                state.lastFetchError = { code: error.errorCode, info: _.map(error.errorInfo, (info, paramName) => `参数 ${paramName}：${info.join('<br />')}`).join('<br />') };
-                            } else {
-                                state.lastFetchError = { code: error.errorCode, info: error.errorInfo };
-                            }
-                        }
-                    })
-                    .always(() => { state.isLoading = false });
             });
+            if (isApiError(postsQuery)) {
+                state.lastFetchError = postsQuery;
+                return false;
+            }
+            if (isNewQuery) state.postPages = [postsQuery];
+            else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
+            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.currentItems}条记录 耗时${Date.now() - startTime}ms`);
+            return true;
         };
 
         watch(route, (to) => {
@@ -198,7 +181,7 @@ export default defineComponent({
             state.forumList = throwIfApiError(await apiForumList());
         })();
 
-        return { ...toRefs(state), query, loadPage };
+        return { ...toRefs(state), fetchPosts, loadPage };
     }
 });
 

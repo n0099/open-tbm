@@ -188,6 +188,7 @@ export default defineComponent({
             clearParamDefaultValue,
             clearedParamsDefaultValue,
             clearedUniqueParamsDefaultValue,
+            flattenParams,
             parseParamRoute,
             submitParamRoute
         } = useQueryFormWithUniqueParams();
@@ -316,6 +317,7 @@ export default defineComponent({
             return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid;
         };
         const submit = () => {
+            emit('query', flattenParams());
             if (checkParams()) submitRoute();
         };
         Object.assign(useQueryFormLateBinding, { parseRoute }); // assign() will prevent losing ref

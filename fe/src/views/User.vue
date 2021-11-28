@@ -82,8 +82,10 @@ export default defineComponent({
         });
         onBeforeRouteUpdate(async (to, from) => {
             const isNewQuery = compareRouteIsNewQuery(to, from);
-            if (!isNewQuery
-                && !_.isEmpty(_.filter(state.userPages, i => i.pages.currentPage === Number(to.params.page ?? 1)))) return true;
+            if (!isNewQuery && !_.isEmpty(_.filter(
+                state.userPages,
+                i => i.pages.currentPage === Number(to.params.page ?? 1)
+            ))) return true;
             const isFetchSuccess = await fetchUsersData(to, isNewQuery);
             return isNewQuery ? true : isFetchSuccess;
         });

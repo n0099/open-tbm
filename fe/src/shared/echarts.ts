@@ -8,8 +8,6 @@ import { DateTime } from 'luxon';
 
 window.addEventListener('resize', _.throttle(() => {
     document.querySelectorAll<HTMLElement>('.echarts').forEach(echartsDom => {
-        // https://github.com/apache/echarts/issues/15896
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         echarts.getInstanceByDom(echartsDom)?.resize();
     });
 }, 200, { leading: false }));

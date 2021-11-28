@@ -195,6 +195,7 @@ export default <
         clearParamDefaultValue,
         clearedParamsDefaultValue,
         clearedUniqueParamsDefaultValue,
+        flattenParams,
         parseParamRoute,
         submitParamRoute
     };
