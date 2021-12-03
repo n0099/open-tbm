@@ -48,11 +48,11 @@ class UsersInfoParser
                     'fansNickname' => isset($user['fans_nickname']) ? Helper::nullableValidate($user['fans_nickname']) : null,
                     'iconInfo' => Helper::nullableValidate($user['iconinfo'], true),
                     'privacySettings' => null, // set by ReplyCrawler parent thread author info updating
-                    'alaInfo' => ! isset($user['ala_info']['lat'])
+                    'alaInfo' => !isset($user['ala_info']['lat'])
                         || (Helper::nullableValidate($user['ala_info']) !== null
                         && ((int)$user['ala_info']['lat'] === 0 && (int)$user['ala_info']['lng'] === 0))
-                        ? null
-                        : Helper::nullableValidate($user['ala_info'], true),
+                            ? null
+                            : Helper::nullableValidate($user['ala_info'], true),
                     'created_at' => $now,
                     'updated_at' => $now
                 ];

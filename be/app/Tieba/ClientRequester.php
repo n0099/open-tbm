@@ -18,7 +18,7 @@ class ClientRequester extends \GuzzleHttp\Client
      */
     public function requestAsync($method, $uri = '', array $options = []): \GuzzleHttp\Promise\PromiseInterface
     {
-        if (! isset($options['form_params'])) {
+        if (!isset($options['form_params'])) {
             throw new \InvalidArgumentException('Post form params must be determined');
         }
         if ($method !== 'POST') {

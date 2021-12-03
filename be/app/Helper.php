@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Support\Arr;
 use JetBrains\PhpStorm\Pure;
+use GuzzleHttp\Utils;
 
 class Helper
 {
@@ -16,7 +17,7 @@ class Helper
 
     public static function abortAPIIfNot(int $errorCode, bool $condition): void
     {
-        if (! $condition) {
+        if (!$condition) {
             static::abortAPI($errorCode);
         }
     }
@@ -63,8 +64,9 @@ class Helper
 
     public static function setKeyWithItemsValue(array $array, string $itemsKey): array
     {
+        // https://stackoverflow.com/questions/56108051/is-it-possible-to-assign-keys-to-array-elements-in-php-from-a-value-column-with
         // note array_column won't check is every item have determined key, if not it will fill with numeric key
-        return array_column($array, null, $itemsKey); // https://stackoverflow.com/questions/56108051/is-it-possible-to-assign-keys-to-array-elements-in-php-from-a-value-column-with
+        return array_column($array, null, $itemsKey);
     }
 
     public static function nullableValidate($value, bool $isJson = false)
@@ -72,16 +74,18 @@ class Helper
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
         }
-        return $isJson ? json_encode($value, JSON_THROW_ON_ERROR) : $value;
+        return $isJson ? Utils::jsonEncode($value) : $value;
     }
 
     public static function isArrayValuesAllEqualTo(array $haystack, $equalTo): bool
     {
-        return array_filter($haystack, fn($value) => $value !== $equalTo) === [];
+        return array_filter($haystack, fn ($value) => $value !== $equalTo) === [];
     }
 
-    #[Pure] public static function getRawSqlGroupByTimeGranularity(string $fieldName, array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year']): array
-    {
+    #[Pure] public static function getRawSqlGroupByTimeGranularity(
+        string $fieldName,
+        array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year']
+    ): array {
         return Arr::only([
             'minute' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:%i\") AS time",
             'hour' => "DATE_FORMAT({$fieldName}, \"%Y-%m-%d %H:00\") AS time",

@@ -71,7 +71,7 @@ abstract class PostModel extends Model
     protected function newRelatedInstance($class)
     {
         return tap((new $class())->setFid($this->fid), function ($instance) {
-            if (! $instance->getConnectionName()) {
+            if (!$instance->getConnectionName()) {
                 $instance->setConnection($this->connection);
             }
         });

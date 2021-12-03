@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use App\Timer;
 use Carbon\Carbon;
+use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
 class SubReplyCrawler extends Crawlable
@@ -39,7 +40,7 @@ class SubReplyCrawler extends Crawlable
 
         $tiebaClient = $this->getClientHelper();
         $webRequestTimer = new Timer();
-        $startPageSubRepliesInfo = json_decode($tiebaClient->post(
+        $startPageSubRepliesInfo = Utils::jsonDecode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/floor',
             [
                 'form_params' => [
@@ -48,7 +49,7 @@ class SubReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        )->getBody()->getContents());
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
@@ -94,7 +95,7 @@ class SubReplyCrawler extends Crawlable
             case 28: // {"error_code": "28", "error_msg": "您浏览的主题已不存在，去看看其他贴子吧"}
                 throw new TiebaException('Thread already deleted when crawling sub reply');
             default:
-                throw new \RuntimeException('Error from tieba client when crawling sub reply, raw json: ' . json_encode($responseJson, JSON_THROW_ON_ERROR));
+                throw new \RuntimeException('Error from tieba client when crawling sub reply, raw json: ' . Utils::jsonEncode($responseJson));
         }
 
         $subRepliesList = $responseJson['subpost_list'];

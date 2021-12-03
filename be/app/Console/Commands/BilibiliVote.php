@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Eloquent\BilibiliVoteModel;
 use App\Helper;
+use App\Eloquent\BilibiliVoteModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\Eloquent\UserModel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Spatie\Regex\Regex;
+use GuzzleHttp\Utils;
 
 class BilibiliVote extends Command
 {
@@ -40,7 +41,7 @@ class BilibiliVote extends Command
                 // $votersUsername = UserModel::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
                 foreach ($voteReplies as $voteReply) {
                     $voterUid = $voteReply['authorUid'];
-                    $voteRegex = Regex::match('/"text":"(.*?)投(.*?)号候选人/', json_encode($voteReply['content'], JSON_THROW_ON_ERROR) ?? '');
+                    $voteRegex = Regex::match('/"text":"(.*?)投(.*?)号候选人/', Utils::jsonEncode($voteReply['content']) ?? '');
                     $voteBy = $voteRegex->groupOr(1, '');
                     $voteFor = trim($voteRegex->groupOr(2, ''));
                     $isVoteValid = $voteRegex->hasMatch()

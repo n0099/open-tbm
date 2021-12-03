@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use App\Timer;
 use Carbon\Carbon;
+use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
 class ReplyCrawler extends Crawlable
@@ -41,7 +42,7 @@ class ReplyCrawler extends Crawlable
 
         $tiebaClient = $this->getClientHelper();
         $webRequestTimer = new Timer();
-        $startPageRepliesInfo = json_decode($tiebaClient->post(
+        $startPageRepliesInfo = Utils::jsonDecode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/pb/page',
             [
                 'form_params' => [ // reverse order will be ['last' => 1, 'r' => 1]
@@ -49,7 +50,7 @@ class ReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        )->getBody()->getContents());
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
@@ -93,7 +94,7 @@ class ReplyCrawler extends Crawlable
             case 4: // {"error_code": "4", "error_msg": "贴子可能已被删除"}
                 throw new TiebaException('Thread already deleted when crawling reply');
             default:
-                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . json_encode($responseJson, JSON_THROW_ON_ERROR));
+                throw new \RuntimeException('Error from tieba client when crawling reply, raw json: ' . Utils::jsonEncode($responseJson));
         }
 
         $parentThreadInfo = $responseJson['thread'];

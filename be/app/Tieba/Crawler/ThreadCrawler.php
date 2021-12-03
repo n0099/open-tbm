@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\TiebaException;
 use App\Timer;
 use Carbon\Carbon;
+use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
 class ThreadCrawler extends Crawlable
@@ -39,7 +40,7 @@ class ThreadCrawler extends Crawlable
 
         $tiebaClient = $this->getClientHelper();
         $webRequestTimer = new Timer();
-        $threadsInfo = json_decode($tiebaClient->post(
+        $threadsInfo = Utils::jsonDecode($tiebaClient->post(
             'http://c.tieba.baidu.com/c/f/frs/page',
             [
                 'form_params' => [
@@ -48,7 +49,7 @@ class ThreadCrawler extends Crawlable
                     'rn' => 50
                 ]
             ]
-        )->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        )->getBody()->getContents());
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
@@ -90,7 +91,7 @@ class ThreadCrawler extends Crawlable
             case 0: // no error
                 break;
             default:
-                throw new \RuntimeException('Error from tieba client when crawling thread, raw json: ' . json_encode($responseJson, JSON_THROW_ON_ERROR));
+                throw new \RuntimeException('Error from tieba client when crawling thread, raw json: ' . Utils::jsonEncode($responseJson));
         }
 
         $threadsList = $responseJson['thread_list'];

@@ -75,10 +75,10 @@ import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import type { AxisPointerComponentOption, DataZoomComponentOption, DatasetComponentOption, GraphicComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TimelineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
 import { DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';
-import { LabelLayout, UniversalTransition } from 'echarts/features';
+import { LabelLayout } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
-echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent, UniversalTransition]);
+echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent]);
 
 interface CandidateVotesCount { officialValidCount: number | null, validCount: number, invalidCount: number }
 type CandidatesDetailData = Array<CandidateVotesCount & { candidateIndex: number, candidateName: string }>;

@@ -52,7 +52,7 @@ class ThreadQueue extends CrawlerQueue
                     $cancelCurrentCrawler = true; // cancel pending thread crawl because it's already crawling
                 }
             }
-            if (! $cancelCurrentCrawler) {
+            if (!$cancelCurrentCrawler) {
                 CrawlingPostModel::insert(array_merge($crawlingForumInfo, [
                     'startTime' => microtime(true)
                 ])); // lock for current pending thread crawler
@@ -90,7 +90,7 @@ class ThreadQueue extends CrawlerQueue
                         }
                     }
                 }
-                if (! isset($oldThreadsInfo[$tid]) // do we have to crawl new replies under thread
+                if (!isset($oldThreadsInfo[$tid]) // do we have to crawl new replies under thread
                     || (int)$newThread['replyNum'] !== $oldThreadsInfo[$tid]['replyNum']
                     || strtotime($newThread['latestReplyTime']) !== strtotime($oldThreadsInfo[$tid]['latestReplyTime'])) {
                     $firstReplyCrawlPage = 1;

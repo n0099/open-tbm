@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Tieba\Eloquent\IndexModel;
 use App\Helper;
-use App\Tieba\Eloquent\ForumModel;
-use App\Tieba\Eloquent\PostModelFactory;
-use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Post\Post;
+use App\Tieba\Eloquent\IndexModel;
+use App\Tieba\Eloquent\ForumModel;
+use App\Tieba\Eloquent\UserModel;
+use App\Tieba\Eloquent\PostModelFactory;
+use GuzzleHttp\Utils;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -19,38 +20,31 @@ class PostsQuery extends Controller
 
     public function query(\Illuminate\Http\Request $request): array
     {
-        /**
-         * @param array|string $names
-         * @return array
-         */
-        $filterParams = function ($names) use (&$queryParams): array { // cannot use one-liner fn() => syntax here since $queryParams won't sync changes
-            return array_values(array_filter($queryParams, fn(array $param): bool => \in_array(array_keys($param)[0], (array)$names, true)));
+        $filterParams = function (array | string $names) use (&$queryParams): array { // cannot use one-liner fn () => syntax here since $queryParams won't sync changes
+            return array_values(array_filter(
+                $queryParams,
+                fn (array $param): bool => \in_array(array_keys($param)[0], (array)$names, true))
+            );
         }; // array_values() will remove keys remained by array_filter() from original $queryParams
-        /**
-         * @param string $name
-         * @return mixed|null
-         */
-        $getParamValue = fn(string $name) => $filterParams($name)[0][$name] ?? null;
-        /**
-         * @param string $name
-         * @param mixed $value
-         * @throws \InvalidArgumentException
-         */
+        $getParamValue = fn (string $name) => $filterParams($name)[0][$name] ?? null;
         $setParamValue = function (string $name, $value) use (&$queryParams): void {
-            $filteredParams = array_keys(array_filter($queryParams, fn(array $param): bool => array_keys($param)[0] === $name));
+            $filteredParams = array_keys(array_filter($queryParams, fn (array $param): bool => array_keys($param)[0] === $name));
             if ($filteredParams === []) {
                 throw new \InvalidArgumentException('Cannot find param with given param name');
             }
             $queryParams[$filteredParams[0]][$name] = $value; // only set first param's value which occurs in $queryParams
         };
 
-        $queryParams = json_decode($request->validate(['page' => 'integer', 'query' => 'json'])['query'], true, 512, JSON_THROW_ON_ERROR);
+        $queryParams = (array)Utils::jsonDecode($request->validate(['page' => 'integer', 'query' => 'json'])['query']);
         $paramsValidValue = [
             'userGender' => [0, 1, 2],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin']
         ];
         $dateRangeValidator = function (string $attribute, string $value, \Closure $fail) {
-            \Validator::make(explode(',', $value), ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0'])->validate();
+            \Validator::make(
+                explode(',', $value),
+                ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0']
+            )->validate();
         };
         \Validator::make($queryParams, [ // note we haven't validate is sub param have corresponding main param yet
             '*.fid' => 'integer',
@@ -80,18 +74,20 @@ class PostsQuery extends Controller
             '*.spaceSplit' => 'boolean'
         ])->validate();
 
-        Helper::abortAPIIf(40001, \count($queryParams) === \count($filterParams(['postTypes', 'orderBy']))); // only fill postTypes and/or orderBy uniqueParam doesn't query anything
+        // only fill postTypes and/or orderBy uniqueParam doesn't query anything
+        Helper::abortAPIIf(40001, \count($queryParams) === \count($filterParams(['postTypes', 'orderBy'])));
         $uniqueParamsName = ['fid', 'postTypes', 'orderBy'];
         $postIDParamsName = ['tid', 'pid', 'spid'];
         $isPostIDQuery = \count($queryParams) === \count($filterParams([...$uniqueParamsName, ...$postIDParamsName])) // is there no other params
             && \count($filterParams($postIDParamsName)) === 1 // is there only one post id param
             && array_column($queryParams, 'range') === []; // is post id param haven't any sub param
-        $isFidQuery = $getParamValue('fid') !== null && \count($queryParams) === \count($filterParams($uniqueParamsName)); // is fid unique param exists and there's no other params
+        // is fid unique param exists and there's no other params
+        $isFidQuery = $getParamValue('fid') !== null && \count($queryParams) === \count($filterParams($uniqueParamsName));
         $isIndexQuery = $isPostIDQuery || $isFidQuery;
         $isSearchQuery = false;
-        if (! $isIndexQuery) {
+        if (!$isIndexQuery) {
             Helper::abortAPIIf(40002, $getParamValue('fid') === null);
-            $isSearchQuery = ! $isIndexQuery;
+            $isSearchQuery = !$isIndexQuery;
         }
 
         foreach ($uniqueParamsName as $uniqueParamName) {
@@ -103,7 +99,10 @@ class PostsQuery extends Controller
         ];
         foreach ($uniqueParamsDefaultValue as $uniqueParamName => $uniqueParamDefaultValue) {
             if ($getParamValue($uniqueParamName) === null) { // add unique params with default value when it's not presented
-                $queryParams[] = array_merge([$uniqueParamName => $uniqueParamDefaultValue['value']], $uniqueParamDefaultValue['subParam'] ?? []);
+                $queryParams[] = array_merge(
+                    [$uniqueParamName => $uniqueParamDefaultValue['value']],
+                    $uniqueParamDefaultValue['subParam'] ?? []
+                );
             }
         }
         $setParamValue('postTypes', Arr::sort($getParamValue('postTypes'))); // sort here to prevent further sort while validating
@@ -174,13 +173,16 @@ class PostsQuery extends Controller
         if ($isSearchQuery) {
             $queryResult = $this->searchQuery($queryParams);
         } elseif ($isIndexQuery) {
-            $queryResult = $this->indexQuery(array_reduce($filterParams([...$uniqueParamsName, ...$postIDParamsName]), fn(array $flatParams, array $param): array => array_merge($flatParams, $param), [])); // flatten unique query params
+            $queryResult = $this->indexQuery(array_reduce(
+                $filterParams([...$uniqueParamsName, ...$postIDParamsName]),
+                fn (array $flatParams, array $param): array => array_merge($flatParams, $param), [])
+            ); // flatten unique query params
         }
         ['result' => $queryResult, 'pages' => $pagesInfo] = $queryResult;
 
         return [
             'pages' => $pagesInfo,
-            'forum' => ForumModel::where('fid', $queryResult['fid'])->hidePrivateFields()->first()->toArray(),
+            'forum' => ForumModel::where('fid', $queryResult['fid'])->hidePrivateFields()->first()?->toArray(),
             'threads' => $this->getNestedPostsInfoByID($queryResult, $isIndexQuery),
             'users' => UserModel::whereIn(
                 'uid',
@@ -209,7 +211,7 @@ class PostsQuery extends Controller
             }
             return $query->where(function ($query) use ($param, $fieldName, $notString, $paramValue) {
                 $notOrWhere = $notString === 'Not' ? '' : 'or'; // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-                $addMatchKeyword = fn(string $keyword) => $query->{"{$notOrWhere}Where"}($fieldName, "{$notString} LIKE", $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword);
+                $addMatchKeyword = fn (string $keyword) => $query->{"{$notOrWhere}Where"}($fieldName, "{$notString} LIKE", $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword);
                 if ($param['spaceSplit']) {
                     foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multiple search keyword by space char
                         $addMatchKeyword($splitedKeyword);
@@ -259,17 +261,14 @@ class PostsQuery extends Controller
                     return $postQuery->{"where{$cause}"}($fieldsName[$paramName] ?? $paramName, explode(',', $paramValue));
                 }
                 return $postQuery->where($fieldsName[$paramName] ?? $paramName, $param['not'] ? $numericParamsReverseRange[$param['range']] : $param['range'], $paramValue);
-                break;
             // textMatchParams
             case 'threadTitle':
             case 'postContent':
                 return $applyTextMatchParamsQuery($postQuery, $paramName === 'threadTitle' ? 'title' : 'content', $not, $paramValue, $param);
-                break;
 
             case 'postTime':
             case 'latestReplyTime':
                 return $postQuery->{"where{$not}Between"}($paramName, explode(',', $paramValue));
-                break;
 
             case 'threadProperties':
                 foreach ($paramValue as $threadProperty) {
@@ -283,7 +282,6 @@ class PostsQuery extends Controller
                     }
                 }
                 return $postQuery;
-                break;
 
             case 'authorName':
             case 'latestReplierName':
@@ -292,18 +290,15 @@ class PostsQuery extends Controller
                 $userType = str_starts_with($paramName, 'author') ? 'author' : 'latestReplier';
                 $fieldName = str_ends_with($paramName, 'DisplayName') ? 'displayName' : 'name';
                 return $postQuery->{"where{$not}In"}("{$userType}Uid", $applyTextMatchParamsQuery(UserModel::newQuery(), $fieldName, $not, $paramValue, $param));
-                break;
             case 'authorGender':
             case 'latestReplierGender':
                 $userType = str_starts_with($paramName, 'author') ? 'author' : 'latestReplier';
                 return $postQuery->{"where{$not}In"}("{$userType}Uid", UserModel::where('gender', $paramValue));
-                break;
             case 'authorManagerType':
                 if ($paramValue === 'NULL') {
                     return $postQuery->{"where{$not}Null"}('authorManagerType');
                 }
                 return $postQuery->where('authorManagerType', $param['not'] ? '!=' : '=', $paramValue);
-                break;
             default:
                 return $postQuery;
         }
@@ -311,9 +306,12 @@ class PostsQuery extends Controller
 
     private function searchQuery(array $queryParams): array
     {
-        $getUniqueParamValue = fn(string $name) => Arr::first($queryParams, fn(array $param): bool => array_keys($param)[0] === $name)[$name];
+        $getUniqueParamValue = fn (string $name) => Arr::first($queryParams, fn (array $param): bool => array_keys($param)[0] === $name)[$name];
         $postQueries = [];
-        foreach (Arr::only(PostModelFactory::getPostModelsByFid($getUniqueParamValue('fid')), $getUniqueParamValue('postTypes')) as $postType => $postModel) {
+        foreach (Arr::only(PostModelFactory::getPostModelsByFid(
+            $getUniqueParamValue('fid')),
+            $getUniqueParamValue('postTypes')
+        ) as $postType => $postModel) {
             $postQuery = $postModel->newQuery();
             foreach ($queryParams as $param) {
                 $postQueries[$postType] = $this->applySearchQueryOnPostModel($postQuery, $param);
@@ -352,9 +350,9 @@ class PostsQuery extends Controller
         return [
             'result' => $postsQueriedInfo,
             'pages' => [ // todo: should cast simplePagination to array in $postQueries to prevent dynamic call method by string
-                'firstItem' => $pageInfoUnion($postQueries, 'firstItem', fn(array $unionValues) => min($unionValues)),
-                'itemsCount' => $pageInfoUnion($postQueries, 'count', fn(array $unionValues) => array_sum($unionValues)),
-                'currentPage' => $pageInfoUnion($postQueries, 'currentPage', fn(array $unionValues) => min($unionValues))
+                'firstItem' => $pageInfoUnion($postQueries, 'firstItem', fn (array $unionValues) => min($unionValues)),
+                'itemsCount' => $pageInfoUnion($postQueries, 'count', fn (array $unionValues) => array_sum($unionValues)),
+                'currentPage' => $pageInfoUnion($postQueries, 'currentPage', fn (array $unionValues) => min($unionValues))
             ]
         ];
     }
@@ -378,12 +376,11 @@ class PostsQuery extends Controller
         Helper::abortAPIIf(40401, $indexQuery->isEmpty());
 
         $postsQueriedInfo = [
-            'fid' => 0,
+            'fid' => $indexQuery->pluck('fid')->first(),
             'thread' => [],
             'reply' => [],
             'subReply' => []
         ];
-        $postsQueriedInfo['fid'] = $indexQuery->pluck('fid')->first();
         foreach (['thread' => 'tid', 'reply' => 'pid', 'subReply' => 'spid'] as $postType => $postIDName) { // assign queried posts id from $indexQuery
             $postsQueriedInfo[$postType] = $indexQuery->where('type', $postType)->toArray();
         }
@@ -406,26 +403,29 @@ class PostsQuery extends Controller
         $spids = array_column($postsInfo['subReply'], 'spid');
         $threadsInfo = collect($tids === []
             ? []
-            : ($isInfoOnlyContainsPostsID
+            : (
+                $isInfoOnlyContainsPostsID
                 ? $postModels['thread']->tid($tids)->hidePrivateFields()->get()->toArray()
                 : $postsInfo['thread']
             ));
         $repliesInfo = collect($pids === []
             ? []
-            : ($isInfoOnlyContainsPostsID
+            : (
+                $isInfoOnlyContainsPostsID
                 ? $postModels['reply']->pid($pids)->hidePrivateFields()->get()->toArray()
                 : $postsInfo['reply']
             ));
         $subRepliesInfo = collect($spids === []
             ? []
-            : ($isInfoOnlyContainsPostsID
+            : (
+                $isInfoOnlyContainsPostsID
                 ? $postModels['subReply']->spid($spids)->hidePrivateFields()->get()->toArray()
                 : $postsInfo['subReply']
             ));
 
-        $isSubIDsMissInOriginIDs = fn(Collection $originIDs, Collection $subIDs): bool
+        $isSubIDsMissInOriginIDs = fn (Collection $originIDs, Collection $subIDs): bool
         => $subIDs->contains(
-            fn(int $subID): bool => ! $originIDs->contains($subID)
+            fn (int $subID): bool => !$originIDs->contains($subID)
         );
 
         $tidsInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();

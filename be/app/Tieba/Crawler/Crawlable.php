@@ -6,6 +6,7 @@ use App\Exceptions\ExceptionAdditionInfo;
 use App\Tieba\ClientRequester;
 use App\Tieba\Eloquent\IndexModel;
 use App\Timer;
+use GuzzleHttp\Utils;
 
 abstract class Crawlable
 {
@@ -95,7 +96,7 @@ abstract class Crawlable
     {
         $arrayAfterGroup = [];
         foreach ($arrayToGroup as $item) {
-            $nullValueFields = array_map(fn() => false, array_flip($nullableFields));
+            $nullValueFields = array_map(fn () => false, array_flip($nullableFields));
             foreach ($nullValueFields as $nullableFieldName => $isNull) {
                 $nullValueFields[$nullableFieldName] = ($item[$nullableFieldName] ?? null) === null;
             }
@@ -132,7 +133,7 @@ abstract class Crawlable
             'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTimer) {
                 $this->profileWebRequestStopped($webRequestTimer);
                 ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                $this->checkThenParsePostsInfo(json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR));
+                $this->checkThenParsePostsInfo(Utils::jsonDecode($response->getBody()->getContents()));
                 $webRequestTimer->start(); // resume timing for possible succeed web request
             },
             'rejected' => function (\GuzzleHttp\Exception\TransferException $e, int $index) {
