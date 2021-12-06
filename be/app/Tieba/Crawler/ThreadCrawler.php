@@ -49,7 +49,7 @@ class ThreadCrawler extends Crawlable
                     'rn' => 50
                 ]
             ]
-        )->getBody()->getContents());
+        )->getBody()->getContents(), true);
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {

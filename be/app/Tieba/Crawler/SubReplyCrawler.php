@@ -49,7 +49,7 @@ class SubReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody()->getContents());
+        )->getBody()->getContents(), true);
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {
@@ -132,7 +132,7 @@ class SubReplyCrawler extends Crawlable
 
             $this->profiles['parsedPostTimes']++;
             $subRepliesInfo[] = $currentInfo;
-            $indexesInfo[] = array_merge(Arr::only($currentInfo, ['tid', 'pid', 'spid', 'authorUid']), [
+            $indexesInfo[] = array_merge(Arr::only($currentInfo, [...Helper::POSTS_ID, 'authorUid']), [
                 'created_at' => $now,
                 'updated_at' => $now,
                 'postTime' => $currentInfo['postTime'],

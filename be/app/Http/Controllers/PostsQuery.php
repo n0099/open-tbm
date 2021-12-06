@@ -18,35 +18,47 @@ class PostsQuery extends Controller
 {
     private int $pagingPerPageItems = 200;
 
+    private static function getParamName(array $param): string
+    {
+        return (string)array_keys($param)[0];
+    }
+
     public function query(\Illuminate\Http\Request $request): array
     {
-        $filterParams = function (array | string $names) use (&$queryParams): array { // cannot use one-liner fn () => syntax here since $queryParams won't sync changes
+        $filterParams = function (array | string $names) use (&$queryParams): array {
+            // cannot use one-liner fn () => syntax here since we need $queryParams to sync changes
+            // array_values() will remove keys remained by array_filter() from original $queryParams
             return array_values(array_filter(
                 $queryParams,
-                fn (array $param): bool => \in_array(array_keys($param)[0], (array)$names, true))
-            );
-        }; // array_values() will remove keys remained by array_filter() from original $queryParams
+                fn (array $param): bool => \in_array(self::getParamName($param), (array)$names, true)
+            ));
+        };
+        // only get first occurred param's value
         $getParamValue = fn (string $name) => $filterParams($name)[0][$name] ?? null;
         $setParamValue = function (string $name, $value) use (&$queryParams): void {
-            $filteredParams = array_keys(array_filter($queryParams, fn (array $param): bool => array_keys($param)[0] === $name));
+            $filteredParams = array_keys(array_filter($queryParams, fn (array $param): bool => self::getParamName($param) === $name));
             if ($filteredParams === []) {
                 throw new \InvalidArgumentException('Cannot find param with given param name');
             }
             $queryParams[$filteredParams[0]][$name] = $value; // only set first param's value which occurs in $queryParams
         };
 
-        $queryParams = (array)Utils::jsonDecode($request->validate(['page' => 'integer', 'query' => 'json'])['query']);
+        $queryParams = (array)Utils::jsonDecode($request->validate([
+            'page' => 'integer',
+            'query' => 'json'
+        ])['query'], true);
         $paramsValidValue = [
             'userGender' => [0, 1, 2],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin']
         ];
-        $dateRangeValidator = function (string $attribute, string $value, \Closure $fail) {
+        $dateRangeValidator = function ($_, string $value): void {
             \Validator::make(
                 explode(',', $value),
                 ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0']
             )->validate();
         };
-        \Validator::make($queryParams, [ // note we haven't validate is sub param have corresponding main param yet
+        // note here we haven't validate that is every sub param have a corresponding main param yet
+        \Validator::make($queryParams, [
             '*.fid' => 'integer',
             '*.postTypes' => 'array|in:thread,reply,subReply',
             '*.orderBy' => 'string|in:postTime,tid,pid,spid',
@@ -68,115 +80,126 @@ class PostsQuery extends Controller
             '*.latestReplierUid' => 'integer',
             '*.latestReplierGender' => Rule::in($paramsValidValue['userGender']),
             // sub param of tid, pid, spid, threadViewNum, threadShareNum, threadReplyNum, replySubReplyNum, authorUid, authorExpGrade, latestReplierUid
-            '*.range' => 'in:<,=,>',
+            '*.range' => 'in:<,=,>,IN,BETWEEN',
             // sub param of threadTitle, postContent, authorName, authorDisplayName, latestReplierName, latestReplierDisplayName
-            '*.matchBy' => 'in:implicit,explicit',
+            '*.matchBy' => 'in:implicit,explicit,regex',
             '*.spaceSplit' => 'boolean'
         ])->validate();
-
         // only fill postTypes and/or orderBy uniqueParam doesn't query anything
         Helper::abortAPIIf(40001, \count($queryParams) === \count($filterParams(['postTypes', 'orderBy'])));
+
         $uniqueParamsName = ['fid', 'postTypes', 'orderBy'];
-        $postIDParamsName = ['tid', 'pid', 'spid'];
-        $isPostIDQuery = \count($queryParams) === \count($filterParams([...$uniqueParamsName, ...$postIDParamsName])) // is there no other params
-            && \count($filterParams($postIDParamsName)) === 1 // is there only one post id param
+        $isPostIDQuery = \count($queryParams) === \count($filterParams([...$uniqueParamsName, ...Helper::POSTS_ID])) // is there no other params
+            && \count($filterParams(Helper::POSTS_ID)) === 1 // is there only one post id param
             && array_column($queryParams, 'range') === []; // is post id param haven't any sub param
-        // is fid unique param exists and there's no other params
-        $isFidQuery = $getParamValue('fid') !== null && \count($queryParams) === \count($filterParams($uniqueParamsName));
+        // is fid param exists and there's no other params
+        $isFidParamNull = $getParamValue('fid') === null;
+        $isFidQuery = !$isFidParamNull && \count($queryParams) === \count($filterParams($uniqueParamsName));
         $isIndexQuery = $isPostIDQuery || $isFidQuery;
-        $isSearchQuery = false;
-        if (!$isIndexQuery) {
-            Helper::abortAPIIf(40002, $getParamValue('fid') === null);
-            $isSearchQuery = !$isIndexQuery;
+        $isSearchQuery = !$isIndexQuery;
+        if ($isSearchQuery) {
+            Helper::abortAPIIf(40002, $isFidParamNull);
         }
 
-        foreach ($uniqueParamsName as $uniqueParamName) {
-            Helper::abortAPIIf(40005, \count($filterParams($uniqueParamName)) > 1); // is same unique param only appeared once
+        foreach ($uniqueParamsName as $uniqueParamName) { // is all unique param only appeared once
+            Helper::abortAPIIf(40005, \count($filterParams($uniqueParamName)) > 1);
         }
         $uniqueParamsDefaultValue = [
-            'postTypes' => ['value' => ['thread', 'reply', 'subReply']],
+            'postTypes' => ['value' => Helper::POST_TYPES],
             'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'default']]
         ];
         foreach ($uniqueParamsDefaultValue as $uniqueParamName => $uniqueParamDefaultValue) {
-            if ($getParamValue($uniqueParamName) === null) { // add unique params with default value when it's not presented
+            // add unique params with default value when it's not presented in request
+            if ($getParamValue($uniqueParamName) === null) {
                 $queryParams[] = array_merge(
                     [$uniqueParamName => $uniqueParamDefaultValue['value']],
                     $uniqueParamDefaultValue['subParam'] ?? []
                 );
             }
         }
-        $setParamValue('postTypes', Arr::sort($getParamValue('postTypes'))); // sort here to prevent further sort while validating
 
-        $numericParamsDefaultValue = ['range' => '='];
-        $textMatchParamsDefaultValue = ['matchBy' => 'implicit', 'spaceSplit' => false];
-        $subParamsDefaultValue = [
-            'tid' => $numericParamsDefaultValue,
-            'pid' => $numericParamsDefaultValue,
-            'spid' => $numericParamsDefaultValue,
-            'threadTitle' => $textMatchParamsDefaultValue,
-            'postContent' => $textMatchParamsDefaultValue,
-            'threadViewNum' => $numericParamsDefaultValue,
-            'threadShareNum' => $numericParamsDefaultValue,
-            'threadReplyNum' => $numericParamsDefaultValue,
-            'replySubReplyNum' => $numericParamsDefaultValue,
-            'authorUid' => $numericParamsDefaultValue,
-            'authorName' => $textMatchParamsDefaultValue,
-            'authorDisplayName' => $textMatchParamsDefaultValue,
-            'authorExpGrade' => $numericParamsDefaultValue,
-            'latestReplierUid' => $numericParamsDefaultValue,
-            'latestReplierName' => $textMatchParamsDefaultValue,
-            'latestReplierDisplayName' => $textMatchParamsDefaultValue,
+        $paramDefaultValueByType = [
+            'numeric' => ['range' => '='],
+            'text' => ['matchBy' => 'implicit', 'spaceSplit' => false]
         ];
-        foreach ($queryParams as $paramIndex => $param) { // set sub params with default value
-            foreach ($subParamsDefaultValue[array_keys($param)[0]] ?? [] as $subParamName => $subParamDefaultValue) {
-                $queryParams[$paramIndex][$subParamName] ??= $subParamDefaultValue;
-                $queryParams[$paramIndex]['not'] ??= false;
+        $paramsNameByType = [
+            'numeric' => [
+                'tid',
+                'pid',
+                'spid',
+                'threadViewNum',
+                'threadShareNum',
+                'threadReplyNum',
+                'replySubReplyNum',
+                'authorUid',
+                'authorExpGrade',
+                'latestReplierUid'
+            ],
+            'text' => [
+                'threadTitle',
+                'postContent',
+                'authorName',
+                'authorDisplayName',
+                'latestReplierName',
+                'latestReplierDisplayName'
+            ]
+        ];
+        $subParamsDefaultValue = collect($paramsNameByType)->flatMap(fn (array $names, string $type) =>
+            array_fill_keys($names, $paramDefaultValueByType[$type]))->toArray();
+        foreach ($queryParams as &$param) { // set sub params with default value
+            foreach ($subParamsDefaultValue[self::getParamName($param)] ?? [] as $subParamName => $subParamDefaultValue) {
+                $param[$subParamName] ??= $subParamDefaultValue;
             }
         }
+        unset($param);
+
+        $setParamValue('postTypes', Arr::sort($getParamValue('postTypes'))); // sort here to prevent further sort while validating
+        $currentPostTypes = $getParamValue('postTypes');
+        $isRequiredPostTypes = fn (array $current, array $required): bool =>
+            $required[0] === 'SUB'
+                ? array_diff($current, Arr::sort($required[1])) === []
+                : $current === Arr::sort($required[1]);
 
         $paramsRequiredPostTypes = [
-            'pid' => [['reply', 'subReply'], 'OR'],
-            'spid' => [['subReply'], 'AND'],
-            'latestReplyTime' => [['thread'], 'AND'],
-            'threadTitle' => [['thread'], 'AND'],
-            'postContent' => [['reply', 'subReply'], 'OR'],
-            'threadViewNum' => [['thread'], 'AND'],
-            'threadShareNum' => [['thread'], 'AND'],
-            'threadReplyNum' => [['thread'], 'AND'],
-            'replySubReplyNum' => [['reply'], 'AND'],
-            'threadProperties' => [['thread'], 'AND'],
-            'authorExpGrade' => [['reply', 'subReply'], 'OR'],
-            'latestReplierUid' => [['thread'], 'AND'],
-            'latestReplierName' => [['thread'], 'AND'],
-            'latestReplierDisplayName' => [['thread'], 'AND'],
-            'latestReplierGender' => [['thread'], 'AND']
+            'pid' => ['SUB', ['reply', 'subReply']],
+            'spid' => ['ALL', ['subReply']],
+            'latestReplyTime' => ['ALL', ['thread']],
+            'threadTitle' => ['ALL', ['thread']],
+            'postContent' => ['SUB', ['reply', 'subReply']],
+            'threadViewNum' => ['ALL', ['thread']],
+            'threadShareNum' => ['ALL', ['thread']],
+            'threadReplyNum' => ['ALL', ['thread']],
+            'replySubReplyNum' => ['ALL', ['reply']],
+            'threadProperties' => ['ALL', ['thread']],
+            'authorExpGrade' => ['SUB', ['reply', 'subReply']],
+            'latestReplierUid' => ['ALL', ['thread']],
+            'latestReplierName' => ['ALL', ['thread']],
+            'latestReplierDisplayName' => ['ALL', ['thread']],
+            'latestReplierGender' => ['ALL', ['thread']]
         ];
         foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
             if ($filterParams($paramName) !== []) {
-                Helper::abortAPIIfNot(40003, $requiredPostTypes[1] === 'OR'
-                    ? array_diff($getParamValue('postTypes'), $requiredPostTypes[0]) === []
-                    : $getParamValue('postTypes') === Arr::sort($requiredPostTypes[0]));
+                Helper::abortAPIIfNot(40003, !$isRequiredPostTypes($currentPostTypes, $requiredPostTypes));
             }
         }
 
         $orderByRequiredPostTypes = [
-            'pid' => [['reply', 'subReply'], 'OR'],
-            'spid' => [['subReply'], 'OR']
+            'pid' => ['SUB', ['reply', 'subReply']],
+            'spid' => ['SUB', ['subReply']]
         ];
-        if (\array_key_exists($getParamValue('orderBy'), $orderByRequiredPostTypes)) {
-            $currentOrderByRequiredPostTypes = $orderByRequiredPostTypes[$getParamValue('orderBy')];
-            Helper::abortAPIIfNot(40004, $currentOrderByRequiredPostTypes[1] === 'OR'
-                ? array_diff($getParamValue('postTypes'), $currentOrderByRequiredPostTypes[0]) === []
-                : $getParamValue('postTypes') === Arr::sort($currentOrderByRequiredPostTypes[0]));
+        $currentOrderBy = $getParamValue('orderBy');
+        if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
+            Helper::abortAPIIfNot(40004, !$isRequiredPostTypes($currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]));
         }
 
         if ($isSearchQuery) {
             $queryResult = $this->searchQuery($queryParams);
         } elseif ($isIndexQuery) {
             $queryResult = $this->indexQuery(array_reduce(
-                $filterParams([...$uniqueParamsName, ...$postIDParamsName]),
-                fn (array $flatParams, array $param): array => array_merge($flatParams, $param), [])
-            ); // flatten unique query params
+                $filterParams([...$uniqueParamsName, ...Helper::POSTS_ID]),
+                fn (array $flatParams, array $param): array => array_merge($flatParams, $param),
+                []
+            )); // flatten unique query params
         }
         ['result' => $queryResult, 'pages' => $pagesInfo] = $queryResult;
 
@@ -221,7 +244,7 @@ class PostsQuery extends Controller
                 }
             });
         };
-        $paramName = array_keys($param)[0];
+        $paramName = self::getParamName($param);
         $paramValue = $param[$paramName];
 
         $numericParamsReverseRange = [
@@ -306,10 +329,11 @@ class PostsQuery extends Controller
 
     private function searchQuery(array $queryParams): array
     {
-        $getUniqueParamValue = fn (string $name) => Arr::first($queryParams, fn (array $param): bool => array_keys($param)[0] === $name)[$name];
+        $getUniqueParamValue = fn (string $name) =>
+            Arr::first($queryParams, fn (array $param): bool => self::getParamName($param) === $name)[$name];
         $postQueries = [];
-        foreach (Arr::only(PostModelFactory::getPostModelsByFid(
-            $getUniqueParamValue('fid')),
+        foreach (Arr::only(
+            PostModelFactory::getPostModelsByFid($getUniqueParamValue('fid')),
             $getUniqueParamValue('postTypes')
         ) as $postType => $postModel) {
             $postQuery = $postModel->newQuery();
@@ -318,12 +342,10 @@ class PostsQuery extends Controller
             }
         }
 
-        $postsQueriedInfo = [
-            'fid' => $getUniqueParamValue('fid'),
-            'thread' => [],
-            'reply' => [],
-            'subReply' => []
-        ];
+        $postsQueriedInfo = array_merge(
+            ['fid' => $getUniqueParamValue('fid')],
+            array_fill_keys(Helper::POST_TYPES, [])
+        );
         foreach ($postQueries as $postType => $postQuery) {
             $postQueries[$postType] = $postQuery->hidePrivateFields()->simplePaginate($this->pagingPerPageItems);
             $postsQueriedInfo[$postType] = $postQueries[$postType]->toArray()['data'];
@@ -359,31 +381,26 @@ class PostsQuery extends Controller
 
     private function indexQuery(array $flatQueryParams): array
     {
-        $indexQuery = IndexModel::where(Arr::only($flatQueryParams, ['fid', 'tid', 'pid', 'spid']));
+        $indexQuery = IndexModel::where(Arr::only($flatQueryParams, ['fid', ...Helper::POSTS_ID]));
         if ($flatQueryParams['orderBy'] !== 'default') {
             $indexQuery->orderBy($flatQueryParams['orderBy'], $flatQueryParams['direction']);
-        } elseif (Arr::only($flatQueryParams, ['tid', 'pid', 'spid']) === []) { // query by fid only
+        } elseif (Arr::only($flatQueryParams, Helper::POSTS_ID) === []) { // query by fid only
             $indexQuery->orderByDesc('postTime'); // order by postTime to prevent posts out of order when order by post id
         } else { // query by post id
-            $indexQuery = $indexQuery->orderByMulti([ // order by all posts id to keep reply and sub reply continuous instated of clip into multi page since they are vary in postTime
-                'tid' => 'ASC',
-                'pid' => 'ASC',
-                'spid' => 'ASC'
-            ]);
+            // order by all posts id to keep reply and sub reply continuous instated of clip into multi page since they are vary in postTime
+            $indexQuery = $indexQuery->orderByMulti(array_fill_keys(Helper::POSTS_ID, 'ASC'));
         }
 
         $indexQuery = $indexQuery->whereIn('type', $flatQueryParams['postTypes'])->simplePaginate($this->pagingPerPageItems);
         Helper::abortAPIIf(40401, $indexQuery->isEmpty());
 
-        $postsQueriedInfo = [
-            'fid' => $indexQuery->pluck('fid')->first(),
-            'thread' => [],
-            'reply' => [],
-            'subReply' => []
-        ];
-        foreach (['thread' => 'tid', 'reply' => 'pid', 'subReply' => 'spid'] as $postType => $postIDName) { // assign queried posts id from $indexQuery
-            $postsQueriedInfo[$postType] = $indexQuery->where('type', $postType)->toArray();
-        }
+        $postsQueriedInfo = array_merge(
+            ['fid' => $indexQuery->pluck('fid')->first()],
+            array_map( // assign queried posts id from $indexQuery
+                fn ($postType) => $indexQuery->where('type', $postType)->toArray(),
+                array_combine(Helper::POST_TYPES, Helper::POSTS_ID)
+            )
+        );
 
         return [
             'result' => $postsQueriedInfo,

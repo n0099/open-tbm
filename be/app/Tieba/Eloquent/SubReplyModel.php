@@ -2,6 +2,7 @@
 
 namespace App\Tieba\Eloquent;
 
+use App\Helper;
 use App\Tieba\Post\Post;
 use App\Tieba\Post\SubReply;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,9 +17,7 @@ class SubReplyModel extends PostModel
 
     protected array $fields = [
         'id',
-        'tid',
-        'pid',
-        'spid',
+        ...Helper::POSTS_ID,
         'content',
         'authorUid',
         'authorManagerType',
@@ -35,9 +34,7 @@ class SubReplyModel extends PostModel
     ];
 
     public array $updateExpectFields = [
-        'tid',
-        'pid',
-        'spid',
+        ...Helper::POSTS_ID,
         'postTime',
         'authorUid',
         'created_at'

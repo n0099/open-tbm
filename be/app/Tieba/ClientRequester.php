@@ -30,7 +30,7 @@ class ClientRequester extends \GuzzleHttp\Client
             '_client_type' => 2, // 0:WAP|1:iPhone|2:Android|3:WindowsPhone|4:Windows8UWP
             '_client_version' => $this->getConfig('client_version')
         ];
-        $clientData = $clientInfo + $options['form_params'];
+        $clientData = array_merge($clientInfo, $options['form_params']);
 
         $clientSign = null;
         foreach ($clientData as $key => $value) {

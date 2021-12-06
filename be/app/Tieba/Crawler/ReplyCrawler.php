@@ -50,7 +50,7 @@ class ReplyCrawler extends Crawlable
                     'pn' => $this->startPage
                 ]
             ]
-        )->getBody()->getContents());
+        )->getBody()->getContents(), true);
         $this->profileWebRequestStopped($webRequestTimer);
 
         try {

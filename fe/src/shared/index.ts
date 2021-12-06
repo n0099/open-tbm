@@ -15,7 +15,7 @@ export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
 
 export type PostType = 'reply' | 'subReply' | 'thread';
-export type PostsID = typeof postsID[number];
+export type PostID = typeof postsID[number];
 export const postsID = ['tid', 'pid', 'spid'] as const;
 
 // we can't declare global timeout like `window.noty = new Noty({ timeout: 3000 });` due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455

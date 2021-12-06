@@ -283,8 +283,9 @@ export default defineComponent({
             }
             const isRequiredPostTypes = (current: PostType[], required?: RequiredPostTypes[string]): required is undefined => {
                 if (required === undefined) return true; // not set means this param accepts any post types
-                if (required[0] === 'SUB' && _.isEmpty(_.difference(current, _.sortBy(required[1])))) return true;
-                if (required[0] === 'ALL' && _.isEqual(_.sortBy(required[1]), current)) return true;
+                required[1] = _.sortBy(required[1]);
+                if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1]))) return true;
+                if (required[0] === 'ALL' && _.isEqual(required[1], current)) return true;
                 return false;
             };
             const requiredPostTypesStringify = (required: NonNullable<RequiredPostTypes[string]>) =>

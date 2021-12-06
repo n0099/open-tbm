@@ -133,7 +133,7 @@ abstract class Crawlable
             'fulfilled' => function (\Psr\Http\Message\ResponseInterface $response, int $index) use ($webRequestTimer) {
                 $this->profileWebRequestStopped($webRequestTimer);
                 ExceptionAdditionInfo::set(['parsingPage' => $index]);
-                $this->checkThenParsePostsInfo(Utils::jsonDecode($response->getBody()->getContents()));
+                $this->checkThenParsePostsInfo(Utils::jsonDecode($response->getBody()->getContents(), true));
                 $webRequestTimer->start(); // resume timing for possible succeed web request
             },
             'rejected' => function (\GuzzleHttp\Exception\TransferException $e, int $index) {

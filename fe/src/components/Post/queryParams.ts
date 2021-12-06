@@ -1,4 +1,4 @@
-import type { DeepWritable, ObjEmpty, PostType, PostsID } from '@/shared';
+import type { DeepWritable, ObjEmpty, PostType, PostID } from '@/shared';
 import { boolStrToBool } from '@/shared';
 import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from './useQueryForm';
 import useQueryForm from './useQueryForm';
@@ -132,7 +132,7 @@ export const useQueryFormLateBinding: Parameters<typeof useQueryForm>[0] = {
 export interface UniqueParams extends Record<string, Param> {
     fid: { name: 'fid', value: number, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
-    orderBy: { name: 'orderBy', value: PostsID | 'default' | 'postTime', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
+    orderBy: { name: 'orderBy', value: PostID | 'default' | 'postTime', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
 }
 // must get invoked with in the setup() of component
 export const useQueryFormWithUniqueParams = () => {
