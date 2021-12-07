@@ -65,11 +65,6 @@ class ThreadModel extends PostModel
         return $this->hasMany(ReplyModel::class, 'tid', 'tid');
     }
 
-    public function scopeTid(Builder $query, $tid): Builder
-    {
-        return $this->scopeIDType($query, 'tid', $tid);
-    }
-
     public function toPost(): Post
     {
         return new Thread($this);

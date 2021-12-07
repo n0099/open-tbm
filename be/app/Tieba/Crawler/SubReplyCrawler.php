@@ -155,7 +155,7 @@ class SubReplyCrawler extends Crawlable
                 ExceptionAdditionInfo::set(['insertingSubReplies' => true]);
                 $chunkInsertBufferSize = 2000;
                 $subReplyModel = PostModelFactory::newSubReply($this->fid);
-                $subReplyUpdateFields = static::getUpdateFieldsWithoutExpected($this->subRepliesInfo[0], $subReplyModel);
+                $subReplyUpdateFields = self::getUpdateFieldsWithoutExpected($this->subRepliesInfo[0], $subReplyModel);
                 $subReplyModel->chunkInsertOnDuplicate($this->subRepliesInfo, $subReplyUpdateFields, $chunkInsertBufferSize);
                 ExceptionAdditionInfo::remove('insertingSubReplies');
 

@@ -152,7 +152,7 @@ abstract class Crawlable
     protected function saveIndexesAndUsersInfo (int $chunkInsertBufferSize): void
     {
         $indexModel = new IndexModel();
-        $indexUpdateFields = static::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
+        $indexUpdateFields = self::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
         $indexModel->chunkInsertOnDuplicate($this->indexesInfo, $indexUpdateFields, $chunkInsertBufferSize);
         $this->usersInfo->saveUsersInfo();
     }

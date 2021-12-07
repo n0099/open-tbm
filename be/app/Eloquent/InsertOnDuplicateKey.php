@@ -27,7 +27,7 @@ trait InsertOnDuplicateKey
         }
     }
 
-    public function insertOnDuplicateKey(array $data, array $updateColumns = null): bool
+    public function insertOnDuplicateKey(array $data, array $updateColumns = null): false|int
     {
         if (empty($data)) {
             return false;
@@ -45,7 +45,7 @@ trait InsertOnDuplicateKey
         return $this->getConnection()->affectingStatement($sql, $data);
     }
 
-    public function insertIgnore(array $data): bool
+    public function insertIgnore(array $data): false|int
     {
         if (empty($data)) {
             return false;
@@ -63,7 +63,7 @@ trait InsertOnDuplicateKey
         return $this->getConnection()->affectingStatement($sql, $data);
     }
 
-    public function replace(array $data): bool
+    public function replace(array $data): false|int
     {
         if (empty($data)) {
             return false;

@@ -46,7 +46,7 @@ class BilibiliVote
      */
     public static function allCandidatesVotesCount(Request $request): string
     {
-        return static::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
+        return self::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
@@ -84,9 +84,9 @@ class BilibiliVote
      */
     public static function top50CandidatesVotesCount(Request $request): string
     {
-        return static::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
+        return self::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade')
-            ->whereIn('voteFor', static::getTopVotesCandidatesSQL(50))
+            ->whereIn('voteFor', self::getTopVotesCandidatesSQL(50))
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
             ->get())
@@ -110,10 +110,10 @@ class BilibiliVote
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))]
         ]);
-        return static::sanitizeVoteForField(BilibiliVoteModel::selectRaw($groupBytimeGranularity[$request->query()['timeGranularity']])
+        return self::sanitizeVoteForField(BilibiliVoteModel::selectRaw($groupBytimeGranularity[$request->query()['timeGranularity']])
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
-            ->whereIn('voteFor', static::getTopVotesCandidatesSQL(5))
+            ->whereIn('voteFor', self::getTopVotesCandidatesSQL(5))
             ->groupBy('time', 'isValid', 'voteFor')
             ->orderBy('time', 'ASC')
             ->get())
@@ -146,11 +146,11 @@ class BilibiliVote
             $timeGranularityRawSQL[] = "SELECT \"{$time}\" AS endTime";
         }
         $timeGranularityRawSQL = implode(' UNION ', $timeGranularityRawSQL);
-        return static::sanitizeVoteForField(\DB::query()
+        return self::sanitizeVoteForField(\DB::query()
             ->selectRaw('CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
             ->fromSub(BilibiliVoteModel
                 ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeGranularity})*{$timeGranularity} as endTime, isValid, voteFor, COUNT(*) as count")
-                ->whereIn('voteFor', static::getTopVotesCandidatesSQL(10))
+                ->whereIn('voteFor', self::getTopVotesCandidatesSQL(10))
                 ->groupBy('endTime', 'isValid', 'voteFor')
             , 'timeGroups')
             ->join(\DB::raw("({$timeGranularityRawSQL}) AS timeGranularityRawSQL"),

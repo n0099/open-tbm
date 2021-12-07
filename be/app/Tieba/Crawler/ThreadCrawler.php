@@ -173,14 +173,14 @@ class ThreadCrawler extends Crawlable
                 ExceptionAdditionInfo::set(['insertingThreads' => true]);
                 $chunkInsertBufferSize = 2000;
                 $threadModel = PostModelFactory::newThread($this->fid);
-                foreach (static::groupNullableColumnArray($this->threadsInfo, [
+                foreach (self::groupNullableColumnArray($this->threadsInfo, [
                     'postTime',
                     'latestReplyTime',
                     'latestReplierUid',
                     'shareNum',
                     'agreeInfo'
                 ]) as $threadsInfoGroup) {
-                    $threadUpdateFields = static::getUpdateFieldsWithoutExpected($threadsInfoGroup[0], $threadModel);
+                    $threadUpdateFields = self::getUpdateFieldsWithoutExpected($threadsInfoGroup[0], $threadModel);
                     $threadModel->chunkInsertOnDuplicate($threadsInfoGroup, $threadUpdateFields, $chunkInsertBufferSize);
                 }
                 ExceptionAdditionInfo::remove('insertingThreads');

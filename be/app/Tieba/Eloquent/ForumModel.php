@@ -34,11 +34,11 @@ class ForumModel extends Model
 
     public static function getName(int $fid): Collection
     {
-        return static::where('fid', $fid)->value('name');
+        return self::where('fid', $fid)->value('name');
     }
 
     public static function getFid(string $forumName): Collection
     {
-        return static::where('name', $forumName)->value('fid');
+        return self::where('name', $forumName)->value('fid');
     }
 }

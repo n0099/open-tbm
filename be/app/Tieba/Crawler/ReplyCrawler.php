@@ -172,11 +172,11 @@ class ReplyCrawler extends Crawlable
                 ExceptionAdditionInfo::set(['insertingReplies' => true]);
                 $chunkInsertBufferSize = 2000;
                 $replyModel = PostModelFactory::newReply($this->fid);
-                foreach (static::groupNullableColumnArray($this->repliesInfo, [
+                foreach (self::groupNullableColumnArray($this->repliesInfo, [
                     'authorManagerType',
                     'authorExpGrade'
                 ]) as $repliesInfoGroup) {
-                    $replyUpdateFields = static::getUpdateFieldsWithoutExpected($repliesInfoGroup[0], $replyModel);
+                    $replyUpdateFields = self::getUpdateFieldsWithoutExpected($repliesInfoGroup[0], $replyModel);
                     $replyModel->chunkInsertOnDuplicate($repliesInfoGroup, $replyUpdateFields, $chunkInsertBufferSize);
                 }
 

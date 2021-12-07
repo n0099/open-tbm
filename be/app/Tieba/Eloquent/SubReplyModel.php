@@ -50,11 +50,6 @@ class SubReplyModel extends PostModel
         return $this->belongsTo(ReplyModel::class, 'pid', 'pid');
     }
 
-    public function scopeTid(Builder $query, $tid): Builder
-    {
-        return $this->scopeIDType($query, 'tid', $tid);
-    }
-
     public function scopePid(Builder $query, $pid): Builder
     {
         return $this->scopeIDType($query, 'pid', $pid);

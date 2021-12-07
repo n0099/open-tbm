@@ -476,7 +476,7 @@ class PostsQuery extends Controller
         $repliesInfo->transform($convertJsonContentToHtml);
         $subRepliesInfo->transform($convertJsonContentToHtml);
 
-        return static::convertNestedPostsInfo($threadsInfo->toArray(), $repliesInfo->toArray(), $subRepliesInfo->toArray());
+        return self::convertNestedPostsInfo($threadsInfo->toArray(), $repliesInfo->toArray(), $subRepliesInfo->toArray());
     }
 
     private static function convertNestedPostsInfo(array $threadsInfo = [], array $repliesInfo = [], array $subRepliesInfo = []): array

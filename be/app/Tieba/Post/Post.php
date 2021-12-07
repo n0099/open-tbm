@@ -11,9 +11,9 @@ abstract class Post
      *
      * @param array|Model $postData
      */
-    public function __construct($postData)
+    public function __construct(Model|array $postData)
     {
-        $initialWith = function ($postProperties) {
+        $initialWith = function (array $postProperties) {
             $postIDByType = [
                 Thread::class => 'tid',
                 Reply::class => 'pid',
@@ -50,6 +50,6 @@ abstract class Post
     public static function convertJsonContentToHtml(array $content): string
     {
         // remove spamming \n then trim spaces due to blade @break directive
-        return str_replace("\n", null, trim(view('formatPostJsonContent', ['content' => $content])));
+        return str_replace("\n", '', trim((string)view('formatPostJsonContent', ['content' => $content])));
     }
 }

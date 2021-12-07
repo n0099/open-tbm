@@ -15,18 +15,18 @@ class ExceptionAdditionInfo
 
     public static function set(array $info): void
     {
-        static::$info = array_merge(static::$info, $info);
+        self::$info = array_merge(self::$info, $info);
     }
 
     public static function remove(...$infoNames): void
     {
         foreach ($infoNames as $infoName) {
-            unset(static::$info[$infoName]);
+            unset(self::$info[$infoName]);
         }
     }
 
     public static function format(): string
     {
-        return json_encode(static::$info ?? [], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        return json_encode(self::$info ?? [], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
     }
 }

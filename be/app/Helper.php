@@ -15,14 +15,14 @@ class Helper
     public static function abortAPIIf(int $errorCode, bool $condition): void
     {
         if ($condition) {
-            static::abortAPI($errorCode);
+            self::abortAPI($errorCode);
         }
     }
 
     public static function abortAPIIfNot(int $errorCode, bool $condition): void
     {
         if (!$condition) {
-            static::abortAPI($errorCode);
+            self::abortAPI($errorCode);
         }
     }
 

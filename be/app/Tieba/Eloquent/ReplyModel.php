@@ -62,11 +62,6 @@ class ReplyModel extends PostModel
         return $this->hasMany(SubReplyModel::class, 'pid', 'pid');
     }
 
-    public function scopeTid(Builder $query, $tid): Builder
-    {
-        return $this->scopeIDType($query, 'tid', $tid);
-    }
-
     public function scopePid(Builder $query, $pid): Builder
     {
         return $this->scopeIDType($query, 'pid', $pid);

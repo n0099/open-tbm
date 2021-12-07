@@ -31,10 +31,7 @@ abstract class PostModel extends Model
      */
     protected $guarded = [];
 
-    /**
-     * @var int Forum id of this post
-     */
-    protected int $fid;
+    protected int $fid = 0;
 
     protected array $fields;
 
@@ -42,7 +39,31 @@ abstract class PostModel extends Model
 
     public array $updateExpectFields;
 
-    protected function scopeIDType(Builder $query, string $postIDName, $postID): Builder
+    abstract public function toPost(): Post;
+
+    /**
+     * Setting model table name by forum id and post type
+     */
+    public function setFid(int $fid): static
+    {
+        $this->fid = $fid;
+
+        $postTypeClassNamePlural = [
+            ThreadModel::class => 'threads',
+            ReplyModel::class => 'replies',
+            SubReplyModel::class => 'subReplies'
+        ];
+        $this->setTable("tbm_f{$fid}_" . $postTypeClassNamePlural[\get_class($this)]);
+
+        return $this;
+    }
+
+    public function scopeTid(Builder $query, $tid): Builder
+    {
+        return $this->scopeIDType($query, 'tid', $tid);
+    }
+
+    protected function scopeIDType(Builder $query, string $postIDName, Collection|array|int $postID): Builder
     {
         if (\is_int($postID)) {
             return $query->where($postIDName, $postID);
@@ -58,15 +79,8 @@ abstract class PostModel extends Model
         return $query->select(array_diff($this->fields, $this->hidedFields));
     }
 
-    abstract public function scopeTid(Builder $query, $tid): Builder;
-
-    abstract public function toPost(): Post;
-
     /**
      * Override the parent relation instance method for passing valid forum id to new related post model
-     *
-     * @param  string  $class
-     * @return mixed
      */
     protected function newRelatedInstance($class)
     {
@@ -79,35 +93,9 @@ abstract class PostModel extends Model
 
     /**
      * Override the parent newInstance method for passing valid forum id to model's query builder
-     *
-     * @param  array  $attributes
-     * @param  bool  $exists
-     * @return static
      */
-    public function newInstance($attributes = [], $exists = false): self
+    public function newInstance($attributes = [], $exists = false): static
     {
-        return parent::newInstance(...\func_get_args())->setFid($this->fid);
-    }
-
-    /**
-     * Setting model table name by forum id and post type
-     *
-     * @param int $fid
-     *
-     * @return PostModel
-     */
-    public function setFid(int $fid): self
-    {
-        $this->fid = $fid;
-
-        $tableNamePrefix = "tbm_f{$fid}_";
-        $postTypeClassNamePlural = [
-            ThreadModel::class => 'threads',
-            ReplyModel::class => 'replies',
-            SubReplyModel::class => 'subReplies'
-        ];
-        $this->setTable($tableNamePrefix . $postTypeClassNamePlural[\get_class($this)]);
-
-        return $this;
+        return parent::newInstance($attributes, $exists)->setFid($this->fid);
     }
 }
