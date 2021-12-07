@@ -28,7 +28,7 @@ class BilibiliVote extends Command
         $replyModel::where('tid', $voteTid)
             ->whereBetween('postTime', [$voteStartTime, $voteEndTime])
             // set a lower chunk size to minimize influence of ignoring previous valid vote
-            ->chunk(10, function (Collection $voteReplies) use ($voteResultModel): void {
+            ->chunk(10, static function (Collection $voteReplies) use ($voteResultModel) {
                 $voteResults = [];
                 $candidateIDRange = range(1, 1056);
                 $votersPreviousValidVotesCount = $voteResultModel

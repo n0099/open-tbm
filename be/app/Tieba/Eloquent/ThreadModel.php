@@ -4,7 +4,6 @@ namespace App\Tieba\Eloquent;
 
 use App\Tieba\Post\Post;
 use App\Tieba\Post\Thread;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class Post

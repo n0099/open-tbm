@@ -96,7 +96,7 @@ abstract class Crawlable
     {
         $arrayAfterGroup = [];
         foreach ($arrayToGroup as $item) {
-            $nullValueFields = array_map(fn () => false, array_flip($nullableFields));
+            $nullValueFields = array_map(static fn () => false, array_flip($nullableFields));
             foreach ($nullValueFields as $nullableFieldName => $isNull) {
                 $nullValueFields[$nullableFieldName] = ($item[$nullableFieldName] ?? null) === null;
             }
@@ -119,14 +119,14 @@ abstract class Crawlable
         return array_diff(array_keys($updateItem), $model->updateExpectFields);
     }
 
-    protected function profileWebRequestStopped (Timer $webRequestTimer): void
+    protected function profileWebRequestStopped(Timer $webRequestTimer): void
     {
         $webRequestTimer->stop();
         $this->profiles['webRequestTimes']++;
         $this->profiles['webRequestTiming'] += $webRequestTimer->getTime();
     }
 
-    protected function getGuzzleHttpPoolConfig (Timer $webRequestTimer): array
+    protected function getGuzzleHttpPoolConfig(Timer $webRequestTimer): array
     {
         return [
             'concurrency' => 10,
@@ -136,20 +136,20 @@ abstract class Crawlable
                 $this->checkThenParsePostsInfo(Utils::jsonDecode($response->getBody()->getContents(), true));
                 $webRequestTimer->start(); // resume timing for possible succeed web request
             },
-            'rejected' => function (\GuzzleHttp\Exception\TransferException $e, int $index) {
+            'rejected' => static function (\GuzzleHttp\Exception\TransferException $e, int $index) {
                 ExceptionAdditionInfo::set(['parsingPage' => $index]);
                 report($e);
             }
         ];
     }
 
-    protected function cacheIndexesAndUsersInfo (array $indexesInfo, array $usersInfo): void
+    protected function cacheIndexesAndUsersInfo(array $indexesInfo, array $usersInfo): void
     {
         $this->indexesInfo = array_merge($this->indexesInfo, $indexesInfo);
         $this->profiles['parsedUserTimes'] = $this->usersInfo->parseUsersInfo($usersInfo);
     }
 
-    protected function saveIndexesAndUsersInfo (int $chunkInsertBufferSize): void
+    protected function saveIndexesAndUsersInfo(int $chunkInsertBufferSize): void
     {
         $indexModel = new IndexModel();
         $indexUpdateFields = self::getUpdateFieldsWithoutExpected($this->indexesInfo[0], $indexModel);
@@ -157,7 +157,7 @@ abstract class Crawlable
         $this->usersInfo->saveUsersInfo();
     }
 
-    protected function cachePageInfoAndTrimEndPage (array $pageInfo): void
+    protected function cachePageInfoAndTrimEndPage(array $pageInfo): void
     {
         $this->pageInfo = $pageInfo;
         $totalPages = $pageInfo['total_page'];

@@ -83,7 +83,7 @@ class Helper
 
     public static function isArrayValuesAllEqualTo(array $haystack, $equalTo): bool
     {
-        return array_filter($haystack, fn ($value) => $value !== $equalTo) === [];
+        return array_filter($haystack, static fn ($value) => $value !== $equalTo) === [];
     }
 
     #[Pure] public static function getRawSqlGroupByTimeGranularity(

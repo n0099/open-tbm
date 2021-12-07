@@ -37,7 +37,7 @@ class SubReplyQueue extends CrawlerQueue
             ->doCrawl()->savePostsInfo()->getProfiles();
 
         $queueTimer->stop();
-        \DB::transaction(function () use ($crawlerProfiles, $queueTimer): void {
+        \DB::transaction(function () use ($crawlerProfiles, $queueTimer) {
             // report previous reply crawl finished
             /** @var Model|null $currentCrawlingSubReply */
             $currentCrawlingSubReply = CrawlingPostModel

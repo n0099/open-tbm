@@ -84,13 +84,13 @@ class PostsQuery extends Controller
      */
     private function applySearchQueryOnPostModel(Builder $postQuery, array $param): Builder
     {
-        $applyTextMatchParamsQuery = function (Builder $query, string $fieldName, string $notString, $paramValue, array $param): Builder {
+        $applyTextMatchParamsQuery = static function (Builder $query, string $fieldName, string $notString, $paramValue, array $param): Builder {
             if ($param['matchBy'] === 'regex') {
                 return $query->where($fieldName, "{$notString} REGEXP", $paramValue);
             }
-            return $query->where(function ($query) use ($param, $fieldName, $notString, $paramValue) {
+            return $query->where(static function ($query) use ($param, $fieldName, $notString, $paramValue) {
                 $notOrWhere = $notString === 'Not' ? '' : 'or'; // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-                $addMatchKeyword = fn (string $keyword) => $query->{"{$notOrWhere}Where"}($fieldName, "{$notString} LIKE", $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword);
+                $addMatchKeyword = static fn (string $keyword) => $query->{"{$notOrWhere}Where"}($fieldName, "{$notString} LIKE", $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword);
                 if ($param['spaceSplit']) {
                     foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multiple search keyword by space char
                         $addMatchKeyword($splitedKeyword);
@@ -185,8 +185,8 @@ class PostsQuery extends Controller
 
     private function searchQuery(array $queryParams): array
     {
-        $getUniqueParamValue = fn (string $name) =>
-            Arr::first($queryParams, fn (array $param): bool => self::getParamName($param) === $name)[$name];
+        $getUniqueParamValue = static fn (string $name) =>
+            Arr::first($queryParams, static fn (array $param): bool => self::getParamName($param) === $name)[$name];
         $postQueries = [];
         foreach (Arr::only(
             PostModelFactory::getPostModelsByFid($getUniqueParamValue('fid')),
@@ -216,7 +216,7 @@ class PostsQuery extends Controller
          * @param callable $unionStatement
          * @return mixed $unionStatement()
          */
-        $pageInfoUnion = function (array $queryBuilders, string $unionMethodName, callable $unionStatement) {
+        $pageInfoUnion = static function (array $queryBuilders, string $unionMethodName, callable $unionStatement) {
             $unionValues = [];
             foreach ($queryBuilders as $queryBuilder) {
                 $unionValues[] = $queryBuilder->$unionMethodName();
@@ -228,9 +228,9 @@ class PostsQuery extends Controller
         return [
             'result' => $postsQueriedInfo,
             'pages' => [ // todo: should cast simplePagination to array in $postQueries to prevent dynamic call method by string
-                'firstItem' => $pageInfoUnion($postQueries, 'firstItem', fn (array $unionValues) => min($unionValues)),
-                'itemsCount' => $pageInfoUnion($postQueries, 'count', fn (array $unionValues) => array_sum($unionValues)),
-                'currentPage' => $pageInfoUnion($postQueries, 'currentPage', fn (array $unionValues) => min($unionValues))
+                'firstItem' => $pageInfoUnion($postQueries, 'firstItem', static fn (array $unionValues) => min($unionValues)),
+                'itemsCount' => $pageInfoUnion($postQueries, 'count', static fn (array $unionValues) => array_sum($unionValues)),
+                'currentPage' => $pageInfoUnion($postQueries, 'currentPage', static fn (array $unionValues) => min($unionValues))
             ]
         ];
     }
@@ -253,7 +253,7 @@ class PostsQuery extends Controller
         $postsQueriedInfo = array_merge(
             ['fid' => $indexQuery->pluck('fid')->first()],
             array_map( // assign queried posts id from $indexQuery
-                fn ($postType) => $indexQuery->where('type', $postType)->toArray(),
+                static fn ($postType) => $indexQuery->where('type', $postType)->toArray(),
                 array_combine(Helper::POST_TYPES, Helper::POSTS_ID)
             )
         );
@@ -296,10 +296,8 @@ class PostsQuery extends Controller
                 : $postsInfo['subReply']
             ));
 
-        $isSubIDsMissInOriginIDs = fn (Collection $originIDs, Collection $subIDs): bool
-        => $subIDs->contains(
-            fn (int $subID): bool => !$originIDs->contains($subID)
-        );
+        $isSubIDsMissInOriginIDs = static fn (Collection $originIDs, Collection $subIDs): bool
+            => $subIDs->contains(static fn (int $subID): bool => !$originIDs->contains($subID));
 
         $tidsInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();
         // $tids must be first argument to ensure the diffed $tidsInReplies existing
@@ -323,7 +321,7 @@ class PostsQuery extends Controller
                 ->hidePrivateFields()->get()->toArray());
         }
 
-        $convertJsonContentToHtml = function (array $post): array {
+        $convertJsonContentToHtml = static function (array $post) {
             if ($post['content'] !== null) {
                 $post['content'] = Post::convertJsonContentToHtml($post['content']);
             }

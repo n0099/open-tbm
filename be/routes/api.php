@@ -17,12 +17,12 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/forumList', fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
+Route::get('/forumList', static fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
 
-Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
+Route::middleware(ReCAPTCHACheck::class)->group(static function () {
     Route::get('/postsQuery', 'PostsQuery@query');
     Route::get('/usersQuery', 'UsersQuery@query');
-    Route::get('/status', function (Request $request): string {
+    Route::get('/status', static function (Request $request): string {
         $groupByTimeGranularity = [
             'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',
             'hour' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:00") AS startTime',
@@ -46,7 +46,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
                 CAST(SUM(parsedPostTimes) AS UNSIGNED) AS parsedPostTimes,
                 CAST(SUM(parsedUserTimes) AS UNSIGNED) AS parsedUserTimes
             ')
-            ->fromSub(fn (Builder $query) =>
+            ->fromSub(static fn (Builder $query) =>
                 $query->from('tbm_crawledPosts')
                 ->selectRaw($groupByTimeGranularity[$queryParams['timeGranularity']])
                 ->selectRaw('
@@ -62,7 +62,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(function (): void {
             ->groupBy('startTime')
             ->get()->toJson();
     });
-    Route::get('/stats/forumPostsCount', function (Request $request): array {
+    Route::get('/stats/forumPostsCount', static function (Request $request): array {
         $groupByTimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime');
         $queryParams = $request->validate([
             'fid' => 'required|integer',
