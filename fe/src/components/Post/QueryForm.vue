@@ -210,8 +210,9 @@ export default defineComponent({
                     return 'fid'; // note when query with postTypes and/or orderBy param, the route will go params instead of fid
                 }
             }
-            if (_.isEmpty(_.reject(clearedParams, param => _.includes(postsID, param.name))) // is there no other params
-                && _.filter(clearedParams, param => _.includes(postsID, param.name)).length === 1 // is there only one post id param
+            const isPostsIDParam = (param: Params[keyof Params]) => _.includes(postsID, param.name);
+            if (_.isEmpty(_.reject(clearedParams, isPostsIDParam)) // is there no other params
+                && _.filter(clearedParams, isPostsIDParam).length === 1 // is there only one post id param
                 && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is post id param haven't any sub param
                 return 'postID';
             }

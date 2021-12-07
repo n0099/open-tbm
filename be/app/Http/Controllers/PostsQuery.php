@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Helper;
+use App\Http\PostsQuery\Param;
+use App\Http\PostsQuery\ParamsValidator;
 use App\Tieba\Post\Post;
 use App\Tieba\Eloquent\IndexModel;
 use App\Tieba\Eloquent\ForumModel;
@@ -12,7 +14,6 @@ use GuzzleHttp\Utils;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
 
 class PostsQuery extends Controller
 {
@@ -25,179 +26,34 @@ class PostsQuery extends Controller
 
     public function query(\Illuminate\Http\Request $request): array
     {
-        $filterParams = function (array | string $names) use (&$queryParams): array {
-            // cannot use one-liner fn () => syntax here since we need $queryParams to sync changes
-            // array_values() will remove keys remained by array_filter() from original $queryParams
-            return array_values(array_filter(
-                $queryParams,
-                fn (array $param): bool => \in_array(self::getParamName($param), (array)$names, true)
-            ));
-        };
-        // only get first occurred param's value
-        $getParamValue = fn (string $name) => $filterParams($name)[0][$name] ?? null;
-        $setParamValue = function (string $name, $value) use (&$queryParams): void {
-            $filteredParams = array_keys(array_filter($queryParams, fn (array $param): bool => self::getParamName($param) === $name));
-            if ($filteredParams === []) {
-                throw new \InvalidArgumentException('Cannot find param with given param name');
-            }
-            $queryParams[$filteredParams[0]][$name] = $value; // only set first param's value which occurs in $queryParams
-        };
-
-        $queryParams = (array)Utils::jsonDecode($request->validate([
+        $validator = new ParamsValidator((array)Utils::jsonDecode($request->validate([
             'page' => 'integer',
             'query' => 'json'
-        ])['query'], true);
-        $paramsValidValue = [
-            'userGender' => [0, 1, 2],
-            'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin']
-        ];
-        $dateRangeValidator = function ($_, string $value): void {
-            \Validator::make(
-                explode(',', $value),
-                ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0']
-            )->validate();
-        };
-        // note here we haven't validate that is every sub param have a corresponding main param yet
-        \Validator::make($queryParams, [
-            '*.fid' => 'integer',
-            '*.postTypes' => 'array|in:thread,reply,subReply',
-            '*.orderBy' => 'string|in:postTime,tid,pid,spid',
-            '*.direction' => 'in:ASC,DESC',
-            '*.tid' => 'integer',
-            '*.pid' => 'integer',
-            '*.spid' => 'integer',
-            '*.postTime' => $dateRangeValidator,
-            '*.latestReplyTime' => $dateRangeValidator,
-            '*.threadViewNum' => 'integer',
-            '*.threadShareNum' => 'integer',
-            '*.threadReplyNum' => 'integer',
-            '*.replySubReplyNum' => 'integer',
-            '*.threadProperties' => 'array|in:good,sticky',
-            '*.authorUid' => 'integer',
-            '*.authorExpGrade' => 'integer',
-            '*.authorGender' => Rule::in($paramsValidValue['userGender']),
-            '*.authorManagerType' => Rule::in($paramsValidValue['userManagerType']),
-            '*.latestReplierUid' => 'integer',
-            '*.latestReplierGender' => Rule::in($paramsValidValue['userGender']),
-            // sub param of tid, pid, spid, threadViewNum, threadShareNum, threadReplyNum, replySubReplyNum, authorUid, authorExpGrade, latestReplierUid
-            '*.range' => 'in:<,=,>,IN,BETWEEN',
-            // sub param of threadTitle, postContent, authorName, authorDisplayName, latestReplierName, latestReplierDisplayName
-            '*.matchBy' => 'in:implicit,explicit,regex',
-            '*.spaceSplit' => 'boolean'
-        ])->validate();
-        // only fill postTypes and/or orderBy uniqueParam doesn't query anything
-        Helper::abortAPIIf(40001, \count($queryParams) === \count($filterParams(['postTypes', 'orderBy'])));
+        ])['query'], true));
+        $params = $validator->params;
 
-        $uniqueParamsName = ['fid', 'postTypes', 'orderBy'];
-        $isPostIDQuery = \count($queryParams) === \count($filterParams([...$uniqueParamsName, ...Helper::POSTS_ID])) // is there no other params
-            && \count($filterParams(Helper::POSTS_ID)) === 1 // is there only one post id param
-            && array_column($queryParams, 'range') === []; // is post id param haven't any sub param
+        $uniqueParamsName = ParamsValidator::UNIQUE_PARAMS_NAME;
+        $postsIDParams = $params->filter(...Helper::POSTS_ID);
+        $isPostIDQuery = $params->count() === \count($postsIDParams) // is there no other params
+            && \count($postsIDParams) === 1 // is there only one post id param
+            && array_filter($postsIDParams, static fn ($p) => $p->getSubParams() !== []) === []; // is post id param haven't any sub param
         // is fid param exists and there's no other params
-        $isFidParamNull = $getParamValue('fid') === null;
-        $isFidQuery = !$isFidParamNull && \count($queryParams) === \count($filterParams($uniqueParamsName));
+        $isFidParamNull = $params->getUniqueParamValue('fid') === null;
+        $isFidQuery = !$isFidParamNull && $params->count() === \count($params->filter(...$uniqueParamsName));
         $isIndexQuery = $isPostIDQuery || $isFidQuery;
         $isSearchQuery = !$isIndexQuery;
         if ($isSearchQuery) {
             Helper::abortAPIIf(40002, $isFidParamNull);
         }
 
-        foreach ($uniqueParamsName as $uniqueParamName) { // is all unique param only appeared once
-            Helper::abortAPIIf(40005, \count($filterParams($uniqueParamName)) > 1);
-        }
-        $uniqueParamsDefaultValue = [
-            'postTypes' => ['value' => Helper::POST_TYPES],
-            'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'default']]
-        ];
-        foreach ($uniqueParamsDefaultValue as $uniqueParamName => $uniqueParamDefaultValue) {
-            // add unique params with default value when it's not presented in request
-            if ($getParamValue($uniqueParamName) === null) {
-                $queryParams[] = array_merge(
-                    [$uniqueParamName => $uniqueParamDefaultValue['value']],
-                    $uniqueParamDefaultValue['subParam'] ?? []
-                );
-            }
-        }
-
-        $paramDefaultValueByType = [
-            'numeric' => ['range' => '='],
-            'text' => ['matchBy' => 'implicit', 'spaceSplit' => false]
-        ];
-        $paramsNameByType = [
-            'numeric' => [
-                'tid',
-                'pid',
-                'spid',
-                'threadViewNum',
-                'threadShareNum',
-                'threadReplyNum',
-                'replySubReplyNum',
-                'authorUid',
-                'authorExpGrade',
-                'latestReplierUid'
-            ],
-            'text' => [
-                'threadTitle',
-                'postContent',
-                'authorName',
-                'authorDisplayName',
-                'latestReplierName',
-                'latestReplierDisplayName'
-            ]
-        ];
-        $subParamsDefaultValue = collect($paramsNameByType)->flatMap(fn (array $names, string $type) =>
-            array_fill_keys($names, $paramDefaultValueByType[$type]))->toArray();
-        foreach ($queryParams as &$param) { // set sub params with default value
-            foreach ($subParamsDefaultValue[self::getParamName($param)] ?? [] as $subParamName => $subParamDefaultValue) {
-                $param[$subParamName] ??= $subParamDefaultValue;
-            }
-        }
-        unset($param);
-
-        $setParamValue('postTypes', Arr::sort($getParamValue('postTypes'))); // sort here to prevent further sort while validating
-        $currentPostTypes = $getParamValue('postTypes');
-        $isRequiredPostTypes = fn (array $current, array $required): bool =>
-            $required[0] === 'SUB'
-                ? array_diff($current, Arr::sort($required[1])) === []
-                : $current === Arr::sort($required[1]);
-
-        $paramsRequiredPostTypes = [
-            'pid' => ['SUB', ['reply', 'subReply']],
-            'spid' => ['ALL', ['subReply']],
-            'latestReplyTime' => ['ALL', ['thread']],
-            'threadTitle' => ['ALL', ['thread']],
-            'postContent' => ['SUB', ['reply', 'subReply']],
-            'threadViewNum' => ['ALL', ['thread']],
-            'threadShareNum' => ['ALL', ['thread']],
-            'threadReplyNum' => ['ALL', ['thread']],
-            'replySubReplyNum' => ['ALL', ['reply']],
-            'threadProperties' => ['ALL', ['thread']],
-            'authorExpGrade' => ['SUB', ['reply', 'subReply']],
-            'latestReplierUid' => ['ALL', ['thread']],
-            'latestReplierName' => ['ALL', ['thread']],
-            'latestReplierDisplayName' => ['ALL', ['thread']],
-            'latestReplierGender' => ['ALL', ['thread']]
-        ];
-        foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
-            if ($filterParams($paramName) !== []) {
-                Helper::abortAPIIfNot(40003, !$isRequiredPostTypes($currentPostTypes, $requiredPostTypes));
-            }
-        }
-
-        $orderByRequiredPostTypes = [
-            'pid' => ['SUB', ['reply', 'subReply']],
-            'spid' => ['SUB', ['subReply']]
-        ];
-        $currentOrderBy = $getParamValue('orderBy');
-        if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
-            Helper::abortAPIIfNot(40004, !$isRequiredPostTypes($currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]));
-        }
+        $validator->addDefaultParamsThenValidate();
 
         if ($isSearchQuery) {
-            $queryResult = $this->searchQuery($queryParams);
-        } elseif ($isIndexQuery) {
+            $queryResult = $this->searchQuery($params);
+        } else {
             $queryResult = $this->indexQuery(array_reduce(
-                $filterParams([...$uniqueParamsName, ...Helper::POSTS_ID]),
-                fn (array $flatParams, array $param): array => array_merge($flatParams, $param),
+                $params->filter(...$uniqueParamsName, ...Helper::POSTS_ID),
+                static fn (array $accParams, Param $param) => array_merge($accParams, [$param->name => $param->value]),
                 []
             )); // flatten unique query params
         }
