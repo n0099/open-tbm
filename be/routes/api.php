@@ -63,7 +63,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
             ->get()->toJson();
     });
     Route::get('/stats/forumPostsCount', static function (Request $request): array {
-        $groupByTimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime');
+        $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime');
         $queryParams = $request->validate([
             'fid' => 'required|integer',
             'timeGranularity' => ['required', 'string', Rule::in(array_keys($groupByTimeGranularity))],

@@ -12,6 +12,20 @@ class Helper
 
     public const POST_TYPES = ['thread', 'reply', 'subReply'];
 
+    public const POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
+
+    public const POSTS_ID_TYPE = [
+        'tid' => 'thread',
+        'pid' => 'reply',
+        'spid' => 'subReply'
+    ];
+
+    public const POSTS_TYPE_ID = [
+        'thread' => 'tid',
+        'reply' => 'pid',
+        'subReply' => 'spid'
+    ];
+
     public static function abortAPIIf(int $errorCode, bool $condition): void
     {
         if ($condition) {
@@ -66,8 +80,9 @@ class Helper
         exit;
     }
 
-    public static function setKeyWithItemsValue(array $array, string $itemsKey): array
+    public static function keyBy(array $array, string $itemsKey): array
     {
+        // similar with Illuminate\Support\Collection::keyBy()
         // https://stackoverflow.com/questions/56108051/is-it-possible-to-assign-keys-to-array-elements-in-php-from-a-value-column-with
         // note array_column won't check is every item have determined key, if not it will fill with numeric key
         return array_column($array, null, $itemsKey);
@@ -86,7 +101,7 @@ class Helper
         return array_filter($haystack, static fn ($value) => $value !== $equalTo) === [];
     }
 
-    #[Pure] public static function getRawSqlGroupByTimeGranularity(
+    #[Pure] public static function rawSqlGroupByTimeGranularity(
         string $fieldName,
         array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year']
     ): array {

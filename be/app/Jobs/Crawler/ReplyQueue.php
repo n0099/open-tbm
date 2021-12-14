@@ -35,7 +35,7 @@ class ReplyQueue extends CrawlerQueue
 
         $repliesCrawler = (new Crawler\ReplyCrawler($this->fid, $this->tid, $this->startPage))->doCrawl();
         $newRepliesInfo = $repliesCrawler->getUpdatedPostsInfo();
-        $oldRepliesInfo = Helper::setKeyWithItemsValue(
+        $oldRepliesInfo = Helper::keyBy(
             PostModelFactory::newReply($this->fid)
                 ->select('pid', 'subReplyNum')
                 ->whereIn('pid', array_keys($newRepliesInfo))

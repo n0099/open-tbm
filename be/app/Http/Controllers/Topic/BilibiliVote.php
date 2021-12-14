@@ -64,7 +64,7 @@ class BilibiliVote
      */
     public static function allVotesCountByTime(Request $request): string
     {
-        $groupByTimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
+        $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupByTimeGranularity))]
         ]);
@@ -106,7 +106,7 @@ class BilibiliVote
      */
     public static function top5CandidatesVotesCountByTime(Request $request): string
     {
-        $groupBytimeGranularity = Helper::getRawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
+        $groupBytimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))]
         ]);

@@ -99,7 +99,7 @@ class ReplyCrawler extends Crawlable
 
         $parentThreadInfo = $responseJson['thread'];
         $repliesList = $responseJson['post_list'];
-        $replyUsersList = Helper::setKeyWithItemsValue($responseJson['user_list'], 'id');
+        $replyUsersList = Helper::keyBy($responseJson['user_list'], 'id');
         if (\count($repliesList) === 0) {
             throw new TiebaException('Reply list is empty, posts might already deleted from tieba');
         }
