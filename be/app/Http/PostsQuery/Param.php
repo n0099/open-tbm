@@ -6,14 +6,9 @@ class Param
 {
     public string $name;
 
-    public mixed $value;
+    public array|string|int $value;
 
     protected array $subParams;
-
-    public function getSubParams(): array
-    {
-        return $this->subParams;
-    }
 
     public function __construct(array $param)
     {
@@ -23,18 +18,18 @@ class Param
         $this->subParams = $param;
     }
 
-    public function __get(string $name)
+    public function getAllSub(): array
     {
-        return $this->subParams[$name];
+        return $this->subParams;
     }
 
-    public function __set(string $name, mixed $value)
+    public function getSub(string $name)
+    {
+        return $this->subParams[$name] ?? null;
+    }
+
+    public function setSub(string $name, array|string|int $value): void
     {
         $this->subParams[$name] = $value;
-    }
-
-    public function __isset(string $name)
-    {
-        return isset($this->subParams[$name]);
     }
 }

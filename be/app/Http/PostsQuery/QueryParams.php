@@ -99,7 +99,9 @@ class QueryParams
         array_fill_keys($names, $paramDefaultValueByType[$type]))->toArray();
         foreach ($this->params as $param) { // set sub params with default value
             foreach ($subParamsDefaultValue[$param->name] ?? [] as $name => $value) {
-                $param->{$name} ??= $value;
+                if ($param->getSub($name) === null) {
+                    $param->setSub($name, $value);
+                }
             }
         }
     }
