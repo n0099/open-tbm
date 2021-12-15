@@ -10,11 +10,6 @@ class IndexQuery
 {
     use BaseQuery;
 
-    public function toNestedPosts(): array
-    {
-        return self::getNestedPostsInfoByID($this->queryResult, true);
-    }
-
     public function query(QueryParams $queryParams): self
     {
         $flatQueryParams = array_reduce(
@@ -28,26 +23,24 @@ class IndexQuery
         } elseif (Arr::only($flatQueryParams, Helper::POSTS_ID) === []) { // query by fid only
             $indexQuery->orderByDesc('postTime'); // order by postTime to prevent posts out of order when order by post id
         } else { // query by post id
-            // order by all posts id to keep reply and sub reply continuous instated of clip into multi page since they are vary in postTime
-            $indexQuery = $indexQuery->orderByMulti(array_fill_keys(Helper::POSTS_ID, 'ASC'));
+            // order by all posts id to keep reply and sub reply continuous instated of clip into multi-page since they are varied in postTime
+            $indexQuery->orderByMulti(array_fill_keys(Helper::POSTS_ID, 'ASC'));
         }
 
-        $indexQuery = $indexQuery->whereIn('type', $flatQueryParams['postTypes'])->simplePaginate($this->perPageItems);
-        Helper::abortAPIIf(40401, $indexQuery->isEmpty());
+        $result = $indexQuery->whereIn('type', $flatQueryParams['postTypes'])->simplePaginate($this->perPageItems);
+        Helper::abortAPIIf(40401, $result->isEmpty());
 
-        $postsQueriedInfo = array_merge(
-            ['fid' => $indexQuery->pluck('fid')->first()],
-            array_map( // assign queried posts id from $indexQuery
-                static fn ($postType) => $indexQuery->where('type', $postType)->toArray(),
-                array_combine(Helper::POST_TYPES, Helper::POSTS_ID)
-            )
+        $this->queryResult = array_merge(
+            ['fid' => $result->pluck('fid')->first()],
+            array_combine(Helper::POST_TYPES_PLURAL, array_map( // assign queried posts id from $indexQuery
+                static fn ($postType) => $result->where('type', $postType)->toArray(),
+                Helper::POST_TYPES
+            ))
         );
-
-        $this->queryResult = $postsQueriedInfo;
         $this->queryResultPages = [
-            'firstItem' => $indexQuery->firstItem(),
-            'itemsCount' => $indexQuery->count(),
-            'currentPage' => $indexQuery->currentPage()
+            'firstItem' => $result->firstItem(),
+            'itemsCount' => $result->count(),
+            'currentPage' => $result->currentPage()
         ];
 
         return $this;

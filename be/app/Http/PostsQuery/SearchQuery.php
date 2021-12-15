@@ -17,11 +17,6 @@ class SearchQuery
         return (string)array_keys($param)[0];
     }
 
-    public function toNestedPosts(): array
-    {
-        return self::getNestedPostsInfoByID($this->queryResult, false);
-    }
-
     public function query(QueryParams $queryParams): self
     {
         $getUniqueParamValue = static fn (string $name) =>

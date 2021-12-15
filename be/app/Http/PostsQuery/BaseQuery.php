@@ -13,8 +13,6 @@ trait BaseQuery
 
     protected array $queryResultPages;
 
-    abstract public function toNestedPosts(): array;
-
     abstract public function query(QueryParams $queryParams): self;
 
     public function __construct(protected int $perPageItems)
@@ -31,55 +29,49 @@ trait BaseQuery
         return $this->queryResultPages;
     }
 
-    private static function getNestedPostsInfoByID(array $postsInfo, bool $isInfoOnlyContainsPostsID): array
+    public function fillWithParentPost(): array
     {
-        $postModels = PostModelFactory::getPostModelsByFid($postsInfo['fid']);
-        $tids = array_column($postsInfo['thread'], 'tid');
-        $pids = array_column($postsInfo['reply'], 'pid');
-        $spids = array_column($postsInfo['subReply'], 'spid');
-        $threadsInfo = collect($tids === []
-            ? []
-            : (
-            $isInfoOnlyContainsPostsID
-                ? $postModels['thread']->tid($tids)->hidePrivateFields()->get()->toArray()
-                : $postsInfo['thread']
-            ));
-        $repliesInfo = collect($pids === []
-            ? []
-            : (
-            $isInfoOnlyContainsPostsID
-                ? $postModels['reply']->pid($pids)->hidePrivateFields()->get()->toArray()
-                : $postsInfo['reply']
-            ));
-        $subRepliesInfo = collect($spids === []
-            ? []
-            : (
-            $isInfoOnlyContainsPostsID
-                ? $postModels['subReply']->spid($spids)->hidePrivateFields()->get()->toArray()
-                : $postsInfo['subReply']
-            ));
+        $queryResult = $this->queryResult;
+        $isInfoOnlyContainsPostsID = $this instanceof IndexQuery;
+        $postModels = PostModelFactory::getPostModelsByFid($queryResult['fid']);
+        $tids = array_column($queryResult['threads'], 'tid');
+        $pids = array_column($queryResult['replies'], 'pid');
+        $spids = array_column($queryResult['subReplies'], 'spid');
+
+        $queryDetailedPostsInfo = static function ($postIDs, $postType) use ($postModels, $isInfoOnlyContainsPostsID) {
+            if ($postIDs === []) {
+                return collect();
+            }
+            $model = $postModels[$postType];
+            return collect($isInfoOnlyContainsPostsID
+                ? $model->{Helper::POSTS_TYPE_ID[$postType]}($postIDs)->hidePrivateFields()->get()->toArray()
+                : $model);
+        };
+        $threads = $queryDetailedPostsInfo($tids, 'thread');
+        $replies = $queryDetailedPostsInfo($pids, 'reply');
+        $subReplies = $queryDetailedPostsInfo($spids, 'subReply');
 
         $isSubIDsMissInOriginIDs = static fn (Collection $originIDs, Collection $subIDs): bool
-        => $subIDs->contains(static fn (int $subID): bool => !$originIDs->contains($subID));
+            => $subIDs->contains(static fn (int $subID): bool => !$originIDs->contains($subID));
 
-        $tidsInReplies = $repliesInfo->pluck('tid')->concat($subRepliesInfo->pluck('tid'))->unique()->sort()->values();
-        // $tids must be first argument to ensure the diffed $tidsInReplies existing
+        $tidsInReplies = $replies->pluck('tid')
+            ->concat($subReplies->pluck('tid'))->unique()->sort()->values();
+        // $tids must be first argument to ensure the existence of diffed $tidsInReplies
         if ($isSubIDsMissInOriginIDs(collect($tids), $tidsInReplies)) {
-            // fetch complete threads info which appeared in replies and sub replies info but missed in $tids
-            $threadsInfo = collect($postModels['thread']
+            // fetch complete threads info which appeared in replies and sub replies info but missing in $tids
+            $threads = collect($postModels['thread']
                 ->tid($tidsInReplies->concat($tids)->toArray())
                 ->hidePrivateFields()->get()->toArray());
         }
 
-        $pidsInThreadsAndSubReplies = $subRepliesInfo->pluck('pid');
-        if ($pids === []) { // append thread's first reply when there's no pid
-            $pidsInThreadsAndSubReplies = $pidsInThreadsAndSubReplies->concat($threadsInfo->pluck('firstPid'));
-        }
-        $pidsInThreadsAndSubReplies = $pidsInThreadsAndSubReplies->unique()->sort()->values();
+        $pidsInThreadsAndSubReplies = $subReplies->pluck('pid')
+            // append thread's first reply when there's no pid
+            ->concat($pids === [] ? $threads->pluck('firstPid') : [])
+            ->unique()->sort()->values();
         // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
         if ($isSubIDsMissInOriginIDs(collect($pids), $pidsInThreadsAndSubReplies)) {
-            // fetch complete replies info which appeared in threads and sub replies info but missed in $pids
-            $repliesInfo = collect($postModels['reply']
+            // fetch complete replies info which appeared in threads and sub replies info but missing in $pids
+            $replies = collect($postModels['reply']
                 ->pid($pidsInThreadsAndSubReplies->concat($pids)->toArray())
                 ->hidePrivateFields()->get()->toArray());
         }
@@ -90,24 +82,29 @@ trait BaseQuery
             }
             return $post;
         };
-        $repliesInfo->transform($convertJsonContentToHtml);
-        $subRepliesInfo->transform($convertJsonContentToHtml);
+        $replies->transform($convertJsonContentToHtml);
+        $subReplies->transform($convertJsonContentToHtml);
 
-        return self::convertNestedPostsInfo($threadsInfo->toArray(), $repliesInfo->toArray(), $subRepliesInfo->toArray());
+        return array_merge(
+            ['fid' => $queryResult['fid']],
+            array_combine(Helper::POST_TYPES_PLURAL, [$threads->toArray(), $replies->toArray(), $subReplies->toArray()])
+        );
     }
 
-    private static function convertNestedPostsInfo(array $threadsInfo = [], array $repliesInfo = [], array $subRepliesInfo = []): array
+    public static function nestPostsWithParent(array $threads, array $replies, array $subReplies, int $fid): array
     {
-        $threadsInfo = Helper::setKeyWithItemsValue($threadsInfo, 'tid');
-        $repliesInfo = Helper::setKeyWithItemsValue($repliesInfo, 'pid');
-        $subRepliesInfo = Helper::setKeyWithItemsValue($subRepliesInfo, 'spid');
+        // adding useless parameter $fid will compatible with array shape of field $this->queryResult when passing it as spread arguments
+        $threads = Helper::keyBy($threads, 'tid');
+        $replies = Helper::keyBy($replies, 'pid');
+        $subReplies = Helper::keyBy($subReplies, 'spid');
         $nestedPostsInfo = [];
 
-        foreach ($threadsInfo as $tid => $thread) {
-            $threadReplies = collect($repliesInfo)->where('tid', $tid)->toArray(); // can't use values() here to prevent losing posts id key
+        foreach ($threads as $tid => $thread) {
+            // can't invoke values() here to prevent losing key with posts id
+            $threadReplies = collect($replies)->where('tid', $tid)->toArray();
             foreach ($threadReplies as $pid => $reply) {
                 // values() and array_values() remove keys to simplify json data
-                $threadReplies[$pid]['subReplies'] = collect($subRepliesInfo)->where('pid', $pid)->values()->toArray();
+                $threadReplies[$pid]['subReplies'] = collect($subReplies)->where('pid', $pid)->values()->toArray();
             }
             $nestedPostsInfo[$tid] = array_merge($thread, ['replies' => array_values($threadReplies)]);
         }

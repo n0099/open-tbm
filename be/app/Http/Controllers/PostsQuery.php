@@ -42,19 +42,20 @@ class PostsQuery extends Controller
         } else {
             $query = (new IndexQuery($this->perPageItems))->query($params);
         }
-        $queryResult = $query->getResult();
+        $queryResult = $query->fillWithParentPost();
 
         return [
             'pages' => $query->getResultPages(),
             'forum' => ForumModel::where('fid', $queryResult['fid'])->hidePrivateFields()->first()?->toArray(),
-            'threads' => $query->toNestedPosts(),
+            'threads' => $query::nestPostsWithParent(...$queryResult),
             'users' => UserModel::whereIn(
                 'uid',
                 collect([
-                    array_column($queryResult['thread'], 'authorUid'),
-                    array_column($queryResult['thread'], 'latestReplierUid'),
-                    array_column($queryResult['reply'], 'authorUid'),
-                    array_column($queryResult['subReply'], 'authorUid')
+                    array_column($queryResult['threads'], 'latestReplierUid'),
+                    array_map(
+                        static fn ($type) => array_column($queryResult[$type], 'authorUid'),
+                        Helper::POST_TYPES_PLURAL
+                    ),
                 ])->flatten()->unique()->sort()->toArray()
             )->hidePrivateFields()->get()->toArray()
         ];
