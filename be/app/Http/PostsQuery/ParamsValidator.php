@@ -70,6 +70,8 @@ class ParamsValidator
             '*.authorManagerType' => Rule::in($paramsPossibleValue['userManagerType']),
             '*.latestReplierUid' => 'integer',
             '*.latestReplierGender' => Rule::in($paramsPossibleValue['userGender']),
+
+            '*.not' => 'boolean',
             // sub param of tid, pid, spid, threadViewNum, threadShareNum, threadReplyNum, replySubReplyNum, authorUid, authorExpGrade, latestReplierUid
             '*.range' => 'in:<,=,>,IN,BETWEEN',
             // sub param of threadTitle, postContent, authorName, authorDisplayName, latestReplierName, latestReplierDisplayName
@@ -81,13 +83,13 @@ class ParamsValidator
     protected function validate40001(): void
     {
         // only fill postTypes and/or orderBy uniqueParam doesn't query anything
-        Helper::abortAPIIf(40001, $this->params->count() === \count($this->params->filter('postTypes', 'orderBy')));
+        Helper::abortAPIIf(40001, $this->params->count() === \count($this->params->pick('postTypes', 'orderBy')));
     }
 
     protected function validate40005(): void
     {
         foreach (self::UNIQUE_PARAMS_NAME as $uniqueParamName) { // is all unique param only appeared once
-            Helper::abortAPIIf(40005, \count($this->params->filter($uniqueParamName)) > 1);
+            Helper::abortAPIIf(40005, \count($this->params->pick($uniqueParamName)) > 1);
         }
     }
 
@@ -119,7 +121,7 @@ class ParamsValidator
             'latestReplierGender' => ['ALL', ['thread']]
         ];
         foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
-            if ($this->params->filter($paramName) !== []) {
+            if ($this->params->pick($paramName) !== []) {
                 Helper::abortAPIIfNot(40003, !self::isRequiredPostTypes($this->currentPostTypes, $requiredPostTypes));
             }
         }

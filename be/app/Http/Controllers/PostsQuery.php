@@ -25,14 +25,14 @@ class PostsQuery extends Controller
         ));
         $params = $validator->params;
 
-        $postsIDParams = $params->filter(...Helper::POSTS_ID);
+        $postsIDParams = $params->pick(...Helper::POSTS_ID);
         $isPostIDQuery = // is there no other params, note we ignored the existence of unique params
             \count($params->omit('postTypes')) === \count($postsIDParams)
             && \count($postsIDParams) === 1 // is there only one post id param
             && array_filter($postsIDParams, static fn ($p) => $p->getAllSub() !== []) === []; // is post id param haven't any sub param
         // is the fid param exists and there's no other params
         $isFidParamNull = $params->getUniqueParamValue('fid') === null;
-        $isFidQuery = !$isFidParamNull && $params->count() === \count($params->filter(...ParamsValidator::UNIQUE_PARAMS_NAME));
+        $isFidQuery = !$isFidParamNull && $params->count() === \count($params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME));
         $isIndexQuery = $isPostIDQuery || $isFidQuery;
         $isSearchQuery = !$isIndexQuery;
         if ($isSearchQuery) {
@@ -43,18 +43,18 @@ class PostsQuery extends Controller
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
         $query = (new $queryClass($this->perPageItems))->query($params);
-        $queryResult = $query->fillWithParentPost();
+        $result = $query->fillWithParentPost();
 
         return [
             'pages' => $query->getResultPages(),
-            'forum' => ForumModel::where('fid', $queryResult['fid'])->hidePrivateFields()->first()?->toArray(),
-            'threads' => $query::nestPostsWithParent(...$queryResult),
+            'forum' => ForumModel::where('fid', $result['fid'])->hidePrivateFields()->first()?->toArray(),
+            'threads' => $query::nestPostsWithParent(...$result),
             'users' => UserModel::whereIn(
                 'uid',
                 collect([
-                    array_column($queryResult['threads'], 'latestReplierUid'),
+                    array_column($result['threads'], 'latestReplierUid'),
                     array_map(
-                        static fn ($type) => array_column($queryResult[$type], 'authorUid'),
+                        static fn ($type) => array_column($result[$type], 'authorUid'),
                         Helper::POST_TYPES_PLURAL
                     ),
                 ])->flatten()->unique()->sort()->toArray()

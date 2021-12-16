@@ -24,7 +24,8 @@ class PostModelFactory
 
     /**
      * @param int $fid
-     * @return array{thread: ThreadModel, reply: ReplyModel, subReply: SubReplyModel}
+     * @return PostModel[]
+     * @plasm-return array{thread: ThreadModel, reply: ReplyModel, subReply: SubReplyModel}
      */
     #[ArrayShape([
         'thread' => ThreadModel::class,

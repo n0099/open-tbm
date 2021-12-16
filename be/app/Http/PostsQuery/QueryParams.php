@@ -27,7 +27,7 @@ class QueryParams
     /**
      * @return Param[]
      */
-    public function filter(string ...$names): array
+    public function pick(string ...$names): array
     {
         // array_values() will reset keys
         return array_values(array_filter(
@@ -49,31 +49,39 @@ class QueryParams
 
     public function getUniqueParamValue(string $name): mixed
     {
-        return $this->filter($name)[0]->value ?? null;
+        return $this->pick($name)[0]->value ?? null;
     }
 
     public function setUniqueParamValue(string $name, mixed $value): void
     {
-        $paramsMatchWithName = array_keys(array_filter($this->params, static fn ($p) => $p->name === $name));
-        if ($paramsMatchWithName === []) {
-            throw new \RuntimeException('Cannot find param with given param name');
-        }
-        $this->params[$paramsMatchWithName[0]]->value = $value;
+        $this->params[$this->getParamsIndexByName($name)[0]]->value = $value;
+    }
+
+    /**
+     * @return int[]
+     */
+    protected function getParamsIndexByName(string $name): array
+    {
+        return array_keys(array_filter($this->params, static fn ($p) => $p->name === $name));
     }
 
     public function addDefaultValueOnUniqueParams(): void
     {
         $uniqueParamsDefaultValue = [
             'postTypes' => ['value' => Helper::POST_TYPES],
-            'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'default']]
+            'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'ASC']]
         ];
         foreach ($uniqueParamsDefaultValue as $name => $value) {
             // add unique params with default value when it's not presented in $this->params
-            if ($this->getUniqueParamValue($name) === null) {
-                $this->params[] = new Param([
-                    $name => $value['value'],
-                    'subParam' => $value['subParam'] ?? []
-                ]);
+            $paramFilledWithDefaults = new Param(array_merge(
+                [$name => $this->getUniqueParamValue($name) ?? $value['value']],
+                $this->pick($name)[0]->subParam ?? $value['subParam'] ?? []
+            ));
+            $paramsIndex = $this->getParamsIndexByName($name);
+            if ($paramsIndex === []) {
+                $this->params[] = $paramFilledWithDefaults;
+            } else {
+                $this->params[$paramsIndex[0]] = $paramFilledWithDefaults;
             }
         }
     }

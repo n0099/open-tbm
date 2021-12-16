@@ -28,7 +28,7 @@ class SearchQuery
         ) as $postType => $postModel) {
             $postQuery = $postModel->newQuery();
             foreach ($queryParams as $param) {
-                $postQueries[$postType] = self::applySearchQueryOnPostModel($postQuery, $param);
+                $postQueries[$postType] = self::applyQueryParamsOnQuery($postQuery, $param);
             }
         }
 
@@ -71,117 +71,100 @@ class SearchQuery
     }
 
     /**
-     * Apply search query param's condition on posts model's query builder
-     *
-     * @param Builder $postQuery
-     * @param array $param
-     * @return Builder
+     * Apply conditions of query params on a query builder that created from posts model
      */
-    private static function applySearchQueryOnPostModel(Builder $postQuery, array $param): Builder
+    private static function applyQueryParamsOnQuery(Builder $qb, Param $param): Builder
     {
-        $paramName = self::getParamName($param);
-        $paramValue = $param[$paramName];
+        $name = $param->name;
+        $value = $param->value;
+        $sub = $param->getAllSub();
+        $sub['not'] ??= false;
+        $not = $sub['not'] ? 'Not' : '';
+        $inverseNot = $sub['not'] ? '' : 'Not';
 
-        $numericParamsReverseRange = [
+        $fieldNameOfNumericParams = [
+            'threadViewNum' => 'viewNum',
+            'threadShareNum' => 'shareNum',
+            'threadReplyNum' => 'replyNum',
+            'replySubReplyNum' => 'subReplyNum'
+        ][$name] ?? $name;
+        $inverseRangeOfNumericParams = [
             '<' => '>=',
             '=' => '!=',
             '>' => '<='
-        ];
-        $not = $param['not'] ?? false ? 'Not' : ''; // unique params doesn't have not sub param
-        $reverseNot = $param['not'] ?? false ? '' : 'Not';
-        switch ($paramName) {
-            // uniqueParams
-            case 'orderBy':
-                if ($paramValue === 'default') {
-                    return $postQuery->orderByDesc('postTime');
-                }
-                return $postQuery->orderBy($paramValue, $param['direction']);
-                break;
-            // numericParams
-            case 'tid':
-            case 'pid':
-            case 'spid':
-            case 'authorUid':
-            case 'authorExpGrade':
-            case 'latestReplierUid':
-            case 'threadViewNum':
-            case 'threadShareNum':
-            case 'threadReplyNum':
-            case 'replySubReplyNum':
-                $fieldsName = [
-                    'threadViewNum' => 'viewNum',
-                    'threadShareNum' => 'shareNum',
-                    'threadReplyNum' => 'replyNum',
-                    'replySubReplyNum' => 'subReplyNum'
-                ];
-                if ($param['range'] === 'IN' || $param['range'] === 'BETWEEN') {
-                    $cause = $not . $param['range'];
-                    return $postQuery->{"where{$cause}"}($fieldsName[$paramName] ?? $paramName, explode(',', $paramValue));
-                }
-                return $postQuery->where($fieldsName[$paramName] ?? $paramName, $param['not'] ? $numericParamsReverseRange[$param['range']] : $param['range'], $paramValue);
-            // textMatchParams
-            case 'threadTitle':
-            case 'postContent':
-                return self::applyTextMatchParamsQuery($postQuery, $paramName === 'threadTitle' ? 'title' : 'content', $not, $paramValue, $param);
+        ][$sub['range'] ?? null] ?? null;
+        $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
+        $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
 
-            case 'postTime':
-            case 'latestReplyTime':
-                return $postQuery->{"where{$not}Between"}($paramName, explode(',', $paramValue));
-
-            case 'threadProperties':
-                foreach ($paramValue as $threadProperty) {
-                    switch ($threadProperty) {
-                        case 'good':
-                            $postQuery = $postQuery->where('isGood', $param['not'] ? false : true);
-                            break;
-                        case 'sticky':
-                            $postQuery = $postQuery->{"where{$reverseNot}Null"}('stickyType');
-                            break;
-                    }
+        return match ($name) {
+            // unique
+            'orderBy' => $value === 'default'
+                ? $qb->orderByDesc('postTime')
+                : $qb->orderBy($value, $sub['direction']),
+            // numeric
+            'tid', 'pid', 'spid',
+            'authorUid', 'authorExpGrade', 'latestReplierUid',
+            'threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum' =>
+                $sub['range'] === 'IN' || $sub['range'] === 'BETWEEN'
+                    ? $qb->{"where{$not}{$sub['range']}"}($fieldNameOfNumericParams, explode(',', $value))
+                    : $qb->where(
+                        $fieldNameOfNumericParams,
+                        $sub['not'] ? $inverseRangeOfNumericParams : $sub['range'],
+                        $value
+                    ),
+            // textMatch
+            'threadTitle', 'postContent' =>
+                self::applyTextMatchParamsOnQuery($qb, $name === 'threadTitle' ? 'title' : 'content', $not, $value, $sub),
+            // dateTimeRange
+            'postTime', 'latestReplyTime' =>
+                $qb->{"where{$not}Between"}($name, explode(',', $value)),
+            // array
+            'threadProperties' => static function () use ($sub, $inverseNot, $value, $qb) {
+                foreach ($value as $threadProperty) {
+                    match ($threadProperty) {
+                        'good' => $qb->where('isGood', !$sub['not']),
+                        'sticky' => $qb->{"where{$inverseNot}Null"}('stickyType')
+                    };
                 }
-                return $postQuery;
-
-            case 'authorName':
-            case 'latestReplierName':
-            case 'authorDisplayName':
-            case 'latestReplierDisplayName':
-                $userType = str_starts_with($paramName, 'author') ? 'author' : 'latestReplier';
-                $fieldName = str_ends_with($paramName, 'DisplayName') ? 'displayName' : 'name';
-                return $postQuery->{"where{$not}In"}("{$userType}Uid", self::applyTextMatchParamsQuery(UserModel::newQuery(), $fieldName, $not, $paramValue, $param));
-            case 'authorGender':
-            case 'latestReplierGender':
-                $userType = str_starts_with($paramName, 'author') ? 'author' : 'latestReplier';
-                return $postQuery->{"where{$not}In"}("{$userType}Uid", UserModel::where('gender', $paramValue));
-            case 'authorManagerType':
-                if ($paramValue === 'NULL') {
-                    return $postQuery->{"where{$not}Null"}('authorManagerType');
-                }
-                return $postQuery->where('authorManagerType', $param['not'] ? '!=' : '=', $paramValue);
-            default:
-                return $postQuery;
-        }
+                return $qb;
+            },
+            // user
+            'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
+                $qb->{"where{$not}In"}(
+                    "{$userTypeOfUserParams}Uid",
+                    self::applyTextMatchParamsOnQuery(UserModel::newQuery(), $fieldNameOfUserNameParams, $not, $value, $sub)
+                ),
+            'authorGender', 'latestReplierGender' =>
+                $qb->{"where{$not}In"}("{$userTypeOfUserParams}Uid", UserModel::where('gender', $value)),
+            'authorManagerType' =>
+                $value === 'NULL'
+                    ? $qb->{"where{$not}Null"}('authorManagerType')
+                    : $qb->where('authorManagerType', $sub['not'] ? '!=' : '=', $value),
+            default => $qb
+        };
     }
 
-    private static function applyTextMatchParamsQuery(Builder $query, string $fieldName, string $notString, $paramValue, array $param): Builder
+    private static function applyTextMatchParamsOnQuery(Builder $qb, string $field, string $value, array $subParams): Builder
     {
-        if ($param['matchBy'] === 'regex') {
-            return $query->where($fieldName, "{$notString} REGEXP", $paramValue);
+        $not = $subParams['not'] ? 'Not' : '';
+        if ($subParams['matchBy'] === 'regex') {
+            return $qb->where($field, "{$not} REGEXP", $value);
         }
-        return $query->where(static function ($query) use ($param, $fieldName, $notString, $paramValue) {
+        return $qb->where(static function ($subQuery) use ($subParams, $field, $not, $value) {
             // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-            $notOrWhere = $notString === 'Not' ? '' : 'or';
+            $isOrWhere = $not === 'Not' ? '' : 'or';
             $addMatchKeyword = static fn (string $keyword) =>
-                $query->{"{$notOrWhere}Where"}(
-                    $fieldName,
-                    "{$notString} LIKE",
-                    $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword
+                $subQuery->{"{$isOrWhere}Where"}(
+                    $field,
+                    "{$not} LIKE",
+                    $subParams['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword
                 );
-            if ($param['spaceSplit']) {
-                foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multiple search keyword by space char
+            if ($subParams['spaceSplit']) { // split multiple search keyword by space char
+                foreach (explode(' ', $value) as $splitedKeyword) {
                     $addMatchKeyword($splitedKeyword);
                 }
             } else {
-                $addMatchKeyword($paramValue);
+                $addMatchKeyword($value);
             }
         });
     }

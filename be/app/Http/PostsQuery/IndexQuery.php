@@ -13,8 +13,9 @@ class IndexQuery
     public function query(QueryParams $queryParams): self
     {
         $flatQueryParams = array_reduce(
-            $queryParams->filter(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POSTS_ID),
-            static fn (array $accParams, Param $param) => array_merge($accParams, [$param->name => $param->value]),
+            $queryParams->pick(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POSTS_ID),
+            static fn (array $accParams, Param $param) =>
+                array_merge($accParams, [$param->name => $param->value], $param->getAllSub()),
             []
         ); // flatten unique query params
 

@@ -32,12 +32,12 @@ trait BaseQuery
     public function fillWithParentPost(): array
     {
         $queryResult = $this->queryResult;
-        $isInfoOnlyContainsPostsID = $this instanceof IndexQuery;
         $postModels = PostModelFactory::getPostModelsByFid($queryResult['fid']);
         $tids = array_column($queryResult['threads'], 'tid');
         $pids = array_column($queryResult['replies'], 'pid');
         $spids = array_column($queryResult['subReplies'], 'spid');
 
+        $isInfoOnlyContainsPostsID = $this instanceof IndexQuery;
         $queryDetailedPostsInfo = static function ($postIDs, $postType) use ($postModels, $isInfoOnlyContainsPostsID) {
             if ($postIDs === []) {
                 return collect();
@@ -51,13 +51,13 @@ trait BaseQuery
         $replies = $queryDetailedPostsInfo($pids, 'reply');
         $subReplies = $queryDetailedPostsInfo($spids, 'subReply');
 
-        $isSubIDsMissInOriginIDs = static fn (Collection $originIDs, Collection $subIDs): bool
-            => $subIDs->contains(static fn (int $subID): bool => !$originIDs->contains($subID));
+        $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs)
+            => $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
 
         $tidsInReplies = $replies->pluck('tid')
             ->concat($subReplies->pluck('tid'))->unique()->sort()->values();
         // $tids must be first argument to ensure the existence of diffed $tidsInReplies
-        if ($isSubIDsMissInOriginIDs(collect($tids), $tidsInReplies)) {
+        if ($isSubPostIDMissFormParent(collect($tids), $tidsInReplies)) {
             // fetch complete threads info which appeared in replies and sub replies info but missing in $tids
             $threads = collect($postModels['thread']
                 ->tid($tidsInReplies->concat($tids)->toArray())
@@ -69,7 +69,7 @@ trait BaseQuery
             ->concat($pids === [] ? $threads->pluck('firstPid') : [])
             ->unique()->sort()->values();
         // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
-        if ($isSubIDsMissInOriginIDs(collect($pids), $pidsInThreadsAndSubReplies)) {
+        if ($isSubPostIDMissFormParent(collect($pids), $pidsInThreadsAndSubReplies)) {
             // fetch complete replies info which appeared in threads and sub replies info but missing in $pids
             $replies = collect($postModels['reply']
                 ->pid($pidsInThreadsAndSubReplies->concat($pids)->toArray())
