@@ -96,7 +96,7 @@ class ParamsValidator
         $required[1] = Arr::sort($required[1]);
         return $required[0] === 'SUB'
             ? array_diff($current, $required[1]) === []
-            : $current ===$required[1];
+            : $current === $required[1];
     }
 
     protected function validate40003(): void

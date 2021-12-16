@@ -171,11 +171,11 @@ class SearchQuery
             // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
             $notOrWhere = $notString === 'Not' ? '' : 'or';
             $addMatchKeyword = static fn (string $keyword) =>
-            $query->{"{$notOrWhere}Where"}(
-                $fieldName,
-                "{$notString} LIKE",
-                $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword
-            );
+                $query->{"{$notOrWhere}Where"}(
+                    $fieldName,
+                    "{$notString} LIKE",
+                    $param['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword
+                );
             if ($param['spaceSplit']) {
                 foreach (explode(' ', $paramValue) as $splitedKeyword) { // split multiple search keyword by space char
                     $addMatchKeyword($splitedKeyword);

@@ -16,17 +16,21 @@ class PostsQuery extends Controller
 
     public function query(\Illuminate\Http\Request $request): array
     {
-        $validator = new ParamsValidator((array)Utils::jsonDecode($request->validate([
-            'page' => 'integer',
-            'query' => 'json'
-        ])['query'], true));
+        $validator = new ParamsValidator((array)Utils::jsonDecode(
+            $request->validate([
+                'page' => 'integer',
+                'query' => 'json'
+            ])['query'],
+            true
+        ));
         $params = $validator->params;
 
         $postsIDParams = $params->filter(...Helper::POSTS_ID);
-        $isPostIDQuery = $params->count() === \count($postsIDParams) // is there no other params
+        $isPostIDQuery = // is there no other params, note we ignored the existence of unique params
+            \count($params->omit('postTypes')) === \count($postsIDParams)
             && \count($postsIDParams) === 1 // is there only one post id param
             && array_filter($postsIDParams, static fn ($p) => $p->getAllSub() !== []) === []; // is post id param haven't any sub param
-        // is fid param exists and there's no other params
+        // is the fid param exists and there's no other params
         $isFidParamNull = $params->getUniqueParamValue('fid') === null;
         $isFidQuery = !$isFidParamNull && $params->count() === \count($params->filter(...ParamsValidator::UNIQUE_PARAMS_NAME));
         $isIndexQuery = $isPostIDQuery || $isFidQuery;
@@ -37,11 +41,8 @@ class PostsQuery extends Controller
 
         $validator->addDefaultParamsThenValidate();
 
-        if ($isSearchQuery) {
-            $query = (new SearchQuery($this->perPageItems))->query($params);
-        } else {
-            $query = (new IndexQuery($this->perPageItems))->query($params);
-        }
+        $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
+        $query = (new $queryClass($this->perPageItems))->query($params);
         $queryResult = $query->fillWithParentPost();
 
         return [

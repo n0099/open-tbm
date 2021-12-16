@@ -94,9 +94,9 @@ export default <
     };
     const clearedParamsDefaultValue = (): Array<Partial<TParam>> =>
         _.filter(state.params.map(clearParamDefaultValue)) as Array<Partial<TParam>>; // filter() will remove falsy values like null
-    const clearedUniqueParamsDefaultValue = (...omitParams: string[]): Partial<UniqueParams> =>
+    const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
-        _.pickBy(_.mapValues(_.omit(state.uniqueParams, omitParams), clearParamDefaultValue)) as Partial<UniqueParams>;
+        _.pickBy(_.mapValues(state.uniqueParams, clearParamDefaultValue)) as Partial<UniqueParams>;
     const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Partial<Param>) => {
             const flatted: ObjUnknown = {};

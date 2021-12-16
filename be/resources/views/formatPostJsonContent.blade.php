@@ -7,7 +7,7 @@ try {
     @foreach ($content as $item)
         @switch ($item['type'])
             @case (0) {{--文本 {"text": "content\n", "type": "0"} --}}
-                <span>{{ nl2br(trim($item['text'], "\n")) }}</span>
+                <span>{!! nl2br(htmlspecialchars(trim($item['text'], "\n"))) !!}</span>
                 @break
             @case (1)
                 {{--链接
@@ -16,7 +16,10 @@ try {
                     {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[失效] http://pan.baidu.com/s/", "type": "1", "url_type": "1"}
                     {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[有效] http://pan.baidu.com/s/", "type": "1", "url_type": "2"}
                 --}}
-                <a href="{{ $item['link'] }}" target="_blank">{{ $item['text'] }}</a>
+                <?php
+                    $skipCheckUrl = rawurldecode(Regex::match('@^http://tieba\.baidu\.com/mo/q/checkurl\?url=(.+?)(&|$)@', $item['link'])->group(1));
+                ?>
+                <a href="{{ empty($skipCheckUrl) ? $item['link'] : $skipCheckUrl }}" target="_blank">{{ $item['text'] }}</a>
                 @break
             @case (2) {{--表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"} --}}
                 <?php
@@ -102,17 +105,15 @@ try {
                         "is_native_app": "0"
                     }
                 --}}
-                <a href="{{ $item['link'] }}" target="_blank">
-                    @if (isset($item['origin_src']))
-                        <div class="tieba-image-zoom-in">
-                            <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['origin_src'] }}" />
-                        </div>
-                    @else
-                        外站视频：{{ $item['text'] }}
-                    @endif
-                </a>
+                @if (isset($item['src']))
+                    <video controls poster="{{ $item['src'] }}" src="{{ $item['link'] }}" />
+                @else
+                    <a href="{{ $item['text'] }}" target="_blank">
+                        [[外站视频：{{ $item['text'] }}]]
+                    </a>
+                @endif
                 @break
-            @case (7) {{--换行 {"type":"7","text":"\n"} not found in many posts --}}
+            @case (7) {{--换行 {"type":"7", "text":"\n"} not found in many posts --}}
                 <br />
                 @break
             @case (9) {{--电话 {"text": "12345678 \d{8}", "type": "9", "phonetype": "2"} --}}

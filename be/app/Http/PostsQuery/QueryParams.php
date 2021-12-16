@@ -36,6 +36,17 @@ class QueryParams
         ));
     }
 
+    /**
+     * @return Param[]
+     */
+    public function omit(string ...$names): array
+    {
+        return array_values(array_filter(
+            $this->params,
+            static fn ($p): bool => !\in_array($p->name, $names, true)
+        ));
+    }
+
     public function getUniqueParamValue(string $name): mixed
     {
         return $this->filter($name)[0]->value ?? null;
@@ -56,13 +67,13 @@ class QueryParams
             'postTypes' => ['value' => Helper::POST_TYPES],
             'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'default']]
         ];
-        foreach ($uniqueParamsDefaultValue as $uniqueParamName => $uniqueParamDefaultValue) {
+        foreach ($uniqueParamsDefaultValue as $name => $value) {
             // add unique params with default value when it's not presented in $this->params
-            if ($this->getUniqueParamValue($uniqueParamName) === null) {
-                $this->params[] = new Param(array_merge(
-                    [$uniqueParamName => $uniqueParamDefaultValue['value']],
-                    $uniqueParamDefaultValue['subParam'] ?? []
-                ));
+            if ($this->getUniqueParamValue($name) === null) {
+                $this->params[] = new Param([
+                    $name => $value['value'],
+                    'subParam' => $value['subParam'] ?? []
+                ]);
             }
         }
     }
@@ -96,7 +107,7 @@ class QueryParams
             ]
         ];
         $subParamsDefaultValue = collect($paramsNameByType)->flatMap(static fn (array $names, string $type) =>
-        array_fill_keys($names, $paramDefaultValueByType[$type]))->toArray();
+            array_fill_keys($names, $paramDefaultValueByType[$type]))->toArray();
         foreach ($this->params as $param) { // set sub params with default value
             foreach ($subParamsDefaultValue[$param->name] ?? [] as $name => $value) {
                 if ($param->getSub($name) === null) {

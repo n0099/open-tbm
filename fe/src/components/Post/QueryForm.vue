@@ -200,10 +200,11 @@ export default defineComponent({
             isOrderByInvalid: false,
             isFidInvalid: false
         });
-        const currentQueryType = () => {
+        const getCurrentQueryType = () => {
             const clearedParams = clearedParamsDefaultValue();
             if (_.isEmpty(clearedParams)) { // is there no other params
-                const clearedUniqueParams = clearedUniqueParamsDefaultValue('postTypes', 'orderBy');
+                // ignore the post type param since index query (postID or fid) doesn't restrict them
+                const clearedUniqueParams = _.omit(clearedUniqueParamsDefaultValue(), 'postTypes');
                 if (_.isEmpty(clearedUniqueParams)) { // only fill unique param postTypes and/or orderBy doesn't query anything
                     return 'empty';
                 } else if (clearedUniqueParams.fid !== undefined) {
@@ -263,7 +264,8 @@ export default defineComponent({
             // check query type
             state.isFidInvalid = false;
             const clearedUniqueParams = clearedUniqueParamsDefaultValue();
-            switch (currentQueryType()) {
+            const currentQueryType = getCurrentQueryType();
+            switch (currentQueryType) {
                 case 'empty':
                     notyShow('warning', '请选择贴吧或/并输入查询参数，勿只选择贴子类型参数');
                     return false; // exit early
@@ -273,7 +275,7 @@ export default defineComponent({
                         notyShow('info', '已移除按贴索引查询所不需要的查询贴吧参数');
                         submitRoute(); // update route to match new params without fid
                     }
-                    return true; // index query doesn't restrict on post types
+                    break;
                 case 'search':
                     if (clearedUniqueParams.fid === undefined) {
                         state.isFidInvalid = true; // search query require fid param
@@ -282,6 +284,7 @@ export default defineComponent({
                     break;
                 case 'fid':
             }
+
             const isRequiredPostTypes = (current: PostType[], required?: RequiredPostTypes[string]): required is undefined => {
                 if (required === undefined) return true; // not set means this param accepts any post types
                 required[1] = _.sortBy(required[1]);
@@ -291,20 +294,24 @@ export default defineComponent({
             };
             const requiredPostTypesStringify = (required: NonNullable<RequiredPostTypes[string]>) =>
                 `${required[1].join(required[0] === 'SUB' ? ' | ' : ' & ')}`;
-            // check params required post types
             const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
+
+            // check params required post types, index query doesn't restrict on post types
             useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
-            useState.params.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
-                if (param === null || param.name === undefined || param.value === undefined) {
-                    useState.invalidParamsIndex.push(paramIndex);
-                } else {
-                    const required = paramsRequiredPostTypes[param.name];
-                    if (!isRequiredPostTypes(postTypes, required)) {
+            if (currentQueryType !== 'postID' || currentQueryType !== 'fid') {
+                useState.params.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
+                    if (param === null || param.name === undefined || param.value === undefined) {
                         useState.invalidParamsIndex.push(paramIndex);
-                        notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求贴子类型为${requiredPostTypesStringify(required)}`);
+                    } else {
+                        const required = paramsRequiredPostTypes[param.name];
+                        if (!isRequiredPostTypes(postTypes, required)) {
+                            useState.invalidParamsIndex.push(paramIndex);
+                            notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求贴子类型为${requiredPostTypesStringify(required)}`);
+                        }
                     }
-                }
-            });
+                });
+            }
+
             // check order by required post types
             state.isOrderByInvalid = false;
             const orderBy = useState.uniqueParams.orderBy.value;
@@ -315,12 +322,15 @@ export default defineComponent({
                     notyShow('warning', `排序方式与查询贴子类型要求不匹配，当前要求贴子类型为${requiredPostTypesStringify(required)}`);
                 }
             }
+
             // return false when there have at least one invalid params
             return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid;
         };
         const submit = () => {
-            emit('query', flattenParams());
-            if (checkParams()) submitRoute();
+            if (checkParams()) {
+                emit('query', flattenParams());
+                submitRoute();
+            }
         };
         Object.assign(useQueryFormLateBinding, { parseRoute }); // assign() will prevent losing ref
 
@@ -329,9 +339,9 @@ export default defineComponent({
             return `${p.subParam.matchBy === 'explicit' ? '精确' : '正则'}匹配 空格${p.subParam.spaceSplit ? '不' : ''}分割关键词`;
         };
         const currentQueryTypeDesc = computed(() => {
-            if (currentQueryType() === 'fid') return '按吧索引查询';
-            if (currentQueryType() === 'postID') return '按贴索引查询';
-            if (currentQueryType() === 'search') return '搜索查询';
+            if (getCurrentQueryType() === 'fid') return '按吧索引查询';
+            if (getCurrentQueryType() === 'postID') return '按贴索引查询';
+            if (getCurrentQueryType() === 'search') return '搜索查询';
             return '空查询';
         });
 
