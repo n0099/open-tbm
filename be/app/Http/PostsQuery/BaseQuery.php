@@ -13,7 +13,7 @@ trait BaseQuery
 
     protected array $queryResultPages;
 
-    abstract public function query(QueryParams $queryParams): self;
+    abstract public function query(QueryParams $params): self;
 
     public function __construct(protected int $perPageItems)
     {
@@ -31,21 +31,21 @@ trait BaseQuery
 
     public function fillWithParentPost(): array
     {
-        $queryResult = $this->queryResult;
-        $postModels = PostModelFactory::getPostModelsByFid($queryResult['fid']);
-        $tids = array_column($queryResult['threads'], 'tid');
-        $pids = array_column($queryResult['replies'], 'pid');
-        $spids = array_column($queryResult['subReplies'], 'spid');
+        $result = $this->queryResult;
+        $postModels = PostModelFactory::getPostModelsByFid($result['fid']);
+        $tids = array_column($result['threads'], 'tid');
+        $pids = array_column($result['replies'], 'pid');
+        $spids = array_column($result['subReplies'], 'spid');
 
         $isInfoOnlyContainsPostsID = $this instanceof IndexQuery;
-        $queryDetailedPostsInfo = static function ($postIDs, $postType) use ($postModels, $isInfoOnlyContainsPostsID) {
+        $queryDetailedPostsInfo = static function (array $postIDs, string $postType) use ($result, $postModels, $isInfoOnlyContainsPostsID) {
             if ($postIDs === []) {
                 return collect();
             }
             $model = $postModels[$postType];
             return collect($isInfoOnlyContainsPostsID
                 ? $model->{Helper::POSTS_TYPE_ID[$postType]}($postIDs)->hidePrivateFields()->get()->toArray()
-                : $model);
+                : $result[Helper::POST_TYPES_TO_PLURAL[$postType]]);
         };
         $threads = $queryDetailedPostsInfo($tids, 'thread');
         $replies = $queryDetailedPostsInfo($pids, 'reply');
@@ -86,7 +86,7 @@ trait BaseQuery
         $subReplies->transform($convertJsonContentToHtml);
 
         return array_merge(
-            ['fid' => $queryResult['fid']],
+            ['fid' => $result['fid']],
             array_combine(Helper::POST_TYPES_PLURAL, [$threads->toArray(), $replies->toArray(), $subReplies->toArray()])
         );
     }

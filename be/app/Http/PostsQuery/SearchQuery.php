@@ -3,50 +3,43 @@
 namespace App\Http\PostsQuery;
 
 use App\Helper;
+use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
 
 class SearchQuery
 {
     use BaseQuery;
 
-    private static function getParamName(array $param): string
+    public function query(QueryParams $params): self
     {
-        return (string)array_keys($param)[0];
-    }
-
-    public function query(QueryParams $queryParams): self
-    {
-        $getUniqueParamValue = static fn (string $name) =>
-            Arr::first($queryParams, static fn (array $param): bool => self::getParamName($param) === $name)[$name];
-        $postQueries = [];
-        foreach (Arr::only(
-            PostModelFactory::getPostModelsByFid($getUniqueParamValue('fid')),
-            $getUniqueParamValue('postTypes')
-        ) as $postType => $postModel) {
+        $fid = $params->getUniqueParamValue('fid');
+        $queries = array_map(function (PostModel $postModel) use ($params): Paginator {
             $postQuery = $postModel->newQuery();
-            foreach ($queryParams as $param) {
-                $postQueries[$postType] = self::applyQueryParamsOnQuery($postQuery, $param);
+            foreach ($params->omit() as $param) {
+                self::applyQueryParamsOnQuery($postQuery, $param);
             }
-        }
+            return $postQuery->hidePrivateFields()->simplePaginate($this->perPageItems);
+        }, Arr::only(
+            PostModelFactory::getPostModelsByFid($fid),
+            $params->getUniqueParamValue('postTypes')
+        ));
 
-        $postsQueriedInfo = array_merge(
-            ['fid' => $getUniqueParamValue('fid')],
-            array_fill_keys(Helper::POST_TYPES, [])
+        $queryResults = array_map(static fn ($qb) => $qb->toArray()['data'], $queries);
+        $results = array_merge(
+            ['fid' => $fid],
+            array_combine(Helper::POST_TYPES_PLURAL, $queryResults)
         );
-        foreach ($postQueries as $postType => $postQuery) {
-            $postQueries[$postType] = $postQuery->hidePrivateFields()->simplePaginate($this->perPageItems);
-            $postsQueriedInfo[$postType] = $postQueries[$postType]->toArray()['data'];
-        }
-        Helper::abortAPIIf(40401, array_keys(array_filter($postsQueriedInfo)) === ['fid']);
+        Helper::abortAPIIf(40401, array_keys(array_filter($results)) === ['fid']);
 
-        $this->queryResult = $postsQueriedInfo;
-        $this->queryResultPages = [ // todo: should cast simplePagination to array in $postQueries to prevent dynamic call method by string
-            'firstItem' => self::pageInfoUnion($postQueries, 'firstItem', static fn (array $unionValues) => min($unionValues)),
-            'itemsCount' => self::pageInfoUnion($postQueries, 'count', static fn (array $unionValues) => array_sum($unionValues)),
-            'currentPage' => self::pageInfoUnion($postQueries, 'currentPage', static fn (array $unionValues) => min($unionValues))
+        $this->queryResult = $results;
+        $this->queryResultPages = [ // todo: should cast simplePagination to array in $queries to prevent dynamic call method by string
+            'firstItem' => self::unionPageStats($queries, 'firstItem', static fn (array $v) => min($v)),
+            'itemsCount' => self::unionPageStats($queries, 'count', static fn (array $v) => array_sum($v)),
+            'currentPage' => self::unionPageStats($queries, 'currentPage', static fn (array $v) => min($v))
         ];
 
         return $this;
@@ -55,19 +48,16 @@ class SearchQuery
     /**
      * Union builders pagination $unionMethodName data by $unionStatement
      *
-     * @param array $queryBuilders
+     * @param Paginator[] $paginators
      * @param string $unionMethodName
-     * @param callable $unionStatement
-     * @return mixed $unionStatement()
+     * @param callable $unionCallback
+     * @return mixed returned by $unionCallback()
      */
-    private static function pageInfoUnion(array $queryBuilders, string $unionMethodName, callable $unionStatement): mixed
+    private static function unionPageStats(array $paginators, string $unionMethodName, callable $unionCallback): mixed
     {
-        $unionValues = [];
-        foreach ($queryBuilders as $queryBuilder) {
-            $unionValues[] = $queryBuilder->$unionMethodName();
-        }
-        $unionValues = array_filter($unionValues); // array_filter() will remove falsy values
-        return $unionStatement($unionValues === [] ? [0] : $unionValues); // prevent empty array
+        // array_filter() will remove falsy values
+        $unionValues = array_filter(array_map(static fn ($p) => $p->$unionMethodName(), $paginators));
+        return $unionCallback($unionValues === [] ? [0] : $unionValues); // prevent empty array
     }
 
     /**

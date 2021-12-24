@@ -14,6 +14,8 @@ class Helper
 
     public const POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
 
+    public const POST_TYPES_TO_PLURAL = ['thread' => 'threads', 'reply' => 'replies', 'subReply' => 'subReplies'];
+
     public const POSTS_ID_TYPE = [
         'tid' => 'thread',
         'pid' => 'reply',
