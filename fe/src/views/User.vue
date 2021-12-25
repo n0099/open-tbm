@@ -71,7 +71,7 @@ export default defineComponent({
             }
             if (isNewQuery) state.userPages = [usersQuery];
             else state.userPages = _.sortBy([...state.userPages, usersQuery], i => i.pages.currentPage);
-            notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.currentItems}条记录 耗时${Date.now() - startTime}ms`);
+            notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
             return true;
         };
         fetchUsersData(route, true);

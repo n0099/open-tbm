@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts">
-import type { ApiError, ApiForumList } from '@/api/index.d';
+import type { ApiError, ApiForumList, ApiPostsQuery } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
@@ -63,7 +63,8 @@ export default defineComponent({
         const router = useRouter();
         const state = reactive<{
             forumList: ApiForumList,
-            postPages: unknown[],
+            postPages: ApiPostsQuery[],
+            currentQueryParams: ObjUnknown,
             currentRoutePage: number,
             isLoading: boolean,
             lastFetchError: ApiError | null,
@@ -74,6 +75,7 @@ export default defineComponent({
         }>({
             forumList: [],
             postPages: [],
+            currentQueryParams: {},
             currentRoutePage: 1,
             isLoading: false,
             lastFetchError: null,
@@ -159,7 +161,7 @@ export default defineComponent({
             }
             if (isNewQuery) state.postPages = [postsQuery];
             else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
-            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.currentItems}条记录 耗时${Date.now() - startTime}ms`);
+            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
             return true;
         };
 

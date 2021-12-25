@@ -38,7 +38,7 @@ class UsersQuery extends Controller
         return [
             'pages' => [
                 'firstItem' => $queriedInfo->firstItem(),
-                'currentItems' => $queriedInfo->count(),
+                'itemsCount' => $queriedInfo->count(),
                 'currentPage' => $queriedInfo->currentPage()
             ],
             'users' => $queriedInfo->toArray()['data']

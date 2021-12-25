@@ -25,14 +25,16 @@ class ParamsValidator
         $this->validate40005();
     }
 
-    public function addDefaultParamsThenValidate(): void
+    public function addDefaultParamsThenValidate(bool $shouldSkip40003): void
     {
         $this->params->addDefaultValueOnParams();
         $this->params->addDefaultValueOnUniqueParams();
         // sort here to prevent further sort while validating
         $this->params->setUniqueParamValue('postTypes', Arr::sort($this->params->getUniqueParamValue('postTypes')));
         $this->currentPostTypes = (array)$this->params->getUniqueParamValue('postTypes');
-        $this->validate40003();
+        if (!$shouldSkip40003) {
+            $this->validate40003();
+        }
         $this->validate40004();
     }
 
@@ -122,7 +124,7 @@ class ParamsValidator
         ];
         foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
             if ($this->params->pick($paramName) !== []) {
-                Helper::abortAPIIfNot(40003, !self::isRequiredPostTypes($this->currentPostTypes, $requiredPostTypes));
+                Helper::abortAPIIfNot(40003, self::isRequiredPostTypes($this->currentPostTypes, $requiredPostTypes));
             }
         }
     }
@@ -135,7 +137,7 @@ class ParamsValidator
         ];
         $currentOrderBy = (string)$this->params->getUniqueParamValue('orderBy');
         if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
-            Helper::abortAPIIfNot(40004, !self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]));
+            Helper::abortAPIIfNot(40004, self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]));
         }
     }
 }

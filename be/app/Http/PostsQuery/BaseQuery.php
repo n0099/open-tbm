@@ -66,7 +66,7 @@ trait BaseQuery
 
         $pidsInThreadsAndSubReplies = $subReplies->pluck('pid')
             // append thread's first reply when there's no pid
-            ->concat($pids === [] ? $threads->pluck('firstPid') : [])
+            // ->concat($pids === [] ? $threads->pluck('firstPid') : [])
             ->unique()->sort()->values();
         // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
         if ($isSubPostIDMissFormParent(collect($pids), $pidsInThreadsAndSubReplies)) {

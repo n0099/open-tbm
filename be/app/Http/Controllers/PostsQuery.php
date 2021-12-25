@@ -39,7 +39,7 @@ class PostsQuery extends Controller
             Helper::abortAPIIf(40002, $isFidParamNull);
         }
 
-        $validator->addDefaultParamsThenValidate();
+        $validator->addDefaultParamsThenValidate($isIndexQuery);
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
         $query = (new $queryClass($this->perPageItems))->query($params);

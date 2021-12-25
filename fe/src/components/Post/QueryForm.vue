@@ -298,7 +298,7 @@ export default defineComponent({
 
             // check params required post types, index query doesn't restrict on post types
             useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
-            if (currentQueryType !== 'postID' || currentQueryType !== 'fid') {
+            if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
                 useState.params.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
                     if (param === null || param.name === undefined || param.value === undefined) {
                         useState.invalidParamsIndex.push(paramIndex);

@@ -39,7 +39,7 @@ export interface ApiStatsForumPostsCountQP {
     endTime: UnixTimestamp
 }
 
-export type Pagination = { [P in 'currentItems' | 'currentPage' | 'firstItem']: number };
+export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemsCount']: number };
 interface ApiQPPagination { page?: number }
 export type TiebaUserGender = 0 | 1 | 2 | null;
 export type TiebaUserGenderQP = '0' | '1' | '2' | 'NULL';
