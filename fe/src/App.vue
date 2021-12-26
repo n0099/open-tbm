@@ -48,12 +48,6 @@ const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
 const $$baseUrl = '{{ $baseUrl }}';
 const $$baseUrlDir = $$baseUrl.substr($$baseUrl.indexOf('/', $$baseUrl.indexOf('://') + 3));
 
-const $$getTiebaPostLink = (tid, pid = null, spid = null) => {
-    if (spid !== null) return `https://tieba.baidu.com/p/${tid}?pid=${spid}#${spid}`;
-    else if (pid !== null) return `https://tieba.baidu.com/p/${tid}?pid=${pid}#${pid}`;
-
-    return `https://tieba.baidu.com/p/${tid}`;
-};
 const $$getTBMPostLink = (tid, pid = null, spid = null) => {
     if (spid !== null) return `${$$baseUrl}/post/tid/${tid}`;
     else if (pid !== null) return `${$$baseUrl}/post/pid/${pid}`;

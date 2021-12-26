@@ -1,34 +1,34 @@
 <template>
     <div :data-page="posts.pages.currentPage" class="post-render-list pb-3">
-        <div v-for="thread in posts.threads" :id="`t${thread.tid}`" class="thread-item card">
+        <div v-for="thread in posts.threads" :key="thread.tid" :id="`t${thread.tid}`" class="thread-item card">
             <div class="thread-title shadow-sm card-header sticky-top">
                 <ThreadTag :thread="thread" />
                 <h6 class="d-inline">{{ thread.title }}</h6>
-                <div class="float-right badge badge-light">
-                    <RouterLink :to="{ name: 'tid', params: { tid: thread.tid } }"
-                                class="badge badge-pill badge-light">只看此贴</RouterLink>
-                    <a :href="$$getTiebaPostLink(thread.tid)" target="_blank"
-                       class="badge badge-pill badge-light"><FontAwesomeIcon icon="link" /></a>
+                <div class="float-end badge bg-light">
+                    <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
+                                class="badge rounded-pill bg-light text-dark">只看此贴</RouterLink>
+                    <a :href="tiebaPostLink(thread.tid)" target="_blank"
+                       class="badge rounded-pill bg-light text-dark"><FontAwesomeIcon icon="link" size="lg" /></a>
                     <a :data-tippy-content="`<h6>tid：${thread.tid}</h6><hr />
-                                首次收录时间：${moment(thread.created_at).fromNow()}（${thread.created_at}）<br />
-                                最后更新时间：${moment(thread.updated_at).fromNow()}（${thread.updated_at}）`"
-                       class="badge badge-pill badge-light">
-                        <FontAwesomeIcon icon="info" />
+                        首次收录时间：${moment(thread.created_at).fromNow()}（${thread.created_at}）<br />
+                        最后更新时间：${moment(thread.updated_at).fromNow()}（${thread.updated_at}）`"
+                       class="badge rounded-pill bg-light text-dark">
+                        <FontAwesomeIcon icon="info" size="lg" />
                     </a>
                     <span :data-tippy-content="`发帖时间：${thread.postTime}`"
-                          class="post-time-badge badge badge-pill badge-success">{{ moment(thread.postTime).fromNow() }}</span>
+                          class="post-time-badge badge rounded-pill bg-success">{{ moment(thread.postTime).fromNow() }}</span>
                 </div>
-                <div class="mt-1">
-                    <span data-tippy-content="回复量" class="badge badge-info">
-                        <FontAwesomeIcon icon="comment-alt" {{ thread.replyNum }}
+                <div class="d-flex gap-1 mt-2">
+                    <span data-tippy-content="回复量" class="badge bg-secondary">
+                        <FontAwesomeIcon icon="comment-alt" />{{ thread.replyNum }}
                     </span>
-                    <span data-tippy-content="浏览量" class="badge badge-info">
-                        <FontAwesomeIcon icon="eye"> {{ thread.viewNum }}
+                    <span data-tippy-content="浏览量" class="badge bg-info">
+                        <FontAwesomeIcon icon="eye" />{{ thread.viewNum }}
                     </span>
-                    <span v-if="thread.shareNum !== 0" data-tippy-content="分享量" class="badge badge-info">
-                        <FontAwesomeIcon icon="share-alt" {{ thread.shareNum }}
+                    <span v-if="thread.shareNum !== 0" data-tippy-content="分享量" class="badge bg-info">
+                        <FontAwesomeIcon icon="share-alt" /> {{ thread.shareNum }}
                     </span>
-                    <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge badge-info">
+                    <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge bg-info">
                         <FontAwesomeIcon icon="thumbs-up" /> {{ thread.agreeInfo.agree_num }}
                         <FontAwesomeIcon icon="thumbs-down" /> {{ thread.agreeInfo.disagree_num }}
                     </span>
@@ -36,42 +36,42 @@
                         点赞量：${thread.zanInfo.num}<br />
                         最后点赞时间：${moment.unix(thread.zanInfo.last_time).fromNow()}
                         （${moment.unix(thread.zanInfo.last_time).format('YYYY-MM-DD HH:mm:ss')}）<br />
-                        近期点赞用户：${thread.zanInfo.user_id_list}<br />`" class="badge badge-info">
+                        近期点赞用户：${thread.zanInfo.user_id_list}<br />`" class="badge bg-info">
                         <!-- todo: fetch users info in zanInfo.user_id_list -->
                         <FontAwesomeIcon icon="thumbs-up" /> 旧版客户端赞
                     </span>
-                    <span v-if="thread.location !== null" data-tippy-content="发帖位置" class="badge badge-info">
-                        <FontAwesomeIcon icon="location-arrow" {{ thread.location }} <!-- todo: unknown json struct -->
+                    <span v-if="thread.location !== null" data-tippy-content="发帖位置" class="badge bg-info">
+                        <FontAwesomeIcon icon="location-arrow" /> {{ thread.location }}<!-- todo: unknown json struct -->
                     </span>
-                    <div class="float-right btn-group" role="group">
-                        <a :href="$$getTiebaUserLink($getUserInfo(thread.authorUid).name)"
-                           target="_blank" class="badge btn btn-light">
+                    <div class="float-end badge bg-light" role="group">
+                        <a :href="tiebaUserLink(getUserInfo(thread.authorUid).name)"
+                           target="_blank" class="badge">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
                                   class="fw-bold text-success">楼主：</span>
                             <span v-else class="fw-bold text-info">楼主及最后回复：</span>
-                            <span class="fw-normal">{{ renderUsername(thread.authorUid) }}</span>
+                            <span class="fw-normal text-dark">{{ renderUsername(thread.authorUid) }}</span>
                         </a>
                         <UserTag v-if="thread.authorManagerType !== null"
                                  :user-info="{ managerType: thread.authorManagerType }" :users-info-source="posts.users" />
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
-                            <a :href="$$getTiebaUserLink($getUserInfo(thread.latestReplierUid).name)"
-                               target="_blank" class="badge btn btn-light">
+                            <a :href="tiebaUserLink(getUserInfo(thread.latestReplierUid).name)"
+                               target="_blank" class="badge">
                                 <span class="fw-bold text-secondary">最后回复：</span>
-                                <span class="fw-normal">{{ renderUsername(thread.latestReplierUid) }}</span>
+                                <span class="fw-normal text-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </a>
                         </template>
-                        <div class="thread-latest-reply-time-badge d-inline badge badge-light">
+                        <div class="thread-latest-reply-time-badge d-inline badge bg-light text-dark">
                             <span :data-tippy-content="`最后回复时间：${thread.latestReplyTime}`"
-                                  class="post-time-badge badge badge-pill badge-secondary">{{ moment(thread.latestReplyTime).fromNow() }}</span>
+                                  class="post-time-badge badge rounded-pill bg-secondary">{{ moment(thread.latestReplyTime).fromNow() }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-for="reply in thread.replies" :id="reply.pid">
+            <div v-for="reply in thread.replies" :key="reply.pid" :id="reply.pid">
                 <div class="reply-title sticky-top card-header">
-                    <div class="d-inline h5">
-                        <span class="badge badge-info">{{ reply.floor }}楼</span>
-                        <span v-if="reply.subReplyNum > 0" class="badge badge-info">
+                    <div class="d-inline-flex gap-1 h5">
+                        <span class="badge bg-secondary">{{ reply.floor }}楼</span>
+                        <span v-if="reply.subReplyNum > 0" class="badge bg-info">
                             {{ reply.subReplyNum }}条<FontAwesomeIcon icon="comment-dots" />
                         </span>
                         <!-- TODO: implement these reply's property
@@ -81,28 +81,28 @@
                             <span>{{ reply.tailInfo }}</span>
                         -->
                     </div>
-                    <div class="float-right badge badge-light">
-                        <RouterLink :to="{ name: 'pid', params: { pid: reply.pid } }"
-                                    class="badge badge-pill badge-light">只看此楼</RouterLink>
-                        <a :href="$$getTiebaPostLink(reply.tid, reply.pid)" target="_blank"
-                           class="badge badge-pill badge-light"><FontAwesomeIcon icon="link" /></a>
+                    <div class="float-end badge bg-light">
+                        <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
+                                    class="badge rounded-pill bg-light text-dark">只看此楼</RouterLink>
+                        <a :href="tiebaPostLink(reply.tid, reply.pid)" target="_blank"
+                           class="badge rounded-pill bg-light text-dark"><FontAwesomeIcon icon="link" size="lg" /></a>
                         <a :data-tippy-content="`
                             <h6>pid：${reply.pid}</h6><hr />
                             首次收录时间：${moment(reply.created_at).fromNow()}（${reply.created_at}）<br />
                             最后更新时间：${moment(reply.updated_at).fromNow()}（${reply.updated_at}）`"
-                           class="badge badge-pill badge-light">
-                            <FontAwesomeIcon icon="info" />
+                           class="badge rounded-pill bg-light text-dark">
+                            <FontAwesomeIcon icon="info" size="lg" />
                         </a>
                         <span :data-tippy-content="reply.postTime"
-                              class="post-time-badge badge badge-pill badge-primary">{{ moment(reply.postTime).fromNow() }}</span>
+                              class="post-time-badge badge rounded-pill bg-primary">{{ moment(reply.postTime).fromNow() }}</span>
                     </div>
                 </div>
                 <div class="reply-info shadow-sm row bs-callout bs-callout-info">
-                    <div v-for="author in [$getUserInfo(reply.authorUid)]" class="col-auto text-center reply-banner">
-                        <div class="reply-user-info sticky-top shadow-sm badge badge-light">
-                            <a :href="$$getTiebaUserLink(author.name)" target="_blank" class="d-block">
-                                <img :data-src="$$getTiebaUserAvatarUrl(author.avatarUrl)"
-                                     class="tieba-user-avatar-large lazyload d-block mx-auto badge badge-light"/>
+                    <div v-for="author in [getUserInfo(reply.authorUid)]" :key="author.uid" class="col-auto text-center reply-banner">
+                        <div class="reply-user-info sticky-top shadow-sm badge bg-light">
+                            <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
+                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
+                                     class="tieba-user-avatar-large lazyload d-block mx-auto badge bg-light"/>
                                 <span>
                                     {{ author.name }}
                                     <br v-if="author.displayName !== null && author.name !== null" />
@@ -116,45 +116,45 @@
                             }" :users-info-source="posts.users" />
                         </div>
                     </div>
-                    <div class="reply-body col border-left">
+                    <div class="reply-body col border-start">
                         <div class="p-2" v-html="reply.content" />
                         <template v-if="reply.subReplies.length > 0">
-                            <div v-for="subReplyGroup in reply.subReplies"
+                            <div v-for="subReplyGroup in reply.subReplies" :key="reply.subReplies.indexOf(subReplyGroup)"
                                  class="sub-reply-group bs-callout bs-callout-success">
                                 <ul class="list-group list-group-flush">
-                                    <li v-for="(subReply, subReplyIndex) in subReplyGroup"
+                                    <li v-for="(subReply, subReplyIndex) in subReplyGroup" :key="subReply.spid"
                                         @mouseenter="hoveringSubReplyID = subReply.spid"
                                         @mouseleave="hoveringSubReplyID = 0"
                                         class="sub-reply-item list-group-item">
-                                        <template v-for="author in [$getUserInfo(subReply.authorUid)]">
+                                        <template v-for="author in [getUserInfo(subReply.authorUid)]" :key="author.uid">
                                             <a v-if="subReplyGroup[subReplyIndex - 1] === undefined"
-                                               :href="$$getTiebaUserLink(author.name)"
-                                               target="_blank" class="sub-reply-user-info badge badge-light">
-                                                <img :data-src="$$getTiebaUserAvatarUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
-                                                <span>{{ renderUsername(subReply.authorUid) }}</span>
+                                               :href="tiebaUserLink(author.name)"
+                                               target="_blank" class="sub-reply-user-info badge bg-light">
+                                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
+                                                <span class="align-middle ms-1 text-dark">{{ renderUsername(subReply.authorUid) }}</span>
                                                 <UserTag :user-info="{
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
                                                     managerType: subReply.authorManagerType,
                                                     expGrade: subReply.authorExpGrade
                                                 }" :users-info-source="posts.users" />
                                             </a>
-                                            <div class="float-right badge badge-light">
+                                            <div class="float-end badge bg-light">
                                                 <div :class="{
                                                     'd-none': hoveringSubReplyID !== subReply.spid,
                                                     'd-inline': hoveringSubReplyID === subReply.spid
                                                 }"><!-- fixme: high cpu usage due to js evaling while quickly emitting hover event -->
-                                                    <a :href="$$getTiebaPostLink(subReply.tid, null, subReply.spid)" target="_blank"
-                                                       class="badge badge-pill badge-light"><FontAwesomeIcon icon="link" /></a>
+                                                    <a :href="tiebaPostLink(subReply.tid, subReply.spid)" target="_blank"
+                                                       class="badge rounded-pill bg-light text-dark"><FontAwesomeIcon icon="link" size="lg" /></a>
                                                     <a :data-tippy-content="`
                                                         <h6>spid：${subReply.spid}</h6><hr />
                                                         首次收录时间：${moment(subReply.created_at).fromNow()}（${subReply.created_at}）<br />
                                                         最后更新时间：${moment(subReply.created_at).fromNow()}（${subReply.updated_at}）`"
-                                                       class="badge badge-pill badge-light">
-                                                        <FontAwesomeIcon icon="info" />
+                                                       class="badge rounded-pill bg-light text-dark">
+                                                        <FontAwesomeIcon icon="info" size="lg" />
                                                     </a>
                                                 </div>
                                                 <span :data-tippy-content="subReply.postTime"
-                                                      class="post-time-badge badge badge-pill badge-info">{{ moment(subReply.postTime).fromNow() }}</span>
+                                                      class="post-time-badge badge rounded-pill bg-info">{{ moment(subReply.postTime).fromNow() }}</span>
                                             </div>
                                         </template>
                                         <div v-html="subReply.content" />
@@ -170,6 +170,8 @@
 </template>
 
 <script lang="ts">
+import '@/shared/bootstrapCallout.css';
+import { tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
 import { ThreadTag, UserTag } from './';
 import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, toRefs } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
@@ -185,10 +187,6 @@ export default defineComponent({
     setup(props) {
         const route = useRoute();
         const state = reactive({
-            $$getTiebaUserLink,
-            $$getTiebaPostLink,
-            $$getTiebaUserAvatarUrl,
-            $getUserInfo: window.$getUserInfo(props.initialPosts.users),
             hoveringSubReplyID: 0 // for display item's right floating hide buttons
         });
         const posts = computed(() => {
@@ -212,8 +210,18 @@ export default defineComponent({
             });
             return postsData;
         });
+        const getUserInfo = /* window.getUserInfo(props.initialPosts.users) */ () => ({
+            id: 0,
+            uid: 0,
+            name: '未知用户',
+            displayName: null,
+            avatarUrl: null,
+            gender: 0,
+            fansNickname: null,
+            iconInfo: []
+        });
         const renderUsername = uid => {
-            const user = state.$getUserInfo(uid);
+            const user = getUserInfo(uid);
             const { name } = user;
             const { displayName } = user;
             if (name === null) return `${displayName !== null ? displayName : `无用户名或覆盖名（UID：${user.uid}）`}`;
@@ -234,7 +242,7 @@ export default defineComponent({
             $$registerTiebaImageZoomEvent(this.$el, true);
         });
 
-        return { moment, ...toRefs(state), posts };
+        return { moment, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, ...toRefs(state), posts, renderUsername, getUserInfo };
     }
 });
 </script>
@@ -260,7 +268,7 @@ export default defineComponent({
 
 .reply-title {
     z-index: 1019;
-    top: 62px;
+    top: 72px;
     margin-top: .625em;
     border-top: 1px solid #ededed;
     border-bottom: 0;

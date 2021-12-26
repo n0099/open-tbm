@@ -339,9 +339,10 @@ export default defineComponent({
             return `${p.subParam.matchBy === 'explicit' ? '精确' : '正则'}匹配 空格${p.subParam.spaceSplit ? '不' : ''}分割关键词`;
         };
         const currentQueryTypeDesc = computed(() => {
-            if (getCurrentQueryType() === 'fid') return '按吧索引查询';
-            if (getCurrentQueryType() === 'postID') return '按贴索引查询';
-            if (getCurrentQueryType() === 'search') return '搜索查询';
+            const currentQueryType = getCurrentQueryType();
+            if (currentQueryType === 'fid') return '按吧索引查询';
+            if (currentQueryType === 'postID') return '按贴索引查询';
+            if (currentQueryType === 'search') return '搜索查询';
             return '空查询';
         });
 

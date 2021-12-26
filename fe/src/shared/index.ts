@@ -20,6 +20,10 @@ export const postsID = ['tid', 'pid', 'spid'] as const;
 
 // we can't declare global timeout like `window.noty = new Noty({ timeout: 3000 });` due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 3000, type, text }).show() };
+export const tiebaPostLink = (tid: number, pidOrSpid?: number) => {
+    if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
+    return `https://tieba.baidu.com/p/${tid}`;
+};
 export const tiebaUserLink = (username: string) => `https://tieba.baidu.com/home/main?un=${username}`;
 export const tiebaUserPortraitUrl = (portrait: string) => `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
 
