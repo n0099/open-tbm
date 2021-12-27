@@ -59,7 +59,7 @@ export const timeGranularityAxisType: { [P in TimeGranularities]: 'category' | '
     year: 'category'
 };
 
-const getLuxonFromDateTimeUTC8 = (dateTime: SqlDateTimeUtcPlus8) => DateTime.fromSQL(dateTime, { zone: 'Asia/Shanghai' });
+export const dateTimeFromUTC8 = (dateTime: SqlDateTimeUtcPlus8) => DateTime.fromSQL(dateTime, { zone: 'Asia/Shanghai' });
 const stringTypeGuard = (p: unknown): p is string => (_.isString(p) ? true : '');
 export const timeGranularityAxisPointerLabelFormatter: { [P in TimeGranularities]: (params: { value: Date | number | string }) => string } = {
     minute: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATETIME_SHORT) : ''),

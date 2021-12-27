@@ -25,6 +25,7 @@ function detectUndefined(node) {
             // own usage start
             'loading',
             'echarts',
+            'bs-callout',
             // own usage end
             'grecaptcha',
             'g-recaptcha',
@@ -32,6 +33,7 @@ function detectUndefined(node) {
             'nprogress',
             'noty_',
             'ls-is-cached', // lazysizes
+            'tippy-',
             // fontawesome start
             'fa-',
             'far',

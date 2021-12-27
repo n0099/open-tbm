@@ -13,6 +13,7 @@ export type ObjEmpty = Record<string, never>;
 // https://github.com/microsoft/TypeScript/issues/35660
 export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
+export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 
 export type PostType = 'reply' | 'subReply' | 'thread';
 export type PostID = typeof postsID[number];

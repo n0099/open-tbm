@@ -4,6 +4,7 @@ export { default as InputTextMatchParam } from './InputTextMatchParam.vue';
 export { default as NavSidebar } from './NavSidebar.vue';
 export { default as PageNextButton } from './PageNextButton.vue';
 export { default as PagePreviousButton } from './PagePreviousButton.vue';
+export { default as PostTimeBadge } from './PostTimeBadge.vue';
 export { default as QueryForm } from './QueryForm.vue';
 export { default as SelectParam } from './SelectParam.vue';
 export { default as SelectRange } from './SelectRange.vue';
