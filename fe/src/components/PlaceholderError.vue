@@ -25,6 +25,6 @@ export default defineComponent({
 
 <style scoped>
 .errorCode {
-    font-size: 6em;
+    font-size: 6rem;
 }
 </style>

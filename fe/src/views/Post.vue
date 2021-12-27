@@ -225,7 +225,7 @@ const postsQueryVue = {
 <style scoped>
 .posts-nav-collapse {
     padding: 2px;
-    font-size: 1.3em;
+    font-size: 1.3rem;
     background-color: whitesmoke;
 }
 .post-render-wrapper {

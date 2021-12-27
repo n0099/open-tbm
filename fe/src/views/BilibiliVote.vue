@@ -686,15 +686,15 @@ export default defineComponent({
     margin-top: 0.5rem;
 }
 #top50CandidatesCount {
-    height: 32em;
+    height: 32rem;
 }
 #top10CandidatesTimeline {
-    height: 40em;
+    height: 40rem;
 }
 #top5CandidatesCountByTime {
-    height: 40em;
+    height: 40rem;
 }
 #allVotesCountByTime {
-    height: 20em;
+    height: 20rem;
 }
 </style>

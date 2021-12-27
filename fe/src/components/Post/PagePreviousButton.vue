@@ -26,8 +26,8 @@ export default defineComponent({
 <style scoped>
 .post-previous-page-button {
     position: relative;
-    top: -1.5em;
-    margin-bottom: -1em;
+    top: -1.5rem;
+    margin-bottom: -1rem;
     padding-bottom: 4px;
     padding-top: 4px;
 }

@@ -208,6 +208,6 @@ export default defineComponent({
 
 <style scoped>
 #statusChartDom {
-    height: 40em;
+    height: 40rem;
 }
 </style>

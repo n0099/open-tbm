@@ -63,9 +63,9 @@ select {
     z-index: 1; /* let border overlaps other selects */
 }
 .select-param-first-row {
-    border-top-left-radius: 0.25em !important;
+    border-top-left-radius: 0.25rem !important;
 }
 .select-param-last-row {
-    border-bottom-left-radius: 0.25em !important;
+    border-bottom-left-radius: 0.25rem !important;
 }
 </style>

@@ -166,6 +166,6 @@ export default defineComponent({
 
 <style scoped>
 #statsChartDom {
-    height: 25em;
+    height: 25rem;
 }
 </style>

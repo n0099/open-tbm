@@ -260,54 +260,54 @@ export default defineComponent({
 }
 /* <post-render-list> */
 .thread-item {
-    margin-top: 1em;
+    margin-top: 1rem;
 }
 .thread-title {
-    padding: .75em 1em .5em 1em;
+    padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }
 
 .reply-title {
     z-index: 1019;
     top: 5rem;
-    margin-top: .625em;
+    margin-top: .625rem;
     border-top: 1px solid #ededed;
     border-bottom: 0;
     background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
 }
 .reply-info {
-    padding: .625em;
+    padding: .625rem;
     margin: 0;
     border-top: 0;
 }
 .reply-banner {
     padding-left: 0;
-    padding-right: .5em;
+    padding-right: .5rem;
 }
 .reply-body {
     overflow: auto;
-    padding-left: .5em;
-    padding-right: .5em;
+    padding-left: .5rem;
+    padding-right: .5rem;
 }
 .reply-user-info {
     z-index: 1018;
-    top: 8em;
-    padding: .25em;
-    font-size: 1em;
+    top: 8rem;
+    padding: .25rem;
+    font-size: 1rem;
     line-height: 140%;
 }
 
 .sub-reply-group {
-    margin: .5em 0 .25em .5em;
-    padding: .25em;
+    margin: .5rem 0 .25rem .5rem;
+    padding: .25rem;
 }
 .sub-reply-item {
-    padding: .125em;
+    padding: .125rem;
 }
 .sub-reply-item > * {
-    padding: .25em;
+    padding: .25rem;
 }
 .sub-reply-user-info {
-    font-size: 0.9em;
+    font-size: 0.9rem;
 }
 </style>
