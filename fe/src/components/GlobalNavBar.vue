@@ -35,10 +35,10 @@
 </template>
 
 <script lang="ts">
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { defineComponent, reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 export default defineComponent({
     components: { FontAwesomeIcon, RouterLink },

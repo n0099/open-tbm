@@ -36,6 +36,9 @@ import QueryTimeRange from '@/components/QueryTimeRange.vue';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { Switch } from 'ant-design-vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import _ from 'lodash';
+
 import * as echarts from 'echarts/core';
 import type { LineSeriesOption } from 'echarts/charts';
 import { LineChart } from 'echarts/charts';
@@ -43,8 +46,6 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { UniversalTransition } from 'echarts/features';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption, VisualMapComponentOption } from 'echarts/components';
 import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import _ from 'lodash';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
 let chart: echarts.ECharts | null = null;

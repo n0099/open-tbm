@@ -44,6 +44,7 @@ import QueryTimeRange from '@/components/QueryTimeRange.vue';
 import _ from 'lodash';
 import { defineComponent, reactive, ref, toRefs } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+
 import * as echarts from 'echarts/core';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
 import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';

@@ -81,7 +81,7 @@
                     }" />
                 </template>
                 <template v-if="lo.includes(['postTime', 'latestReplyTime'], param.name)">
-                    <RangePicker v-model="param.subParam.range" :show-time="true"
+                    <RangePicker v-model="param.subParam.range" :showTime="true"
                                  format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="lo.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">

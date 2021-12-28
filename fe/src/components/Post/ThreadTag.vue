@@ -9,11 +9,13 @@
 </template>
 
 <script lang="ts">
+import type { ThreadRecord } from '@/api/index.d';
+import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
-        thread: { type: Object, required: true }
+        thread: { type: Object as PropType<ThreadRecord>, required: true }
     }
 });
 </script>

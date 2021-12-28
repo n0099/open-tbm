@@ -1,6 +1,6 @@
 <template>
     <Menu v-model="selectedThread" @click="selectThread"
-          v-model:open-keys="expandedPages" :force-sub-menu-render="true" :inline-indent="16"
+          v-model:openKeys="expandedPages" :forceSubMenuRender="true" :inlineIndent="16"
           mode="inline" class="posts-nav">
         <template v-for="posts in postPages">
             <SubMenu v-for="page in [posts.pages.currentPage]" @title-click="selectPage"

@@ -1,5 +1,5 @@
 import type { SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
-import type { Float, ObjUnknown, UInt, UnixTimestamp } from '@/shared';
+import type { BoolInt, Float, Int, Iso8601DateTimeUtc0, ObjUnknown, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
@@ -8,7 +8,7 @@ export type ApiForumList = Array<{
     id: number,
     fid: number,
     name: string,
-    isCrawling: number
+    isCrawling: BoolInt
 }>;
 
 export type ApiStatus = Array<{
@@ -41,10 +41,11 @@ export interface ApiStatsForumPostsCountQP {
 
 export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemsCount']: number };
 interface ApiQPPagination { page?: number }
+export type BaiduUserID = Int;
 export type TiebaUserGender = 0 | 1 | 2 | null;
 export type TiebaUserGenderQP = '0' | '1' | '2' | 'NULL';
 export interface TiebaUserInfo {
-    uid: number,
+    uid: BaiduUserID,
     avatarUrl: string,
     name: string | null,
     displayName: string | null,
@@ -58,7 +59,63 @@ export interface ApiUsersQuery {
 }
 export type ApiUsersQueryQP = ApiQPPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQP };
 
-export interface ApiPostsQuery {
-    pages: Pagination
+type LaravelEloquentRecordsCommonTimestampFields = { [P in 'created_at' | 'updated_at']: Iso8601DateTimeUtc0 };
+export type AuthorManagerType = 'assist' | 'manager' | 'picadmin' | 'voiceadmin';
+export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampFields {
+    tid: UInt,
+    firstPid: UInt,
+    threadType: UInt | number | 1024 | 1040,
+    stickyType: 'membertop' | 'top',
+    isGood: BoolInt,
+    topicType: 'normal',
+    title: string,
+    authorUid: BaiduUserID,
+    authorManagerType: AuthorManagerType,
+    postTime: SqlDateTimeUtcPlus8,
+    latestReplierUid: BaiduUserID,
+    latestReplyTime: SqlDateTimeUtcPlus8,
+    replyNum: UInt,
+    viewNum: UInt,
+    shareNum: UInt,
+    location: ObjUnknown | null,
+    agreeInfo: ObjUnknown | null,
+    zanInfo: ObjUnknown | null
 }
+export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
+export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields {
+    tid: UInt,
+    pid: UInt,
+    floor: UInt,
+    content: string, // original json convert to html string via be/app/resources/views/formatPostJsonContent.blade.php
+    authorUid: BaiduUserID,
+    authorManagerType: AuthorManagerType,
+    authorExpGrade: AuthorExpGrade,
+    subReplyNum: UInt,
+    postTime: SqlDateTimeUtcPlus8,
+    isFold: 0 | 6,
+    location: ObjUnknown | null,
+    agreeInfo: ObjUnknown | null,
+    signInfo: ObjUnknown | null,
+    tailInfo: ObjUnknown | null
+}
+export interface SubReplyRecord extends LaravelEloquentRecordsCommonTimestampFields {
+    tid: UInt,
+    pid: UInt,
+    spid: UInt,
+    content: string, // original json convert to html string via be/app/resources/views/formatPostJsonContent.blade.php
+    authorUid: BaiduUserID,
+    authorManagerType: AuthorManagerType,
+    authorExpGrade: AuthorExpGrade,
+    postTime: SqlDateTimeUtcPlus8
+}
+export type PostRecord = ReplyRecord | SubReplyRecord | ThreadRecord;
+
+export type ApiPostsQuery = ApiUsersQuery & {
+    forum: Pick<ApiForumList[number], 'fid' | 'name'>,
+    threads: Array<ThreadRecord & {
+        replies: Array<ReplyRecord & {
+            subReplies: SubReplyRecord[]
+        }>
+    }>
+};
 export type ApiPostsQueryQP = ApiQPPagination & { query: string };

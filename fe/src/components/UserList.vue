@@ -42,7 +42,6 @@
 <script lang="ts">
 import type { ApiUsersQuery, TiebaUserGender } from '@/api/index.d';
 import { removeEnd, routeNameStrAssert, tiebaUserPortraitUrl } from '@/shared';
-
 import type { ComputedRef, PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';

@@ -1,15 +1,15 @@
 <template>
     <span :data-tippy-content="tippyPrefix + time"
-          :class="'badge rounded-pill bg-' + badgeColor">
+          :class="'ms-1 fw-normal badge rounded-pill bg-' + badgeColor">
         {{ dateTimeFromUTC8(time).toRelative({ round: false }) }}
     </span>
 </template>
 
 <script lang="ts">
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 import type { BootstrapColors } from '@/shared';
 import { dateTimeFromUTC8 } from '@/shared/echarts';
+import type { PropType } from 'vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
@@ -25,7 +25,7 @@ export default defineComponent({
 
 <style scoped>
 span {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: .75rem;
+    padding-right: .75rem;
 }
 </style>

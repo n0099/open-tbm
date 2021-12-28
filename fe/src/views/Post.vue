@@ -2,15 +2,15 @@
     <div class="container">
         <QueryForm @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" />
         <p>当前页数：{{ currentRoutePage }}</p>
-        <Menu v-show="postPages.length !== 0" v-model="renderType" mode="horizontal">
+        <Menu v-show="postPages.length !== 0" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
             <MenuItem key="table">表格视图</MenuItem>
         </Menu>
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
-        <div class="justify-content-center row">
-            <NavSidebar :post-pages="postPages" :aria-expanded="postsNavExpanded"
-                         class="posts-nav col-xl d-none d-xl-block vh-100 sticky-top" />
+        <div class="row justify-content-center">
+            <NavSidebar :postPages="postPages" :ariaExpanded="postsNavExpanded"
+                        class="posts-nav col-xl d-none d-xl-block vh-100 sticky-top" />
             <!-- fixme: Cannot read property 'value' of undefined @ invokeDirectiveHook()
             <a @click="postsNavExpanded = !postsNavExpanded"
                class="posts-nav-collapse col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
@@ -25,11 +25,11 @@
                 'col-xl-10': renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
             }">
                 <template v-for="(posts, pageIndex) in postPages">
-                    <PagePreviousButton @load-page="loadPage($event)" :page-info="posts.pages" />
-                    <ViewList v-if="renderType === 'list'" :key="posts.pages.currentPage" :initial-posts="posts" />
+                    <PagePreviousButton @loadPage="loadPage($event)" :pageInfo="posts.pages" />
+                    <ViewList v-if="renderType === 'list'" :key="posts.pages.currentPage" :initialPosts="posts" />
                     <ViewTable v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts" />
                     <PageNextButton v-if="!isLoading && pageIndex === postPages.length - 1"
-                                    @load-page="loadPage($event)" :current-page="posts.pages.currentPage" />
+                                    @loadPage="loadPage($event)" :currentPage="posts.pages.currentPage" />
                 </template>
             </div>
             <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder col-xl d-none"></div>
@@ -70,6 +70,7 @@ export default defineComponent({
             lastFetchError: ApiError | null,
             showPlaceholderPostList: boolean,
             renderType: 'list' | 'table',
+            selectedRenderTypes: ['list' | 'table'],
             postsNavExpanded: boolean,
             scrollStopDebounce: Function | null
         }>({
@@ -81,6 +82,7 @@ export default defineComponent({
             lastFetchError: null,
             showPlaceholderPostList: false,
             renderType: 'list',
+            selectedRenderTypes: ['list'],
             postsNavExpanded: false,
             scrollStopDebounce: null
         });

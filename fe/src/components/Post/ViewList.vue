@@ -8,15 +8,8 @@
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此贴</RouterLink>
-                        <a :href="tiebaPostLink(thread.tid)" target="_blank"
-                           class="badge bg-light rounded-pill link-dark"><FontAwesomeIcon icon="link" size="lg" class="align-bottom" /></a>
-                        <a :data-tippy-content="`<h6>tid：${thread.tid}</h6><hr />
-                            首次收录时间：${DateTime.fromISO(thread.created_at).toRelative({ round: false })}（${thread.created_at}）<br />
-                            最后更新时间：${DateTime.fromISO(thread.updated_at).toRelative({ round: false })}（${thread.updated_at}）`"
-                           class="badge bg-light rounded-pill link-dark">
-                            <FontAwesomeIcon icon="info" size="lg" class="align-bottom" />
-                        </a>
-                        <PostTimeBadge :time="thread.postTime" tippy-prefix="发帖时间：" badgeColor="success" class="ms-1" />
+                        <PostCommonMetadataIconLinks :meta="thread" postTypeID="tid" />
+                        <PostTimeBadge :time="thread.postTime" tippy-prefix="发帖时间：" badgeColor="success" />
                     </div>
                 </div>
                 <div class="row justify-content-between mt-2">
@@ -49,21 +42,19 @@
                     <div class="col-auto badge bg-light" role="group">
                         <a :href="tiebaUserLink(getUserInfo(thread.authorUid).name)" target="_blank">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
-                                  class="fw-bold link-success">楼主：</span>
-                            <span v-else class="fw-bold link-info">楼主及最后回复：</span>
-                            <span class="fw-normal link-dark">{{ renderUsername(thread.authorUid) }}</span>
+                                  class="fw-normal link-success">楼主：</span>
+                            <span v-else class="fw-normal link-info">楼主及最后回复：</span>
+                            <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                         </a>
                         <UserTag v-if="thread.authorManagerType !== null"
-                                 :user-info="{ managerType: thread.authorManagerType }" :users-info-source="posts.users" />
+                                 :user="{ managerType: thread.authorManagerType }"/>
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
                             <a :href="tiebaUserLink(getUserInfo(thread.latestReplierUid).name)" target="_blank">
-                                <span class="fw-bold link-secondary">最后回复：</span>
-                                <span class="fw-normal link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
+                                <span class="fw-normal link-secondary">最后回复：</span>
+                                <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </a>
                         </template>
-                        <div class="d-inline pe-0 badge bg-light">
-                            <PostTimeBadge :time="thread.latestReplyTime" tippy-prefix="最后回复时间：" badgeColor="secondary" />
-                        </div>
+                        <PostTimeBadge :time="thread.latestReplyTime" tippy-prefix="最后回复时间：" badgeColor="secondary" />
                     </div>
                 </div>
             </div>
@@ -84,15 +75,7 @@
                     <div class="float-end badge bg-light">
                         <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
-                        <a :href="tiebaPostLink(reply.tid, reply.pid)" target="_blank"
-                           class="badge bg-light rounded-pill link-dark"><FontAwesomeIcon icon="link" size="lg" class="align-bottom" /></a>
-                        <a :data-tippy-content="`
-                            <h6>pid：${reply.pid}</h6><hr />
-                            首次收录时间：${DateTime.fromISO(reply.created_at).toRelative({ round: false })}（${reply.created_at}）<br />
-                            最后更新时间：${DateTime.fromISO(reply.updated_at).toRelative({ round: false })}（${reply.updated_at}）`"
-                           class="badge bg-light rounded-pill link-dark">
-                            <FontAwesomeIcon icon="info" size="lg" class="align-bottom" />
-                        </a>
+                        <PostCommonMetadataIconLinks :meta="reply" postTypeID="pid" />
                         <PostTimeBadge :time="reply.postTime" badgeColor="primary" />
                     </div>
                 </div>
@@ -108,11 +91,11 @@
                                     {{ author.displayName }}
                                 </span>
                             </a>
-                            <UserTag :user-info="{
+                            <UserTag :user="{
                                 uid: { current: reply.authorUid, thread: thread.authorUid },
                                 managerType: reply.authorManagerType,
                                 expGrade: reply.authorExpGrade
-                            }" :users-info-source="posts.users" />
+                            }"/>
                         </div>
                     </div>
                     <div class="reply-body col border-start">
@@ -131,26 +114,15 @@
                                                target="_blank" class="sub-reply-user-info badge bg-light">
                                                 <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
                                                 <span class="align-middle ms-1 link-dark">{{ renderUsername(subReply.authorUid) }}</span>
-                                                <UserTag :user-info="{
+                                                <UserTag :user="{
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
                                                     managerType: subReply.authorManagerType,
                                                     expGrade: subReply.authorExpGrade
-                                                }" :users-info-source="posts.users" />
+                                                }"/>
                                             </a>
                                             <div class="float-end badge bg-light">
-                                                <div :class="{
-                                                    'd-none': hoveringSubReplyID !== subReply.spid,
-                                                    'd-inline': hoveringSubReplyID === subReply.spid
-                                                }"><!-- fixme: high cpu usage due to js evaling while quickly emitting hover event -->
-                                                    <a :href="tiebaPostLink(subReply.tid, subReply.spid)" target="_blank"
-                                                       class="badge bg-light rounded-pill link-dark"><FontAwesomeIcon icon="link" size="lg" class="align-bottom" /></a>
-                                                    <a :data-tippy-content="`
-                                                        <h6>spid：${subReply.spid}</h6><hr />
-                                                        首次收录时间：${DateTime.fromISO(subReply.created_at).toRelative({ round: false })}（${subReply.created_at}）<br />
-                                                        最后更新时间：${DateTime.fromISO(subReply.created_at).toRelative({ round: false })}（${subReply.updated_at}）`"
-                                                       class="badge bg-light rounded-pill link-dark">
-                                                        <FontAwesomeIcon icon="info" size="lg" class="align-bottom" />
-                                                    </a>
+                                                <div :class="{ 'visually-hidden': hoveringSubReplyID !== subReply.spid, 'd-inline': true }">
+                                                    <PostCommonMetadataIconLinks :meta="subReply" postTypeID="spid" />
                                                 </div>
                                                 <PostTimeBadge :time="subReply.postTime" badgeColor="info" />
                                             </div>
@@ -169,10 +141,14 @@
 
 <script lang="ts">
 import '@/shared/bootstrapCallout.css';
+import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
+import type { ApiPostsQuery, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { Modify } from '@/shared';
 import { tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 import { dateTimeFromUTC8 } from '@/shared/echarts';
-import { PostTimeBadge, ThreadTag, UserTag } from './';
+
+import type { PropType } from 'vue';
 import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, toRefs } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -180,9 +156,9 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 export default defineComponent({
-    components: { RouterLink, FontAwesomeIcon, PostTimeBadge, ThreadTag, UserTag },
+    components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
     props: {
-        initialPosts: { type: Object, required: true }
+        initialPosts: { type: Object as PropType<ApiPostsQuery>, required: true }
     },
     setup(props) {
         const route = useRoute();
@@ -190,25 +166,33 @@ export default defineComponent({
             hoveringSubReplyID: 0 // for display item's right floating hide buttons
         });
         const posts = computed(() => {
-            const postsData = _.cloneDeep(props.initialPosts); // prevent mutates prop in other post renders
-            postsData.threads = _.map(postsData.threads, thread => {
-                thread.replies = _.map(thread.replies, reply => {
-                    reply.subReplies = _.reduce(reply.subReplies, (groupedSubReplies, subReply, index, subReplies) => {
-                        // group sub replies item by continuous and same author info
-                        const previousSubReply = subReplies[index - 1];
-                        if (previousSubReply !== undefined
-                            && subReply.authorUid === previousSubReply.authorUid
-                            && subReply.authorManagerType === previousSubReply.authorManagerType
-                            && subReply.authorExpGrade === previousSubReply.authorExpGrade) _.last(groupedSubReplies).push(subReply); // append to last group
-                        else groupedSubReplies.push([subReply]); // new group
-
-                        return groupedSubReplies;
-                    }, []);
-                    return reply;
+            const newPosts = props.initialPosts as unknown as Modify<ApiPostsQuery, {
+                threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
+            }>;
+            props.initialPosts.threads.forEach((thread, i) => {
+                newPosts.threads[i].replies = thread.replies.map(reply => {
+                    const newReply = reply as unknown as ReplyRecord & { subReplies: SubReplyRecord[][] };
+                    newReply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
+                        (groupedSubReplies, subReply, index, subReplies) => {
+                            // group sub replies item by continuous and same author info
+                            const previousSubReply = subReplies[index - 1];
+                            // https://github.com/microsoft/TypeScript/issues/13778
+                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                            if (previousSubReply !== undefined
+                                && subReply.authorUid === previousSubReply.authorUid
+                                && subReply.authorManagerType === previousSubReply.authorManagerType
+                                && subReply.authorExpGrade === previousSubReply.authorExpGrade
+                            ) _.last(groupedSubReplies)?.push(subReply); // append to last group
+                            else groupedSubReplies.push([subReply]); // new group
+                            return groupedSubReplies;
+                        },
+                        []
+                    );
+                    return newReply;
                 });
                 return thread;
             });
-            return postsData;
+            return newPosts;
         });
         const getUserInfo = /* window.getUserInfo(props.initialPosts.users) */ () => ({
             id: 0,

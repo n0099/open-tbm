@@ -1,7 +1,7 @@
-import type { DeepWritable, ObjEmpty, PostType, PostID } from '@/shared';
-import { boolStrToBool } from '@/shared';
 import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from './useQueryForm';
 import useQueryForm from './useQueryForm';
+import type { DeepWritable, ObjEmpty, PostID, PostType } from '@/shared';
+import { boolStrToBool } from '@/shared';
 import _ from 'lodash';
 
 // value of [0] will be either ALL: require exactly same post types, or SUB: requiring a subset of types

@@ -68,6 +68,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+
 import * as echarts from 'echarts/core';
 import type { OptionDataItem } from 'echarts/types/src/util/types';
 import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction';

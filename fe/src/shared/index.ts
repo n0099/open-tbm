@@ -4,20 +4,24 @@ import _ from 'lodash';
 
 export type Iso8601DateTimeUtc0 = string; // "2020-10-10T00:11:22Z"
 export type SqlDateTimeUtcPlus8 = string; // '2020-10-10 00:11:22'
+export type UnixTimestamp = number;
 export type Int = number;
 export type UInt = number;
 export type Float = number;
-export type UnixTimestamp = number;
+export type BoolInt = 0 | 1;
 export type ObjUnknown = Record<string, unknown>;
 export type ObjEmpty = Record<string, never>;
 // https://github.com/microsoft/TypeScript/issues/35660
 export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
+// https://stackoverflow.com/questions/41285211/overriding-interface-property-type-defined-in-typescript-d-ts-file
+export type Modify<T, R> = Omit<T, keyof R> & R;
 export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 
 export type PostType = 'reply' | 'subReply' | 'thread';
 export type PostID = typeof postsID[number];
 export const postsID = ['tid', 'pid', 'spid'] as const;
+export const postTypeToID = { thread: 'tid', reply: 'pid', subReply: 'spid' };
 
 // we can't declare global timeout like `window.noty = new Noty({ timeout: 3000 });` due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 3000, type, text }).show() };

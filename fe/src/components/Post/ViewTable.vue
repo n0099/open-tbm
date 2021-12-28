@@ -1,7 +1,7 @@
 <template>
     <div class="container-flow">
-        <Table :columns="threadColumns" :data-source="threads" :default-expand-all-rows="true"
-               :expand-row-by-click="true" :pagination="false" :scroll="{ x: true }"
+        <Table :columns="threadColumns" :dataSource="threads" :defaultExpandAllRows="true"
+               :expandRowByClick="true" :pagination="false" :scroll="{ x: true }"
                size="middle" class="render-table-thread">
             <template v-slot:tid="text, record" >
                 <RouterLink :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</RouterLink>
@@ -18,7 +18,7 @@
                     <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
                          class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.authorUid) }}
                 </a>
-                <UserTag :user-info="{ managerType: record.authorManagerType }" :users-info-source="posts.users" />
+                <UserTag :user="{ managerType: record.authorManagerType }"/>
             </template>
             <template v-slot:latestReplierInfo="text, record" >
                 <a :href="$$getTiebaUserLink($getUserInfo(record.latestReplierUid).name)" target="_blank">
@@ -28,30 +28,30 @@
             </template>
             <template v-slot:expandedRowRender="record" >
                 <span v-if="threadsReply[record.tid] === undefined">无子回复帖</span>
-                <Table v-else :columns="replyColumns" :data-source="threadsReply[record.tid]"
-                       :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                <Table v-else :columns="replyColumns" :dataSource="threadsReply[record.tid]"
+                       :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" size="middle">
                     <template v-for="thread in [record]" slot="authorInfo" slot-scope="text, record">
                         <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
                             <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
                                  class="tieba-user-avatar-small lazyload"/> {{ renderUsername(record.authorUid) }}
                         </a>
-                        <UserTag :user-info="{
+                        <UserTag :user="{
                             uid: { current: record.authorUid, thread: thread.authorUid },
                             managerType: record.authorManagerType,
                             expGrade: record.authorExpGrade
-                        }" :users-info-source="posts.users" />
+                        }"/>
                     </template>
                     <template v-slot:expandedRowRender="record" >
                         <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content" />
                         <Table v-if="repliesSubReply[record.pid] !== undefined"
-                               :columns="subReplyColumns" :data-source="repliesSubReply[record.pid]"
-                               :default-expand-all-rows="true" :expand-row-by-click="true" :pagination="false" size="middle">
+                               :columns="subReplyColumns" :dataSource="repliesSubReply[record.pid]"
+                               :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" size="middle">
                             <template v-for="reply in [record]" slot="authorInfo" slot-scope="text, record">
                                 <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
                                     <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
                                          class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.authorUid) }}
                                 </a>
-                                <UserTag :user-info="{
+                                <UserTag :user="{
                                     uid: {
                                         current: record.authorUid,
                                         thread: _.find(posts.threads, { tid: reply.tid }).authorUid,
@@ -59,7 +59,7 @@
                                     },
                                     managerType: record.authorManagerType,
                                     expGrade: record.authorExpGrade
-                                }" :users-info-source="posts.users" />
+                                }"/>
                             </template>
                             <template v-slot:expandedRowRender="record" >
                                 <span v-html="record.content" />

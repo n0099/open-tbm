@@ -40,6 +40,7 @@
 </template>
 
 <script lang="ts">
+import type { BaiduUserID } from '@/api/index.d';
 import type { PropType } from 'vue';
 import { defineComponent, onMounted, reactive, toRefs, watch } from 'vue';
 import _ from 'lodash';
@@ -47,7 +48,7 @@ import _ from 'lodash';
 export const selectTiebaUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
 export type SelectTiebaUserBy = typeof selectTiebaUserBy[number];
 export type SelectTiebaUserParams = Partial<{
-    uid: number,
+    uid: BaiduUserID,
     uidCompareBy: '<' | '=' | '>',
     name: string | 'NULL',
     nameUseRegex: boolean,

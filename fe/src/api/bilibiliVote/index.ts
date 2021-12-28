@@ -1,4 +1,3 @@
-import type { Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 import allCandidatesVotesCount from './allCandidatesVotesCount.json';
 import allVotesCountByTimeHourGranularity from './allVotesCountByTimeHourGranularity.json';
 import allVotesCountByTimeMinuteGranularity from './allVotesCountByTimeMinuteGranularity.json';
@@ -8,6 +7,7 @@ import top5CandidatesVotesCountByTimeMinuteGranularity from './top5CandidatesVot
 import top10CandidatesTimeline from './top10CandidatesTimeline.json';
 import top50CandidatesVotesCount from './top50CandidatesVotesCount.json';
 import top50OfficialValidVotesCount from './top50OfficialValidVotesCount.json';
+import type { BoolInt, Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 
 export const json: {
     allCandidatesVotesCount: AllCandidatesVotesCount,
@@ -31,7 +31,7 @@ export const json: {
     top50OfficialValidVotesCount
 };
 
-export type IsValid = 0 | 1;
+export type IsValid = BoolInt;
 export type CountByTimeGranularity = 'hour' | 'minute';
 export type CandidatesName = string[];
 export type AllCandidatesVotesCount = Array<{
