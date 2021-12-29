@@ -9,7 +9,7 @@
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="row justify-content-center">
-            <NavSidebar :postPages="postPages" :ariaExpanded="postsNavExpanded"
+            <NavSidebar :postPages="postPages" :aria-expanded="postsNavExpanded"
                         class="posts-nav col-xl d-none d-xl-block vh-100 sticky-top" />
             <!-- fixme: Cannot read property 'value' of undefined @ invokeDirectiveHook()
             <a @click="postsNavExpanded = !postsNavExpanded"
@@ -24,10 +24,10 @@
                 'col-xl-auto': true,
                 'col-xl-10': renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
             }">
-                <template v-for="(posts, pageIndex) in postPages">
+                <template v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage">
                     <PagePreviousButton @loadPage="loadPage($event)" :pageInfo="posts.pages" />
-                    <ViewList v-if="renderType === 'list'" :key="posts.pages.currentPage" :initialPosts="posts" />
-                    <ViewTable v-else-if="renderType === 'table'" :key="posts.pages.currentPage" :posts="posts" />
+                    <ViewList v-if="renderType === 'list'" :initialPosts="posts" />
+                    <ViewTable v-else-if="renderType === 'table'" :posts="posts" />
                     <PageNextButton v-if="!isLoading && pageIndex === postPages.length - 1"
                                     @loadPage="loadPage($event)" :currentPage="posts.pages.currentPage" />
                 </template>
@@ -175,6 +175,7 @@ export default defineComponent({
         });
         watchEffect(() => {
             state.currentRoutePage = parseInt(route.params.page ?? '1');
+            state.renderType = state.selectedRenderTypes[0];
         });
         watch(() => state.renderType, renderType => {
             if (state.scrollStopDebounce === null) return;
@@ -189,21 +190,9 @@ export default defineComponent({
     }
 });
 
-window.$previousPostsQueryAjax = undefined;
 window.$sharedData = {
     firstPostInView: { tid: 0, pid: 0 }
 };
-window.$getUserInfo = dataSource => uid => // curry invoke
-    _.find(dataSource, { uid }) || { // thread latest replier uid might be unknown
-        id: 0,
-        uid: 0,
-        name: '未知用户',
-        displayName: null,
-        avatarUrl: null,
-        gender: 0,
-        fansNickname: null,
-        iconInfo: []
-    };
 
 const postsQueryVue = {
     router: {

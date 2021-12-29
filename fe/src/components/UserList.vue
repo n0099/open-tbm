@@ -2,7 +2,7 @@
     <div>
         <div class="row align-items-center p-2">
             <div class="col align-middle"><hr /></div>
-            <div v-for="(page, _i) in [usersData.pages]" :key="_i" class="w-auto">
+            <div v-for="(page, _k) in [usersData.pages]" :key="_k" class="w-auto">
                 <div class="p-2 badge bg-light text-dark">
                     <RouterLink v-if="page.currentPage > 1" :to="pagesRoute.prev" class="badge bg-primary link-light">上一页</RouterLink>
                     <p class="h4">第 {{ page.currentPage }} 页</p>
@@ -28,7 +28,7 @@
         <div v-if="!isLoadingNewPage && isLastPageInPages" class="p-4">
             <div class="row align-items-center">
                 <div class="col"><hr /></div>
-                <div class="w-auto" v-for="(page, _i) in [usersData.pages]" :key="_i">
+                <div class="w-auto" v-for="(page, _k) in [usersData.pages]" :key="_k">
                     <RouterLink :to="pagesRoute.next" class="btn btn-secondary">
                         <span class="h4">下一页</span>
                     </RouterLink>

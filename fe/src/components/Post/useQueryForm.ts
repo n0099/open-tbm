@@ -82,11 +82,11 @@ export default <
                 ? _.isEqual(_.sortBy(newParam.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
                 : newParam.value === defaultParam.value)) delete newParam.value;
 
-        _.each(defaultParam.subParam, (value, _name) => {
+        _.each(defaultParam.subParam, (value, name) => {
             if (newParam.subParam === undefined) return;
             // undefined means this sub param must get deleted and merge into parent, as part of the parent param value
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            if (newParam.subParam[_name] === value || value === undefined) delete newParam.subParam[_name];
+            if (newParam.subParam[name] === value || value === undefined) delete newParam.subParam[name];
         });
         if (_.isEmpty(newParam.subParam)) delete newParam.subParam;
 
@@ -156,7 +156,7 @@ export default <
     const submitParamRoute = (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<TParam>>) => {
         const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
         const subParamValue = (subParam?: Param['subParam']) =>
-            _.map(subParam, (value, _name) => `;${_name}:${escapeParamValue(value)}`).join('');
+            _.map(subParam, (value, name) => `;${name}:${escapeParamValue(value)}`).join('');
         void router.push({
             path: `/p/${[...Object.values(filteredUniqueParams), ...filteredParams]
                 // format param to url, e.g. name:value;subParamName:subParamValue...

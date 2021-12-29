@@ -40,7 +40,7 @@
                         </span>
                     </div>
                     <div class="col-auto badge bg-light" role="group">
-                        <a :href="tiebaUserLink(getUserInfo(thread.authorUid).name)" target="_blank">
+                        <a :href="tiebaUserLink(getUser(thread.authorUid).name)" target="_blank">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
                                   class="fw-normal link-success">楼主：</span>
                             <span v-else class="fw-normal link-info">楼主及最后回复：</span>
@@ -49,7 +49,7 @@
                         <UserTag v-if="thread.authorManagerType !== null"
                                  :user="{ managerType: thread.authorManagerType }"/>
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
-                            <a :href="tiebaUserLink(getUserInfo(thread.latestReplierUid).name)" target="_blank">
+                            <a :href="tiebaUserLink(getUser(thread.latestReplierUid).name)" target="_blank">
                                 <span class="fw-normal link-secondary">最后回复：</span>
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </a>
@@ -80,7 +80,7 @@
                     </div>
                 </div>
                 <div class="reply-info row shadow-sm bs-callout bs-callout-info">
-                    <div v-for="author in [getUserInfo(reply.authorUid)]" :key="author.uid" class="col-auto text-center reply-banner">
+                    <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid" class="col-auto text-center reply-banner">
                         <div class="reply-user-info sticky-top shadow-sm badge bg-light">
                             <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
                                 <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
@@ -101,19 +101,19 @@
                     <div class="reply-body col border-start">
                         <div class="p-2" v-html="reply.content" />
                         <template v-if="reply.subReplies.length > 0">
-                            <div v-for="subReplyGroup in reply.subReplies" :key="reply.subReplies.indexOf(subReplyGroup)"
+                            <div v-for="(subReplyGroup, _k) in reply.subReplies" :key="_k"
                                  class="sub-reply-group bs-callout bs-callout-success">
                                 <ul class="list-group list-group-flush">
                                     <li v-for="(subReply, subReplyIndex) in subReplyGroup" :key="subReply.spid"
                                         @mouseenter="hoveringSubReplyID = subReply.spid"
                                         @mouseleave="hoveringSubReplyID = 0"
                                         class="sub-reply-item list-group-item">
-                                        <template v-for="author in [getUserInfo(subReply.authorUid)]" :key="author.uid">
+                                        <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                                             <a v-if="subReplyGroup[subReplyIndex - 1] === undefined"
                                                :href="tiebaUserLink(author.name)"
                                                target="_blank" class="sub-reply-user-info badge bg-light">
                                                 <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
-                                                <span class="align-middle ms-1 link-dark">{{ renderUsername(subReply.authorUid) }}</span>
+                                                <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
                                                 <UserTag :user="{
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
                                                     managerType: subReply.authorManagerType,
@@ -142,7 +142,7 @@
 <script lang="ts">
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
-import type { ApiPostsQuery, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord, TiebaUserRecord } from '@/api/index.d';
 import type { Modify } from '@/shared';
 import { tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
@@ -166,16 +166,16 @@ export default defineComponent({
             hoveringSubReplyID: 0 // for display item's right floating hide buttons
         });
         const posts = computed(() => {
-            const newPosts = props.initialPosts as unknown as Modify<ApiPostsQuery, {
-                threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
+            const newPosts = props.initialPosts as Modify<ApiPostsQuery, { // https://github.com/microsoft/TypeScript/issues/33591
+                threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: Array<SubReplyRecord | SubReplyRecord[]> }> }>
             }>;
-            props.initialPosts.threads.forEach((thread, i) => {
-                newPosts.threads[i].replies = thread.replies.map(reply => {
-                    const newReply = reply as unknown as ReplyRecord & { subReplies: SubReplyRecord[][] };
-                    newReply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
+            newPosts.threads = newPosts.threads.map(thread => {
+                thread.replies = thread.replies.map(reply => {
+                    reply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
                         (groupedSubReplies, subReply, index, subReplies) => {
+                            if (_.isArray(subReply)) return [subReply]; // useless since subReply will never be an array
                             // group sub replies item by continuous and same author info
-                            const previousSubReply = subReplies[index - 1];
+                            const previousSubReply = subReplies[index - 1] as SubReplyRecord;
                             // https://github.com/microsoft/TypeScript/issues/13778
                             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                             if (previousSubReply !== undefined
@@ -188,28 +188,27 @@ export default defineComponent({
                         },
                         []
                     );
-                    return newReply;
+                    return reply;
                 });
                 return thread;
             });
-            return newPosts;
+            return newPosts as Modify<ApiPostsQuery, {
+                threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
+            }>;
         });
-        const getUserInfo = /* window.getUserInfo(props.initialPosts.users) */ () => ({
-            id: 0,
+        const getUser = (uid: BaiduUserID): TiebaUserRecord => _.find(props.initialPosts.users, { uid }) ?? {
             uid: 0,
+            avatarUrl: '',
             name: '未知用户',
             displayName: null,
-            avatarUrl: null,
-            gender: 0,
             fansNickname: null,
+            gender: 0,
             iconInfo: []
-        });
-        const renderUsername = uid => {
-            const user = getUserInfo(uid);
-            const { name } = user;
-            const { displayName } = user;
-            if (name === null) return `${displayName !== null ? displayName : `无用户名或覆盖名（UID：${user.uid}）`}`;
-            return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
+        };
+        const renderUsername = (uid: number) => {
+            const { name, displayName } = getUser(uid);
+            if (name === null) return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
+            return name + (displayName === null ? '' : `（${displayName}）`);
         };
         onMounted(initialTippy);
 

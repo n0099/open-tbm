@@ -196,7 +196,7 @@
     "no-redeclare": "off",
     "@typescript-eslint/no-redeclare": "error",
     "no-shadow": "off",
-    "@typescript-eslint/no-shadow": ["error", { "builtinGlobals": true, "hoist": "all" }],
+    "@typescript-eslint/no-shadow": ["error", { "builtinGlobals": true, "hoist": "all",  "allow": ["name"] }],
     "no-throw-literal": "off",
     "@typescript-eslint/no-throw-literal": "error",
     "no-unused-expressions": "off",

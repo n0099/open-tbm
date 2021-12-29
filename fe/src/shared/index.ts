@@ -40,8 +40,8 @@ export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'tru
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
 // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
-export const routeNameStrAssert: (_name: RouteLocationNormalizedLoaded['name']) => asserts _name is string = _name => {
-    if (!_.isString(_name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
+export const routeNameStrAssert: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
+    if (!_.isString(name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
 };
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));

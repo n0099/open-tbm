@@ -8,7 +8,7 @@
             </button>
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="navbar-nav">
-                    <template v-for="nav in navs" :key="navs.indexOf(nav)">
+                    <template v-for="(nav, _k) in navs" :key="_k">
                         <li v-if="'routes' in nav" :class="'nav-item dropdown' + activeNavClass(nav.isActive)">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}

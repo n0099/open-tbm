@@ -6,7 +6,7 @@
         </template>
         <template v-else>
             <p class="errorCode text-muted">{{ error.errorCode }}</p>
-            <p v-for="(info, key) in error.errorInfo.split('\n')" :key="key">{{ info }}</p>
+            <p v-for="(info, _k) in error.errorInfo.split('\n')" :key="_k">{{ info }}</p>
         </template>
     </div>
 </template>

@@ -44,7 +44,7 @@ interface ApiQPPagination { page?: number }
 export type BaiduUserID = Int;
 export type TiebaUserGender = 0 | 1 | 2 | null;
 export type TiebaUserGenderQP = '0' | '1' | '2' | 'NULL';
-export interface TiebaUserInfo {
+export interface TiebaUserRecord {
     uid: BaiduUserID,
     avatarUrl: string,
     name: string | null,
@@ -55,7 +55,7 @@ export interface TiebaUserInfo {
 }
 export interface ApiUsersQuery {
     pages: Pagination,
-    users: TiebaUserInfo[]
+    users: TiebaUserRecord[]
 }
 export type ApiUsersQueryQP = ApiQPPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQP };
 

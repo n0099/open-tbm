@@ -232,7 +232,6 @@ export default defineComponent({
             } else { // post id routes
                 useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
                     fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
-                // eslint-disable-next-line @typescript-eslint/no-shadow
                 useState.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
                     fillParamWithDefaultValue({ name, value }));
             }
