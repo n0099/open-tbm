@@ -68,7 +68,7 @@ export default defineComponent({
         const activeNavClass = (isActive?: boolean) => (isActive === true ? 'active' : '');
 
         watch(() => route.name, () => {
-            navs.map(nav => ({
+            navs.forEach(nav => ({ // we don't have to reassign navs since it's reactive
                 ...nav,
                 isActive: 'routes' in nav
                     ? nav.routes.some(i => i.route === route.name)

@@ -1,16 +1,19 @@
 <template>
-    <Menu v-model="selectedThread" @click="selectThread"
-          v-model:openKeys="expandedPages" :forceSubMenuRender="true" :inlineIndent="16"
-          mode="inline" class="posts-nav">
+    <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="selectThread"
+          :forceSubMenuRender="true" :inlineIndent="16" mode="inline"
+          :class="{ 'd-none': !postsNavExpanded }" :aria-expanded="postsNavExpanded"
+          class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
-            <SubMenu v-for="page in [posts.pages.currentPage]" @title-click="selectPage"
-                     :title="`第${page}页`" :key="`page-${page}`">
-                <MenuItem v-for="thread in posts.threads" v-scroll-to-post="firstPostInView.page === page && firstPostInView.tid === thread.tid"
-                          :key="`page-${page}_t${thread.tid}`" :title="thread.title">
+            <SubMenu v-for="page in [posts.pages.currentPage]" :key="`page-${page}`"
+                     @title-click="selectPage" :title="`第${page}页`">
+                <MenuItem v-for="thread in posts.threads" :key="`page-${page}_t${thread.tid}`"
+                          v-scroll-to-post="firstPostInView.page === page && firstPostInView.tid === thread.tid"
+                          :title="thread.title" class="nav-sidebar-thread-item">
                     {{ thread.title }}
                     <div class="d-block btn-group" role="group">
                         <a @click="navigate(page, null, reply.pid)"
-                           v-for="reply in thread.replies" v-scroll-to-post="firstPostInView.page === page && firstPostInView.pid === reply.pid"
+                           v-for="reply in thread.replies" :key="reply.pid"
+                           v-scroll-to-post="firstPostInView.page === page && firstPostInView.pid === reply.pid"
                            :class="{
                                'btn': true,
                                'btn-info': reply.pid === firstPostInView.pid,
@@ -24,20 +27,29 @@
             </SubMenu>
         </template>
     </Menu>
+    <a @click="postsNavExpanded = !postsNavExpanded"
+       class="posts-nav-expanded col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
+        <!-- https://github.com/FortAwesome/vue-fontawesome/issues/313 -->
+        <span v-show="postsNavExpanded"><FontAwesomeIcon icon="angle-left" /></span>
+        <span v-show="!postsNavExpanded"><FontAwesomeIcon icon="angle-right" /></span>
+    </a>
 </template>
 
 <script lang="ts">
+import type { ApiPostsQuery } from '@/api/index.d';
+import type { PropType } from 'vue';
 import { defineComponent, reactive, toRefs, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 export default defineComponent({
-    components: { Menu, MenuItem, SubMenu },
+    components: { FontAwesomeIcon, Menu, MenuItem, SubMenu },
     props: {
-        postPages: { type: Array, required: true }
+        postPages: { type: Array as PropType<ApiPostsQuery[]>, required: true }
     },
     directives: {
-        'scroll-to-post'(el, binding, vnode) {
+        'scroll-to-post'(el, binding) {
             if (binding.value !== binding.oldValue
                 && binding.value === true
                 && $('.posts-nav').css('display') !== 'none') { // don't scroll when <posts-nav> is collapsed
@@ -53,7 +65,8 @@ export default defineComponent({
         const state = reactive({
             firstPostInView: window.$sharedData.firstPostInView,
             expandedPages: [],
-            selectedThread: []
+            selectedThread: [],
+            postsNavExpanded: false
         });
         const navigate = (page, tid = null, pid = null) => {
             router.replace({
@@ -78,27 +91,37 @@ export default defineComponent({
             state.selectedThread = [`page-${to.page}_t${to.tid}`];
         }, { deep: true });
 
-        return { ...toRefs(state), navigate };
+        return { ...toRefs(state), navigate, selectThread, selectPage };
     }
 });
 </script>
 
-<style scoped>
-.posts-nav .ant-menu-item {
+<style>/* to override styles for dom under another component <MenuItem>, we have to declare in global scope */
+.nav-sidebar-thread-item {
     height: auto !important; /* to show reply nav buttons under thread menu items */
-    padding: 0 5px 0 28px !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
-    white-space: normal !important;
+    white-space: normal;
 }
-.posts-nav .ant-menu-item hr {
-    margin: 7px 0 0 0;
+.nav-sidebar-thread-item hr {
+    margin: .5rem 0 0 0;
 }
+.nav-sidebar-thread-item .ant-menu-title-content {
+    padding-left: .5rem;
+}
+</style>
 
+<style scoped>
+.posts-nav-expanded {
+    padding: 2px;
+    font-size: 1.3rem;
+    background-color: whitesmoke;
+}
 .posts-nav {
-    padding: 0 10px 0 0;
+    padding: 0 1.5rem 0 0;
     overflow: hidden;
-    border-right: 1px solid #ededed;
+    max-height: 100vh;
+    border-top: 1px solid #f0f0f0;
 }
 .posts-nav:hover {
     padding: 0;
@@ -106,10 +129,6 @@ export default defineComponent({
 }
 @media (max-width: 1200px) {
     .posts-nav[aria-expanded=true] {
-        display: block !important;
-        position: sticky;
-        top: 0;
-        left: 0;
         width: fit-content;
         max-width: 35%;
     }

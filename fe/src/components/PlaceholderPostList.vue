@@ -17,10 +17,7 @@
 <script>
 export default {
     props: {
-        isLoading: {
-            type: Boolean,
-            default: true
-        }
+        isLoading: { type: Boolean, default: true }
     }
 };
 </script>
@@ -40,7 +37,6 @@ export default {
     animation-iteration-count: infinite;
     animation-duration: 1.5s;
 }
-
 @keyframes tombstone-post-list {
     0% {
         opacity: .5;

@@ -29,8 +29,8 @@
                         </span>
                         <span v-if="thread.zanInfo !== null" :data-tippy-content="`
                             点赞量：${thread.zanInfo.num}<br />
-                            最后点赞时间：${DateTime.fromUnix(thread.zanInfo.last_time).toRelative({ round: false })}
-                            （${DateTime.fromUnix(thread.zanInfo.last_time).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
+                            最后点赞时间：${DateTime.fromSeconds(thread.zanInfo.last_time).toRelative({ round: false })}
+                            （${DateTime.fromSeconds(thread.zanInfo.last_time).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
                             近期点赞用户：${thread.zanInfo.user_id_list}<br />`" class="badge bg-info">
                             <!-- todo: fetch users info in zanInfo.user_id_list -->
                             <FontAwesomeIcon icon="thumbs-up" class="me-1" /> 旧版客户端赞
@@ -149,8 +149,8 @@ import { initialTippy } from '@/shared/tippy';
 import { dateTimeFromUTC8 } from '@/shared/echarts';
 
 import type { PropType } from 'vue';
-import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, reactive, toRefs } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -161,10 +161,7 @@ export default defineComponent({
         initialPosts: { type: Object as PropType<ApiPostsQuery>, required: true }
     },
     setup(props) {
-        const route = useRoute();
-        const state = reactive({
-            hoveringSubReplyID: 0 // for display item's right floating hide buttons
-        });
+        const hoveringSubReplyID = ref(0);
         const posts = computed(() => {
             const newPosts = props.initialPosts as Modify<ApiPostsQuery, { // https://github.com/microsoft/TypeScript/issues/33591
                 threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: Array<SubReplyRecord | SubReplyRecord[]> }> }>
@@ -210,23 +207,10 @@ export default defineComponent({
             if (name === null) return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
             return name + (displayName === null ? '' : `（${displayName}）`);
         };
+
         onMounted(initialTippy);
 
-        onMounted(() => {
-            if (route.hash !== '') $(`.post-render-list[data-page='${route.params.page || 1}'] #${route.hash.substr(1)}`)[0].scrollIntoView(); // scroll to route hash determined reply or thread item after initial load
-
-            nextTick(() => { // initial dom event after all dom and child components rendered
-                $$registerTippy();
-                $$registerTiebaImageZoomEvent();
-            });
-        });
-        onBeforeUnmount(() => {
-            // this.$el is already unmounted from document while beforeDestroy()
-            $$registerTippy(this.$el, true);
-            $$registerTiebaImageZoomEvent(this.$el, true);
-        });
-
-        return { DateTime, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, dateTimeFromUTC8, ...toRefs(state), posts, renderUsername, getUserInfo };
+        return { DateTime, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, dateTimeFromUTC8, hoveringSubReplyID, posts, renderUsername, getUser };
     }
 });
 </script>

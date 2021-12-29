@@ -1,8 +1,8 @@
 <template>
-    <div :data-page="pageInfo.currentPage" class="post-previous-page mt-3 p-2 row align-items-center">
+    <div :data-page="pageInfo.currentPage" class="post-previous-page row align-items-center mt-3 p-2">
         <div class="col"><hr /></div>
         <div class="w-auto">
-            <div class="p-2 badge badge-light">
+            <div class="p-2 badge bg-light">
                 <button v-if="pageInfo.currentPage > 1" @click="$emit('load-page', pageInfo.currentPage - 1)"
                         class="post-previous-page-button btn btn-primary" type="button">上一页</button>
                 <p class="h4">第 {{ pageInfo.currentPage }} 页</p>

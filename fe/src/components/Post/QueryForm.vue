@@ -345,7 +345,7 @@ export default defineComponent({
             return '空查询';
         });
 
-        return { lo: _, postsID, ...toRefs(state), ...toRefs(useState), currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, addParam, changeParam, deleteParam, submit };
+        return { lo: _, postsID, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>

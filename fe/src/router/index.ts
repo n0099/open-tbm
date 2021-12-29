@@ -1,4 +1,4 @@
-import { compareRouteIsNewQuery } from '@/shared';
+import { compareRouteIsNewQuery, routeNameStrAssert } from '@/shared';
 import Index from '@/views/Index.vue';
 import type { Component } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
@@ -60,8 +60,12 @@ export default createRouter({
     scrollBehavior(to, from, savedPosition) {
         if (('page' in from.params || 'page' in to.params)
             && !compareRouteIsNewQuery(to, from)) return { el: `#page${to.params.page ?? 1}`, top: 0 };
+        if (to.hash) return { el: to.hash, top: 0 };
         // the undocumented 'href' property will not in from when user refresh page
         if (!('href' in from || savedPosition === null)) return savedPosition;
-        return { top: 0 };
+        routeNameStrAssert(to.name);
+        routeNameStrAssert(from.name);
+        if (to.name.split('/')[0] !== from.name.split('/')[0]) return { top: 0 };
+        return false;
     }
 });

@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" />
+        <QueryForm @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" ref="queryFormRef" />
         <p>当前页数：{{ currentRoutePage }}</p>
         <Menu v-show="postPages.length !== 0" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -9,20 +9,12 @@
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="row justify-content-center">
-            <NavSidebar :postPages="postPages" :aria-expanded="postsNavExpanded"
-                        class="posts-nav col-xl d-none d-xl-block vh-100 sticky-top" />
-            <!-- fixme: Cannot read property 'value' of undefined @ invokeDirectiveHook()
-            <a @click="postsNavExpanded = !postsNavExpanded"
-               class="posts-nav-collapse col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
-                <FontAwesomeIcon v-show="postsNavExpanded" icon="angle-left" />
-                <FontAwesomeIcon v-show="!postsNavExpanded" icon="angle-right" />
-            </a>-->
+            <NavSidebar :postPages="postPages" />
             <div :class="{
                 'post-render-wrapper': true,
                 'post-render-list-wrapper': renderType === 'list',
                 'col': true,
-                'col-xl-auto': true,
-                'col-xl-10': renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
+                'col-xl-10': true //renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
             }">
                 <template v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage">
                     <PagePreviousButton @loadPage="loadPage($event)" :pageInfo="posts.pages" />
@@ -50,10 +42,9 @@ import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, Vi
 import type { ObjUnknown } from '@/shared';
 import { notyShow } from '@/shared';
 
-import { computed, defineComponent, onBeforeMount, onMounted, reactive, toRefs, watch, watchEffect } from 'vue';
+import { computed, defineComponent, onBeforeMount, onMounted, reactive, ref, toRefs, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
 export default defineComponent({
@@ -71,7 +62,6 @@ export default defineComponent({
             showPlaceholderPostList: boolean,
             renderType: 'list' | 'table',
             selectedRenderTypes: ['list' | 'table'],
-            postsNavExpanded: boolean,
             scrollStopDebounce: Function | null
         }>({
             forumList: [],
@@ -83,14 +73,14 @@ export default defineComponent({
             showPlaceholderPostList: false,
             renderType: 'list',
             selectedRenderTypes: ['list'],
-            postsNavExpanded: false,
             scrollStopDebounce: null
         });
+        const queryFormRef = ref<InstanceType<typeof QueryForm>>();
         const updateTitle = () => {
             const page = state.currentRoutePage;
             const forumName = `${state.postPages[0].forum.name}吧`;
             const threadTitle = state.postPages[0].threads[0].title;
-            switch (this.$refs.queryForm.currentQueryType()) {
+            switch (queryFormRef.value?.getCurrentQueryType()) {
                 case 'fid':
                 case 'search':
                     document.title = `第${page}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
@@ -131,7 +121,6 @@ export default defineComponent({
                 window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: firstReplyPidInView });
                 router.replace({ hash: `#${firstReplyPidInView}`, params: { ...newRouteParams, page } });
             }
-            updateTitle();
         };
         state.scrollStopDebounce = _.debounce(scrollStop, 200);
         const loadPage = page => {
@@ -163,6 +152,7 @@ export default defineComponent({
             }
             if (isNewQuery) state.postPages = [postsQuery];
             else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
+            updateTitle();
             notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
             return true;
         };
@@ -175,7 +165,7 @@ export default defineComponent({
         });
         watchEffect(() => {
             state.currentRoutePage = parseInt(route.params.page ?? '1');
-            state.renderType = state.selectedRenderTypes[0];
+            [state.renderType] = state.selectedRenderTypes;
         });
         watch(() => state.renderType, renderType => {
             if (state.scrollStopDebounce === null) return;
@@ -186,7 +176,7 @@ export default defineComponent({
             state.forumList = throwIfApiError(await apiForumList());
         })();
 
-        return { ...toRefs(state), fetchPosts, loadPage };
+        return { ...toRefs(state), queryFormRef, fetchPosts, loadPage };
     }
 });
 
@@ -214,21 +204,12 @@ const postsQueryVue = {
 </script>
 
 <style scoped>
-.posts-nav-collapse {
-    padding: 2px;
-    font-size: 1.3rem;
-    background-color: whitesmoke;
-}
 .post-render-wrapper {
     padding-left: 10px;
 }
-.post-render-list-wrapper-placeholder {
-    padding: 0;
-}
-
 @media (max-width: 1200px) {
     .post-render-wrapper {
-        width: calc(100% - 15px); /* minus width of <posts-nav-collapse> to prevent it warps new row */
+        width: calc(100% - 15px); /* minus the width of .posts-nav-expanded in <NavSidebar> to prevent it warps new row */
     }
 }
 @media (min-width: 1200px) {
@@ -238,6 +219,10 @@ const postsQueryVue = {
     .post-render-list-wrapper {
         max-width: 1000px;
     }
+}
+
+.post-render-list-wrapper-placeholder {
+    padding: 0;
 }
 @media (min-width: 1400px) {
     .post-render-list-wrapper-placeholder {
