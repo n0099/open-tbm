@@ -1,4 +1,3 @@
-import type { RouteLocationNormalized, RouteLocationNormalizedLoaded } from 'vue-router';
 import Noty from 'noty';
 import _ from 'lodash';
 
@@ -16,16 +15,20 @@ export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
 // https://stackoverflow.com/questions/41285211/overriding-interface-property-type-defined-in-typescript-d-ts-file
 export type Modify<T, R> = Omit<T, keyof R> & R;
-export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 
+export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type PostType = 'reply' | 'subReply' | 'thread';
 export type PostID = typeof postsID[number];
 export const postsID = ['tid', 'pid', 'spid'] as const;
 export const postTypeToID = { thread: 'tid', reply: 'pid', subReply: 'spid' };
+export type Fid = UInt;
+export type Tid = UInt;
+export type Pid = UInt;
+export type Spid = UInt;
 
 // we can't declare global timeout like `window.noty = new Noty({ timeout: 3000 });` due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 3000, type, text }).show() };
-export const tiebaPostLink = (tid: number, pidOrSpid?: number) => {
+export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
     return `https://tieba.baidu.com/p/${tid}`;
 };
@@ -39,9 +42,3 @@ export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<st
 export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'true';
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
-// https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
-export const routeNameStrAssert: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
-    if (!_.isString(name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
-};
-export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
-    !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));

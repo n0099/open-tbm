@@ -11,14 +11,15 @@
 </template>
 
 <script lang="ts">
-import { compareRouteIsNewQuery, notyShow, removeEnd, removeStart } from '@/shared';
-import { apiUsersQuery, isApiError } from '@/api';
-import type { ApiError, ApiUsersQuery } from '@/api/index.d';
+import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
 import PlaceholderError from '@/components/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
-import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
 import UserList from '@/components/UserList.vue';
 import UserQueryForm from '@/components/UserQueryForm.vue';
+import { apiUsersQuery, isApiError } from '@/api';
+import type { ApiError, ApiUsersQuery } from '@/api/index.d';
+import { notyShow, removeEnd, removeStart } from '@/shared';
+import { compareRouteIsNewQuery } from '@/router';
 
 import { defineComponent, reactive, toRefs, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';

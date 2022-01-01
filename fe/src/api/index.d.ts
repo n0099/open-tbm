@@ -1,12 +1,12 @@
 import type { SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
-import type { BoolInt, Float, Int, Iso8601DateTimeUtc0, ObjUnknown, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
+import type { BoolInt, Fid, Float, Int, Iso8601DateTimeUtc0, ObjUnknown, Pid, Spid, SqlDateTimeUtcPlus8, Tid, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
 
 export type ApiForumList = Array<{
     id: number,
-    fid: number,
+    fid: Fid,
     name: string,
     isCrawling: BoolInt
 }>;
@@ -33,7 +33,7 @@ export interface ApiStatsForumPostsCount {
     subReply: TimeCountPair[]
 }
 export interface ApiStatsForumPostsCountQP {
-    fid: UInt,
+    fid: Fid,
     timeGranularity: 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year',
     startTime: UnixTimestamp,
     endTime: UnixTimestamp
@@ -62,8 +62,8 @@ export type ApiUsersQueryQP = ApiQPPagination & SelectTiebaUserParams & { gender
 type LaravelEloquentRecordsCommonTimestampFields = { [P in 'created_at' | 'updated_at']: Iso8601DateTimeUtc0 };
 export type AuthorManagerType = 'assist' | 'manager' | 'picadmin' | 'voiceadmin';
 export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampFields {
-    tid: UInt,
-    firstPid: UInt,
+    tid: Tid,
+    firstPid: Pid,
     threadType: UInt | number | 1024 | 1040,
     stickyType: 'membertop' | 'top',
     isGood: BoolInt,
@@ -83,8 +83,8 @@ export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampField
 }
 export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields {
-    tid: UInt,
-    pid: UInt,
+    tid: Tid,
+    pid: Pid,
     floor: UInt,
     content: string, // original json convert to html string via be/app/resources/views/formatPostJsonContent.blade.php
     authorUid: BaiduUserID,
@@ -99,9 +99,9 @@ export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields
     tailInfo: ObjUnknown | null
 }
 export interface SubReplyRecord extends LaravelEloquentRecordsCommonTimestampFields {
-    tid: UInt,
-    pid: UInt,
-    spid: UInt,
+    tid: Tid,
+    pid: Pid,
+    spid: Spid,
     content: string, // original json convert to html string via be/app/resources/views/formatPostJsonContent.blade.php
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,

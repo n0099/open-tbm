@@ -84,7 +84,7 @@
                         <div class="reply-user-info sticky-top shadow-sm badge bg-light">
                             <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
                                 <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
-                                     class="tieba-user-avatar-large lazyload d-block mx-auto badge bg-light"/>
+                                     class="tieba-user-portrait-large lazyload d-block mx-auto badge bg-light"/>
                                 <span>
                                     {{ author.name }}
                                     <br v-if="author.displayName !== null && author.name !== null" />
@@ -111,8 +111,8 @@
                                         <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                                             <a v-if="subReplyGroup[subReplyIndex - 1] === undefined"
                                                :href="tiebaUserLink(author.name)"
-                                               target="_blank" class="sub-reply-user-info badge bg-light">
-                                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-avatar-small lazyload" />
+                                               target="_blank" class="sub-reply-user-info text-wrap badge bg-light">
+                                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-portrait-small lazyload" />
                                                 <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
                                                 <UserTag :user="{
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
@@ -140,6 +140,7 @@
 </template>
 
 <script lang="ts">
+import './tiebaUserPortrait.css';
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
 import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord, TiebaUserRecord } from '@/api/index.d';
@@ -154,6 +155,21 @@ import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
+
+export const baseGetUser = (users: TiebaUserRecord[]) => (uid: BaiduUserID): TiebaUserRecord => _.find(users, { uid }) ?? {
+    uid: 0,
+    avatarUrl: '',
+    name: '未知用户',
+    displayName: null,
+    fansNickname: null,
+    gender: 0,
+    iconInfo: []
+};
+export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUser>) => (uid: BaiduUserID) => {
+    const { name, displayName } = injectedGetUser(uid);
+    if (name === null) return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
+    return name + (displayName === null ? '' : `（${displayName}）`);
+};
 
 export default defineComponent({
     components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
@@ -193,39 +209,17 @@ export default defineComponent({
                 threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
             }>;
         });
-        const getUser = (uid: BaiduUserID): TiebaUserRecord => _.find(props.initialPosts.users, { uid }) ?? {
-            uid: 0,
-            avatarUrl: '',
-            name: '未知用户',
-            displayName: null,
-            fansNickname: null,
-            gender: 0,
-            iconInfo: []
-        };
-        const renderUsername = (uid: number) => {
-            const { name, displayName } = getUser(uid);
-            if (name === null) return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
-            return name + (displayName === null ? '' : `（${displayName}）`);
-        };
+        const getUser = baseGetUser(props.initialPosts.users);
+        const renderUsername = baseRenderUsername(getUser);
 
         onMounted(initialTippy);
 
-        return { DateTime, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, dateTimeFromUTC8, hoveringSubReplyID, posts, renderUsername, getUser };
+        return { DateTime, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, dateTimeFromUTC8, hoveringSubReplyID, posts, getUser, renderUsername };
     }
 });
 </script>
 
 <style scoped>
-/* <post-render-list> and <post-render-table> */
-.tieba-user-avatar-small {
-    width: 25px;
-    height: 25px;
-}
-.tieba-user-avatar-large {
-    width: 90px;
-    height: 90px;
-}
-/* <post-render-list> */
 .thread-item {
     margin-top: 1rem;
 }

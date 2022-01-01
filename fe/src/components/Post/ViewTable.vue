@@ -3,66 +3,62 @@
         <Table :columns="threadColumns" :dataSource="threads" :defaultExpandAllRows="true"
                :expandRowByClick="true" :pagination="false" :scroll="{ x: true }"
                size="middle" class="render-table-thread">
-            <template v-slot:tid="text, record" >
-                <RouterLink :to="{ name: 'tid', params: { tid: record.tid } }">{{ record.tid }}</RouterLink>
+            <template #tid="{ record: { tid } }">
+                <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
             </template>
-            <template v-slot:firstPid="text, record" >
-                <RouterLink :to="{ name: 'pid', params: { pid: record.firstPid } }">{{ record.firstPid }}</RouterLink>
+            <template #firstPid="{ record: { firstPid } }">
+                <RouterLink :to="{ name: 'post/pid', params: { pid: firstPid } }">{{ firstPid }}</RouterLink>
             </template>
-            <template v-slot:titleWithTag="text, record" >
+            <template #titleWithTag="{ record }">
                 <ThreadTag :thread="record" />
                 <span>{{ record.title }}</span>
             </template>
-            <template v-slot:authorInfo="text, record" >
-                <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
-                    <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
-                         class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.authorUid) }}
+            <template #authorInfo="{ record: { authorUid, authorManagerType } }">
+                <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
+                    <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                         class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
                 </a>
-                <UserTag :user="{ managerType: record.authorManagerType }"/>
+                <UserTag :user="{ managerType: authorManagerType }"/>
             </template>
-            <template v-slot:latestReplierInfo="text, record" >
-                <a :href="$$getTiebaUserLink($getUserInfo(record.latestReplierUid).name)" target="_blank">
-                    <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.latestReplierUid).avatarUrl)"
-                         class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.latestReplierUid) }}
+            <template #latestReplierInfo="{ record: { latestReplierUid } }">
+                <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
+                    <img :data-src="tiebaUserPortraitUrl(getUser(latestReplierUid).avatarUrl)"
+                         class="tieba-user-portrait-small lazyload" /> {{ renderUsername(latestReplierUid) }}
                 </a>
             </template>
-            <template v-slot:expandedRowRender="record" >
-                <span v-if="threadsReply[record.tid] === undefined">无子回复帖</span>
-                <Table v-else :columns="replyColumns" :dataSource="threadsReply[record.tid]"
+            <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
+                <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
+                <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
                        :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" size="middle">
-                    <template v-for="thread in [record]" slot="authorInfo" slot-scope="text, record">
-                        <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
-                            <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
-                                 class="tieba-user-avatar-small lazyload"/> {{ renderUsername(record.authorUid) }}
+                    <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                        <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
+                            <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                                 class="tieba-user-portrait-small lazyload"/> {{ renderUsername(authorUid) }}
                         </a>
                         <UserTag :user="{
-                            uid: { current: record.authorUid, thread: thread.authorUid },
-                            managerType: record.authorManagerType,
-                            expGrade: record.authorExpGrade
+                            uid: { current: authorUid, thread: threadAuthorUid },
+                            managerType: authorManagerType,
+                            expGrade: authorExpGrade
                         }"/>
                     </template>
-                    <template v-slot:expandedRowRender="record" >
-                        <div :is="repliesSubReply[record.pid] === undefined ? 'span' : 'p'" v-html="record.content" />
-                        <Table v-if="repliesSubReply[record.pid] !== undefined"
-                               :columns="subReplyColumns" :dataSource="repliesSubReply[record.pid]"
+                    <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
+                        <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-html="content" />
+                        <Table v-if="repliesSubReply[pid] !== undefined"
+                               :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                                :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" size="middle">
-                            <template v-for="reply in [record]" slot="authorInfo" slot-scope="text, record">
-                                <a :href="$$getTiebaUserLink($getUserInfo(record.authorUid).name)" target="_blank">
-                                    <img :data-src="$$getTiebaUserAvatarUrl($getUserInfo(record.authorUid).avatarUrl)"
-                                         class="tieba-user-avatar-small lazyload" /> {{ renderUsername(record.authorUid) }}
+                            <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                                <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
+                                    <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                                         class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
                                 </a>
                                 <UserTag :user="{
-                                    uid: {
-                                        current: record.authorUid,
-                                        thread: _.find(posts.threads, { tid: reply.tid }).authorUid,
-                                        reply: reply.authorUid
-                                    },
-                                    managerType: record.authorManagerType,
-                                    expGrade: record.authorExpGrade
+                                    uid: { current: authorUid, thread: threadAuthorUid, reply: replyAuthorUid },
+                                    managerType: authorManagerType,
+                                    expGrade: authorExpGrade
                                 }"/>
                             </template>
-                            <template v-slot:expandedRowRender="record" >
-                                <span v-html="record.content" />
+                            <template #expandedRowRender="{ record: { content } }">
+                                <span v-html="content" />
                             </template>
                         </Table>
                     </template>
@@ -73,37 +69,49 @@
 </template>
 
 <script lang="ts">
+import './tiebaUserPortrait.css';
 import { ThreadTag, UserTag } from './';
+import { baseGetUser, baseRenderUsername } from '@/components/Post/ViewList.vue';
+import type { ApiPostsQuery, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { Pid, Tid } from '@/shared';
+import { tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
+
+import type { PropType } from 'vue';
 import { defineComponent, onMounted, reactive, toRefs } from 'vue';
 import { RouterLink } from 'vue-router';
+import type { ColumnProps } from 'ant-design-vue/es/table/interface';
 import { Table } from 'ant-design-vue';
 import _ from 'lodash';
 
 export default defineComponent({
     components: { RouterLink, Table, ThreadTag, UserTag },
     props: {
-        posts: { type: Object, required: true }
+        posts: { type: Object as PropType<ApiPostsQuery>, required: true }
     },
     setup(props) {
-        const state = reactive({
-            $$getTiebaUserLink,
-            $$getTiebaUserAvatarUrl,
-            $getUserInfo: window.$getUserInfo(props.posts.users),
+        const state = reactive<{
+            threads: ThreadRecord[],
+            threadsReply: Record<Tid, ReplyRecord[]>,
+            repliesSubReply: Record<Pid, SubReplyRecord[]>,
+            threadColumns: ColumnProps[],
+            replyColumns: ColumnProps[],
+            subReplyColumns: ColumnProps[]
+        }>({
             threads: [],
             threadsReply: [],
             repliesSubReply: [],
             threadColumns: [
-                { title: 'tid', dataIndex: 'tid', scopedSlots: { customRender: 'tid' } },
-                { title: '标题', dataIndex: 'title', scopedSlots: { customRender: 'titleWithTag' } },
+                { title: 'tid', dataIndex: 'tid', slots: { customRender: 'tid' } },
+                { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },
                 { title: '回复量', dataIndex: 'replyNum' },
                 { title: '浏览量', dataIndex: 'viewNum' },
-                { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
+                { title: '发帖人', slots: { customRender: 'authorInfo' } },
                 { title: '发帖时间', dataIndex: 'postTime' },
-                { title: '最后回复人', scopedSlots: { customRender: 'latestReplierInfo' } },
+                { title: '最后回复人', slots: { customRender: 'latestReplierInfo' } },
                 { title: '最后回复时间', dataIndex: 'latestReplyTime' },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
-                { title: '1楼pid', dataIndex: 'firstPid', scopedSlots: { customRender: 'firstPid' } },
+                { title: '1楼pid', dataIndex: 'firstPid', slots: { customRender: 'firstPid' } },
                 { title: '主题贴类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
                 { title: '分享量', dataIndex: 'shareNum' },
                 { title: '赞踩量', dataIndex: 'agreeInfo' }, // todo: unknown json struct
@@ -116,7 +124,7 @@ export default defineComponent({
                 { title: 'pid', dataIndex: 'pid' },
                 { title: '楼层', dataIndex: 'floor' },
                 { title: '楼中楼回复量', dataIndex: 'subReplyNum' },
-                { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
+                { title: '发帖人', slots: { customRender: 'authorInfo' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '发帖时间', dataIndex: 'postTime' },
                 { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
@@ -129,53 +137,44 @@ export default defineComponent({
             ],
             subReplyColumns: [
                 { title: 'spid', dataIndex: 'spid' },
-                { title: '发帖人', scopedSlots: { customRender: 'authorInfo' } },
+                { title: '发帖人', slots: { customRender: 'authorInfo' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '发帖时间', dataIndex: 'postTime' },
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }
             ]
         });
-        const renderUsername = uid => {
-            const user = state.$getUserInfo(uid);
-            const { name } = user;
-            const { displayName } = user;
-            if (name === null) return `${displayName !== null ? `${displayName}` : `无用户名或覆盖名（UID：${user.uid}）`}`;
-            return `${name} ${displayName !== null ? `（${displayName}）` : ''}`;
-        };
+        const getUser = baseGetUser(props.posts.users);
+        const renderUsername = baseRenderUsername(getUser);
 
         onMounted(() => {
             state.threads = props.posts.threads;
             state.threadsReply = _.chain(state.threads)
                 .map('replies')
-                .reject(_.isEmpty) // remove threads which haven't reply
+                .reject(_.isEmpty) // remove threads which have no reply
                 .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
                 .value();
             state.repliesSubReply = _.chain(state.threadsReply)
-                .toArray() // tid keyed object to array
+                .toArray() // cast tid keyed object to array
                 .flatten() // flatten every thread's replies
                 .map('subReplies')
-                .reject(_.isEmpty) // remove replies which haven't sub reply
-                .mapKeys(subReplies => subReplies[0].pid) // convert replies' sub reply array to object for adding pid key
+                .reject(_.isEmpty) // remove replies which have no sub reply
+                .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which keyed by pid
                 .value();
         });
 
-        return { _, ...toRefs(state), renderUsername };
+        return { tiebaUserLink, tiebaUserPortraitUrl, ...toRefs(state), getUser, renderUsername };
     }
 });
 </script>
 
+<style>
+.ant-table td { /* required in https://2x.antdv.com/components/table-cn#API, when enabling `:scroll="{ x: true }"` */
+    white-space: nowrap;
+}
+</style>
+
 <style scoped>
-/* <post-render-list> and <post-render-table> */
-.tieba-user-avatar-small {
-    width: 25px;
-    height: 25px;
-}
-.tieba-user-avatar-large {
-    width: 90px;
-    height: 90px;
-}
-/* <post-render-table> */
 .render-table-thread .ant-table {
     width: fit-content;
 }

@@ -159,9 +159,10 @@
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from './';
 import type { Params, RequiredPostTypes, UniqueParams, paramsNameByType } from './queryParams';
 import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormLateBinding, useQueryFormWithUniqueParams } from './queryParams';
-import type { PostType } from '@/shared';
-import { notyShow, postsID, removeEnd, routeNameStrAssert } from '@/shared';
 import type { ApiForumList } from '@/api/index.d';
+import type { PostType } from '@/shared';
+import { notyShow, postsID, removeEnd } from '@/shared';
+import { routeNameStrAssert } from '@/router';
 
 import type { PropType } from 'vue';
 import { computed, defineComponent, reactive, toRefs } from 'vue';

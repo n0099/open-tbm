@@ -13,8 +13,8 @@
         </div>
         <div v-for="(user, userIndex) in usersData.users" :key="user.uid" :id="user.uid" class="row">
             <div class="col-3">
-                <img class="lazyload d-block mx-auto badge bg-light" width="110" height="110"
-                     :data-src="tiebaUserPortraitUrl(user.avatarUrl)" />
+                <img :data-src="tiebaUserPortraitUrl(user.avatarUrl)"
+                     class="lazyload d-block mx-auto badge bg-light" width="110" height="110" />
             </div>
             <div class="col">
                 <p>百度UID：{{ user.uid }}</p>
@@ -41,7 +41,8 @@
 
 <script lang="ts">
 import type { ApiUsersQuery, TiebaUserGender } from '@/api/index.d';
-import { removeEnd, routeNameStrAssert, tiebaUserPortraitUrl } from '@/shared';
+import { removeEnd, tiebaUserPortraitUrl } from '@/shared';
+import { routeNameStrAssert } from '@/router';
 import type { ComputedRef, PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';

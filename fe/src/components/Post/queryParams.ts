@@ -1,6 +1,6 @@
 import type { Param, ParamPartialValue, ParamPreprocessorOrWatcher } from './useQueryForm';
 import useQueryForm from './useQueryForm';
-import type { DeepWritable, ObjEmpty, PostID, PostType } from '@/shared';
+import type { DeepWritable, Fid, ObjEmpty, PostID, PostType } from '@/shared';
 import { boolStrToBool } from '@/shared';
 import _ from 'lodash';
 
@@ -130,7 +130,7 @@ export const useQueryFormLateBinding: Parameters<typeof useQueryForm>[0] = {
     }
 };
 export interface UniqueParams extends Record<string, Param> {
-    fid: { name: 'fid', value: number, subParam: ObjEmpty },
+    fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
     orderBy: { name: 'orderBy', value: PostID | 'default' | 'postTime', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
 }

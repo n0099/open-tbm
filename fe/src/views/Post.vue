@@ -9,12 +9,12 @@
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="row justify-content-center">
-            <NavSidebar :postPages="postPages" />
+            <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
             <div :class="{
                 'post-render-wrapper': true,
                 'post-render-list-wrapper': renderType === 'list',
                 'col': true,
-                'col-xl-10': true //renderType !== 'list' // let wrapper, except .post-render-list-wrapper, takes over right margin spaces, aka .post-render-list-wrapper-placeholder
+                'col-xl-10': renderType === 'list'
             }">
                 <template v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage">
                     <PagePreviousButton @loadPage="loadPage($event)" :pageInfo="posts.pages" />
@@ -24,7 +24,7 @@
                                     @loadPage="loadPage($event)" :currentPage="posts.pages.currentPage" />
                 </template>
             </div>
-            <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder col-xl d-none"></div>
+            <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder col-xl d-none p-0"></div>
         </div>
     </div>
     <div class="container">
@@ -70,7 +70,7 @@ export default defineComponent({
             currentRoutePage: 1,
             isLoading: false,
             lastFetchError: null,
-            showPlaceholderPostList: false,
+            showPlaceholderPostList: true,
             renderType: 'list',
             selectedRenderTypes: ['list'],
             scrollStopDebounce: null
@@ -219,10 +219,6 @@ const postsQueryVue = {
     .post-render-list-wrapper {
         max-width: 1000px;
     }
-}
-
-.post-render-list-wrapper-placeholder {
-    padding: 0;
 }
 @media (min-width: 1400px) {
     .post-render-list-wrapper-placeholder {

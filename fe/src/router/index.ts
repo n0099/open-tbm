@@ -1,27 +1,33 @@
-import { compareRouteIsNewQuery, routeNameStrAssert } from '@/shared';
 import Index from '@/views/Index.vue';
 import type { Component } from 'vue';
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import NProgress from 'nprogress';
+import _ from 'lodash';
+
+export const routeNameStrAssert: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
+    if (!_.isString(name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
+}; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
+export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
+    !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
 
 const lazyLoadRouteView = async (component: Promise<Component>) => {
     NProgress.start();
     const loadingBlocksDom = document.getElementById('loadingBlocksRouteChange');
-    const [containerDom] = document.getElementsByClassName('container');
+    const containersDom = document.getElementsByClassName('container');
     loadingBlocksDom?.classList.remove('d-none');
-    containerDom.classList.add('invisible');
+    containersDom.forEach(i => { i.classList.add('d-none') });
     return component.finally(() => {
         NProgress.done();
         loadingBlocksDom?.classList.add('d-none');
-        containerDom.classList.remove('invisible');
+        containersDom.forEach(i => { i.classList.remove('d-none') });
     });
 };
-
 const withPageRoute = <T extends { components: Record<string, () => Promise<Component>> }
 | { component: () => Promise<Component> } & { props: boolean }>
 (routeName: string, restRoute: T): T & { children: RouteRecordRaw[] } =>
     ({ ...restRoute, children: [{ ...restRoute, path: 'page/:page', name: `${routeName}+p` }] });
+
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
 const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }, props: true };
 export default createRouter({
