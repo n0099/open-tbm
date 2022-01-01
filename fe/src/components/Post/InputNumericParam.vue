@@ -1,25 +1,26 @@
 <template>
     <input v-if="modelValue.subParam.range === 'IN'"
            @input="emitModelChange" :value="modelValue.value"
-           :class="classes" :placeholder="placeholders.IN" :aria-label="modelValue.name"
+           :placeholder="placeholders.IN" :aria-label="modelValue.name"
            type="text" class="form-control" required pattern="\d+(,\d+)+" />
     <input v-else-if="modelValue.subParam.range === 'BETWEEN'"
            @input="emitModelChange" :value="modelValue.value"
-           :class="classes" :placeholder="placeholders.BETWEEN" :aria-label="modelValue.name"
+           :placeholder="placeholders.BETWEEN" :aria-label="modelValue.name"
            type="text" class="col-3 form-control flex-grow-0" required pattern="\d+,\d+" />
     <input v-else @input="emitModelChange" :value="modelValue.value"
-           :class="classes" :placeholder="placeholders.number" :aria-label="modelValue.name"
+           :placeholder="placeholders.number" :aria-label="modelValue.name"
            type="number" class="col-2 form-control flex-grow-0" required />
 </template>
 
 <script lang="ts">
+import type { ParamTypeNum, ParamTypeWithCommon } from '@/components/Post/queryParams';
+import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
-        modelValue: Object,
-        classes: { type: Object, required: true },
-        placeholders: { type: Object, required: true }
+        modelValue: Object as PropType<ParamTypeWithCommon<string, ParamTypeNum>>,
+        placeholders: { type: Object as PropType<{ [P in 'BETWEEN' | 'IN' | 'number']: string }>, required: true }
     },
     setup(props, { emit }) {
         const emitModelChange = e => { emit('update:modelValue', { ...props.modelValue, value: e.target.value }) };

@@ -1,71 +1,69 @@
 <template>
-    <div class="container-flow">
-        <Table :columns="threadColumns" :dataSource="threads" :defaultExpandAllRows="true"
-               :expandRowByClick="true" :pagination="false" :scroll="{ x: true }"
-               size="middle" class="render-table-thread">
-            <template #tid="{ record: { tid } }">
-                <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
-            </template>
-            <template #firstPid="{ record: { firstPid } }">
-                <RouterLink :to="{ name: 'post/pid', params: { pid: firstPid } }">{{ firstPid }}</RouterLink>
-            </template>
-            <template #titleWithTag="{ record }">
-                <ThreadTag :thread="record" />
-                <span>{{ record.title }}</span>
-            </template>
-            <template #authorInfo="{ record: { authorUid, authorManagerType } }">
-                <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
-                    <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                         class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
-                </a>
-                <UserTag :user="{ managerType: authorManagerType }"/>
-            </template>
-            <template #latestReplierInfo="{ record: { latestReplierUid } }">
-                <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
-                    <img :data-src="tiebaUserPortraitUrl(getUser(latestReplierUid).avatarUrl)"
-                         class="tieba-user-portrait-small lazyload" /> {{ renderUsername(latestReplierUid) }}
-                </a>
-            </template>
-            <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
-                <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
-                <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
-                       :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" size="middle">
-                    <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
-                        <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
-                            <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                                 class="tieba-user-portrait-small lazyload"/> {{ renderUsername(authorUid) }}
-                        </a>
-                        <UserTag :user="{
-                            uid: { current: authorUid, thread: threadAuthorUid },
-                            managerType: authorManagerType,
-                            expGrade: authorExpGrade
-                        }"/>
-                    </template>
-                    <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                        <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-html="content" />
-                        <Table v-if="repliesSubReply[pid] !== undefined"
-                               :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
-                               :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" size="middle">
-                            <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
-                                <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
-                                    <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                                         class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
-                                </a>
-                                <UserTag :user="{
-                                    uid: { current: authorUid, thread: threadAuthorUid, reply: replyAuthorUid },
-                                    managerType: authorManagerType,
-                                    expGrade: authorExpGrade
-                                }"/>
-                            </template>
-                            <template #expandedRowRender="{ record: { content } }">
-                                <span v-html="content" />
-                            </template>
-                        </Table>
-                    </template>
-                </Table>
-            </template>
-        </Table>
-    </div>
+    <Table :columns="threadColumns" :dataSource="threads" :defaultExpandAllRows="true"
+           :expandRowByClick="true" :pagination="false"
+           rowKey="tid" size="middle" class="render-table-thread">
+        <template #tid="{ record: { tid } }">
+            <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
+        </template>
+        <template #firstPid="{ record: { firstPid } }">
+            <RouterLink :to="{ name: 'post/pid', params: { pid: firstPid } }">{{ firstPid }}</RouterLink>
+        </template>
+        <template #titleWithTag="{ record }">
+            <ThreadTag :thread="record" />
+            <span>{{ record.title }}</span>
+        </template>
+        <template #authorInfo="{ record: { authorUid, authorManagerType } }">
+            <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
+                <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                     class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
+            </a>
+            <UserTag :user="{ managerType: authorManagerType }"/>
+        </template>
+        <template #latestReplierInfo="{ record: { latestReplierUid } }">
+            <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
+                <img :data-src="tiebaUserPortraitUrl(getUser(latestReplierUid).avatarUrl)"
+                     class="tieba-user-portrait-small lazyload" /> {{ renderUsername(latestReplierUid) }}
+            </a>
+        </template>
+        <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
+            <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
+            <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
+                   :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
+                <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                    <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
+                        <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                             class="tieba-user-portrait-small lazyload"/> {{ renderUsername(authorUid) }}
+                    </a>
+                    <UserTag :user="{
+                        uid: { current: authorUid, thread: threadAuthorUid },
+                        managerType: authorManagerType,
+                        expGrade: authorExpGrade
+                    }"/>
+                </template>
+                <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
+                    <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-html="content" />
+                    <Table v-if="repliesSubReply[pid] !== undefined"
+                           :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
+                           :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
+                        <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                            <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
+                                <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                                     class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
+                            </a>
+                            <UserTag :user="{
+                                uid: { current: authorUid, thread: threadAuthorUid, reply: replyAuthorUid },
+                                managerType: authorManagerType,
+                                expGrade: authorExpGrade
+                            }"/>
+                        </template>
+                        <template #expandedRowRender="{ record: { content } }">
+                            <span v-html="content" />
+                        </template>
+                    </Table>
+                </template>
+            </Table>
+        </template>
+    </Table>
 </template>
 
 <script lang="ts">
@@ -169,30 +167,26 @@ export default defineComponent({
 </script>
 
 <style>
-.ant-table td { /* required in https://2x.antdv.com/components/table-cn#API, when enabling `:scroll="{ x: true }"` */
-    white-space: nowrap;
-}
-</style>
-
-<style scoped>
 .render-table-thread .ant-table {
-    width: fit-content;
+    width: fit-content; /* narrow the width of reply and sub reply table to prevent they stretch with thread table */
 }
 
-.render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table { /* dom struct might change in further antd updates */
+.render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table {
+    /* select the outermost thread table, might change in further antd updates */
     width: auto;
     border: 1px solid #e8e8e8;
     border-radius: 4px 4px 0 0;
 }
 
-.render-table-thread .ant-table td, .render-table-thread .ant-table td *, .render-table-thread .ant-table th {
+.render-table-thread .ant-table td, .render-table-thread .ant-table td > *, .render-table-thread .ant-table th {
     white-space: nowrap;
     font-family: Consolas, Courier New, monospace;
 }
 
 .render-table-thread .ant-table-expand-icon-th, .render-table-thread .ant-table-row-expand-icon-cell {
-    width: 1px; /* any value other than 0px */
-    min-width: unset;
+    /* shrink the width of expanding child posts table button */
+    width: auto;
+    min-width: auto;
     padding-left: 5px !important;
     padding-right: 0 !important;
 }

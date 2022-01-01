@@ -1,5 +1,5 @@
 <template>
-    <div :class="classes" class="input-group-text">
+    <div class="input-group-text">
         <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
                    :checked="modelValue.subParam.matchBy === 'implicit'"
@@ -33,17 +33,18 @@
 </template>
 
 <script lang="ts">
+import type { ParamTypeText, ParamTypeWithCommon } from '@/components/Post/queryParams';
+import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import _ from 'lodash';
 
 export default defineComponent({
     props: {
-        modelValue: Object,
-        paramIndex: { type: Number, required: true },
-        classes: { type: Object, required: true }
+        modelValue: Object as PropType<ParamTypeWithCommon<string, ParamTypeText>>,
+        paramIndex: { type: Number, required: true }
     },
     setup(props, { emit }) {
-        const emitModelChange = (name, value) => {
+        const emitModelChange = (name: string, value: unknown) => {
             emit('update:modelValue', { ...props.modelValue, ...{ subParam: { [name]: value } } });
         };
         const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>

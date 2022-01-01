@@ -1,5 +1,15 @@
-.ant-input-lg, .input-group-text {
+.input-group-text ~ * > .ant-input-lg {
     height: 38px; /* adopt to bootstrap input group */
+}
+
+.input-group > :not(:first-child) .ant-calendar-picker-input  {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+.input-group > :not(:last-child) .ant-calendar-picker-input  {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
 }
 
 .lazyload, .lazyloading {

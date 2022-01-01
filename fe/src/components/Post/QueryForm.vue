@@ -56,13 +56,12 @@
                 </div>
             </div>
         </div>
-        <div v-for="(param, paramIndex) in params" :key="paramIndex" class="query-param-row row">
-            <div class="input-group">
+        <div class="query-params">
+            <div v-for="(param, paramIndex) in params" :key="paramIndex" class="input-group">
                 <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
                 <SelectParam @paramChange="changeParam(paramIndex, $event.value)" :currentParam="param.name" :class="{
                     'is-invalid': invalidParamsIndex.includes(paramIndex),
-                    'select-param-first-row': paramIndex === 0,
-                    'select-param-last-row': paramIndex === params.length - 1
+                    'select-param': true
                 }" />
                 <div class="param-input-group-text input-group-text">
                     <div class="form-check">
@@ -74,10 +73,10 @@
                 </div>
                 <template v-if="lo.includes(postsID, param.name)">
                     <SelectRange v-model="param.subParam.range" />
-                    <InputNumericParam v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{
+                    <InputNumericParam v-model="params[paramIndex]" :placeholders="{
                         IN: param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
                         BETWEEN: param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
-                        number: param.name === 'tid' ? 5000000000 : 15000000000
+                        number: param.name === 'tid' ? '5000000000' : '15000000000'
                     }" />
                 </template>
                 <template v-if="lo.includes(['postTime', 'latestReplyTime'], param.name)">
@@ -86,15 +85,14 @@
                 </template>
                 <template v-if="lo.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
                     <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required>
-                    <InputTextMatchParam v-model="params[paramIndex]" :paramIndex="paramIndex" :classes="paramRowLastDomClass(paramIndex, params)" />
+                    <InputTextMatchParam v-model="params[paramIndex]" :paramIndex="paramIndex" />
                 </template>
                 <template v-if="lo.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                     <SelectRange v-model="param.subParam.range" />
                     <InputNumericParam v-model="params[paramIndex]" :paramIndex="paramIndex"
-                                       :classes="paramRowLastDomClass(paramIndex, params)"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: 100 }" />
                 </template>
-                <div v-if="param.name === 'threadProperties'" :class="paramRowLastDomClass(paramIndex, params)">
+                <div v-if="param.name === 'threadProperties'">
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
                             <input v-model="param.value" :id="`paramThreadPropertiesGood-${paramIndex}`"
@@ -103,7 +101,7 @@
                                    class="text-danger fw-normal form-check-label">精品</label>
                         </div>
                     </div>
-                    <div :class="paramRowLastDomClass(paramIndex, params)" class="param-input-group-text input-group-text">
+                    <div class="param-input-group-text input-group-text">
                         <div class="form-check">
                             <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`"
                                    type="checkbox" value="sticky" class="form-check-input">
@@ -114,14 +112,14 @@
                 </div>
                 <template v-if="lo.includes(['authorUid', 'latestReplierUid'], param.name)">
                     <SelectRange v-model="param.subParam.range"></SelectRange>
-                    <InputNumericParam v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)" :placeholders="{
+                    <InputNumericParam v-model="params[paramIndex]" :placeholders="{
                         IN: '4000000000,4000000001,4000000002,...',
                         BETWEEN: '4000000000,5000000000',
-                        number: 4000000000
+                        number: '4000000000'
                     }" />
                 </template>
                 <template v-if="param.name === 'authorManagerType'">
-                    <select v-model="param.value" :class="paramRowLastDomClass(paramIndex, params)" class="form-control flex-grow-0 w-25">
+                    <select v-model="param.value" class="form-control flex-grow-0 w-25">
                         <option value="NULL">吧友</option>
                         <option value="manager">吧主</option>
                         <option value="assist">小吧主</option>
@@ -129,7 +127,7 @@
                     </select>
                 </template>
                 <template v-if="lo.includes(['authorGender', 'latestReplierGender'], param.name)">
-                    <select v-model="param.value" :class="paramRowLastDomClass(paramIndex, params)" class="form-control flex-grow-0 w-25">
+                    <select v-model="param.value" class="form-control flex-grow-0 w-25">
                         <option selected value="0">未设置（显示为男）</option>
                         <option value="1">男 ♂</option>
                         <option value="2">女 ♀</option>
@@ -137,12 +135,11 @@
                 </template>
                 <template v-if="param.name === 'authorExpGrade'">
                     <SelectRange v-model="param.subParam.range" />
-                    <InputNumericParam v-model="params[paramIndex]" :classes="paramRowLastDomClass(paramIndex, params)"
-                                       :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: 18 }" />
+                    <InputNumericParam v-model="params[paramIndex]" :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: '18' }" />
                 </template>
             </div>
         </div>
-        <div class="query-param-row row mt-2">
+        <div class="row mt-2">
             <button class="add-param-button col-auto btn btn-link disabled" type="button"><FontAwesomeIcon icon="plus" /></button>
             <SelectParam @paramChange="addParam($event)" />
         </div>
@@ -181,7 +178,6 @@ export default defineComponent({
     setup(props, { emit }) {
         const {
             state: useState,
-            paramRowLastDomClass,
             addParam,
             changeParam,
             deleteParam,
@@ -346,31 +342,30 @@ export default defineComponent({
             return '空查询';
         });
 
-        return { lo: _, postsID, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, inputTextMatchParamPlaceholder, paramRowLastDomClass, addParam, changeParam, deleteParam, submit };
+        return { lo: _, postsID, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, inputTextMatchParamPlaceholder, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>
 
-<style>
-.ant-calendar-picker-input {
-    border-bottom-left-radius: 0;
-    border-top-left-radius: 0;
-}
-</style>
-
 <style scoped>
-.query-param-row {
+.query-params > * {
     margin-top: -1px;
 }
+.query-params > :first-child > .select-param {
+    border-top-left-radius: 0.25rem !important;
+}
+.query-params > :last-child > .select-param {
+    border-bottom-left-radius: 0.25rem !important;
+}
 
-.param-control-first-row {
+.query-params > :first-child:not(:only-child) > :last-child {
     border-bottom-right-radius: 0;
 }
-.param-control-middle-row {
+.query-params > :not(:first-child):not(:last-child) > :last-child {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
-.param-control-last-row {
+.query-params > :last-child:not(:only-child) > :last-child {
     border-top-right-radius: 0;
 }
 

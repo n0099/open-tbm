@@ -85,20 +85,20 @@ export const paramsNameByType = {
         'latestReplyTime'
     ]
 } as const;
-interface ParamTypeNum { value: string, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
-interface ParamTypeText { value: string, subParam: { matchBy: 'eegex' | 'explicit' | 'implicit', spaceSplit: boolean } }
+export interface ParamTypeNum { value: string, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
+export interface ParamTypeText { value: string, subParam: { matchBy: 'eegex' | 'explicit' | 'implicit', spaceSplit: boolean } }
 interface ParamTypeDateTime { value: string, subParam: { range: undefined } }
 interface ParamTypeGender { value: '0' | '1' | '2' }
 interface ParamTypeOther {
     threadProperties: { value: Array<'good' | 'sticky'> },
     authorManagerType: { value: 'assist' | 'manager' | 'NULL' | 'voiceadmin' }
 }
-interface ParamsCommon<P> { name: P, subParam: ObjEmpty }
-export type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamsCommon<P> & ParamTypeGender }
-& { [P in keyof ParamTypeOther]: ParamsCommon<P> & ParamTypeOther[P] }
-& { [P in typeof paramsNameByType.dateTime[number]]: ParamsCommon<P> & ParamTypeDateTime }
-& { [P in typeof paramsNameByType.numeric[number]]: ParamsCommon<P> & ParamTypeNum }
-& { [P in typeof paramsNameByType.text[number]]: ParamsCommon<P> & ParamTypeText };
+export type ParamTypeWithCommon<N, P> = P & { name: N, subParam: ObjEmpty };
+export type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamTypeWithCommon<P, ParamTypeGender> }
+& { [P in keyof ParamTypeOther]: ParamTypeWithCommon<P, ParamTypeOther[P]> }
+& { [P in typeof paramsNameByType.dateTime[number]]: ParamTypeWithCommon<P, ParamTypeDateTime> }
+& { [P in typeof paramsNameByType.numeric[number]]: ParamTypeWithCommon<P, ParamTypeNum> }
+& { [P in typeof paramsNameByType.text[number]]: ParamTypeWithCommon<P, ParamTypeText> };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
     postTypes: { value: ['thread', 'reply', 'subReply'], subParam: {} },

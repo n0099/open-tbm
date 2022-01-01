@@ -59,13 +59,4 @@ export default defineComponent({
 select {
     width: 20% !important;
 }
-.is-invalid {
-    z-index: 1; /* let border overlaps other selects */
-}
-.select-param-first-row {
-    border-top-left-radius: 0.25rem !important;
-}
-.select-param-last-row {
-    border-bottom-left-radius: 0.25rem !important;
-}
 </style>

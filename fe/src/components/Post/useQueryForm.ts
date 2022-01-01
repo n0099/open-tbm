@@ -35,14 +35,6 @@ export default <
         invalidParamsIndex: []
     }) as State; // https://github.com/vuejs/vue-next/issues/1324, https://github.com/vuejs/vue-next/issues/2136
 
-    const paramRowLastDomClass = (paramIndex: number, params: typeof state.params) =>
-        (params.length === 1
-            ? {} // if there only have one row, class remains unchanged
-            : {
-                'param-control-first-row': paramIndex === 0,
-                'param-control-middle-row': !(paramIndex === 0 || paramIndex === params.length - 1),
-                'param-control-last-row': paramIndex === params.length - 1
-            });
     const fillParamWithDefaultValue = <T extends TParam | TUniqueParam>
     (param: Partial<Param> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
@@ -187,7 +179,6 @@ export default <
 
     return {
         state,
-        paramRowLastDomClass,
         addParam,
         changeParam,
         deleteParam,
