@@ -74,7 +74,7 @@ export default defineComponent({
             isPostsNavExpanded: false,
             firstPostInView: { tid: 0, pid: 0, page: 0 }
         });
-        const navigate = (page: string, tid?: string, pid?: string) => {
+        const navigate = (page: number | string, tid?: string, pid?: number | string) => {
             router.replace({
                 hash: `#${pid ?? (tid === undefined ? null : `t${tid}`)}`,
                 params: { ...route.params, page }
@@ -152,7 +152,8 @@ export default defineComponent({
 });
 </script>
 
-<style>/* to override styles for dom under another component <MenuItem>, we have to declare in global scope */
+<style>
+/* to override styles for dom under another component <MenuItem>, we have to declare in global scope */
 .posts-nav-thread-item {
     height: auto !important; /* to show reply nav buttons under thread menu items */
     margin-top: 0 !important;

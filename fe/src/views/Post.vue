@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" ref="queryFormRef" />
+        <QueryForm ref="queryFormRef" @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" />
         <p>当前页数：{{ currentRoutePage }}</p>
         <Menu v-show="postPages.length !== 0" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -10,10 +10,8 @@
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="row justify-content-center">
             <NavSidebar v-if="renderType === 'list'" :postPages="postPages" :firstPostInView="firstPostInView" />
-            <div :class="{
-                'post-render-wrapper': true,
+            <div class="post-render-wrapper col" :class="{
                 'post-render-list-wrapper': renderType === 'list',
-                'col': true,
                 'col-xl-10': renderType === 'list'
             }">
                 <template v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage">
@@ -24,7 +22,7 @@
                                     @loadPage="loadPage($event)" :currentPage="posts.pages.currentPage" />
                 </template>
             </div>
-            <div v-show="renderType === 'list'" class="post-render-list-right-padding col-xl d-none p-0"></div>
+            <div v-show="renderType === 'list'" class="post-render-list-right-padding col-xl d-none p-0" />
         </div>
     </div>
     <div class="container">
@@ -71,7 +69,7 @@ export default defineComponent({
             lastFetchError: null,
             showPlaceholderPostList: true,
             renderType: 'list',
-            selectedRenderTypes: ['list'],
+            selectedRenderTypes: ['list']
         });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
         const loadPage = page => {

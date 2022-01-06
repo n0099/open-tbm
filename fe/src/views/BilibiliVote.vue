@@ -18,36 +18,36 @@
         <p><a href="https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
         <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
         <hr />
-        <div ref="top50CandidatesCount" id="top50CandidatesCount" class="echarts"></div>
+        <div ref="top50CandidatesCount" id="top50CandidatesCount" class="echarts" />
         <hr />
-        <div ref="top10CandidatesTimeline" id="top10CandidatesTimeline" class="echarts"></div>
+        <div ref="top10CandidatesTimeline" id="top10CandidatesTimeline" class="echarts" />
         <hr />
         <div class="row justify-content-end">
             <label class="col-2 col-form-label text-end" for="top5CandidatesCountByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeGranularity v-model="query.top5CandidatesCountByTimeGranularity" :granularities="['minute', 'hour']" id="top5CandidatesCountByTimeGranularity" />
+                    <QueryTimeGranularity v-model="query.top5CandidatesCountByTimeGranularity" id="top5CandidatesCountByTimeGranularity" :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
-        <div ref="top5CandidatesCountByTime" id="top5CandidatesCountByTime" class="echarts"></div>
+        <div ref="top5CandidatesCountByTime" id="top5CandidatesCountByTime" class="echarts" />
         <hr />
         <div class="row justify-content-end">
             <label class="col-2 col-form-label text-end" for="allVotesCountByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <QueryTimeGranularity v-model="query.allVotesCountByTimeGranularity" :granularities="['minute', 'hour']" id="allVotesCountByTimeGranularity" />
+                    <QueryTimeGranularity v-model="query.allVotesCountByTimeGranularity" id="allVotesCountByTimeGranularity" :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
-        <div ref="allVotesCountByTime" id="allVotesCountByTime" class="echarts"></div>
+        <div ref="allVotesCountByTime" id="allVotesCountByTime" class="echarts" />
         <hr />
         <Table :columns="candidatesDetailColumns"
                :data-source="candidatesDetailData"
                :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }"
-               row-key="candidateIndex">
+               rowKey="candidateIndex">
             <template #candidateName="{ text }">
                 <a :href="tiebaUserLink(text)">{{ text }}</a>
             </template>

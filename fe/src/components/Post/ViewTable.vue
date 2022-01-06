@@ -17,7 +17,7 @@
                 <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
                      class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
             </a>
-            <UserTag :user="{ managerType: authorManagerType }"/>
+            <UserTag :user="{ managerType: authorManagerType }" />
         </template>
         <template #latestReplierInfo="{ record: { latestReplierUid } }">
             <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
@@ -32,13 +32,13 @@
                 <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
                     <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                         <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                             class="tieba-user-portrait-small lazyload"/> {{ renderUsername(authorUid) }}
+                             class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
                     </a>
                     <UserTag :user="{
                         uid: { current: authorUid, thread: threadAuthorUid },
                         managerType: authorManagerType,
                         expGrade: authorExpGrade
-                    }"/>
+                    }" />
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
                     <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-html="content" />
@@ -54,10 +54,10 @@
                                 uid: { current: authorUid, thread: threadAuthorUid, reply: replyAuthorUid },
                                 managerType: authorManagerType,
                                 expGrade: authorExpGrade
-                            }"/>
+                            }" />
                         </template>
-                        <template #expandedRowRender="{ record: { content } }">
-                            <span v-html="content" />
+                        <template #expandedRowRender="{ record: { content: subReplyContent } }">
+                            <span v-html="subReplyContent" />
                         </template>
                     </Table>
                 </template>

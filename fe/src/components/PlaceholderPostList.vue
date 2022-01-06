@@ -3,13 +3,13 @@
         <template v-if="isLoading">
             <div class="col"><hr /></div>
             <div class="w-auto">
-                <div class="loading mx-auto"></div>
+                <div class="loading mx-auto" />
             </div>
         </template>
         <div class="col"><hr /></div>
-        <div class="w-100"></div>
+        <div class="w-100" />
         <div class="col">
-            <div class="tombstone-post-list"></div>
+            <div class="tombstone-post-list" />
         </div>
     </div>
 </template>

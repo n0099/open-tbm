@@ -1,7 +1,6 @@
 <template>
-    <select :value="modelValue"
-            @input="$emit('update:modelValue', $event.target.value)"
-            :id="id" class="form-control">
+    <select @input="$emit('update:modelValue', $event.target.value)"
+            :id="id" :value="modelValue" class="form-control">
         <option v-for="(text, granularity) in options" :key="granularity" :value="granularity">{{ text }}</option>
     </select>
 </template>

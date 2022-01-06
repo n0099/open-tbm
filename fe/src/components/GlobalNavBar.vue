@@ -4,12 +4,12 @@
             <RouterLink to="/" class="navbar-brand">贴吧云监控</RouterLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                     aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon" />
             </button>
-            <div class="navbar-collapse collapse" id="navbar">
+            <div id="navbar" class="navbar-collapse collapse">
                 <ul class="navbar-nav">
                     <template v-for="(nav, _k) in navs" :key="_k">
-                        <li v-if="'routes' in nav" :class="'nav-item dropdown' + activeNavClass(nav.isActive)">
+                        <li v-if="'routes' in nav" :class="`nav-item dropdown${activeNavClass(nav.isActive)}`">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </a>
@@ -19,7 +19,7 @@
                                 </RouterLink>
                             </div>
                         </li>
-                        <li v-else :class="'nav-item' + activeNavClass(nav.isActive)">
+                        <li v-else :class="`nav-item${activeNavClass(nav.isActive)}`">
                             <RouterLink :to="{ name: nav.route }" class="nav-link">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </RouterLink>

@@ -50,7 +50,7 @@
                             <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                         </a>
                         <UserTag v-if="thread.authorManagerType !== null"
-                                 :user="{ managerType: thread.authorManagerType }"/>
+                                 :user="{ managerType: thread.authorManagerType }" />
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
                             <a :href="tiebaUserLink(getUser(thread.latestReplierUid).name)" target="_blank" class="ms-2">
                                 <span class="fw-normal link-secondary">最后回复：</span>
@@ -87,7 +87,7 @@
                          class="reply-user-info col-auto text-center sticky-top shadow-sm badge bg-light">
                         <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
                             <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
-                                 class="tieba-user-portrait-large lazyload"/>
+                                 class="tieba-user-portrait-large lazyload" />
                             <p class="my-0">{{ author.name }}</p>
                             <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
                         </a>
@@ -95,7 +95,7 @@
                             uid: { current: reply.authorUid, thread: thread.authorUid },
                             managerType: reply.authorManagerType,
                             expGrade: reply.authorExpGrade
-                        }"/>
+                        }" />
                     </div>
                     <div class="col me-2 px-1 border-start overflow-auto">
                         <div class="p-2" v-html="reply.content" />
@@ -117,10 +117,10 @@
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
                                                     managerType: subReply.authorManagerType,
                                                     expGrade: subReply.authorExpGrade
-                                                }"/>
+                                                }" />
                                             </a>
                                             <div class="float-end badge bg-light">
-                                                <div :class="{ 'visually-hidden': hoveringSubReplyID !== subReply.spid, 'd-inline': true }">
+                                                <div class="d-inline" :class="{ 'visually-hidden': hoveringSubReplyID !== subReply.spid }">
                                                     <PostCommonMetadataIconLinks :meta="subReply" postTypeID="spid" />
                                                 </div>
                                                 <PostTimeBadge :time="subReply.postTime" badgeColor="info" />

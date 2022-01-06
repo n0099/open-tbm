@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submitQueryForm()" class="mt-3">
+    <form @submit.prevent="submitQueryForm" class="mt-3">
         <div class="row">
             <label class="col-3 col-form-label text-end" for="queryTimeRange">时间范围</label>
             <div class="col-5">
@@ -24,7 +24,7 @@
             <button type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
     </form>
-    <div ref="chartDom" id="statusChartDom" class="echarts mt-4"></div>
+    <div ref="chartDom" id="statusChartDom" class="echarts mt-4" />
 </template>
 
 <script lang="ts">

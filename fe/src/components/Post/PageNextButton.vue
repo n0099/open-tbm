@@ -3,7 +3,7 @@
         <div class="row align-items-center">
             <div class="col"><hr /></div>
             <div class="w-auto">
-                <button @click="$emit('load-page', currentPage + 1)" class="btn btn-secondary" type="button">
+                <button @click="$emit('loadPage', currentPage + 1)" class="btn btn-secondary" type="button">
                     <span class="h4">下一页</span>
                 </button>
             </div>

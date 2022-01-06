@@ -27,7 +27,7 @@
     <div v-if="!isLoadingNewPage && isLastPageInPages" class="p-4">
         <div class="row align-items-center">
             <div class="col"><hr /></div>
-            <div class="w-auto" v-for="(page, _k) in [usersData.pages]" :key="_k">
+            <div v-for="(page, _k) in [usersData.pages]" :key="_k" class="w-auto">
                 <RouterLink :to="pagesRoute.next" class="btn btn-secondary">
                     <span class="h4">下一页</span>
                 </RouterLink>
@@ -44,10 +44,11 @@ import { routeNameStrAssert } from '@/router';
 import type { ComputedRef, PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
-import { useRoute } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import _ from 'lodash';
 
 export default defineComponent({
+    components: { RouterLink },
     props: {
         usersData: { type: Object as PropType<ApiUsersQuery>, required: true },
         isLoadingNewPage: { type: Boolean, required: true },

@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submitQueryForm()" class="mt-3">
+    <form @submit.prevent="submitQueryForm" class="mt-3">
         <div class="row">
             <label class="col-2 col-form-label text-end" for="queryFid">贴吧</label>
             <div class="col-3">
@@ -11,7 +11,7 @@
                     </select>
                 </div>
             </div>
-            <div class="col-4"></div>
+            <div class="col-4" />
             <button :disabled="query.fid === 0" type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
         <div class="row mt-2">
@@ -31,7 +31,7 @@
             </div>
         </div>
     </form>
-    <div ref="chartDom" id="statsChartDom" class="echarts mt-4"></div>
+    <div ref="chartDom" id="statsChartDom" class="echarts mt-4" />
 </template>
 
 <script lang="ts">

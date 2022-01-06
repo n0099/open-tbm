@@ -2,31 +2,31 @@
     <div class="input-group-text">
         <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
-                   :checked="modelValue.subParam.matchBy === 'implicit'"
-                   :id="inputID('Implicit')" :name="inputName"
-                   value="implicit" type="radio" class="form-check-input">
+                   :id="inputID('Implicit')"
+                   :checked="modelValue.subParam.matchBy === 'implicit'" :name="inputName"
+                   value="implicit" type="radio" class="form-check-input" />
             <label :for="inputID('Implicit')" class="form-check-label">模糊</label>
         </div>
         <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
-                   :checked="modelValue.subParam.matchBy === 'explicit'"
-                   :id="inputID('Explicit')" :name="inputName"
-                   value="explicit" type="radio" class="form-check-input">
+                   :id="inputID('Explicit')"
+                   :checked="modelValue.subParam.matchBy === 'explicit'" :name="inputName"
+                   value="explicit" type="radio" class="form-check-input" />
             <label :for="inputID('Explicit')" class="form-check-label">精确</label>
         </div>
         <div class="form-check form-check-inline">
             <input @input="emitModelChange('spaceSplit', $event.target.checked)"
-                   :checked="modelValue.subParam.spaceSplit"
                    :id="inputID('SpaceSplit')"
+                   :checked="modelValue.subParam.spaceSplit"
                    :disabled="modelValue.subParam.matchBy === 'regex'"
-                   type="checkbox" class="form-check-input">
+                   type="checkbox" class="form-check-input" />
             <label :for="inputID('SpaceSplit')" class="form-check-label">空格分隔</label>
         </div>
         <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
-                   :checked="modelValue.subParam.matchBy === 'regex'"
-                   :id="inputID('Regex')" :name="inputName"
-                   value="regex" type="radio" class="form-check-input">
+                   :id="inputID('Regex')"
+                   :checked="modelValue.subParam.matchBy === 'regex'" :name="inputName"
+                   value="regex" type="radio" class="form-check-input" />
             <label :for="inputID('Regex')" class="form-check-label">正则</label>
         </div>
     </div>

@@ -1,6 +1,6 @@
 <template>
     <span :data-tippy-content="tippyPrefix + time"
-          :class="'ms-1 fw-normal badge rounded-pill bg-' + badgeColor">
+          :class="`ms-1 fw-normal badge rounded-pill bg-${badgeColor}`">
         {{ dateTimeFromUTC8(time).toRelative({ round: false }) }}
     </span>
 </template>

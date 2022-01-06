@@ -3,7 +3,7 @@
         <div class="col"><hr /></div>
         <div class="w-auto">
             <div class="p-2 badge bg-light">
-                <button v-if="pageInfo.currentPage > 1" @click="$emit('load-page', pageInfo.currentPage - 1)"
+                <button v-if="pageInfo.currentPage > 1" @click="$emit('loadPage', pageInfo.currentPage - 1)"
                         class="post-previous-page-button btn btn-primary" type="button">上一页</button>
                 <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
                 <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.itemsCount }} 条</span>

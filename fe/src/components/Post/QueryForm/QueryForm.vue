@@ -1,12 +1,12 @@
 <template>
-    <form @submit.prevent="submit()" class="mt-3">
+    <form @submit.prevent="submit" class="mt-3">
         <div class="row">
             <label class="col-1 col-form-label" for="paramFid">贴吧</label>
             <div class="col-3">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
-                    <select v-model.number="uniqueParams.fid.value" :class="{ 'is-invalid': isFidInvalid }"
-                            id="paramFid" class="form-select form-control">
+                    <select v-model.number="uniqueParams.fid.value" id="paramFid"
+                            :class="{ 'is-invalid': isFidInvalid }" class="form-select form-control">
                         <option value="0">未指定</option>
                         <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
@@ -17,17 +17,17 @@
                 <div class="input-group">
                     <div class="form-check form-check-inline">
                         <input v-model="uniqueParams.postTypes.value" id="paramPostTypesThread"
-                               type="checkbox" value="thread" class="form-check-input">
+                               type="checkbox" value="thread" class="form-check-input" />
                         <label class="form-check-label" for="paramPostTypesThread">主题贴</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input v-model="uniqueParams.postTypes.value" id="paramPostTypesReply"
-                               type="checkbox" value="reply" class="form-check-input">
+                               type="checkbox" value="reply" class="form-check-input" />
                         <label class="form-check-label" for="paramPostTypesReply">回复贴</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input v-model="uniqueParams.postTypes.value" id="paramPostTypesSubReply"
-                               type="checkbox" value="subReply" class="form-check-input">
+                               type="checkbox" value="subReply" class="form-check-input" />
                         <label class="form-check-label" for="paramPostTypesSubReply">楼中楼</label>
                     </div>
                 </div>
@@ -59,14 +59,14 @@
         <div class="query-params">
             <div v-for="(param, paramIndex) in params" :key="paramIndex" class="input-group">
                 <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
-                <SelectParam @paramChange="changeParam(paramIndex, $event.value)" :currentParam="param.name" :class="{
-                    'is-invalid': invalidParamsIndex.includes(paramIndex),
-                    'select-param': true
-                }" />
+                <SelectParam @paramChange="changeParam(paramIndex, $event.value)" :currentParam="param.name"
+                             class="select-param" :class="{
+                                 'is-invalid': invalidParamsIndex.includes(paramIndex)
+                             }" />
                 <div class="param-input-group-text input-group-text">
                     <div class="form-check">
                         <input v-model="param.subParam.not" :id="`param${lo.upperFirst(param.name)}Not-${paramIndex}`"
-                               type="checkbox" value="good" class="form-check-input">
+                               type="checkbox" value="good" class="form-check-input" />
                         <label :for="`param${lo.upperFirst(param.name)}Not-${paramIndex}`"
                                class="text-secondary fw-bold form-check-label">非</label>
                     </div>
@@ -84,19 +84,19 @@
                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="lo.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
-                    <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required>
+                    <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required />
                     <InputTextMatchParam v-model="params[paramIndex]" :paramIndex="paramIndex" />
                 </template>
                 <template v-if="lo.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
                     <SelectRange v-model="param.subParam.range" />
                     <InputNumericParam v-model="params[paramIndex]" :paramIndex="paramIndex"
-                                       :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: 100 }" />
+                                       :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: '100' }" />
                 </template>
                 <div v-if="param.name === 'threadProperties'">
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
                             <input v-model="param.value" :id="`paramThreadPropertiesGood-${paramIndex}`"
-                                   type="checkbox" value="good" class="form-check-input">
+                                   type="checkbox" value="good" class="form-check-input" />
                             <label :for="`paramThreadPropertiesGood-${paramIndex}`"
                                    class="text-danger fw-normal form-check-label">精品</label>
                         </div>
@@ -104,14 +104,14 @@
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
                             <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`"
-                                   type="checkbox" value="sticky" class="form-check-input">
+                                   type="checkbox" value="sticky" class="form-check-input" />
                             <label :for="`paramThreadPropertiesSticky-${paramIndex}`"
                                    class="text-primary fw-normal form-check-label">置顶</label>
                         </div>
                     </div>
                 </div>
                 <template v-if="lo.includes(['authorUid', 'latestReplierUid'], param.name)">
-                    <SelectRange v-model="param.subParam.range"></SelectRange>
+                    <SelectRange v-model="param.subParam.range" />
                     <InputNumericParam v-model="params[paramIndex]" :placeholders="{
                         IN: '4000000000,4000000001,4000000002,...',
                         BETWEEN: '4000000000,5000000000',
@@ -145,7 +145,7 @@
         </div>
         <div class="row mt-3">
             <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
-                查询 <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                查询 <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" />
             </button>
             <span class="col-auto ms-3 my-auto text-muted">{{ currentQueryTypeDesc }}</span>
         </div>
@@ -285,8 +285,7 @@ export default defineComponent({
                 if (required === undefined) return true; // not set means this param accepts any post types
                 required[1] = _.sortBy(required[1]);
                 if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1]))) return true;
-                if (required[0] === 'ALL' && _.isEqual(required[1], current)) return true;
-                return false;
+                return required[0] === 'ALL' && _.isEqual(required[1], current);
             };
             const requiredPostTypesStringify = (required: NonNullable<RequiredPostTypes[string]>) =>
                 `${required[1].join(required[0] === 'SUB' ? ' | ' : ' & ')}`;

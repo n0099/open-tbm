@@ -1,8 +1,8 @@
 <template>
     <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
     <UserList v-for="(usersQuery, pageIndex) in userPages"
-              :key="'page' + usersQuery.pages.currentPage"
-              :id="'page' + usersQuery.pages.currentPage"
+              :key="`page${usersQuery.pages.currentPage}`"
+              :id="`page${usersQuery.pages.currentPage}`"
               :usersData="usersQuery"
               :isLoadingNewPage="isLoading"
               :isLastPageInPages="pageIndex === userPages.length - 1" />

@@ -1,16 +1,16 @@
 <template>
-    <RangePicker :value="timeRange" @change="timeRangeChanged" :ranges="{
+    <RangePicker @change="timeRangeChanged" :id="id" :value="timeRange" :ranges="{
         昨天: [moment().subtract(1, 'day').startOf('day'), moment().subtract(1, 'day').endOf('day')],
         今天: [moment().startOf('day'), moment().endOf('day')],
         本周: [moment().startOf('week'), moment().endOf('week')],
         最近7天: [moment().subtract(7, 'days'), moment()],
         本月: [moment().startOf('month'), moment().endOf('momth')],
         最近30天: [moment().subtract(30, 'days'), moment()]
-    }" :format="'YYYY-MM-DD HH:mm'" :showTime="{
+    }" format="YYYY-MM-DD HH:mm" :showTime="{
         format: 'HH:mm',
         minuteStep: 5,
         secondStep: 10
-    }" :allowClear="false" size="large" :id="id" class="col" />
+    }" :allowClear="false" size="large" class="col" />
 </template>
 
 <script lang="ts">
