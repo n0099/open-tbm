@@ -149,9 +149,9 @@ export default <
         const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
         const subParamValue = (subParam?: Param['subParam']) =>
             _.map(subParam, (value, name) => `;${name}:${escapeParamValue(value)}`).join('');
+        const flatParams = [...Object.values(filteredUniqueParams) as TParam[], ...filteredParams];
         void router.push({
-            path: `/p/${[...Object.values(filteredUniqueParams), ...filteredParams]
-                // format param to url, e.g. name:value;subParamName:subParamValue...
+            path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param => `${param.name}:${paramValue(param.value)}${subParamValue(param.subParam)}`)
                 .join('/')}`
         });

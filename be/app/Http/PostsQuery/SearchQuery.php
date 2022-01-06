@@ -9,6 +9,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 class SearchQuery
 {
@@ -17,10 +18,14 @@ class SearchQuery
     public function query(QueryParams $params): self
     {
         $fid = $params->getUniqueParamValue('fid');
-        $queries = array_map(function (PostModel $postModel) use ($params): Paginator {
+        /** @var array<string, Collection> $cachedUserQuery */
+        $cachedUserQuery = [];
+        $queries = array_map(function (PostModel $postModel) use ($params, &$cachedUserQuery): Paginator {
             $postQuery = $postModel->newQuery();
             foreach ($params->omit() as $param) {
-                self::applyQueryParamsOnQuery($postQuery, $param);
+                // even when $cachedUserQuery[$param->name] is null, it will still pass as a reference to the array item
+                // which is null at this point, but will be later updated by ref
+                self::applyQueryParamsOnQuery($postQuery, $param, $cachedUserQuery[$param->name]);
             }
             return $postQuery->hidePrivateFields()->simplePaginate($this->perPageItems);
         }, Arr::only(
@@ -63,7 +68,7 @@ class SearchQuery
     /**
      * Apply conditions of query params on a query builder that created from posts model
      */
-    private static function applyQueryParamsOnQuery(Builder $qb, Param $param): Builder
+    private static function applyQueryParamsOnQuery(Builder $qb, Param $param, ?Collection &$outCachedUserQueryResult): Builder
     {
         $name = $param->name;
         $value = $param->value;
@@ -83,8 +88,14 @@ class SearchQuery
             '=' => '!=',
             '>' => '<='
         ][$sub['range'] ?? null] ?? null;
+
         $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
         $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
+        $getAndCacheUserQuery = static function (Builder $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
+            // $outCachedUserQueryResult === null means it's the first call
+            $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->get();
+            return $outCachedUserQueryResult;
+        };
 
         return match ($name) {
             // unique
@@ -118,14 +129,18 @@ class SearchQuery
                 }
                 return $qb;
             },
-            // user
             'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
                 $qb->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
-                    self::applyTextMatchParamsOnQuery(UserModel::select('uid'), $fieldNameOfUserNameParams, $value, $sub)
+                    $getAndCacheUserQuery(self::applyTextMatchParamsOnQuery(
+                        UserModel::select('uid'), $fieldNameOfUserNameParams, $value, $sub
+                    ))
                 ),
             'authorGender', 'latestReplierGender' =>
-                $qb->{"where{$not}In"}("{$userTypeOfUserParams}Uid", UserModel::where('gender', $value)),
+                $qb->{"where{$not}In"}(
+                    "{$userTypeOfUserParams}Uid",
+                    $getAndCacheUserQuery(UserModel::select('uid')->where('gender', $value))
+                ),
             'authorManagerType' =>
                 $value === 'NULL'
                     ? $qb->{"where{$not}Null"}('authorManagerType')
@@ -146,7 +161,7 @@ class SearchQuery
             $addMatchKeyword = static fn (string $keyword) =>
                 $subQuery->{"{$isOrWhere}Where"}(
                     $field,
-                    "{$not} LIKE",
+                    trim("{$not} LIKE"),
                     $subParams['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword
                 );
             if ($subParams['spaceSplit']) { // split multiple search keyword by space char
