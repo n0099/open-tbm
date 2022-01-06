@@ -19,7 +19,7 @@ import UserQueryForm from '@/components/UserQueryForm.vue';
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart } from '@/shared';
-import { compareRouteIsNewQuery } from '@/router';
+import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 
 import { defineComponent, reactive, toRefs, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -81,6 +81,7 @@ export default defineComponent({
             state.selectUserBy = removeStart(removeEnd(route.name?.toString() ?? '', '+p'), 'user/') as SelectTiebaUserBy;
             state.params = { ..._.omit(props, 'page'), uid: props.uid === undefined ? undefined : Number(props.uid) };
         });
+
         onBeforeRouteUpdate(async (to, from) => {
             const isNewQuery = compareRouteIsNewQuery(to, from);
             if (!isNewQuery && !_.isEmpty(_.filter(
@@ -89,6 +90,12 @@ export default defineComponent({
             ))) return true;
             const isFetchSuccess = await fetchUsersData(to, isNewQuery);
             return isNewQuery ? true : isFetchSuccess;
+        });
+        setComponentCustomScrollBehaviour((to, from) => {
+            if (!compareRouteIsNewQuery(to, from)
+                && ('page' in from.params || 'page' in to.params)
+            ) return { el: `#page${to.params.page ?? 1}`, top: 0 };
+            return undefined;
         });
 
         return { ...toRefs(state) };

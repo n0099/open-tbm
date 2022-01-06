@@ -1,15 +1,18 @@
 <template>
     <div :data-page="posts.pages.currentPage" class="post-render-list pb-3">
-        <div v-for="thread in posts.threads" :key="thread.tid" :id="`t${thread.tid}`" class="thread-item card">
+        <div v-for="thread in posts.threads" :key="thread.tid"
+             :id="`t${thread.tid}`" :data-post-id="thread.tid" class="mt-3 card">
             <div class="thread-title shadow-sm card-header sticky-top">
                 <div class="row justify-content-between">
-                    <ThreadTag :thread="thread" />
-                    <h6 class="col-auto d-inline">{{ thread.title }}</h6>
+                    <div class="col-auto">
+                        <ThreadTag :thread="thread" />
+                        <h6 class="d-inline">{{ thread.title }}</h6>
+                    </div>
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此贴</RouterLink>
                         <PostCommonMetadataIconLinks :meta="thread" postTypeID="tid" />
-                        <PostTimeBadge :time="thread.postTime" tippy-prefix="发帖时间：" badgeColor="success" />
+                        <PostTimeBadge :time="thread.postTime" tippyPrefix="发帖时间：" badgeColor="success" />
                     </div>
                 </div>
                 <div class="row justify-content-between mt-2">
@@ -29,8 +32,8 @@
                         </span>
                         <span v-if="thread.zanInfo !== null" :data-tippy-content="`
                             点赞量：${thread.zanInfo.num}<br />
-                            最后点赞时间：${DateTime.fromSeconds(thread.zanInfo.last_time).toRelative({ round: false })}
-                            （${DateTime.fromSeconds(thread.zanInfo.last_time).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
+                            最后点赞时间：${DateTime.fromSeconds(Number(thread.zanInfo.last_time)).toRelative({ round: false })}
+                            （${DateTime.fromSeconds(Number(thread.zanInfo.last_time)).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
                             近期点赞用户：${thread.zanInfo.user_id_list}<br />`" class="badge bg-info">
                             <!-- todo: fetch users info in zanInfo.user_id_list -->
                             <FontAwesomeIcon icon="thumbs-up" class="me-1" /> 旧版客户端赞
@@ -49,16 +52,16 @@
                         <UserTag v-if="thread.authorManagerType !== null"
                                  :user="{ managerType: thread.authorManagerType }"/>
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
-                            <a :href="tiebaUserLink(getUser(thread.latestReplierUid).name)" target="_blank">
+                            <a :href="tiebaUserLink(getUser(thread.latestReplierUid).name)" target="_blank" class="ms-2">
                                 <span class="fw-normal link-secondary">最后回复：</span>
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </a>
                         </template>
-                        <PostTimeBadge :time="thread.latestReplyTime" tippy-prefix="最后回复时间：" badgeColor="secondary" />
+                        <PostTimeBadge :time="thread.latestReplyTime" tippyPrefix="最后回复时间：" badgeColor="secondary" />
                     </div>
                 </div>
             </div>
-            <div v-for="reply in thread.replies" :key="reply.pid" :id="reply.pid">
+            <div v-for="reply in thread.replies" :key="reply.pid" :id="reply.pid" :data-post-id="reply.pid">
                 <div class="reply-title sticky-top card-header">
                     <div class="d-inline-flex gap-1 h5">
                         <span class="badge bg-secondary">{{ reply.floor }}楼</span>
@@ -80,25 +83,21 @@
                     </div>
                 </div>
                 <div class="reply-info row shadow-sm bs-callout bs-callout-info">
-                    <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid" class="col-auto text-center reply-banner">
-                        <div class="reply-user-info sticky-top shadow-sm badge bg-light">
-                            <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
-                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
-                                     class="tieba-user-portrait-large lazyload d-block mx-auto badge bg-light"/>
-                                <span>
-                                    {{ author.name }}
-                                    <br v-if="author.displayName !== null && author.name !== null" />
-                                    {{ author.displayName }}
-                                </span>
-                            </a>
-                            <UserTag :user="{
-                                uid: { current: reply.authorUid, thread: thread.authorUid },
-                                managerType: reply.authorManagerType,
-                                expGrade: reply.authorExpGrade
-                            }"/>
-                        </div>
+                    <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
+                         class="reply-user-info col-auto text-center sticky-top shadow-sm badge bg-light">
+                        <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
+                            <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
+                                 class="tieba-user-portrait-large lazyload"/>
+                            <p class="my-0">{{ author.name }}</p>
+                            <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
+                        </a>
+                        <UserTag :user="{
+                            uid: { current: reply.authorUid, thread: thread.authorUid },
+                            managerType: reply.authorManagerType,
+                            expGrade: reply.authorExpGrade
+                        }"/>
                     </div>
-                    <div class="reply-body col border-start">
+                    <div class="col me-2 px-1 border-start overflow-auto">
                         <div class="p-2" v-html="reply.content" />
                         <template v-if="reply.subReplies.length > 0">
                             <div v-for="(subReplyGroup, _k) in reply.subReplies" :key="_k"
@@ -143,6 +142,7 @@
 import './tiebaUserPortrait.css';
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
+import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord, TiebaUserRecord } from '@/api/index.d';
 import type { Modify } from '@/shared';
 import { tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
@@ -171,6 +171,7 @@ export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUse
     return name + (displayName === null ? '' : `（${displayName}）`);
 };
 
+export const isRouteHashChangeTriggeredByPostsNav = ref(false);
 export default defineComponent({
     components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
     props: {
@@ -213,6 +214,20 @@ export default defineComponent({
         const renderUsername = baseRenderUsername(getUser);
 
         onMounted(initialTippy);
+        setComponentCustomScrollBehaviour((to, from) => {
+            if (isRouteHashChangeTriggeredByPostsNav.value) {
+                isRouteHashChangeTriggeredByPostsNav.value = false;
+                return false;
+            }
+            if (!compareRouteIsNewQuery(to, from)
+                && ('page' in from.params || 'page' in to.params)) {
+                return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
+                    el: `.post-render-list[data-page='${to.params.page}'] [id='${to.hash.substring(1)}']`,
+                    top: 80 // .reply-title { top: 5rem; }
+                };
+            }
+            return undefined;
+        });
 
         return { DateTime, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, dateTimeFromUTC8, hoveringSubReplyID, posts, getUser, renderUsername };
     }
@@ -220,9 +235,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.thread-item {
-    margin-top: 1rem;
-}
 .thread-title {
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
@@ -241,21 +253,12 @@ export default defineComponent({
     margin: 0;
     border-top: 0;
 }
-.reply-banner {
-    padding-left: 0;
-    padding-right: .5rem;
-}
-.reply-body {
-    overflow: auto;
-    padding-left: .5rem;
-    padding-right: .5rem;
-}
 .reply-user-info {
     z-index: 1018;
     top: 8rem;
     padding: .25rem;
     font-size: 1rem;
-    line-height: 140%;
+    line-height: 150%;
 }
 
 .sub-reply-group {

@@ -1,47 +1,48 @@
 <template>
     <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="selectThread"
           :forceSubMenuRender="true" :inlineIndent="16" mode="inline"
-          :class="{ 'd-none': !postsNavExpanded }" :aria-expanded="postsNavExpanded"
+          :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
-            <SubMenu v-for="page in [posts.pages.currentPage]" :key="`page-${page}`"
-                     @title-click="selectPage" :title="`第${page}页`">
-                <MenuItem v-for="thread in posts.threads" :key="`page-${page}_t${thread.tid}`"
-                          v-scroll-to-post="firstPostInView.page === page && firstPostInView.tid === thread.tid"
-                          :title="thread.title" class="nav-sidebar-thread-item">
+            <SubMenu v-for="page in [posts.pages.currentPage]" :key="`page${page}`"
+                     @titleClick="selectPage" :title="`第${page}页`">
+                <MenuItem v-for="thread in posts.threads" :key="`page${page}-t${thread.tid}`" :title="thread.title"
+                          class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
                     <div class="d-block btn-group" role="group">
-                        <a @click="navigate(page, null, reply.pid)"
-                           v-for="reply in thread.replies" :key="reply.pid"
-                           v-scroll-to-post="firstPostInView.page === page && firstPostInView.pid === reply.pid"
-                           :class="{
-                               'btn': true,
-                               'btn-info': reply.pid === firstPostInView.pid,
-                               'btn-light': reply.pid !== firstPostInView.pid
-                           }" href="#!">
-                            {{ reply.floor }}L
-                        </a>
+                        <template v-for="reply in thread.replies" :key="reply.pid">
+                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="isFirstReplyInView"
+                                    @click="navigate(page, null, reply.pid)" :data-pid="reply.pid"
+                                    :class="{
+                                        'btn-info': isFirstReplyInView,
+                                        'text-white': isFirstReplyInView,
+                                        'rounded-3': isFirstReplyInView,
+                                        'btn-light': !isFirstReplyInView
+                                    }" class="posts-nav-reply-link btn">{{ reply.floor }}L</button>
+                        </template>
                     </div>
-                    <hr />
                 </MenuItem>
             </SubMenu>
         </template>
     </Menu>
-    <a @click="postsNavExpanded = !postsNavExpanded"
+    <a @click="isPostsNavExpanded = !isPostsNavExpanded"
        class="posts-nav-expanded col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
         <!-- https://github.com/FortAwesome/vue-fontawesome/issues/313 -->
-        <span v-show="postsNavExpanded"><FontAwesomeIcon icon="angle-left" /></span>
-        <span v-show="!postsNavExpanded"><FontAwesomeIcon icon="angle-right" /></span>
+        <span v-show="isPostsNavExpanded"><FontAwesomeIcon icon="angle-left" /></span>
+        <span v-show="!isPostsNavExpanded"><FontAwesomeIcon icon="angle-right" /></span>
     </a>
 </template>
 
 <script lang="ts">
+import { isRouteHashChangeTriggeredByPostsNav } from '@/components/Post/ViewList.vue';
+import { isApiError } from '@/api/index';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { PropType } from 'vue';
-import { defineComponent, reactive, toRefs, watch } from 'vue';
+import { defineComponent, onUnmounted, reactive, toRefs, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import _ from 'lodash';
 
 export default defineComponent({
     components: { FontAwesomeIcon, Menu, MenuItem, SubMenu },
@@ -62,34 +63,89 @@ export default defineComponent({
     setup(props) {
         const route = useRoute();
         const router = useRouter();
-        const state = reactive({
-            firstPostInView: window.$sharedData.firstPostInView,
+        const state = reactive<{
+            expandedPages: string[],
+            selectedThread: string[],
+            isPostsNavExpanded: boolean,
+            firstPostInView: { [P in 'page' | 'pid' | 'tid']: number }
+        }>({
             expandedPages: [],
             selectedThread: [],
-            postsNavExpanded: false
+            isPostsNavExpanded: false,
+            firstPostInView: { tid: 0, pid: 0, page: 0 }
         });
-        const navigate = (page, tid = null, pid = null) => {
+        const navigate = (page: string, tid?: string, pid?: string) => {
             router.replace({
-                hash: `#${pid || (tid !== null ? `t${tid}` : null)}`,
-                params: { ...route.params, 0: route.params.pathMatch, page }
-            }); // [vue-router] missing param for named route "param+p": Expected "0" to be defined
+                hash: `#${pid ?? (tid === undefined ? null : `t${tid}`)}`,
+                params: { ...route.params, page }
+            });
         };
-        const selectThread = ({ domEvent, key }) => {
-            if (domEvent.target.tagName !== 'A') { // omit reply link click events
-                const postPosition = /page-(\d+)_t(\d+)/.exec(key);
-                navigate(postPosition[1], postPosition[2]);
+        const selectThread = ({ domEvent, key }: { domEvent: PointerEvent & { target: Element }, key: string }) => {
+            if (domEvent.target.tagName !== 'BUTTON') { // ignore clicks on reply link
+                const [, p, t] = /page(\d+)-t(\d+)/u.exec(key) ?? [];
+                navigate(p, t);
             }
         };
         const selectPage = ({ key }) => { // fixme: titleClick event on <a-menu> not triggered
             navigate(/page-(\d+)/.exec(key)[1]);
         };
 
-        watch(() => props.postPages, (to, from) => {
-            state.expandedPages = _.map(to, i => `page-${i.pages.currentPage}`);
+        const scrollStop = _.debounce(() => {
+            const reduceFindTopmostElementInView = (topOffset: number) => (result: { top: number, el: Element }, curEl: Element) => {
+                const elTop = curEl.getBoundingClientRect().top - topOffset;
+                // ignore element which its y coord is ahead of the top of viewport
+                if (elTop >= 0 && result.top > elTop) return { top: elTop, el: curEl };
+                return result;
+            };
+            const findFirstDomInView = (selector: string, topOffset = 0): Element =>
+                [...document.querySelectorAll(selector)].reduce(
+                    reduceFindTopmostElementInView(topOffset),
+                    { top: Infinity, el: document.createElement('null') }
+                ).el;
+            const firstPostInView = {
+                t: findFirstDomInView('.thread-title'),
+                p: findFirstDomInView('.reply-title', 80) // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
+            };
+            const firstPostIDInView = _.mapValues(firstPostInView, i =>
+                Number(i.parentElement?.getAttribute('data-post-id')));
+            const firstPostPageInView = _.mapValues(firstPostInView, i =>
+                Number(i.closest('.post-render-list')?.getAttribute('data-page')));
+            // is first reply belongs to first thread, true when first thread have no reply, so the first reply will belongs to other thread which comes after first thread in view
+            if (_.chain(props.postPages)
+                .map(i => i.threads)
+                .flatten()
+                .filter({ tid: firstPostIDInView.t })
+                .map(i => i.replies)
+                .flatten()
+                .filter({ pid: firstPostIDInView.p })
+                .isEmpty()
+                .value()) {
+                state.firstPostInView = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
+                router.replace({ hash: `#t${firstPostIDInView.t}`, params: { ...route.params, page: firstPostPageInView.t } });
+            } else {
+                state.firstPostInView = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
+                router.replace({ hash: `#${firstPostIDInView.p}`, params: { ...route.params, page: firstPostPageInView.p } });
+            }
+            isRouteHashChangeTriggeredByPostsNav.value = true;
+        }, 200);
+        const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
+        onUnmounted(removeScrollEventListener);
+
+        watchEffect(() => {
+            if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
+            else document.addEventListener('scroll', scrollStop, { passive: true });
+            state.expandedPages = props.postPages.map(i => `page${i.pages.currentPage}`);
+
+            const { page, tid, pid } = state.firstPostInView;
+            state.selectedThread = [`page${page}_t${tid}`];
+
+            // scroll menu to the link to reply in <ViewList> which is the topmost one in viewport (nearest to top border of viewport)
+            const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
+            const navMenuEl = replyEl?.closest('.posts-nav');
+            if (replyEl !== null && navMenuEl
+                && navMenuEl.getBoundingClientRect().top === 0 // is navMenuEl sticking to the top border of viewport
+            ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 100); // 100px offset to scroll down replyEl
         });
-        watch(() => state.firstPostInView, (to, from) => {
-            state.selectedThread = [`page-${to.page}_t${to.tid}`];
-        }, { deep: true });
 
         return { ...toRefs(state), navigate, selectThread, selectPage };
     }
@@ -97,17 +153,11 @@ export default defineComponent({
 </script>
 
 <style>/* to override styles for dom under another component <MenuItem>, we have to declare in global scope */
-.nav-sidebar-thread-item {
+.posts-nav-thread-item {
     height: auto !important; /* to show reply nav buttons under thread menu items */
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     white-space: normal;
-}
-.nav-sidebar-thread-item hr {
-    margin: .5rem 0 0 0;
-}
-.nav-sidebar-thread-item .ant-menu-title-content {
-    padding-left: .5rem;
 }
 </style>
 
@@ -115,10 +165,11 @@ export default defineComponent({
 .posts-nav-expanded {
     padding: 2px;
     font-size: 1.3rem;
-    background-color: whitesmoke;
+    background-color: #f5f5f5;
 }
+
 .posts-nav {
-    padding: 0 1.5rem 0 0;
+    padding: 0 1rem 0 0;
     overflow: hidden;
     max-height: 100vh;
     border-top: 1px solid #f0f0f0;

@@ -9,7 +9,7 @@
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="row justify-content-center">
-            <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
+            <NavSidebar v-if="renderType === 'list'" :postPages="postPages" :firstPostInView="firstPostInView" />
             <div :class="{
                 'post-render-wrapper': true,
                 'post-render-list-wrapper': renderType === 'list',
@@ -24,7 +24,7 @@
                                     @loadPage="loadPage($event)" :currentPage="posts.pages.currentPage" />
                 </template>
             </div>
-            <div v-show="renderType === 'list'" class="post-render-list-wrapper-placeholder col-xl d-none p-0"></div>
+            <div v-show="renderType === 'list'" class="post-render-list-right-padding col-xl d-none p-0"></div>
         </div>
     </div>
     <div class="container">
@@ -42,13 +42,13 @@ import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, Vi
 import type { ObjUnknown } from '@/shared';
 import { notyShow } from '@/shared';
 
-import { computed, defineComponent, onBeforeMount, onMounted, reactive, ref, toRefs, watch, watchEffect } from 'vue';
+import { defineComponent, reactive, ref, toRefs, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
 export default defineComponent({
-    components: { FontAwesomeIcon, Menu, MenuItem, PlaceholderError, PlaceholderPostList, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable, NavSidebar },
+    components: { Menu, MenuItem, PlaceholderError, PlaceholderPostList, QueryForm, ViewList, ViewTable, NavSidebar },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -61,8 +61,7 @@ export default defineComponent({
             lastFetchError: ApiError | null,
             showPlaceholderPostList: boolean,
             renderType: 'list' | 'table',
-            selectedRenderTypes: ['list' | 'table'],
-            scrollStopDebounce: Function | null
+            selectedRenderTypes: ['list' | 'table']
         }>({
             forumList: [],
             postPages: [],
@@ -73,59 +72,10 @@ export default defineComponent({
             showPlaceholderPostList: true,
             renderType: 'list',
             selectedRenderTypes: ['list'],
-            scrollStopDebounce: null
         });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-        const updateTitle = () => {
-            const page = state.currentRoutePage;
-            const forumName = `${state.postPages[0].forum.name}吧`;
-            const threadTitle = state.postPages[0].threads[0].title;
-            switch (queryFormRef.value?.getCurrentQueryType()) {
-                case 'fid':
-                case 'search':
-                    document.title = `第${page}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
-                    break;
-                case 'postID':
-                    document.title = `第${page}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
-                    break;
-            }
-        };
-        const scrollStop = () => {
-            const findFirstPostInView = topOffset => (result, dom) => { // partial invoke
-                const top = dom.getBoundingClientRect().top - topOffset;
-                result.top = result.top === undefined ? Infinity : result.top;
-                if (top >= 0 && result.top > top) { // ignore doms which y coord is ahead of top of viewport
-                    return result = { dom, top };
-                }
-                return result;
-            };
-            const firstThreadDomInView = $(_.reduce($('.thread-title'), findFirstPostInView(0), {}).dom);
-            const firstThreadTidInView = parseInt(firstThreadDomInView.parent().prop('id').substr(1));
-            const firstReplyDomInView = $(_.reduce($('.reply-title'), findFirstPostInView(62), {}).dom); // 62px is the top offset of reply title
-            const firstReplyPidInView = parseInt(firstReplyDomInView.parent().prop('id'));
-            const newRouteParams = { ...route.params, 0: route.params.pathMatch }; // [vue-router] missing param for named route "param+p": Expected "0" to be defined
-            if (_.chain(state.postPages)
-                .map('threads')
-                .flatten()
-                .filter({ tid: firstThreadTidInView })
-                .map('replies')
-                .flatten()
-                .filter({ pid: firstReplyPidInView })
-                .isEmpty()
-                .value()) { // is first reply belongs to first thread, true when first thread have no reply so the first reply will be some other threads reply which comes after first thread in view
-                const page = firstThreadDomInView.parents('.post-render-list').data('page');
-                window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: 0 });
-                router.replace({ hash: `#t${firstThreadTidInView}`, params: { ...newRouteParams, page } });
-            } else { // _.merge() prevents vue data binding observer in prototypes being cleared
-                const page = firstReplyDomInView.parents('.post-render-list').data('page');
-                window.$sharedData.firstPostInView = _.merge(window.$sharedData.firstPostInView, { page, tid: firstThreadTidInView, pid: firstReplyPidInView });
-                router.replace({ hash: `#${firstReplyPidInView}`, params: { ...newRouteParams, page } });
-            }
-        };
-        state.scrollStopDebounce = _.debounce(scrollStop, 200);
         const loadPage = page => {
             if (_.map(state.postPages, 'pages.currentPage').includes(page)) $(`.post-previous-page[data-page='${page}']`)[0].scrollIntoView(); // scroll to page if already loaded
-
             router.push(_.merge(route.name.startsWith('param')
                 ? { path: `/page/${page}/${route.params.pathMatch}` }
                 : {
@@ -152,26 +102,30 @@ export default defineComponent({
             }
             if (isNewQuery) state.postPages = [postsQuery];
             else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
-            updateTitle();
+
+            { // update title
+                const page = state.currentRoutePage;
+                const forumName = `${state.postPages[0].forum.name}吧`;
+                const threadTitle = state.postPages[0].threads[0].title;
+                switch (queryFormRef.value?.getCurrentQueryType()) {
+                    case 'fid':
+                    case 'search':
+                        document.title = `第${page}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
+                        break;
+                    case 'postID':
+                        document.title = `第${page}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                        break;
+                }
+            }
             notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
             return true;
         };
 
-        watch(route, (to) => {
-            delete to.params[0]; // fixme: [vue-router] missing param for named route "param+p": Expected "0" to be defined
-            if (to.hash === '#') { // remove empty hash
-                to.hash = '';
-            }
-        });
         watchEffect(() => {
             state.currentRoutePage = parseInt(route.params.page ?? '1');
             [state.renderType] = state.selectedRenderTypes;
         });
-        watch(() => state.renderType, renderType => {
-            if (state.scrollStopDebounce === null) return;
-            if (renderType === 'list') window.addEventListener('scroll', state.scrollStopDebounce, { passive: true });
-            else window.removeEventListener('scroll', state.scrollStopDebounce);
-        }, { immediate: true });
+
         (async () => {
             state.forumList = throwIfApiError(await apiForumList());
         })();
@@ -179,28 +133,6 @@ export default defineComponent({
         return { ...toRefs(state), queryFormRef, fetchPosts, loadPage };
     }
 });
-
-window.$sharedData = {
-    firstPostInView: { tid: 0, pid: 0 }
-};
-
-const postsQueryVue = {
-    router: {
-        scrollBehavior(to, from, savedPosition) {
-            if (to.hash !== '') {
-                // skip scroll to dom when route update is triggered by scrollStop()
-                if (!(window.$sharedData.firstPostInView.pid === parseInt(to.hash.substr(1))
-                    || window.$sharedData.firstPostInView.tid === parseInt(to.hash.substr(2)))) {
-                    return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
-                        selector: `.post-render-list[data-page='${to.params.page}'] [id='${to.hash.substr(1)}']`
-                    };
-                }
-            } else if (savedPosition) {
-                return savedPosition;
-            }
-        }
-    }
-};
 </script>
 
 <style scoped>
@@ -221,7 +153,7 @@ const postsQueryVue = {
     }
 }
 @media (min-width: 1400px) {
-    .post-render-list-wrapper-placeholder {
+    .post-render-list-right-padding {
         display: block !important; /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
     }
 }

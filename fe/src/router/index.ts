@@ -1,9 +1,16 @@
 import Index from '@/views/Index.vue';
 import type { Component } from 'vue';
-import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
+import { onUnmounted, ref } from 'vue';
+import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw, RouterScrollBehavior } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import NProgress from 'nprogress';
 import _ from 'lodash';
+
+const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
+export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
+    componentCustomScrollBehaviour.value = cb;
+    onUnmounted(() => { componentCustomScrollBehaviour.value = undefined });
+};
 
 export const routeNameStrAssert: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
     if (!_.isString(name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
@@ -14,7 +21,7 @@ export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteL
 const lazyLoadRouteView = async (component: Promise<Component>) => {
     NProgress.start();
     const loadingBlocksDom = document.getElementById('loadingBlocksRouteChange');
-    const containersDom = document.getElementsByClassName('container');
+    const containersDom = [...document.getElementsByClassName('container')];
     loadingBlocksDom?.classList.remove('d-none');
     containersDom.forEach(i => { i.classList.add('d-none') });
     return component.finally(() => {
@@ -64,13 +71,16 @@ export default createRouter({
     ],
     linkActiveClass: 'active',
     scrollBehavior(to, from, savedPosition) {
-        if (('page' in from.params || 'page' in to.params)
-            && !compareRouteIsNewQuery(to, from)) return { el: `#page${to.params.page ?? 1}`, top: 0 };
+        if (componentCustomScrollBehaviour.value !== undefined) {
+            const ret = componentCustomScrollBehaviour.value(to, from, savedPosition) as ReturnType<RouterScrollBehavior> | undefined;
+            if (ret !== undefined) return ret;
+        }
         if (to.hash) return { el: to.hash, top: 0 };
-        // the undocumented 'href' property will not in from when user refresh page
+        // the undocumented 'href' property will not exists in from when user refresh page
         if (!('href' in from || savedPosition === null)) return savedPosition;
         routeNameStrAssert(to.name);
         routeNameStrAssert(from.name);
+        // scroll to top when the prefix of route name changed
         if (to.name.split('/')[0] !== from.name.split('/')[0]) return { top: 0 };
         return false;
     }
