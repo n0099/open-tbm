@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import type { ParamTypeNum, ParamTypeWithCommon } from '@/components/Post/queryParams';
+import type { ParamTypeNum, ParamTypeWithCommon } from './queryParams';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 

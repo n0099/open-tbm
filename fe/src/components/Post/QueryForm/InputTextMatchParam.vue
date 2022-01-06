@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import type { ParamTypeText, ParamTypeWithCommon } from '@/components/Post/queryParams';
+import type { ParamTypeText, ParamTypeWithCommon } from './queryParams';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import _ from 'lodash';
