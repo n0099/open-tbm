@@ -29,7 +29,6 @@ import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
 import { defineComponent, onMounted } from 'vue';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
-import _ from 'lodash';
 
 export default defineComponent({
     components: { GlobalNavBar, ConfigProvider, HorizontalMobileMessage },
@@ -39,22 +38,6 @@ export default defineComponent({
         return { AntdZhCn, baseUrl };
     }
 });
-
-const $$registerTippy = (scopedRootDom = 'body', unregister = false) => {
-    if (unregister) _.each($(scopedRootDom).find('[data-tippy-content]'), dom => dom._tippy.destroy());
-    else tippy($(scopedRootDom).find('[data-tippy-content]').get());
-};
-
-const $$baseUrl = '{{ $baseUrl }}';
-const $$baseUrlDir = $$baseUrl.substr($$baseUrl.indexOf('/', $$baseUrl.indexOf('://') + 3));
-
-const $$getTBMPostLink = (tid, pid = null, spid = null) => {
-    if (spid !== null) return `${$$baseUrl}/post/tid/${tid}`;
-    else if (pid !== null) return `${$$baseUrl}/post/pid/${pid}`;
-
-    return `${$$baseUrl}/post/spid/${spid}`;
-};
-const $$getTBMUserLink = username => `${$$baseUrl}/user/n/${username}`;
 </script>
 
 <style scoped>

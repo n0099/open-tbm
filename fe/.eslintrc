@@ -68,7 +68,6 @@
     "no-useless-concat": "error",
     "no-useless-escape": "error",
     "no-useless-return": "error",
-    "prefer-named-capture-group": "error",
     "prefer-promise-reject-errors": "error",
     "prefer-regex-literals": ["error", { "disallowRedundantWrapping": true }],
     "radix": ["error", "as-needed"],

@@ -1,5 +1,5 @@
 <template>
-    <div class="btn-group" role="group">
+    <div class="btn-group align-baseline" role="group">
         <button v-if="thread.stickyType === 'membertop'" class="badge btn btn-warning" type="button">会员置顶</button>
         <button v-if="thread.stickyType === 'top'" class="badge btn btn-primary" type="button">置顶</button>
         <button v-if="thread.isGood" class="badge btn btn-danger" type="button">精品</button>

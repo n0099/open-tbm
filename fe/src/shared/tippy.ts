@@ -3,6 +3,13 @@ import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
 import 'tippy.js/animations/perspective.css';
 
+tippy.setDefaultProps({
+    animation: 'perspective',
+    interactive: true,
+    theme: 'light',
+    maxWidth: 'none'
+});
+
 export const initialTippy = () => createSingleton(tippy('[data-tippy-content]'), {
-    allowHTML: true, interactive: true, maxWidth: 'none', theme: 'light', animation: 'perspective', appendTo: document.body
+    allowHTML: true, appendTo: document.body
 });

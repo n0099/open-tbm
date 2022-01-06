@@ -38,8 +38,8 @@
             <div id="paramOrder" class="col-8">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="sort-amount-down" /></span>
-                    <select v-model="uniqueParams.orderBy.value" :class="{ 'is-invalid': isOrderByInvalid }"
-                            class="form-select form-control">
+                    <select v-model="uniqueParams.orderBy.value"
+                            :class="{ 'is-invalid': isOrderByInvalid }" class="form-select form-control">
                         <option value="default">默认（按贴索引查询按贴子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
                         <option value="postTime">发帖时间</option>
                         <optgroup label="贴子ID">
@@ -81,7 +81,7 @@
                 </template>
                 <template v-if="lo.includes(['postTime', 'latestReplyTime'], param.name)">
                     <RangePicker v-model="param.subParam.range" :showTime="true"
-                                 format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm" size="large" />
+                                 format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="lo.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
                     <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required>

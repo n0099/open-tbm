@@ -104,7 +104,7 @@ class SearchQuery
                     ),
             // textMatch
             'threadTitle', 'postContent' =>
-                self::applyTextMatchParamsOnQuery($qb, $name === 'threadTitle' ? 'title' : 'content', $not, $value, $sub),
+                self::applyTextMatchParamsOnQuery($qb, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
             // dateTimeRange
             'postTime', 'latestReplyTime' =>
                 $qb->{"where{$not}Between"}($name, explode(',', $value)),
@@ -122,7 +122,7 @@ class SearchQuery
             'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
                 $qb->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
-                    self::applyTextMatchParamsOnQuery(UserModel::newQuery(), $fieldNameOfUserNameParams, $not, $value, $sub)
+                    self::applyTextMatchParamsOnQuery(UserModel::select('uid'), $fieldNameOfUserNameParams, $value, $sub)
                 ),
             'authorGender', 'latestReplierGender' =>
                 $qb->{"where{$not}In"}("{$userTypeOfUserParams}Uid", UserModel::where('gender', $value)),
@@ -140,7 +140,7 @@ class SearchQuery
         if ($subParams['matchBy'] === 'regex') {
             return $qb->where($field, "{$not} REGEXP", $value);
         }
-        return $qb->where(static function ($subQuery) use ($subParams, $field, $not, $value) {
+        return $qb->where(static function (Builder $subQuery) use ($subParams, $field, $not, $value) {
             // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
             $isOrWhere = $not === 'Not' ? '' : 'or';
             $addMatchKeyword = static fn (string $keyword) =>

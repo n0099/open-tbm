@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts">
-import type { TiebaUserGenderQP } from '@/api/index.d';
+import type { BaiduUserID, TiebaUserGenderQP } from '@/api/index.d';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
 import SelectTiebaUser, { selectTiebaUserBy } from '@/components/SelectTiebaUser.vue';
@@ -34,7 +34,7 @@ export default defineComponent({
         query: { type: Object as PropType<RouteQueryString>, required: true },
         params: {
             type: Object as PropType<{
-                uid?: number,
+                uid?: BaiduUserID,
                 name?: string,
                 displayName?: string
             }>,

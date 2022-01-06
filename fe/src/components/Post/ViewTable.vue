@@ -70,7 +70,7 @@
 import './tiebaUserPortrait.css';
 import { ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from '@/components/Post/ViewList.vue';
-import type { ApiPostsQuery, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';
 import type { Pid, Tid } from '@/shared';
 import { tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
 
@@ -88,8 +88,8 @@ export default defineComponent({
     },
     setup(props) {
         const state = reactive<{
-            threads: ThreadRecord[],
-            threadsReply: Record<Tid, ReplyRecord[]>,
+            threads: ApiPostsQuery['threads'],
+            threadsReply: Record<Tid, ApiPostsQuery['threads'][number]['replies']>,
             repliesSubReply: Record<Pid, SubReplyRecord[]>,
             threadColumns: ColumnProps[],
             replyColumns: ColumnProps[],
@@ -148,14 +148,14 @@ export default defineComponent({
         onMounted(() => {
             state.threads = props.posts.threads;
             state.threadsReply = _.chain(state.threads)
-                .map('replies')
+                .map(i => i.replies)
                 .reject(_.isEmpty) // remove threads which have no reply
                 .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
                 .value();
             state.repliesSubReply = _.chain(state.threadsReply)
                 .toArray() // cast tid keyed object to array
                 .flatten() // flatten every thread's replies
-                .map('subReplies')
+                .map(i => i.subReplies)
                 .reject(_.isEmpty) // remove replies which have no sub reply
                 .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which keyed by pid
                 .value();
