@@ -24,7 +24,6 @@
     "noty": "^3.2.0-beta-deprecated",
     "nprogress": "^0.2.0",
     "qs": "^6.10.2",
-    "stats.js": "^0.17.0",
     "tippy.js": "^6.3.7",
     "vue": "^3.2.26",
     "vue-router": "^4.0.12",
@@ -51,6 +50,7 @@
     "@vue/eslint-config-typescript": "^10.0.0",
     "eslint": "^8.6.0",
     "eslint-plugin-vue": "^8.2.0",
+    "stats.js": "^0.17.0",
     "typescript": "^4.5.4",
     "vue-cli-plugin-webpack-bundle-analyzer": "^4.0.0"
   },
