@@ -2,7 +2,7 @@
     <div class="col-5">
         <div class="input-group">
             <select v-model="selectBy" class="selectUserBy form-select">
-                <option value="">请选择</option>
+                <option value="">未选择</option>
                 <option value="uid">UID</option>
                 <option value="name">用户名</option>
                 <option value="nameNULL">NULL用户名</option>

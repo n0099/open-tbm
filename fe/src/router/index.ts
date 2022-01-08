@@ -12,7 +12,7 @@ export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
     onUnmounted(() => { componentCustomScrollBehaviour.value = undefined });
 };
 
-export const routeNameStrAssert: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
+export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
     if (!_.isString(name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
@@ -36,7 +36,7 @@ const withPageRoute = <T extends { components: Record<string, () => Promise<Comp
     ({ ...restRoute, children: [{ ...restRoute, path: 'page/:page', name: `${routeName}+p` }] });
 
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
-const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }, props: true };
+const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) } };
 export default createRouter({
     history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
     routes: [
@@ -71,17 +71,20 @@ export default createRouter({
     ],
     linkActiveClass: 'active',
     scrollBehavior(to, from, savedPosition) {
+        if (savedPosition !== null) return savedPosition;
+
         if (componentCustomScrollBehaviour.value !== undefined) {
             const ret = componentCustomScrollBehaviour.value(to, from, savedPosition) as ReturnType<RouterScrollBehavior> | undefined;
             if (ret !== undefined) return ret;
         }
+
         if (to.hash) return { el: to.hash, top: 0 };
-        // the undocumented 'href' property will not exists in from when user refresh page
-        if (!('href' in from || savedPosition === null)) return savedPosition;
-        routeNameStrAssert(to.name);
-        routeNameStrAssert(from.name);
-        // scroll to top when the prefix of route name changed
-        if (to.name.split('/')[0] !== from.name.split('/')[0]) return { top: 0 };
+        if (from.name !== undefined) { // from.name will be undefined when user refresh page
+            assertRouteNameIsStr(to.name);
+            assertRouteNameIsStr(from.name);
+            // scroll to top when the prefix of route name changed
+            if (to.name.split('/')[0] !== from.name.split('/')[0]) return { top: 0 };
+        }
         return false;
     }
 });

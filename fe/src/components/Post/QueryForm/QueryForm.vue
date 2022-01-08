@@ -159,7 +159,7 @@ import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormLateBind
 import type { ApiForumList } from '@/api/index.d';
 import type { PostType } from '@/shared';
 import { notyShow, postsID, removeEnd } from '@/shared';
-import { routeNameStrAssert } from '@/router';
+import { assertRouteNameIsStr } from '@/router';
 
 import type { PropType } from 'vue';
 import { computed, defineComponent, reactive, toRefs } from 'vue';
@@ -217,7 +217,7 @@ export default defineComponent({
             return 'search';
         };
         const parseRoute = (route: RouteLocationNormalizedLoaded) => {
-            routeNameStrAssert(route.name);
+            assertRouteNameIsStr(route.name);
             useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
             useState.params = [];
             const routeName = removeEnd(route.name, '+p');

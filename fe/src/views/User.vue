@@ -94,7 +94,7 @@ export default defineComponent({
         setComponentCustomScrollBehaviour((to, from) => {
             if (!compareRouteIsNewQuery(to, from)
                 && ('page' in from.params || 'page' in to.params)
-            ) return { el: `#page${to.params.page ?? 1}`, top: 0 };
+            ) return { el: `#page${to.params.page ?? 1}` };
             return undefined;
         });
 
