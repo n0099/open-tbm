@@ -66,8 +66,10 @@ export default defineComponent({
         };
 
         const submitQueryForm = () => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const params = boolPropToStr<LocationQueryValueRaw>(state.selectUser.params);
             const { selectBy } = state.selectUser;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const routeName = removeEnd(selectBy, 'NULL');
             router.push({
                 name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,

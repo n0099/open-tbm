@@ -15,6 +15,7 @@ export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
 // https://stackoverflow.com/questions/41285211/overriding-interface-property-type-defined-in-typescript-d-ts-file
 export type Modify<T, R> = Omit<T, keyof R> & R;
+export type ObjValues<T> = T[keyof T];
 
 export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type PostType = 'reply' | 'subReply' | 'thread';
@@ -42,3 +43,5 @@ export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<st
 export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'true';
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
+export const emitEventStrValidator = (p: string) => _.isString(p);
+export const emitEventNumValidator = (p: number) => _.isNumber(p);

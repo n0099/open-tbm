@@ -90,7 +90,7 @@ class QueryParams
     {
         $paramDefaultValueByType = [
             'numeric' => ['range' => '='],
-            'text' => ['matchBy' => 'implicit', 'spaceSplit' => false]
+            'text' => ['matchBy' => 'explicit', 'spaceSplit' => false]
         ];
         $paramsNameByType = [
             'numeric' => [

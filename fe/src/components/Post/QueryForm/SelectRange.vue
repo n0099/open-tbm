@@ -10,11 +10,15 @@
 </template>
 
 <script>
+import { emitEventStrValidator } from '@/shared';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
-        modelValue: String
+        modelValue: { type: String, required: true }
+    },
+    emits: {
+        'update:modelValue': emitEventStrValidator
     }
 });
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submit" class="mt-3">
+    <form @submit.prevent="submit(false)" class="mt-3">
         <div class="row">
             <label class="col-1 col-form-label" for="paramFid">贴吧</label>
             <div class="col-3">
@@ -59,7 +59,7 @@
         <div class="query-params">
             <div v-for="(param, paramIndex) in params" :key="paramIndex" class="input-group">
                 <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
-                <SelectParam @paramChange="changeParam(paramIndex, $event.value)" :currentParam="param.name"
+                <SelectParam @paramChange="changeParam(paramIndex, $event)" :currentParam="param.name"
                              class="select-param" :class="{
                                  'is-invalid': invalidParamsIndex.includes(paramIndex)
                              }" />
@@ -157,7 +157,7 @@ import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from
 import type { Params, RequiredPostTypes, UniqueParams, paramsNameByType } from './queryParams';
 import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormLateBinding, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
-import type { PostType } from '@/shared';
+import type { ObjUnknown, ObjValues, PostType } from '@/shared';
 import { notyShow, postsID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
@@ -174,6 +174,9 @@ export default defineComponent({
     props: {
         isLoading: { type: Boolean, required: true },
         forumList: { type: Array as PropType<ApiForumList>, required: true }
+    },
+    emits: {
+        query: (p: ObjUnknown[]) => _.isArray(p) && p.every(_.isObject)
     },
     setup(props, { emit }) {
         const {
@@ -208,7 +211,7 @@ export default defineComponent({
                     return 'fid'; // note when query with postTypes and/or orderBy param, the route will go params instead of fid
                 }
             }
-            const isPostsIDParam = (param: Params[keyof Params]) => _.includes(postsID, param.name);
+            const isPostsIDParam = (param: ObjValues<Params>) => (postsID as unknown as string[]).includes(param.name);
             if (_.isEmpty(_.reject(clearedParams, isPostsIDParam)) // is there no other params
                 && _.filter(clearedParams, isPostsIDParam).length === 1 // is there only one post id param
                 && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is post id param haven't any sub param
@@ -287,7 +290,7 @@ export default defineComponent({
                 if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1]))) return true;
                 return required[0] === 'ALL' && _.isEqual(required[1], current);
             };
-            const requiredPostTypesStringify = (required: NonNullable<RequiredPostTypes[string]>) =>
+            const requiredPostTypesToString = (required: NonNullable<RequiredPostTypes[string]>) =>
                 `${required[1].join(required[0] === 'SUB' ? ' | ' : ' & ')}`;
             const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
 
@@ -301,7 +304,7 @@ export default defineComponent({
                         const required = paramsRequiredPostTypes[param.name];
                         if (!isRequiredPostTypes(postTypes, required)) {
                             useState.invalidParamsIndex.push(paramIndex);
-                            notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求贴子类型为${requiredPostTypesStringify(required)}`);
+                            notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求贴子类型为${requiredPostTypesToString(required)}`);
                         }
                     }
                 });
@@ -314,7 +317,7 @@ export default defineComponent({
                 const required = orderByRequiredPostTypes[orderBy];
                 if (!isRequiredPostTypes(postTypes, required)) {
                     state.isOrderByInvalid = true;
-                    notyShow('warning', `排序方式与查询贴子类型要求不匹配，当前要求贴子类型为${requiredPostTypesStringify(required)}`);
+                    notyShow('warning', `排序方式与查询贴子类型要求不匹配，当前要求贴子类型为${requiredPostTypesToString(required)}`);
                 }
             }
 

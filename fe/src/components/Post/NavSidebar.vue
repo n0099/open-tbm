@@ -4,8 +4,7 @@
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
-            <SubMenu v-for="page in [posts.pages.currentPage]" :key="`page${page}`"
-                     @titleClick="selectPage" :title="`第${page}页`">
+            <SubMenu v-for="page in [posts.pages.currentPage]" :key="`page${page}`" :title="`第${page}页`">
                 <MenuItem v-for="thread in posts.threads" :key="`page${page}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
@@ -70,7 +69,7 @@ export default defineComponent({
         let isScrollTriggeredByNavigate = false;
         const navigate = (page: number | string, tid?: string, pid?: Pid | string) => {
             router.replace({
-                hash: `#${pid ?? (tid === undefined ? null : `t${tid}`)}`,
+                hash: `#${pid ?? (tid === undefined ? '' : `t${tid}`)}`,
                 params: { ...route.params, page }
             });
             isScrollTriggeredByNavigate = true;
@@ -80,9 +79,6 @@ export default defineComponent({
                 const [, p, t] = /page(\d+)-t(\d+)/u.exec(key) ?? [];
                 navigate(p, t);
             }
-        };
-        const selectPage = ({ key }) => { // fixme: titleClick event on <a-menu> not triggered
-            navigate(/page-(\d+)/.exec(key)[1]);
         };
 
         const scrollStop = _.debounce(() => {
@@ -146,7 +142,8 @@ export default defineComponent({
             if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
             else document.addEventListener('scroll', scrollStop, { passive: true });
             state.expandedPages = props.postPages.map(i => `page${i.pages.currentPage}`);
-
+        });
+        watchEffect(() => {
             const { page, tid, pid } = state.firstPostInView;
             state.selectedThread = [`page${page}_t${tid}`];
             if (isScrollTriggeredByNavigate) {
@@ -158,10 +155,10 @@ export default defineComponent({
             const navMenuEl = replyEl?.closest('.posts-nav');
             if (replyEl !== null && navMenuEl
                 && navMenuEl.getBoundingClientRect().top === 0 // is navMenuEl sticking to the top border of viewport
-            ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 100); // 100px offset to scroll down replyEl
+            ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
         });
 
-        return { ...toRefs(state), navigate, selectThread, selectPage };
+        return { ...toRefs(state), navigate, selectThread };
     }
 });
 </script>
@@ -184,7 +181,7 @@ export default defineComponent({
 }
 
 .posts-nav {
-    padding: 0 1rem 0 0;
+    padding: 0 10px 0 0; /* padding-right: 10px to match with the width of ::-webkit-scrollbar */
     overflow: hidden;
     max-height: 100vh;
     border-top: 1px solid #f0f0f0;

@@ -122,7 +122,7 @@ export default defineComponent({
                 state.currentDisplayingItemsIndex.push(itemIndex); // make sure remain current displaying items
                 state.newDisplayItemsIndex = newDisplayItemsID.concat(state.currentDisplayingItemsIndex); // move newly display items index
             } else {
-                state.currentDisplayingItemsIndex = state.currentDisplayingItemsIndex.filter(i => i !== itemIndex); // remove from currentDisplayingItemsIndex
+                state.currentDisplayingItemsIndex = !state.currentDisplayingItemsIndex.includes(itemIndex); // remove from currentDisplayingItemsIndex
                 if (props.itemDynamicDimensions === true) { // cache current hiding item dom's height and width px before hided
                     state.itemDomDimensionsCache[itemIndex] = { height: itemDom.offsetHeight, width: itemDom.offsetWidth };
                 }

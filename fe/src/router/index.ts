@@ -18,6 +18,8 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name'])
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
 export const routeNameWithPage = (name: string) => (_.endsWith(name, '+p') ? name : `${name}+p`);
+// https://github.com/vuejs/vue-router-next/issues/1184
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.params.page ?? 1);
 
 const lazyLoadRouteView = async (component: Promise<Component>) => {

@@ -578,9 +578,9 @@ export default defineComponent({
                 });
 
                 // only display official votes count legend when timeline arrive its showtime
-                charts.top10CandidatesTimeline?.on('timelinechanged', (params: TimelineChangePayload) => {
+                charts.top10CandidatesTimeline?.on('timelinechanged', params => {
                     charts.top10CandidatesTimeline?.dispatchAction({
-                        type: params.currentIndex + 1 === timelineRanges.length ? 'legendSelect' : 'legendUnSelect',
+                        type: (params as TimelineChangePayload).currentIndex + 1 === timelineRanges.length ? 'legendSelect' : 'legendUnSelect',
                         name: '贴吧官方统计有效票'
                     });
                 });

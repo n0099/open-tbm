@@ -1,5 +1,5 @@
 <template>
-    <select @change="$emit('paramChange', $event.target)" class="form-select form-control flex-grow-0">
+    <select @change="$emit('paramChange', $event.target.value)" class="form-select form-control flex-grow-0">
         <option selected value="add" disabled>New...</option>
         <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
             <option v-for="(paramDescription, paramName) in group" :key="paramName"
@@ -8,12 +8,16 @@
     </select>
 </template>
 
-<script lang="ts">
+<script>
+import { emitEventStrValidator } from '@/shared';
 import { defineComponent, ref } from 'vue';
 
 export default defineComponent({
     props: {
         currentParam: String
+    },
+    emits: {
+        paramChange: emitEventStrValidator
     },
     setup() {
         const paramsGroup = ref({

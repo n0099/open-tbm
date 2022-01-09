@@ -1,4 +1,4 @@
-import type { ObjUnknown } from '@/shared';
+import type { ObjUnknown, ObjValues } from '@/shared';
 import { boolStrToBool } from '@/shared';
 import { onBeforeMount, reactive, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -20,8 +20,8 @@ export default <
         parseRoute?: (route: RouteLocationNormalizedLoaded) => void
     }
 ) => {
-    type TUniqueParam = UniqueParams[keyof UniqueParams];
-    type TParam = Params[keyof Params];
+    type TUniqueParam = ObjValues<UniqueParams>;
+    type TParam = ObjValues<Params>;
     const route = useRoute();
     const router = useRouter();
     interface State {
@@ -41,14 +41,13 @@ export default <
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
-        if (!_.includes(_.keys(state.uniqueParams), param.name)) defaultParam.subParam.not = false; // add subParam.not on every param
+        if (!Object.keys(state.uniqueParams).includes(param.name)) defaultParam.subParam.not = false; // add subParam.not on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
         if (resetToDefault) return _.defaultsDeep(defaultParam, param);
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
     };
-    const addParam = (selectDom: HTMLSelectElement) => {
-        state.params.push(fillParamWithDefaultValue({ name: selectDom.value }));
-        selectDom.value = 'add'; // reset to add option
+    const addParam = (name: string) => {
+        state.params.push(fillParamWithDefaultValue({ name }));
     };
     const changeParam = (beforeParamIndex: number, afterParamName: string) => {
         _.pull(state.invalidParamsIndex, beforeParamIndex);
@@ -118,8 +117,8 @@ export default <
                 const parsedParam: ParamPartial = { name: '', subParam: {} };
                 paramWithSub.split(';').forEach((params, paramIndex) => { // split multiple params
                     const paramPair: [string, unknown] = [
-                        params.substr(0, params.indexOf(':')),
-                        escapeParamValue(params.substr(params.indexOf(':') + 1), true)
+                        params.substring(0, params.indexOf(':')),
+                        escapeParamValue(params.substring(params.indexOf(':') + 1), true)
                     ]; // split kv pair by first colon, using substr to prevent split array type param value
                     if (paramIndex === 0) { // main param
                         [parsedParam.name, parsedParam.value] = paramPair;
@@ -164,12 +163,12 @@ export default <
             .each(param => deps.paramsWatcher[param.name]?.(param))
             .value();
     }, { deep: true });
+
     onBeforeRouteUpdate((to, from) => {
         if (deps.parseRoute === undefined) throw Error('Unimplmented method in deps');
         if (to.path === from.path) return; // ignore when only hash has changed
         deps.parseRoute(to);
     });
-
     onBeforeMount(() => {
         state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
         state.params = state.params.map(_.unary(fillParamWithDefaultValue)) as typeof state.params;

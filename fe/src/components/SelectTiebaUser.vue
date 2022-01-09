@@ -41,6 +41,7 @@
 
 <script lang="ts">
 import type { BaiduUserID } from '@/api/index.d';
+import type { ObjValues } from '@/shared';
 import type { PropType } from 'vue';
 import { defineComponent, onMounted, reactive, toRefs, watch } from 'vue';
 import _ from 'lodash';
@@ -56,14 +57,20 @@ export type SelectTiebaUserParams = Partial<{
     displayNameUseRegex: boolean
 }>;
 const selectTiebaUserParamsNames = ['uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'] as const;
-type SelectTiebaUserParamsValues = SelectTiebaUserParams[keyof SelectTiebaUserParams];
+type SelectTiebaUserParamsValues = ObjValues<SelectTiebaUserParams>;
 // widen type Record<string, SelectTiebaUserParamsValues> for compatible with props.paramsNameMap
 export interface SelectTiebaUserModel { selectBy: SelectTiebaUserBy, params: Record<string, SelectTiebaUserParamsValues> | SelectTiebaUserParams }
 
 export default defineComponent({
     props: {
-        modelValue: Object as PropType<SelectTiebaUserModel>,
-        paramsNameMap: Object as PropType<SelectTiebaUserParams>
+        modelValue: { type: Object as PropType<SelectTiebaUserModel>, required: true },
+        paramsNameMap: Object as PropType<Record<keyof SelectTiebaUserParams, string>>
+    },
+    emits: {
+        'update:modelValue': (p: SelectTiebaUserModel) =>
+            _.isObject(p)
+                && selectTiebaUserBy.includes(p.selectBy)
+                && _.isObject(p.params) // todo: check p.params against props.paramsNameMap
     },
     setup(props, { emit }) {
         const state = reactive<{
@@ -84,12 +91,12 @@ export default defineComponent({
         watch(() => state.params, emitModelChange, { deep: true });
         watch(() => props.modelValue, () => {
             // emit with default params value when parent haven't passing modelValue
-            if (_.isEmpty(props.modelValue) || props.modelValue === undefined) emitModelChange();
+            if (_.isEmpty(props.modelValue)) emitModelChange();
             else ({ selectBy: state.selectBy, params: state.params } = props.modelValue);
             // filter out unnecessary and undefined params
             state.params = _.omitBy(_.pick(state.params, selectTiebaUserParamsNames), (i?: SelectTiebaUserParamsValues) => i === undefined);
             // reset to default selectBy if it's a invalid value
-            if (!_.includes(selectTiebaUserBy, state.selectBy)) state.selectBy = '';
+            if (!selectTiebaUserBy.includes(state.selectBy)) state.selectBy = '';
             if (state.selectBy === 'uid') state.params.uidCompareBy ??= '='; // set to default value if it's undefined
             if (state.params.name === 'NULL') state.selectBy = 'nameNULL';
             if (state.params.displayName === 'NULL') state.selectBy = 'displayNameNULL';

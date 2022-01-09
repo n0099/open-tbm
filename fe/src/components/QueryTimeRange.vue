@@ -14,6 +14,7 @@
 </template>
 
 <script lang="ts">
+import { emitEventNumValidator } from '@/shared';
 import type { PropType } from 'vue';
 import { defineComponent, ref, watchEffect } from 'vue';
 import { RangePicker } from 'ant-design-vue';
@@ -30,7 +31,10 @@ export default defineComponent({
         id: { type: String, default: 'queryTimeRange' },
         timesAgo: { type: Object as PropType<DurationLike>, required: true }
     },
-    emits: ['update:startTime', 'update:endTime'],
+    emits: {
+        'update:startTime': emitEventNumValidator,
+        'update:endTime': emitEventNumValidator
+    },
     setup(props, { emit }) {
         const timeRange = ref<Moment[]>([]);
         const timeRangeChanged = ([startTime, endTime]: Moment[]) => {

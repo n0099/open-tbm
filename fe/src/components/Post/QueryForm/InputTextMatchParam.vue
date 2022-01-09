@@ -33,23 +33,35 @@
 </template>
 
 <script lang="ts">
+import { paramTypeTextSubParamMatchByValues } from './queryParams';
 import type { ParamTypeText, ParamTypeWithCommon } from './queryParams';
+import type { ObjValues } from '@/shared';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import _ from 'lodash';
 
+type ParamType = ParamTypeWithCommon<string, ParamTypeText>;
 export default defineComponent({
     props: {
-        modelValue: Object as PropType<ParamTypeWithCommon<string, ParamTypeText>>,
+        modelValue: { type: Object as PropType<ParamType>, required: true },
         paramIndex: { type: Number, required: true }
     },
+    emits: {
+        'update:modelValue': (p: ParamType) =>
+            _.isString(p.name) && _.isString(p.value)
+                && paramTypeTextSubParamMatchByValues.includes(p.subParam.matchBy)
+                && _.isBoolean(p.subParam.spaceSplit)
+    },
     setup(props, { emit }) {
-        const emitModelChange = (name: string, value: unknown) => {
-            emit('update:modelValue', { ...props.modelValue, ...{ subParam: { [name]: value } } });
+        const emitModelChange = (name: keyof ParamTypeText['subParam'], value: ObjValues<ParamTypeText['subParam']>) => {
+            emit('update:modelValue', {
+                ...props.modelValue,
+                subParam: { ...props.modelValue.subParam, [name]: value }
+            } as ParamType);
         };
         const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>
-            `param${_.upperFirst(props.modelValue?.name)}${type}-${props.paramIndex}`;
-        const inputName = `param${_.upperFirst(props.modelValue?.name)}-${props.paramIndex}`;
+            `param${_.upperFirst(props.modelValue.name)}${type}-${props.paramIndex}`;
+        const inputName = `param${_.upperFirst(props.modelValue.name)}-${props.paramIndex}`;
         return { emitModelChange, inputID, inputName };
     }
 });

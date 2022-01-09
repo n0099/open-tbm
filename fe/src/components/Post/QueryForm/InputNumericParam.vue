@@ -14,16 +14,25 @@
 
 <script lang="ts">
 import type { ParamTypeNum, ParamTypeWithCommon } from './queryParams';
+import { paramTypeNumSubParamRangeValues } from './queryParams';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import _ from 'lodash';
 
 export default defineComponent({
     props: {
-        modelValue: Object as PropType<ParamTypeWithCommon<string, ParamTypeNum>>,
+        modelValue: { type: Object as PropType<ParamTypeWithCommon<string, ParamTypeNum>>, required: true },
         placeholders: { type: Object as PropType<{ [P in 'BETWEEN' | 'IN' | 'number']: string }>, required: true }
     },
+    emits: {
+        'update:modelValue': (p: ParamTypeWithCommon<string, ParamTypeNum>) =>
+            _.isString(p.name) && _.isString(p.value)
+                && paramTypeNumSubParamRangeValues.includes(p.subParam.range)
+    },
     setup(props, { emit }) {
-        const emitModelChange = e => { emit('update:modelValue', { ...props.modelValue, value: e.target.value }) };
+        const emitModelChange = (e: InputEvent & { target: HTMLInputElement }) => {
+            emit('update:modelValue', { ...props.modelValue, value: e.target.value });
+        };
         return { emitModelChange };
     }
 });

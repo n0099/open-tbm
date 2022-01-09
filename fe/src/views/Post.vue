@@ -68,25 +68,6 @@ export default defineComponent({
             selectedRenderTypes: ['list']
         });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-        let isSubmitTriggeredByInitialLoad = true;
-        let isRouteChangeTriggeredByQueryForm = false;
-        const submitQueryForm = (e: ObjUnknown) => {
-            isRouteChangeTriggeredByQueryForm = true;
-            state.currentQueryParams = e;
-            if (isSubmitTriggeredByInitialLoad) {
-                fetchPosts(e, false, routePageParamNullSafe(route))
-                    .then(isFetchSuccess => {
-                        if (!isFetchSuccess) return;
-                        const scrollPosition = postListItemScrollPosition(route);
-                        const el = document.querySelector(scrollPosition.el);
-                        if (el === null) return;
-                        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - scrollPosition.top);
-                    });
-            } else {
-                fetchPosts(e, true);
-            }
-            isSubmitTriggeredByInitialLoad = false;
-        };
         const fetchPosts = async (queryParams: ObjUnknown, isNewQuery: boolean, page = 1) => {
             const startTime = Date.now();
             state.lastFetchError = null;
@@ -124,6 +105,26 @@ export default defineComponent({
             }
             notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
             return true;
+        };
+
+        let isSubmitTriggeredByInitialLoad = true;
+        let isRouteChangeTriggeredByQueryForm = false;
+        const submitQueryForm = (e: ObjUnknown) => {
+            isRouteChangeTriggeredByQueryForm = true;
+            state.currentQueryParams = e;
+            if (isSubmitTriggeredByInitialLoad) {
+                fetchPosts(e, false, routePageParamNullSafe(route))
+                    .then(isFetchSuccess => {
+                        if (!isFetchSuccess) return;
+                        const scrollPosition = postListItemScrollPosition(route);
+                        const el = document.querySelector(scrollPosition.el);
+                        if (el === null) return;
+                        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - scrollPosition.top);
+                    });
+            } else {
+                fetchPosts(e, true);
+            }
+            isSubmitTriggeredByInitialLoad = false;
         };
 
         (async () => {

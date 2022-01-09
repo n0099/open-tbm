@@ -39,7 +39,7 @@ const paramTypes: { [P in 'array' | 'dateTimeRange' | 'numeric' | 'textMatch']: 
     },
     numeric: { default: { subParam: { range: '=' } } },
     textMatch: {
-        default: { subParam: { matchBy: 'implicit', spaceSplit: false } },
+        default: { subParam: { matchBy: 'explicit', spaceSplit: false } },
         preprocessor: param => {
             param.subParam.spaceSplit = boolStrToBool(param.subParam.spaceSplit);
         },
@@ -85,15 +85,17 @@ export const paramsNameByType = {
         'latestReplyTime'
     ]
 } as const;
-export interface ParamTypeNum { value: string, subParam: { range: '<' | '=' | '>' | 'BETWEEN' | 'IN' } }
-export interface ParamTypeText { value: string, subParam: { matchBy: 'eegex' | 'explicit' | 'implicit', spaceSplit: boolean } }
+export const paramTypeNumSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
+export interface ParamTypeNum { value: string, subParam: { range: typeof paramTypeNumSubParamRangeValues[number] } }
+export const paramTypeTextSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
+export interface ParamTypeText { value: string, subParam: { matchBy: typeof paramTypeTextSubParamMatchByValues[number], spaceSplit: boolean } }
 interface ParamTypeDateTime { value: string, subParam: { range: undefined } }
 interface ParamTypeGender { value: '0' | '1' | '2' }
 interface ParamTypeOther {
     threadProperties: { value: Array<'good' | 'sticky'> },
     authorManagerType: { value: 'assist' | 'manager' | 'NULL' | 'voiceadmin' }
 }
-export type ParamTypeWithCommon<N, P> = P & { name: N, subParam: ObjEmpty };
+export type ParamTypeWithCommon<N, P> = P & { name: N, value: unknown, subParam: ObjEmpty };
 export type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamTypeWithCommon<P, ParamTypeGender> }
 & { [P in keyof ParamTypeOther]: ParamTypeWithCommon<P, ParamTypeOther[P]> }
 & { [P in typeof paramsNameByType.dateTime[number]]: ParamTypeWithCommon<P, ParamTypeDateTime> }

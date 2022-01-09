@@ -120,7 +120,7 @@
                                                 }" />
                                             </a>
                                             <div class="float-end badge bg-light">
-                                                <div class="d-inline" :class="{ 'visually-hidden': hoveringSubReplyID !== subReply.spid }">
+                                                <div class="d-inline" :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
                                                     <PostCommonMetadataIconLinks :meta="subReply" postTypeID="spid" />
                                                 </div>
                                                 <PostTimeBadge :time="subReply.postTime" badgeColor="info" />
