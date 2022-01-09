@@ -9,7 +9,7 @@
                 <MenuItem v-for="thread in posts.threads" :key="`page${page}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
-                    <div class="d-block btn-group" role="group">
+                    <div class="d-block btn-group p-1" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="isFirstReplyInView"
                                     @click="navigate(page, null, reply.pid)" :data-pid="reply.pid"
@@ -34,9 +34,13 @@
 </template>
 
 <script lang="ts">
-import { isRouteHashChangeTriggeredByPostsNav } from '@/components/Post/ViewList.vue';
+import { isRouteChangeTriggeredByPostsNavScrollEvent } from '@/components/Post/ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery } from '@/api/index.d';
+import { assertRouteNameIsStr, routeNameWithPage } from '@/router';
+import type { Pid, Tid } from '@/shared';
+import { removeEnd } from '@/shared';
+
 import type { PropType } from 'vue';
 import { defineComponent, onUnmounted, reactive, toRefs, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -49,17 +53,6 @@ export default defineComponent({
     props: {
         postPages: { type: Array as PropType<ApiPostsQuery[]>, required: true }
     },
-    directives: {
-        'scroll-to-post'(el, binding) {
-            if (binding.value !== binding.oldValue
-                && binding.value === true
-                && $('.posts-nav').css('display') !== 'none') { // don't scroll when <posts-nav> is collapsed
-                // force expand parent <a-sub-menu> to skip .ant-motion-collapse-legacy-active animation while page's first load
-                $(el).parents('.ant-menu-sub').css('height', 'unset');
-                el.scrollIntoViewIfNeeded(); // fixme: should only scroll within <posts-nav> instead of whole window
-            }
-        }
-    },
     setup(props) {
         const route = useRoute();
         const router = useRouter();
@@ -67,18 +60,20 @@ export default defineComponent({
             expandedPages: string[],
             selectedThread: string[],
             isPostsNavExpanded: boolean,
-            firstPostInView: { [P in 'page' | 'pid' | 'tid']: number }
+            firstPostInView: { page: number, pid: Pid, tid: Tid }
         }>({
             expandedPages: [],
             selectedThread: [],
             isPostsNavExpanded: false,
             firstPostInView: { tid: 0, pid: 0, page: 0 }
         });
-        const navigate = (page: number | string, tid?: string, pid?: number | string) => {
+        let isScrollTriggeredByNavigate = false;
+        const navigate = (page: number | string, tid?: string, pid?: Pid | string) => {
             router.replace({
                 hash: `#${pid ?? (tid === undefined ? null : `t${tid}`)}`,
                 params: { ...route.params, page }
             });
+            isScrollTriggeredByNavigate = true;
         };
         const selectThread = ({ domEvent, key }: { domEvent: PointerEvent & { target: Element }, key: string }) => {
             if (domEvent.target.tagName !== 'BUTTON') { // ignore clicks on reply link
@@ -102,14 +97,30 @@ export default defineComponent({
                     reduceFindTopmostElementInView(topOffset),
                     { top: Infinity, el: document.createElement('null') }
                 ).el;
+
             const firstPostInView = {
                 t: findFirstDomInView('.thread-title'),
                 p: findFirstDomInView('.reply-title', 80) // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
             };
             const firstPostIDInView = _.mapValues(firstPostInView, i =>
                 Number(i.parentElement?.getAttribute('data-post-id')));
+            // when there's no thread or reply item in the viewport, firstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
+            if (Number.isNaN(firstPostIDInView.t)) {
+                state.firstPostInView = { tid: 0, pid: 0, page: 0 };
+                router.replace({ hash: '' }); // empty route hash
+                isRouteChangeTriggeredByPostsNavScrollEvent.value = true;
+                return;
+            }
             const firstPostPageInView = _.mapValues(firstPostInView, i =>
                 Number(i.closest('.post-render-list')?.getAttribute('data-page')));
+
+            const replaceRouteHash = (page: number, postID: Pid | Tid, hashPrefix = '') => {
+                assertRouteNameIsStr(route.name);
+                const hash = `#${hashPrefix}${postID}`;
+                router.replace(page === 1 // to prevent '/page/1' occurs in route path
+                    ? { hash, name: removeEnd(route.name, '+p'), params: _.omit(route.params, 'page') }
+                    : { hash, name: routeNameWithPage(route.name), params: { ...route.params, page } });
+            };
             // is first reply belongs to first thread, true when first thread have no reply, so the first reply will belongs to other thread which comes after first thread in view
             if (_.chain(props.postPages)
                 .map(i => i.threads)
@@ -121,12 +132,12 @@ export default defineComponent({
                 .isEmpty()
                 .value()) {
                 state.firstPostInView = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
-                router.replace({ hash: `#t${firstPostIDInView.t}`, params: { ...route.params, page: firstPostPageInView.t } });
+                replaceRouteHash(firstPostPageInView.t, firstPostIDInView.t, 't');
             } else {
                 state.firstPostInView = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
-                router.replace({ hash: `#${firstPostIDInView.p}`, params: { ...route.params, page: firstPostPageInView.p } });
+                replaceRouteHash(firstPostPageInView.p, firstPostIDInView.p);
             }
-            isRouteHashChangeTriggeredByPostsNav.value = true;
+            isRouteChangeTriggeredByPostsNavScrollEvent.value = true;
         }, 200);
         const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
         onUnmounted(removeScrollEventListener);
@@ -138,7 +149,10 @@ export default defineComponent({
 
             const { page, tid, pid } = state.firstPostInView;
             state.selectedThread = [`page${page}_t${tid}`];
-
+            if (isScrollTriggeredByNavigate) {
+                isScrollTriggeredByNavigate = false;
+                return;
+            }
             // scroll menu to the link to reply in <ViewList> which is the topmost one in viewport (nearest to top border of viewport)
             const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
             const navMenuEl = replyEl?.closest('.posts-nav');

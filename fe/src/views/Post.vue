@@ -1,7 +1,7 @@
 <template>
     <div class="container">
-        <QueryForm ref="queryFormRef" @query="fetchPosts($event, true)" :forumList="forumList" :isLoading="isLoading" />
-        <p>当前页数：{{ currentRoutePage }}</p>
+        <QueryForm ref="queryFormRef" @query="submitQueryForm" :forumList="forumList" :isLoading="isLoading" />
+        <p>当前页数：{{ routePageParamNullSafe($route) }}</p>
         <Menu v-show="postPages.length !== 0" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
             <MenuItem key="table">表格视图</MenuItem>
@@ -9,19 +9,17 @@
     </div>
     <div v-show="postPages.length !== 0" class="container-fluid">
         <div class="row justify-content-center">
-            <NavSidebar v-if="renderType === 'list'" :postPages="postPages" :firstPostInView="firstPostInView" />
+            <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
             <div class="post-render-wrapper col" :class="{
                 'post-render-list-wrapper': renderType === 'list',
                 'col-xl-10': renderType === 'list'
             }">
-                <template v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage">
-                    <PagePreviousButton @loadPage="loadPage($event)" :pageInfo="posts.pages" />
-                    <ViewList v-if="renderType === 'list'" :initialPosts="posts" />
-                    <ViewTable v-else-if="renderType === 'table'" :posts="posts" />
-                    <PageNextButton v-if="!isLoading && pageIndex === postPages.length - 1"
-                                    @loadPage="loadPage($event)" :currentPage="posts.pages.currentPage" />
-                </template>
+                <PostViewPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage"
+                              :renderType="renderType" :posts="posts"
+                              :isLoadingNewPage="isLoading"
+                              :isLastPageInPages="pageIndex === postPages.length - 1" />
             </div>
+
             <div v-show="renderType === 'list'" class="post-render-list-right-padding col-xl d-none p-0" />
         </div>
     </div>
@@ -34,37 +32,35 @@
 <script lang="ts">
 import type { ApiError, ApiForumList, ApiPostsQuery } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
-import PlaceholderError from '@/components/PlaceholderError.vue';
-import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
-import { NavSidebar, PageNextButton, PagePreviousButton, QueryForm, ViewList, ViewTable } from '@/components/Post/exports.vue';
+import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
+import { postListItemScrollPosition } from '@/components/Post/ViewList.vue';
+import { compareRouteIsNewQuery, routePageParamNullSafe } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow } from '@/shared';
 
 import { defineComponent, reactive, ref, toRefs, watchEffect } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
+export type PostViewRenderer = 'list' | 'table';
 export default defineComponent({
-    components: { Menu, MenuItem, PlaceholderError, PlaceholderPostList, QueryForm, ViewList, ViewTable, NavSidebar },
+    components: { Menu, MenuItem, PlaceholderError, PlaceholderPostList, QueryForm, NavSidebar, PostViewPage },
     setup() {
         const route = useRoute();
-        const router = useRouter();
         const state = reactive<{
             forumList: ApiForumList,
             postPages: ApiPostsQuery[],
             currentQueryParams: ObjUnknown,
-            currentRoutePage: number,
             isLoading: boolean,
             lastFetchError: ApiError | null,
             showPlaceholderPostList: boolean,
-            renderType: 'list' | 'table',
-            selectedRenderTypes: ['list' | 'table']
+            renderType: PostViewRenderer,
+            selectedRenderTypes: [PostViewRenderer]
         }>({
             forumList: [],
             postPages: [],
             currentQueryParams: {},
-            currentRoutePage: 1,
             isLoading: false,
             lastFetchError: null,
             showPlaceholderPostList: true,
@@ -72,28 +68,40 @@ export default defineComponent({
             selectedRenderTypes: ['list']
         });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-        const loadPage = page => {
-            if (_.map(state.postPages, 'pages.currentPage').includes(page)) $(`.post-previous-page[data-page='${page}']`)[0].scrollIntoView(); // scroll to page if already loaded
-            router.push(_.merge(route.name.startsWith('param')
-                ? { path: `/page/${page}/${route.params.pathMatch}` }
-                : {
-                    name: route.name.endsWith('+p') ? route.name : `${route.name}+p`,
-                    params: { ...route.params, page }
-                }));
+        let isSubmitTriggeredByInitialLoad = true;
+        let isRouteChangeTriggeredByQueryForm = false;
+        const submitQueryForm = (e: ObjUnknown) => {
+            isRouteChangeTriggeredByQueryForm = true;
+            state.currentQueryParams = e;
+            if (isSubmitTriggeredByInitialLoad) {
+                fetchPosts(e, false, routePageParamNullSafe(route))
+                    .then(isFetchSuccess => {
+                        if (!isFetchSuccess) return;
+                        const scrollPosition = postListItemScrollPosition(route);
+                        const el = document.querySelector(scrollPosition.el);
+                        if (el === null) return;
+                        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - scrollPosition.top);
+                    });
+            } else {
+                fetchPosts(e, true);
+            }
+            isSubmitTriggeredByInitialLoad = false;
         };
-        const fetchPosts = async (queryParams: ObjUnknown, isNewQuery: boolean) => {
+        const fetchPosts = async (queryParams: ObjUnknown, isNewQuery: boolean, page = 1) => {
             const startTime = Date.now();
             state.lastFetchError = null;
             state.showPlaceholderPostList = true;
             if (isNewQuery) state.postPages = [];
             state.isLoading = true;
+
             const postsQuery = await apiPostsQuery({
                 query: JSON.stringify(queryParams),
-                page: isNewQuery ? 1 : parseInt(route.params.page ?? '1')
+                page: isNewQuery ? 1 : page
             }).finally(() => {
                 state.showPlaceholderPostList = false;
                 state.isLoading = false;
             });
+
             if (isApiError(postsQuery)) {
                 state.lastFetchError = postsQuery;
                 return false;
@@ -102,7 +110,6 @@ export default defineComponent({
             else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
 
             { // update title
-                const page = state.currentRoutePage;
                 const forumName = `${state.postPages[0].forum.name}吧`;
                 const threadTitle = state.postPages[0].threads[0].title;
                 switch (queryFormRef.value?.getCurrentQueryType()) {
@@ -119,16 +126,30 @@ export default defineComponent({
             return true;
         };
 
+        (async () => {
+            state.forumList = throwIfApiError(await apiForumList());
+            queryFormRef.value?.submit(true);
+        })();
         watchEffect(() => {
-            state.currentRoutePage = parseInt(route.params.page ?? '1');
             [state.renderType] = state.selectedRenderTypes;
         });
 
-        (async () => {
-            state.forumList = throwIfApiError(await apiForumList());
-        })();
+        onBeforeRouteUpdate(async (to, from) => {
+            if (isRouteChangeTriggeredByQueryForm) {
+                isRouteChangeTriggeredByQueryForm = false;
+                return true;
+            }
+            const isNewQuery = compareRouteIsNewQuery(to, from);
+            const page = routePageParamNullSafe(to);
+            if (!isNewQuery && !_.isEmpty(_.filter(
+                state.postPages,
+                i => i.pages.currentPage === page
+            ))) return true;
+            const isFetchSuccess = await fetchPosts(state.currentQueryParams, isNewQuery, page);
+            return isNewQuery ? true : isFetchSuccess; // only pass pending route change after successful fetched
+        });
 
-        return { ...toRefs(state), queryFormRef, fetchPosts, loadPage };
+        return { routePageParamNullSafe, ...toRefs(state), queryFormRef, submitQueryForm, fetchPosts };
     }
 });
 </script>

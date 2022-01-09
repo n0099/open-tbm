@@ -142,7 +142,7 @@
 import './tiebaUserPortrait.css';
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
-import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
+import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
 import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord, TiebaUserRecord } from '@/api/index.d';
 import type { Modify } from '@/shared';
 import { tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
@@ -151,6 +151,7 @@ import { dateTimeFromUTC8 } from '@/shared/echarts';
 
 import type { PropType } from 'vue';
 import { computed, defineComponent, onMounted, ref } from 'vue';
+import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
@@ -170,8 +171,16 @@ export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUse
     if (name === null) return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
     return name + (displayName === null ? '' : `（${displayName}）`);
 };
+export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
+    const hash = route.hash.substring(1);
+    const idSelectorToHash = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
+    return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
+        el: `.post-render-list[data-page='${routePageParamNullSafe(route)}']${idSelectorToHash}`,
+        top: 80 // .reply-title { top: 5rem; }
+    };
+};
 
-export const isRouteHashChangeTriggeredByPostsNav = ref(false);
+export const isRouteChangeTriggeredByPostsNavScrollEvent = ref(false);
 export default defineComponent({
     components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
     props: {
@@ -215,17 +224,11 @@ export default defineComponent({
 
         onMounted(initialTippy);
         setComponentCustomScrollBehaviour((to, from) => {
-            if (isRouteHashChangeTriggeredByPostsNav.value) {
-                isRouteHashChangeTriggeredByPostsNav.value = false;
+            if (isRouteChangeTriggeredByPostsNavScrollEvent.value) {
+                isRouteChangeTriggeredByPostsNavScrollEvent.value = false;
                 return false;
             }
-            if (!compareRouteIsNewQuery(to, from)
-                && ('page' in from.params || 'page' in to.params)) {
-                return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
-                    el: `.post-render-list[data-page='${to.params.page}'] [id='${to.hash.substring(1)}']`,
-                    top: 80 // .reply-title { top: 5rem; }
-                };
-            }
+            if (!compareRouteIsNewQuery(to, from)) return postListItemScrollPosition(to);
             return undefined;
         });
 

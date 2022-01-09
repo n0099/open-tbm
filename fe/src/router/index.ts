@@ -17,6 +17,8 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name'])
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
+export const routeNameWithPage = (name: string) => (_.endsWith(name, '+p') ? name : `${name}+p`);
+export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.params.page ?? 1);
 
 const lazyLoadRouteView = async (component: Promise<Component>) => {
     NProgress.start();
@@ -51,7 +53,7 @@ export default createRouter({
                 { path: 't/:tid', name: 'post/tid', ...withPageRoute('post/tid', postRoute) },
                 { path: 'p/:pid', name: 'post/pid', ...withPageRoute('post/pid', postRoute) },
                 { path: 'sp/:spid', name: 'post/spid', ...withPageRoute('post/spid', postRoute) },
-                { path: ':pathMatch(.*)*', name: 'post/param', ...postRoute }
+                { path: ':pathMatch(.*)*', name: 'post/param', ...withPageRoute('post/param', postRoute) }
             ]
         },
         {
@@ -71,7 +73,8 @@ export default createRouter({
     ],
     linkActiveClass: 'active',
     scrollBehavior(to, from, savedPosition) {
-        if (savedPosition !== null) return savedPosition;
+        // 'href' property will not exist in from when user refresh page: https://next.router.vuejs.org/api/#resolve
+        if ('href' in from && savedPosition !== null) return savedPosition;
 
         if (componentCustomScrollBehaviour.value !== undefined) {
             const ret = componentCustomScrollBehaviour.value(to, from, savedPosition) as ReturnType<RouterScrollBehavior> | undefined;

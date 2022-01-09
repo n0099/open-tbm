@@ -321,10 +321,10 @@ export default defineComponent({
             // return false when there have at least one invalid params
             return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid;
         };
-        const submit = () => {
+        const submit = (skipSubmitRoute = false) => {
             if (checkParams()) {
                 emit('query', flattenParams());
-                submitRoute();
+                if (!skipSubmitRoute) submitRoute();
             }
         };
         Object.assign(useQueryFormLateBinding, { parseRoute }); // assign() will prevent losing ref
