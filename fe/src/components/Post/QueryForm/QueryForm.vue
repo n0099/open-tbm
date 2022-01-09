@@ -241,7 +241,7 @@ export default defineComponent({
             const clearedParams = clearedParamsDefaultValue();
             const clearedUniqueParams = clearedUniqueParamsDefaultValue();
             if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
-                for (const postIDName of _.reverse(postsID)) { // todo: sub posts id goes first to simply verbose multi post id condition
+                for (const postIDName of _.reverse(postsID)) {
                     const postIDParam = _.filter(clearedParams, param => param.name === postIDName);
                     if (_.isEmpty(_.reject(clearedParams, param => param.name === postIDName)) // is there no other params
                         && postIDParam.length === 1 // is there only one post id param

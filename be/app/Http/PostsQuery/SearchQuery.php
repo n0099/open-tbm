@@ -36,7 +36,10 @@ class SearchQuery
         $queryResults = array_map(static fn ($qb) => $qb->toArray()['data'], $queries);
         $results = array_merge(
             ['fid' => $fid],
-            array_combine(Helper::POST_TYPES_PLURAL, $queryResults)
+            array_combine(Arr::only(
+                Helper::POST_TYPES_TO_PLURAL,
+                $params->getUniqueParamValue('postTypes')
+            ), $queryResults)
         );
         Helper::abortAPIIf(40401, array_keys(array_filter($results)) === ['fid']);
 
