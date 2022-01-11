@@ -2,6 +2,13 @@
     <div class="input-group-text">
         <div class="form-check form-check-inline">
             <input @input="emitModelChange('matchBy', $event.target.value)"
+                   :id="inputID('Regex')"
+                   :checked="modelValue.subParam.matchBy === 'regex'" :name="inputName"
+                   value="regex" type="radio" class="form-check-input" />
+            <label :for="inputID('Regex')" class="form-check-label">正则</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input @input="emitModelChange('matchBy', $event.target.value)"
                    :id="inputID('Implicit')"
                    :checked="modelValue.subParam.matchBy === 'implicit'" :name="inputName"
                    value="implicit" type="radio" class="form-check-input" />
@@ -22,24 +29,24 @@
                    type="checkbox" class="form-check-input" />
             <label :for="inputID('SpaceSplit')" class="form-check-label">空格分隔</label>
         </div>
-        <div class="form-check form-check-inline">
-            <input @input="emitModelChange('matchBy', $event.target.value)"
-                   :id="inputID('Regex')"
-                   :checked="modelValue.subParam.matchBy === 'regex'" :name="inputName"
-                   value="regex" type="radio" class="form-check-input" />
-            <label :for="inputID('Regex')" class="form-check-label">正则</label>
-        </div>
     </div>
 </template>
 
 <script lang="ts">
 import { paramTypeTextSubParamMatchByValues } from './queryParams';
-import type { ParamTypeText, ParamTypeWithCommon } from './queryParams';
+import type { ParamTypeText, ParamTypeWithCommon, Params, paramsNameByType } from './queryParams';
 import type { ObjValues } from '@/shared';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import _ from 'lodash';
 
+const matchByDesc = {
+    implicit: '模糊',
+    explicit: '精确',
+    regex: '正则'
+};
+export const inputTextMatchParamPlaceholder = (p: Params[typeof paramsNameByType.text[number]]) =>
+    `${matchByDesc[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
 type ParamType = ParamTypeWithCommon<string, ParamTypeText>;
 export default defineComponent({
     props: {

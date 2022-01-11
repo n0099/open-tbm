@@ -57,85 +57,85 @@
             </div>
         </div>
         <div class="query-params">
-            <div v-for="(param, paramIndex) in params" :key="paramIndex" class="input-group">
-                <button @click="deleteParam(paramIndex)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
-                <SelectParam @paramChange="changeParam(paramIndex, $event)" :currentParam="param.name"
+            <div v-for="(p, pI) in params" :key="pI" class="input-group">
+                <button @click="deleteParam(pI)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
+                <SelectParam @paramChange="changeParam(pI, $event)" :currentParam="p.name"
                              class="select-param" :class="{
-                                 'is-invalid': invalidParamsIndex.includes(paramIndex)
+                                 'is-invalid': invalidParamsIndex.includes(pI)
                              }" />
                 <div class="param-input-group-text input-group-text">
                     <div class="form-check">
-                        <input v-model="param.subParam.not" :id="`param${lo.upperFirst(param.name)}Not-${paramIndex}`"
+                        <input v-model="p.subParam.not" :id="`param${upperFirst(p.name)}Not-${pI}`"
                                type="checkbox" value="good" class="form-check-input" />
-                        <label :for="`param${lo.upperFirst(param.name)}Not-${paramIndex}`"
+                        <label :for="`param${upperFirst(p.name)}Not-${pI}`"
                                class="text-secondary fw-bold form-check-label">非</label>
                     </div>
                 </div>
-                <template v-if="lo.includes(postsID, param.name)">
-                    <SelectRange v-model="param.subParam.range" />
-                    <InputNumericParam v-model="params[paramIndex]" :placeholders="{
-                        IN: param.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
-                        BETWEEN: param.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
-                        number: param.name === 'tid' ? '5000000000' : '15000000000'
+                <template v-if="postsID.includes(p.name)">
+                    <SelectRange v-model="p.subParam.range" />
+                    <InputNumericParam v-model="params[pI]" :placeholders="{
+                        IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
+                        BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
+                        number: p.name === 'tid' ? '5000000000' : '15000000000'
                     }" />
                 </template>
-                <template v-if="lo.includes(['postTime', 'latestReplyTime'], param.name)">
-                    <RangePicker v-model="param.subParam.range" :showTime="true"
+                <template v-if="['postTime', 'latestReplyTime'].includes(p.name)">
+                    <RangePicker v-model="p.subParam.range" :showTime="true"
                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
-                <template v-if="lo.includes(['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'], param.name)">
-                    <input v-model="param.value" :placeholder="inputTextMatchParamPlaceholder(param)" type="text" class="form-control" required />
-                    <InputTextMatchParam v-model="params[paramIndex]" :paramIndex="paramIndex" />
+                <template v-if="['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'].includes(p.name)">
+                    <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)" type="text" class="form-control" required />
+                    <InputTextMatchParam v-model="params[pI]" :paramIndex="pI" />
                 </template>
-                <template v-if="lo.includes(['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'], param.name)">
-                    <SelectRange v-model="param.subParam.range" />
-                    <InputNumericParam v-model="params[paramIndex]" :paramIndex="paramIndex"
+                <template v-if="['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'].includes(p.name)">
+                    <SelectRange v-model="p.subParam.range" />
+                    <InputNumericParam v-model="params[pI]" :paramIndex="pI"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: '100' }" />
                 </template>
-                <div v-if="param.name === 'threadProperties'">
+                <div v-if="p.name === 'threadProperties'">
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
-                            <input v-model="param.value" :id="`paramThreadPropertiesGood-${paramIndex}`"
+                            <input v-model="p.value" :id="`paramThreadPropertiesGood-${pI}`"
                                    type="checkbox" value="good" class="form-check-input" />
-                            <label :for="`paramThreadPropertiesGood-${paramIndex}`"
+                            <label :for="`paramThreadPropertiesGood-${pI}`"
                                    class="text-danger fw-normal form-check-label">精品</label>
                         </div>
                     </div>
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
-                            <input v-model="param.value" :id="`paramThreadPropertiesSticky-${paramIndex}`"
+                            <input v-model="p.value" :id="`paramThreadPropertiesSticky-${pI}`"
                                    type="checkbox" value="sticky" class="form-check-input" />
-                            <label :for="`paramThreadPropertiesSticky-${paramIndex}`"
+                            <label :for="`paramThreadPropertiesSticky-${pI}`"
                                    class="text-primary fw-normal form-check-label">置顶</label>
                         </div>
                     </div>
                 </div>
-                <template v-if="lo.includes(['authorUid', 'latestReplierUid'], param.name)">
-                    <SelectRange v-model="param.subParam.range" />
-                    <InputNumericParam v-model="params[paramIndex]" :placeholders="{
+                <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
+                    <SelectRange v-model="p.subParam.range" />
+                    <InputNumericParam v-model="params[pI]" :placeholders="{
                         IN: '4000000000,4000000001,4000000002,...',
                         BETWEEN: '4000000000,5000000000',
                         number: '4000000000'
                     }" />
                 </template>
-                <template v-if="param.name === 'authorManagerType'">
-                    <select v-model="param.value" class="form-control flex-grow-0 w-25">
+                <template v-if="p.name === 'authorManagerType'">
+                    <select v-model="p.value" class="form-control flex-grow-0 w-25">
                         <option value="NULL">吧友</option>
                         <option value="manager">吧主</option>
                         <option value="assist">小吧主</option>
                         <option value="voiceadmin">语音小编</option>
                     </select>
                 </template>
-                <template v-if="lo.includes(['authorGender', 'latestReplierGender'], param.name)">
-                    <select v-model="param.value" class="form-control flex-grow-0 w-25">
+                <template v-if="['authorGender', 'latestReplierGender'].includes(p.name)">
+                    <select v-model="p.value" class="form-control flex-grow-0 w-25">
                         <option selected value="0">未设置（显示为男）</option>
                         <option value="1">男 ♂</option>
                         <option value="2">女 ♀</option>
                     </select>
                 </template>
-                <template v-if="param.name === 'authorExpGrade'">
-                    <SelectRange v-model="param.subParam.range" />
-                    <InputNumericParam v-model="params[paramIndex]" :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: '18' }" />
+                <template v-if="p.name === 'authorExpGrade'">
+                    <SelectRange v-model="p.subParam.range" />
+                    <InputNumericParam v-model="params[pI]" :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: '18' }" />
                 </template>
             </div>
         </div>
@@ -153,8 +153,8 @@
 </template>
 
 <script lang="ts">
-import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange } from './';
-import type { Params, RequiredPostTypes, UniqueParams, paramsNameByType } from './queryParams';
+import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, inputTextMatchParamPlaceholder } from './';
+import type { Params, RequiredPostTypes, UniqueParams } from './queryParams';
 import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormLateBinding, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
 import type { ObjUnknown, ObjValues, PostType } from '@/shared';
@@ -332,10 +332,6 @@ export default defineComponent({
         };
         Object.assign(useQueryFormLateBinding, { parseRoute }); // assign() will prevent losing ref
 
-        const inputTextMatchParamPlaceholder = (p: Params[typeof paramsNameByType.text[number]]) => {
-            if (p.subParam.matchBy === 'implicit') return '模糊';
-            return `${p.subParam.matchBy === 'explicit' ? '精确' : '正则'}匹配 空格${p.subParam.spaceSplit ? '不' : ''}分割关键词`;
-        };
         const currentQueryTypeDesc = computed(() => {
             const currentQueryType = getCurrentQueryType();
             if (currentQueryType === 'fid') return '按吧索引查询';
@@ -344,7 +340,7 @@ export default defineComponent({
             return '空查询';
         });
 
-        return { lo: _, postsID, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, inputTextMatchParamPlaceholder, addParam, changeParam, deleteParam, submit };
+        return { upperFirst: _.upperFirst, postsID, inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>

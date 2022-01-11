@@ -6,7 +6,6 @@
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
 }
-
 .input-group > :not(:last-child) .ant-calendar-picker-input  {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
@@ -21,22 +20,17 @@
     transition: opacity .3s;
 }
 
-.loading {
-    background: url('../../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
-}
-
 a {
-    color: #1890ff; /* use antd color for clearly bootstrap hover animation */
+    color: #1890ff; /* use antd color to stress bootstrap hover animation */
     text-decoration: none !important; /* override browser underline */
 }
 
 * {
     font-weight: 300;
-    font-family: "Lucida Grande", "Microsoft Yahei", 'Noto Sans SC', sans-serif;
 }
 
 @media (max-width: 991.98px) {
-    .container {
+    .container { /* let all .container be like .container-fluid when viewport width is less than md breakpoint */
         max-width: 100%;
     }
 }

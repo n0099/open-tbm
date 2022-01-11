@@ -1,6 +1,6 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-light">
-        <div class="container-fluid">
+        <div id="nav" class="container-fluid">
             <RouterLink to="/" class="navbar-brand">贴吧云监控</RouterLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                     aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -9,7 +9,7 @@
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="navbar-nav">
                     <template v-for="(nav, _k) in navs" :key="_k">
-                        <li v-if="'routes' in nav" :class="`nav-item dropdown${activeNavClass(nav.isActive)}`">
+                        <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </a>
@@ -19,7 +19,7 @@
                                 </RouterLink>
                             </div>
                         </li>
-                        <li v-else :class="`nav-item${activeNavClass(nav.isActive)}`">
+                        <li v-else class="nav-item" :class="{ action: nav.isActive }">
                             <RouterLink :to="{ name: nav.route }" class="nav-link">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </RouterLink>
@@ -38,7 +38,6 @@
 import { defineComponent, reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 export default defineComponent({
     components: { FontAwesomeIcon, RouterLink },
@@ -65,7 +64,6 @@ export default defineComponent({
                 ]
             }
         ]);
-        const activeNavClass = (isActive?: boolean) => (isActive === true ? 'active' : '');
 
         watch(() => route.name, () => {
             navs.forEach(nav => ({ // we don't have to reassign navs since it's reactive
@@ -76,7 +74,7 @@ export default defineComponent({
             }));
         });
 
-        return { AntdZhCn, navs, activeNavClass };
+        return { navs };
     }
 });
 </script>

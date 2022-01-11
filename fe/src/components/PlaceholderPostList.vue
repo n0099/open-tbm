@@ -3,13 +3,16 @@
         <template v-if="isLoading">
             <div class="col"><hr /></div>
             <div class="w-auto">
-                <div class="loading mx-auto" />
+                <picture>
+                    <source srcset="../../public/assets/icon-huaji-loading-spinner.avifs" type="image/avif" />
+                    <img src="../../public/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif" />
+                </picture>
             </div>
         </template>
         <div class="col"><hr /></div>
         <div class="w-100" />
         <div class="col">
-            <div class="tombstone-post-list" />
+            <img :class="{ loading: isLoading }" src="../../public/assets/tombstone-post-list.svg" />
         </div>
     </div>
 </template>
@@ -24,14 +27,6 @@ export default {
 
 <style scoped>
 .loading {
-    width: 120px;
-    height: 120px;
-}
-
-.tombstone-post-list {
-    height: 480px;
-    background-image: url('../../public/assets/tombstone-post-list.svg');
-    background-size: 100%;
     animation-name: tombstone-post-list;
     animation-play-state: running;
     animation-iteration-count: infinite;

@@ -11,7 +11,6 @@ import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import 'lazysizes';
 import '@/shared/style.css';
-import * as antdComponents from '@/shared/antd';
 import * as fontAwesomeIcons from '@/shared/fontAwesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 library.add(...Object.values(fontAwesomeIcons));
@@ -28,5 +27,4 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const app = createApp(App).use(store).use(router);
-Object.values(antdComponents).forEach(c => app.use(c));
 app.mount('#app');
