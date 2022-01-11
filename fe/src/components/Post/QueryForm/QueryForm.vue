@@ -266,7 +266,7 @@ export default defineComponent({
             const currentQueryType = getCurrentQueryType();
             switch (currentQueryType) {
                 case 'empty':
-                    notyShow('warning', '请选择贴吧或/并输入查询参数，勿只选择贴子类型参数');
+                    notyShow('warning', '请选择贴吧或/并输入查询参数<br />勿只选择贴子类型参数');
                     return false; // exit early
                 case 'postID':
                     if (clearedUniqueParams.fid !== undefined) {
@@ -317,7 +317,7 @@ export default defineComponent({
                 const required = orderByRequiredPostTypes[orderBy];
                 if (!isRequiredPostTypes(postTypes, required)) {
                     state.isOrderByInvalid = true;
-                    notyShow('warning', `排序方式与查询贴子类型要求不匹配，当前要求贴子类型为${requiredPostTypesToString(required)}`);
+                    notyShow('warning', `排序方式与查询贴子类型要求不匹配<br />当前要求贴子类型为${requiredPostTypesToString(required)}`);
                 }
             }
 
@@ -350,10 +350,10 @@ export default defineComponent({
     margin-top: -1px;
 }
 .query-params > :first-child > .select-param {
-    border-top-left-radius: 0.25rem !important;
+    border-top-left-radius: .25rem !important;
 }
 .query-params > :last-child > .select-param {
-    border-bottom-left-radius: 0.25rem !important;
+    border-bottom-left-radius: .25rem !important;
 }
 
 .query-params > :first-child:not(:only-child) > :last-child {

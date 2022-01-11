@@ -6,7 +6,7 @@
                   :users="users"
                   :isLoadingNewPage="isLoading"
                   :isLastPageInPages="pageIndex === userPages.length - 1" />
-    <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" />
+    <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
     <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
 </template>
 

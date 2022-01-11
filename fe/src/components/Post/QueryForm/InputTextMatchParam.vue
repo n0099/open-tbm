@@ -79,6 +79,6 @@ export default defineComponent({
     margin: 0;
 }
 .form-check-inline:not(:last-child) {
-    margin-right: 0.5rem;
+    margin-right: .5rem;
 }
 </style>

@@ -6,3 +6,9 @@
     width: 90px;
     height: 90px;
 }
+.tieba-image {
+    margin: .25rem;
+    max-width: 300px;
+    max-height: 300px;
+    object-fit: contain;
+}

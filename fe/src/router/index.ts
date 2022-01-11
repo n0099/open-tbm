@@ -1,4 +1,6 @@
 import Index from '@/views/Index.vue';
+import PlaceholderError from '@/components/PlaceholderError.vue';
+import { notyShow } from '@/shared';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
 import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw, RouterScrollBehavior } from 'vue-router';
@@ -28,6 +30,7 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
     const containersDom = ['.container', '.container-fluid:not(#nav)'].flatMap(i => [...document.querySelectorAll(i)]);
     loadingBlocksDom?.classList.remove('d-none');
     containersDom.forEach(i => { i.classList.add('d-none') });
+    component.catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) });
     return component.finally(() => {
         NProgress.done();
         loadingBlocksDom?.classList.add('d-none');
@@ -37,24 +40,30 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
 const withPageRoute = <T extends { components: Record<string, () => Promise<Component>> }
 | { component: () => Promise<Component> } & { props: boolean }>
 (routeName: string, restRoute: T): T & { children: RouteRecordRaw[] } =>
-    ({ ...restRoute, children: [{ ...restRoute, path: 'page/:page', name: `${routeName}+p` }] });
+    ({ ...restRoute, children: [{ ...restRoute, path: 'page/:page(\\d+)', name: `${routeName}+p` }] });
 
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
 const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) } };
 export default createRouter({
     history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
     routes: [
+        {
+            path: '/:pathMatch(.*)*',
+            name: '404',
+            component: PlaceholderError,
+            props: r => ({ error: { errorCode: 404, errorInfo: `${r.path}` } })
+        },
         { path: '/', name: 'index', component: Index },
         {
             path: '/p',
             name: 'post',
             ...postRoute,
             children: [
-                { path: 'page/:page', name: 'post+p', ...postRoute },
-                { path: 'f/:fid', name: 'post/fid', ...withPageRoute('post/fid', postRoute) },
-                { path: 't/:tid', name: 'post/tid', ...withPageRoute('post/tid', postRoute) },
-                { path: 'p/:pid', name: 'post/pid', ...withPageRoute('post/pid', postRoute) },
-                { path: 'sp/:spid', name: 'post/spid', ...withPageRoute('post/spid', postRoute) },
+                { path: 'page/:page(\\d+)', name: 'post+p', ...postRoute },
+                { path: 'f/:fid(\\d+)', name: 'post/fid', ...withPageRoute('post/fid', postRoute) },
+                { path: 't/:tid(\\d+)', name: 'post/tid', ...withPageRoute('post/tid', postRoute) },
+                { path: 'p/:pid(\\d+)', name: 'post/pid', ...withPageRoute('post/pid', postRoute) },
+                { path: 'sp/:spid(\\d+)', name: 'post/spid', ...withPageRoute('post/spid', postRoute) },
                 { path: ':pathMatch(.*)*', name: 'post/param', ...withPageRoute('post/param', postRoute) }
             ]
         },
@@ -63,8 +72,8 @@ export default createRouter({
             name: 'user',
             ...userRoute,
             children: [
-                { path: 'page/:page', name: 'user+p', ...userRoute },
-                { path: 'id/:uid', name: 'user/uid', ...withPageRoute('user/uid', userRoute) },
+                { path: 'page/:page(\\d+)', name: 'user+p', ...userRoute },
+                { path: 'id/:uid(\\d+)', name: 'user/uid', ...withPageRoute('user/uid', userRoute) },
                 { path: 'n/:name', name: 'user/name', ...withPageRoute('user/name', userRoute) },
                 { path: 'dn/:displayName', name: 'user/displayName', ...withPageRoute('user/displayName', userRoute) }
             ]

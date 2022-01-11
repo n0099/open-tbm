@@ -118,9 +118,9 @@ export default defineComponent({
 
 <style scoped>
 .selectUserBy {
-    flex-grow: 0.3;
+    flex-grow: .3;
 }
 .uidCompareBy {
-    flex-grow: 0.1;
+    flex-grow: .1;
 }
 </style>

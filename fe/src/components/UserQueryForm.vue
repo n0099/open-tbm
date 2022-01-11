@@ -16,10 +16,10 @@
 </template>
 
 <script lang="ts">
+import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './SelectTiebaUser.vue';
+import SelectTiebaUser, { selectTiebaUserBy } from './SelectTiebaUser.vue';
 import type { BaiduUserID, TiebaUserGenderQP } from '@/api/index.d';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
-import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
-import SelectTiebaUser, { selectTiebaUserBy } from '@/components/SelectTiebaUser.vue';
 
 import type { PropType } from 'vue';
 import { defineComponent, reactive, toRefs, watchEffect } from 'vue';

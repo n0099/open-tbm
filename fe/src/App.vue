@@ -1,7 +1,7 @@
 <template>
     <GlobalNavBar />
     <HorizontalMobileMessage />
-    <img id="loadingBlocksRouteChange" :src="`${baseUrl}assets/icon-loading-blocks.svg`" class="d-none" />
+    <img id="loadingBlocksRouteChange" src="../public/assets/icon-loading-blocks.svg" class="d-none" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
             <RouterView />
@@ -34,9 +34,8 @@ import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 export default defineComponent({
     components: { RouterView, ConfigProvider, GlobalNavBar, HorizontalMobileMessage },
     setup() {
-        const baseUrl = process.env.BASE_URL;
         onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
-        return { AntdZhCn, baseUrl };
+        return { AntdZhCn };
     }
 });
 </script>

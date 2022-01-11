@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import { isRouteChangeTriggeredByPostsNavScrollEvent } from '@/components/Post/ViewList.vue';
+import { isRouteChangeTriggeredByPostsNavScrollEvent } from './ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameWithPage } from '@/router';

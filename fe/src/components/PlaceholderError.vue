@@ -1,6 +1,5 @@
 <template>
     <div class="text-center">
-        <hr />
         <template v-if="error === null">
             <span class="errorCode text-muted">error</span>
         </template>

@@ -24,7 +24,7 @@
         </div>
     </div>
     <div class="container">
-        <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" />
+        <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
         <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
     </div>
 </template>

@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import './tiebaUserPortrait.css';
+import './tiebaPostElements.css';
 import { ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from '@/components/Post/ViewList.vue';
 import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';

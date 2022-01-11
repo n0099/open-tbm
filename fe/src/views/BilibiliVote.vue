@@ -56,18 +56,18 @@
 </template>
 
 <script lang="ts">
+import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import type { CandidatesName, CountByTimeGranularity, IsValid, Top10CandidatesTimeline, Top50OfficialValidVotesCount } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
 import { tiebaUserLink } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
-import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import _ from 'lodash';
-import { DateTime } from 'luxon';
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { DateTime } from 'luxon';
+import _ from 'lodash';
 
 import * as echarts from 'echarts/core';
 import type { OptionDataItem } from 'echarts/types/src/util/types';
@@ -684,7 +684,7 @@ export default defineComponent({
 
 <style scoped>
 .echarts {
-    margin-top: 0.5rem;
+    margin-top: .5rem;
 }
 #top50CandidatesCount {
     height: 32rem;

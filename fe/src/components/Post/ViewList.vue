@@ -139,7 +139,7 @@
 </template>
 
 <script lang="ts">
-import './tiebaUserPortrait.css';
+import './tiebaPostElements.css';
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
 import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
@@ -275,6 +275,6 @@ export default defineComponent({
     padding: .25rem;
 }
 .sub-reply-user-info {
-    font-size: 0.9rem;
+    font-size: .9rem;
 }
 </style>
