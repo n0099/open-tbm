@@ -12,18 +12,18 @@
                     </select>
                 </div>
             </div>
-            <label class="col-1 col-form-label text-center">贴子类型</label>
+            <label class="col-1 col-form-label text-center">帖子类型</label>
             <div class="col my-auto">
                 <div class="input-group">
                     <div class="form-check form-check-inline">
                         <input v-model="uniqueParams.postTypes.value" id="paramPostTypesThread"
                                type="checkbox" value="thread" class="form-check-input" />
-                        <label class="form-check-label" for="paramPostTypesThread">主题贴</label>
+                        <label class="form-check-label" for="paramPostTypesThread">主题帖</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input v-model="uniqueParams.postTypes.value" id="paramPostTypesReply"
                                type="checkbox" value="reply" class="form-check-input" />
-                        <label class="form-check-label" for="paramPostTypesReply">回复贴</label>
+                        <label class="form-check-label" for="paramPostTypesReply">回复帖</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input v-model="uniqueParams.postTypes.value" id="paramPostTypesSubReply"
@@ -40,11 +40,11 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="sort-amount-down" /></span>
                     <select v-model="uniqueParams.orderBy.value"
                             :class="{ 'is-invalid': isOrderByInvalid }" class="form-select form-control">
-                        <option value="default">默认（按贴索引查询按贴子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
+                        <option value="default">默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
                         <option value="postTime">发帖时间</option>
-                        <optgroup label="贴子ID">
-                            <option value="tid">主题贴tid</option>
-                            <option value="pid">回复贴pid</option>
+                        <optgroup label="帖子ID">
+                            <option value="tid">主题帖tid</option>
+                            <option value="pid">回复帖pid</option>
                             <option value="spid">楼中楼spid</option>
                         </optgroup>
                     </select>
@@ -266,12 +266,12 @@ export default defineComponent({
             const currentQueryType = getCurrentQueryType();
             switch (currentQueryType) {
                 case 'empty':
-                    notyShow('warning', '请选择贴吧或/并输入查询参数<br />勿只选择贴子类型参数');
+                    notyShow('warning', '请选择贴吧或/并输入查询参数<br />勿只选择帖子类型参数');
                     return false; // exit early
                 case 'postID':
                     if (clearedUniqueParams.fid !== undefined) {
                         useState.uniqueParams.fid.value = 0; // reset fid to default,
-                        notyShow('info', '已移除按贴索引查询所不需要的查询贴吧参数');
+                        notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
                         submitRoute(); // update route to match new params without fid
                     }
                     break;
@@ -304,7 +304,7 @@ export default defineComponent({
                         const required = paramsRequiredPostTypes[param.name];
                         if (!isRequiredPostTypes(postTypes, required)) {
                             useState.invalidParamsIndex.push(paramIndex);
-                            notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求贴子类型为${requiredPostTypesToString(required)}`);
+                            notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求帖子类型为${requiredPostTypesToString(required)}`);
                         }
                     }
                 });
@@ -317,7 +317,7 @@ export default defineComponent({
                 const required = orderByRequiredPostTypes[orderBy];
                 if (!isRequiredPostTypes(postTypes, required)) {
                     state.isOrderByInvalid = true;
-                    notyShow('warning', `排序方式与查询贴子类型要求不匹配<br />当前要求贴子类型为${requiredPostTypesToString(required)}`);
+                    notyShow('warning', `排序方式与查询帖子类型要求不匹配<br />当前要求帖子类型为${requiredPostTypesToString(required)}`);
                 }
             }
 
@@ -335,7 +335,7 @@ export default defineComponent({
         const currentQueryTypeDesc = computed(() => {
             const currentQueryType = getCurrentQueryType();
             if (currentQueryType === 'fid') return '按吧索引查询';
-            if (currentQueryType === 'postID') return '按贴索引查询';
+            if (currentQueryType === 'postID') return '按帖索引查询';
             if (currentQueryType === 'search') return '搜索查询';
             return '空查询';
         });

@@ -63,7 +63,7 @@ const commonSeriesOption: LineSeriesOption = {
     universalTransition: true
 };
 const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption> = {
-    title: { text: '吧贴量统计' },
+    title: { text: '吧帖量统计' },
     axisPointer: { type: 'shadow' },
     tooltip: { trigger: 'axis' },
     ...extendCommonToolbox({
@@ -86,12 +86,12 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     series: [{
         ...commonSeriesOption,
         id: 'thread',
-        name: '主题贴（右轴）',
+        name: '主题帖（右轴）',
         yAxisIndex: 1
     }, {
         ...commonSeriesOption,
         id: 'reply',
-        name: '回复贴',
+        name: '回复帖',
         stack: 'postsCount'
     }, {
         ...commonSeriesOption,
@@ -126,7 +126,7 @@ export default defineComponent({
             }
             emptyChartSeriesData(chart);
             chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
-                { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧贴量统计` } }
+                { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧帖量统计` } }
             );
 
             const statsResult = throwIfApiError(await apiStatsForumPostsCount(state.query)

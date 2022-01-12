@@ -10,7 +10,7 @@
                     </div>
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
-                                    class="badge bg-light rounded-pill link-dark">只看此贴</RouterLink>
+                                    class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
                         <PostCommonMetadataIconLinks :meta="thread" postTypeID="tid" />
                         <PostTimeBadge :time="thread.postTime" tippyPrefix="发帖时间：" badgeColor="success" />
                     </div>

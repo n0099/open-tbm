@@ -96,10 +96,10 @@ export default defineComponent({
                 switch (queryFormRef.value?.getCurrentQueryType()) {
                     case 'fid':
                     case 'search':
-                        document.title = `第${page}页 - ${forumName} - 贴子查询 - 贴吧云监控`;
+                        document.title = `第${page}页 - ${forumName} - 帖子查询 - 贴吧云监控`;
                         break;
                     case 'postID':
-                        document.title = `第${page}页 - 【${forumName}】${threadTitle} - 贴子查询 - 贴吧云监控`;
+                        document.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询 - 贴吧云监控`;
                         break;
                 }
             }

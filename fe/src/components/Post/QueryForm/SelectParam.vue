@@ -21,12 +21,12 @@ export default defineComponent({
     },
     setup() {
         const paramsGroup = ref({
-            贴子ID: {
-                tid: 'tid（主题贴ID）',
-                pid: 'pid（回复贴ID）',
+            帖子ID: {
+                tid: 'tid（主题帖ID）',
+                pid: 'pid（回复帖ID）',
                 spid: 'spid（楼中楼ID）'
             },
-            所有贴子类型: {
+            所有帖子类型: {
                 postTime: '发帖时间',
                 authorUid: '发帖人UID',
                 authorName: '发帖人用户名',
@@ -34,23 +34,23 @@ export default defineComponent({
                 authorGender: '发帖人性别',
                 authorManagerType: '发帖人吧务级别'
             },
-            仅主题贴: {
+            仅主题帖: {
                 latestReplyTime: '最后回复时间',
-                threadTitle: '主题贴标题',
-                threadViewNum: '主题贴浏览量',
-                threadShareNum: '主题贴分享量',
-                threadReplyNum: '主题贴回复量',
-                threadProperties: '主题贴属性',
+                threadTitle: '主题帖标题',
+                threadViewNum: '主题帖浏览量',
+                threadShareNum: '主题帖分享量',
+                threadReplyNum: '主题帖回复量',
+                threadProperties: '主题帖属性',
                 latestReplierUid: '最后回复人UID',
                 latestReplierName: '最后回复人用户名',
                 latestReplierDisplayName: '最后回复人覆盖名',
                 latestReplierGender: '最后回复人性别'
             },
-            仅回复贴: {
+            仅回复帖: {
                 replySubReplyNum: '楼中楼回复量'
             },
-            仅回复贴或楼中楼: {
-                postContent: '贴子内容',
+            仅回复帖或楼中楼: {
+                postContent: '帖子内容',
                 authorExpGrade: '发帖人经验等级'
             }
         });

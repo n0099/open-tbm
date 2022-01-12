@@ -126,7 +126,7 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     }, {
         ...commonSeriesOption,
         id: 'savePostsTiming',
-        name: '贴子保存耗时',
+        name: '帖子保存耗时',
         xAxisIndex: 0,
         yAxisIndex: 0,
         stack: 'queueTotalTiming'
@@ -146,7 +146,7 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     }, {
         ...commonSeriesOption,
         id: 'parsedPostTimes',
-        name: '处理贴子量（右轴）',
+        name: '处理帖子量（右轴）',
         xAxisIndex: 1,
         yAxisIndex: 2
     }, {

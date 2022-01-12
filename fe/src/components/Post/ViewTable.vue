@@ -110,7 +110,7 @@ export default defineComponent({
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
                 { title: '1楼pid', dataIndex: 'firstPid', slots: { customRender: 'firstPid' } },
-                { title: '主题贴类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
+                { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
                 { title: '分享量', dataIndex: 'shareNum' },
                 { title: '赞踩量', dataIndex: 'agreeInfo' }, // todo: unknown json struct
                 { title: '旧版客户端赞', dataIndex: 'zanInfo' }, // todo: unknown json struct
