@@ -2,22 +2,17 @@
     height: 38px; /* adopt to bootstrap input group */
 }
 
-.input-group > :not(:first-child) .ant-calendar-picker-input  {
-    border-bottom-left-radius: 0;
-    border-top-left-radius: 0;
+.lazy.loading {
+    opacity: .5;
+    background: #f7f7f7 url('../../public/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }
-.input-group > :not(:last-child) .ant-calendar-picker-input  {
-    border-bottom-right-radius: 0;
-    border-top-right-radius: 0;
+.lazy.loaded {
+    opacity: 1;
+    transition: opacity .5s;
 }
 
-.lazyload, .lazyloading {
-    opacity: 0;
-    background: #f7f7f7 url('../../public/assets/icon-huaji-loading-spinner.gif') no-repeat center;
-}
-.lazyloaded {
-    opacity: 1;
-    transition: opacity .3s;
+.loading {
+    background: url('../../public/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }
 
 a {

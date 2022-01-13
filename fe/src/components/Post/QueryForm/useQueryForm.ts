@@ -58,7 +58,6 @@ export default <
         // move forward index of all params, which after current
         state.invalidParamsIndex = state.invalidParamsIndex.map(invalidParamIndex =>
             (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex));
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         state.params.splice(paramIndex, 1);
     };
     const clearParamDefaultValue = <T extends Param>(param: Param): Partial<Param | T> | null => {

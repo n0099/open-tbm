@@ -37,7 +37,7 @@ export default defineComponent({
     },
     setup(props, { emit }) {
         const timeRange = ref<Moment[]>([]);
-        const timeRangeChanged = ([startTime, endTime]: Moment[]) => {
+        const timeRangeChanged = ([startTime, endTime]: [Moment, Moment]) => {
             emit('update:startTime', startTime.unix());
             emit('update:endTime', endTime.unix());
         };
@@ -45,11 +45,13 @@ export default defineComponent({
         watchEffect(() => {
             timeRange.value = [moment.unix(props.startTime), moment.unix(props.endTime)];
         });
-        // timesAgo will overwrite first assign to timeRange with initial props value
-        timeRange.value = [
+        const initialRangeWithTimesAgo: [Moment, Moment] = [
             moment(DateTime.now().minus(props.timesAgo).startOf('minute').toISO()),
             moment(DateTime.now().startOf('minute').toISO())
         ];
+        // timesAgo will overwrite first assign to timeRange with initial props value
+        timeRange.value = initialRangeWithTimesAgo;
+        timeRangeChanged(initialRangeWithTimesAgo);
 
         return { moment, timeRange, timeRangeChanged };
     }

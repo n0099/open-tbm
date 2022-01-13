@@ -35,11 +35,13 @@ import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api'
 import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
 import { postListItemScrollPosition } from '@/components/Post/ViewList.vue';
 import { compareRouteIsNewQuery, routePageParamNullSafe } from '@/router';
+import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
-import { notyShow } from '@/shared';
+import { notyShow, titleTemplate } from '@/shared';
 
-import { defineComponent, reactive, ref, toRefs, watchEffect } from 'vue';
+import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { useHead } from '@vueuse/head';
 import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
@@ -49,6 +51,7 @@ export default defineComponent({
     setup() {
         const route = useRoute();
         const state = reactive<{
+            title: string,
             forumList: ApiForumList,
             postPages: ApiPostsQuery[],
             currentQueryParams: ObjUnknown,
@@ -58,6 +61,7 @@ export default defineComponent({
             renderType: PostViewRenderer,
             selectedRenderTypes: [PostViewRenderer]
         }>({
+            title: '帖子查询',
             forumList: [],
             postPages: [],
             currentQueryParams: {},
@@ -67,6 +71,7 @@ export default defineComponent({
             renderType: 'list',
             selectedRenderTypes: ['list']
         });
+        useHead({ title: computed(() => titleTemplate(state.title)) });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
         const fetchPosts = async (queryParams: ObjUnknown, isNewQuery: boolean, page = 1) => {
             const startTime = Date.now();
@@ -96,14 +101,17 @@ export default defineComponent({
                 switch (queryFormRef.value?.getCurrentQueryType()) {
                     case 'fid':
                     case 'search':
-                        document.title = `第${page}页 - ${forumName} - 帖子查询 - 贴吧云监控`;
+                        state.title = `第${page}页 - ${forumName} - 帖子查询`;
                         break;
                     case 'postID':
-                        document.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询 - 贴吧云监控`;
+                        state.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
                         break;
                 }
             }
-            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
+            const networkTime = Date.now() - startTime;
+            await nextTick(); // wait for child components finish dom update
+            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+            lazyLoadUpdate();
             return true;
         };
 

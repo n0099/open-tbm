@@ -4,7 +4,7 @@
         <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="user.uid" class="row">
             <div class="col-3">
                 <img :data-src="tiebaUserPortraitUrl(user.avatarUrl)"
-                     class="lazyload d-block mx-auto badge bg-light" width="110" height="110" />
+                     class="lazy d-block mx-auto badge bg-light" width="110" height="110" />
             </div>
             <div class="col">
                 <p>百度UID：{{ user.uid }}</p>
@@ -22,9 +22,10 @@
 <script lang="ts">
 import { PageNextButton, PagePrevButton, usePageRoutes } from './usePageNextAndPrevButton';
 import type { ApiUsersQuery, TiebaUserGender } from '@/api/index.d';
+import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import { tiebaUserPortraitUrl } from '@/shared';
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import { defineComponent, watch } from 'vue';
 
 export default defineComponent({
     components: { PageNextButton, PagePrevButton },
@@ -43,6 +44,7 @@ export default defineComponent({
             return gender === null ? 'NULL' : gendersList[gender];
         };
         const pageRoutes = usePageRoutes(props.users.pages.currentPage);
+        watch(() => props.users, lazyLoadUpdate);
         return { tiebaUserPortraitUrl, userGender, pageRoutes };
     }
 });

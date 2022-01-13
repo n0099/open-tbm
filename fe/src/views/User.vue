@@ -21,7 +21,7 @@ import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart } from '@/shared';
 import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
 
-import { defineComponent, reactive, toRefs, watchEffect } from 'vue';
+import { defineComponent, nextTick, reactive, toRefs, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import _ from 'lodash';
@@ -72,7 +72,9 @@ export default defineComponent({
             }
             if (isNewQuery) state.userPages = [usersQuery];
             else state.userPages = _.sortBy([...state.userPages, usersQuery], i => i.pages.currentPage);
-            notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemsCount}条记录 耗时${Date.now() - startTime}ms`);
+            const networkTime = Date.now() - startTime;
+            await nextTick(); // wait for child components finish dom update
+            notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemsCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
             return true;
         };
         fetchUsersData(route, true);

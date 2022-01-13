@@ -24,7 +24,7 @@
             </SubMenu>
         </template>
     </Menu>
-    <a @click="isPostsNavExpanded = !isPostsNavExpanded"
+    <a @click="togglePostsNavExpanded"
        class="posts-nav-expanded col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
         <!-- https://github.com/FortAwesome/vue-fontawesome/issues/313 -->
         <span v-show="isPostsNavExpanded"><FontAwesomeIcon icon="angle-left" /></span>
@@ -43,6 +43,7 @@ import { removeEnd } from '@/shared';
 import type { PropType } from 'vue';
 import { defineComponent, onUnmounted, reactive, toRefs, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
@@ -58,14 +59,14 @@ export default defineComponent({
         const state = reactive<{
             expandedPages: string[],
             selectedThread: string[],
-            isPostsNavExpanded: boolean,
             firstPostInView: { page: number, pid: Pid, tid: Tid }
         }>({
             expandedPages: [],
             selectedThread: [],
-            isPostsNavExpanded: false,
             firstPostInView: { tid: 0, pid: 0, page: 0 }
         });
+        const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
+
         let isScrollTriggeredByNavigate = false;
         const navigate = (page: number | string, tid?: string, pid?: Pid | string) => {
             router.replace({
@@ -158,7 +159,7 @@ export default defineComponent({
             ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
         });
 
-        return { ...toRefs(state), navigate, selectThread };
+        return { ...toRefs(state), isPostsNavExpanded, togglePostsNavExpanded, navigate, selectThread };
     }
 });
 </script>

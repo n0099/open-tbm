@@ -15,14 +15,14 @@
         <template #authorInfo="{ record: { authorUid, authorManagerType } }">
             <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                 <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                     class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
+                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
             </a>
             <UserTag :user="{ managerType: authorManagerType }" />
         </template>
         <template #latestReplierInfo="{ record: { latestReplierUid } }">
             <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
                 <img :data-src="tiebaUserPortraitUrl(getUser(latestReplierUid).avatarUrl)"
-                     class="tieba-user-portrait-small lazyload" /> {{ renderUsername(latestReplierUid) }}
+                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(latestReplierUid) }}
             </a>
         </template>
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
@@ -32,7 +32,7 @@
                 <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
                     <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                         <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                             class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
+                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                     </a>
                     <UserTag :user="{
                         uid: { current: authorUid, thread: threadAuthorUid },
@@ -41,14 +41,14 @@
                     }" />
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                    <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-html="content" />
+                    <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-viewer.static v-html="content" />
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                            :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
                         <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
                             <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                                 <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
-                                     class="tieba-user-portrait-small lazyload" /> {{ renderUsername(authorUid) }}
+                                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                             </a>
                             <UserTag :user="{
                                 uid: { current: authorUid, thread: threadAuthorUid, reply: replyAuthorUid },
@@ -57,7 +57,7 @@
                             }" />
                         </template>
                         <template #expandedRowRender="{ record: { content: subReplyContent } }">
-                            <span v-html="subReplyContent" />
+                            <span v-viewer.static v-html="subReplyContent" />
                         </template>
                     </Table>
                 </template>
@@ -67,9 +67,8 @@
 </template>
 
 <script lang="ts">
-import './tiebaPostElements.css';
 import { ThreadTag, UserTag } from './';
-import { baseGetUser, baseRenderUsername } from '@/components/Post/ViewList.vue';
+import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';
 import type { Pid, Tid } from '@/shared';
 import { tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';

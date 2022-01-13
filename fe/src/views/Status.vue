@@ -35,6 +35,7 @@ import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { useIntervalFn } from '@vueuse/core';
 import { Switch } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
@@ -162,7 +163,6 @@ export default defineComponent({
     components: { FontAwesomeIcon, Switch, QueryTimeGranularity, QueryTimeRange },
     setup() {
         const chartDom = ref<HTMLElement>();
-        const autoRefreshIntervalID = ref(0);
         const state = reactive<{
             autoRefresh: boolean,
             query: ApiStatusQP
@@ -195,10 +195,11 @@ export default defineComponent({
                 .value();
             chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
         };
+        const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
 
         watch(() => state.autoRefresh, autoRefresh => {
-            if (autoRefresh) autoRefreshIntervalID.value = window.setInterval(submitQueryForm, 60000); // refresh data every minute
-            else clearInterval(autoRefreshIntervalID.value);
+            if (autoRefresh) resume();
+            else pause();
         });
         onMounted(submitQueryForm);
 

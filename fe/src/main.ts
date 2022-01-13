@@ -1,7 +1,9 @@
 import { createApp } from 'vue';
+import { createHead } from '@vueuse/head';
 import App from '@/App.vue';
 import router from '@/router';
 import store from '@/store';
+
 import 'ant-design-vue/dist/antd.css';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -9,8 +11,8 @@ import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
-import 'lazysizes';
 import '@/shared/style.css';
+
 import * as fontAwesomeIcons from '@/shared/fontAwesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 library.add(...Object.values(fontAwesomeIcons));
@@ -26,5 +28,5 @@ if (process.env.NODE_ENV === 'development') {
     await import('@/stats.js');
 }
 
-const app = createApp(App).use(store).use(router);
+export const app = createApp(App).use(store).use(router).use(createHead());
 app.mount('#app');

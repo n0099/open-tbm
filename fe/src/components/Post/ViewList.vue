@@ -43,19 +43,19 @@
                         </span>
                     </div>
                     <div class="col-auto badge bg-light" role="group">
-                        <a :href="tiebaUserLink(getUser(thread.authorUid).name)" target="_blank">
+                        <RouterLink :to="userRoute(thread.authorUid)" target="_blank">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
                                   class="fw-normal link-success">楼主：</span>
                             <span v-else class="fw-normal link-info">楼主及最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
-                        </a>
+                        </RouterLink>
                         <UserTag v-if="thread.authorManagerType !== null"
                                  :user="{ managerType: thread.authorManagerType }" />
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
-                            <a :href="tiebaUserLink(getUser(thread.latestReplierUid).name)" target="_blank" class="ms-2">
+                            <RouterLink :to="userRoute(thread.latestReplierUid)" target="_blank" class="ms-2">
                                 <span class="fw-normal link-secondary">最后回复：</span>
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
-                            </a>
+                            </RouterLink>
                         </template>
                         <PostTimeBadge :time="thread.latestReplyTime" tippyPrefix="最后回复时间：" badgeColor="secondary" />
                     </div>
@@ -85,12 +85,12 @@
                 <div class="reply-info row shadow-sm bs-callout bs-callout-info">
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                          class="reply-user-info col-auto text-center sticky-top shadow-sm badge bg-light">
-                        <a :href="tiebaUserLink(author.name)" target="_blank" class="d-block">
+                        <RouterLink :to="userRoute(author.name)" target="_blank" class="d-block">
                             <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
-                                 class="tieba-user-portrait-large lazyload" />
+                                 class="tieba-user-portrait-large lazy" />
                             <p class="my-0">{{ author.name }}</p>
                             <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
-                        </a>
+                        </RouterLink>
                         <UserTag :user="{
                             uid: { current: reply.authorUid, thread: thread.authorUid },
                             managerType: reply.authorManagerType,
@@ -98,7 +98,7 @@
                         }" />
                     </div>
                     <div class="col me-2 px-1 border-start overflow-auto">
-                        <div class="p-2" v-html="reply.content" />
+                        <div v-viewer.static class="p-2" v-html="reply.content" />
                         <template v-if="reply.subReplies.length > 0">
                             <div v-for="(subReplyGroup, _k) in reply.subReplies" :key="_k"
                                  class="sub-reply-group bs-callout bs-callout-success">
@@ -108,17 +108,17 @@
                                         @mouseleave="hoveringSubReplyID = 0"
                                         class="sub-reply-item list-group-item">
                                         <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
-                                            <a v-if="subReplyGroup[subReplyIndex - 1] === undefined"
-                                               :href="tiebaUserLink(author.name)"
-                                               target="_blank" class="sub-reply-user-info text-wrap badge bg-light">
-                                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-portrait-small lazyload" />
+                                            <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"
+                                                        :to="userRoute(author.uid)" target="_blank"
+                                                        class="sub-reply-user-info text-wrap badge bg-light">
+                                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-portrait-small lazy" />
                                                 <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
                                                 <UserTag :user="{
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
                                                     managerType: subReply.authorManagerType,
                                                     expGrade: subReply.authorExpGrade
                                                 }" />
-                                            </a>
+                                            </RouterLink>
                                             <div class="float-end badge bg-light">
                                                 <div class="d-inline" :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
                                                     <PostCommonMetadataIconLinks :meta="subReply" postTypeID="spid" />
@@ -126,7 +126,7 @@
                                                 <PostTimeBadge :time="subReply.postTime" badgeColor="info" />
                                             </div>
                                         </template>
-                                        <div v-html="subReply.content" />
+                                        <div v-viewer.static v-html="subReply.content" />
                                     </li>
                                 </ul>
                             </div>
@@ -139,15 +139,14 @@
 </template>
 
 <script lang="ts">
-import './tiebaPostElements.css';
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
+import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
-import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord, TiebaUserRecord } from '@/api/index.d';
+import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
 import type { Modify } from '@/shared';
-import { tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
+import { tiebaUserPortraitUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
-import { dateTimeFromUTC8 } from '@/shared/echarts';
 
 import type { PropType } from 'vue';
 import { computed, defineComponent, onMounted, ref } from 'vue';
@@ -157,20 +156,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 
-export const baseGetUser = (users: TiebaUserRecord[]) => (uid: BaiduUserID): TiebaUserRecord => _.find(users, { uid }) ?? {
-    uid: 0,
-    avatarUrl: '',
-    name: '未知用户',
-    displayName: null,
-    fansNickname: null,
-    gender: 0,
-    iconInfo: []
-};
-export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUser>) => (uid: BaiduUserID) => {
-    const { name, displayName } = injectedGetUser(uid);
-    if (name === null) return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
-    return name + (displayName === null ? '' : `（${displayName}）`);
-};
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.substring(1);
     const idSelectorToHash = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
@@ -179,8 +164,8 @@ export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded)
         top: 80 // .reply-title { top: 5rem; }
     };
 };
-
 export const isRouteChangeTriggeredByPostsNavScrollEvent = ref(false);
+
 export default defineComponent({
     components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
     props: {
@@ -221,6 +206,7 @@ export default defineComponent({
         });
         const getUser = baseGetUser(props.initialPosts.users);
         const renderUsername = baseRenderUsername(getUser);
+        const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
         onMounted(initialTippy);
         setComponentCustomScrollBehaviour((to, from) => {
@@ -232,7 +218,7 @@ export default defineComponent({
             return undefined;
         });
 
-        return { DateTime, tiebaPostLink, tiebaUserLink, tiebaUserPortraitUrl, dateTimeFromUTC8, hoveringSubReplyID, posts, getUser, renderUsername };
+        return { DateTime, tiebaUserPortraitUrl, hoveringSubReplyID, posts, getUser, renderUsername, userRoute };
     }
 });
 </script>

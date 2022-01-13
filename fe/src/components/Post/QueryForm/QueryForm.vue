@@ -345,6 +345,18 @@ export default defineComponent({
 });
 </script>
 
+<style>
+/* remove borders for <RangePicker> in the start, middle and end of .input-group */
+.input-group > :not(:first-child) .ant-calendar-picker-input {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}
+.input-group > :not(:last-child) .ant-calendar-picker-input {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+</style>
+
 <style scoped>
 .query-params > * {
     margin-top: -1px;
