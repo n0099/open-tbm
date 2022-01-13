@@ -2541,6 +2541,50 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vueuse/core@npm:^7.5.3":
+  version: 7.5.3
+  resolution: "@vueuse/core@npm:7.5.3"
+  dependencies:
+    "@vueuse/shared": 7.5.3
+    vue-demi: "*"
+  peerDependencies:
+    "@vue/composition-api": ^1.1.0
+    vue: ^2.6.0 || ^3.2.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+    vue:
+      optional: true
+  checksum: 685c59230e283e4abed67adc045f160021753634e565a9f168706040f378fe8950dfadb0b8f261371abb9b71c3b4a9f0a472a914783521bc2dc562f04deb7687
+  languageName: node
+  linkType: hard
+
+"@vueuse/head@npm:^0.7.4":
+  version: 0.7.4
+  resolution: "@vueuse/head@npm:0.7.4"
+  peerDependencies:
+    vue: ">=3"
+  checksum: 5860a044fcb89e6a9b28e29643fad05ad1a0d9d59adda7b62005bee6a233c2be44c6777f57ea66791cc4d0a3dc3e5dbb71745b680c47411b6a9c011bae6c8e48
+  languageName: node
+  linkType: hard
+
+"@vueuse/shared@npm:7.5.3":
+  version: 7.5.3
+  resolution: "@vueuse/shared@npm:7.5.3"
+  dependencies:
+    vue-demi: "*"
+  peerDependencies:
+    "@vue/composition-api": ^1.1.0
+    vue: ^2.6.0 || ^3.2.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+    vue:
+      optional: true
+  checksum: 8b38323c3eabf754ed8a36726cdf86cf41c2799334fce6e797576fe605dfdb32176654c99140dc16ef545a517217a86fa39b12a280839f08409cefebfe96222f
+  languageName: node
+  linkType: hard
+
 "@webassemblyjs/ast@npm:1.11.1":
   version: 1.11.1
   resolution: "@webassemblyjs/ast@npm:1.11.1"
@@ -6205,13 +6249,6 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"lazysizes@npm:^5.3.2":
-  version: 5.3.2
-  resolution: "lazysizes@npm:5.3.2"
-  checksum: 6126c800bee810e27961ceab39e6940391f54ce42241cf11dcdc5effcf42d0f4ba509a6c126f578a20ba4d60ad6a9fbae2b2518c168494fa0184b644dac65bda
-  languageName: node
-  linkType: hard
-
 "levn@npm:^0.4.1":
   version: 0.4.1
   resolution: "levn@npm:0.4.1"
@@ -9001,13 +9038,14 @@ fsevents@~2.3.2:
     "@vue/cli-service": ^5.0.0-rc.1
     "@vue/compiler-sfc": ^3.2.26
     "@vue/eslint-config-typescript": ^10.0.0
+    "@vueuse/core": ^7.5.3
+    "@vueuse/head": ^0.7.4
     ant-design-vue: ^2.2.8
     bootstrap: ^5.1.3
     core-js: ^3.20.2
     echarts: ^5.2.2
     eslint: ^8.6.0
     eslint-plugin-vue: ^8.2.0
-    lazysizes: ^5.3.2
     lodash: ^4.17.21
     luxon: ^2.3.0
     noty: ^3.2.0-beta-deprecated
@@ -9016,6 +9054,8 @@ fsevents@~2.3.2:
     stats.js: ^0.17.0
     tippy.js: ^6.3.7
     typescript: ^4.5.4
+    v-viewer: next
+    vanilla-lazyload: ^17.5.0
     vue: ^3.2.26
     vue-cli-plugin-webpack-bundle-analyzer: ^4.0.0
     vue-router: ^4.0.12
@@ -9384,6 +9424,18 @@ typescript@^4.5.4:
   languageName: node
   linkType: hard
 
+"v-viewer@npm:next":
+  version: 3.0.10
+  resolution: "v-viewer@npm:3.0.10"
+  dependencies:
+    lodash: ^4.17.21
+    viewerjs: ^1.9.0
+  peerDependencies:
+    vue: ^3.0.0
+  checksum: 979cda73be844d657f3f222f8124505f5ff23e0818a1c93090a56a53cbc83649b70ffd967358e41d7e5213e25c453d1d322e1cb380fbef9813051f9cb6a5bb75
+  languageName: node
+  linkType: hard
+
 "v8-compile-cache@npm:^2.0.3":
   version: 2.3.0
   resolution: "v8-compile-cache@npm:2.3.0"
@@ -9401,6 +9453,13 @@ typescript@^4.5.4:
   languageName: node
   linkType: hard
 
+"vanilla-lazyload@npm:^17.5.0":
+  version: 17.5.0
+  resolution: "vanilla-lazyload@npm:17.5.0"
+  checksum: 77cd6bb68697acf0b2f2c7a05f7346c5df8e1589a503656961dd72720fcfcee7a00bea3b4c8753fdf8fbafe21b16649f171b648f5c135a597a25afeb269d467e
+  languageName: node
+  linkType: hard
+
 "vary@npm:~1.1.2":
   version: 1.1.2
   resolution: "vary@npm:1.1.2"
@@ -9415,12 +9474,35 @@ typescript@^4.5.4:
   languageName: node
   linkType: hard
 
+"viewerjs@npm:^1.9.0":
+  version: 1.10.2
+  resolution: "viewerjs@npm:1.10.2"
+  checksum: 092fb70ef97cfcf47d7f18fb2a2389c2142fd498418764a38558122eaefdecf08302218f03d72b9a9b8c5138c8c31859bda25bd560c6ba70ae17f961cbd6e279
+  languageName: node
+  linkType: hard
+
 "vue-cli-plugin-webpack-bundle-analyzer@npm:^4.0.0":
   version: 4.0.0
   resolution: "vue-cli-plugin-webpack-bundle-analyzer@npm:4.0.0"
   dependencies:
     webpack-bundle-analyzer: ^4.2.0
   checksum: 391daeb61e0fad193da835ee7b39455bb7f12350ec75dfda2ca37715ec61d059e7f18ca144f46725696c0f35aca23d85a55c3ce696c2fb321f9ca952986ed64d
+  languageName: node
+  linkType: hard
+
+"vue-demi@npm:*":
+  version: 0.12.1
+  resolution: "vue-demi@npm:0.12.1"
+  peerDependencies:
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^3.0.0-0 || ^2.6.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  bin:
+    vue-demi-fix: bin/vue-demi-fix.js
+    vue-demi-switch: bin/vue-demi-switch.js
+  checksum: d39a43e765e5bc34cf5b378ccff53a521e824f8c55aae6a9163c294364e8af593c5331b3b3b1b679b28096a3142abed5aed07e2dfb581c96f2eba88a176666f2
   languageName: node
   linkType: hard
 
