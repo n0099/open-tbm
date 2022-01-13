@@ -1,6 +1,9 @@
 <?php
 use Spatie\Regex\Regex;
 
+$replaceWithHttps = static fn (string $url) => str_replace('http://', 'https://', $url);
+$replaceImageEndpoint = static fn (string $url) => str_replace('//t.hiphotos.baidu.com', '//tiebapic.baidu.com', $replaceWithHttps($url));
+
 try {
 ?>
 @spaceless
@@ -17,7 +20,12 @@ try {
                     {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[有效] http://pan.baidu.com/s/", "type": "1", "url_type": "2"}
                 --}}
                 <?php
-                    $skipCheckUrl = rawurldecode(Regex::match('@^http://tieba\.baidu\.com/mo/q/checkurl\?url=(.+?)(&|$)@', $item['link'])->group(1));
+                    $skipCheckUrl = rawurldecode(
+                        Regex::match(
+                            '@^http://tieba\.baidu\.com/mo/q/checkurl\?url=(.+?)(&|$)@',
+                            $item['link']
+                        )->groupOr(1, $item['link'])
+                    );
                 ?>
                 <a href="{{ empty($skipCheckUrl) ? $item['link'] : $skipCheckUrl }}" target="_blank">{{ $item['text'] }}</a>
                 @break
@@ -55,7 +63,8 @@ try {
                         : $emoticonsIndex[$emoticonInfo['prefix']]);
                 $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonInfo['class']}/{$emoticonInfo['prefix']}{$emoticonInfo['index']}.{$emoticonInfo['type']}";
                 ?>
-                <img class="lazyload" data-src="{{ $emoticonUrl }}" alt="{{ $item['c'] }}" />
+                <img class="lazy" referrerpolicy="no-referrer"
+                     data-src="{{ $emoticonUrl }}" alt="{{ $item['c'] }}" />
                 @break
             @case (3)
                 {{--图片
@@ -74,9 +83,9 @@ try {
                     }
                     http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
                 --}}
-                <div class="tieba-image-zoom-in">
-                    <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['origin_src'] ?? $item['src'] }}" />
-                </div>
+                <img class="tieba-image lazy" referrerpolicy="no-referrer"
+                     data-src="{{ $replaceImageEndpoint($item['cdn_src']) }}"
+                     data-origin="{{ $replaceImageEndpoint($item['origin_src'] ?? $item['src']) }}" />
                 @break
             @case (4) {{--@用户 {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
                 <a href="http://tieba.baidu.com/home/main?un={{ ltrim($item['text'], '@') }}" target="_blank">{{ $item['text'] }}</a>
@@ -106,7 +115,8 @@ try {
                     }
                 --}}
                 @if (isset($item['src']))
-                    <video controls poster="{{ $item['src'] }}" src="{{ $item['link'] }}" />
+                    <video controls poster="{{ $item['src'] }}" src="{{ $item['link'] }}"></video>
+                    <a href="{{ $item['text'] }}" target="_blank">贴吧视频播放页</a>
                 @else
                     <a href="{{ $item['text'] }}" target="_blank">
                         [[外站视频：{{ $item['text'] }}]]
@@ -129,7 +139,8 @@ try {
                         "native_app": []
                     }
                 --}}
-                <span>[[语音,时长:{{ $item['during_time'] }}s]]</span>{{-- TODO: fill with voice player and play source url --}}
+                {{-- TODO: fill with voice player and play source url --}}
+                <span>[[语音 {{ $item['voice_md5'] }} 时长:{{ $item['during_time'] }}s]]</span>
                 @break
             @case (11)
                 {{--客户端表情包
@@ -144,7 +155,8 @@ try {
                         "packet_name": ""
                     }
                 --}}
-                <img class="d-block lazyload" data-src="{{ str_replace('http://', 'https://', $item['dynamic']) }}" alt="{{ $item['c'] }}" />
+                <img class="d-block lazy" referrerpolicy="no-referrer"
+                     data-src="{{ $replaceWithHttps($item['dynamic']) }}" alt="{{ $item['c'] }}" />
                 @break
             @case (16)
                 {{--涂鸦
@@ -162,9 +174,8 @@ try {
                         "big_cdn_src": "http://t.hiphotos.baidu.com/forum/w%3D960%3Bq%3D60/sign={unknown token}/{image hash id}.jpg"
                     }
                 --}}
-                <div class="tieba-image-zoom-in">
-                    <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['graffiti_info']['url'] }}" alt="贴吧涂鸦" />
-                </div>
+                <img class="tieba-image lazy" referrerpolicy="no-referrer"
+                     data-src="{{ $replaceWithHttps($item['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
                 @break
             @case (17) {{--活动 not found --}}
                 @break
@@ -189,9 +200,8 @@ try {
                     }
                 --}}
                 <a href="{{ $item['meme_info']['detail_link'] }}" target="_blank">
-                    <div class="tieba-image-zoom-in">
-                        <img class="tieba-image lazyload" referrerpolicy="no-referrer" data-src="{{ $item['src'] }}" />
-                    </div>
+                    <img class="tieba-image lazy" referrerpolicy="no-referrer"
+                         data-src="{{ $replaceWithHttps($item['src']) }}" />
                 </a>
                 @break
             @default
