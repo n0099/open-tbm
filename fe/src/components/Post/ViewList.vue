@@ -85,7 +85,7 @@
                 <div class="reply-info row shadow-sm bs-callout bs-callout-info">
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                          class="reply-user-info col-auto text-center sticky-top shadow-sm badge bg-light">
-                        <RouterLink :to="userRoute(author.name)" target="_blank" class="d-block">
+                        <RouterLink :to="userRoute(author.uid)" target="_blank" class="d-block">
                             <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
                                  class="tieba-user-portrait-large lazy" />
                             <p class="my-0">{{ author.name }}</p>

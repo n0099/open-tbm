@@ -19,7 +19,7 @@
             <div class="col-5">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeRange v-model:startTime="query.startTime" v-model:endTime="query.endTime" :timesAgo="{ day: 1 }" />
+                    <QueryTimeRange v-model:startTime="query.startTime" v-model:endTime="query.endTime" :timesAgo="{ day: 14 }" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
@@ -35,14 +35,16 @@
 </template>
 
 <script lang="ts">
+import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
+import QueryTimeRange from '@/components/QueryTimeRange.vue';
 import type { ApiForumList, ApiStatsForumPostsCountQP } from '@/api/index.d';
 import { apiForumList, apiStatsForumPostsCount, throwIfApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
-import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
-import QueryTimeRange from '@/components/QueryTimeRange.vue';
+import { titleTemplate } from '@/shared';
 
 import _ from 'lodash';
 import { defineComponent, reactive, ref, toRefs } from 'vue';
+import { useHead } from '@vueuse/head';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 import * as echarts from 'echarts/core';
@@ -104,6 +106,7 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 export default defineComponent({
     components: { FontAwesomeIcon, QueryTimeGranularity, QueryTimeRange },
     setup() {
+        useHead({ title: titleTemplate('统计') });
         const chartDom = ref<HTMLElement>();
         const state = reactive<{
             query: ApiStatsForumPostsCountQP,

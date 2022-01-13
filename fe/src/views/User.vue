@@ -18,12 +18,13 @@ import UserListPage from '@/components/UserListPage.vue';
 import UserQueryForm from '@/components/UserQueryForm.vue';
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
-import { notyShow, removeEnd, removeStart } from '@/shared';
+import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
 
 import { defineComponent, nextTick, reactive, toRefs, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { useHead } from '@vueuse/head';
 import _ from 'lodash';
 
 export default defineComponent({
@@ -35,6 +36,7 @@ export default defineComponent({
         displayName: String
     },
     setup(props) {
+        useHead({ title: titleTemplate('用户查询') });
         const route = useRoute();
         const state = reactive<{
             params: Pick<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, '' | 'displayNameNULL' | 'nameNULL'>>,

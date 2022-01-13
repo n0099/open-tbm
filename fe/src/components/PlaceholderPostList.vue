@@ -12,7 +12,7 @@
         <div class="col"><hr /></div>
         <div class="w-100" />
         <div class="col">
-            <img :class="{ loading: isLoading }" src="../../public/assets/tombstone-post-list.svg" />
+            <img :class="{ animate: isLoading }" src="../../public/assets/tombstone-post-list.svg" />
         </div>
     </div>
 </template>
@@ -26,7 +26,7 @@ export default {
 </script>
 
 <style scoped>
-.loading {
+.animate {
     animation-name: tombstone-post-list;
     animation-play-state: running;
     animation-iteration-count: infinite;

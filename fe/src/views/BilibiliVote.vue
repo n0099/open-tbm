@@ -60,10 +60,11 @@ import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import type { CandidatesName, CountByTimeGranularity, IsValid, Top10CandidatesTimeline, Top50OfficialValidVotesCount } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
-import { tiebaUserLink } from '@/shared';
+import { tiebaUserLink, titleTemplate } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
 import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { useHead } from '@vueuse/head';
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
@@ -412,6 +413,7 @@ const {
 export default defineComponent({
     components: { FontAwesomeIcon, Table, QueryTimeGranularity },
     setup() {
+        useHead({ title: titleTemplate('bilibili吧2019年吧主公投 - 专题') });
         const state = reactive<{
             query: {
                 top5CandidatesCountByTimeGranularity: CountByTimeGranularity,
