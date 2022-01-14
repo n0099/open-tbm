@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tbm", "tbm.csproj", "{3DAC21AE-4493-4CF2-B887-203A781C12AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3DAC21AE-4493-4CF2-B887-203A781C12AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DAC21AE-4493-4CF2-B887-203A781C12AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DAC21AE-4493-4CF2-B887-203A781C12AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DAC21AE-4493-4CF2-B887-203A781C12AA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A136C5D5-62D8-4451-B139-33124D2A44E5}
+	EndGlobalSection
+EndGlobal
