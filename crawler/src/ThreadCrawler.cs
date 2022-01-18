@@ -9,20 +9,36 @@ namespace tbm
 {
     public class ThreadCrawler : BaseCrawler
     {
-        private string ForumName { get; }
+        public string ForumName { get; }
 
         public ThreadCrawler(ClientRequester clientRequester, string forumName, int fid, uint startPage, uint endPage = 1)
             : base(fid, startPage, endPage, clientRequester) => ForumName = forumName;
 
         public override async Task<ThreadCrawler> DoCrawler()
         {
-            var json = await CrawlSinglePage(StartPage);
-            ParseThreads(ValidateJson(json));
-            EndPage = Math.Min(EndPage, uint.Parse(json.GetProperty("page").GetProperty("total_page").GetString() ?? ""));
-            for (uint page = StartPage + 1; page < EndPage; page++)
+            try
             {
-                json = await CrawlSinglePage(page);
-                ParseThreads(ValidateJson(json));
+                var startPageEl = await CrawlSinglePage(StartPage);
+                ParseThreads(ValidateJson(startPageEl));
+                EndPage = Math.Min(EndPage, uint.Parse(startPageEl.GetProperty("page").GetProperty("total_page").GetString() ?? ""));
+            }
+            catch (Exception e)
+            {
+                throw AddExceptionData(e);
+            }
+            var pages = Enumerable.Range((int)StartPage + 1, (int)EndPage).Select(i => (uint)i).Shuffle();
+            foreach (var page in pages)
+            {
+                try
+                {
+                    ParseThreads(ValidateJson(await CrawlSinglePage(page)));
+                    Console.WriteLine(Posts.Count);
+                }
+                catch (Exception e)
+                {
+                    e.Data["curPage"] = page;
+                    throw;
+                }
             }
             return this;
         }
@@ -30,7 +46,7 @@ namespace tbm
         private void ParseThreads(ArrayEnumerator threads)
         {
             static string? NullIfEmptyJsonLiteral(string json) => json is @"""""" or "[]" ? null : json;
-            var newThreads = threads.Select(t => new ThreadPost()
+            var newThreads = threads.Select(t => new ThreadPost
             {
                 Tid = ulong.Parse(t.GetStrProp("tid")),
                 FirstPid = ulong.Parse(t.GetStrProp("first_post_id")),
@@ -51,12 +67,12 @@ namespace tbm
                 ReplyNum = uint.Parse(t.GetStrProp("reply_num")),
                 ViewNum = uint.Parse(t.GetStrProp("view_num")),
                 ShareNum = t.TryGetProperty("share_num", out var shareNum) ? uint.Parse(shareNum.GetString() ?? "") : null, // topic thread won't have this
-                AgreeNum = uint.Parse(t.GetStrProp("agree_num")),
-                DisagreeNum = uint.Parse(t.GetStrProp("disagree_num")),
+                AgreeNum = int.Parse(t.GetStrProp("agree_num")),
+                DisagreeNum = int.Parse(t.GetStrProp("disagree_num")),
                 Location = NullIfEmptyJsonLiteral(t.GetProperty("location").GetRawText()),
                 ZanInfo = NullIfEmptyJsonLiteral(t.GetProperty("zan").GetRawText())
             });
-            Console.WriteLine(JsonSerializer.Serialize(newThreads));
+            Posts = Posts.Concat(newThreads).ToList();
         }
 
         private static ArrayEnumerator ValidateJson(JsonElement json)
@@ -69,7 +85,7 @@ namespace tbm
         }
 
         private async Task<JsonElement> CrawlSinglePage(uint page) => 
-            await CrawlSinglePage("http://c.tieba.baidu.com/c/f/frs/page", new Dictionary<string, string>()
+            await CrawlSinglePage("http://c.tieba.baidu.com/c/f/frs/page", new Dictionary<string, string>
             {
                 { "kw", ForumName },
                 { "pn", page.ToString() },

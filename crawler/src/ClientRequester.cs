@@ -8,21 +8,18 @@ using System.Threading.Tasks;
 
 namespace tbm
 {
-    public class ClientRequester
+    public record ClientRequester(string ClientVersion)
     {
         private static readonly HttpClient Http = new();
         private static readonly Random Rand = new();
-        private readonly string _clientVersion;
 
-        public ClientRequester(string clientVersion) => _clientVersion = clientVersion;
-
-        public async Task<HttpResponseMessage> Post(string url, Dictionary<string, string> data)
+        public Task<HttpResponseMessage> Post(string url, Dictionary<string, string> data)
         {
             Dictionary<string, string> clientInfo = new()
             {
                 {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
                 {"_client_type", "2"},
-                {"_client_version", _clientVersion}
+                {"_client_version", ClientVersion}
             };
             var postData = clientInfo.Concat(data);
             var sign = postData.Aggregate("", (acc, i) =>
@@ -32,7 +29,18 @@ namespace tbm
             }) + "tiebaclient!!!";
             var signMd5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
             postData = postData.Append(new KeyValuePair<string, string>("sign", signMd5));
-            return await Http.PostAsync(url, new FormUrlEncodedContent(postData));
+
+            var tcs = new TaskCompletionSource();
+            ClientRequesterTcs.Enqueue(tcs);
+            tcs.Task.Wait();
+
+            var res = Http.PostAsync(url, new FormUrlEncodedContent(postData));
+            res.ContinueWith((i) =>
+            {
+                if (i.Result.IsSuccessStatusCode) ClientRequesterTcs.MaxRps += 0.05;
+                else ClientRequesterTcs.MaxRps--;
+            });
+            return res;
         }
     }
 }
