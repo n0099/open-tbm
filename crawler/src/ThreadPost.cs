@@ -2,7 +2,7 @@
 
 namespace tbm
 {
-    public class ThreadPost: IPost
+    public class ThreadPost : IPost
     {
         [Key] public ulong Tid { get; init; }
         public ulong FirstPid { get; init; }

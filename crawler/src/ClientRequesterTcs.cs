@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Timers;
@@ -11,6 +11,7 @@ namespace tbm
         private static readonly Timer Timer = new();
         private static double _maxRps;
         public static int QueueLength { get => Queue.Count; }
+
         public static double MaxRps
         {
             get => _maxRps;
@@ -32,6 +33,12 @@ namespace tbm
             Timer.Enabled = true;
         }
 
-        public static void Enqueue(TaskCompletionSource tcs) => Queue.Enqueue(tcs);
+        public static void Wait()
+        {
+            // https://devblogs.microsoft.com/premier-developer/the-danger-of-taskcompletionsourcet-class/
+            var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            Queue.Enqueue(tcs);
+            tcs.Task.Wait();
+        }
     }
 }

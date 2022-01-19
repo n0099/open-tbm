@@ -21,19 +21,16 @@ namespace tbm
                 {"_client_type", "2"},
                 {"_client_version", ClientVersion}
             };
-            var postData = clientInfo.Concat(data);
+            var postData = clientInfo.Concat(data).ToList();
             var sign = postData.Aggregate("", (acc, i) =>
             {
                 acc += i.Key + '=' + i.Value;
                 return acc;
             }) + "tiebaclient!!!";
             var signMd5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
-            postData = postData.Append(new KeyValuePair<string, string>("sign", signMd5));
+            postData.Add(new KeyValuePair<string, string>("sign", signMd5));
 
-            var tcs = new TaskCompletionSource();
-            ClientRequesterTcs.Enqueue(tcs);
-            tcs.Task.Wait();
-
+            ClientRequesterTcs.Wait();
             var res = Http.PostAsync(url, new FormUrlEncodedContent(postData));
             res.ContinueWith((i) =>
             {

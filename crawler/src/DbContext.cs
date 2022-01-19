@@ -1,13 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace tbm
 {
     public class DbContext : Microsoft.EntityFrameworkCore.DbContext
     {
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
-        public int Fid { get; }
+        public uint Fid { get; }
 
-        public DbContext(int fid) => Fid = fid;
+        public DbContext(uint fid) => Fid = fid;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

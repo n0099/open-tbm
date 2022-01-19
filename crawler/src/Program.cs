@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,12 +14,18 @@ namespace tbm
         {
             AppDomain.CurrentDomain.UnhandledException += (_, args) =>
                 Console.WriteLine($"ExceptionData={JsonSerializer.Serialize(((Exception)args.ExceptionObject).Data)}\n{args.ExceptionObject}");
-            TaskScheduler.UnobservedTaskException += (_, args) =>
+            TaskScheduler.UnobservedTaskException += (_, args) => LogException(args.Exception);
                 Console.WriteLine($"ExceptionData={JsonSerializer.Serialize(args.Exception.Data)}\n{args.Exception}");
 
             var crawler = new ThreadCrawler(new ClientRequester("6.0.2"), "", 0, 1, 100);
             await crawler.DoCrawler();
+            _ = Task.WhenAll(new List<Task>() { crawler.DoCrawler(), crawler.DoCrawler(), crawler.DoCrawler(), crawler.DoCrawler(), crawler.DoCrawler() });
+            Thread.Sleep(1000);
+            await Task.WhenAll(new List<Task>() { crawler.DoCrawler(), crawler.DoCrawler(), crawler.DoCrawler(), crawler.DoCrawler(), crawler.DoCrawler() });
         }
+
+        public static void LogException(Exception e) =>
+            Console.WriteLine($"ExceptionData={JsonSerializer.Serialize(e.Data)}\n{e}");
 
         static void RpsIndicator()
         {

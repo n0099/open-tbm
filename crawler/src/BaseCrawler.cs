@@ -1,29 +1,38 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Fid = System.UInt32;
+using Tid = System.UInt64;
+using Page = System.UInt16;
+using Time = System.UInt32;
 
 namespace tbm
 {
-    public abstract class BaseCrawler
+    public abstract class BaseCrawler<T> where T : BaseCrawler<T>
     {
-        protected int Fid { get; }
-        protected uint StartPage { get; }
-        protected uint EndPage { get; set; }
-        protected List<IPost> Posts { get; set; } = new(50); // rn=50
-        private ClientRequester ClientRequester { get; }
+        protected Fid Fid { get; }
+        protected Page StartPage { get; }
+        protected Page EndPage { get; set; }
+        protected ConcurrentDictionary<Tid, IPost> Posts { get; } = new(1, 50); // rn=50
+        protected static ConcurrentDictionary<Fid, ConcurrentDictionary<Page, Time>> CrawlingThreads { get; } = new(5, 10);
+        protected static ConcurrentDictionary<Fid, ConcurrentDictionary<Page, ushort>> FailedThreads { get; } = new(5, 10);
+        protected const ushort RetryAfter = 300; // 5 minutes
+        private readonly ClientRequester _clientRequester;
 
-        protected BaseCrawler(int fid, uint startPage, uint? endPage, ClientRequester clientRequester)
+        protected BaseCrawler(Fid fid, Page startPage, Page? endPage, ClientRequester clientRequester)
         {
             Fid = fid;
             StartPage = startPage;
-            EndPage = endPage ?? uint.MaxValue;
-            ClientRequester = clientRequester;
+            EndPage = endPage ?? Page.MaxValue;
+            _clientRequester = clientRequester;
         }
 
-        public abstract Task DoCrawler();
+        public abstract Task<T> DoCrawler();
+        public abstract Task<T> DoCrawler(IEnumerable<Page> pages);
 
-        protected Exception AddExceptionData(Exception e)
+        protected Exception FillExceptionData(Exception e)
         {
             e.Data["fid"] = Fid;
             e.Data["startPage"] = StartPage;
@@ -31,9 +40,10 @@ namespace tbm
             return e;
         }
 
-        protected async Task<JsonElement> CrawlSinglePage(string url, Dictionary<string, string> param)
+        protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
         {
             var stream = (await ClientRequester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
+            var stream = (await _clientRequester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
             using var doc = JsonDocument.Parse(stream);
             return doc.RootElement.Clone();
         }

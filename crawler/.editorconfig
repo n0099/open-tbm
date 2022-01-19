@@ -8,7 +8,10 @@ root = true
 indent_style = space
 
 # ReSharper properties
+resharper_csharp_keep_blank_lines_in_declarations = 1
 resharper_csharp_max_line_length = 0
+resharper_csharp_wrap_lines = false
+resharper_max_initializer_elements_on_line = 2
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 4

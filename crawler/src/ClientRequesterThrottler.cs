@@ -20,6 +20,7 @@ namespace tbm
                 Thread.Sleep(100);
                 ShouldReset();
             }
+
             return clientRequester;
         }
 
