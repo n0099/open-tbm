@@ -25,7 +25,7 @@ namespace tbm
             {
                 byte[] buf = new byte[8];
                 random.NextBytes(buf);
-                ulongRand = (ulong)BitConverter.ToInt64(buf, 0);
+                ulongRand = unchecked((ulong)BitConverter.ToInt64(buf, 0));
             } while (ulongRand > ulong.MaxValue - ((ulong.MaxValue % uRange) + 1) % uRange);
 
             return (long)(ulongRand % uRange) + min;

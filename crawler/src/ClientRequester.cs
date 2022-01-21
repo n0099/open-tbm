@@ -32,10 +32,10 @@ namespace tbm
 
             ClientRequesterTcs.Wait();
             var res = Http.PostAsync(url, new FormUrlEncodedContent(postData));
-            res.ContinueWith((i) =>
+            res.ContinueWith(i =>
             {
-                if (i.Result.IsSuccessStatusCode) ClientRequesterTcs.MaxRps += 0.05;
-                else ClientRequesterTcs.MaxRps--;
+                if (i.Result.IsSuccessStatusCode) ClientRequesterTcs.Increase();
+                else ClientRequesterTcs.Decrease();
             });
             return res;
         }

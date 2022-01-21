@@ -1,62 +1,29 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using static System.Text.Json.JsonElement;
-using Fid = System.UInt32;
-using Tid = System.UInt64;
+using Page = System.UInt32;
 using Pid = System.UInt64;
-using Uid = System.Int64;
-using Page = System.UInt16;
+using Tid = System.UInt64;
 using Time = System.UInt32;
+using Uid = System.Int64;
 
 namespace tbm
 {
-    public class ThreadCrawler : BaseCrawler<ThreadCrawler>
+    public class ThreadCrawler : BaseCrawler
     {
-        public string ForumName { get; }
+        private string ForumName { get; }
+        protected override CrawlerLocks CrawlerLocks { get => Locks.Value; }
+        private static readonly Lazy<CrawlerLocks> Locks = new(() => new CrawlerLocks());
 
-        public ThreadCrawler(ClientRequester clientRequester, string forumName, Fid fid, Page startPage, Page endPage = 1)
-            : base(fid, startPage, endPage, clientRequester) => ForumName = forumName;
+        public ThreadCrawler(ClientRequester clientRequester, uint fid, string forumName)
+            : base(clientRequester, fid) => ForumName = forumName;
 
-        public override async Task<ThreadCrawler> DoCrawler()
+        public override async Task DoCrawler(IEnumerable<Page> pages)
         {
-            try
-            {
-                var startPageEl = await CrawlSinglePage(StartPage);
-                ParseThreads(ValidateJson(startPageEl));
-                EndPage = Math.Min(EndPage, Page.Parse(startPageEl.GetProperty("page").GetProperty("total_page").GetString() ?? ""));
-            }
-            catch (Exception e)
-            {
-                throw FillExceptionData(e);
-            }
-
-            return await DoCrawler(Enumerable.Range(StartPage + 1, EndPage - StartPage).Select(i => (Page)i));
-        }
-
-        public override async Task<ThreadCrawler> DoCrawler(IEnumerable<Page> pages)
-        {
-            var deduplicatedPages = pages.ToList();
-            lock (CrawlingThreads)
-            { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
-                foreach (var page in deduplicatedPages.ToList()) // iterate on copy
-                {
-                    var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-                    var newFid = new ConcurrentDictionary<Page, Time>(5, 10);
-                    newFid.TryAdd(page, now);
-                    if (CrawlingThreads.TryAdd(Fid, newFid)) continue;
-                    if (CrawlingThreads[Fid].TryAdd(page, now)) continue;
-
-                    if (CrawlingThreads[Fid][page] < now - RetryAfter)
-                        CrawlingThreads[Fid][page] = now;
-                    else deduplicatedPages.Remove(page);
-                }
-            }
-            
-            await Task.WhenAll(deduplicatedPages.Shuffle().Select(async page =>
+            await Task.WhenAll(CrawlerLocks.AddLocks(Fid, pages).Shuffle().Select(async page =>
             {
                 try
                 {
@@ -64,31 +31,19 @@ namespace tbm
                 }
                 catch (Exception e)
                 {
-                    var newFid = new ConcurrentDictionary<Page, ushort>(5, 10);
-                    newFid.TryAdd(page, 1);
-                    if (!FailedThreads.TryAdd(Fid, newFid))
-                        lock (FailedThreads)
-                            if (!FailedThreads[Fid].TryAdd(page, 1))
-                                FailedThreads[Fid][page]++;
-
                     e.Data["curPage"] = page;
                     Program.LogException(FillExceptionData(e));
+                    ClientRequesterTcs.Decrease();
+                    CrawlerLocks.AddFailed(Fid, page);
                 }
                 finally
                 {
-                    CrawlingThreads[Fid].TryRemove(page, out _);
-                    Console.WriteLine("c3:" + CrawlingThreads[Fid].Count);
-                    lock(CrawlingThreads)
-                        if (CrawlingThreads[Fid].IsEmpty)
-                            CrawlingThreads.TryRemove(Fid, out _);
+                    CrawlerLocks.ReleaseLock(Fid, page);
                 }
             }));
-            Console.WriteLine(Posts.Count);
-
-            return this;
         }
 
-        private void ParseThreads(ArrayEnumerator threads)
+        protected override void ParseThreads(ArrayEnumerator threads)
         {
             static string? NullIfEmptyJsonLiteral(string json) => json is @"""""" or "[]" ? null : json;
             var newThreads = threads.Select(t => new ThreadPost
@@ -120,16 +75,15 @@ namespace tbm
             newThreads.ToList().ForEach(i => Posts[i.Tid] = i); // newThreads will overwrite Posts with same tid
         }
 
-        private static ArrayEnumerator ValidateJson(JsonElement json)
+        protected override ArrayEnumerator ValidateJson(JsonElement json)
         {
-            if (json.GetProperty("error_code").GetString() != "0")
-                throw new Exception($"Error from tieba client when crawling thread, raw json:{json}");
+            ValidateErrorCode(json);
             var threads = json.GetProperty("thread_list").EnumerateArray();
             if (!threads.Any()) throw new Exception("Forum threads list is empty, forum might doesn't existed");
             return threads;
         }
 
-        private async Task<JsonElement> CrawlSinglePage(Page page) =>
+        protected override async Task<JsonElement> CrawlSinglePage(Page page) =>
             await RequestJson("http://c.tieba.baidu.com/c/f/frs/page", new Dictionary<string, string>
             {
                 {"kw", ForumName},
