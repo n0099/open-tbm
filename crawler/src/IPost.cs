@@ -1,4 +1,4 @@
-﻿namespace tbm
+namespace tbm
 {
     public interface IPost
     {

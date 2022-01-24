@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -10,6 +10,8 @@ namespace tbm
 {
     public record ClientRequester(string ClientVersion)
     {
+        public delegate ClientRequester New(string ClientVersion);
+
         private static readonly HttpClient Http = new();
         private static readonly Random Rand = new();
 

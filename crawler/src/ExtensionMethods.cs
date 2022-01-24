@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -32,10 +32,7 @@ namespace tbm
         }
 
         /// <see>https://stackoverflow.com/questions/1651619/optimal-linq-query-to-get-a-random-sub-collection-shuffle/1653204#1653204</see>
-        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
-        {
-            return source.Shuffle(new Random());
-        }
+        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source) => source.Shuffle(new Random());
 
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rng)
         {

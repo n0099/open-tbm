@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace tbm
 {
@@ -16,11 +16,8 @@ namespace tbm
         private static readonly Stopwatch Stopwatch = new();
         private static int _requestCounter;
 
-        public static int QueueLength { get => Queue.Count; }
-        public static double AverageRps
-        {
-            get => (double)_requestCounter / Stopwatch.ElapsedMilliseconds * 1000;
-        }
+        public static int QueueLength => Queue.Count;
+        public static double AverageRps => (double)_requestCounter / Stopwatch.ElapsedMilliseconds * 1000;
 
         public static double MaxRps
         {

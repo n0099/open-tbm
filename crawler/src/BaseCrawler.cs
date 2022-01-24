@@ -14,17 +14,18 @@ namespace tbm
     public abstract class BaseCrawler
     {
         protected Fid Fid { get; }
-        protected abstract CrawlerLocks CrawlerLocks { get; } // singleton
+        protected abstract CrawlerLocks CrawlerLocks { get; init; } // singleton for every derived class
         protected ConcurrentDictionary<Tid, IPost> Posts { get; } = new(5, 50); // rn=50
         private readonly ClientRequester _clientRequester;
+
         public abstract Task DoCrawler(IEnumerable<Page> pages);
         protected abstract void ParseThreads(ArrayEnumerator threads);
         protected abstract ArrayEnumerator ValidateJson(JsonElement json);
         protected abstract Task<JsonElement> CrawlSinglePage(Page page);
 
-        protected BaseCrawler(ClientRequester clientRequester, Fid fid)
+        protected BaseCrawler(ClientRequester requester, Fid fid)
         {
-            _clientRequester = clientRequester;
+            _clientRequester = requester;
             Fid = fid;
         }
 

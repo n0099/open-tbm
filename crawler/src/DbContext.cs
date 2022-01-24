@@ -1,26 +1,44 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
 
 namespace tbm
 {
     public class DbContext : Microsoft.EntityFrameworkCore.DbContext
     {
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
+        private readonly IConfiguration _config;
         public uint Fid { get; }
 
-        public DbContext(uint fid) => Fid = fid;
+        public delegate DbContext New(uint fid);
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        public DbContext(IConfiguration config, uint fid)
         {
-            modelBuilder.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
+            _config = config;
+            Fid = fid;
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+            modelBuilder.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
+
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            var conn = "server=localhost;user=root;password=;database=";
-            optionsBuilder = optionsBuilder.UseMySql(conn, ServerVersion.AutoDetect(conn));
+            var connStr = _config["ConnectionStrings:Main"];
+            options.UseMySql(connStr, ServerVersion.AutoDetect(connStr))
+                .ReplaceService<IModelCacheKeyFactory, ModelWithFidCacheKeyFactory>();
 #if DEBUG
-            optionsBuilder.EnableDetailedErrors().EnableSensitiveDataLogging();
+            options.EnableDetailedErrors().EnableSensitiveDataLogging();
 #endif
         }
+    }
+
+    class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
+    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
+        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
+        public object Create(Microsoft.EntityFrameworkCore.DbContext context) => Create(context, false);
+        public object Create(Microsoft.EntityFrameworkCore.DbContext context, bool designTime) =>
+            context is DbContext dbContext
+                ? (context.GetType(), dbContext.Fid, designTime)
+                : context.GetType();
     }
 }

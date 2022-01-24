@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Autofac.Features.Indexed;
+using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
 using Page = System.UInt32;
 using Pid = System.UInt64;
@@ -12,17 +14,28 @@ using Uid = System.Int64;
 
 namespace tbm
 {
-    public class ThreadCrawler : BaseCrawler
+    public sealed class ThreadCrawler : BaseCrawler
     {
+        private readonly ILogger<ThreadCrawler> _logger;
         private string ForumName { get; }
-        protected override CrawlerLocks CrawlerLocks { get => Locks.Value; }
-        private static readonly Lazy<CrawlerLocks> Locks = new(() => new CrawlerLocks());
+        protected override CrawlerLocks CrawlerLocks { get; init; }
 
-        public ThreadCrawler(ClientRequester clientRequester, uint fid, string forumName)
-            : base(clientRequester, fid) => ForumName = forumName;
+        public delegate ThreadCrawler New(uint fid, string forumName);
 
-        public override async Task DoCrawler(IEnumerable<Page> pages)
+        public ThreadCrawler(
+            ILogger<ThreadCrawler> logger,
+            ClientRequester requester,
+            IIndex<string, CrawlerLocks> locks,
+            uint fid,
+            string forumName
+        ) : base(requester, fid)
         {
+            CrawlerLocks = locks["thread"];
+            _logger = logger;
+            ForumName = forumName;
+        }
+
+        public override async Task DoCrawler(IEnumerable<Page> pages) =>
             await Task.WhenAll(CrawlerLocks.AddLocks(Fid, pages).Shuffle().Select(async page =>
             {
                 try
@@ -32,7 +45,7 @@ namespace tbm
                 catch (Exception e)
                 {
                     e.Data["curPage"] = page;
-                    Program.LogException(FillExceptionData(e));
+                    _logger.LogError(FillExceptionData(e), "exception: ");
                     ClientRequesterTcs.Decrease();
                     CrawlerLocks.AddFailed(Fid, page);
                 }
@@ -41,7 +54,6 @@ namespace tbm
                     CrawlerLocks.ReleaseLock(Fid, page);
                 }
             }));
-        }
 
         protected override void ParseThreads(ArrayEnumerator threads)
         {
