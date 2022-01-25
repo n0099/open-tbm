@@ -28,13 +28,13 @@ namespace tbm
             ILogger<ThreadCrawler> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
-            IIndex<string, CrawlerLocks> locks,
+            IIndex<string, CrawlerLocks.New> locks,
             uint fid,
             string forumName
         ) : base(requester, fid)
         {
             _clientRequesterTcs = requesterTcs;
-            CrawlerLocks = locks["thread"];
+            CrawlerLocks = locks["thread"]("thread");
             _logger = logger;
             ForumName = forumName;
         }
