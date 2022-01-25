@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace tbm
 {
-    public record ClientRequester(string ClientVersion)
+    public record ClientRequester(ClientRequesterTcs ClientRequesterTcs, string ClientVersion)
     {
         public delegate ClientRequester New(string ClientVersion);
 

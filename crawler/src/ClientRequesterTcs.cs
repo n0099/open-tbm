@@ -3,62 +3,88 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
 namespace tbm
 {
-    public static class ClientRequesterTcs
+    public class ClientRequesterTcs
     {
-        private static readonly ConcurrentQueue<TaskCompletionSource> Queue = new();
-        private static readonly Timer Timer = new();
-        private static double _maxRps;
-        private const int InitialRps = 15;
-        private static readonly Stopwatch Stopwatch = new();
-        private static int _requestCounter;
+        private readonly IConfigurationSection _config;
+        private readonly ILogger<ClientRequesterTcs> _logger;
+        private readonly ConcurrentQueue<TaskCompletionSource> _queue = new();
+        private readonly Timer _timer = new();
+        private readonly Timer _timerLogTrace = new();
+        private double _maxRps;
+        private readonly Stopwatch _stopwatch = new();
+        private int _requestCounter;
 
-        public static int QueueLength => Queue.Count;
-        public static double AverageRps => (double)_requestCounter / Stopwatch.ElapsedMilliseconds * 1000;
-
-        public static double MaxRps
+        private int QueueLength => _queue.Count;
+        private float AverageRps => (float)_requestCounter / _stopwatch.ElapsedMilliseconds * 1000;
+        private double MaxRps
         {
             get => _maxRps;
-            private set
+            set
             {
                 _maxRps = value;
-                if ((uint)Timer.Interval != (uint)(1000 / value))
+                if ((uint)_timer.Interval != (uint)(1000 / value))
                 { // only update interval with a truncated integer to prevent frequently change it
                   // which will cause the increment of real rps can't keep up with _maxRps with long queue length
-                    Timer.Interval = 1000 / value;
+                    _timer.Interval = 1000 / value;
                 }
                 Interlocked.Increment(ref _requestCounter);
             }
         }
 
-        static ClientRequesterTcs()
+        public ClientRequesterTcs(IConfiguration config, ILogger<ClientRequesterTcs> logger)
         {
-            Stopwatch.Start();
-            MaxRps = InitialRps;
-            Timer.Elapsed += (_, _) =>
+            _logger = logger;
+            _config = config.GetSection("ClientRequesterTcs");
+            MaxRps = _config.GetValue("InitialRps", 15);
+            _timerLogTrace.Interval = _config.GetValue("LogTrace:LogIntervalMs", 1000);
+            _timerLogTrace.Elapsed += (_, _) => TryLogTrace();
+            _timerLogTrace.Enabled = true;
+            _stopwatch.Start();
+
+            _timer.Elapsed += (_, _) =>
             {
-                if (Queue.TryDequeue(out var tcs)) tcs?.SetResult();
+                if (_queue.TryDequeue(out var tcs)) tcs?.SetResult();
             };
-            Timer.Enabled = true;
+            _timer.Enabled = true;
         }
 
-        public static void Increase() => MaxRps = Math.Min(1000, MaxRps + Math.Log10(MaxRps) * 0.01);
-        public static void Decrease() => MaxRps = Math.Max(1, MaxRps - 1);
+        public void Increase() => MaxRps = Math.Min(
+            _config.GetValue("LimitRps:1", 1000),
+            MaxRps + _config.GetValue("DeltaRps:0", 0.01));
 
-        public static void Wait()
+        public void Decrease() => MaxRps = Math.Max(
+            _config.GetValue("LimitRps:0", 1),
+            MaxRps - _config.GetValue("DeltaRps:1", 0.5));
+
+        public void Wait()
         { // https://devblogs.microsoft.com/premier-developer/the-danger-of-taskcompletionsourcet-class/
             var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            Queue.Enqueue(tcs);
+            _queue.Enqueue(tcs);
             tcs.Task.Wait();
         }
 
-        public static void ResetAverageRps()
+        private void ResetAverageRps()
         {
             Interlocked.Exchange(ref _requestCounter, 0);
-            Stopwatch.Restart();
+            _stopwatch.Restart();
+        }
+
+        private void TryLogTrace()
+        {
+            var config = _config.GetSection("LogTrace");
+            if (!config.GetValue("Enabled", false)) return;
+            _timerLogTrace.Interval = config.GetValue("LogIntervalMs", 1000);
+
+            _logger.LogTrace("TCS: queueLen={} maxRps={:F2} avgRps={:F2} elapsed={:F1}s",
+                QueueLength, MaxRps, AverageRps,
+                (float)_stopwatch.ElapsedMilliseconds / 1000);
+            if (config.GetValue("ResetAfterLog", false)) ResetAverageRps();
         }
     }
 }

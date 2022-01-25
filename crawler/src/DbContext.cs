@@ -6,15 +6,15 @@ namespace tbm
 {
     public class DbContext : Microsoft.EntityFrameworkCore.DbContext
     {
+        private readonly string _connectionStr;
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
-        private readonly IConfiguration _config;
         public uint Fid { get; }
 
         public delegate DbContext New(uint fid);
 
         public DbContext(IConfiguration config, uint fid)
         {
-            _config = config;
+            _connectionStr = config.GetConnectionString("Main");
             Fid = fid;
         }
 
@@ -23,8 +23,7 @@ namespace tbm
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            var connStr = _config["ConnectionStrings:Main"];
-            options.UseMySql(connStr, ServerVersion.AutoDetect(connStr))
+            options.UseMySql(_connectionStr, ServerVersion.AutoDetect(_connectionStr))
                 .ReplaceService<IModelCacheKeyFactory, ModelWithFidCacheKeyFactory>();
 #if DEBUG
             options.EnableDetailedErrors().EnableSensitiveDataLogging();

@@ -41,6 +41,7 @@ namespace tbm
                     {
                         builder.RegisterType<DbContext>();
                         builder.RegisterType<ClientRequester>();
+                        builder.RegisterType<ClientRequesterTcs>().SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("thread").SingleInstance();
                         builder.RegisterType<ThreadCrawler>().WithParameter(
                             (p, _) => p.ParameterType == typeof(ClientRequester),
@@ -49,11 +50,10 @@ namespace tbm
                     .Build();
                 Autofac = host.Services.GetAutofacRoot();
                 host.Run();
-                host.WaitForShutdown();
             }
             catch (Exception e)
             {
-                logger.Fatal(e, "exception: ");
+                logger.Fatal(e, "exception");
                 throw;
             }
             finally
@@ -64,7 +64,7 @@ namespace tbm
 
         public static void RpsIndicator()
         {
-            var requester = new ClientRequester("6.0.2");
+            var requester = Autofac.Resolve<ClientRequester.New>()("6.0.2");
             var requestParams = new Dictionary<string, string> {{"kw", ""}, {"pn", "1"}, {"rn", "50"}};
             var timer = new Stopwatch();
             timer.Start();

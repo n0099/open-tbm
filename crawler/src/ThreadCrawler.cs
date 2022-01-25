@@ -17,6 +17,8 @@ namespace tbm
     public sealed class ThreadCrawler : BaseCrawler
     {
         private readonly ILogger<ThreadCrawler> _logger;
+        private readonly ClientRequesterTcs _clientRequesterTcs;
+
         private string ForumName { get; }
         protected override CrawlerLocks CrawlerLocks { get; init; }
 
@@ -25,11 +27,13 @@ namespace tbm
         public ThreadCrawler(
             ILogger<ThreadCrawler> logger,
             ClientRequester requester,
+            ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks> locks,
             uint fid,
             string forumName
         ) : base(requester, fid)
         {
+            _clientRequesterTcs = requesterTcs;
             CrawlerLocks = locks["thread"];
             _logger = logger;
             ForumName = forumName;
@@ -45,8 +49,8 @@ namespace tbm
                 catch (Exception e)
                 {
                     e.Data["curPage"] = page;
-                    _logger.LogError(FillExceptionData(e), "exception: ");
-                    ClientRequesterTcs.Decrease();
+                    _logger.LogError(FillExceptionData(e), "exception");
+                    _clientRequesterTcs.Decrease();
                     CrawlerLocks.AddFailed(Fid, page);
                 }
                 finally

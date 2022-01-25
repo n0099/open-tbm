@@ -16,7 +16,7 @@ namespace tbm
         protected Fid Fid { get; }
         protected abstract CrawlerLocks CrawlerLocks { get; init; } // singleton for every derived class
         protected ConcurrentDictionary<Tid, IPost> Posts { get; } = new(5, 50); // rn=50
-        private readonly ClientRequester _clientRequester;
+        private readonly ClientRequester _requester;
 
         public abstract Task DoCrawler(IEnumerable<Page> pages);
         protected abstract void ParseThreads(ArrayEnumerator threads);
@@ -25,7 +25,7 @@ namespace tbm
 
         protected BaseCrawler(ClientRequester requester, Fid fid)
         {
-            _clientRequester = requester;
+            _requester = requester;
             Fid = fid;
         }
 
@@ -61,7 +61,7 @@ namespace tbm
 
         protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
         {
-            var stream = (await _clientRequester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
+            var stream = (await _requester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
             using var doc = JsonDocument.Parse(stream);
             return doc.RootElement.Clone();
         }
