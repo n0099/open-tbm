@@ -9,13 +9,12 @@ using Timer = System.Timers.Timer;
 
 namespace tbm
 {
-    public class ClientRequesterTcs
+    public class ClientRequesterTcs : WithLogTrace
     {
         private readonly IConfigurationSection _config;
         private readonly ILogger<ClientRequesterTcs> _logger;
         private readonly ConcurrentQueue<TaskCompletionSource> _queue = new();
-        private readonly Timer _timer = new();
-        private readonly Timer _timerLogTrace = new();
+        private readonly Timer _timer = new() {Enabled = true};
         private double _maxRps;
         private readonly Stopwatch _stopwatch = new();
         private int _requestCounter;
@@ -41,17 +40,23 @@ namespace tbm
         {
             _logger = logger;
             _config = config.GetSection("ClientRequesterTcs");
+            InitLogTrace(_config);
             MaxRps = _config.GetValue("InitialRps", 15);
-            _timerLogTrace.Interval = _config.GetValue("LogTrace:LogIntervalMs", 1000);
-            _timerLogTrace.Elapsed += (_, _) => TryLogTrace();
-            _timerLogTrace.Enabled = true;
             _stopwatch.Start();
 
             _timer.Elapsed += (_, _) =>
             {
-                if (_queue.TryDequeue(out var tcs)) tcs?.SetResult();
+                if (_queue.TryDequeue(out var tcs)) tcs.SetResult();
             };
-            _timer.Enabled = true;
+        }
+
+        protected override void TryLogTrace()
+        {
+            if (!ShouldLogTrace()) return;
+            _logger.LogTrace("TCS: queueLen={} maxRps={:F2} avgRps={:F2} elapsed={:F1}s",
+                QueueLength, MaxRps, AverageRps,
+                (float)_stopwatch.ElapsedMilliseconds / 1000);
+            if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
         }
 
         public void Increase() => MaxRps = Math.Min(
@@ -73,18 +78,6 @@ namespace tbm
         {
             Interlocked.Exchange(ref _requestCounter, 0);
             _stopwatch.Restart();
-        }
-
-        private void TryLogTrace()
-        {
-            var config = _config.GetSection("LogTrace");
-            if (!config.GetValue("Enabled", false)) return;
-            _timerLogTrace.Interval = config.GetValue("LogIntervalMs", 1000);
-
-            _logger.LogTrace("TCS: queueLen={} maxRps={:F2} avgRps={:F2} elapsed={:F1}s",
-                QueueLength, MaxRps, AverageRps,
-                (float)_stopwatch.ElapsedMilliseconds / 1000);
-            if (config.GetValue("ResetAfterLog", false)) ResetAverageRps();
         }
     }
 }

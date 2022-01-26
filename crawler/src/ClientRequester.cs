@@ -5,10 +5,13 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace tbm
 {
-    public record ClientRequester(ClientRequesterTcs ClientRequesterTcs, string ClientVersion)
+    public record ClientRequester(ILogger<ClientRequester> Logger, IConfiguration Config,
+        ClientRequesterTcs ClientRequesterTcs, string ClientVersion)
     {
         public delegate ClientRequester New(string ClientVersion);
 
@@ -30,10 +33,11 @@ namespace tbm
                 return acc;
             }) + "tiebaclient!!!";
             var signMd5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
-            postData.Add(new KeyValuePair<string, string>("sign", signMd5));
+            postData.Add(KeyValuePair.Create("sign", signMd5));
 
             ClientRequesterTcs.Wait();
             var res = Http.PostAsync(url, new FormUrlEncodedContent(postData));
+            if (Config.GetValue("ClientRequester:LogTrace", false)) Logger.LogTrace("POST {} {}", url, data);
             res.ContinueWith(i =>
             {
                 if (i.Result.IsSuccessStatusCode) ClientRequesterTcs.Increase();
