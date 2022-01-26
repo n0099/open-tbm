@@ -11,11 +11,9 @@ namespace tbm
 {
     public class CrawlerLocks
     {
+        private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, Time>> _crawling = new();
+        private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, ushort>> _failed = new();
         private readonly ushort _retryAfter;
-        private readonly ushort _newPageConcurrencyLevel;
-        private readonly ushort _newPageCapacity;
-        private ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, Time>> Crawling { get; }
-        private ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, ushort>> Failed { get; }
 
         public delegate CrawlerLocks New(string postType);
 
@@ -23,32 +21,26 @@ namespace tbm
         {
             var locksConfig = config.GetSection($"CrawlerLocks:{postType}");
             _retryAfter = locksConfig.GetValue<ushort>("RetryAfterSec", 300); // 5 minutes
-            var concurrencyLevels = locksConfig.GetSection("ConcurrencyLevel");
-            var initialCapacities = locksConfig.GetSection("InitialCapacity");
-            _newPageConcurrencyLevel = concurrencyLevels.GetValue<ushort>("NewPage", 5);
-            _newPageCapacity = initialCapacities.GetValue<ushort>("NewPage", 5);
-            Crawling = new(concurrencyLevels.GetValue("Crawling", 10), initialCapacities.GetValue("Crawling", 20));
-            Failed = new(concurrencyLevels.GetValue("Failed", 10), initialCapacities.GetValue("Failed", 20));
         }
 
         public IEnumerable<Page> AddLocks(FidOrPostID index, IEnumerable<Page> pages)
         {
             var lockFreePages = pages.ToHashSet();
-            lock (Crawling)
+            lock (_crawling)
             { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
                 var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-                if (!Crawling.ContainsKey(index))
+                if (!_crawling.ContainsKey(index))
                 { // if no one is locking any pages in index, just insert pages then return it as is
                     var pageTimeDict = lockFreePages.Select(p => new KeyValuePair<Page, Time>(p, now));
-                    var newFid = new ConcurrentDictionary<Page, Time>(_newPageConcurrencyLevel, pageTimeDict, null);
-                    if (Crawling.TryAdd(index, newFid)) return lockFreePages;
+                    var newFid = new ConcurrentDictionary<Page, Time>(pageTimeDict);
+                    if (_crawling.TryAdd(index, newFid)) return lockFreePages;
                 }
                 foreach (var page in lockFreePages.ToList()) // iterate on copy
                 {
-                    if (Crawling[index].TryAdd(page, now)) continue;
+                    if (_crawling[index].TryAdd(page, now)) continue;
                     // when page in locking:
-                    if (Crawling[index][page] < now - _retryAfter)
-                        Crawling[index][page] = now;
+                    if (_crawling[index][page] < now - _retryAfter)
+                        _crawling[index][page] = now;
                     else lockFreePages.Remove(page);
                 }
             }
@@ -58,21 +50,21 @@ namespace tbm
 
         public void AddFailed(FidOrPostID index, Page page)
         {
-            var newFid = new ConcurrentDictionary<Page, ushort>(_newPageConcurrencyLevel, _newPageCapacity);
+            var newFid = new ConcurrentDictionary<Page, ushort>();
             newFid.TryAdd(page, 1);
-            if (Failed.TryAdd(index, newFid)) return;
+            if (_failed.TryAdd(index, newFid)) return;
 
-            lock (Failed)
-                if (!Failed[index].TryAdd(page, 1))
-                    Failed[index][page]++;
+            lock (_failed)
+                if (!_failed[index].TryAdd(page, 1))
+                    _failed[index][page]++;
         }
 
         public void ReleaseLock(FidOrPostID index, Page page)
         {
-            Crawling[index].TryRemove(page, out _);
-            lock (Crawling)
-                if (Crawling[index].IsEmpty)
-                    Crawling.TryRemove(index, out _);
+            _crawling[index].TryRemove(page, out _);
+            lock (_crawling)
+                if (_crawling[index].IsEmpty)
+                    _crawling.TryRemove(index, out _);
         }
     }
 }
