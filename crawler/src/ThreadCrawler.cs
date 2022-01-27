@@ -7,57 +7,33 @@ using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
 using Page = System.UInt32;
-using Pid = System.UInt64;
+using Fid = System.UInt32;
 using Tid = System.UInt64;
-using Time = System.UInt32;
+using Pid = System.UInt64;
 using Uid = System.Int64;
+using Time = System.UInt32;
 
 namespace tbm
 {
     public sealed class ThreadCrawler : BaseCrawler
     {
-        private readonly ILogger<ThreadCrawler> _logger;
-        private readonly ClientRequesterTcs _clientRequesterTcs;
-
-        private string ForumName { get; }
         protected override CrawlerLocks CrawlerLocks { get; init; }
+        private readonly string _forumName;
 
-        public delegate ThreadCrawler New(uint fid, string forumName);
+        public delegate ThreadCrawler New(Fid fid, string forumName);
 
         public ThreadCrawler(
             ILogger<ThreadCrawler> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
-            uint fid,
+            Fid fid,
             string forumName
-        ) : base(requester, fid)
+        ) : base(logger, requesterTcs, requester, fid)
         {
-            _clientRequesterTcs = requesterTcs;
+            _forumName = forumName;
             CrawlerLocks = locks["thread"]("thread");
-            _logger = logger;
-            ForumName = forumName;
         }
-
-        public override async Task DoCrawler(IEnumerable<Page> pages) =>
-            await Task.WhenAll(CrawlerLocks.AddLocks(Fid, pages).Shuffle().Select(async page =>
-            {
-                try
-                {
-                    ParseThreads(ValidateJson(await CrawlSinglePage(page)));
-                }
-                catch (Exception e)
-                {
-                    e.Data["curPage"] = page;
-                    _logger.LogError(FillExceptionData(e), "exception");
-                    _clientRequesterTcs.Decrease();
-                    CrawlerLocks.AddFailed(Fid, page);
-                }
-                finally
-                {
-                    CrawlerLocks.ReleaseLock(Fid, page);
-                }
-            }));
 
         protected override void ParseThreads(ArrayEnumerator threads)
         {
@@ -93,18 +69,23 @@ namespace tbm
 
         protected override ArrayEnumerator ValidateJson(JsonElement json)
         {
-            ValidateErrorCode(json);
-            var threads = json.GetProperty("thread_list").EnumerateArray();
-            if (!threads.Any()) throw new Exception("Forum threads list is empty, forum might doesn't existed");
-            return threads;
+            ValidateOtherErrorCode(json);
+            return CheckIsEmptyPostList(json, "thread_list",
+                "Forum threads list is empty, forum might doesn't existed");
         }
 
         protected override async Task<JsonElement> CrawlSinglePage(Page page) =>
             await RequestJson("http://c.tieba.baidu.com/c/f/frs/page", new Dictionary<string, string>
             {
-                {"kw", ForumName},
+                {"kw", _forumName},
                 {"pn", page.ToString()},
                 {"rn", "50"}
             });
+
+        protected override Exception FillExceptionData(Exception e)
+        {
+            e.Data["forumName"] = _forumName;
+            return e;
+        }
     }
 }

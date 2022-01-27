@@ -16,6 +16,7 @@ namespace tbm
         private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, ushort>> _failed = new();
         private readonly IConfigurationSection _config;
         private readonly ILogger<CrawlerLocks> _logger;
+        private readonly string _postType;
 
         public delegate CrawlerLocks New(string postType);
 
@@ -23,6 +24,7 @@ namespace tbm
         {
             _logger = logger;
             _config = config.GetSection($"CrawlerLocks:{postType}");
+            _postType = postType;
             InitLogTrace(_config);
         }
 
@@ -31,8 +33,8 @@ namespace tbm
             if (!ShouldLogTrace()) return;
             lock (_crawling)
             lock (_failed)
-                _logger.LogTrace("Lock: crawlingSize={} crawlingPagesCount={} failedSize={} failedPagesCount={}",
-                    _crawling.Count, _crawling.Select(i => KeyValuePair.Create(i.Key, i.Value.Count)),
+                _logger.LogTrace("Lock: type={} crawlingSize={} crawlingPagesCount={} failedSize={} failedPagesCount={}",
+                    _postType, _crawling.Count, _crawling.Select(i => KeyValuePair.Create(i.Key, i.Value.Count)),
                     _failed.Count, _failed.Select(i => KeyValuePair.Create(i.Key, i.Value.Count)));
         }
 
