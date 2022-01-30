@@ -1,7 +1,7 @@
 module.exports = {
     publicPath: process.env.VUE_APP_PUBLIC_PATH,
     configureWebpack: {
-        experiments: { futureDefaults: true },
+        experiments: { topLevelAwait: true },
         module: {
             rules: [{
                 test: /\.avif/u,
