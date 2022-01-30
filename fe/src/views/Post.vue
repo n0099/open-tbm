@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm ref="queryFormRef" @query="submitQueryForm" :forumList="forumList" :isLoading="isLoading" />
+        <QueryForm ref="queryFormRef" :forumList="forumList" :isLoading="isLoading" />
         <p>当前页数：{{ routePageParamNullSafe($route) }}</p>
         <Menu v-show="postPages.length !== 0" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -40,12 +40,14 @@ import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
 
 import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect } from 'vue';
+import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
 import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
 export type PostViewRenderer = 'list' | 'table';
+export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 export default defineComponent({
     components: { Menu, MenuItem, PlaceholderError, PlaceholderPostList, QueryForm, NavSidebar, PostViewPage },
     setup() {
@@ -71,7 +73,7 @@ export default defineComponent({
         });
         useHead({ title: computed(() => titleTemplate(state.title)) });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-        const fetchPosts = async (queryParams: ObjUnknown[] | undefined, isNewQuery: boolean, page = 1) => {
+        const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page = 1) => {
             const startTime = Date.now();
             state.lastFetchError = null;
             state.showPlaceholderPostList = true;
@@ -113,49 +115,42 @@ export default defineComponent({
             return true;
         };
 
-        let isSubmitTriggeredByInitialLoad = true;
-        let isRouteChangeTriggeredByQueryForm = false;
-        const submitQueryForm = (e: ObjUnknown[]) => {
-            isRouteChangeTriggeredByQueryForm = true;
-            if (isSubmitTriggeredByInitialLoad) {
-                fetchPosts(e, false, routePageParamNullSafe(route))
-                    .then(isFetchSuccess => {
-                        if (!isFetchSuccess) return;
-                        const scrollPosition = postListItemScrollPosition(route);
-                        const el = document.querySelector(scrollPosition.el);
-                        if (el === null) return;
-                        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - scrollPosition.top);
-                    });
-            } else {
-                fetchPosts(e, true);
+        const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, page: number) => {
+            if (queryFormRef.value === undefined) return false;
+            const flattenParams = queryFormRef.value.parseRouteToGetFlattenParams(_route);
+            if (flattenParams === false) return false;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, page);
+            if (isFetchSuccess) {
+                const scrollPosition = postListItemScrollPosition(_route);
+                const el = document.querySelector(scrollPosition.el);
+                if (el === null) return isFetchSuccess;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
             }
-            isSubmitTriggeredByInitialLoad = false;
+            return isFetchSuccess;
         };
-
-        (async () => {
-            state.forumList = throwIfApiError(await apiForumList());
-            queryFormRef.value?.submit(true);
-        })();
-        watchEffect(() => {
-            [state.renderType] = state.selectedRenderTypes;
-        });
-
         onBeforeRouteUpdate(async (to, from) => {
-            if (isRouteChangeTriggeredByQueryForm) {
-                isRouteChangeTriggeredByQueryForm = false;
-                return true;
-            }
-            const isNewQuery = compareRouteIsNewQuery(to, from);
+            const isNewQuery = isRouteUpdateTriggeredBySubmitQueryForm.value || compareRouteIsNewQuery(to, from);
+            isRouteUpdateTriggeredBySubmitQueryForm.value = false;
             const page = routePageParamNullSafe(to);
             if (!isNewQuery && !_.isEmpty(_.filter(
                 state.postPages,
                 i => i.pages.currentPage === page
             ))) return true;
-            const isFetchSuccess = await fetchPosts(queryFormRef.value?.parseRouteToGetFlattenParams(to), isNewQuery, page);
-            return isNewQuery ? true : isFetchSuccess; // only pass pending route change after successful fetched
+            const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, page);
+            return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
         });
 
-        return { routePageParamNullSafe, ...toRefs(state), queryFormRef, submitQueryForm, fetchPosts };
+        (async () => {
+            state.forumList = throwIfApiError(await apiForumList());
+            parseRouteThenFetch(route, true, routePageParamNullSafe(route));
+        })();
+        watchEffect(() => {
+            [state.renderType] = state.selectedRenderTypes;
+        });
+
+        return { routePageParamNullSafe, ...toRefs(state), queryFormRef, fetchPosts };
     }
 });
 </script>

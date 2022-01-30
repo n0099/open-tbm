@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts">
-import { isRouteChangeTriggeredByPostsNavScrollEvent } from './ViewList.vue';
+import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameWithPage } from '@/router';
@@ -105,7 +105,7 @@ export default defineComponent({
             if (Number.isNaN(firstPostIDInView.t)) {
                 state.firstPostInView = { tid: 0, pid: 0, page: 0 };
                 router.replace({ hash: '' }); // empty route hash
-                isRouteChangeTriggeredByPostsNavScrollEvent.value = true;
+                isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
                 return;
             }
             const firstPostPageInView = _.mapValues(firstPostInView, i =>
@@ -134,7 +134,7 @@ export default defineComponent({
                 state.firstPostInView = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
                 replaceRouteHash(firstPostPageInView.p, firstPostIDInView.p);
             }
-            isRouteChangeTriggeredByPostsNavScrollEvent.value = true;
+            isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
         }, 200);
         const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
         onUnmounted(removeScrollEventListener);

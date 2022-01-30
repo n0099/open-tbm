@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submit(false)" class="mt-3">
+    <form @submit.prevent="queryFormSubmit" class="mt-3">
         <div class="row">
             <label class="col-1 col-form-label" for="paramFid">贴吧</label>
             <div class="col-3">
@@ -141,7 +141,7 @@
         </div>
         <div class="row mt-2">
             <button class="add-param-button col-auto btn btn-link disabled" type="button"><FontAwesomeIcon icon="plus" /></button>
-            <SelectParam @paramChange="addParam($event)" />
+            <SelectParam @paramChange="addParam($event)" currentParam="add" />
         </div>
         <div class="row mt-3">
             <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
@@ -153,16 +153,17 @@
 </template>
 
 <script lang="ts">
+import { isRouteUpdateTriggeredBySubmitQueryForm } from '@/views/Post.vue';
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, inputTextMatchParamPlaceholder } from './';
 import type { Params, RequiredPostTypes, UniqueParams } from './queryParams';
 import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
-import type { ObjUnknown, ObjValues, PostType } from '@/shared';
+import type { ObjValues, PostType } from '@/shared';
 import { notyShow, postsID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
 import type { PropType } from 'vue';
-import { computed, defineComponent, onBeforeMount, reactive, toRefs } from 'vue';
+import { computed, defineComponent, onMounted, reactive, toRefs, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
@@ -175,10 +176,8 @@ export default defineComponent({
         isLoading: { type: Boolean, required: true },
         forumList: { type: Array as PropType<ApiForumList>, required: true }
     },
-    emits: {
-        query: (p: ObjUnknown[]) => _.isArray(p) && p.every(_.isObject)
-    },
-    setup(props, { emit }) {
+    setup() {
+        const router = useRouter();
         const {
             state: useState,
             addParam,
@@ -192,7 +191,6 @@ export default defineComponent({
             parseParamRoute,
             submitParamRoute
         } = useQueryFormWithUniqueParams();
-        const router = useRouter();
         const state = reactive<{
             isOrderByInvalid: boolean,
             isFidInvalid: boolean
@@ -219,23 +217,14 @@ export default defineComponent({
             }
             return 'search';
         };
-        const parseRoute = (route: RouteLocationNormalizedLoaded) => {
-            assertRouteNameIsStr(route.name);
-            useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
-            useState.params = [];
-            const routeName = removeEnd(route.name, '+p');
-            // parse route path to params
-            if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
-                parseParamRoute(route.params.pathMatch); // omit the page param from route full path
-            } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
-                useState.uniqueParams.fid.value = parseInt(route.params.fid);
-            } else { // post id routes
-                useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
-                    fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
-                useState.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
-                    fillParamWithDefaultValue({ name, value }));
-            }
-        };
+        const currentQueryTypeDesc = computed(() => {
+            const currentQueryType = getCurrentQueryType();
+            if (currentQueryType === 'fid') return '按吧索引查询';
+            if (currentQueryType === 'postID') return '按帖索引查询';
+            if (currentQueryType === 'search') return '搜索查询';
+            return '空查询';
+        });
+
         const submitRoute = () => {
             // deciding which route to go
             const clearedParams = clearedParamsDefaultValue();
@@ -258,6 +247,10 @@ export default defineComponent({
                 return;
             }
             submitParamRoute(clearedUniqueParams, clearedParams); // param route
+        };
+        const queryFormSubmit = () => {
+            isRouteUpdateTriggeredBySubmitQueryForm.value = true;
+            submitRoute();
         };
         const checkParams = () => {
             // check query type
@@ -324,33 +317,43 @@ export default defineComponent({
             // return false when there have at least one invalid params
             return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid;
         };
-        const submit = (skipSubmitRoute = false) => {
-            if (checkParams()) {
-                emit('query', flattenParams());
-                if (!skipSubmitRoute) submitRoute();
+
+        const parseRoute = (route: RouteLocationNormalizedLoaded) => {
+            assertRouteNameIsStr(route.name);
+            useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
+            useState.params = [];
+            const routeName = removeEnd(route.name, '+p');
+            // parse route path to params
+            if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
+                parseParamRoute(route.params.pathMatch); // omit the page param from route full path
+            } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
+                useState.uniqueParams.fid.value = parseInt(route.params.fid);
+            } else { // post id routes
+                useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
+                    fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
+                useState.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
+                    fillParamWithDefaultValue({ name, value }));
             }
         };
-        const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded) => {
+        const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded): ReturnType<typeof flattenParams> | false => {
             parseRoute(route);
             if (checkParams()) return flattenParams();
-            return undefined;
+            return false;
         };
-        onBeforeMount(() => parseRouteToGetFlattenParams(useRoute())); // first time parse, discard the returned flattenParams()
 
-        const currentQueryTypeDesc = computed(() => {
-            const currentQueryType = getCurrentQueryType();
-            if (currentQueryType === 'fid') return '按吧索引查询';
-            if (currentQueryType === 'postID') return '按帖索引查询';
-            if (currentQueryType === 'search') return '搜索查询';
-            return '空查询';
+        watch(() => useState.uniqueParams.postTypes.value, (to, from) => {
+            if (to.length === 0) useState.uniqueParams.postTypes.value = from; // to prevent empty post types
         });
 
-        return { upperFirst: _.upperFirst, postsID, inputTextMatchParamPlaceholder, parseRouteToGetFlattenParams, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam, submit };
+        return { upperFirst: _.upperFirst, postsID, inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), queryFormSubmit, parseRouteToGetFlattenParams, getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam };
     }
 });
 </script>
 
 <style>
+.input-group-text ~ * > .ant-input-lg {
+    height: unset; /* revert the effect in global style @/shared/style.css */
+}
 /* remove borders for <RangePicker> in the start, middle and end of .input-group */
 .input-group > :not(:first-child) .ant-calendar-picker-input {
     border-bottom-left-radius: 0;

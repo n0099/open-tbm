@@ -1,26 +1,27 @@
 <template>
-    <select @change="$emit('paramChange', $event.target.value)" class="form-select form-control flex-grow-0">
-        <option selected value="add" disabled>New...</option>
+    <select v-model="selected" @change="$emit('paramChange', $event.target.value)"
+            class="form-select form-control flex-grow-0">
+        <option value="add" disabled>New...</option>
         <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
-            <option v-for="(paramDescription, paramName) in group" :key="paramName"
-                    :selected="currentParam === paramName" :value="paramName">{{ paramDescription }}</option>
+            <option v-for="(paramDescription, paramName) in group"
+                    :key="paramName" :value="paramName">{{ paramDescription }}</option>
         </optgroup>
     </select>
 </template>
 
-<script>
+<script lang="ts">
 import { emitEventStrValidator } from '@/shared';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, watchEffect } from 'vue';
 
 export default defineComponent({
     props: {
-        currentParam: String
+        currentParam: { type: String, required: true }
     },
     emits: {
         paramChange: emitEventStrValidator
     },
-    setup() {
-        const paramsGroup = ref({
+    setup(props) {
+        const paramsGroup = {
             帖子ID: {
                 tid: 'tid（主题帖ID）',
                 pid: 'pid（回复帖ID）',
@@ -53,8 +54,14 @@ export default defineComponent({
                 postContent: '帖子内容',
                 authorExpGrade: '发帖人经验等级'
             }
+        };
+
+        const selected = ref('add');
+        watchEffect(() => {
+            selected.value = props.currentParam;
         });
-        return { paramsGroup };
+
+        return { selected, paramsGroup };
     }
 });
 </script>

@@ -26,7 +26,7 @@ export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.p
 
 const lazyLoadRouteView = async (component: Promise<Component>) => {
     NProgress.start();
-    const loadingBlocksDom = document.getElementById('loadingBlocksRouteChange');
+    const loadingBlocksDom = document.getElementById('loadingBlocksRouteUpdate');
     const containersDom = ['.container', '.container-fluid:not(#nav)'].flatMap(i => [...document.querySelectorAll(i)]);
     loadingBlocksDom?.classList.remove('d-none');
     containersDom.forEach(i => { i.classList.add('d-none') });

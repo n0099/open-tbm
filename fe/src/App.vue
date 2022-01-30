@@ -1,7 +1,7 @@
 <template>
     <GlobalNavBar />
     <HorizontalMobileMessage />
-    <img id="loadingBlocksRouteChange" src="../public/assets/icon-loading-blocks.svg" class="d-none" />
+    <img id="loadingBlocksRouteUpdate" src="../public/assets/icon-loading-blocks.svg" class="d-none" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
             <RouterView />

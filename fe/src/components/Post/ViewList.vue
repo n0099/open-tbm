@@ -164,7 +164,7 @@ export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded)
         top: 80 // .reply-title { top: 5rem; }
     };
 };
-export const isRouteChangeTriggeredByPostsNavScrollEvent = ref(false);
+export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 
 export default defineComponent({
     components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
@@ -210,8 +210,8 @@ export default defineComponent({
 
         onMounted(initialTippy);
         setComponentCustomScrollBehaviour((to, from) => {
-            if (isRouteChangeTriggeredByPostsNavScrollEvent.value) {
-                isRouteChangeTriggeredByPostsNavScrollEvent.value = false;
+            if (isRouteUpdateTriggeredByPostsNavScrollEvent.value) {
+                isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
                 return false;
             }
             if (!compareRouteIsNewQuery(to, from)) return postListItemScrollPosition(to);

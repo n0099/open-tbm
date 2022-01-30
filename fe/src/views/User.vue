@@ -93,7 +93,7 @@ export default defineComponent({
                 i => i.pages.currentPage === routePageParamNullSafe(to)
             ))) return true;
             const isFetchSuccess = await fetchUsersData(to, isNewQuery);
-            return isNewQuery ? true : isFetchSuccess; // only pass pending route change after successful fetched
+            return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
         });
         setComponentCustomScrollBehaviour((to, from) => {
             if (!compareRouteIsNewQuery(to, from)) return { el: `#page${routePageParamNullSafe(to)}` };
