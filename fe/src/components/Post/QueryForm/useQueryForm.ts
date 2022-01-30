@@ -1,8 +1,7 @@
 import type { ObjUnknown, ObjValues } from '@/shared';
 import { boolStrToBool } from '@/shared';
 import { onBeforeMount, reactive, watch } from 'vue';
-import type { RouteLocationNormalizedLoaded } from 'vue-router';
-import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
 export interface Param { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
@@ -16,13 +15,11 @@ export default <
     deps: {
         paramsDefaultValue: Readonly<Partial<Record<string, ParamPartialValue>>>,
         paramsPreprocessor: Readonly<Partial<Record<string, ParamPreprocessorOrWatcher>>>,
-        paramsWatcher: Readonly<Partial<Record<string, ParamPreprocessorOrWatcher>>>,
-        parseRoute?: (route: RouteLocationNormalizedLoaded) => void
+        paramsWatcher: Readonly<Partial<Record<string, ParamPreprocessorOrWatcher>>>
     }
 ) => {
     type TUniqueParam = ObjValues<UniqueParams>;
     type TParam = ObjValues<Params>;
-    const route = useRoute();
     const router = useRouter();
     interface State {
         uniqueParams: UniqueParams,
@@ -163,16 +160,9 @@ export default <
             .value();
     }, { deep: true });
 
-    onBeforeRouteUpdate((to, from) => {
-        if (deps.parseRoute === undefined) throw Error('Unimplmented method in deps');
-        if (to.path === from.path) return; // ignore when only hash has changed
-        deps.parseRoute(to);
-    });
     onBeforeMount(() => {
         state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
         state.params = state.params.map(_.unary(fillParamWithDefaultValue)) as typeof state.params;
-        if (deps.parseRoute === undefined) throw Error('Unimplmented method in deps');
-        deps.parseRoute(route); // first time parse
     });
 
     return {

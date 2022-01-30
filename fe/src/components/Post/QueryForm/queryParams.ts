@@ -113,7 +113,7 @@ const paramsDefaultValue = {
     ..._.mapValues(_.keyBy(paramsNameByType.text), () => paramTypes.textMatch.default),
     ..._.mapValues(_.keyBy(paramsNameByType.dateTime), () => paramTypes.dateTimeRange.default)
 } as const;
-export const useQueryFormLateBinding: Parameters<typeof useQueryForm>[0] = {
+const useQueryFormDeps: Parameters<typeof useQueryForm>[0] = {
     paramsDefaultValue,
     paramsPreprocessor: {
         postTypes: paramTypes.array.preprocessor,
@@ -138,7 +138,7 @@ export interface UniqueParams extends Record<string, Param> {
 }
 // must get invoked with in the setup() of component
 export const useQueryFormWithUniqueParams = () => {
-    const ret = useQueryForm<UniqueParams, Params>(useQueryFormLateBinding);
+    const ret = useQueryForm<UniqueParams, Params>(useQueryFormDeps);
     ret.state.uniqueParams = {
         fid: { name: 'fid', ...paramsDefaultValue.fid },
         postTypes: { name: 'postTypes', ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes> },

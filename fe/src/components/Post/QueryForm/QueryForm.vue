@@ -155,16 +155,16 @@
 <script lang="ts">
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, inputTextMatchParamPlaceholder } from './';
 import type { Params, RequiredPostTypes, UniqueParams } from './queryParams';
-import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormLateBinding, useQueryFormWithUniqueParams } from './queryParams';
+import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
 import type { ObjUnknown, ObjValues, PostType } from '@/shared';
 import { notyShow, postsID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
 import type { PropType } from 'vue';
-import { computed, defineComponent, reactive, toRefs } from 'vue';
+import { computed, defineComponent, onBeforeMount, reactive, toRefs } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
@@ -330,7 +330,12 @@ export default defineComponent({
                 if (!skipSubmitRoute) submitRoute();
             }
         };
-        Object.assign(useQueryFormLateBinding, { parseRoute }); // assign() will prevent losing ref
+        const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded) => {
+            parseRoute(route);
+            if (checkParams()) return flattenParams();
+            return undefined;
+        };
+        onBeforeMount(() => parseRouteToGetFlattenParams(useRoute())); // first time parse, discard the returned flattenParams()
 
         const currentQueryTypeDesc = computed(() => {
             const currentQueryType = getCurrentQueryType();
@@ -340,7 +345,7 @@ export default defineComponent({
             return '空查询';
         });
 
-        return { upperFirst: _.upperFirst, postsID, inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam, submit };
+        return { upperFirst: _.upperFirst, postsID, inputTextMatchParamPlaceholder, parseRouteToGetFlattenParams, ...toRefs(state), ...toRefs(useState), getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam, submit };
     }
 });
 </script>

@@ -54,7 +54,6 @@ export default defineComponent({
             title: string,
             forumList: ApiForumList,
             postPages: ApiPostsQuery[],
-            currentQueryParams: ObjUnknown,
             isLoading: boolean,
             lastFetchError: ApiError | null,
             showPlaceholderPostList: boolean,
@@ -64,7 +63,6 @@ export default defineComponent({
             title: '帖子查询',
             forumList: [],
             postPages: [],
-            currentQueryParams: {},
             isLoading: false,
             lastFetchError: null,
             showPlaceholderPostList: true,
@@ -73,7 +71,7 @@ export default defineComponent({
         });
         useHead({ title: computed(() => titleTemplate(state.title)) });
         const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-        const fetchPosts = async (queryParams: ObjUnknown, isNewQuery: boolean, page = 1) => {
+        const fetchPosts = async (queryParams: ObjUnknown[] | undefined, isNewQuery: boolean, page = 1) => {
             const startTime = Date.now();
             state.lastFetchError = null;
             state.showPlaceholderPostList = true;
@@ -117,9 +115,8 @@ export default defineComponent({
 
         let isSubmitTriggeredByInitialLoad = true;
         let isRouteChangeTriggeredByQueryForm = false;
-        const submitQueryForm = (e: ObjUnknown) => {
+        const submitQueryForm = (e: ObjUnknown[]) => {
             isRouteChangeTriggeredByQueryForm = true;
-            state.currentQueryParams = e;
             if (isSubmitTriggeredByInitialLoad) {
                 fetchPosts(e, false, routePageParamNullSafe(route))
                     .then(isFetchSuccess => {
@@ -154,7 +151,7 @@ export default defineComponent({
                 state.postPages,
                 i => i.pages.currentPage === page
             ))) return true;
-            const isFetchSuccess = await fetchPosts(state.currentQueryParams, isNewQuery, page);
+            const isFetchSuccess = await fetchPosts(queryFormRef.value?.parseRouteToGetFlattenParams(to), isNewQuery, page);
             return isNewQuery ? true : isFetchSuccess; // only pass pending route change after successful fetched
         });
 

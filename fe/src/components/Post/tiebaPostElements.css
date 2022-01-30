@@ -18,4 +18,15 @@
     width: 150px; /* to prevent it shrink to 0x0px */
     height: 150px;
     margin: .25rem;
+    cursor: zoom-in;
+}
+/*
+ * workaround to simulate https://stackoverflow.com/questions/1817792/is-there-a-previous-sibling-selector/15503444#15503444
+ * with this approach, only the first image directly after any span and first span after image will occupy the whole row
+ */
+span + .tieba-image {
+    display: block;
+}
+.tieba-image + span {
+    display: block;
 }
