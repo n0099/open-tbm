@@ -1,4 +1,4 @@
-namespace tbm
+namespace tbm.Crawler
 {
     public class ReplyPost : IPost
     {

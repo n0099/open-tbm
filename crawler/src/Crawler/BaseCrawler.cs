@@ -9,7 +9,7 @@ using static System.Text.Json.JsonElement;
 using Fid = System.UInt32;
 using Page = System.UInt32;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public abstract class BaseCrawler<TPost> where TPost : IPost
     {

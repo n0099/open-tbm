@@ -12,7 +12,7 @@ using Pid = System.UInt64;
 using Uid = System.Int64;
 using Time = System.UInt32;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public sealed class ReplyCrawler : BaseCrawler<ReplyPost>
     {

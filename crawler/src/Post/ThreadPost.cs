@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public class ThreadPost : IPost
     {

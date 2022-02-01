@@ -8,7 +8,7 @@ using FidOrPostID = System.UInt64;
 using Page = System.UInt32;
 using Time = System.UInt32;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public class CrawlerLocks : WithLogTrace
     {

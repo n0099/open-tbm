@@ -1,7 +1,7 @@
 using System.Timers;
 using Microsoft.Extensions.Configuration;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public abstract class WithLogTrace
     {

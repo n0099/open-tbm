@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 
-namespace tbm
+namespace tbm.Crawler
 {
     internal class Program
     {

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public class DbContext : Microsoft.EntityFrameworkCore.DbContext
     {

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public record ClientRequester(ILogger<ClientRequester> Logger, IConfiguration Config,
         ClientRequesterTcs ClientRequesterTcs, string ClientVersion)

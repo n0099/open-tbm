@@ -7,7 +7,7 @@ using Autofac;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public class Worker : BackgroundService
     {

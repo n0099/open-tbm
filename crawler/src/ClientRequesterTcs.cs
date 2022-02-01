@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public class ClientRequesterTcs : WithLogTrace
     {

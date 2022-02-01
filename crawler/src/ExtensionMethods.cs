@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
-namespace tbm
+namespace tbm.Crawler
 {
     public static class ExtensionMethods
     {
