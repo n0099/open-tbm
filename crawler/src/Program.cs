@@ -43,9 +43,16 @@ namespace tbm
                         builder.RegisterType<ClientRequester>();
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("thread").SingleInstance();
-                        builder.RegisterType<ThreadCrawler>().WithParameter(
-                            (p, _) => p.ParameterType == typeof(ClientRequester),
-                            (_, c) => c.Resolve<ClientRequester.New>()("6.0.2"));
+                        builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("reply").SingleInstance();
+                        builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("subReply").SingleInstance();
+
+                        void RegisterPostCrawler<T>(string clientVersion) where T : notnull =>
+                            builder.RegisterType<T>().WithParameter(
+                                (p, _) => p.ParameterType == typeof(ClientRequester),
+                                (_, c) => c.Resolve<ClientRequester.New>()(clientVersion));
+                        RegisterPostCrawler<ThreadCrawler>("6.0.2");
+                        RegisterPostCrawler<ReplyCrawler>("8.8.8");
+                        RegisterPostCrawler<SubReplyCrawler>("8.8.8");
                     })
                     .Build();
                 Autofac = host.Services.GetAutofacRoot();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Autofac.Features.Indexed;
@@ -8,16 +9,19 @@ using static System.Text.Json.JsonElement;
 using Fid = System.UInt32;
 using Tid = System.UInt64;
 using Pid = System.UInt64;
+using Spid = System.UInt64;
+using Uid = System.Int64;
+using Time = System.UInt32;
 
 namespace tbm
 {
-    public sealed class SubReplyCrawler : BaseCrawler
+    public sealed class SubReplyCrawler : BaseCrawler<SubReplyPost>
     {
         protected override CrawlerLocks CrawlerLocks { get; init; }
         private readonly Tid _tid;
         private readonly Pid _pid;
 
-        public delegate ReplyCrawler New(Fid fid, Tid tid, Pid pid);
+        public delegate SubReplyCrawler New(Fid fid, Tid tid, Pid pid);
 
         public SubReplyCrawler(
             ILogger<SubReplyCrawler> logger,
@@ -25,14 +29,27 @@ namespace tbm
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
             Fid fid, Tid tid, Pid pid
-        ) : base(logger, requesterTcs, requester, fid)
+        ) : base(logger, requester, requesterTcs, fid)
         {
-            CrawlerLocks = locks["reply"]("reply");
+            CrawlerLocks = locks["subReply"]("subReply");
             _tid = tid;
             _pid = pid;
         }
 
-        protected override void ParseThreads(ArrayEnumerator threads) => throw new System.NotImplementedException();
+        protected override Exception FillExceptionData(Exception e)
+        {
+            e.Data["tid"] = _tid;
+            e.Data["pid"] = _pid;
+            return e;
+        }
+
+        protected override async Task<JsonElement> CrawlSinglePage(uint page) =>
+            await RequestJson("http://c.tieba.baidu.com/c/f/pb/floor", new Dictionary<string, string>
+            {
+                {"kz", _tid.ToString()},
+                {"pid", _pid.ToString()},
+                {"pn", page.ToString()}
+            });
 
         protected override ArrayEnumerator ValidateJson(JsonElement json)
         {
@@ -45,24 +62,27 @@ namespace tbm
                     throw new Exception("Thread already deleted when crawling sub reply");
                 default:
                     ValidateOtherErrorCode(json);
-                    return CheckIsEmptyPostList(json, "subpost_list",
+                    return EnsureNonEmptyPostList(json, "subpost_list",
                         "Sub reply list is empty, posts might already deleted from tieba");
             }
         }
 
-        protected override async Task<JsonElement> CrawlSinglePage(uint page) =>
-            await RequestJson("http://c.tieba.baidu.com/c/f/pb/floor", new Dictionary<string, string>
-            {
-                {"kz", _tid.ToString()},
-                {"pid", _pid.ToString()},
-                {"pn", page.ToString()}
-            });
-
-        protected override Exception FillExceptionData(Exception e)
+        protected override void ParsePosts(ArrayEnumerator posts)
         {
-            e.Data["tid"] = _tid;
-            e.Data["pid"] = _pid;
-            return e;
+            var newPosts = posts.Select(p => new SubReplyPost
+            {
+                Tid = _tid,
+                Pid = _pid,
+                Spid = Spid.Parse(p.GetStrProp("id")),
+                Content = NullIfEmptyJsonLiteral(p.GetProperty("content").GetRawText()),
+                AuthorUid = Uid.Parse(p.GetProperty("author").GetStrProp("id")),
+                AuthorManagerType = p.GetProperty("author").TryGetProperty("bawu_type", out var bawuType)
+                    ? bawuType.GetString().NullIfWhiteSpace()
+                    : null, // will be null if he's not a moderator
+                AuthorExpGrade = ushort.Parse(p.GetProperty("author").GetStrProp("level_id")),
+                PostTime = Time.Parse(p.GetStrProp("time"))
+            });
+            newPosts.ToList().ForEach(i => Posts[i.Spid] = i);
         }
     }
 }

@@ -32,7 +32,7 @@ namespace tbm
                 acc += i.Key + '=' + i.Value;
                 return acc;
             }) + "tiebaclient!!!";
-            var signMd5 = BitConverter.ToString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
+            var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
             postData.Add(KeyValuePair.Create("sign", signMd5));
 
             ClientRequesterTcs.Wait();
