@@ -7,8 +7,8 @@ namespace tbm.Crawler
         public uint Floor { get; init; }
         public string? Content { get; init; }
         public long AuthorUid { get; init; }
-        public string? AuthorManagerType { get; init; }
-        public ushort? AuthorExpGrade { get; init; }
+        public string? AuthorManagerType { get; set; }
+        public ushort? AuthorExpGrade { get; set; }
         public uint SubReplyNum { get; init; }
         public uint PostTime { get; init; }
         public bool IsFold { get; init; }

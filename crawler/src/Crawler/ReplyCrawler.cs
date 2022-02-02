@@ -18,6 +18,7 @@ namespace tbm.Crawler
     {
         protected override CrawlerLocks CrawlerLocks { get; init; }
         private readonly Tid _tid;
+        private ThreadLateSaveInfo? _parentThread;
 
         public delegate ReplyCrawler New(Fid fid, Tid tid);
 
@@ -26,8 +27,9 @@ namespace tbm.Crawler
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
+            UserParser userParser,
             Fid fid, Tid tid
-        ) : base(logger, requester, requesterTcs, fid)
+        ) : base(logger, requester, requesterTcs, userParser, fid)
         {
             CrawlerLocks = locks["reply"]("reply");
             _tid = tid;
@@ -46,7 +48,36 @@ namespace tbm.Crawler
                 {"pn", page.ToString()}
             });
 
-        protected override ArrayEnumerator ValidateJson(JsonElement json)
+        protected override void ValidateJsonThenParse(JsonElement json)
+        {
+            var posts = GetValidPosts(json);
+            ParsePosts(posts);
+
+            var parentThread = json.GetProperty("thread").GetProperty("thread_info");
+            _parentThread = new ThreadLateSaveInfo
+            {
+                AuthorPhoneType = parentThread.GetStrProp("phone_type"),
+                AntiSpamInfo = parentThread.GetProperty("antispam_info").GetRawText()
+            };
+
+            var users = json.GetProperty("user_list").EnumerateArray();
+            Users.ParseUsers(users);
+            lock (Posts)
+                posts.Select(p => Pid.Parse(p.GetStrProp("id"))).ToList().ForEach(pid =>
+                {
+                    var p = Posts[pid];
+                    var author = users.First(u => Uid.Parse(u.GetStrProp("id")) == p.AuthorUid);
+                    p.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                        ? bawuType.GetString().NullIfWhiteSpace()
+                        : null; // will be null if he's not a moderator
+                    p.AuthorExpGrade = author.TryGetProperty("level_id", out var levelIdEl)
+                        ? ushort.TryParse(levelIdEl.GetString(), out var levelId) ? levelId : null
+                        : null; // will be null when author is a historical anonymous user
+                    Posts[pid] = p;
+                });
+        }
+
+        protected override ArrayEnumerator GetValidPosts(JsonElement json)
         {
             var errorCode = json.GetProperty("error_code").GetString();
             if (errorCode == "4")
@@ -65,8 +96,6 @@ namespace tbm.Crawler
                 Floor = uint.Parse(p.GetStrProp("floor")),
                 Content = NullIfEmptyJsonLiteral(p.GetProperty("content").GetRawText()),
                 AuthorUid = Uid.Parse(p.GetStrProp("author_id")),
-                // AuthorManagerType = TODO.TryGetProperty("bawu_type", out var bawuType) ? bawuType.GetString().NullIfWhiteSpace() : null, // will be null if he's not a moderator
-                // AuthorExpGrade = TODO.TryGetProperty("level_id", out var levelId) ? levelId.GetString().NullIfWhiteSpace() : null, // will be null when author is a historical anonymous user
                 SubReplyNum = uint.Parse(p.GetStrProp("sub_post_number")),
                 PostTime = Time.Parse(p.GetStrProp("time")),
                 IsFold = p.GetStrProp("is_fold") != "0",

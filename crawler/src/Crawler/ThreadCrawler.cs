@@ -27,9 +27,10 @@ namespace tbm.Crawler
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
+            UserParser userParser,
             Fid fid,
             string forumName
-        ) : base(logger, requester, requesterTcs, fid)
+        ) : base(logger, requester, requesterTcs, userParser, fid)
         {
             _forumName = forumName;
             CrawlerLocks = locks["thread"]("thread");
@@ -49,7 +50,7 @@ namespace tbm.Crawler
                 {"rn", "50"}
             });
 
-        protected override ArrayEnumerator ValidateJson(JsonElement json)
+        protected override ArrayEnumerator GetValidPosts(JsonElement json)
         {
             ValidateOtherErrorCode(json);
             return EnsureNonEmptyPostList(json, "thread_list",
@@ -58,39 +59,46 @@ namespace tbm.Crawler
 
         protected override void ParsePosts(ArrayEnumerator posts)
         {
-            var newPosts = posts.Select(p => new ThreadPost
+            List<JsonElement> users = new();
+            var newPosts = posts.Select(p =>
             {
-                Tid = Tid.Parse(p.GetStrProp("tid")),
-                FirstPid = Pid.Parse(p.GetStrProp("first_post_id")),
-                ThreadType = ulong.Parse(p.GetStrProp("thread_types")),
-                StickyType = p.GetStrProp("is_membertop") == "1"
-                    ? "membertop"
-                    : p.TryGetProperty("is_top", out var isTop)
-                        ? isTop.GetString() == "0" ? null : "top"
-                        : "top", // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
-                IsGood = p.GetStrProp("is_good") == "1",
-                TopicType = p.TryGetProperty("is_livepost", out var isLivePost) ? isLivePost.GetString() : null,
-                Title = p.GetStrProp("title"),
-                AuthorUid = Uid.Parse(p.GetProperty("author").GetStrProp("id")),
-                AuthorManagerType = p.GetProperty("author").TryGetProperty("bawu_type", out var bawuType)
-                    ? bawuType.GetString().NullIfWhiteSpace()
-                    : null, // topic thread won't have this
-                PostTime = p.TryGetProperty("create_time", out var createTime)
-                    ? Time.Parse(createTime.GetString() ?? "")
-                    : null, // topic thread won't have this
-                LatestReplyTime = Time.Parse(p.GetStrProp("last_time_int")),
-                LatestReplierUid = Uid.Parse(p.GetProperty("last_replyer").GetStrProp("id")), // topic thread won't have this
-                ReplyNum = uint.Parse(p.GetStrProp("reply_num")),
-                ViewNum = uint.Parse(p.GetStrProp("view_num")),
-                ShareNum = p.TryGetProperty("share_num", out var shareNum)
-                    ? uint.Parse(shareNum.GetString() ?? "")
-                    : null, // topic thread won't have this
-                AgreeNum = int.Parse(p.GetStrProp("agree_num")),
-                DisagreeNum = int.Parse(p.GetStrProp("disagree_num")),
-                Location = NullIfEmptyJsonLiteral(p.GetProperty("location").GetRawText()),
-                ZanInfo = NullIfEmptyJsonLiteral(p.GetProperty("zan").GetRawText())
+                var author = p.GetProperty("author");
+                users.Add(author);
+                return new ThreadPost
+                {
+                    Tid = Tid.Parse(p.GetStrProp("tid")),
+                    FirstPid = Pid.Parse(p.GetStrProp("first_post_id")),
+                    ThreadType = ulong.Parse(p.GetStrProp("thread_types")),
+                    StickyType = p.GetStrProp("is_membertop") == "1"
+                        ? "membertop"
+                        : p.TryGetProperty("is_top", out var isTop)
+                            ? isTop.GetString() == "0" ? null : "top"
+                            : "top", // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
+                    IsGood = p.GetStrProp("is_good") == "1",
+                    TopicType = p.TryGetProperty("is_livepost", out var isLivePost) ? isLivePost.GetString() : null,
+                    Title = p.GetStrProp("title"),
+                    AuthorUid = Uid.Parse(author.GetStrProp("id")),
+                    AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                        ? bawuType.GetString().NullIfWhiteSpace()
+                        : null, // topic thread won't have this
+                    PostTime = p.TryGetProperty("create_time", out var createTime)
+                        ? Time.Parse(createTime.GetString() ?? "")
+                        : null, // topic thread won't have this
+                    LatestReplyTime = Time.Parse(p.GetStrProp("last_time_int")),
+                    LatestReplierUid = Uid.Parse(p.GetProperty("last_replyer").GetStrProp("id")), // topic thread won't have this
+                    ReplyNum = uint.Parse(p.GetStrProp("reply_num")),
+                    ViewNum = uint.Parse(p.GetStrProp("view_num")),
+                    ShareNum = p.TryGetProperty("share_num", out var shareNum)
+                        ? uint.Parse(shareNum.GetString() ?? "")
+                        : null, // topic thread won't have this
+                    AgreeNum = int.Parse(p.GetStrProp("agree_num")),
+                    DisagreeNum = int.Parse(p.GetStrProp("disagree_num")),
+                    Location = NullIfEmptyJsonLiteral(p.GetProperty("location").GetRawText()),
+                    ZanInfo = NullIfEmptyJsonLiteral(p.GetProperty("zan").GetRawText())
+                };
             });
             newPosts.ToList().ForEach(i => Posts[i.Tid] = i);
+            Users.ParseUsers(users);
         }
     }
 }

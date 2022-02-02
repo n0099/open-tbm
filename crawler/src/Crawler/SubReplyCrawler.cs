@@ -28,8 +28,9 @@ namespace tbm.Crawler
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
+            UserParser userParser,
             Fid fid, Tid tid, Pid pid
-        ) : base(logger, requester, requesterTcs, fid)
+        ) : base(logger, requester, requesterTcs, userParser, fid)
         {
             CrawlerLocks = locks["subReply"]("subReply");
             _tid = tid;
@@ -51,7 +52,7 @@ namespace tbm.Crawler
                 {"pn", page.ToString()}
             });
 
-        protected override ArrayEnumerator ValidateJson(JsonElement json)
+        protected override ArrayEnumerator GetValidPosts(JsonElement json)
         {
             var errorCode = json.GetProperty("error_code").GetString();
             switch (errorCode)
@@ -69,20 +70,27 @@ namespace tbm.Crawler
 
         protected override void ParsePosts(ArrayEnumerator posts)
         {
-            var newPosts = posts.Select(p => new SubReplyPost
+            List<JsonElement> users = new();
+            var newPosts = posts.Select(p =>
             {
-                Tid = _tid,
-                Pid = _pid,
-                Spid = Spid.Parse(p.GetStrProp("id")),
-                Content = NullIfEmptyJsonLiteral(p.GetProperty("content").GetRawText()),
-                AuthorUid = Uid.Parse(p.GetProperty("author").GetStrProp("id")),
-                AuthorManagerType = p.GetProperty("author").TryGetProperty("bawu_type", out var bawuType)
-                    ? bawuType.GetString().NullIfWhiteSpace()
-                    : null, // will be null if he's not a moderator
-                AuthorExpGrade = ushort.Parse(p.GetProperty("author").GetStrProp("level_id")),
-                PostTime = Time.Parse(p.GetStrProp("time"))
+                var author = p.GetProperty("author");
+                users.Add(author);
+                return new SubReplyPost
+                {
+                    Tid = _tid,
+                    Pid = _pid,
+                    Spid = Spid.Parse(p.GetStrProp("id")),
+                    Content = NullIfEmptyJsonLiteral(p.GetProperty("content").GetRawText()),
+                    AuthorUid = Uid.Parse(author.GetStrProp("id")),
+                    AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                        ? bawuType.GetString().NullIfWhiteSpace()
+                        : null, // will be null if he's not a moderator
+                    AuthorExpGrade = ushort.Parse(author.GetStrProp("level_id")),
+                    PostTime = Time.Parse(p.GetStrProp("time"))
+                };
             });
             newPosts.ToList().ForEach(i => Posts[i.Spid] = i);
+            Users.ParseUsers(users);
         }
     }
 }

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace tbm.Crawler
 {
-    public class ThreadPost : IPost
+    public class ThreadPost : ThreadLateSaveInfo, IPost
     {
         [Key] public ulong Tid { get; init; }
         public ulong FirstPid { get; init; }

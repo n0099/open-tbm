@@ -45,6 +45,7 @@ namespace tbm.Crawler
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("thread").SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("reply").SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("subReply").SingleInstance();
+                        builder.RegisterType<UserParser>();
 
                         void RegisterPostCrawler<T>(string clientVersion) where T : notnull =>
                             builder.RegisterType<T>().WithParameter(
