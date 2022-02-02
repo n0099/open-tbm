@@ -81,7 +81,7 @@ namespace tbm.Crawler
         {
             var errorCode = json.GetProperty("error_code").GetString();
             if (errorCode == "4")
-                throw new Exception("Thread already deleted when crawling reply");
+                throw new TiebaException("Thread already deleted when crawling reply");
             ValidateOtherErrorCode(json);
             return EnsureNonEmptyPostList(json, "post_list",
                 "Reply list is empty, posts might already deleted from tieba");

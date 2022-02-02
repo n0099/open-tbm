@@ -58,9 +58,9 @@ namespace tbm.Crawler
             switch (errorCode)
             {
                 case "4":
-                    throw new Exception("Reply already deleted when crawling sub reply");
+                    throw new TiebaException("Reply already deleted when crawling sub reply");
                 case "28":
-                    throw new Exception("Thread already deleted when crawling sub reply");
+                    throw new TiebaException("Thread already deleted when crawling sub reply");
                 default:
                     ValidateOtherErrorCode(json);
                     return EnsureNonEmptyPostList(json, "subpost_list",

@@ -50,7 +50,7 @@ namespace tbm.Crawler
             };
         }
 
-        protected override void TryLogTrace()
+        protected override void LogTrace()
         {
             if (!ShouldLogTrace()) return;
             _logger.LogTrace("TCS: queueLen={} maxRps={:F2} avgRps={:F2} elapsed={:F1}s",

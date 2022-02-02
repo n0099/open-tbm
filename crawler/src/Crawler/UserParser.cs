@@ -13,7 +13,7 @@ namespace tbm.Crawler
         public void ParseUsers(IEnumerable<JsonElement> users)
         {
             var usersList = users.ToList();
-            if (!usersList.Any()) throw new Exception("User list is empty");
+            if (!usersList.Any()) throw new TiebaException("User list is empty");
             var newUsers = usersList.Select(u =>
             {
                 var rawUid = u.GetStrProp("id");

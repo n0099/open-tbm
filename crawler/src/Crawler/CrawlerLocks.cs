@@ -28,7 +28,7 @@ namespace tbm.Crawler
             InitLogTrace(_config);
         }
 
-        protected override void TryLogTrace()
+        protected override void LogTrace()
         {
             if (!ShouldLogTrace()) return;
             lock (_crawling)

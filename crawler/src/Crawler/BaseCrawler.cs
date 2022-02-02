@@ -51,7 +51,7 @@ namespace tbm.Crawler
                 e.Data["startPage"] = startPage;
                 e.Data["endPage"] = endPage;
                 e.Data["fid"] = _fid;
-                _logger.LogError(FillExceptionData(e), "exception");
+                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
             }
         }
 
@@ -66,7 +66,7 @@ namespace tbm.Crawler
                 {
                     e.Data["page"] = page;
                     e.Data["fid"] = _fid;
-                    _logger.LogError(FillExceptionData(e), "exception");
+                    _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
                     _requesterTcs.Decrease();
                     CrawlerLocks.AddFailed(_fid, page);
                 }
@@ -81,13 +81,13 @@ namespace tbm.Crawler
         protected static void ValidateOtherErrorCode(JsonElement json)
         {
             if (json.GetProperty("error_code").GetString() != "0")
-                throw new Exception($"Error from tieba client when crawling thread, raw json:{json}");
+                throw new TiebaException($"Error from tieba client when crawling thread, raw json:{json}");
         }
 
         protected static ArrayEnumerator EnsureNonEmptyPostList(JsonElement json, string fieldName, string exceptionMessage)
         {
             using var posts = json.GetProperty(fieldName).EnumerateArray();
-            return posts.Any() ? posts : throw new Exception(exceptionMessage);
+            return posts.Any() ? posts : throw new TiebaException(exceptionMessage);
         }
 
         protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
