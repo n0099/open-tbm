@@ -2,13 +2,13 @@ namespace tbm.Crawler
 {
     public class SubReplyPost : IPost
     {
-        public ulong Tid { get; init; }
-        public ulong Pid { get; init; }
-        public ulong Spid { get; init; }
-        public string? Content { get; init; }
-        public long AuthorUid { get; init; }
-        public string? AuthorManagerType { get; init; }
-        public ushort AuthorExpGrade { get; init; }
-        public uint PostTime { get; init; }
+        public ulong Tid { get; set; }
+        public ulong Pid { get; set; }
+        public ulong Spid { get; set; }
+        public string? Content { get; set; }
+        public long AuthorUid { get; set; }
+        public string? AuthorManagerType { get; set; }
+        public ushort AuthorExpGrade { get; set; }
+        public uint PostTime { get; set; }
     }
 }

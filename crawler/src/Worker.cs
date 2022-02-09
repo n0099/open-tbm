@@ -19,7 +19,7 @@ namespace tbm.Crawler
         {
             await using var scope = Program.Autofac.BeginLifetimeScope();
 
-            var db = scope.Resolve<DbContext.New>()(0);
+            var db = scope.Resolve<TbmDbContext.New>()(0);
             var a = from thread in db.Threads orderby thread.Tid select thread.Title;
             _logger.LogInformation(JsonSerializer.Serialize(a.Take(5).ToList()));
 

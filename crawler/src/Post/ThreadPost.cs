@@ -4,24 +4,24 @@ namespace tbm.Crawler
 {
     public class ThreadPost : ThreadLateSaveInfo, IPost
     {
-        [Key] public ulong Tid { get; init; }
-        public ulong FirstPid { get; init; }
-        public ulong ThreadType { get; init; }
-        public string? StickyType { get; init; }
-        public bool IsGood { get; init; }
-        public string? TopicType { get; init; }
-        public string Title { get; init; } = "";
-        public long AuthorUid { get; init; }
-        public string? AuthorManagerType { get; init; }
-        public uint? PostTime { get; init; }
-        public uint LatestReplyTime { get; init; }
-        public long LatestReplierUid { get; init; }
-        public uint ReplyNum { get; init; }
-        public uint ViewNum { get; init; }
-        public uint? ShareNum { get; init; }
-        public int AgreeNum { get; init; }
-        public int DisagreeNum { get; init; }
-        public string? Location { get; init; }
-        public string? ZanInfo { get; init; }
+        [Key] public ulong Tid { get; set; }
+        public ulong FirstPid { get; set; }
+        public ulong ThreadType { get; set; }
+        public string? StickyType { get; set; }
+        public bool IsGood { get; set; }
+        public string? TopicType { get; set; }
+        public string Title { get; set; } = "";
+        public long AuthorUid { get; set; }
+        public string? AuthorManagerType { get; set; }
+        public uint? PostTime { get; set; }
+        public uint LatestReplyTime { get; set; }
+        public long LatestReplierUid { get; set; }
+        public uint ReplyNum { get; set; }
+        public uint ViewNum { get; set; }
+        public uint? ShareNum { get; set; }
+        public int AgreeNum { get; set; }
+        public int DisagreeNum { get; set; }
+        public string? Location { get; set; }
+        public string? ZanInfo { get; set; }
     }
 }

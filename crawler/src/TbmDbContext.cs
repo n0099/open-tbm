@@ -4,15 +4,15 @@ using Microsoft.Extensions.Configuration;
 
 namespace tbm.Crawler
 {
-    public class DbContext : Microsoft.EntityFrameworkCore.DbContext
+    public class TbmDbContext : DbContext
     {
         private readonly string _connectionStr;
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public uint Fid { get; }
 
-        public delegate DbContext New(uint fid);
+        public delegate TbmDbContext New(uint fid);
 
-        public DbContext(IConfiguration config, uint fid)
+        public TbmDbContext(IConfiguration config, uint fid)
         {
             _connectionStr = config.GetConnectionString("Main");
             Fid = fid;
@@ -34,9 +34,9 @@ namespace tbm.Crawler
     class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
         // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(Microsoft.EntityFrameworkCore.DbContext context) => Create(context, false);
-        public object Create(Microsoft.EntityFrameworkCore.DbContext context, bool designTime) =>
-            context is DbContext dbContext
+        public object Create(DbContext context) => Create(context, false);
+        public object Create(DbContext context, bool designTime) =>
+            context is TbmDbContext dbContext
                 ? (context.GetType(), dbContext.Fid, designTime)
                 : context.GetType();
     }

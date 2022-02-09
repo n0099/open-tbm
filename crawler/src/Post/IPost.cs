@@ -2,7 +2,7 @@ namespace tbm.Crawler
 {
     public interface IPost
     {
-        public ulong Tid { get; init; }
-        public long AuthorUid { get; init; }
+        public ulong Tid { get; set; }
+        public long AuthorUid { get; set; }
     }
 }

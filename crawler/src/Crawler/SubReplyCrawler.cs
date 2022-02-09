@@ -80,7 +80,7 @@ namespace tbm.Crawler
                     Tid = _tid,
                     Pid = _pid,
                     Spid = Spid.Parse(p.GetStrProp("id")),
-                    Content = NullIfEmptyJsonLiteral(p.GetProperty("content").GetRawText()),
+                    Content = RawJsonOrNullWhenEmpty(p.GetProperty("content").GetRawText()),
                     AuthorUid = Uid.Parse(author.GetStrProp("id")),
                     AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
                         ? bawuType.GetString().NullIfWhiteSpace()

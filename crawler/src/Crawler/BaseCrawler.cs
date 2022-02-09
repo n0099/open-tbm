@@ -16,7 +16,7 @@ namespace tbm.Crawler
         private readonly ILogger<BaseCrawler<TPost>> _logger;
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly ClientRequester _requester;
-        private readonly Fid _fid;
+        protected readonly Fid Fid;
         protected abstract CrawlerLocks CrawlerLocks { get; init; } // singleton for every derived class
         protected readonly ConcurrentDictionary<ulong, TPost> Posts = new();
         protected readonly UserParser Users;
@@ -31,11 +31,11 @@ namespace tbm.Crawler
             _logger = logger;
             _requester = requester;
             _requesterTcs = requesterTcs;
-            _fid = fid;
+            Fid = fid;
             Users = userParser;
         }
 
-        public static string? NullIfEmptyJsonLiteral(string json) => json is @"""""" or "[]" ? null : json;
+        public static string? RawJsonOrNullWhenEmpty(string json) => json is @"""""" or "[]" ? null : json;
 
         public async Task DoCrawler(Page startPage, Page endPage = Page.MaxValue)
         {
@@ -50,13 +50,13 @@ namespace tbm.Crawler
             {
                 e.Data["startPage"] = startPage;
                 e.Data["endPage"] = endPage;
-                e.Data["fid"] = _fid;
+                e.Data["fid"] = Fid;
                 _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
             }
         }
 
         private async Task DoCrawler(IEnumerable<Page> pages) =>
-            await Task.WhenAll(CrawlerLocks.AddLocks(_fid, pages).Shuffle().Select(async page =>
+            await Task.WhenAll(CrawlerLocks.AddLocks(Fid, pages).Shuffle().Select(async page =>
             {
                 try
                 {
@@ -65,14 +65,14 @@ namespace tbm.Crawler
                 catch (Exception e)
                 {
                     e.Data["page"] = page;
-                    e.Data["fid"] = _fid;
+                    e.Data["fid"] = Fid;
                     _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
                     _requesterTcs.Decrease();
-                    CrawlerLocks.AddFailed(_fid, page);
+                    CrawlerLocks.AddFailed(Fid, page);
                 }
                 finally
                 {
-                    CrawlerLocks.ReleaseLock(_fid, page);
+                    CrawlerLocks.ReleaseLock(Fid, page);
                 }
             }));
 

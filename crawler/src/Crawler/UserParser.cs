@@ -46,7 +46,7 @@ namespace tbm.Crawler
                     FansNickname = u.TryGetProperty("fans_nickname", out var fansNickName)
                         ? fansNickName.GetString().NullIfWhiteSpace()
                         : null,
-                    IconInfo = BaseCrawler<IPost>.NullIfEmptyJsonLiteral(u.GetProperty("iconinfo").GetRawText())
+                    IconInfo = BaseCrawler<IPost>.RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo").GetRawText())
                 };
             });
             newUsers.OfType<UserRecord>().ToList().ForEach(i => _users[i.Uid] = i);

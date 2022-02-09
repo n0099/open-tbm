@@ -2,20 +2,20 @@ namespace tbm.Crawler
 {
     public class ReplyPost : IPost
     {
-        public ulong Tid { get; init; }
-        public ulong Pid { get; init; }
-        public uint Floor { get; init; }
-        public string? Content { get; init; }
-        public long AuthorUid { get; init; }
+        public ulong Tid { get; set; }
+        public ulong Pid { get; set; }
+        public uint Floor { get; set; }
+        public string? Content { get; set; }
+        public long AuthorUid { get; set; }
         public string? AuthorManagerType { get; set; }
         public ushort? AuthorExpGrade { get; set; }
-        public uint SubReplyNum { get; init; }
-        public uint PostTime { get; init; }
-        public bool IsFold { get; init; }
-        public int AgreeNum { get; init; }
-        public int DisagreeNum { get; init; }
-        public string? Location { get; init; }
-        public string? SignInfo { get; init; }
-        public string? TailInfo { get; init; }
+        public uint SubReplyNum { get; set; }
+        public uint PostTime { get; set; }
+        public bool IsFold { get; set; }
+        public int AgreeNum { get; set; }
+        public int DisagreeNum { get; set; }
+        public string? Location { get; set; }
+        public string? SignInfo { get; set; }
+        public string? TailInfo { get; set; }
     }
 }

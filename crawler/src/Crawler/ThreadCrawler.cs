@@ -93,8 +93,8 @@ namespace tbm.Crawler
                         : null, // topic thread won't have this
                     AgreeNum = int.Parse(p.GetStrProp("agree_num")),
                     DisagreeNum = int.Parse(p.GetStrProp("disagree_num")),
-                    Location = NullIfEmptyJsonLiteral(p.GetProperty("location").GetRawText()),
-                    ZanInfo = NullIfEmptyJsonLiteral(p.GetProperty("zan").GetRawText())
+                    Location = RawJsonOrNullWhenEmpty(p.GetProperty("location").GetRawText()),
+                    ZanInfo = RawJsonOrNullWhenEmpty(p.GetProperty("zan").GetRawText())
                 };
             });
             newPosts.ToList().ForEach(i => Posts[i.Tid] = i);

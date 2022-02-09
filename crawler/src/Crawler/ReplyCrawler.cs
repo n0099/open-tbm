@@ -94,16 +94,16 @@ namespace tbm.Crawler
                 Tid = _tid,
                 Pid = Pid.Parse(p.GetStrProp("id")),
                 Floor = uint.Parse(p.GetStrProp("floor")),
-                Content = NullIfEmptyJsonLiteral(p.GetProperty("content").GetRawText()),
+                Content = RawJsonOrNullWhenEmpty(p.GetProperty("content").GetRawText()),
                 AuthorUid = Uid.Parse(p.GetStrProp("author_id")),
                 SubReplyNum = uint.Parse(p.GetStrProp("sub_post_number")),
                 PostTime = Time.Parse(p.GetStrProp("time")),
                 IsFold = p.GetStrProp("is_fold") != "0",
                 AgreeNum = int.Parse(p.GetProperty("agree").GetStrProp("agree_num")),
                 DisagreeNum = int.Parse(p.GetProperty("agree").GetStrProp("disagree_num")),
-                Location = NullIfEmptyJsonLiteral(p.GetProperty("lbs_info").GetRawText()),
-                SignInfo = NullIfEmptyJsonLiteral(p.GetProperty("signature").GetRawText()),
-                TailInfo = NullIfEmptyJsonLiteral(p.GetProperty("tail_info").GetRawText())
+                Location = RawJsonOrNullWhenEmpty(p.GetProperty("lbs_info").GetRawText()),
+                SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature").GetRawText()),
+                TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info").GetRawText())
             });
             newPosts.ToList().ForEach(i => { Posts[i.Pid] = i; });
         }
