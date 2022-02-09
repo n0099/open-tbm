@@ -1,9 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace tbm.Crawler
 {
     public class ReplyPost : IPost
     {
         public ulong Tid { get; set; }
-        public ulong Pid { get; set; }
+        [Key] public ulong Pid { get; set; }
         public uint Floor { get; set; }
         public string? Content { get; set; }
         public long AuthorUid { get; set; }
@@ -17,5 +19,7 @@ namespace tbm.Crawler
         public string? Location { get; set; }
         public string? SignInfo { get; set; }
         public string? TailInfo { get; set; }
+        public uint CreatedAt { get; set; }
+        public uint UpdatedAt { get; set; }
     }
 }

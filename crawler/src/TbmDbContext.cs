@@ -1,33 +1,63 @@
+using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 
 namespace tbm.Crawler
 {
     public class TbmDbContext : DbContext
     {
-        private readonly string _connectionStr;
-        public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public uint Fid { get; }
+        public DbSet<ThreadPost> Threads => Set<ThreadPost>();
+        public DbSet<ReplyPost> Replies => Set<ReplyPost>();
+        public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
+        private readonly IConfiguration _config;
 
         public delegate TbmDbContext New(uint fid);
 
         public TbmDbContext(IConfiguration config, uint fid)
         {
-            _connectionStr = config.GetConnectionString("Main");
+            _config = config;
             Fid = fid;
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
+            modelBuilder.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
+            modelBuilder.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseMySql(_connectionStr, ServerVersion.AutoDetect(_connectionStr))
-                .ReplaceService<IModelCacheKeyFactory, ModelWithFidCacheKeyFactory>();
-#if DEBUG
-            options.EnableDetailedErrors().EnableSensitiveDataLogging();
-#endif
+            var connectionStr = _config.GetConnectionString("Main");
+            options.UseMySql(connectionStr, ServerVersion.AutoDetect(connectionStr))
+                .ReplaceService<IModelCacheKeyFactory, ModelWithFidCacheKeyFactory>()
+                .UseCamelCaseNamingConvention();
+
+            var dbSettings = _config.GetSection("DbSettings");
+            options.UseLoggerFactory(LoggerFactory.Create(builder => builder.AddNLog()
+                .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(dbSettings.GetValue("LogLevel", "Trace")).Ordinal)));
+            if (dbSettings.GetValue("EnableDetailedErrors", false)) options.EnableDetailedErrors();
+            if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
+        }
+
+        public override int SaveChanges()
+        { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity is IPost && e.State is EntityState.Added or EntityState.Modified);
+
+            foreach (var entityEntry in entries)
+            {
+                ((IPost)entityEntry.Entity).UpdatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+                if (entityEntry.State == EntityState.Added)
+                    ((IPost)entityEntry.Entity).CreatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+            }
+
+            return base.SaveChanges();
         }
     }
 

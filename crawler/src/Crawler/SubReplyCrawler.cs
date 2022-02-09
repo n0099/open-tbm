@@ -80,7 +80,7 @@ namespace tbm.Crawler
                     Tid = _tid,
                     Pid = _pid,
                     Spid = Spid.Parse(p.GetStrProp("id")),
-                    Content = RawJsonOrNullWhenEmpty(p.GetProperty("content").GetRawText()),
+                    Content = RawJsonOrNullWhenEmpty(p.GetProperty("content")),
                     AuthorUid = Uid.Parse(author.GetStrProp("id")),
                     AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
                         ? bawuType.GetString().NullIfWhiteSpace()
@@ -92,5 +92,7 @@ namespace tbm.Crawler
             newPosts.ToList().ForEach(i => Posts[i.Spid] = i);
             Users.ParseUsers(users);
         }
+
+        public override void SavePosts() => throw new NotImplementedException();
     }
 }

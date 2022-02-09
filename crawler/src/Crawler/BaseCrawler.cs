@@ -25,6 +25,7 @@ namespace tbm.Crawler
         protected abstract Task<JsonElement> CrawlSinglePage(Page page);
         protected abstract ArrayEnumerator GetValidPosts(JsonElement json);
         protected abstract void ParsePosts(ArrayEnumerator posts);
+        public abstract void SavePosts();
 
         protected BaseCrawler(ILogger<BaseCrawler<TPost>> logger, ClientRequester requester, ClientRequesterTcs requesterTcs, UserParser userParser,uint fid)
         {
@@ -35,7 +36,9 @@ namespace tbm.Crawler
             Users = userParser;
         }
 
-        public static string? RawJsonOrNullWhenEmpty(string json) => json is @"""""" or "[]" ? null : json;
+        public static string? RawJsonOrNullWhenEmpty(JsonElement json) =>
+            // serialize to json for further compare with the field value of saved post read from db in SavePosts()
+            json.GetRawText() is @"""""" or "[]" ? null : JsonSerializer.Serialize(json);
 
         public async Task DoCrawler(Page startPage, Page endPage = Page.MaxValue)
         {

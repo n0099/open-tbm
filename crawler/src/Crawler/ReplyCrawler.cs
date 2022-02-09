@@ -57,7 +57,7 @@ namespace tbm.Crawler
             _parentThread = new ThreadLateSaveInfo
             {
                 AuthorPhoneType = parentThread.GetStrProp("phone_type"),
-                AntiSpamInfo = parentThread.GetProperty("antispam_info").GetRawText()
+                AntiSpamInfo = RawJsonOrNullWhenEmpty(parentThread.GetProperty("antispam_info"))
             };
 
             var users = json.GetProperty("user_list").EnumerateArray();
@@ -94,18 +94,20 @@ namespace tbm.Crawler
                 Tid = _tid,
                 Pid = Pid.Parse(p.GetStrProp("id")),
                 Floor = uint.Parse(p.GetStrProp("floor")),
-                Content = RawJsonOrNullWhenEmpty(p.GetProperty("content").GetRawText()),
+                Content = RawJsonOrNullWhenEmpty(p.GetProperty("content")),
                 AuthorUid = Uid.Parse(p.GetStrProp("author_id")),
                 SubReplyNum = uint.Parse(p.GetStrProp("sub_post_number")),
                 PostTime = Time.Parse(p.GetStrProp("time")),
                 IsFold = p.GetStrProp("is_fold") != "0",
                 AgreeNum = int.Parse(p.GetProperty("agree").GetStrProp("agree_num")),
                 DisagreeNum = int.Parse(p.GetProperty("agree").GetStrProp("disagree_num")),
-                Location = RawJsonOrNullWhenEmpty(p.GetProperty("lbs_info").GetRawText()),
-                SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature").GetRawText()),
-                TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info").GetRawText())
+                Location = RawJsonOrNullWhenEmpty(p.GetProperty("lbs_info")),
+                SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature")),
+                TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info"))
             });
             newPosts.ToList().ForEach(i => { Posts[i.Pid] = i; });
         }
+
+        public override void SavePosts() => throw new NotImplementedException();
     }
 }

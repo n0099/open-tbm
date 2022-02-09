@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Autofac;
 using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
@@ -93,12 +94,48 @@ namespace tbm.Crawler
                         : null, // topic thread won't have this
                     AgreeNum = int.Parse(p.GetStrProp("agree_num")),
                     DisagreeNum = int.Parse(p.GetStrProp("disagree_num")),
-                    Location = RawJsonOrNullWhenEmpty(p.GetProperty("location").GetRawText()),
-                    ZanInfo = RawJsonOrNullWhenEmpty(p.GetProperty("zan").GetRawText())
+                    Location = RawJsonOrNullWhenEmpty(p.GetProperty("location")),
+                    ZanInfo = RawJsonOrNullWhenEmpty(p.GetProperty("zan"))
                 };
             });
             newPosts.ToList().ForEach(i => Posts[i.Tid] = i);
             Users.ParseUsers(users);
+        }
+
+        public override void SavePosts()
+        {
+            using var scope = Program.Autofac.BeginLifetimeScope();
+            var db = scope.Resolve<TbmDbContext.New>()(Fid);
+            var existing = (from thread in db.Threads
+                where Posts.Keys.Any(tid => tid == thread.Tid)
+                select thread).ToDictionary(i => i.Tid);
+            var groupedPosts = Posts.Values.GroupBy(t => existing.ContainsKey(t.Tid)).ToList();
+            IEnumerable<ThreadPost> GetNewOrExistedPosts(bool isExisted) =>
+                groupedPosts.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<ThreadPost>();
+
+            var threadProps = typeof(ThreadPost).GetProperties()
+                .Where(p => p.Name is not (nameof(IPost.CreatedAt) or nameof(IPost.UpdatedAt))).ToList();
+            foreach (var newThread in GetNewOrExistedPosts(true))
+            {
+                var oldThread = existing[newThread.Tid];
+                foreach (var p in threadProps)
+                {
+                    var newValue = p.GetValue(newThread);
+                    var oldValue = p.GetValue(oldThread);
+                    if (oldValue != null && ThreadPost.JsonTypeFields.Contains(p.Name))
+                    { // serialize the value of json type fields which read from db
+                      // for further compare with newValue which have been re-serialized in base.RawJsonOrNullWhenEmpty()
+                        using var json = JsonDocument.Parse((string)oldValue);
+                        oldValue = JsonSerializer.Serialize(json);
+                    }
+                    if (!Equals(oldValue, newValue))
+                    {
+                        p.SetValue(oldThread, newValue);
+                    }
+                }
+            }
+            db.AddRange(GetNewOrExistedPosts(false));
+            db.SaveChanges();
         }
     }
 }
