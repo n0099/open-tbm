@@ -81,12 +81,19 @@ namespace tbm.Crawler
                 }
             }));
 
+        protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
+        {
+            await using var stream = (await _requester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
+            using var doc = JsonDocument.Parse(stream);
+            return doc.RootElement.Clone();
+        }
+
         protected virtual void ValidateJsonThenParse(JsonElement json) => ParsePosts(GetValidPosts(json));
 
         protected static void ValidateOtherErrorCode(JsonElement json)
         {
             if (json.GetProperty("error_code").GetString() != "0")
-                throw new TiebaException($"Error from tieba client when crawling thread, raw json:{json}");
+                throw new TiebaException($"Error from tieba client, raw json:{json}");
         }
 
         protected static ArrayEnumerator EnsureNonEmptyPostList(JsonElement json, string fieldName, string exceptionMessage)
@@ -95,11 +102,57 @@ namespace tbm.Crawler
             return posts.Any() ? posts : throw new TiebaException(exceptionMessage);
         }
 
-        protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
+        protected void DiffPosts<TPostRevision>(TbmDbContext db,
+            Func<TPost, bool> existPredicate,
+            Func<TPost, TPost> existingPostSelector,
+            Func<uint, TPost, TPostRevision> postRevisionFactory) where TPostRevision : IPostRevision
         {
-            await using var stream = (await _requester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
-            using var doc = JsonDocument.Parse(stream);
-            return doc.RootElement.Clone();
+            var groupedPosts = Posts.Values.GroupBy(existPredicate).ToList();
+            IEnumerable<TPost> GetExistedOrNewPosts(bool isExisted) =>
+                groupedPosts.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<TPost>();
+
+            var postProps = typeof(TPost).GetProperties()
+                .Where(p => p.Name is not (nameof(IPost.CreatedAt)
+                    or nameof(IPost.UpdatedAt) or nameof(IPost.JsonTypeProps))).ToList();
+            var postRevisionProps = typeof(TPostRevision).GetProperties();
+            var nowTimestamp = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+
+            foreach (var newPost in GetExistedOrNewPosts(true))
+            {
+                var revision = default(TPostRevision);
+                var oldPost = existingPostSelector(newPost);
+                foreach (var p in postProps)
+                {
+                    var newValue = p.GetValue(newPost);
+                    var oldValue = p.GetValue(oldPost);
+                    if (oldValue != null && oldPost.JsonTypeProps.Contains(p.Name))
+                    { // serialize the value of json type fields which read from db
+                      // for further compare with newValue which have been re-serialized in RawJsonOrNullWhenEmpty()
+                        using var json = JsonDocument.Parse((string)oldValue);
+                        oldValue = JsonSerializer.Serialize(json);
+                    }
+
+                    if (Equals(oldValue, newValue)) continue;
+                    // ef core will track changes on oldPost via reflection
+                    p.SetValue(oldPost, newValue);
+
+                    var revisionProp = postRevisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
+                    if (revisionProp == null)
+                        Logger.LogWarning("updating field {} is not existed in revision table, " +
+                                          "newValue={}, oldValue={}, newPost={}, oldPost={}",
+                            p.Name, newValue, oldValue, JsonSerializer.Serialize(newPost), JsonSerializer.Serialize(oldPost));
+                    else
+                    {
+                        revision ??= postRevisionFactory(nowTimestamp, newPost);
+                        revisionProp.SetValue(revision, newValue);
+                    }
+                }
+
+                if (revision != null) db.Add(revision);
+            }
+
+            var newPostsPendingForInsert = GetExistedOrNewPosts(false);
+            if (newPostsPendingForInsert.Any()) db.AddRange();
         }
     }
 }

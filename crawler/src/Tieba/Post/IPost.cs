@@ -7,5 +7,6 @@ namespace tbm.Crawler
         public string? AuthorManagerType { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
+        public string[] JsonTypeProps { get; }
     }
 }

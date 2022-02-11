@@ -26,6 +26,6 @@ namespace tbm.Crawler
         public string? ZanInfo { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
-        [NotMapped] public static readonly string[] JsonTypeFields = {nameof(Location), nameof(ZanInfo)};
+        [NotMapped] public string[] JsonTypeProps { get; } = {nameof(Location), nameof(ZanInfo)};
     }
 }

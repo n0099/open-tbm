@@ -105,7 +105,7 @@ namespace tbm.Crawler
                 SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature")),
                 TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info"))
             });
-            newPosts.ForEach(i => { Posts[i.Pid] = i; });
+            lock (Posts) newPosts.ForEach(i => Posts[i.Pid] = i);
         }
 
         public override void SavePosts() => throw new NotImplementedException();

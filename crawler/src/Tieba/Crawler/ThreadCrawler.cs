@@ -106,52 +106,13 @@ namespace tbm.Crawler
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
-            var existing = (from thread in db.Threads
+            var existedPosts = (from thread in db.Threads
                 where Posts.Keys.Any(tid => tid == thread.Tid)
                 select thread).ToDictionary(i => i.Tid);
-            var groupedPosts = Posts.Values.GroupBy(t => existing.ContainsKey(t.Tid)).ToList();
-            IEnumerable<ThreadPost> GetNewOrExistedPosts(bool isExisted) =>
-                groupedPosts.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<ThreadPost>();
-
-            var threadProps = typeof(ThreadPost).GetProperties()
-                .Where(p => p.Name is not (nameof(IPost.CreatedAt) or nameof(IPost.UpdatedAt))).ToList();
-            var threadRevisionProps = typeof(ThreadRevision).GetProperties();
-            var nowTimestamp = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
-            foreach (var newThread in GetNewOrExistedPosts(true))
-            {
-                ThreadRevision? revision = null;
-                var oldThread = existing[newThread.Tid];
-                foreach (var p in threadProps)
-                {
-                    var newValue = p.GetValue(newThread);
-                    var oldValue = p.GetValue(oldThread);
-                    if (oldValue != null && ThreadPost.JsonTypeFields.Contains(p.Name))
-                    { // serialize the value of json type fields which read from db
-                      // for further compare with newValue which have been re-serialized in base.RawJsonOrNullWhenEmpty()
-                        using var json = JsonDocument.Parse((string)oldValue);
-                        oldValue = JsonSerializer.Serialize(json);
-                    }
-
-                    if (Equals(oldValue, newValue)) continue;
-                    // ef core will track changes on oldThread via reflection
-                    p.SetValue(oldThread, newValue);
-
-                    var revisionProp = threadRevisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
-                    if (revisionProp == null)
-                        Logger.LogWarning("updating field {} is not existed in revision table, " +
-                                          "newValue={}, oldValue={}, newThread={}, oldThread={}",
-                            p.Name, newValue, oldValue, JsonSerializer.Serialize(newThread), JsonSerializer.Serialize(oldThread));
-                    else
-                    {
-                        revision ??= new ThreadRevision {Time = nowTimestamp, Tid = newThread.Tid};
-                        revisionProp.SetValue(revision, newValue);
-                    }
-                }
-
-                if (revision != null) db.Add(revision);
-            }
-            db.AddRange(GetNewOrExistedPosts(false));
-
+            DiffPosts(db,
+                p => existedPosts.ContainsKey(p.Tid),
+                (p => existedPosts[p.Tid]),
+                (now, p) => new ThreadRevision {Time = now, Tid = p.Tid});
             // prevent update with default null value on fields which will be later set by ReplyCrawler
             db.Set<ThreadPost>().ForEach(post => db.Entry(post).Properties.Where(p => p.Metadata.Name
                     is nameof(ThreadLateSaveInfo.AntiSpamInfo) or nameof(ThreadLateSaveInfo.AuthorPhoneType))

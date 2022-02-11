@@ -29,10 +29,7 @@ namespace tbm.Crawler
                         logging.ClearProviders();
                         logging.AddNLog();
                     })
-                    .ConfigureServices((_, service) =>
-                    {
-                        service.AddHostedService<Worker>();
-                    })
+                    .ConfigureServices((_, service) => service.AddHostedService<Worker>())
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                     .ConfigureContainer((ContainerBuilder builder) =>
                     {

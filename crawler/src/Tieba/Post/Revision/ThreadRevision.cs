@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class ThreadRevision
+    public class ThreadRevision : IPostRevision
     {
         public uint Time { get; set; }
         public ulong Tid { get; set; }
