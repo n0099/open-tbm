@@ -1,31 +1,38 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Timer = System.Timers.Timer;
 
 namespace tbm.Crawler
 {
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
+        private readonly Timer _timer = new() {Enabled = true, Interval = 60 * 1000}; // per minute
 
         public Worker(ILogger<Worker> logger) => _logger = logger;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _timer.Elapsed += async (_, _) => await CrawlThenSave();
+            await CrawlThenSave();
+        }
+
+        private async Task CrawlThenSave()
+        {
             await using var scope = Program.Autofac.BeginLifetimeScope();
-
-            var db = scope.Resolve<TbmDbContext.New>()(0);
-            var a = from thread in db.Threads orderby thread.Tid select thread.Title;
-            _logger.LogInformation(JsonSerializer.Serialize(a.Take(5).ToList()));
-
-            var crawler = scope.Resolve<ThreadCrawler.New>()(0, "");
-            await Task.WhenAll(new List<Task>() { crawler.DoCrawler(1, 100), crawler.DoCrawler(1, 100), crawler.DoCrawler(1, 100), crawler.DoCrawler(1, 100), crawler.DoCrawler(1, 100) });
-            Thread.Sleep(1000);
+            try
+            {
+                var crawler = scope.Resolve<ThreadCrawler.New>()(0, "");
+                (await crawler.DoCrawler(1, 1)).SavePosts();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("exception: {}", e);
+            }
         }
     }
 }

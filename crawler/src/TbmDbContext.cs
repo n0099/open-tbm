@@ -11,9 +11,11 @@ namespace tbm.Crawler
     public class TbmDbContext : DbContext
     {
         public uint Fid { get; }
+        public DbSet<UserRecord> Users => Set<UserRecord>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
+        public DbSet<ThreadRevision> ThreadRevisions => Set<ThreadRevision>();
         private readonly IConfiguration _config;
 
         public delegate TbmDbContext New(uint fid);
@@ -26,9 +28,11 @@ namespace tbm.Crawler
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<UserRecord>().ToTable("tbm_tiebaUsers");
             modelBuilder.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
             modelBuilder.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
             modelBuilder.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
+            modelBuilder.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new { e.Time, e.Tid });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)

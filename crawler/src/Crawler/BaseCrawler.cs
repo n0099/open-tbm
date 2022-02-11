@@ -13,7 +13,7 @@ namespace tbm.Crawler
 {
     public abstract class BaseCrawler<TPost> where TPost : IPost
     {
-        private readonly ILogger<BaseCrawler<TPost>> _logger;
+        protected readonly ILogger<BaseCrawler<TPost>> Logger;
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly ClientRequester _requester;
         protected readonly Fid Fid;
@@ -29,7 +29,7 @@ namespace tbm.Crawler
 
         protected BaseCrawler(ILogger<BaseCrawler<TPost>> logger, ClientRequester requester, ClientRequesterTcs requesterTcs, UserParser userParser,uint fid)
         {
-            _logger = logger;
+            Logger = logger;
             _requester = requester;
             _requesterTcs = requesterTcs;
             Fid = fid;
@@ -40,7 +40,7 @@ namespace tbm.Crawler
             // serialize to json for further compare with the field value of saved post read from db in SavePosts()
             json.GetRawText() is @"""""" or "[]" ? null : JsonSerializer.Serialize(json);
 
-        public async Task DoCrawler(Page startPage, Page endPage = Page.MaxValue)
+        public async Task<BaseCrawler<TPost>> DoCrawler(Page startPage, Page endPage = Page.MaxValue)
         {
             try
             {
@@ -54,8 +54,10 @@ namespace tbm.Crawler
                 e.Data["startPage"] = startPage;
                 e.Data["endPage"] = endPage;
                 e.Data["fid"] = Fid;
-                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
+                Logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
             }
+
+            return this;
         }
 
         private async Task DoCrawler(IEnumerable<Page> pages) =>
@@ -69,7 +71,7 @@ namespace tbm.Crawler
                 {
                     e.Data["page"] = page;
                     e.Data["fid"] = Fid;
-                    _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
+                    Logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
                     _requesterTcs.Decrease();
                     CrawlerLocks.AddFailed(Fid, page);
                 }

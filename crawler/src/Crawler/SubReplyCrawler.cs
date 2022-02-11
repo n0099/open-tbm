@@ -89,7 +89,7 @@ namespace tbm.Crawler
                     PostTime = Time.Parse(p.GetStrProp("time"))
                 };
             });
-            newPosts.ToList().ForEach(i => Posts[i.Spid] = i);
+            newPosts.ForEach(i => Posts[i.Spid] = i);
             Users.ParseUsers(users);
         }
 

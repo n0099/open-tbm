@@ -92,13 +92,13 @@ namespace tbm.Crawler
                     ShareNum = p.TryGetProperty("share_num", out var shareNum)
                         ? uint.Parse(shareNum.GetString() ?? "")
                         : null, // topic thread won't have this
-                    AgreeNum = int.Parse(p.GetStrProp("agree_num")),
-                    DisagreeNum = int.Parse(p.GetStrProp("disagree_num")),
+                    AgreeNum = uint.Parse(p.GetStrProp("agree_num")),
+                    DisagreeNum = uint.Parse(p.GetStrProp("disagree_num")),
                     Location = RawJsonOrNullWhenEmpty(p.GetProperty("location")),
                     ZanInfo = RawJsonOrNullWhenEmpty(p.GetProperty("zan"))
                 };
             });
-            newPosts.ToList().ForEach(i => Posts[i.Tid] = i);
+            newPosts.ForEach(i => Posts[i.Tid] = i);
             Users.ParseUsers(users);
         }
 
@@ -115,8 +115,11 @@ namespace tbm.Crawler
 
             var threadProps = typeof(ThreadPost).GetProperties()
                 .Where(p => p.Name is not (nameof(IPost.CreatedAt) or nameof(IPost.UpdatedAt))).ToList();
+            var threadRevisionProps = typeof(ThreadRevision).GetProperties();
+            var nowTimestamp = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
             foreach (var newThread in GetNewOrExistedPosts(true))
             {
+                ThreadRevision? revision = null;
                 var oldThread = existing[newThread.Tid];
                 foreach (var p in threadProps)
                 {
@@ -128,13 +131,31 @@ namespace tbm.Crawler
                         using var json = JsonDocument.Parse((string)oldValue);
                         oldValue = JsonSerializer.Serialize(json);
                     }
-                    if (!Equals(oldValue, newValue))
+
+                    if (Equals(oldValue, newValue)) continue;
+                    // ef core will track changes on oldThread via reflection
+                    p.SetValue(oldThread, newValue);
+
+                    var revisionProp = threadRevisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
+                    if (revisionProp == null)
+                        Logger.LogWarning("updating field {} is not existed in revision table, " +
+                                          "newValue={}, oldValue={}, newThread={}, oldThread={}",
+                            p.Name, newValue, oldValue, JsonSerializer.Serialize(newThread), JsonSerializer.Serialize(oldThread));
+                    else
                     {
-                        p.SetValue(oldThread, newValue);
+                        revision ??= new ThreadRevision {Time = nowTimestamp, Tid = newThread.Tid};
+                        revisionProp.SetValue(revision, newValue);
                     }
                 }
+
+                if (revision != null) db.Add(revision);
             }
             db.AddRange(GetNewOrExistedPosts(false));
+
+            // prevent update with default null value on fields which will be later set by ReplyCrawler
+            db.Set<ThreadPost>().ForEach(post => db.Entry(post).Properties.Where(p => p.Metadata.Name
+                    is nameof(ThreadLateSaveInfo.AntiSpamInfo) or nameof(ThreadLateSaveInfo.AuthorPhoneType))
+                .ForEach(p => p.IsModified = false));
             db.SaveChanges();
         }
     }

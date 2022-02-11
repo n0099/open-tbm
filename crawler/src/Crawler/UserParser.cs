@@ -48,7 +48,8 @@ namespace tbm.Crawler
                     IconInfo = BaseCrawler<IPost>.RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo"))
                 };
             });
-            newUsers.OfType<UserRecord>().ToList().ForEach(i => _users[i.Uid] = i);
+            // OfType() will remove null values
+            newUsers.OfType<UserRecord>().ForEach(i => _users[i.Uid] = i);
         }
     }
 }

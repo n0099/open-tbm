@@ -19,11 +19,11 @@ namespace tbm.Crawler
             if (max <= min)
                 throw new ArgumentOutOfRangeException(nameof(max), "max must be > min!");
 
-            ulong uRange = (ulong)(max - min);
+            var uRange = (ulong)(max - min);
             ulong ulongRand;
             do
             {
-                byte[] buf = new byte[8];
+                var buf = new byte[8];
                 random.NextBytes(buf);
                 ulongRand = unchecked((ulong)BitConverter.ToInt64(buf, 0));
             } while (ulongRand > ulong.MaxValue - ((ulong.MaxValue % uRange) + 1) % uRange);
@@ -45,9 +45,9 @@ namespace tbm.Crawler
         private static IEnumerable<T> ShuffleIterator<T>(this IEnumerable<T> source, Random rng)
         {
             var buffer = source.ToList();
-            for (int i = 0; i < buffer.Count; i++)
+            for (var i = 0; i < buffer.Count; i++)
             {
-                int j = rng.Next(i, buffer.Count);
+                var j = rng.Next(i, buffer.Count);
                 yield return buffer[j];
 
                 buffer[j] = buffer[i];
@@ -58,5 +58,11 @@ namespace tbm.Crawler
 
         /// <see>https://stackoverflow.com/questions/10295028/c-sharp-empty-string-null/10295082#10295082</see>
         public static string? NullIfWhiteSpace(this string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+        /// <see>https://stackoverflow.com/questions/101265/why-is-there-no-foreach-extension-method-on-ienumerable/101278#101278</see>
+        public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (var element in source) action(element);
+        }
     }
 }

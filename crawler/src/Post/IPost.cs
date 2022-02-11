@@ -4,6 +4,7 @@ namespace tbm.Crawler
     {
         public ulong Tid { get; set; }
         public long AuthorUid { get; set; }
+        public string? AuthorManagerType { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
     }

@@ -63,7 +63,7 @@ namespace tbm.Crawler
             var users = json.GetProperty("user_list").EnumerateArray();
             Users.ParseUsers(users);
             lock (Posts)
-                posts.Select(p => Pid.Parse(p.GetStrProp("id"))).ToList().ForEach(pid =>
+                posts.Select(p => Pid.Parse(p.GetStrProp("id"))).ForEach(pid =>
                 {
                     var p = Posts[pid];
                     var author = users.First(u => Uid.Parse(u.GetStrProp("id")) == p.AuthorUid);
@@ -105,7 +105,7 @@ namespace tbm.Crawler
                 SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature")),
                 TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info"))
             });
-            newPosts.ToList().ForEach(i => { Posts[i.Pid] = i; });
+            newPosts.ForEach(i => { Posts[i.Pid] = i; });
         }
 
         public override void SavePosts() => throw new NotImplementedException();

@@ -9,8 +9,8 @@ namespace tbm.Crawler
         public ulong FirstPid { get; set; }
         public ulong ThreadType { get; set; }
         public string? StickyType { get; set; }
-        public bool IsGood { get; set; }
         public string? TopicType { get; set; }
+        public bool IsGood { get; set; }
         public string Title { get; set; } = "";
         public long AuthorUid { get; set; }
         public string? AuthorManagerType { get; set; }
@@ -20,8 +20,8 @@ namespace tbm.Crawler
         public uint ReplyNum { get; set; }
         public uint ViewNum { get; set; }
         public uint? ShareNum { get; set; }
-        public int AgreeNum { get; set; }
-        public int DisagreeNum { get; set; }
+        public uint AgreeNum { get; set; }
+        public uint DisagreeNum { get; set; }
         public string? Location { get; set; }
         public string? ZanInfo { get; set; }
         public uint CreatedAt { get; set; }
