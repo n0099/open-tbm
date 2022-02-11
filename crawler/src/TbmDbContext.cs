@@ -11,7 +11,7 @@ namespace tbm.Crawler
     public class TbmDbContext : DbContext
     {
         public uint Fid { get; }
-        public DbSet<UserRecord> Users => Set<UserRecord>();
+        public DbSet<TiebaUser> Users => Set<TiebaUser>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
@@ -28,7 +28,7 @@ namespace tbm.Crawler
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UserRecord>().ToTable("tbm_tiebaUsers");
+            modelBuilder.Entity<TiebaUser>().ToTable("tbm_tiebaUsers");
             modelBuilder.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
             modelBuilder.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
             modelBuilder.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");

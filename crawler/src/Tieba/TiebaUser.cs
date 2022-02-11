@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace tbm.Crawler
 {
-    public class UserRecord
+    public class TiebaUser
     {
         [Key] public long Uid { get; set; }
         public string? Name { get; set; }

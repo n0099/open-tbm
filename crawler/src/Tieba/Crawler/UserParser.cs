@@ -7,7 +7,7 @@ namespace tbm.Crawler
 {
     public class UserParser
     {
-        private readonly ConcurrentDictionary<long, UserRecord> _users = new();
+        private readonly ConcurrentDictionary<long, TiebaUser> _users = new();
 
         public void ParseUsers(IEnumerable<JsonElement> users)
         {
@@ -21,7 +21,7 @@ namespace tbm.Crawler
                 var uid = long.Parse(rawUid);
                 if (uid < 0) // historical anonymous user
                 {
-                    return new UserRecord
+                    return new TiebaUser
                     {
                         Uid = uid,
                         Name = u.GetStrProp("name_show"),
@@ -32,7 +32,7 @@ namespace tbm.Crawler
                     ? nameEl.GetString().NullIfWhiteSpace()
                     : null; // null when he haven't set username for his baidu account yet
                 var nameShow = u.GetStrProp("name_show");
-                return new UserRecord
+                return new TiebaUser
                 {
                     Uid = uid,
                     Name = name,
@@ -49,7 +49,7 @@ namespace tbm.Crawler
                 };
             });
             // OfType() will remove null values
-            newUsers.OfType<UserRecord>().ForEach(i => _users[i.Uid] = i);
+            newUsers.OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
     }
 }
