@@ -18,7 +18,6 @@ namespace tbm.Crawler
 {
     public sealed class ThreadCrawler : BaseCrawler<ThreadPost>
     {
-        protected override CrawlerLocks CrawlerLocks { get; init; }
         private readonly string _forumName;
 
         public delegate ThreadCrawler New(Fid fid, string forumName);
@@ -27,15 +26,12 @@ namespace tbm.Crawler
             ILogger<ThreadCrawler> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
-            IIndex<string, CrawlerLocks.New> locks,
             UserParser userParser,
+            IIndex<string, CrawlerLocks.New> locks,
             Fid fid,
             string forumName
-        ) : base(logger, requester, requesterTcs, userParser, fid)
-        {
+        ) : base(logger, requester, requesterTcs, userParser, (locks["thread"]("thread"), fid), fid) =>
             _forumName = forumName;
-            CrawlerLocks = locks["thread"]("thread");
-        }
 
         protected override Exception FillExceptionData(Exception e)
         {
@@ -95,8 +91,8 @@ namespace tbm.Crawler
                     post.ShareNum = p.TryGetProperty("share_num", out var shareNum)
                         ? uint.Parse(shareNum.GetString() ?? "")
                         : null; // topic thread won't have this
-                    post.AgreeNum = uint.Parse(p.GetStrProp("agree_num"));
-                    post.DisagreeNum = uint.Parse(p.GetStrProp("disagree_num"));
+                    post.AgreeNum = int.Parse(p.GetStrProp("agree_num"));
+                    post.DisagreeNum = int.Parse(p.GetStrProp("disagree_num"));
                     post.Location = RawJsonOrNullWhenEmpty(p.GetProperty("location"));
                     post.ZanInfo = RawJsonOrNullWhenEmpty(p.GetProperty("zan"));
                     return post;

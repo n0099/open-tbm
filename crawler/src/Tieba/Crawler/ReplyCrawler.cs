@@ -16,7 +16,6 @@ namespace tbm.Crawler
 {
     public sealed class ReplyCrawler : BaseCrawler<ReplyPost>
     {
-        protected override CrawlerLocks CrawlerLocks { get; init; }
         private readonly Tid _tid;
         private ThreadLateSaveInfo? _parentThread;
 
@@ -26,14 +25,10 @@ namespace tbm.Crawler
             ILogger<ReplyCrawler> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
-            IIndex<string, CrawlerLocks.New> locks,
             UserParser userParser,
+            IIndex<string, CrawlerLocks.New> locks,
             Fid fid, Tid tid
-        ) : base(logger, requester, requesterTcs, userParser, fid)
-        {
-            CrawlerLocks = locks["reply"]("reply");
-            _tid = tid;
-        }
+        ) : base(logger, requester, requesterTcs, userParser, (locks["reply"]("reply"), tid), fid) => _tid = tid;
 
         protected override Exception FillExceptionData(Exception e)
         {

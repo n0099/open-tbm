@@ -17,7 +17,6 @@ namespace tbm.Crawler
 {
     public sealed class SubReplyCrawler : BaseCrawler<SubReplyPost>
     {
-        protected override CrawlerLocks CrawlerLocks { get; init; }
         private readonly Tid _tid;
         private readonly Pid _pid;
 
@@ -27,12 +26,11 @@ namespace tbm.Crawler
             ILogger<SubReplyCrawler> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
-            IIndex<string, CrawlerLocks.New> locks,
             UserParser userParser,
+            IIndex<string, CrawlerLocks.New> locks,
             Fid fid, Tid tid, Pid pid
-        ) : base(logger, requester, requesterTcs, userParser, fid)
+        ) : base(logger, requester, requesterTcs, userParser, (locks["subReply"]("subReply"), pid), fid)
         {
-            CrawlerLocks = locks["subReply"]("subReply");
             _tid = tid;
             _pid = pid;
         }

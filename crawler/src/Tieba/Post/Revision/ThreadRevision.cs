@@ -15,8 +15,8 @@ namespace tbm.Crawler
         public uint? ReplyNum { get; set; }
         public uint? ViewNum { get; set; }
         public uint? ShareNum { get; set; }
-        public uint? AgreeNum { get; set; }
-        public uint? DisagreeNum { get; set; }
+        public int? AgreeNum { get; set; }
+        public int? DisagreeNum { get; set; }
         // changes for props with [NotMapped] attribute will be ignored when inserting
         [NotMapped] public string? ZanInfo { get; set; }
     }
