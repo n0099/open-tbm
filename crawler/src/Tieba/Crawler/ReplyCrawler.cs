@@ -89,21 +89,31 @@ namespace tbm.Crawler
 
         protected override void ParsePosts(ArrayEnumerator posts)
         {
-            var newPosts = posts.Select(p => new ReplyPost
+            var newPosts = posts.Select(p =>
             {
-                Tid = _tid,
-                Pid = Pid.Parse(p.GetStrProp("id")),
-                Floor = uint.Parse(p.GetStrProp("floor")),
-                Content = RawJsonOrNullWhenEmpty(p.GetProperty("content")),
-                AuthorUid = Uid.Parse(p.GetStrProp("author_id")),
-                SubReplyNum = uint.Parse(p.GetStrProp("sub_post_number")),
-                PostTime = Time.Parse(p.GetStrProp("time")),
-                IsFold = p.GetStrProp("is_fold") != "0",
-                AgreeNum = int.Parse(p.GetProperty("agree").GetStrProp("agree_num")),
-                DisagreeNum = int.Parse(p.GetProperty("agree").GetStrProp("disagree_num")),
-                Location = RawJsonOrNullWhenEmpty(p.GetProperty("lbs_info")),
-                SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature")),
-                TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info"))
+                var post = new ReplyPost();
+                try
+                {
+                    post.Tid = _tid;
+                    post.Pid = Pid.Parse(p.GetStrProp("id"));
+                    post.Floor = uint.Parse(p.GetStrProp("floor"));
+                    post.Content = RawJsonOrNullWhenEmpty(p.GetProperty("content"));
+                    post.AuthorUid = Uid.Parse(p.GetStrProp("author_id"));
+                    post.SubReplyNum = uint.Parse(p.GetStrProp("sub_post_number"));
+                    post.PostTime = Time.Parse(p.GetStrProp("time"));
+                    post.IsFold = p.GetStrProp("is_fold") != "0";
+                    post.AgreeNum = int.Parse(p.GetProperty("agree").GetStrProp("agree_num"));
+                    post.DisagreeNum = int.Parse(p.GetProperty("agree").GetStrProp("disagree_num"));
+                    post.Location = RawJsonOrNullWhenEmpty(p.GetProperty("lbs_info"));
+                    post.SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature"));
+                    post.TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info"));
+                    return post;
+                }
+                catch (Exception e)
+                {
+                    e.Data["rawJson"] = p.GetRawText();
+                    throw new Exception("Reply parse error", e);
+                }
             });
             lock (Posts) newPosts.ForEach(i => Posts[i.Pid] = i);
         }

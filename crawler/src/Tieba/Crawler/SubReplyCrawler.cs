@@ -75,19 +75,26 @@ namespace tbm.Crawler
             {
                 var author = p.GetProperty("author");
                 users.Add(author);
-                return new SubReplyPost
+                var post = new SubReplyPost();
+                try
                 {
-                    Tid = _tid,
-                    Pid = _pid,
-                    Spid = Spid.Parse(p.GetStrProp("id")),
-                    Content = RawJsonOrNullWhenEmpty(p.GetProperty("content")),
-                    AuthorUid = Uid.Parse(author.GetStrProp("id")),
-                    AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                    post.Tid = _tid;
+                    post.Pid = _pid;
+                    post.Spid = Spid.Parse(p.GetStrProp("id"));
+                    post.Content = RawJsonOrNullWhenEmpty(p.GetProperty("content"));
+                    post.AuthorUid = Uid.Parse(author.GetStrProp("id"));
+                    post.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
                         ? bawuType.GetString().NullIfWhiteSpace()
-                        : null, // will be null if he's not a moderator
-                    AuthorExpGrade = ushort.Parse(author.GetStrProp("level_id")),
-                    PostTime = Time.Parse(p.GetStrProp("time"))
-                };
+                        : null; // will be null if he's not a moderator
+                    post.AuthorExpGrade = ushort.Parse(author.GetStrProp("level_id"));
+                    post.PostTime = Time.Parse(p.GetStrProp("time"));
+                    return post;
+                }
+                catch (Exception e)
+                {
+                    e.Data["rawJson"] = p.GetRawText();
+                    throw new Exception("Sub reply parse error", e);
+                }
             });
             newPosts.ForEach(i => Posts[i.Spid] = i);
             Users.ParseUsers(users);
