@@ -98,6 +98,6 @@ namespace tbm.Crawler
             Users.ParseUsers(users);
         }
 
-        public override void SavePosts() => throw new NotImplementedException();
+        protected override void SavePosts(TbmDbContext db) => throw new NotImplementedException();
     }
 }

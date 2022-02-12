@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Autofac;
 using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
@@ -107,22 +106,30 @@ namespace tbm.Crawler
             Users.ParseUsers(users);
         }
 
-        public override void SavePosts()
+        protected override void SavePosts(TbmDbContext db)
         {
-            using var scope = Program.Autofac.BeginLifetimeScope();
-            var db = scope.Resolve<TbmDbContext.New>()(Fid);
-            var existedPosts = (from thread in db.Threads
+            var existingPosts = (from thread in db.Threads
                 where Posts.Keys.Any(tid => tid == thread.Tid)
                 select thread).ToDictionary(i => i.Tid);
             DiffPosts(db,
-                p => existedPosts.ContainsKey(p.Tid),
-                (p => existedPosts[p.Tid]),
+                p => existingPosts.ContainsKey(p.Tid),
+                p => existingPosts[p.Tid],
                 (now, p) => new ThreadRevision {Time = now, Tid = p.Tid});
             // prevent update with default null value on fields which will be later set by ReplyCrawler
-            db.Set<ThreadPost>().ForEach(post => db.Entry(post).Properties.Where(p => p.Metadata.Name
+            db.Set<ThreadPost>().Local.ForEach(post => db.Entry(post).Properties.Where(p => p.Metadata.Name
                     is nameof(ThreadLateSaveInfo.AntiSpamInfo) or nameof(ThreadLateSaveInfo.AuthorPhoneType))
                 .ForEach(p => p.IsModified = false));
-            db.SaveChanges();
+
+            var existingPostsIndex = from index in db.PostsIndex
+                where index.Type == "thread" && Posts.Keys.Any(tid => tid == index.Tid)
+                select index.Tid;
+            InsertPostsIndex(db, existingPostsIndex, p => new PostIndex
+                {
+                    Type = "thread",
+                    Fid = Fid,
+                    Tid = p.Tid,
+                    PostTime = p.PostTime
+                });
         }
     }
 }

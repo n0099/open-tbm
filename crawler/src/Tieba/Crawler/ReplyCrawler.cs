@@ -113,6 +113,6 @@ namespace tbm.Crawler
             lock (Posts) newPosts.ForEach(i => Posts[i.Pid] = i);
         }
 
-        public override void SavePosts() => throw new NotImplementedException();
+        protected override void SavePosts(TbmDbContext db) => throw new NotImplementedException();
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Autofac;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
 using Fid = System.UInt32;
@@ -26,7 +27,7 @@ namespace tbm.Crawler
         protected abstract Task<JsonElement> CrawlSinglePage(Page page);
         protected abstract ArrayEnumerator GetValidPosts(JsonElement json);
         protected abstract void ParsePosts(ArrayEnumerator posts);
-        public abstract void SavePosts();
+        protected abstract void SavePosts(TbmDbContext db);
 
         protected BaseCrawler(ILogger<BaseCrawler<TPost>> logger,
             ClientRequester requester,
@@ -46,6 +47,16 @@ namespace tbm.Crawler
         public static string? RawJsonOrNullWhenEmpty(JsonElement json) =>
             // serialize to json for further compare with the field value of saved post read from db in SavePosts()
             json.GetRawText() is @"""""" or "[]" ? null : JsonSerializer.Serialize(json);
+
+        public void SavePosts()
+        {
+            using var scope = Program.Autofac.BeginLifetimeScope();
+            var db = scope.Resolve<TbmDbContext.New>()(Fid);
+            using var transaction = db.Database.BeginTransaction();
+            SavePosts(db);
+            db.SaveChanges();
+            transaction.Commit();
+        }
 
         public async Task<BaseCrawler<TPost>> DoCrawler(Page startPage, Page endPage = Page.MaxValue)
         {
@@ -112,7 +123,7 @@ namespace tbm.Crawler
         protected void DiffPosts<TPostRevision>(TbmDbContext db,
             Func<TPost, bool> existPredicate,
             Func<TPost, TPost> existingPostSelector,
-            Func<uint, TPost, TPostRevision> postRevisionFactory) where TPostRevision : IPostRevision
+            Func<uint, TPost, TPostRevision> revisionFactory) where TPostRevision : IPostRevision
         {
             var groupedPosts = Posts.Values.GroupBy(existPredicate).ToList();
             IEnumerable<TPost> GetExistedOrNewPosts(bool isExisted) =>
@@ -150,7 +161,7 @@ namespace tbm.Crawler
                             p.Name, newValue, oldValue, JsonSerializer.Serialize(newPost), JsonSerializer.Serialize(oldPost));
                     else
                     {
-                        revision ??= postRevisionFactory(nowTimestamp, newPost);
+                        revision ??= revisionFactory(nowTimestamp, newPost);
                         revisionProp.SetValue(revision, newValue);
                     }
                 }
@@ -161,5 +172,8 @@ namespace tbm.Crawler
             var newPostsPendingForInsert = GetExistedOrNewPosts(false);
             if (newPostsPendingForInsert.Any()) db.AddRange();
         }
+
+        protected void InsertPostsIndex(TbmDbContext db, IEnumerable<ulong> existingPostsIndex, Func<TPost, PostIndex> indexFactory) =>
+            db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingPostsIndex)).Select(indexFactory));
     }
 }

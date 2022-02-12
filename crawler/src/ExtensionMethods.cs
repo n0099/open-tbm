@@ -26,7 +26,7 @@ namespace tbm.Crawler
                 var buf = new byte[8];
                 random.NextBytes(buf);
                 ulongRand = unchecked((ulong)BitConverter.ToInt64(buf, 0));
-            } while (ulongRand > ulong.MaxValue - ((ulong.MaxValue % uRange) + 1) % uRange);
+            } while (ulongRand > ulong.MaxValue - (((ulong.MaxValue % uRange) + 1) % uRange));
 
             return (long)(ulongRand % uRange) + min;
         }
@@ -64,5 +64,9 @@ namespace tbm.Crawler
         {
             foreach (var element in source) action(element);
         }
+
+        /// <see>https://stackoverflow.com/questions/9464112/c-sharp-get-value-subset-from-dictionary-by-keylist/9464468#9464468</see>
+        public static IEnumerable<TValue> GetValuesByKeys<TKey, TValue>(this IDictionary<TKey, TValue> dict, IEnumerable<TKey> keys) =>
+            keys.Where(dict.ContainsKey).Select(x => dict[x]);
     }
 }
