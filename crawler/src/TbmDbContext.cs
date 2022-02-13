@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +14,6 @@ namespace tbm.Crawler
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
-        public DbSet<ThreadRevision> ThreadRevisions => Set<ThreadRevision>();
         public DbSet<PostIndex> PostsIndex => Set<PostIndex>();
         private readonly IConfiguration _config;
 
@@ -34,6 +32,7 @@ namespace tbm.Crawler
             modelBuilder.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
             modelBuilder.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
             modelBuilder.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new { e.Time, e.Tid });
+            modelBuilder.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new { e.Time, e.Uid });
             modelBuilder.Entity<PostIndex>().ToTable("tbm_postsIndex").HasKey(e => new { e.Tid, e.Pid, e.Spid });
         }
 
@@ -53,16 +52,15 @@ namespace tbm.Crawler
 
         public override int SaveChanges()
         { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.Entity is IPost && e.State is EntityState.Added or EntityState.Modified);
-
-            foreach (var entityEntry in entries)
+            ChangeTracker.Entries().ForEach(e =>
             {
-                ((IPost)entityEntry.Entity).UpdatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
-                if (entityEntry.State == EntityState.Added)
-                    ((IPost)entityEntry.Entity).CreatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
-            }
+                if (e.Entity is not IEntityWithTimestampFields entity
+                    || e.State is not (EntityState.Added or EntityState.Modified)) return;
 
+                entity.UpdatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+                if (e.State == EntityState.Added)
+                    entity.CreatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+            });
             return base.SaveChanges();
         }
     }

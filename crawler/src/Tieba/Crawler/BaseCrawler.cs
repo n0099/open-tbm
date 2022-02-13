@@ -54,6 +54,7 @@ namespace tbm.Crawler
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
             SavePosts(db);
+            Users.SaveUsers(db);
             db.SaveChanges();
             transaction.Commit();
         }
@@ -120,30 +121,26 @@ namespace tbm.Crawler
             return posts.Any() ? posts : throw new TiebaException(exceptionMessage);
         }
 
-        protected void DiffPosts<TPostRevision>(TbmDbContext db,
-            Func<TPost, bool> existPredicate,
-            Func<TPost, TPost> existingPostSelector,
-            Func<uint, TPost, TPostRevision> revisionFactory) where TPostRevision : IPostRevision
+        public static IEnumerable<TRevision> GetRevisionsForTwoObjectsThenSync<TObject, TRevision>(ILogger logger,
+            string[] jsonTypePropsInObject,
+            IEnumerable<TObject> newObjects,
+            Func<TObject, TObject> oldObjectSelector,
+            Func<uint, TObject, TRevision> revisionFactory)
         {
-            var groupedPosts = Posts.Values.GroupBy(existPredicate).ToList();
-            IEnumerable<TPost> GetExistedOrNewPosts(bool isExisted) =>
-                groupedPosts.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<TPost>();
-
-            var postProps = typeof(TPost).GetProperties()
-                .Where(p => p.Name is not (nameof(IPost.CreatedAt)
-                    or nameof(IPost.UpdatedAt) or nameof(IPost.JsonTypeProps))).ToList();
-            var postRevisionProps = typeof(TPostRevision).GetProperties();
+            var postProps = typeof(TObject).GetProperties()
+                .Where(p => p.Name is not (nameof(IEntityWithTimestampFields.CreatedAt) or nameof(IEntityWithTimestampFields.UpdatedAt))).ToList();
+            var postRevisionProps = typeof(TRevision).GetProperties();
             var nowTimestamp = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
 
-            foreach (var newPost in GetExistedOrNewPosts(true))
+            return newObjects.Select(newObj =>
             {
-                var revision = default(TPostRevision);
-                var oldPost = existingPostSelector(newPost);
+                var revision = default(TRevision);
+                var oldObj = oldObjectSelector(newObj);
                 foreach (var p in postProps)
                 {
-                    var newValue = p.GetValue(newPost);
-                    var oldValue = p.GetValue(oldPost);
-                    if (oldValue != null && oldPost.JsonTypeProps.Contains(p.Name))
+                    var newValue = p.GetValue(newObj);
+                    var oldValue = p.GetValue(oldObj);
+                    if (oldValue != null && jsonTypePropsInObject.Contains(p.Name))
                     { // serialize the value of json type fields which read from db
                       // for further compare with newValue which have been re-serialized in RawJsonOrNullWhenEmpty()
                         using var json = JsonDocument.Parse((string)oldValue);
@@ -152,25 +149,37 @@ namespace tbm.Crawler
 
                     if (Equals(oldValue, newValue)) continue;
                     // ef core will track changes on oldPost via reflection
-                    p.SetValue(oldPost, newValue);
+                    p.SetValue(oldObj, newValue);
 
                     var revisionProp = postRevisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
                     if (revisionProp == null)
-                        Logger.LogWarning("updating field {} is not existed in revision table, " +
+                        logger.LogWarning("updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newPost={}, oldPost={}",
-                            p.Name, newValue, oldValue, JsonSerializer.Serialize(newPost), JsonSerializer.Serialize(oldPost));
+                            p.Name, newValue, oldValue, JsonSerializer.Serialize(newObj), JsonSerializer.Serialize(oldObj));
                     else
                     {
-                        revision ??= revisionFactory(nowTimestamp, newPost);
+                        revision ??= revisionFactory(nowTimestamp, newObj);
                         revisionProp.SetValue(revision, newValue);
                     }
                 }
 
-                if (revision != null) db.Add(revision);
-            }
+                return revision;
+            }).OfType<TRevision>();
+        }
 
-            var newPostsPendingForInsert = GetExistedOrNewPosts(false);
-            if (newPostsPendingForInsert.Any()) db.AddRange();
+        protected void DiffPosts<TPostRevision>(TbmDbContext db,
+            string[] jsonTypePropsInPost,
+            Func<TPost, bool> isExistPredicate,
+            Func<TPost, TPost> existingPostSelector,
+            Func<uint, TPost, TPostRevision> revisionFactory) where TPostRevision : IPostRevision
+        {
+            var groupedPosts = Posts.Values.GroupBy(isExistPredicate).ToList();
+            IEnumerable<TPost> GetExistedOrNewPosts(bool isExisted) =>
+                groupedPosts.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<TPost>();
+
+            db.AddRange((IEnumerable<object>)GetRevisionsForTwoObjectsThenSync(Logger, jsonTypePropsInPost, GetExistedOrNewPosts(true), existingPostSelector, revisionFactory));
+            var newPostsPendingForInsert = ((IEnumerable<object>)GetExistedOrNewPosts(false)).ToList();
+            if (newPostsPendingForInsert.Any()) db.AddRange(newPostsPendingForInsert);
         }
 
         protected void InsertPostsIndex(TbmDbContext db, IEnumerable<ulong> existingPostsIndex, Func<TPost, PostIndex> indexFactory) =>

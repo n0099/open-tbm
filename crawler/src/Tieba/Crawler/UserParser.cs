@@ -2,12 +2,16 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace tbm.Crawler
 {
     public class UserParser
     {
+        private readonly ILogger<UserParser> _logger;
         private readonly ConcurrentDictionary<long, TiebaUser> _users = new();
+
+        public UserParser(ILogger<UserParser> logger) => _logger = logger;
 
         public void ParseUsers(IEnumerable<JsonElement> users)
         {
@@ -50,6 +54,24 @@ namespace tbm.Crawler
             });
             // OfType() will remove null values
             newUsers.OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
+        }
+
+        public void SaveUsers(TbmDbContext db)
+        {
+            var existingUsers = (from user in db.Users
+                where _users.Keys.Any(uid => uid == user.Uid)
+                select user).ToDictionary(i => i.Uid);
+            var groupedUsers = _users.Values.GroupBy(u => existingUsers.ContainsKey(u.Uid)).ToList();
+            IEnumerable<TiebaUser> GetExistedOrNewPosts(bool isExisted) =>
+                groupedUsers.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<TiebaUser>();
+
+            db.AddRange(BaseCrawler<IPost>.GetRevisionsForTwoObjectsThenSync(_logger,
+                TiebaUser.JsonTypeProps,
+                GetExistedOrNewPosts(true),
+                u => existingUsers[u.Uid],
+                (now, u) => new UserRevision {Time = now, Uid = u.Uid}));
+            var newUsersPendingForInsert = GetExistedOrNewPosts(false).ToList();
+            if (newUsersPendingForInsert.Any()) db.AddRange(newUsersPendingForInsert);
         }
     }
 }

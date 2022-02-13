@@ -111,7 +111,7 @@ namespace tbm.Crawler
             var existingPosts = (from thread in db.Threads
                 where Posts.Keys.Any(tid => tid == thread.Tid)
                 select thread).ToDictionary(i => i.Tid);
-            DiffPosts(db,
+            DiffPosts(db, ThreadPost.JsonTypeProps,
                 p => existingPosts.ContainsKey(p.Tid),
                 p => existingPosts[p.Tid],
                 (now, p) => new ThreadRevision {Time = now, Tid = p.Tid});
@@ -124,12 +124,12 @@ namespace tbm.Crawler
                 where index.Type == "thread" && Posts.Keys.Any(tid => tid == index.Tid)
                 select index.Tid;
             InsertPostsIndex(db, existingPostsIndex, p => new PostIndex
-                {
-                    Type = "thread",
-                    Fid = Fid,
-                    Tid = p.Tid,
-                    PostTime = p.PostTime
-                });
+            {
+                Type = "thread",
+                Fid = Fid,
+                Tid = p.Tid,
+                PostTime = p.PostTime
+            });
         }
     }
 }

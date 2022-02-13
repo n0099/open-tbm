@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace tbm.Crawler
 {
@@ -26,6 +25,6 @@ namespace tbm.Crawler
         public string? ZanInfo { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
-        [NotMapped] public string[] JsonTypeProps { get; } = {nameof(Location), nameof(ZanInfo)};
+        public static readonly string[] JsonTypeProps = {nameof(Location), nameof(ZanInfo)};
     }
 }
