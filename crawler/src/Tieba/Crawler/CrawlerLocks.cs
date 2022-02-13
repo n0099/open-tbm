@@ -15,13 +15,13 @@ namespace tbm.Crawler
     {
         private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, Time>> _crawling = new();
         private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, ushort>> _failed = new();
-        private readonly IConfigurationSection _config;
         private readonly ILogger<CrawlerLocks> _logger;
+        private readonly IConfigurationSection _config;
         private readonly string _postType;
 
         public delegate CrawlerLocks New(string postType);
 
-        public CrawlerLocks(IConfiguration config, ILogger<CrawlerLocks> logger, string postType)
+        public CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string postType)
         {
             _logger = logger;
             _config = config.GetSection($"CrawlerLocks:{postType}");

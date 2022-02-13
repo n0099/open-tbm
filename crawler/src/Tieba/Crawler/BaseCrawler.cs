@@ -12,9 +12,9 @@ using Page = System.UInt32;
 
 namespace tbm.Crawler
 {
-    public abstract class BaseCrawler<TPost> where TPost : IPost
+    public abstract class BaseCrawler<TPost> : CommonInPostAndUser where TPost : IPost
     {
-        protected readonly ILogger<BaseCrawler<TPost>> Logger;
+        protected sealed override ILogger<object> Logger { get; init; }
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly ClientRequester _requester;
         private readonly CrawlerLocks _locks; // singleton for every derived class
@@ -43,10 +43,6 @@ namespace tbm.Crawler
             (_locks, _lockIndex) = lockAndIndex;
             Fid = fid;
         }
-
-        public static string? RawJsonOrNullWhenEmpty(JsonElement json) =>
-            // serialize to json for further compare with the field value of saved post read from db in SavePosts()
-            json.GetRawText() is @"""""" or "[]" ? null : JsonSerializer.Serialize(json);
 
         public void SavePosts()
         {
@@ -120,64 +116,6 @@ namespace tbm.Crawler
         {
             using var posts = json.GetProperty(fieldName).EnumerateArray();
             return posts.Any() ? posts : throw new TiebaException(exceptionMessage);
-        }
-
-        public static IEnumerable<TRevision> GetRevisionsForTwoObjectsThenSync<TObject, TRevision>(ILogger logger,
-            string[] jsonTypePropsInObject,
-            IEnumerable<TObject> newObjects,
-            Func<TObject, TObject> oldObjectSelector,
-            Func<uint, TObject, TRevision> revisionFactory)
-        {
-            var postProps = typeof(TObject).GetProperties()
-                .Where(p => p.Name is not (nameof(IEntityWithTimestampFields.CreatedAt) or nameof(IEntityWithTimestampFields.UpdatedAt))).ToList();
-            var postRevisionProps = typeof(TRevision).GetProperties();
-            var nowTimestamp = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
-
-            return newObjects.Select(newObj =>
-            {
-                var revision = default(TRevision);
-                var oldObj = oldObjectSelector(newObj);
-                foreach (var p in postProps)
-                {
-                    var newValue = p.GetValue(newObj);
-                    var oldValue = p.GetValue(oldObj);
-                    if (oldValue != null && jsonTypePropsInObject.Contains(p.Name))
-                    { // serialize the value of json type fields which read from db
-                      // for further compare with newValue which have been re-serialized in RawJsonOrNullWhenEmpty()
-                        using var json = JsonDocument.Parse((string)oldValue);
-                        oldValue = JsonSerializer.Serialize(json);
-                    }
-
-                    if (Equals(oldValue, newValue)) continue;
-                    // ef core will track changes on oldPost via reflection
-                    p.SetValue(oldObj, newValue);
-
-                    var revisionProp = postRevisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
-                    if (revisionProp == null)
-                        logger.LogWarning("updating field {} is not existed in revision table, " +
-                                          "newValue={}, oldValue={}, newPost={}, oldPost={}",
-                            p.Name, newValue, oldValue, JsonSerializer.Serialize(newObj), JsonSerializer.Serialize(oldObj));
-                    else
-                    {
-                        revision ??= revisionFactory(nowTimestamp, newObj);
-                        revisionProp.SetValue(revision, newValue);
-                    }
-                }
-
-                return revision;
-            }).OfType<TRevision>();
-        }
-
-        protected void DiffPosts<TPostRevision>(TbmDbContext db,
-            string[] jsonTypePropsInPost,
-            Func<TPost, bool> isExistPredicate,
-            Func<TPost, TPost> existingPostSelector,
-            Func<uint, TPost, TPostRevision> revisionFactory) where TPostRevision : IPostRevision
-        {
-            var existedOrNew = Posts.Values.ToLookup(isExistPredicate);
-            db.AddRange((IEnumerable<object>)GetRevisionsForTwoObjectsThenSync(Logger, jsonTypePropsInPost, existedOrNew[true], existingPostSelector, revisionFactory));
-            var newPostsPendingForInsert = ((IEnumerable<object>)existedOrNew[false]).ToList();
-            if (newPostsPendingForInsert.Any()) db.AddRange(newPostsPendingForInsert);
         }
 
         protected void InsertPostsIndex(TbmDbContext db, IEnumerable<ulong> existingPostsIndex, Func<TPost, PostIndex> indexFactory) =>

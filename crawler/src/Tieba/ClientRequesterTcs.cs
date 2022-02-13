@@ -11,8 +11,8 @@ namespace tbm.Crawler
 {
     public class ClientRequesterTcs : WithLogTrace
     {
-        private readonly IConfigurationSection _config;
         private readonly ILogger<ClientRequesterTcs> _logger;
+        private readonly IConfigurationSection _config;
         private readonly ConcurrentQueue<TaskCompletionSource> _queue = new();
         private readonly Timer _timer = new() {Enabled = true};
         private double _maxRps;
@@ -36,7 +36,7 @@ namespace tbm.Crawler
             }
         }
 
-        public ClientRequesterTcs(IConfiguration config, ILogger<ClientRequesterTcs> logger)
+        public ClientRequesterTcs(ILogger<ClientRequesterTcs> logger, IConfiguration config)
         {
             _logger = logger;
             _config = config.GetSection("ClientRequesterTcs");

@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace tbm.Crawler
 {
-    public class UserParser
+    public class UserParser : CommonInPostAndUser
     {
-        private readonly ILogger<UserParser> _logger;
+        protected sealed override ILogger<object> Logger { get; init; }
         private readonly ConcurrentDictionary<long, TiebaUser> _users = new();
 
-        public UserParser(ILogger<UserParser> logger) => _logger = logger;
+        public UserParser(ILogger<UserParser> logger) => Logger = logger;
 
         public void ParseUsers(IEnumerable<JsonElement> users)
         {
@@ -49,7 +49,7 @@ namespace tbm.Crawler
                     FansNickname = u.TryGetProperty("fans_nickname", out var fansNickName)
                         ? fansNickName.GetString().NullIfWhiteSpace()
                         : null,
-                    IconInfo = BaseCrawler<IPost>.RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo"))
+                    IconInfo = RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo"))
                 };
             });
             // OfType() will remove null values
@@ -61,17 +61,10 @@ namespace tbm.Crawler
             var existingUsers = (from user in db.Users
                 where _users.Keys.Any(uid => uid == user.Uid)
                 select user).ToDictionary(i => i.Uid);
-            var groupedUsers = _users.Values.GroupBy(u => existingUsers.ContainsKey(u.Uid)).ToList();
-            IEnumerable<TiebaUser> GetExistedOrNewPosts(bool isExisted) =>
-                groupedUsers.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<TiebaUser>();
-
-            db.AddRange(BaseCrawler<IPost>.GetRevisionsForTwoObjectsThenSync(_logger,
-                TiebaUser.JsonTypeProps,
-                GetExistedOrNewPosts(true),
+            SavePostsOrUsers(db, _users, TiebaUser.JsonTypeProps,
+                u => existingUsers.ContainsKey(u.Uid),
                 u => existingUsers[u.Uid],
-                (now, u) => new UserRevision {Time = now, Uid = u.Uid}));
-            var newUsersPendingForInsert = GetExistedOrNewPosts(false).ToList();
-            if (newUsersPendingForInsert.Any()) db.AddRange(newUsersPendingForInsert);
+                (now, u) => new UserRevision {Time = now, Uid = u.Uid});
         }
     }
 }

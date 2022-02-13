@@ -111,7 +111,7 @@ namespace tbm.Crawler
             var existingPosts = (from thread in db.Threads
                 where Posts.Keys.Any(tid => tid == thread.Tid)
                 select thread).ToDictionary(i => i.Tid);
-            DiffPosts(db, ThreadPost.JsonTypeProps,
+            SavePostsOrUsers(db, Posts, ThreadPost.JsonTypeProps,
                 p => existingPosts.ContainsKey(p.Tid),
                 p => existingPosts[p.Tid],
                 (now, p) => new ThreadRevision {Time = now, Tid = p.Tid});
