@@ -10,13 +10,27 @@ using Microsoft.Extensions.Logging;
 
 namespace tbm.Crawler
 {
-    public record ClientRequester(ILogger<ClientRequester> Logger, IConfiguration Config,
-        ClientRequesterTcs ClientRequesterTcs, string ClientVersion)
+    public class ClientRequester
     {
-        public delegate ClientRequester New(string ClientVersion);
-
+        private readonly ILogger<ClientRequester> _logger;
+        private readonly IConfigurationSection _config;
+        private readonly ClientRequesterTcs _clientRequesterTcs;
+        private readonly string _clientVersion;
         private static readonly HttpClient Http = new();
         private static readonly Random Rand = new();
+
+        public delegate ClientRequester New(string clientVersion);
+
+        public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
+            ClientRequesterTcs clientRequesterTcs, string clientVersion)
+        {
+            _logger = logger;
+            _config = config.GetSection("ClientRequester");
+            _clientRequesterTcs = clientRequesterTcs;
+            _clientVersion = clientVersion;
+            Http.Timeout = TimeSpan.FromMilliseconds(_config.GetValue("TimeoutMs", 3000));
+            Http.DefaultRequestHeaders.UserAgent.TryParseAdd(_config.GetValue("UserAgent", ""));
+        }
 
         public Task<HttpResponseMessage> Post(string url, Dictionary<string, string> data)
         {
@@ -24,7 +38,7 @@ namespace tbm.Crawler
             {
                 {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
                 {"_client_type", "2"},
-                {"_client_version", ClientVersion}
+                {"_client_version", _clientVersion}
             };
             var postData = clientInfo.Concat(data).ToList();
             var sign = postData.Aggregate("", (acc, i) =>
@@ -35,13 +49,13 @@ namespace tbm.Crawler
             var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
             postData.Add(KeyValuePair.Create("sign", signMd5));
 
-            ClientRequesterTcs.Wait();
+            _clientRequesterTcs.Wait();
             var res = Http.PostAsync(url, new FormUrlEncodedContent(postData));
-            if (Config.GetValue("ClientRequester:LogTrace", false)) Logger.LogTrace("POST {} {}", url, data);
+            if (_config.GetValue("LogTrace", false)) _logger.LogTrace("POST {} {}", url, data);
             res.ContinueWith(i =>
             {
-                if (i.Result.IsSuccessStatusCode) ClientRequesterTcs.Increase();
-                else ClientRequesterTcs.Decrease();
+                if (i.Result.IsSuccessStatusCode) _clientRequesterTcs.Increase();
+                else _clientRequesterTcs.Decrease();
             });
             return res;
         }

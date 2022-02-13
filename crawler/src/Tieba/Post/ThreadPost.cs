@@ -21,10 +21,9 @@ namespace tbm.Crawler
         public uint? ShareNum { get; set; }
         public int AgreeNum { get; set; }
         public int DisagreeNum { get; set; }
-        public string? Location { get; set; }
-        public string? ZanInfo { get; set; }
+        [JsonType] public string? Location { get; set; }
+        [JsonType] public string? ZanInfo { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
-        public static readonly string[] JsonTypeProps = {nameof(Location), nameof(ZanInfo)};
     }
 }

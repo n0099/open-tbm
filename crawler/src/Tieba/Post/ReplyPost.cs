@@ -21,6 +21,5 @@ namespace tbm.Crawler
         public string? TailInfo { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
-        public static readonly string[] JsonTypeProps = System.Array.Empty<string>();
     }
 }

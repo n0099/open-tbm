@@ -14,6 +14,5 @@ namespace tbm.Crawler
         public uint PostTime { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
-        public static readonly string[] JsonTypeProps = System.Array.Empty<string>();
     }
 }

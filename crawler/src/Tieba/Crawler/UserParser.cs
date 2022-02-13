@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,21 +37,29 @@ namespace tbm.Crawler
                     ? nameEl.GetString().NullIfWhiteSpace()
                     : null; // null when he haven't set username for his baidu account yet
                 var nameShow = u.GetStrProp("name_show");
-                return new TiebaUser
+
+                var user = new TiebaUser();
+                try
                 {
-                    Uid = uid,
-                    Name = name,
-                    DisplayName = name == nameShow ? null : nameShow,
-                    AvatarUrl = u.GetStrProp("portrait"),
-                    Gender = u.TryGetProperty("gender", out var genderEl)
+                    user.Uid = uid;
+                    user.Name = name;
+                    user.DisplayName = name == nameShow ? null : nameShow;
+                    user.AvatarUrl = u.GetStrProp("portrait");
+                    user.Gender = u.TryGetProperty("gender", out var genderEl)
                         ? ushort.TryParse(genderEl.GetString(), out var gender)
                             ? gender : null
-                        : null, // null when he haven't explicitly set his gender
-                    FansNickname = u.TryGetProperty("fans_nickname", out var fansNickName)
+                        : null; // null when he haven't explicitly set his gender
+                    user.FansNickname = u.TryGetProperty("fans_nickname", out var fansNickName)
                         ? fansNickName.GetString().NullIfWhiteSpace()
-                        : null,
-                    IconInfo = RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo"))
-                };
+                        : null;
+                    user.IconInfo = RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo"));
+                    return user;
+                }
+                catch (Exception e)
+                {
+                    e.Data["rawJson"] = u.GetRawText();
+                    throw new Exception("User parse error", e);
+                }
             });
             // OfType() will remove null values
             newUsers.OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
@@ -61,7 +70,7 @@ namespace tbm.Crawler
             var existingUsers = (from user in db.Users
                 where _users.Keys.Any(uid => uid == user.Uid)
                 select user).ToDictionary(i => i.Uid);
-            SavePostsOrUsers(db, _users, TiebaUser.JsonTypeProps,
+            SavePostsOrUsers(db, _users,
                 u => existingUsers.ContainsKey(u.Uid),
                 u => existingUsers[u.Uid],
                 (now, u) => new UserRevision {Time = now, Uid = u.Uid});
