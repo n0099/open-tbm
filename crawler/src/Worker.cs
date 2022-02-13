@@ -27,7 +27,7 @@ namespace tbm.Crawler
             try
             {
                 var crawler = scope.Resolve<ThreadCrawler.New>()(0, "");
-                (await crawler.DoCrawler(1, 1)).SavePosts();
+                (await crawler.CrawlRange(1, 1)).SavePosts();
             }
             catch (Exception e)
             {

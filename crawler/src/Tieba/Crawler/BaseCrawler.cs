@@ -59,46 +59,47 @@ namespace tbm.Crawler
             transaction.Commit();
         }
 
-        public async Task<BaseCrawler<TPost>> DoCrawler(Page startPage, Page endPage = Page.MaxValue)
-        {
-            try
-            {
-                var startPageEl = await CrawlSinglePage(startPage);
-                ValidateJsonThenParse(startPageEl);
-                endPage = Math.Min(Page.Parse(startPageEl.GetProperty("page").GetProperty("total_page").GetString() ?? ""), endPage);
-                await DoCrawler(Enumerable.Range((int)(startPage + 1), (int)(endPage - startPage)).Select(i => (Page)i));
-            }
-            catch (Exception e)
-            {
-                e.Data["startPage"] = startPage;
-                e.Data["endPage"] = endPage;
-                e.Data["fid"] = Fid;
-                Logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
-            }
+        public async Task<BaseCrawler<TPost>> CrawlRange(Page startPage, Page endPage = Page.MaxValue)
+        { // cancel when startPage is already locked
+            if (!_locks.AcquireRange(_lockIndex, new[] {startPage}).Any()) return this;
+            if (!await CatchCrawlException(async () =>
+                {
+                    var startPageJson = await CrawlSinglePage(startPage);
+                    ValidateJsonThenParse(startPageJson);
+                    endPage = Math.Min(Page.Parse(startPageJson.GetProperty("page").GetProperty("total_page").GetString() ?? ""), endPage);
+                }, startPage))
+                await CrawlRange(Enumerable.Range((int)(startPage + 1), (int)(endPage - startPage)).Select(i => (Page)i));
 
             return this;
         }
 
-        private async Task DoCrawler(IEnumerable<Page> pages) =>
-            await Task.WhenAll(_locks.AddLocks(_lockIndex, pages).Shuffle().Select(async page =>
+        private async Task CrawlRange(IEnumerable<Page> pages) =>
+            await Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(async page =>
             {
-                try
-                {
-                    ValidateJsonThenParse(await CrawlSinglePage(page));
-                }
-                catch (Exception e)
-                {
-                    e.Data["page"] = page;
-                    e.Data["fid"] = Fid;
-                    Logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
-                    _requesterTcs.Decrease();
-                    _locks.AddFailed(_lockIndex, page);
-                }
-                finally
-                {
-                    _locks.ReleaseLock(_lockIndex, page);
-                }
+                await CatchCrawlException(async () => ValidateJsonThenParse(await CrawlSinglePage(page)), page);
             }));
+
+        private async Task<bool> CatchCrawlException(Func<Task> callback, Page page)
+        {
+            try
+            {
+                await callback();
+                return false;
+            }
+            catch (Exception e)
+            {
+                e.Data["page"] = page;
+                e.Data["fid"] = Fid;
+                Logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, FillExceptionData(e), "exception");
+                _requesterTcs.Decrease();
+                _locks.AcquireFailed(_lockIndex, page);
+                return true;
+            }
+            finally
+            {
+                _locks.ReleaseLock(_lockIndex, page);
+            }
+        }
 
         protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
         {
@@ -173,12 +174,9 @@ namespace tbm.Crawler
             Func<TPost, TPost> existingPostSelector,
             Func<uint, TPost, TPostRevision> revisionFactory) where TPostRevision : IPostRevision
         {
-            var groupedPosts = Posts.Values.GroupBy(isExistPredicate).ToList();
-            IEnumerable<TPost> GetExistedOrNewPosts(bool isExisted) =>
-                groupedPosts.SingleOrDefault(i => i.Key == isExisted)?.ToList() ?? new List<TPost>();
-
-            db.AddRange((IEnumerable<object>)GetRevisionsForTwoObjectsThenSync(Logger, jsonTypePropsInPost, GetExistedOrNewPosts(true), existingPostSelector, revisionFactory));
-            var newPostsPendingForInsert = ((IEnumerable<object>)GetExistedOrNewPosts(false)).ToList();
+            var existedOrNew = Posts.Values.ToLookup(isExistPredicate);
+            db.AddRange((IEnumerable<object>)GetRevisionsForTwoObjectsThenSync(Logger, jsonTypePropsInPost, existedOrNew[true], existingPostSelector, revisionFactory));
+            var newPostsPendingForInsert = ((IEnumerable<object>)existedOrNew[false]).ToList();
             if (newPostsPendingForInsert.Any()) db.AddRange(newPostsPendingForInsert);
         }
 

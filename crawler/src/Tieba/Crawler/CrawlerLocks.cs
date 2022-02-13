@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using FidOrPostID = System.UInt64;
@@ -33,12 +34,12 @@ namespace tbm.Crawler
             if (!ShouldLogTrace()) return;
             lock (_crawling)
             lock (_failed)
-                _logger.LogTrace("Lock: type={} crawlingSize={} crawlingPagesCount={} failedSize={} failedPagesCount={}",
-                    _postType, _crawling.Count, _crawling.Select(i => KeyValuePair.Create(i.Key, i.Value.Count)),
-                    _failed.Count, _failed.Select(i => KeyValuePair.Create(i.Key, i.Value.Count)));
+                _logger.LogTrace("Lock: type={} crawlingCount={} crawlingPagesCount={} failedCount={} failed={}", _postType,
+                    _crawling.Count, JsonSerializer.Serialize(_crawling.ToDictionary(i => i.Key, i => i.Value.Count)),
+                    _failed.Count, JsonSerializer.Serialize(_failed));
         }
 
-        public IEnumerable<Page> AddLocks(FidOrPostID index, IEnumerable<Page> pages)
+        public IEnumerable<Page> AcquireRange(FidOrPostID index, IEnumerable<Page> pages)
         {
             var lockFreePages = pages.ToHashSet();
             lock (_crawling)
@@ -47,8 +48,8 @@ namespace tbm.Crawler
                 if (!_crawling.ContainsKey(index))
                 { // if no one is locking any page in index, just insert pages then return it as is
                     var pageTimeDict = lockFreePages.Select(p => KeyValuePair.Create(p, now));
-                    var newFid = new ConcurrentDictionary<Page, Time>(pageTimeDict);
-                    if (_crawling.TryAdd(index, newFid)) return lockFreePages;
+                    var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
+                    if (_crawling.TryAdd(index, newPage)) return lockFreePages;
                 }
                 foreach (var page in lockFreePages.ToList()) // iterate on copy
                 {
@@ -64,13 +65,13 @@ namespace tbm.Crawler
             return lockFreePages;
         }
 
-        public void AddFailed(FidOrPostID index, Page page)
+        public void AcquireFailed(FidOrPostID index, Page page)
         {
-            var newFid = new ConcurrentDictionary<Page, ushort>();
-            newFid.TryAdd(page, 1);
+            var newPage = new ConcurrentDictionary<Page, ushort>();
+            newPage.TryAdd(page, 1);
             lock (_failed)
             {
-                if (_failed.TryAdd(index, newFid)) return;
+                if (_failed.TryAdd(index, newPage)) return;
                 if (!_failed[index].TryAdd(page, 1)) _failed[index][page]++;
             }
         }
