@@ -12,24 +12,27 @@ namespace tbm.Crawler
 {
     public class ClientRequester
     {
+        public class HttpClient : System.Net.Http.HttpClient
+        {
+        }
+
         private readonly ILogger<ClientRequester> _logger;
         private readonly IConfigurationSection _config;
         private readonly ClientRequesterTcs _clientRequesterTcs;
         private readonly string _clientVersion;
-        private static readonly HttpClient Http = new();
+        private static HttpClient _http = new();
         private static readonly Random Rand = new();
 
         public delegate ClientRequester New(string clientVersion);
 
         public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
-            ClientRequesterTcs clientRequesterTcs, string clientVersion)
+            HttpClient http, ClientRequesterTcs clientRequesterTcs, string clientVersion)
         {
             _logger = logger;
             _config = config.GetSection("ClientRequester");
             _clientRequesterTcs = clientRequesterTcs;
             _clientVersion = clientVersion;
-            Http.Timeout = TimeSpan.FromMilliseconds(_config.GetValue("TimeoutMs", 3000));
-            Http.DefaultRequestHeaders.UserAgent.TryParseAdd(_config.GetValue("UserAgent", ""));
+            _http = http;
         }
 
         public Task<HttpResponseMessage> Post(string url, Dictionary<string, string> data)
@@ -50,7 +53,7 @@ namespace tbm.Crawler
             postData.Add(KeyValuePair.Create("sign", signMd5));
 
             _clientRequesterTcs.Wait();
-            var res = Http.PostAsync(url, new FormUrlEncodedContent(postData));
+            var res = _http.PostAsync(url, new FormUrlEncodedContent(postData));
             if (_config.GetValue("LogTrace", false)) _logger.LogTrace("POST {} {}", url, data);
             res.ContinueWith(i =>
             {

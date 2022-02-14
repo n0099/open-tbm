@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -34,7 +35,17 @@ namespace tbm.Crawler
                     .ConfigureContainer((ContainerBuilder builder) =>
                     {
                         builder.RegisterType<TbmDbContext>();
-                        builder.RegisterType<ClientRequester>();
+                        builder.Register(c =>
+                        {
+                            var http = new ClientRequester.HttpClient();
+                            var config = c.Resolve<IConfiguration>().GetSection("ClientRequester");
+                            http.Timeout = TimeSpan.FromMilliseconds(config.GetValue("TimeoutMs", 3000));
+                            http.DefaultRequestHeaders.UserAgent.TryParseAdd(config.GetValue("UserAgent", ""));
+                            return http;
+                        }).AsSelf().SingleInstance();
+                        builder.RegisterType<ClientRequester>().WithParameter(
+                            (p, _) => p.ParameterType == typeof(ClientRequester.HttpClient),
+                            (_, c) => c.Resolve<ClientRequester.HttpClient>());
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("thread").SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("reply").SingleInstance();

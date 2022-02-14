@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace tbm.Crawler
 {
@@ -68,5 +70,14 @@ namespace tbm.Crawler
         /// <see>https://stackoverflow.com/questions/9464112/c-sharp-get-value-subset-from-dictionary-by-keylist/9464468#9464468</see>
         public static IEnumerable<TValue> GetValuesByKeys<TKey, TValue>(this IDictionary<TKey, TValue> dict, IEnumerable<TKey> keys) =>
             keys.Where(dict.ContainsKey).Select(x => dict[x]);
+
+        /// <see>https://stackoverflow.com/questions/21533506/find-a-specified-generic-dbset-in-a-dbcontext-dynamically-when-i-have-an-entity/47464834#47464834</see>
+        public static IQueryable<T>? Set<T>(this DbContext context)
+        {
+            var method = typeof(DbContext).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .First(m => m.Name == nameof(DbContext.Set) && !m.GetParameters().Any());
+            if (method == null) throw new Exception();
+            return method.MakeGenericMethod(typeof(T)).Invoke(context, null) as IQueryable<T>;
+        }
     }
 }

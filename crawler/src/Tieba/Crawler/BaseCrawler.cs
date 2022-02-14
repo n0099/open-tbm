@@ -2,9 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Autofac;
+using LinqKit;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
 using Fid = System.UInt32;
@@ -55,6 +57,28 @@ namespace tbm.Crawler
             transaction.Commit();
         }
 
+        protected void SavePosts<TPostRevision>(TbmDbContext db,
+            ExpressionStarter<TPost> postsPredicate,
+            ExpressionStarter<PostIndex> indexPredicate,
+            Expression<Func<TPost, ulong>> postIdSelector,
+            Expression<Func<PostIndex, ulong>> indexPostIdSelector,
+            Func<TPost, PostIndex> indexFactory,
+            Func<uint, TPost, TPostRevision> revisionFactory)
+        {
+            var dbSet = db.Set<TPost>();
+            if (dbSet == null) throw new ArgumentException("DbSet<TPost> is not exists in DbContext");
+            var postIdSelectorFunc = postIdSelector.Compile();
+
+            var existingPosts = dbSet.Where(postsPredicate).ToDictionary(postIdSelectorFunc);
+            SavePostsOrUsers(db, Posts,
+                p => existingPosts.ContainsKey(postIdSelectorFunc(p)),
+                p => existingPosts[postIdSelectorFunc(p)],
+                revisionFactory);
+
+            var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
+            db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
+        }
+
         public async Task<BaseCrawler<TPost>> CrawlRange(Page startPage, Page endPage = Page.MaxValue)
         { // cancel when startPage is already locked
             if (!_locks.AcquireRange(_lockIndex, new[] {startPage}).Any()) return this;
@@ -99,9 +123,16 @@ namespace tbm.Crawler
 
         protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
         {
-            await using var stream = (await _requester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
-            using var doc = JsonDocument.Parse(stream);
-            return doc.RootElement.Clone();
+            try
+            {
+                await using var stream = (await _requester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
+                using var doc = JsonDocument.Parse(stream);
+                return doc.RootElement.Clone();
+            }
+            catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
+            {
+                throw new TiebaException($"Tieba client request timeout, {e.Message}");
+            }
         }
 
         protected virtual void ValidateJsonThenParse(JsonElement json) => ParsePosts(GetValidPosts(json));
@@ -117,8 +148,5 @@ namespace tbm.Crawler
             using var posts = json.GetProperty(fieldName).EnumerateArray();
             return posts.Any() ? posts : throw new TiebaException(exceptionMessage);
         }
-
-        protected void InsertPostsIndex(TbmDbContext db, IEnumerable<ulong> existingPostsIndex, Func<TPost, PostIndex> indexFactory) =>
-            db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingPostsIndex)).Select(indexFactory));
     }
 }

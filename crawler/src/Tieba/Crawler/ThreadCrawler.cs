@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Autofac.Features.Indexed;
+using LinqKit;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
 using Page = System.UInt32;
@@ -108,28 +109,19 @@ namespace tbm.Crawler
 
         protected override void SavePosts(TbmDbContext db)
         {
-            var existingPosts = (from thread in db.Threads
-                where Posts.Keys.Any(tid => tid == thread.Tid)
-                select thread).ToDictionary(i => i.Tid);
-            SavePostsOrUsers(db, Posts,
-                p => existingPosts.ContainsKey(p.Tid),
-                p => existingPosts[p.Tid],
+            SavePosts(db,
+                PredicateBuilder.New<ThreadPost>(p => Posts.Keys.Any(id => id == p.Tid)),
+                PredicateBuilder.New<PostIndex>(i => i.Type == "thread" && Posts.Keys.Any(id => id == i.Tid)),
+                p => p.Tid,
+                i => i.Tid,
+                p => new PostIndex {Type = "thread", Fid = Fid, Tid = p.Tid, PostTime = p.PostTime},
                 (now, p) => new ThreadRevision {Time = now, Tid = p.Tid});
-            // prevent update with default null value on fields which will be later set by ReplyCrawler
-            db.Set<ThreadPost>().Local.ForEach(post => db.Entry(post).Properties.Where(p => p.Metadata.Name
-                    is nameof(ThreadLateSaveInfo.AntiSpamInfo) or nameof(ThreadLateSaveInfo.AuthorPhoneType))
-                .ForEach(p => p.IsModified = false));
-
-            var existingPostsIndex = from index in db.PostsIndex
-                where index.Type == "thread" && Posts.Keys.Any(tid => tid == index.Tid)
-                select index.Tid;
-            InsertPostsIndex(db, existingPostsIndex, p => new PostIndex
-            {
-                Type = "thread",
-                Fid = Fid,
-                Tid = p.Tid,
-                PostTime = p.PostTime
-            });
+            foreach (var post in db.Set<ThreadPost>().Local)
+            { // prevent update with default null value on fields which will be later set by ReplyCrawler
+                db.Entry(post).Properties
+                    .Where(p => p.Metadata.Name is nameof(ThreadLateSaveInfo.AntiSpamInfo) or nameof(ThreadLateSaveInfo.AuthorPhoneType))
+                    .ForEach(p => p.IsModified = false);
+            }
         }
     }
 }

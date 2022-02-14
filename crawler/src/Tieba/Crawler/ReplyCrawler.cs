@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Autofac.Features.Indexed;
+using LinqKit;
 using Microsoft.Extensions.Logging;
 using static System.Text.Json.JsonElement;
 using Fid = System.UInt32;
@@ -113,6 +114,12 @@ namespace tbm.Crawler
             lock (Posts) newPosts.ForEach(i => Posts[i.Pid] = i);
         }
 
-        protected override void SavePosts(TbmDbContext db) => throw new NotImplementedException();
+        protected override void SavePosts(TbmDbContext db) => SavePosts(db,
+            PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
+            PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid)),
+            p => p.Pid,
+            i => i.Pid,
+            p => new PostIndex {Type = "reply", Fid = Fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
+            (now, p) => new ReplyRevision {Time = now, Tid = p.Tid, Pid = p.Pid});
     }
 }
