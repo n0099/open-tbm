@@ -18,9 +18,9 @@ namespace tbm.Crawler
         {
             var usersList = users.ToList();
             if (!usersList.Any()) throw new TiebaException("User list is empty");
-            var newUsers = usersList.Select(u =>
+            var newUsers = usersList.Select(el =>
             {
-                var rawUid = u.GetStrProp("id");
+                var rawUid = el.GetStrProp("id");
                 // when thread's author user is anonymous, the first uid in user list will be empty string and this user will appears in next
                 if (rawUid == "") return null;
                 var uid = long.Parse(rawUid);
@@ -29,35 +29,35 @@ namespace tbm.Crawler
                     return new TiebaUser
                     {
                         Uid = uid,
-                        Name = u.GetStrProp("name_show"),
-                        AvatarUrl = u.GetStrProp("portrait")
+                        Name = el.GetStrProp("name_show"),
+                        AvatarUrl = el.GetStrProp("portrait")
                     };
                 }
-                var name = u.TryGetProperty("name", out var nameEl)
+                var name = el.TryGetProperty("name", out var nameEl)
                     ? nameEl.GetString().NullIfWhiteSpace()
                     : null; // null when he haven't set username for his baidu account yet
-                var nameShow = u.GetStrProp("name_show");
+                var nameShow = el.GetStrProp("name_show");
 
-                var user = new TiebaUser();
+                var u = new TiebaUser();
                 try
                 {
-                    user.Uid = uid;
-                    user.Name = name;
-                    user.DisplayName = name == nameShow ? null : nameShow;
-                    user.AvatarUrl = u.GetStrProp("portrait");
-                    user.Gender = u.TryGetProperty("gender", out var genderEl)
+                    u.Uid = uid;
+                    u.Name = name;
+                    u.DisplayName = name == nameShow ? null : nameShow;
+                    u.AvatarUrl = el.GetStrProp("portrait");
+                    u.Gender = el.TryGetProperty("gender", out var genderEl)
                         ? ushort.TryParse(genderEl.GetString(), out var gender)
                             ? gender : null
                         : null; // null when he haven't explicitly set his gender
-                    user.FansNickname = u.TryGetProperty("fans_nickname", out var fansNickName)
+                    u.FansNickname = el.TryGetProperty("fans_nickname", out var fansNickName)
                         ? fansNickName.GetString().NullIfWhiteSpace()
                         : null;
-                    user.IconInfo = RawJsonOrNullWhenEmpty(u.GetProperty("iconinfo"));
-                    return user;
+                    u.IconInfo = RawJsonOrNullWhenEmpty(el.GetProperty("iconinfo"));
+                    return u;
                 }
                 catch (Exception e)
                 {
-                    e.Data["rawJson"] = u.GetRawText();
+                    e.Data["rawJson"] = el.GetRawText();
                     throw new Exception("User parse error", e);
                 }
             });

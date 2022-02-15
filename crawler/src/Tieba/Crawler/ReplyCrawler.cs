@@ -84,29 +84,29 @@ namespace tbm.Crawler
 
         protected override void ParsePosts(ArrayEnumerator posts)
         {
-            var newPosts = posts.Select(p =>
+            var newPosts = posts.Select(el =>
             {
-                var post = new ReplyPost();
+                var p = new ReplyPost();
                 try
                 {
-                    post.Tid = _tid;
-                    post.Pid = Pid.Parse(p.GetStrProp("id"));
-                    post.Floor = uint.Parse(p.GetStrProp("floor"));
-                    post.Content = RawJsonOrNullWhenEmpty(p.GetProperty("content"));
-                    post.AuthorUid = Uid.Parse(p.GetStrProp("author_id"));
-                    post.SubReplyNum = uint.Parse(p.GetStrProp("sub_post_number"));
-                    post.PostTime = Time.Parse(p.GetStrProp("time"));
-                    post.IsFold = p.GetStrProp("is_fold") != "0";
-                    post.AgreeNum = int.Parse(p.GetProperty("agree").GetStrProp("agree_num"));
-                    post.DisagreeNum = int.Parse(p.GetProperty("agree").GetStrProp("disagree_num"));
-                    post.Location = RawJsonOrNullWhenEmpty(p.GetProperty("lbs_info"));
-                    post.SignInfo = RawJsonOrNullWhenEmpty(p.GetProperty("signature"));
-                    post.TailInfo = RawJsonOrNullWhenEmpty(p.GetProperty("tail_info"));
-                    return post;
+                    p.Tid = _tid;
+                    p.Pid = Pid.Parse(el.GetStrProp("id"));
+                    p.Floor = uint.Parse(el.GetStrProp("floor"));
+                    p.Content = RawJsonOrNullWhenEmpty(el.GetProperty("content"));
+                    p.AuthorUid = Uid.Parse(el.GetStrProp("author_id"));
+                    p.SubReplyNum = uint.Parse(el.GetStrProp("sub_post_number"));
+                    p.PostTime = Time.Parse(el.GetStrProp("time"));
+                    p.IsFold = el.GetStrProp("is_fold") != "0";
+                    p.AgreeNum = int.Parse(el.GetProperty("agree").GetStrProp("agree_num"));
+                    p.DisagreeNum = int.Parse(el.GetProperty("agree").GetStrProp("disagree_num"));
+                    p.Location = RawJsonOrNullWhenEmpty(el.GetProperty("lbs_info"));
+                    p.SignInfo = RawJsonOrNullWhenEmpty(el.GetProperty("signature"));
+                    p.TailInfo = RawJsonOrNullWhenEmpty(el.GetProperty("tail_info"));
+                    return p;
                 }
                 catch (Exception e)
                 {
-                    e.Data["rawJson"] = p.GetRawText();
+                    e.Data["rawJson"] = el.GetRawText();
                     throw new Exception("Reply parse error", e);
                 }
             });
@@ -120,7 +120,7 @@ namespace tbm.Crawler
                 p => p.Pid,
                 i => i.Pid,
                 p => new PostIndex {Type = "reply", Fid = Fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-                (now, p) => new ReplyRevision {Time = now, Tid = p.Tid, Pid = p.Pid});
+                (now, p) => new ReplyRevision {Time = now, Pid = p.Pid});
 
             if (_parentThread == null) return;
             var parentThread = new ThreadPost()

@@ -46,7 +46,7 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
-        public void SavePosts<TPostRevision>(out IEnumerable<TPostRevision> postRevisions) where TPostRevision : class, IPostRevision
+        public void SavePosts<TPostRevision>(out IEnumerable<TPostRevision> postRevisions) where TPostRevision : PostRevision
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);

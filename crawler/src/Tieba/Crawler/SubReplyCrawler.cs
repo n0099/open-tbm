@@ -70,28 +70,28 @@ namespace tbm.Crawler
         protected override void ParsePosts(ArrayEnumerator posts)
         {
             List<JsonElement> users = new();
-            var newPosts = posts.Select(p =>
+            var newPosts = posts.Select(el =>
             {
-                var author = p.GetProperty("author");
+                var author = el.GetProperty("author");
                 users.Add(author);
-                var post = new SubReplyPost();
+                var p = new SubReplyPost();
                 try
                 {
-                    post.Tid = _tid;
-                    post.Pid = _pid;
-                    post.Spid = Spid.Parse(p.GetStrProp("id"));
-                    post.Content = RawJsonOrNullWhenEmpty(p.GetProperty("content"));
-                    post.AuthorUid = Uid.Parse(author.GetStrProp("id"));
-                    post.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                    p.Tid = _tid;
+                    p.Pid = _pid;
+                    p.Spid = Spid.Parse(el.GetStrProp("id"));
+                    p.Content = RawJsonOrNullWhenEmpty(el.GetProperty("content"));
+                    p.AuthorUid = Uid.Parse(author.GetStrProp("id"));
+                    p.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
                         ? bawuType.GetString().NullIfWhiteSpace()
                         : null; // will be null if he's not a moderator
-                    post.AuthorExpGrade = ushort.Parse(author.GetStrProp("level_id"));
-                    post.PostTime = Time.Parse(p.GetStrProp("time"));
-                    return post;
+                    p.AuthorExpGrade = ushort.Parse(author.GetStrProp("level_id"));
+                    p.PostTime = Time.Parse(el.GetStrProp("time"));
+                    return p;
                 }
                 catch (Exception e)
                 {
-                    e.Data["rawJson"] = p.GetRawText();
+                    e.Data["rawJson"] = el.GetRawText();
                     throw new Exception("Sub reply parse error", e);
                 }
             });
@@ -105,6 +105,6 @@ namespace tbm.Crawler
             p => p.Spid,
             i => i.Spid,
             p => new PostIndex {Type = "reply", Fid = Fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
-            (now, p) => new SubReplyRevision {Time = now, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid});
+            (now, p) => new SubReplyRevision {Time = now, Spid = p.Spid});
     }
 }

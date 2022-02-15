@@ -57,7 +57,7 @@ namespace tbm.Crawler
             if (_config.GetValue("LogTrace", false)) _logger.LogTrace("POST {} {}", url, data);
             res.ContinueWith(i =>
             {
-                if (i.Result.IsSuccessStatusCode) _clientRequesterTcs.Increase();
+                if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _clientRequesterTcs.Increase();
                 else _clientRequesterTcs.Decrease();
             });
             return res;

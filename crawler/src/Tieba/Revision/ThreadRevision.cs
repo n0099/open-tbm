@@ -1,9 +1,7 @@
 namespace tbm.Crawler
 {
-    public class ThreadRevision : IPostRevision
+    public class ThreadRevision : PostRevision
     {
-        public object Clone() => MemberwiseClone();
-        public uint Time { get; set; }
         public ulong Tid { get; set; }
         public string? StickyType { get; set; }
         public string? TopicType { get; set; }

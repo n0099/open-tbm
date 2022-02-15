@@ -57,49 +57,49 @@ namespace tbm.Crawler
         protected override void ParsePosts(ArrayEnumerator posts)
         {
             List<JsonElement> users = new();
-            var newPosts = posts.Select(p =>
+            var newPosts = posts.Select(el =>
             {
-                var author = p.GetProperty("author");
+                var author = el.GetProperty("author");
                 users.Add(author);
-                var post = new ThreadPost();
+                var p = new ThreadPost();
                 try
                 {
-                    post.Tid = Tid.Parse(p.GetStrProp("tid"));
-                    post.FirstPid = Pid.Parse(p.GetStrProp("first_post_id"));
-                    post.ThreadType = ulong.Parse(p.GetStrProp("thread_types"));
-                    post.StickyType = p.GetStrProp("is_membertop") == "1"
+                    p.Tid = Tid.Parse(el.GetStrProp("tid"));
+                    p.FirstPid = Pid.Parse(el.GetStrProp("first_post_id"));
+                    p.ThreadType = ulong.Parse(el.GetStrProp("thread_types"));
+                    p.StickyType = el.GetStrProp("is_membertop") == "1"
                         ? "membertop"
-                        : p.TryGetProperty("is_top", out var isTop)
+                        : el.TryGetProperty("is_top", out var isTop)
                             ? isTop.GetString() == "0" ? null : "top"
                             : "top"; // in 6.0.2 client version, if there's a vip sticky thread and three normal sticky threads, the fourth (oldest) thread won't have is_top field
-                    post.IsGood = p.GetStrProp("is_good") == "1";
-                    post.TopicType = p.TryGetProperty("is_livepost", out var isLivePost)
+                    p.IsGood = el.GetStrProp("is_good") == "1";
+                    p.TopicType = el.TryGetProperty("is_livepost", out var isLivePost)
                         ? isLivePost.GetString()
                         : null;
-                    post.Title = p.GetStrProp("title");
-                    post.AuthorUid = Uid.Parse(author.GetStrProp("id"));
-                    post.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                    p.Title = el.GetStrProp("title");
+                    p.AuthorUid = Uid.Parse(author.GetStrProp("id"));
+                    p.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
                         ? bawuType.GetString().NullIfWhiteSpace()
                         : null; // topic thread won't have this
-                    post.PostTime = p.TryGetProperty("create_time", out var createTime)
+                    p.PostTime = el.TryGetProperty("create_time", out var createTime)
                         ? Time.Parse(createTime.GetString() ?? "")
                         : null; // topic thread won't have this
-                    post.LatestReplyTime = Time.Parse(p.GetStrProp("last_time_int"));
-                    post.LatestReplierUid = Uid.Parse(p.GetProperty("last_replyer").GetStrProp("id")); // topic thread won't have this
-                    post.ReplyNum = uint.Parse(p.GetStrProp("reply_num"));
-                    post.ViewNum = uint.Parse(p.GetStrProp("view_num"));
-                    post.ShareNum = p.TryGetProperty("share_num", out var shareNum)
+                    p.LatestReplyTime = Time.Parse(el.GetStrProp("last_time_int"));
+                    p.LatestReplierUid = Uid.Parse(el.GetProperty("last_replyer").GetStrProp("id")); // topic thread won't have this
+                    p.ReplyNum = uint.Parse(el.GetStrProp("reply_num"));
+                    p.ViewNum = uint.Parse(el.GetStrProp("view_num"));
+                    p.ShareNum = el.TryGetProperty("share_num", out var shareNum)
                         ? uint.Parse(shareNum.GetString() ?? "")
                         : null; // topic thread won't have this
-                    post.AgreeNum = int.Parse(p.GetStrProp("agree_num"));
-                    post.DisagreeNum = int.Parse(p.GetStrProp("disagree_num"));
-                    post.Location = RawJsonOrNullWhenEmpty(p.GetProperty("location"));
-                    post.ZanInfo = RawJsonOrNullWhenEmpty(p.GetProperty("zan"));
-                    return post;
+                    p.AgreeNum = int.Parse(el.GetStrProp("agree_num"));
+                    p.DisagreeNum = int.Parse(el.GetStrProp("disagree_num"));
+                    p.Location = RawJsonOrNullWhenEmpty(el.GetProperty("location"));
+                    p.ZanInfo = RawJsonOrNullWhenEmpty(el.GetProperty("zan"));
+                    return p;
                 }
                 catch (Exception e)
                 {
-                    e.Data["rawJson"] = p.GetRawText();
+                    e.Data["rawJson"] = el.GetRawText();
                     throw new Exception("Thread parse error", e);
                 }
             });
