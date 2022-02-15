@@ -94,9 +94,9 @@ namespace tbm.Crawler
                     p.Floor = uint.Parse(el.GetStrProp("floor"));
                     p.Content = RawJsonOrNullWhenEmpty(el.GetProperty("content"));
                     p.AuthorUid = Uid.Parse(el.GetStrProp("author_id"));
-                    p.SubReplyNum = uint.Parse(el.GetStrProp("sub_post_number"));
+                    p.SubReplyNum = int.Parse(el.GetStrProp("sub_post_number"));
                     p.PostTime = Time.Parse(el.GetStrProp("time"));
-                    p.IsFold = el.GetStrProp("is_fold") != "0";
+                    p.IsFold = ushort.Parse(el.GetStrProp("is_fold"));
                     p.AgreeNum = int.Parse(el.GetProperty("agree").GetStrProp("agree_num"));
                     p.DisagreeNum = int.Parse(el.GetProperty("agree").GetStrProp("disagree_num"));
                     p.Location = RawJsonOrNullWhenEmpty(el.GetProperty("lbs_info"));

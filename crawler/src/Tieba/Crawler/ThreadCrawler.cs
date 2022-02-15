@@ -85,7 +85,9 @@ namespace tbm.Crawler
                         ? Time.Parse(createTime.GetString() ?? "")
                         : null; // topic thread won't have this
                     p.LatestReplyTime = Time.Parse(el.GetStrProp("last_time_int"));
-                    p.LatestReplierUid = Uid.Parse(el.GetProperty("last_replyer").GetStrProp("id")); // topic thread won't have this
+                    p.LatestReplierUid = el.TryGetProperty("last_replyer", out var lastReplyer)
+                        ? Uid.Parse(lastReplyer.GetStrProp("id"))
+                        : null; // topic thread won't have this
                     p.ReplyNum = uint.Parse(el.GetStrProp("reply_num"));
                     p.ViewNum = uint.Parse(el.GetStrProp("view_num"));
                     p.ShareNum = el.TryGetProperty("share_num", out var shareNum)

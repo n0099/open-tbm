@@ -15,14 +15,14 @@ namespace tbm.Crawler
         public string? AuthorManagerType { get; set; }
         public uint? PostTime { get; set; }
         public uint LatestReplyTime { get; set; }
-        public long LatestReplierUid { get; set; }
+        public long? LatestReplierUid { get; set; }
         public uint ReplyNum { get; set; }
         public uint ViewNum { get; set; }
         public uint? ShareNum { get; set; }
         public int AgreeNum { get; set; }
         public int DisagreeNum { get; set; }
-        [JsonType] public string? Location { get; set; }
         [JsonType] public string? ZanInfo { get; set; }
+        [JsonType] public string? Location { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
     }

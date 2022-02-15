@@ -25,15 +25,17 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder b)
         {
-            modelBuilder.Entity<TiebaUser>().ToTable("tbm_tiebaUsers");
-            modelBuilder.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
-            modelBuilder.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
-            modelBuilder.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
-            modelBuilder.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new { e.Time, e.Tid });
-            modelBuilder.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new { e.Time, e.Uid });
-            modelBuilder.Entity<PostIndex>().ToTable("tbm_postsIndex").HasKey(e => new { e.Tid, e.Pid, e.Spid });
+            b.Entity<TiebaUser>().ToTable("tbm_tiebaUsers");
+            b.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
+            b.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
+            b.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
+            b.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new { e.Tid, e.Time });
+            b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new { e.Pid, e.Time });
+            b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new { e.Spid, e.Time });
+            b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new { e.Uid, e.Time });
+            b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasKey(e => new { e.Tid, e.Pid, e.Spid });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
