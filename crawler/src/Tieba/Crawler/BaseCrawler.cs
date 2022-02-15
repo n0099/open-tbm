@@ -14,7 +14,7 @@ using Page = System.UInt32;
 
 namespace tbm.Crawler
 {
-    public abstract class BaseCrawler<TPost> : CommonInPostAndUser where TPost : IPost
+    public abstract class BaseCrawler<TPost> : CommonInPostAndUser where TPost : class, IPost
     {
         protected sealed override ILogger<object> Logger { get; init; }
         private readonly ClientRequesterTcs _requesterTcs;
@@ -46,7 +46,7 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
-        public void SavePosts()
+        public void SavePosts<TPostRevision>(out IEnumerable<TPostRevision> postRevisions) where TPostRevision : class, IPostRevision
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
@@ -55,24 +55,24 @@ namespace tbm.Crawler
             Users.SaveUsers(db);
             db.SaveChanges();
             transaction.Commit();
+            postRevisions = db.Set<TPostRevision>().Local.Select(i => (TPostRevision)i.Clone()).ToList();
         }
 
         protected void SavePosts<TPostRevision>(TbmDbContext db,
             ExpressionStarter<TPost> postsPredicate,
             ExpressionStarter<PostIndex> indexPredicate,
-            Expression<Func<TPost, ulong>> postIdSelector,
+            Func<TPost, ulong> postIdSelector,
             Expression<Func<PostIndex, ulong>> indexPostIdSelector,
             Func<TPost, PostIndex> indexFactory,
             Func<uint, TPost, TPostRevision> revisionFactory)
         {
             var dbSet = db.Set<TPost>();
             if (dbSet == null) throw new ArgumentException("DbSet<TPost> is not exists in DbContext");
-            var postIdSelectorFunc = postIdSelector.Compile();
 
-            var existingPosts = dbSet.Where(postsPredicate).ToDictionary(postIdSelectorFunc);
+            var existingPosts = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
             SavePostsOrUsers(db, Posts,
-                p => existingPosts.ContainsKey(postIdSelectorFunc(p)),
-                p => existingPosts[postIdSelectorFunc(p)],
+                p => existingPosts.ContainsKey(postIdSelector(p)),
+                p => existingPosts[postIdSelector(p)],
                 revisionFactory);
 
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
@@ -86,7 +86,7 @@ namespace tbm.Crawler
                 {
                     var startPageJson = await CrawlSinglePage(startPage);
                     ValidateJsonThenParse(startPageJson);
-                    endPage = Math.Min(Page.Parse(startPageJson.GetProperty("page").GetProperty("total_page").GetString() ?? ""), endPage);
+                    endPage = Math.Min(endPage, Page.Parse(startPageJson.GetProperty("page").GetStrProp("total_page")));
                 }, startPage))
                 await CrawlRange(Enumerable.Range((int)(startPage + 1), (int)(endPage - startPage)).Select(i => (Page)i));
 
@@ -139,7 +139,7 @@ namespace tbm.Crawler
 
         protected static void ValidateOtherErrorCode(JsonElement json)
         {
-            if (json.GetProperty("error_code").GetString() != "0")
+            if (json.GetStrProp("error_code") != "0")
                 throw new TiebaException($"Error from tieba client, raw json:{json}");
         }
 

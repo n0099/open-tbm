@@ -58,24 +58,23 @@ namespace tbm.Crawler
 
             var users = json.GetProperty("user_list").EnumerateArray();
             Users.ParseUsers(users);
-            lock (Posts)
-                posts.Select(p => Pid.Parse(p.GetStrProp("id"))).ForEach(pid =>
-                {
-                    var p = Posts[pid];
-                    var author = users.First(u => Uid.Parse(u.GetStrProp("id")) == p.AuthorUid);
-                    p.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
-                        ? bawuType.GetString().NullIfWhiteSpace()
-                        : null; // will be null if he's not a moderator
-                    p.AuthorExpGrade = author.TryGetProperty("level_id", out var levelIdEl)
-                        ? ushort.TryParse(levelIdEl.GetString(), out var levelId) ? levelId : null
-                        : null; // will be null when author is a historical anonymous user
-                    Posts[pid] = p;
-                });
+            posts.Select(p => Pid.Parse(p.GetStrProp("id"))).ForEach(pid =>
+            { // fill the value of some fields of reply from user list which is out of post list
+                var p = Posts[pid];
+                var author = users.First(u => Uid.Parse(u.GetStrProp("id")) == p.AuthorUid);
+                p.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
+                    ? bawuType.GetString().NullIfWhiteSpace()
+                    : null; // will be null if he's not a moderator
+                p.AuthorExpGrade = author.TryGetProperty("level_id", out var levelIdEl)
+                    ? ushort.TryParse(levelIdEl.GetString(), out var levelId) ? levelId : null
+                    : null; // will be null when author is a historical anonymous user
+                Posts[pid] = p;
+            });
         }
 
         protected override ArrayEnumerator GetValidPosts(JsonElement json)
         {
-            var errorCode = json.GetProperty("error_code").GetString();
+            var errorCode = json.GetStrProp("error_code");
             if (errorCode == "4")
                 throw new TiebaException("Thread already deleted when crawling reply");
             ValidateOtherErrorCode(json);
@@ -111,15 +110,29 @@ namespace tbm.Crawler
                     throw new Exception("Reply parse error", e);
                 }
             });
-            lock (Posts) newPosts.ForEach(i => Posts[i.Pid] = i);
+            newPosts.ForEach(i => Posts[i.Pid] = i);
         }
 
-        protected override void SavePosts(TbmDbContext db) => SavePosts(db,
-            PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
-            PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid)),
-            p => p.Pid,
-            i => i.Pid,
-            p => new PostIndex {Type = "reply", Fid = Fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-            (now, p) => new ReplyRevision {Time = now, Tid = p.Tid, Pid = p.Pid});
+        protected override void SavePosts(TbmDbContext db) {
+            SavePosts(db,
+                PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
+                PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid)),
+                p => p.Pid,
+                i => i.Pid,
+                p => new PostIndex {Type = "reply", Fid = Fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
+                (now, p) => new ReplyRevision {Time = now, Tid = p.Tid, Pid = p.Pid});
+
+            if (_parentThread == null) return;
+            var parentThread = new ThreadPost()
+            {
+                Tid = _tid,
+                AuthorPhoneType = _parentThread.AuthorPhoneType,
+                AntiSpamInfo = _parentThread.AntiSpamInfo
+            };
+            db.Attach(parentThread);
+            db.Entry(parentThread).Properties
+                .Where(p => p.Metadata.Name is nameof(ThreadLateSaveInfo.AuthorPhoneType) or nameof(ThreadLateSaveInfo.AntiSpamInfo))
+                .ForEach(p => p.IsModified = true);
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 using Json.More;
 using Microsoft.Extensions.Logging;
+using Time = System.UInt32;
 
 namespace tbm.Crawler
 {
@@ -22,7 +23,7 @@ namespace tbm.Crawler
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             Func<TPostOrUser, bool> isExistPredicate,
             Func<TPostOrUser, TPostOrUser> existedSelector,
-            Func<uint, TPostOrUser, TRevision> revisionFactory)
+            Func<Time, TPostOrUser, TRevision> revisionFactory)
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
             db.AddRange((IEnumerable<object>)GetRevisionsForObjectsThenMerge(existedOrNew[true], existedSelector, revisionFactory));
@@ -33,12 +34,12 @@ namespace tbm.Crawler
         private IEnumerable<TRevision> GetRevisionsForObjectsThenMerge<TObject, TRevision>(
             IEnumerable<TObject> newObjects,
             Func<TObject, TObject> oldObjectSelector,
-            Func<uint, TObject, TRevision> revisionFactory)
+            Func<Time, TObject, TRevision> revisionFactory)
         {
             var objectProps = typeof(TObject).GetProperties()
                 .Where(p => p.Name is not (nameof(IEntityWithTimestampFields.CreatedAt) or nameof(IEntityWithTimestampFields.UpdatedAt))).ToList();
             var revisionProps = typeof(TRevision).GetProperties();
-            var nowTimestamp = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+            var nowTimestamp = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
 
             return newObjects.Select(newObj =>
             {

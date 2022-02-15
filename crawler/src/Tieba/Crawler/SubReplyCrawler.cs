@@ -53,7 +53,7 @@ namespace tbm.Crawler
 
         protected override ArrayEnumerator GetValidPosts(JsonElement json)
         {
-            var errorCode = json.GetProperty("error_code").GetString();
+            var errorCode = json.GetStrProp("error_code");
             switch (errorCode)
             {
                 case "4":

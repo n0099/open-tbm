@@ -63,15 +63,15 @@ namespace tbm.Crawler
             });
             return base.SaveChanges();
         }
-    }
 
-    class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
-    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
-        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(DbContext context) => Create(context, false);
-        public object Create(DbContext context, bool designTime) =>
-            context is TbmDbContext dbContext
-                ? (context.GetType(), dbContext.Fid, designTime)
-                : context.GetType();
+        private class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
+        { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
+            // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
+            public object Create(DbContext context) => Create(context, false);
+            public object Create(DbContext context, bool designTime) =>
+                context is TbmDbContext dbContext
+                    ? (context.GetType(), dbContext.Fid, designTime)
+                    : context.GetType();
+        }
     }
 }

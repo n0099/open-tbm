@@ -1,9 +1,8 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace tbm.Crawler
 {
     public class ThreadRevision : IPostRevision
     {
+        public object Clone() => MemberwiseClone();
         public uint Time { get; set; }
         public ulong Tid { get; set; }
         public string? StickyType { get; set; }
@@ -17,7 +16,5 @@ namespace tbm.Crawler
         public uint? ShareNum { get; set; }
         public int? AgreeNum { get; set; }
         public int? DisagreeNum { get; set; }
-        // changes for props with [NotMapped] attribute will be ignored when inserting
-        [NotMapped] public string? ZanInfo { get; set; }
     }
 }
