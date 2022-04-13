@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using LinqKit;
 using Microsoft.Extensions.Logging;
+using TbClient.Api.Request;
+using TbClient.Api.Response;
 using static System.Text.Json.JsonElement;
 using Page = System.UInt32;
 using Fid = System.UInt32;
@@ -39,13 +41,24 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override async Task<JsonElement> CrawlSinglePage(Page page) =>
-            await RequestJson("http://c.tieba.baidu.com/c/f/frs/page", new Dictionary<string, string>
-            {
-                {"kw", _forumName},
-                {"pn", page.ToString()},
-                {"rn", "50"}
-            });
+        protected override async Task<JsonElement> CrawlSinglePage(Page page)
+        {
+            var response = await Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(
+                "http://c.tieba.baidu.com/c/f/frs/page?cmd=301001",
+                new ThreadRequest
+                {
+                    Data = new ThreadRequest.Types.Data
+                    {
+                        Kw = _forumName,
+                        Pn = (int)page,
+                        Rn = 90,
+                        RnNeed = 30,
+                        QType = 2,
+                        SortType = 5
+                    }
+                });
+            return new JsonElement();
+        }
 
         protected override ArrayEnumerator GetValidPosts(JsonElement json)
         {

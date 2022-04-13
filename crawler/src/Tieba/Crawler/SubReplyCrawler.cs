@@ -44,7 +44,7 @@ namespace tbm.Crawler
         }
 
         protected override async Task<JsonElement> CrawlSinglePage(uint page) =>
-            await RequestJson("http://c.tieba.baidu.com/c/f/pb/floor", new Dictionary<string, string>
+            await Requester.RequestJson("http://c.tieba.baidu.com/c/f/pb/floor", new Dictionary<string, string>
             {
                 {"kz", _tid.ToString()},
                 {"pid", _pid.ToString()},

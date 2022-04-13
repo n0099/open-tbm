@@ -17,8 +17,8 @@ namespace tbm.Crawler
     public abstract class BaseCrawler<TPost> : CommonInPostAndUser where TPost : class, IPost
     {
         protected sealed override ILogger<object> Logger { get; init; }
+        protected ClientRequester Requester { get; }
         private readonly ClientRequesterTcs _requesterTcs;
-        private readonly ClientRequester _requester;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly ulong _lockIndex;
         protected readonly Fid Fid;
@@ -39,7 +39,7 @@ namespace tbm.Crawler
             uint fid)
         {
             Logger = logger;
-            _requester = requester;
+            Requester = requester;
             _requesterTcs = requesterTcs;
             Users = userParser;
             (_locks, _lockIndex) = lockAndIndex;
@@ -118,20 +118,6 @@ namespace tbm.Crawler
             finally
             {
                 _locks.ReleaseLock(_lockIndex, page);
-            }
-        }
-
-        protected async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param)
-        {
-            try
-            {
-                await using var stream = (await _requester.Post(url, param)).EnsureSuccessStatusCode().Content.ReadAsStream();
-                using var doc = JsonDocument.Parse(stream);
-                return doc.RootElement.Clone();
-            }
-            catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
-            {
-                throw new TiebaException($"Tieba client request timeout, {e.Message}");
             }
         }
 

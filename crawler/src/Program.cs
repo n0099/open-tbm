@@ -40,7 +40,6 @@ namespace tbm.Crawler
                             var http = new ClientRequester.HttpClient();
                             var config = c.Resolve<IConfiguration>().GetSection("ClientRequester");
                             http.Timeout = TimeSpan.FromMilliseconds(config.GetValue("TimeoutMs", 3000));
-                            http.DefaultRequestHeaders.UserAgent.TryParseAdd(config.GetValue("UserAgent", ""));
                             return http;
                         }).AsSelf().SingleInstance();
                         builder.RegisterType<ClientRequester>().WithParameter(
@@ -56,7 +55,7 @@ namespace tbm.Crawler
                             builder.RegisterType<T>().WithParameter(
                                 (p, _) => p.ParameterType == typeof(ClientRequester),
                                 (_, c) => c.Resolve<ClientRequester.New>()(clientVersion));
-                        RegisterPostCrawler<ThreadCrawler>("6.0.2");
+                        RegisterPostCrawler<ThreadCrawler>("12.23.1.0");
                         RegisterPostCrawler<ReplyCrawler>("8.8.8");
                         RegisterPostCrawler<SubReplyCrawler>("8.8.8");
                     })

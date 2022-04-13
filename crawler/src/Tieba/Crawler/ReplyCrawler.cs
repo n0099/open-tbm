@@ -38,7 +38,7 @@ namespace tbm.Crawler
         }
 
         protected override async Task<JsonElement> CrawlSinglePage(uint page) =>
-            await RequestJson("http://c.tieba.baidu.com/c/f/pb/page", new Dictionary<string, string>
+            await Requester.RequestJson("http://c.tieba.baidu.com/c/f/pb/page", new Dictionary<string, string>
             { // reverse order will be {"last", "1"}, {"r", "1"}
                 {"kz", _tid.ToString()},
                 {"pn", page.ToString()}
@@ -123,7 +123,7 @@ namespace tbm.Crawler
                 (now, p) => new ReplyRevision {Time = now, Pid = p.Pid});
 
             if (_parentThread == null) return;
-            var parentThread = new ThreadPost()
+            var parentThread = new ThreadPost
             {
                 Tid = _tid,
                 AuthorPhoneType = _parentThread.AuthorPhoneType,

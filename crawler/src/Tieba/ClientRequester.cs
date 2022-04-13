@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using TbClient.Api.Request;
 
 namespace tbm.Crawler
 {
@@ -35,7 +40,33 @@ namespace tbm.Crawler
             _http = http;
         }
 
-        public Task<HttpResponseMessage> Post(string url, Dictionary<string, string> data)
+        public async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param) =>
+            await Request(() => PostJson(url, param), stream =>
+            {
+                using var doc = JsonDocument.Parse(stream);
+                return doc.RootElement.Clone();
+            });
+
+        public async Task<TResponse> RequestProtoBuf<TRequest, TResponse>(string url, TRequest param)
+            where TRequest : IMessage where TResponse : IMessage<TResponse>, new() =>
+            await Request(() => PostProtoBuf(url, param),
+                stream => new MessageParser<TResponse>(() => new TResponse()).ParseFrom(stream));
+
+        private static async Task<T> Request<T>(Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)
+        {
+            try
+            {
+                await using var stream = (await requester()).EnsureSuccessStatusCode().Content.ReadAsStream();
+                await using var gzip = new GZipStream(stream, CompressionMode.Decompress);
+                return responseConsumer(gzip);
+            }
+            catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
+            {
+                throw new TiebaException($"Tieba client request timeout, {e.Message}");
+            }
+        }
+
+        private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> data)
         {
             Dictionary<string, string> clientInfo = new()
             {
@@ -52,9 +83,41 @@ namespace tbm.Crawler
             var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
             postData.Add(KeyValuePair.Create("sign", signMd5));
 
+            return Post(() => _http.PostAsync(url, new FormUrlEncodedContent(postData)),
+                () => _logger.LogTrace("POST {} {}", url, data));
+        }
+
+        private Task<HttpResponseMessage> PostProtoBuf(string url, IMessage paramsProtoBuf)
+        {
+            var dataField = paramsProtoBuf.Descriptor.FindFieldByName("data");
+            dataField.MessageType.FindFieldByName("common").Accessor
+                .SetValue((IMessage)dataField.Accessor.GetValue(paramsProtoBuf), new Common {ClientVersion = _clientVersion});
+
+            // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
+            var protoBufFile = new ByteArrayContent(paramsProtoBuf.ToByteArray());
+            protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
+            var content = new MultipartFormDataContent();
+            content.Add(protoBufFile);
+            // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
+            var boundary = content.Headers.ContentType?.Parameters.First(o => o.Name == "boundary");
+            if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
+            request.Headers.UserAgent.TryParseAdd($"bdtb for Android {_clientVersion}");
+            request.Headers.Add("x_bd_data_type", "protobuf");
+            request.Headers.AcceptEncoding.ParseAdd("gzip");
+            request.Headers.Accept.ParseAdd("*/*");
+            request.Headers.Connection.Add("keep-alive");
+
+            return Post(() => _http.SendAsync(request),
+                () => _logger.LogTrace("POST {} {}", url, paramsProtoBuf));
+        }
+
+        private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> postCallback, Action logTraceCallback)
+        {
             _clientRequesterTcs.Wait();
-            var res = _http.PostAsync(url, new FormUrlEncodedContent(postData));
-            if (_config.GetValue("LogTrace", false)) _logger.LogTrace("POST {} {}", url, data);
+            var res = postCallback();
+            if (_config.GetValue("LogTrace", false)) logTraceCallback();
             res.ContinueWith(i =>
             {
                 if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _clientRequesterTcs.Increase();

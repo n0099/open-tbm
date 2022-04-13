@@ -1,0 +1,3 @@
+[submodule "tbclient.protobuf"]
+	path = tbclient.protobuf
+	url = https://github.com/n0099/tbclient.protobuf
