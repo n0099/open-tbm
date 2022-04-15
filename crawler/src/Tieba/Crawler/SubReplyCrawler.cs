@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using LinqKit;
 using Microsoft.Extensions.Logging;
-using static System.Text.Json.JsonElement;
+using TbClient.Api.Request;
+using TbClient.Api.Response;
+using TbClient.Post;
 using Fid = System.UInt32;
 using Tid = System.UInt64;
 using Pid = System.UInt64;
-using Spid = System.UInt64;
-using Uid = System.Int64;
-using Time = System.UInt32;
 
 namespace tbm.Crawler
 {
-    public sealed class SubReplyCrawler : BaseCrawler<SubReplyPost>
+    public sealed class SubReplyCrawler : BaseCrawler<SubReplyPost, SubReplyResponse, SubReply>
     {
         private readonly Tid _tid;
         private readonly Pid _pid;
@@ -27,7 +26,7 @@ namespace tbm.Crawler
             ILogger<SubReplyCrawler> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
-            UserParser userParser,
+            UserParserAndSaver userParser,
             IIndex<string, CrawlerLocks.New> locks,
             Fid fid, Tid tid, Pid pid
         ) : base(logger, requester, requesterTcs, userParser, (locks["subReply"]("subReply"), pid), fid)
@@ -43,55 +42,59 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override async Task<JsonElement> CrawlSinglePage(uint page) =>
-            await Requester.RequestJson("http://c.tieba.baidu.com/c/f/pb/floor", new Dictionary<string, string>
-            {
-                {"kz", _tid.ToString()},
-                {"pid", _pid.ToString()},
-                {"pn", page.ToString()}
-            });
+        protected override async Task<SubReplyResponse> CrawlSinglePage(uint page) =>
+            await Requester.RequestProtoBuf<SubReplyRequest, SubReplyResponse>(
+                "http://c.tieba.baidu.com/c/f/pb/floor?cmd=302002",
+                new SubReplyRequest
+                {
+                    Data = new SubReplyRequest.Types.Data
+                    {
+                        Kz = (long)_tid,
+                        Pid = (long)_pid,
+                        Pn = (int)page
+                    }
+                }
+            );
 
-        protected override ArrayEnumerator GetValidPosts(JsonElement json)
+        protected override IList<(SubReply, CrawlRequestFlag)> GetValidPosts((SubReplyResponse, CrawlRequestFlag) responseAndFlag)
         {
-            var errorCode = json.GetStrProp("error_code");
-            switch (errorCode)
+            var error = (TbClient.Error)SubReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(responseAndFlag);
+            switch (error.Errorno)
             {
-                case "4":
+                case 4:
                     throw new TiebaException("Reply already deleted when crawling sub reply");
-                case "28":
+                case 28:
                     throw new TiebaException("Thread already deleted when crawling sub reply");
                 default:
-                    ValidateOtherErrorCode(json);
-                    return EnsureNonEmptyPostList(json, "subpost_list",
+                    ValidateOtherErrorCode(responseAndFlag);
+                    return EnsureNonEmptyPostList(responseAndFlag, 4,
                         "Sub reply list is empty, posts might already deleted from tieba");
             }
         }
 
-        protected override void ParsePosts(ArrayEnumerator posts)
+        protected override void ParsePosts(IEnumerable<SubReply> posts)
         {
-            List<JsonElement> users = new();
+            List<TbClient.User> users = new();
             var newPosts = posts.Select(el =>
             {
-                var author = el.GetProperty("author");
+                var author = el.Author;
                 users.Add(author);
                 var p = new SubReplyPost();
                 try
                 {
                     p.Tid = _tid;
                     p.Pid = _pid;
-                    p.Spid = Spid.Parse(el.GetStrProp("id"));
-                    p.Content = RawJsonOrNullWhenEmpty(el.GetProperty("content"));
-                    p.AuthorUid = Uid.Parse(author.GetStrProp("id"));
-                    p.AuthorManagerType = author.TryGetProperty("bawu_type", out var bawuType)
-                        ? bawuType.GetString().NullIfWhiteSpace()
-                        : null; // will be null if he's not a moderator
-                    p.AuthorExpGrade = ushort.Parse(author.GetStrProp("level_id"));
-                    p.PostTime = Time.Parse(el.GetStrProp("time"));
+                    p.Spid = el.Spid;
+                    p.Content = RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Content));
+                    p.AuthorUid = author.Id;
+                    p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
+                    p.AuthorExpGrade = (ushort)author.LevelId;
+                    p.PostTime = el.Time;
                     return p;
                 }
                 catch (Exception e)
                 {
-                    e.Data["rawJson"] = el.GetRawText();
+                    e.Data["rawJson"] = JsonSerializer.Serialize(el);
                     throw new Exception("Sub reply parse error", e);
                 }
             });

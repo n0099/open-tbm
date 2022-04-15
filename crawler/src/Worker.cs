@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -26,8 +27,8 @@ namespace tbm.Crawler
             await using var scope = Program.Autofac.BeginLifetimeScope();
             try
             {
-                var crawler = scope.Resolve<ThreadCrawler.New>()(0, "");
-                (await crawler.CrawlRange(1, 1)).SavePosts<ThreadRevision>(out var revisions);
+                var crawler = scope.Resolve<ThreadCrawlFacade.New>()(0, "");
+                (await crawler.CrawlPageRange(1, 1)).SavePosts<ThreadRevision>(out var revisions);
             }
             catch (Exception e)
             {

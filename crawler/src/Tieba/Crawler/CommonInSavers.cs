@@ -9,32 +9,25 @@ using Time = System.UInt32;
 
 namespace tbm.Crawler
 {
-    public abstract class CommonInPostAndUser
+    public abstract class CommonInSavers<T> where T : CommonInSavers<T>
     {
-        protected abstract ILogger<object> Logger { get; init; }
-
-        protected static string? RawJsonOrNullWhenEmpty(JsonElement json)
-        {
-            var raw = json.GetRawText();
-            return raw is @"""""" or "[]" ? null : raw;
-        }
-
-        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(TbmDbContext db,
+        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
+            ILogger<T> logger, TbmDbContext db,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             Func<TPostOrUser, bool> isExistPredicate,
             Func<TPostOrUser, TPostOrUser> existedSelector,
             Func<Time, TPostOrUser, TRevision> revisionFactory)
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.AddRange((IEnumerable<object>)GetRevisionsForObjectsThenMerge(existedOrNew[true], existedSelector, revisionFactory));
+            db.AddRange((IEnumerable<object>)GetRevisionsForObjectsThenMerge(existedOrNew[true], existedSelector, revisionFactory, logger));
             var newPostsOrUsers = ((IEnumerable<object>)existedOrNew[false]).ToList();
             if (newPostsOrUsers.Any()) db.AddRange(newPostsOrUsers);
         }
 
-        private IEnumerable<TRevision> GetRevisionsForObjectsThenMerge<TObject, TRevision>(
+        private static IEnumerable<TRevision> GetRevisionsForObjectsThenMerge<TObject, TRevision>(
             IEnumerable<TObject> newObjects,
             Func<TObject, TObject> oldObjectSelector,
-            Func<Time, TObject, TRevision> revisionFactory)
+            Func<Time, TObject, TRevision> revisionFactory, ILogger<T> logger)
         {
             var objectProps = typeof(TObject).GetProperties()
                 .Where(p => p.Name is not (nameof(IEntityWithTimestampFields.CreatedAt) or nameof(IEntityWithTimestampFields.UpdatedAt))).ToList();
@@ -64,7 +57,7 @@ namespace tbm.Crawler
 
                     var revisionProp = revisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
                     if (revisionProp == null)
-                        Logger.LogWarning("updating field {} is not existed in revision table, " +
+                        logger.LogWarning("updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             p.Name, newValue, oldValue, JsonSerializer.Serialize(newObj), JsonSerializer.Serialize(oldObj));
                     else
