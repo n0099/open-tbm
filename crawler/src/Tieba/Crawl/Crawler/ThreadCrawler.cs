@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using TbClient.Api.Request;
 using TbClient.Api.Response;
 using TbClient.Post;
-using Page = System.UInt32;
-using Fid = System.UInt32;
 
 namespace tbm.Crawler
 {
@@ -13,7 +11,7 @@ namespace tbm.Crawler
     {
         private readonly string _forumName;
 
-        public delegate ThreadCrawler New(Fid fid, string forumName);
+        public delegate ThreadCrawler New(string forumName);
 
         public ThreadCrawler(ClientRequester requester, string forumName) : base(requester) => _forumName = forumName;
 
@@ -23,7 +21,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        public override Task<(ThreadResponse, CrawlRequestFlag)[]> CrawlSinglePage(Page page)
+        public override Task<(ThreadResponse, CrawlRequestFlag)[]> CrawlSinglePage(uint page)
         {
             const string url = "http://c.tieba.baidu.com/c/f/frs/page?cmd=301001";
             var requestBody602 = new ThreadRequest.Types.Data

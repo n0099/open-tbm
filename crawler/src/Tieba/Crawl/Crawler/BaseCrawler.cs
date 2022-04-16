@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Google.Protobuf;
-using TbClient.Api.Response;
 using Page = System.UInt32;
 
 namespace tbm.Crawler
