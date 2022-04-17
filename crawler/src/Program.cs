@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -50,6 +53,14 @@ namespace tbm.Crawler
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("reply").SingleInstance();
                         builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("subReply").SingleInstance();
                         builder.RegisterType<UserParserAndSaver>();
+
+                        var baseClassOfClassesToBeRegister = new List<Type>
+                        {
+                            typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
+                            typeof(IParser<,>), typeof(BaseSaver<>)
+                        };
+                        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).Where(t =>
+                            baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t))).AsSelf();
                     })
                     .Build();
                 Autofac = host.Services.GetAutofacRoot();

@@ -15,10 +15,9 @@ namespace tbm.Crawler
 
         public UserParserAndSaver(ILogger<UserParserAndSaver> logger) => _logger = logger;
 
-        public void ParseUsers(List<TbClient.User> users)
-        {
-            if (!users.Any()) throw new TiebaException("User list is empty");
-            var newUsers = users.Select(el =>
+        public void ParseUsers(List<User> users) =>
+            // if (!users.Any()) throw new TiebaException("User list is empty");
+            users.Select(el =>
             {
                 var rawUid = el.Id;
                 // when thread's author user is anonymous, the first uid in user list will be empty string and this user will appears in next
@@ -53,10 +52,7 @@ namespace tbm.Crawler
                     e.Data["rawJson"] = JsonSerializer.Serialize(el);
                     throw new Exception("User parse error", e);
                 }
-            });
-            // OfType() will remove null values
-            newUsers.OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
-        }
+            }).ForEach(i => _users[i.Uid] = i);
 
         public void SaveUsers(TbmDbContext db)
         {

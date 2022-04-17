@@ -10,6 +10,8 @@ namespace tbm.Crawler
     {
         private readonly Fid _fid;
 
+        public delegate SubReplySaver New(ConcurrentDictionary<ulong, SubReplyPost> posts, uint fid);
+
         public SubReplySaver(ILogger<SubReplySaver> logger, ConcurrentDictionary<ulong, SubReplyPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 

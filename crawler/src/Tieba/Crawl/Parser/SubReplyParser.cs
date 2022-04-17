@@ -34,7 +34,7 @@ namespace TbClient.Post
             try
             {
                 var author = el.Author;
-                // we will write parent tid and pid back to instances of SubReplyPost in SubReplyCrawlFacade.ValidateThenParse()
+                // values of property tid and pid will be write back in SubReplyCrawlFacade.PostParseCallback()
                 p.Spid = el.Spid;
                 p.Content = IParser<SubReplyPost, SubReply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Content));
                 p.AuthorUid = author.Id;

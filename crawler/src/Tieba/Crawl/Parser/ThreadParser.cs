@@ -18,18 +18,11 @@ namespace tbm.Crawler
             List<TbClient.User> users = new();
             if (requestFlag == CrawlRequestFlag.Thread602ClientVersion)
             {
-                Thread? InPostsTidFilter(IPost p) => inPosts.FirstOrDefault(p2 => (ulong)p2.Tid == p.Tid);
+                Thread? GetInPostsByTid(IPost p) => inPosts.FirstOrDefault(p2 => (ulong)p2.Tid == p.Tid);
                 outPosts.Values.Where(p => p.LatestReplierUid == null)
-                    .ForEach(p => p.LatestReplierUid =
-                        InPostsTidFilter(p)?.LastReplyer.Id);
+                    .ForEach(p => p.LatestReplierUid = GetInPostsByTid(p)?.LastReplyer.Id);
                 outPosts.Values.Where(p => p.StickyType != null)
-                    .ForEach(p =>
-                    {
-                        var t = InPostsTidFilter(p);
-                        if (t == null) return;
-                        p.AuthorUid = t.AuthorId;
-                        p.AuthorManagerType = t.Author.BawuType;
-                    });
+                    .ForEach(p => p.AuthorManagerType = GetInPostsByTid(p)?.Author.BawuType);
             }
             else
             {
@@ -60,7 +53,7 @@ namespace TbClient.Post
                 p.IsGood = el.IsGood == 1;
                 p.TopicType = el.IsLivepost.ToString();
                 p.Title = el.Title;
-                p.AuthorUid = el.Author.Id;
+                p.AuthorUid = el.AuthorId;
                 p.AuthorManagerType = el.Author.BawuType.NullIfWhiteSpace();
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;

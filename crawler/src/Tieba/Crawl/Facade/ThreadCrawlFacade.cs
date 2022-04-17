@@ -13,7 +13,7 @@ namespace tbm.Crawler
         public ThreadCrawlFacade(ILogger<ThreadCrawlFacade> logger, ThreadCrawler.New crawler,
             ThreadParser parser, ThreadSaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, string forumName
-            ) : base(logger, crawler(forumName), parser, saver, users, requesterTcs, (locks["thread"]("thread"), fid), fid)
+            ) : base(logger, crawler(forumName), parser, saver.Invoke, users, requesterTcs, (locks["thread"]("thread"), fid), fid)
         {
         }
     }

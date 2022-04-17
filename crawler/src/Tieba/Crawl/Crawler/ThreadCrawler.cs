@@ -39,13 +39,11 @@ namespace tbm.Crawler
                 QType = 2,
                 SortType = 5
             };
-            return Task.WhenAll(new List<Task<(ThreadResponse, CrawlRequestFlag)>>
-                {
-                    Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(url, new ThreadRequest {Data = requestBody}, "12.23.1.0")
-                        .ContinueWith(t => (t.Result, CrawlRequestFlag.None)),
-                    Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(url, new ThreadRequest {Data = requestBody602}, "6.0.2")
-                        .ContinueWith(t => (t.Result, CrawlRequestFlag.Thread602ClientVersion))
-                }
+            return Task.WhenAll(
+                Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(url, new ThreadRequest {Data = requestBody}, "12.23.1.0")
+                    .ContinueWith(t => (t.Result, CrawlRequestFlag.None)),
+                Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(url, new ThreadRequest {Data = requestBody602}, "6.0.2")
+                    .ContinueWith(t => (t.Result, CrawlRequestFlag.Thread602ClientVersion))
             );
         }
 

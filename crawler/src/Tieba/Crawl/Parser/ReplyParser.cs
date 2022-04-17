@@ -31,6 +31,7 @@ namespace TbClient.Post
                 p.Floor = el.Floor;
                 p.Content = IParser<ReplyPost, Reply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Content));
                 p.AuthorUid = el.AuthorId;
+                // values of property AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
                 p.SubReplyNum = (int)el.SubPostNumber;
                 p.PostTime = el.Time;
                 p.IsFold = (ushort)el.IsFold;

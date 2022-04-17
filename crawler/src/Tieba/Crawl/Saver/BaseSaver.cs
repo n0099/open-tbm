@@ -14,8 +14,6 @@ namespace tbm.Crawler
 
         public abstract void SavePosts(TbmDbContext db);
 
-        public delegate BaseSaver<TPost> New(ConcurrentDictionary<ulong, TPost> posts);
-
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<ulong, TPost> posts)
         {
             _logger = logger;

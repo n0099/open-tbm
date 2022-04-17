@@ -17,16 +17,12 @@ namespace tbm.Crawler
         public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger, ReplyCrawler.New crawler,
             ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid
-        ) : base(logger, crawler(tid), parser, saver, users, requesterTcs, (locks["reply"]("reply"), fid), fid)
+        ) : base(logger, crawler(tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), fid), fid)
         {
         }
 
-        protected override void ValidateThenParse((ReplyResponse, CrawlRequestFlag) responseAndFlag)
+        protected override void PostParseCallback(ReplyResponse response, IEnumerable<Reply> posts)
         {
-            var response = responseAndFlag.Item1;
-            var posts = Crawler.GetValidPosts(response);
-            Parser.ParsePosts(responseAndFlag.Item2, Crawler.GetValidPosts(responseAndFlag.Item1), Posts, Users);
-
             var data = (IMessage)ReplyResponse.Descriptor.FindFieldByName("data").Accessor.GetValue(response);
             /*
             var parentThread = (Thread)data.Descriptor.FindFieldByName("thread").Accessor.GetValue(data);

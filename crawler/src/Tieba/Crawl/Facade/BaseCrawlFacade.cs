@@ -16,8 +16,8 @@ namespace tbm.Crawler
         where TResponse : IMessage<TResponse>, new() where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
-        protected readonly BaseCrawler<TResponse, TPostProtoBuf> Crawler;
-        protected readonly IParser<TPost, TPostProtoBuf> Parser;
+        private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
+        private readonly IParser<TPost, TPostProtoBuf> _parser;
         private readonly BaseSaver<TPost> _saver;
         protected readonly UserParserAndSaver Users;
         protected readonly ConcurrentDictionary<ulong, TPost> Posts = new();
@@ -28,13 +28,17 @@ namespace tbm.Crawler
 
         protected BaseCrawlFacade(ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
-            IParser<TPost, TPostProtoBuf> parser, BaseSaver<TPost>.New saver, UserParserAndSaver users,
-            ClientRequesterTcs requesterTcs, (CrawlerLocks, ulong) lockAndIndex, Fid fid)
+            IParser<TPost, TPostProtoBuf> parser,
+            Func<ConcurrentDictionary<ulong, TPost>, Fid, BaseSaver<TPost>> saver,
+            UserParserAndSaver users,
+            ClientRequesterTcs requesterTcs,
+            (CrawlerLocks, ulong) lockAndIndex,
+            Fid fid)
         {
             _logger = logger;
-            Crawler = crawler;
-            Parser = parser;
-            _saver = saver(Posts);
+            _crawler = crawler;
+            _parser = parser;
+            _saver = saver(Posts, fid);
             Users = users;
             _requesterTcs = requesterTcs;
             (_locks, _lockIndex) = lockAndIndex;
@@ -59,7 +63,7 @@ namespace tbm.Crawler
             if (!_locks.AcquireRange(_lockIndex, new[] {startPage}).Any()) return this;
             var isCrawlFailed = await CatchCrawlException(async () =>
             {
-                var startPageResponse = await Crawler.CrawlSinglePage(startPage);
+                var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
 
                 var dataField = new TResponse().Descriptor.FindFieldByName("data");
@@ -75,12 +79,19 @@ namespace tbm.Crawler
             return this;
         }
 
-        protected virtual void ValidateThenParse((TResponse, CrawlRequestFlag) responseAndFlag) =>
-            Parser.ParsePosts(responseAndFlag.Item2, Crawler.GetValidPosts(responseAndFlag.Item1), Posts, Users);
+        private void ValidateThenParse((TResponse, CrawlRequestFlag) responseAndFlag)
+        {
+            var (response, flag) = responseAndFlag;
+            var posts = _crawler.GetValidPosts(response);
+            _parser.ParsePosts(flag, posts, Posts, Users);
+            PostParseCallback(response, posts);
+        }
+
+        protected virtual void PostParseCallback(TResponse response, IEnumerable<TPostProtoBuf> posts) { }
 
         private Task CrawlPages(IEnumerable<Page> pages) =>
             Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(async page =>
-                await CatchCrawlException(async () => (await Crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page)
+                await CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page)
             ));
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page)
@@ -94,7 +105,7 @@ namespace tbm.Crawler
             {
                 e.Data["page"] = page;
                 e.Data["fid"] = _fid;
-                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, Crawler.FillExceptionData(e), "exception");
+                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, _crawler.FillExceptionData(e), "exception");
                 _requesterTcs.Decrease();
                 _locks.AcquireFailed(_lockIndex, page);
                 return true;

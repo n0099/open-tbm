@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Autofac.Features.Indexed;
 using Microsoft.Extensions.Logging;
 using TbClient.Api.Response;
@@ -18,20 +19,17 @@ namespace tbm.Crawler
         public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, SubReplyCrawler.New crawler,
             SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid, Pid pid
-        ) : base(logger, crawler(tid, pid), parser, saver, users, requesterTcs, (locks["subReply"]("subReply"), fid), fid)
+        ) : base(logger, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"]("subReply"), fid), fid)
         {
             _tid = tid;
             _pid = pid;
         }
 
-        protected override void ValidateThenParse((SubReplyResponse, CrawlRequestFlag) responseAndFlag)
-        {
-            Parser.ParsePosts(responseAndFlag.Item2, Crawler.GetValidPosts(responseAndFlag.Item1), Posts, Users);
+        protected override void PostParseCallback(SubReplyResponse response, IEnumerable<SubReply> posts) =>
             Posts.Values.ForEach(p =>
             {
                 p.Tid = _tid;
                 p.Pid = _pid;
             });
-        }
     }
 }

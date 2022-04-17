@@ -68,5 +68,26 @@ namespace tbm.Crawler
         /// <see>https://stackoverflow.com/questions/9464112/c-sharp-get-value-subset-from-dictionary-by-keylist/9464468#9464468</see>
         public static IEnumerable<TValue> GetValuesByKeys<TKey, TValue>(this IDictionary<TKey, TValue> dict, IEnumerable<TKey> keys) =>
             keys.Where(dict.ContainsKey).Select(x => dict[x]);
+
+        /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
+        private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)
+        {
+            while (toCheck != null && toCheck != typeof(object))
+            {
+                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
+                if (generic == cur) return true;
+                toCheck = toCheck.BaseType;
+            }
+
+            return false;
+        }
+
+        /// <see>https://stackoverflow.com/questions/4963160/how-to-determine-if-a-type-implements-an-interface-with-c-sharp-reflection/4963190#4963190</see>
+        private static bool IsImplementerOfRawGeneric(this Type generic, Type toCheck) =>
+            toCheck.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == generic);
+
+        /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/25937893#25937893</see>
+        public static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>
+            generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
     }
 }
