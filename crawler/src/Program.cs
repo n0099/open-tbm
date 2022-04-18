@@ -27,6 +27,7 @@ namespace tbm.Crawler
                 logger.Error(args.Exception, "TaskScheduler.UnobservedTaskException:");
             try
             {
+#pragma warning disable IDE0058 // Expression value is never used
                 var host = Host.CreateDefaultBuilder()
                     .ConfigureLogging((_, logging) =>
                     {
@@ -65,6 +66,7 @@ namespace tbm.Crawler
                     .Build();
                 Autofac = host.Services.GetAutofacRoot();
                 host.Run();
+#pragma warning restore IDE0058 // Expression value is never used
             }
             catch (Exception e)
             {

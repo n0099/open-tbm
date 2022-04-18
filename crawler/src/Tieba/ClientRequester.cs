@@ -92,14 +92,13 @@ namespace tbm.Crawler
             // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
             var protoBufFile = new ByteArrayContent(paramsProtoBuf.ToByteArray());
             protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
-            var content = new MultipartFormDataContent();
-            content.Add(protoBufFile);
+            var content = new MultipartFormDataContent {protoBufFile};
             // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
             var boundary = content.Headers.ContentType?.Parameters.First(o => o.Name == "boundary");
             if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
 
             var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
-            request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
+            _ = request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
             request.Headers.Add("x_bd_data_type", "protobuf");
             request.Headers.AcceptEncoding.ParseAdd("gzip");
             request.Headers.Accept.ParseAdd("*/*");
@@ -114,7 +113,7 @@ namespace tbm.Crawler
             _clientRequesterTcs.Wait();
             var res = postCallback();
             if (_config.GetValue("LogTrace", false)) logTraceCallback();
-            res.ContinueWith(i =>
+            _ = res.ContinueWith(i =>
             {
                 if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _clientRequesterTcs.Increase();
                 else _clientRequesterTcs.Decrease();

@@ -52,7 +52,7 @@ namespace tbm.Crawler
             using var transaction = db.Database.BeginTransaction();
             _saver.SavePosts(db);
             Users.SaveUsers(db);
-            db.SaveChanges();
+            _ = db.SaveChanges();
             transaction.Commit();
             postRevisions = db.Set<TPostRevision>().Local.Select(i => (TPostRevision)i.Clone()).ToList();
         }
@@ -83,11 +83,12 @@ namespace tbm.Crawler
         {
             var (response, flag) = responseAndFlag;
             var posts = _crawler.GetValidPosts(response);
-            _parser.ParsePosts(flag, posts, Posts, Users);
-            PostParseCallback(response, posts);
+            var usersStoreUnderPost = _parser.ParsePosts(flag, posts, Posts);
+            if (usersStoreUnderPost != null) Users.ParseUsers(usersStoreUnderPost);
+            PostParseCallback(responseAndFlag, posts);
         }
 
-        protected virtual void PostParseCallback(TResponse response, IEnumerable<TPostProtoBuf> posts) { }
+        protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IEnumerable<TPostProtoBuf> posts) { }
 
         private Task CrawlPages(IEnumerable<Page> pages) =>
             Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(async page =>

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using TbClient;
 using TbClient.Post;
 using tbm.Crawler;
 
@@ -10,16 +11,16 @@ namespace tbm.Crawler
 {
     public class SubReplyParser : IParser<SubReplyPost, SubReply>
     {
-        public void ParsePosts(CrawlRequestFlag requestFlag, IEnumerable<SubReply> inPosts,
-            ConcurrentDictionary<ulong, SubReplyPost> outPosts, UserParserAndSaver userParser)
+        public List<User> ParsePosts(CrawlRequestFlag requestFlag,
+            IEnumerable<SubReply> inPosts, ConcurrentDictionary<ulong, SubReplyPost> outPosts)
         {
-            List<TbClient.User> users = new();
+            List<User> users = new();
             inPosts.Select(el =>
             {
                 users.Add(el.Author);
                 return (SubReplyPost)el;
             }).ForEach(i => outPosts[i.Spid] = i);
-            userParser.ParseUsers(users);
+            return users;
         }
     }
 }

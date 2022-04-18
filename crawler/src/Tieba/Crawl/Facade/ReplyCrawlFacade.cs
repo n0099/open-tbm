@@ -21,9 +21,9 @@ namespace tbm.Crawler
         {
         }
 
-        protected override void PostParseCallback(ReplyResponse response, IEnumerable<Reply> posts)
+        protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IEnumerable<Reply> posts)
         {
-            var data = (IMessage)ReplyResponse.Descriptor.FindFieldByName("data").Accessor.GetValue(response);
+            var data = (IMessage)ReplyResponse.Descriptor.FindFieldByName("data").Accessor.GetValue(responseAndFlag.Item1);
             /*
             var parentThread = (Thread)data.Descriptor.FindFieldByName("thread").Accessor.GetValue(data);
             _parentThread = new ThreadLateSaveInfo
@@ -32,7 +32,7 @@ namespace tbm.Crawler
                 AntiSpamInfo = RawJsonOrNullWhenEmpty(parentThread.GetProperty("antispam_info"))
             };
             */
-            var users = (List<TbClient.User>)data.Descriptor.FindFieldByName("userList").Accessor.GetValue(data);
+            var users = (IList<TbClient.User>)data.Descriptor.FindFieldByName("userList").Accessor.GetValue(data);
             Users.ParseUsers(users);
             posts.Select(p => p.Pid).ForEach(pid =>
             { // fill the value of some fields of reply from user list which is out of post list

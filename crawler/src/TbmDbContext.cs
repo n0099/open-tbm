@@ -25,6 +25,7 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
+#pragma warning disable IDE0058 // Expression value is never used
         protected override void OnModelCreating(ModelBuilder b)
         {
             b.Entity<TiebaUser>().ToTable("tbm_tiebaUsers");
@@ -51,6 +52,7 @@ namespace tbm.Crawler
             if (dbSettings.GetValue("EnableDetailedErrors", false)) options.EnableDetailedErrors();
             if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
         }
+#pragma warning restore IDE0058 // Expression value is never used
 
         public override int SaveChanges()
         { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx

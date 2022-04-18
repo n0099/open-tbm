@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using TbClient;
 using TbClient.Post;
 using tbm.Crawler;
 using Tid = System.UInt64;
@@ -12,10 +13,9 @@ namespace tbm.Crawler
 {
     public class ThreadParser : IParser<ThreadPost, Thread>
     {
-        public void ParsePosts(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts,
-            ConcurrentDictionary<ulong, ThreadPost> outPosts, UserParserAndSaver userParser)
+        public List<User>? ParsePosts(CrawlRequestFlag requestFlag,
+            IEnumerable<Thread> inPosts, ConcurrentDictionary<ulong, ThreadPost> outPosts)
         {
-            List<TbClient.User> users = new();
             if (requestFlag == CrawlRequestFlag.Thread602ClientVersion)
             {
                 Thread? GetInPostsByTid(IPost p) => inPosts.FirstOrDefault(p2 => (ulong)p2.Tid == p.Tid);
@@ -26,13 +26,10 @@ namespace tbm.Crawler
             }
             else
             {
-                inPosts.Select(el =>
-                {
-                    users.Add(el.Author);
-                    return (ThreadPost)el;
-                }).ForEach(i => outPosts[i.Tid] = i);
+                inPosts.Select(el => (ThreadPost)el).ForEach(i => outPosts[i.Tid] = i);
             }
-            userParser.ParseUsers(users);
+
+            return null;
         }
     }
 }

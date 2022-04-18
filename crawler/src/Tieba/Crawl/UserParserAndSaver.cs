@@ -15,8 +15,9 @@ namespace tbm.Crawler
 
         public UserParserAndSaver(ILogger<UserParserAndSaver> logger) => _logger = logger;
 
-        public void ParseUsers(List<User> users) =>
-            // if (!users.Any()) throw new TiebaException("User list is empty");
+        public void ParseUsers(IList<User> users)
+        {
+            if (!users.Any()) throw new TiebaException("User list is empty");
             users.Select(el =>
             {
                 var rawUid = el.Id;
@@ -32,6 +33,7 @@ namespace tbm.Crawler
                         AvatarUrl = el.Portrait
                     };
                 }
+
                 var name = el.Name.NullIfWhiteSpace(); // null when he haven't set username for his baidu account yet
                 var nameShow = el.NameShow;
 
@@ -53,6 +55,7 @@ namespace tbm.Crawler
                     throw new Exception("User parse error", e);
                 }
             }).ForEach(i => _users[i.Uid] = i);
+        }
 
         public void SaveUsers(TbmDbContext db)
         {
