@@ -12,7 +12,7 @@ namespace tbm.Crawler
         private readonly ILogger<BaseSaver<TPost>> _logger;
         protected readonly ConcurrentDictionary<ulong, TPost> Posts;
 
-        public abstract void SavePosts(TbmDbContext db);
+        public abstract ILookup<bool, TPost> SavePosts(TbmDbContext db);
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<ulong, TPost> posts)
         {
@@ -20,25 +20,27 @@ namespace tbm.Crawler
             Posts = posts;
         }
 
-        protected void SavePosts<TPostRevision>(TbmDbContext db,
+        protected ILookup<bool, TPost> SavePosts<TPostRevision>(
+            TbmDbContext db,
             ExpressionStarter<TPost> postsPredicate,
             ExpressionStarter<PostIndex> indexPredicate,
             Func<TPost, ulong> postIdSelector,
             Expression<Func<PostIndex, ulong>> indexPostIdSelector,
             Func<TPost, PostIndex> indexFactory,
-            Func<uint, TPost, TPostRevision> revisionFactory)
+            Func<TPost, TPostRevision> revisionFactory)
         {
             var dbSet = db.Set<TPost>();
             if (dbSet == null) throw new ArgumentException("DbSet<TPost> is not exists in DbContext");
 
             var existingPosts = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
-            SavePostsOrUsers(_logger, db, Posts,
+            var existingOrNewPosts = SavePostsOrUsers(_logger, db, Posts,
                 p => existingPosts.ContainsKey(postIdSelector(p)),
                 p => existingPosts[postIdSelector(p)],
                 revisionFactory);
 
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
             db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
+            return existingOrNewPosts;
         }
     }
 }

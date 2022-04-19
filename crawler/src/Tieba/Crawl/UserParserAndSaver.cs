@@ -43,7 +43,7 @@ namespace tbm.Crawler
                     u.AvatarUrl = el.Portrait;
                     u.Gender = (ushort)el.Gender; // null when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
-                    u.IconInfo = CommonInParser.SerializedProtoBufWrapperOrNullIfEmptyValues(() => new UserIconWrapper {Value = {el.Iconinfo}});
+                    u.IconInfo = CommonInParser.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
                     return u;
                 }
                 catch (Exception e)
@@ -54,15 +54,15 @@ namespace tbm.Crawler
             }).ForEach(i => _users[i.Uid] = i);
         }
 
-        public void SaveUsers(TbmDbContext db)
+        public ILookup<bool, TiebaUser> SaveUsers(TbmDbContext db)
         {
             var existingUsers = (from user in db.Users
                 where _users.Keys.Any(uid => uid == user.Uid)
                 select user).ToDictionary(i => i.Uid);
-            SavePostsOrUsers(_logger, db, _users,
+            return SavePostsOrUsers(_logger, db, _users,
                 u => existingUsers.ContainsKey(u.Uid),
                 u => existingUsers[u.Uid],
-                (now, u) => new UserRevision {Time = now, Uid = u.Uid});
+                (u) => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid});
         }
     }
 }

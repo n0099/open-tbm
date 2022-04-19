@@ -28,7 +28,13 @@ namespace tbm.Crawler
             try
             {
                 var crawler = scope.Resolve<ThreadCrawlFacade.New>()(0, "");
-                (await crawler.CrawlPageRange(1, 1)).SavePosts<ThreadRevision>(out var revisions);
+                (await crawler.CrawlPageRange(1, 1)).SavePosts<ThreadRevision>(
+                    out var existingOrNewPosts,
+                    out var existingOrNewUsers,
+                    out var revisions);
+                _logger.LogInformation(JsonSerializer.Serialize(existingOrNewPosts));
+                _logger.LogInformation(JsonSerializer.Serialize(existingOrNewUsers));
+                _logger.LogInformation(JsonSerializer.Serialize(revisions));
             }
             catch (Exception e)
             {

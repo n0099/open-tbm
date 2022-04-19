@@ -1,15 +1,18 @@
 using System;
-using System.Text.Json;
 using Google.Protobuf;
 
 namespace tbm.Crawler
 {
     public abstract class CommonInParser
     {
-        public static byte[]? SerializedProtoBufOrNullIfEmptyValues(IMessage? protoBuf) =>
-            JsonSerializer.Serialize(protoBuf) is "\"\"" or "[]" or "null" ? null : protoBuf.ToByteArray();
+        public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf)
+        {
+            if (protoBuf == null) return null;
+            var serialized = protoBuf.ToByteArray();
+            return serialized.Length == 0 ? null : serialized;
+        }
 
-        public static byte[]? SerializedProtoBufWrapperOrNullIfEmptyValues(Func<IMessage> wrapperFactory) =>
-            SerializedProtoBufOrNullIfEmptyValues(wrapperFactory());
+        public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty(Func<IMessage> wrapperFactory) =>
+            SerializedProtoBufOrNullIfEmpty(wrapperFactory());
     }
 }

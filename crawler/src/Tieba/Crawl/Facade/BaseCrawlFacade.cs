@@ -26,7 +26,8 @@ namespace tbm.Crawler
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly ulong _lockIndex;
 
-        protected BaseCrawlFacade(ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
+        protected BaseCrawlFacade(
+            ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
             IParser<TPost, TPostProtoBuf> parser,
             Func<ConcurrentDictionary<ulong, TPost>, Fid, BaseSaver<TPost>> saver,
@@ -45,13 +46,18 @@ namespace tbm.Crawler
             _fid = fid;
         }
 
-        public void SavePosts<TPostRevision>(out IEnumerable<TPostRevision> postRevisions) where TPostRevision : PostRevision
+        public void SavePosts<TPostRevision>(
+            out ILookup<bool, TPost> existingOrNewPosts,
+            out ILookup<bool, TiebaUser> existingOrNewUsers,
+            out IEnumerable<TPostRevision> postRevisions)
+            where TPostRevision : PostRevision
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(_fid);
             using var transaction = db.Database.BeginTransaction();
-            _saver.SavePosts(db);
-            Users.SaveUsers(db);
+
+            existingOrNewPosts = _saver.SavePosts(db);
+            existingOrNewUsers = Users.SaveUsers(db);
             _ = db.SaveChanges();
             transaction.Commit();
             postRevisions = db.Set<TPostRevision>().Local.Select(i => (TPostRevision)i.Clone()).ToList();

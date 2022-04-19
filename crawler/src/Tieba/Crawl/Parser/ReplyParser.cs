@@ -34,7 +34,7 @@ namespace TbClient.Post
                 p.Tid = (Tid)el.Tid;
                 p.Pid = el.Pid;
                 p.Floor = el.Floor;
-                p.Content = CommonInParser.SerializedProtoBufWrapperOrNullIfEmptyValues(() => new PostContentWrapper {Value = {el.Content}});
+                p.Content = CommonInParser.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
                 // values of property AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
                 p.SubReplyNum = (int)el.SubPostNumber;
@@ -42,9 +42,9 @@ namespace TbClient.Post
                 p.IsFold = (ushort)el.IsFold;
                 p.AgreeNum = (int)el.Agree.AgreeNum;
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
-                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.LbsInfo);
-                p.SignInfo = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.Signature);
-                p.TailInfo = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.TailInfo);
+                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
+                p.SignInfo = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.Signature);
+                p.TailInfo = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.TailInfo);
                 return p;
             }
             catch (Exception e)

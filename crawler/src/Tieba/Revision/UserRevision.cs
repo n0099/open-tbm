@@ -9,6 +9,6 @@ namespace tbm.Crawler
         public string? AvatarUrl { get; set; }
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
-        public string? IconInfo { get; set; }
+        public byte[]? IconInfo { get; set; }
     }
 }

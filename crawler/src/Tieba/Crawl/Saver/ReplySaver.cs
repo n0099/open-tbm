@@ -15,15 +15,15 @@ namespace tbm.Crawler
         public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<ulong, ReplyPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override void SavePosts(TbmDbContext db)
+        public override ILookup<bool, ReplyPost> SavePosts(TbmDbContext db)
         {
-            SavePosts(db,
+            return SavePosts(db,
                 PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
                 PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid)),
                 p => p.Pid,
                 i => i.Pid,
                 p => new PostIndex {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-                (now, p) => new ReplyRevision {Time = now, Pid = p.Pid});
+                (p) => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
             /*
             if (_parentThread == null) return;
             var parentThread = new ThreadPost

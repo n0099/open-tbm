@@ -25,7 +25,7 @@ namespace tbm.Crawler
                 posts.Where(p => p.StickyType != null)
                     .ForEach(p => p.AuthorManagerType = GetInPostsByTid(p)?.Author.BawuType);
                 posts.Where(p => p.Location != null)
-                    .ForEach(p => p.Location = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(GetInPostsByTid(p)?.Location));
+                    .ForEach(p => p.Location = CommonInParser.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(p)?.Location));
             }
             else
             {
@@ -62,8 +62,8 @@ namespace TbClient.Post
                 p.ShareNum = (uint)el.ShareNum;
                 p.AgreeNum = el.AgreeNum;
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
-                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.Location);
-                p.ZanInfo = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.Zan);
+                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.Location);
+                p.ZanInfo = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.Zan);
                 return p;
             }
             catch (Exception e)
