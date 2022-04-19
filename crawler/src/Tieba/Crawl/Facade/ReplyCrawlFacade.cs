@@ -37,7 +37,7 @@ namespace tbm.Crawler
             posts.Select(p => p.Pid).ForEach(pid =>
             { // fill the value of some fields of reply from user list which is out of post list
                 var p = Posts[pid];
-                var author = users.First(u => u.Id == p.AuthorUid);
+                var author = users.First(u => u.Uid == p.AuthorUid);
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 p.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
                 Posts[pid] = p;

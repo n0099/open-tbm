@@ -91,8 +91,8 @@ namespace tbm.Crawler
         protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IEnumerable<TPostProtoBuf> posts) { }
 
         private Task CrawlPages(IEnumerable<Page> pages) =>
-            Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(async page =>
-                await CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page)
+            Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(page =>
+                CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page)
             ));
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page)

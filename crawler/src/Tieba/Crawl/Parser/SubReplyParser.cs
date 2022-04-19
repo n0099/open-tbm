@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using TbClient;
 using TbClient.Post;
+using TbClient.Wrapper;
 using tbm.Crawler;
 
 namespace tbm.Crawler
@@ -37,8 +38,8 @@ namespace TbClient.Post
                 var author = el.Author;
                 // values of property tid and pid will be write back in SubReplyCrawlFacade.PostParseCallback()
                 p.Spid = el.Spid;
-                p.Content = IParser<SubReplyPost, SubReply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Content));
-                p.AuthorUid = author.Id;
+                p.Content = CommonInParser.SerializedProtoBufWrapperOrNullIfEmptyValues(() => new PostContentWrapper {Value = {el.Content}});
+                p.AuthorUid = author.Uid;
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 p.AuthorExpGrade = (ushort)author.LevelId;
                 p.PostTime = el.Time;

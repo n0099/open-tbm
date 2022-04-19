@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using TbClient;
+using TbClient.Wrapper;
 
 namespace tbm.Crawler
 {
@@ -20,10 +21,7 @@ namespace tbm.Crawler
             if (!users.Any()) throw new TiebaException("User list is empty");
             users.Select(el =>
             {
-                var rawUid = el.Id;
-                // when thread's author user is anonymous, the first uid in user list will be empty string and this user will appears in next
-                // if (rawUid == "") return null;
-                var uid = (long)rawUid;
+                var uid = el.Uid;
                 if (uid < 0) // historical anonymous user
                 {
                     return new TiebaUser
@@ -36,7 +34,6 @@ namespace tbm.Crawler
 
                 var name = el.Name.NullIfWhiteSpace(); // null when he haven't set username for his baidu account yet
                 var nameShow = el.NameShow;
-
                 var u = new TiebaUser();
                 try
                 {
@@ -46,7 +43,7 @@ namespace tbm.Crawler
                     u.AvatarUrl = el.Portrait;
                     u.Gender = (ushort)el.Gender; // null when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
-                    u.IconInfo = IParser<User, User>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Iconinfo));
+                    u.IconInfo = CommonInParser.SerializedProtoBufWrapperOrNullIfEmptyValues(() => new UserIconWrapper {Value = {el.Iconinfo}});
                     return u;
                 }
                 catch (Exception e)

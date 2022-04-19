@@ -36,16 +36,16 @@ namespace tbm.Crawler
             _http = http;
         }
 
-        public async Task<JsonElement> RequestJson(string url, Dictionary<string, string> param, string clientVersion) =>
-            await Request(() => PostJson(url, param, clientVersion), stream =>
+        public Task<JsonElement> RequestJson(string url, Dictionary<string, string> param, string clientVersion) =>
+            Request(() => PostJson(url, param, clientVersion), stream =>
             {
                 using var doc = JsonDocument.Parse(stream);
                 return doc.RootElement.Clone();
             });
 
-        public async Task<TResponse> RequestProtoBuf<TRequest, TResponse>(string url, TRequest param, string clientVersion)
+        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(string url, TRequest param, string clientVersion)
             where TRequest : IMessage where TResponse : IMessage<TResponse>, new() =>
-            await Request(() => PostProtoBuf(url, param, clientVersion),
+            Request(() => PostProtoBuf(url, param, clientVersion),
                 stream => new MessageParser<TResponse>(() => new TResponse()).ParseFrom(stream));
 
         private static async Task<T> Request<T>(Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)

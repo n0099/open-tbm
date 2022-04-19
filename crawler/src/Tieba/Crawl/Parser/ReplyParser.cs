@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using TbClient;
 using TbClient.Post;
+using TbClient.Wrapper;
 using tbm.Crawler;
 using Tid = System.UInt64;
 
@@ -33,7 +34,7 @@ namespace TbClient.Post
                 p.Tid = (Tid)el.Tid;
                 p.Pid = el.Pid;
                 p.Floor = el.Floor;
-                p.Content = IParser<ReplyPost, Reply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Content));
+                p.Content = CommonInParser.SerializedProtoBufWrapperOrNullIfEmptyValues(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
                 // values of property AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
                 p.SubReplyNum = (int)el.SubPostNumber;
@@ -41,9 +42,9 @@ namespace TbClient.Post
                 p.IsFold = (ushort)el.IsFold;
                 p.AgreeNum = (int)el.Agree.AgreeNum;
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
-                p.Location = IParser<ReplyPost, Reply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.LbsInfo));
-                p.SignInfo = IParser<ReplyPost, Reply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Signature));
-                p.TailInfo = IParser<ReplyPost, Reply>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.TailInfo));
+                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.LbsInfo);
+                p.SignInfo = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.Signature);
+                p.TailInfo = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.TailInfo);
                 return p;
             }
             catch (Exception e)

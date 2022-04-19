@@ -21,8 +21,8 @@ namespace tbm.Crawler
         public uint? ShareNum { get; set; }
         public int AgreeNum { get; set; }
         public int DisagreeNum { get; set; }
-        [JsonType] public string? ZanInfo { get; set; }
-        [JsonType] public string? Location { get; set; }
+        [BlobTypeProtoBuf] public byte[]? ZanInfo { get; set; }
+        [BlobTypeProtoBuf] public byte[]? Location { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
     }

@@ -18,11 +18,14 @@ namespace tbm.Crawler
         {
             if (requestFlag == CrawlRequestFlag.Thread602ClientVersion)
             {
+                var posts = outPosts.Values;
                 Thread? GetInPostsByTid(IPost p) => inPosts.FirstOrDefault(p2 => (ulong)p2.Tid == p.Tid);
-                outPosts.Values.Where(p => p.LatestReplierUid == null)
-                    .ForEach(p => p.LatestReplierUid = GetInPostsByTid(p)?.LastReplyer.Id);
-                outPosts.Values.Where(p => p.StickyType != null)
+                posts.Where(p => p.LatestReplierUid == null)
+                    .ForEach(p => p.LatestReplierUid = GetInPostsByTid(p)?.LastReplyer.Uid);
+                posts.Where(p => p.StickyType != null)
                     .ForEach(p => p.AuthorManagerType = GetInPostsByTid(p)?.Author.BawuType);
+                posts.Where(p => p.Location != null)
+                    .ForEach(p => p.Location = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(GetInPostsByTid(p)?.Location));
             }
             else
             {
@@ -45,10 +48,10 @@ namespace TbClient.Post
             {
                 p.Tid = (Tid)el.Tid;
                 p.FirstPid = (Pid)el.FirstPostId;
-                p.ThreadType = (ulong)el.ThreadType;
+                p.ThreadType = (ulong)el.ThreadTypes;
                 p.StickyType = el.IsMembertop == 1 ? "membertop" : el.IsTop == 0 ? null : "top";
                 p.IsGood = el.IsGood == 1;
-                p.TopicType = el.IsLivepost.ToString();
+                p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
                 p.AuthorUid = el.AuthorId;
                 p.AuthorManagerType = el.Author.BawuType.NullIfWhiteSpace();
@@ -59,8 +62,8 @@ namespace TbClient.Post
                 p.ShareNum = (uint)el.ShareNum;
                 p.AgreeNum = el.AgreeNum;
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
-                p.Location = IParser<ThreadPost, Thread>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Location));
-                p.ZanInfo = IParser<ThreadPost, Thread>.RawJsonOrNullWhenEmpty(JsonSerializer.Serialize(el.Zan));
+                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.Location);
+                p.ZanInfo = CommonInParser.SerializedProtoBufOrNullIfEmptyValues(el.Zan);
                 return p;
             }
             catch (Exception e)

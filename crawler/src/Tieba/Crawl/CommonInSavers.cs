@@ -43,7 +43,7 @@ namespace tbm.Crawler
                     var newValue = p.GetValue(newObj);
                     var oldValue = p.GetValue(oldObj);
                     var isJsonEqual = false;
-                    if (oldValue is string o && newValue is string n && p.GetCustomAttribute<JsonType>() != null)
+                    if (oldValue is string o && newValue is string n && p.GetCustomAttribute<BlobTypeProtoBuf>() != null)
                     { // serialize the value of json type fields which read from db
                       // for further compare with newValue which have been re-serialized in RawJsonOrNullWhenEmpty()
                         using var oldJson = JsonDocument.Parse(o);

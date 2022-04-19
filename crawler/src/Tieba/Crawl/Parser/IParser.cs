@@ -9,6 +9,5 @@ namespace tbm.Crawler
     {
         public List<User>? ParsePosts(CrawlRequestFlag requestFlag,
             IEnumerable<TPostProtoBuf> inPosts, ConcurrentDictionary<ulong, TPost> outPosts);
-        public static string? RawJsonOrNullWhenEmpty(string json) => json is @"""""" or "[]" ? null : json;
     }
 }
