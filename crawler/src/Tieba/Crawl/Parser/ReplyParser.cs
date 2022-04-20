@@ -1,14 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using TbClient;
-using TbClient.Post;
-using TbClient.Wrapper;
-using tbm.Crawler;
-using Tid = System.UInt64;
-
 namespace tbm.Crawler
 {
     public class ReplyParser : IParser<ReplyPost, Reply>

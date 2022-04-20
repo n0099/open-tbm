@@ -1,5 +1,3 @@
-using System;
-
 namespace tbm.Crawler
 {
     public class TiebaException : Exception

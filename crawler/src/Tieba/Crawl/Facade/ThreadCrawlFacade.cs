@@ -1,11 +1,3 @@
-using System.Collections.Generic;
-using Autofac.Features.Indexed;
-using Google.Protobuf;
-using Microsoft.Extensions.Logging;
-using TbClient.Api.Response;
-using TbClient.Post;
-using Fid = System.UInt32;
-
 namespace tbm.Crawler
 {
     public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, ThreadResponse, Thread, ThreadCrawler>

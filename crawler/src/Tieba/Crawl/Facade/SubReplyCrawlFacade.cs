@@ -1,12 +1,3 @@
-using System.Collections.Generic;
-using Autofac.Features.Indexed;
-using Microsoft.Extensions.Logging;
-using TbClient.Api.Response;
-using TbClient.Post;
-using Fid = System.UInt32;
-using Tid = System.UInt64;
-using Pid = System.UInt64;
-
 namespace tbm.Crawler
 {
     public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, SubReplyResponse, SubReply, SubReplyCrawler>

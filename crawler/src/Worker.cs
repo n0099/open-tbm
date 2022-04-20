@@ -1,12 +1,3 @@
-using System;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Autofac;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Timer = System.Timers.Timer;
-
 namespace tbm.Crawler
 {
     public class Worker : BackgroundService
@@ -31,10 +22,10 @@ namespace tbm.Crawler
                 (await crawler.CrawlPageRange(1, 1)).SavePosts<ThreadRevision>(
                     out var existingOrNewPosts,
                     out var existingOrNewUsers,
-                    out var revisions);
-                _logger.LogInformation(JsonSerializer.Serialize(existingOrNewPosts));
-                _logger.LogInformation(JsonSerializer.Serialize(existingOrNewUsers));
-                _logger.LogInformation(JsonSerializer.Serialize(revisions));
+                    out var postRevisions);
+                _logger.LogInformation("existingOrNewPosts: {}", JsonSerializer.Serialize(existingOrNewPosts));
+                _logger.LogInformation("existingOrNewUsers: {}", JsonSerializer.Serialize(existingOrNewUsers));
+                _logger.LogInformation("postRevisions: {}", JsonSerializer.Serialize(postRevisions));
             }
             catch (Exception e)
             {

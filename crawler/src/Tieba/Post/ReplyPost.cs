@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace tbm.Crawler
 {
     public class ReplyPost : IPost

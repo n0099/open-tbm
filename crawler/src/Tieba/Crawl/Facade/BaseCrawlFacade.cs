@@ -1,13 +1,4 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Autofac;
-using Google.Protobuf;
-using Microsoft.Extensions.Logging;
-using Page = System.UInt32;
-using Fid = System.UInt32;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Crawler
 {

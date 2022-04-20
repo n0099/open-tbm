@@ -1,8 +1,3 @@
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using Google.Protobuf;
-using TbClient;
-
 namespace tbm.Crawler
 {
     public interface IParser<TPost, in TPostProtoBuf> where TPostProtoBuf : IMessage<TPostProtoBuf>

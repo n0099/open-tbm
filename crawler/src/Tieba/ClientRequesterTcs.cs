@@ -1,12 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Timer = System.Timers.Timer;
-
 namespace tbm.Crawler
 {
     public class ClientRequesterTcs : WithLogTrace
@@ -32,7 +23,7 @@ namespace tbm.Crawler
                   // which will cause the increment of real rps can't keep up with _maxRps with long queue length
                     _timer.Interval = 1000 / value;
                 }
-                Interlocked.Increment(ref _requestCounter);
+                _ = Interlocked.Increment(ref _requestCounter);
             }
         }
 
@@ -76,7 +67,7 @@ namespace tbm.Crawler
 
         private void ResetAverageRps()
         {
-            Interlocked.Exchange(ref _requestCounter, 0);
+            _ = Interlocked.Exchange(ref _requestCounter, 0);
             _stopwatch.Restart();
         }
     }

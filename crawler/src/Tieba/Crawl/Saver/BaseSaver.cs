@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Linq.Expressions;
-using LinqKit;
-using Microsoft.Extensions.Logging;
-
 namespace tbm.Crawler
 {
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost

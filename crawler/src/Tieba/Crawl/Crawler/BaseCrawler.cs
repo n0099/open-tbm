@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Google.Protobuf;
-using Page = System.UInt32;
-
 namespace tbm.Crawler
 {
     public abstract class BaseCrawler<TResponse, TPostProtoBuf>

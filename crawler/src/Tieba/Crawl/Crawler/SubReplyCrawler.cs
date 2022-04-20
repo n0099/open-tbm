@@ -1,12 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TbClient.Api.Request;
-using TbClient.Api.Response;
-using TbClient.Post;
-using Tid = System.UInt64;
-using Pid = System.UInt64;
-
 namespace tbm.Crawler
 {
     public sealed class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>

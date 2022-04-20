@@ -1,16 +1,6 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using FidOrPostID = System.UInt64;
-using Page = System.UInt32;
-using Time = System.UInt32;
-
 namespace tbm.Crawler
 {
+#pragma warning disable IDE0058 // Expression value is never used
     public class CrawlerLocks : WithLogTrace
     {
         private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, Time>> _crawling = new();

@@ -1,13 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using Autofac.Features.Indexed;
-using Google.Protobuf;
-using Microsoft.Extensions.Logging;
-using TbClient.Api.Response;
-using TbClient.Post;
-using Fid = System.UInt32;
-using Tid = System.UInt64;
-
 namespace tbm.Crawler
 {
     public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, ReplyResponse, Reply, ReplyCrawler>

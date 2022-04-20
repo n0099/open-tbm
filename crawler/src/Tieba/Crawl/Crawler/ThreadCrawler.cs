@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TbClient.Api.Request;
-using TbClient.Api.Response;
-using TbClient.Post;
-
 namespace tbm.Crawler
 {
     public sealed class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>

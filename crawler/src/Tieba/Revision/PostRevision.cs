@@ -1,5 +1,3 @@
-using System;
-
 namespace tbm.Crawler
 {
     public abstract class PostRevision : ICloneable

@@ -1,6 +1,3 @@
-using System;
-using Google.Protobuf;
-
 namespace tbm.Crawler
 {
     public abstract class CommonInParser
