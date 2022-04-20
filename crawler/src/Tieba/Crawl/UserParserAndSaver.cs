@@ -13,6 +13,7 @@ namespace tbm.Crawler
             users.Select(el =>
             {
                 var uid = el.Uid;
+                if (uid == 0) return null; // in client version 12.x the last user in list will be a empty user with uid 0
                 if (uid < 0) // historical anonymous user
                 {
                     return new TiebaUser
@@ -34,7 +35,7 @@ namespace tbm.Crawler
                     u.AvatarUrl = el.Portrait;
                     u.Gender = (ushort)el.Gender; // null when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
-                    u.IconInfo = CommonInParser.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
+                    u.IconInfo = CommonInParsers.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
                     return u;
                 }
                 catch (Exception e)
@@ -42,18 +43,21 @@ namespace tbm.Crawler
                     e.Data["rawJson"] = JsonSerializer.Serialize(el);
                     throw new Exception("User parse error", e);
                 }
-            }).ForEach(i => _users[i.Uid] = i);
+            }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
 
         public ILookup<bool, TiebaUser> SaveUsers(TbmDbContext db)
-        {
+        { // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
             var existingUsers = (from user in db.Users
-                where _users.Keys.Any(uid => uid == user.Uid)
-                select user).ToDictionary(i => i.Uid);
-            return SavePostsOrUsers(_logger, db, _users,
-                u => existingUsers.ContainsKey(u.Uid),
-                u => existingUsers[u.Uid],
-                (u) => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid});
+                where _users.Keys.Any(uid => uid == user.Uid) select user).ToList();
+            var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
+            var existingUsersBeforeSave = existingUsers.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
+            bool IsExistPredicate(TiebaUser u) => existingUsersByUid.ContainsKey(u.Uid);
+
+            SavePostsOrUsers(_logger, db, _users, IsExistPredicate,
+                u => existingUsersByUid[u.Uid],
+                u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid});
+            return existingUsersBeforeSave.ToLookup(IsExistPredicate);
         }
     }
 }

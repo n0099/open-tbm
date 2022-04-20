@@ -1,7 +1,8 @@
 namespace tbm.Crawler
 {
-    public class TiebaUser : IEntityWithTimestampFields
+    public class TiebaUser : IEntityWithTimestampFields, ICloneable
     {
+        public object Clone() => MemberwiseClone();
         [Key] public long Uid { get; set; }
         public string? Name { get; set; }
         public string? DisplayName { get; set; }

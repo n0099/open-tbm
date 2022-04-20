@@ -2,6 +2,7 @@ namespace tbm.Crawler
 {
     public class ThreadPost : ThreadLateSaveInfo, IPost
     {
+        public object Clone() => MemberwiseClone();
         [Key] public ulong Tid { get; set; }
         public ulong FirstPid { get; set; }
         public ulong ThreadType { get; set; }

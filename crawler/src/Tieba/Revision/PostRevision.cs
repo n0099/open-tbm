@@ -1,8 +1,7 @@
 namespace tbm.Crawler
 {
-    public abstract class PostRevision : ICloneable
+    public abstract class PostRevision
     {
-        public object Clone() => MemberwiseClone();
         public uint Time { get; set; }
     }
 }

@@ -23,17 +23,20 @@ namespace tbm.Crawler
             Func<TPost, TPostRevision> revisionFactory)
         {
             var dbSet = db.Set<TPost>();
-            if (dbSet == null) throw new ArgumentException("DbSet<TPost> is not exists in DbContext");
+            if (dbSet == null) throw new ArgumentException($"DbSet<{typeof(TPost).Name}> is not exists in DbContext");
 
-            var existingPosts = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
-            var existingOrNewPosts = SavePostsOrUsers(_logger, db, Posts,
-                p => existingPosts.ContainsKey(postIdSelector(p)),
-                p => existingPosts[postIdSelector(p)],
-                revisionFactory);
+            // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
+            var existingPosts = dbSet.Where(postsPredicate).ToList();
+            var existingPostsById = existingPosts.ToDictionary(postIdSelector);
+            var existingPostsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
+            bool IsExistPredicate(TPost p) => existingPostsById.ContainsKey(postIdSelector(p));
 
+            SavePostsOrUsers(_logger, db, Posts, IsExistPredicate,
+                p => existingPostsById[postIdSelector(p)], revisionFactory);
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
             db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
-            return existingOrNewPosts;
+
+            return existingPostsBeforeSave.ToLookup(IsExistPredicate);
         }
     }
 }

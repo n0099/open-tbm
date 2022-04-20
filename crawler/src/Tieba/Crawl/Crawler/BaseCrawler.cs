@@ -13,7 +13,7 @@ namespace tbm.Crawler
 
         protected static void ValidateOtherErrorCode(TResponse response)
         {
-            var error = (TbClient.Error)response.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
+            var error = (Error)response.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
             if (error.Errorno != 0)
                 throw new TiebaException($"Error from tieba client, raw json: {response}");
         }

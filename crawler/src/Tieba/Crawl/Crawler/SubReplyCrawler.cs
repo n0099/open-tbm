@@ -41,7 +41,7 @@ namespace tbm.Crawler
 
         public override IList<SubReply> GetValidPosts(SubReplyResponse response)
         {
-            var error = (TbClient.Error)SubReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
+            var error = (Error)SubReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
             switch (error.Errorno)
             {
                 case 4:

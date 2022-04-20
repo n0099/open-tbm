@@ -20,25 +20,24 @@ namespace TbClient.Post
             var p = new ReplyPost();
             try
             {
-                p.Tid = (Tid)el.Tid;
                 p.Pid = el.Pid;
                 p.Floor = el.Floor;
-                p.Content = CommonInParser.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
+                p.Content = CommonInParsers.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
-                // values of property AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
+                // values of property tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
                 p.SubReplyNum = (int)el.SubPostNumber;
                 p.PostTime = el.Time;
                 p.IsFold = (ushort)el.IsFold;
                 p.AgreeNum = (int)el.Agree.AgreeNum;
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
-                p.Location = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
-                p.SignInfo = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.Signature);
-                p.TailInfo = CommonInParser.SerializedProtoBufOrNullIfEmpty(el.TailInfo);
+                p.Location = CommonInParsers.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
+                p.SignInfo = CommonInParsers.SerializedProtoBufOrNullIfEmpty(el.Signature);
+                p.TailInfo = CommonInParsers.SerializedProtoBufOrNullIfEmpty(el.TailInfo);
                 return p;
             }
             catch (Exception e)
             {
-                e.Data["rawJson"] = JsonSerializer.Serialize(el);
+                e.Data["raw"] = el;
                 throw new Exception("Reply parse error", e);
             }
         }

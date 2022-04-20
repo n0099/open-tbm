@@ -84,5 +84,7 @@ namespace tbm.Crawler
         /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/25937893#25937893</see>
         public static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>
             generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
+
+        public static List<T> ToCloned<T>(this IEnumerable<T> list) where T : ICloneable => list.Select(i => (T)i.Clone()).ToList();
     }
 }

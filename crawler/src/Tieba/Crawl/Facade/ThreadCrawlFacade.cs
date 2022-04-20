@@ -16,7 +16,7 @@ namespace tbm.Crawler
             var (response, flag) = responseAndFlag;
             if (flag == CrawlRequestFlag.Thread602ClientVersion) return;
             var data = (IMessage)ThreadResponse.Descriptor.FindFieldByName("data").Accessor.GetValue(response);
-            Users.ParseUsers((IList<TbClient.User>)data.Descriptor
+            Users.ParseUsers((IList<User>)data.Descriptor
                 .FindFieldByNumber(ThreadResponse.Types.Data.UserListFieldNumber).Accessor.GetValue(data));
         }
     }

@@ -38,8 +38,8 @@ namespace tbm.Crawler
         }
 
         public void SavePosts<TPostRevision>(
-            out ILookup<bool, TPost> existingOrNewPosts,
-            out ILookup<bool, TiebaUser> existingOrNewUsers,
+            out ILookup<bool, TPost> existingOrNewLookupOnOldPosts,
+            out ILookup<bool, TiebaUser> existingOrNewLookupOnOldUsers,
             out IEnumerable<TPostRevision> postRevisions)
             where TPostRevision : PostRevision
         {
@@ -47,11 +47,11 @@ namespace tbm.Crawler
             var db = scope.Resolve<TbmDbContext.New>()(_fid);
             using var transaction = db.Database.BeginTransaction();
 
-            existingOrNewPosts = _saver.SavePosts(db);
-            existingOrNewUsers = Users.SaveUsers(db);
+            existingOrNewLookupOnOldPosts = _saver.SavePosts(db);
+            existingOrNewLookupOnOldUsers = Users.SaveUsers(db);
             _ = db.SaveChanges();
             transaction.Commit();
-            postRevisions = db.Set<TPostRevision>().Local.Select(i => (TPostRevision)i.Clone()).ToList();
+            postRevisions = db.Set<TPostRevision>().Local.ToList();
         }
 
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
@@ -103,7 +103,17 @@ namespace tbm.Crawler
             {
                 e.Data["page"] = page;
                 e.Data["fid"] = _fid;
-                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, _crawler.FillExceptionData(e), "exception");
+                e = _crawler.FillExceptionData(e);
+                var inner = e.InnerException;
+                do
+                { // recursive merge all data of exceptions into e.Data
+                    if (inner == null) continue;
+                    foreach (var dataKey in inner.Data.Keys)
+                        e.Data[dataKey] = inner.Data[dataKey];
+                    inner = inner.InnerException;
+                } while (inner != null);
+
+                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, e, "exception");
                 _requesterTcs.Decrease();
                 _locks.AcquireFailed(_lockIndex, page);
                 return true;

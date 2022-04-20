@@ -29,13 +29,13 @@ namespace tbm.Crawler
                             QType = 2
                         }
                     },
-                    "12.23.1.0"
+                    "12.12.1.0"
                 ), CrawlRequestFlag.None)
             };
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)
         {
-            var error = (TbClient.Error)ReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
+            var error = (Error)ReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
             if (error.Errorno == 4)
                 throw new TiebaException("Thread already deleted when crawling reply");
             ValidateOtherErrorCode(response);

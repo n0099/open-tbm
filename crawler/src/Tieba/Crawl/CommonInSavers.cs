@@ -2,8 +2,9 @@ namespace tbm.Crawler
 {
     public abstract class CommonInSavers<T> where T : CommonInSavers<T>
     {
-        protected ILookup<bool, TPostOrUser> SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
-            ILogger<CommonInSavers<T>> logger, TbmDbContext db,
+        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
+            ILogger<CommonInSavers<T>> logger,
+            TbmDbContext db,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             Func<TPostOrUser, bool> isExistPredicate,
             Func<TPostOrUser, TPostOrUser> existedSelector,
@@ -13,7 +14,6 @@ namespace tbm.Crawler
             db.AddRange((IEnumerable<object>)GetRevisionsForObjectsThenMerge(existedOrNew[true], existedSelector, revisionFactory, logger));
             var newPostsOrUsers = ((IEnumerable<object>)existedOrNew[false]).ToList();
             if (newPostsOrUsers.Any()) db.AddRange(newPostsOrUsers);
-            return existedOrNew;
         }
 
         private static IEnumerable<TRevision> GetRevisionsForObjectsThenMerge<TObject, TRevision>(

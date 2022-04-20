@@ -18,13 +18,15 @@ namespace tbm.Crawler
             await using var scope = Program.Autofac.BeginLifetimeScope();
             try
             {
-                var crawler = scope.Resolve<ThreadCrawlFacade.New>()(0, "");
-                (await crawler.CrawlPageRange(1, 1)).SavePosts<ThreadRevision>(
-                    out var existingOrNewPosts,
-                    out var existingOrNewUsers,
+                var crawler = scope.Resolve<ReplyCrawlFacade.New>()(0, 0);
+                (await crawler.CrawlPageRange(1)).SavePosts<ReplyRevision>(
+                    out var existingOrNewLookupOnOldPosts,
+                    out var existingOrNewLookupOnOldUsers,
                     out var postRevisions);
-                _logger.LogInformation("existingOrNewPosts: {}", JsonSerializer.Serialize(existingOrNewPosts));
-                _logger.LogInformation("existingOrNewUsers: {}", JsonSerializer.Serialize(existingOrNewUsers));
+                var existingOrNewLookupOnOldPostsId = existingOrNewLookupOnOldPosts.Select(g => new {existing = g.Key, id = g.Select(p => p.Pid)});
+                var existingOrNewLookupOnOldUsersId = existingOrNewLookupOnOldUsers.Select(g => new {existing = g.Key, id = g.Select(u => u.Uid)});
+                _logger.LogInformation("existingOrNewLookupOnOldPostsId: {}", JsonSerializer.Serialize(existingOrNewLookupOnOldPostsId));
+                _logger.LogInformation("existingOrNewLookupOnOldUsersId: {}", JsonSerializer.Serialize(existingOrNewLookupOnOldUsersId));
                 _logger.LogInformation("postRevisions: {}", JsonSerializer.Serialize(postRevisions));
             }
             catch (Exception e)

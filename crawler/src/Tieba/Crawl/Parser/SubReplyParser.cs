@@ -28,7 +28,7 @@ namespace TbClient.Post
                 var author = el.Author;
                 // values of property tid and pid will be write back in SubReplyCrawlFacade.PostParseCallback()
                 p.Spid = el.Spid;
-                p.Content = CommonInParser.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
+                p.Content = CommonInParsers.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = author.Uid;
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 p.AuthorExpGrade = (ushort)author.LevelId;
@@ -37,7 +37,7 @@ namespace TbClient.Post
             }
             catch (Exception e)
             {
-                e.Data["rawJson"] = JsonSerializer.Serialize(el);
+                e.Data["raw"] = el;
                 throw new Exception("Sub reply parse error", e);
             }
         }

@@ -2,6 +2,7 @@ namespace tbm.Crawler
 {
     public class SubReplyPost : IPost
     {
+        public object Clone() => MemberwiseClone();
         public ulong Tid { get; set; }
         public ulong Pid { get; set; }
         [Key] public ulong Spid { get; set; }

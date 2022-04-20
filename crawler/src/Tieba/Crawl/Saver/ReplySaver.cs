@@ -17,7 +17,7 @@ namespace tbm.Crawler
                 p => p.Pid,
                 i => i.Pid,
                 p => new PostIndex {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-                (p) => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
+                p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
             /*
             if (_parentThread == null) return;
             var parentThread = new ThreadPost

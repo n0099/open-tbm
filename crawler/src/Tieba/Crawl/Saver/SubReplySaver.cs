@@ -15,6 +15,6 @@ namespace tbm.Crawler
             p => p.Spid,
             i => i.Spid,
             p => new PostIndex {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
-            (p) => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid});
+            p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid});
     }
 }
