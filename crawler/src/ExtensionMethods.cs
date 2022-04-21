@@ -86,5 +86,19 @@ namespace tbm.Crawler
             generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
 
         public static List<T> ToCloned<T>(this IEnumerable<T> list) where T : ICloneable => list.Select(i => (T)i.Clone()).ToList();
+
+        public static Exception ExtractInnerExceptionsData(this Exception e)
+        {
+            var inner = e.InnerException;
+            do
+            { // recursive merge all data of exceptions into e.Data
+                if (inner == null) continue;
+                foreach (var dataKey in inner.Data.Keys)
+                    e.Data[dataKey] = inner.Data[dataKey];
+                inner = inner.InnerException;
+            } while (inner != null);
+
+            return e;
+        }
     }
 }

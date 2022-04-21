@@ -35,7 +35,7 @@ namespace tbm.Crawler
                     u.AvatarUrl = el.Portrait;
                     u.Gender = (ushort)el.Gender; // null when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
-                    u.IconInfo = CommonInParsers.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
+                    u.IconInfo = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
                     return u;
                 }
                 catch (Exception e)

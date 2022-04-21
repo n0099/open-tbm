@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public abstract class CommonInParsers
+    public abstract class Helper
     {
         public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf)
         {

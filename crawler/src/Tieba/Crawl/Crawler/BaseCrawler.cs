@@ -6,10 +6,13 @@ namespace tbm.Crawler
         protected ClientRequester Requester { get; }
 
         public abstract Exception FillExceptionData(Exception e);
-        public abstract Task<(TResponse, CrawlRequestFlag)[]> CrawlSinglePage(Page page);
+        protected abstract IEnumerable<(Task<TResponse>, CrawlRequestFlag)> RealCrawlSinglePage(Page page);
         public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response);
 
         protected BaseCrawler(ClientRequester requester) => Requester = requester;
+
+        public Task<(TResponse, CrawlRequestFlag)[]> CrawlSinglePage(Page page) =>
+            Task.WhenAll(RealCrawlSinglePage(page).Select(async i => (await i.Item1, i.Item2)));
 
         protected static void ValidateOtherErrorCode(TResponse response)
         {

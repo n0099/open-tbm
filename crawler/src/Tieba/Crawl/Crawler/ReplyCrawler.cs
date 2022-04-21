@@ -14,10 +14,10 @@ namespace tbm.Crawler
             return e;
         }
 
-        public override async Task<(ReplyResponse, CrawlRequestFlag)[]> CrawlSinglePage(uint page) =>
+        protected override IEnumerable<(Task<ReplyResponse>, CrawlRequestFlag)> RealCrawlSinglePage(Page page) =>
             new[]
             {
-                (await Requester.RequestProtoBuf<ReplyRequest, ReplyResponse>(
+                (Requester.RequestProtoBuf<ReplyRequest, ReplyResponse>(
                     "http://c.tieba.baidu.com/c/f/pb/page?cmd=302001",
                     new ReplyRequest
                     {

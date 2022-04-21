@@ -14,7 +14,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        public override Task<(ThreadResponse, CrawlRequestFlag)[]> CrawlSinglePage(uint page)
+        protected override IEnumerable<(Task<ThreadResponse>, CrawlRequestFlag)> RealCrawlSinglePage(Page page)
         {
             const string url = "http://c.tieba.baidu.com/c/f/frs/page?cmd=301001";
             var requestBody602 = new ThreadRequest.Types.Data
@@ -32,12 +32,13 @@ namespace tbm.Crawler
                 QType = 2,
                 SortType = 5
             };
-            return Task.WhenAll(
-                Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(url, new ThreadRequest {Data = requestBody}, "12.23.1.0")
-                    .ContinueWith(t => (t.Result, CrawlRequestFlag.None)),
-                Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>(url, new ThreadRequest {Data = requestBody602}, "6.0.2")
-                    .ContinueWith(t => (t.Result, CrawlRequestFlag.Thread602ClientVersion))
-            );
+            return new[]
+            {
+                (Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>
+                    (url, new ThreadRequest {Data = requestBody}, "12.23.1.0"), CrawlRequestFlag.None),
+                (Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>
+                    (url, new ThreadRequest {Data = requestBody602}, "6.0.2"), CrawlRequestFlag.Thread602ClientVersion)
+            };
         }
 
         public override IList<Thread> GetValidPosts(ThreadResponse response)

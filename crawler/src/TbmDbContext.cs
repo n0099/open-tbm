@@ -4,7 +4,7 @@ namespace tbm.Crawler
 {
     public class TbmDbContext : DbContext
     {
-        public uint Fid { get; }
+        public Fid Fid { get; }
         public DbSet<TiebaUser> Users => Set<TiebaUser>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
@@ -12,9 +12,9 @@ namespace tbm.Crawler
         public DbSet<PostIndex> PostsIndex => Set<PostIndex>();
         private readonly IConfiguration _config;
 
-        public delegate TbmDbContext New(uint fid);
+        public delegate TbmDbContext New(Fid fid);
 
-        public TbmDbContext(IConfiguration config, uint fid)
+        public TbmDbContext(IConfiguration config, Fid fid)
         {
             _config = config;
             Fid = fid;
@@ -56,9 +56,9 @@ namespace tbm.Crawler
                 if (e.Entity is not IEntityWithTimestampFields entity
                     || e.State is not (EntityState.Added or EntityState.Modified)) return;
 
-                entity.UpdatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+                entity.UpdatedAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 if (e.State == EntityState.Added)
-                    entity.CreatedAt = (uint)DateTimeOffset.Now.ToUnixTimeSeconds();
+                    entity.CreatedAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
             });
             return base.SaveChanges();
         }

@@ -9,20 +9,11 @@ namespace tbm.Crawler
         public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger, ReplyCrawler.New crawler,
             ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid
-        ) : base(logger, crawler(tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), fid), fid) => _tid = tid;
+        ) : base(logger, crawler(tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), tid), fid) => _tid = tid;
 
         protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IList<Reply> posts)
         {
             var data = responseAndFlag.Item1.Data;
-            /*
-            var parentThread = (Thread)data.Descriptor.FindFieldByName("thread").Accessor.GetValue(data);
-            _parentThread = new ThreadLateSaveInfo
-            {
-                AuthorPhoneType = parentThread.GetStrProp("phone_type"),
-                AntiSpamInfo = RawJsonOrNullWhenEmpty(parentThread.GetProperty("antispam_info"))
-            };
-            */
-
             if (data.Page.CurrentPage == 1)
             { // update parent thread of reply with new title which is extracted from the first floor reply in first page
                 using var scope = Program.Autofac.BeginLifetimeScope();

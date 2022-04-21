@@ -8,16 +8,16 @@ namespace tbm.Crawler
 
         private readonly ILogger<ClientRequester> _logger;
         private readonly IConfigurationSection _config;
-        private readonly ClientRequesterTcs _clientRequesterTcs;
+        private readonly ClientRequesterTcs _requesterTcs;
         private static HttpClient _http = new();
         private static readonly Random Rand = new();
 
         public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
-            HttpClient http, ClientRequesterTcs clientRequesterTcs)
+            HttpClient http, ClientRequesterTcs requesterTcs)
         {
             _logger = logger;
             _config = config.GetSection("ClientRequester");
-            _clientRequesterTcs = clientRequesterTcs;
+            _requesterTcs = requesterTcs;
             _http = http;
         }
 
@@ -95,13 +95,13 @@ namespace tbm.Crawler
 
         private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> postCallback, Action logTraceCallback)
         {
-            _clientRequesterTcs.Wait();
+            _requesterTcs.Wait();
             var res = postCallback();
             if (_config.GetValue("LogTrace", false)) logTraceCallback();
             _ = res.ContinueWith(i =>
             {
-                if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _clientRequesterTcs.Increase();
-                else _clientRequesterTcs.Decrease();
+                if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
+                else _requesterTcs.Decrease();
             });
             return res;
         }

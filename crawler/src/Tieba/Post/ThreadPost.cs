@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class ThreadPost : ThreadLateSaveInfo, IPost
+    public class ThreadPost : IPost
     {
         public object Clone() => MemberwiseClone();
         [Key] public ulong Tid { get; set; }
@@ -22,6 +22,7 @@ namespace tbm.Crawler
         public int DisagreeNum { get; set; }
         public byte[]? ZanInfo { get; set; }
         public byte[]? Location { get; set; }
+        public string? AuthorPhoneType { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
     }

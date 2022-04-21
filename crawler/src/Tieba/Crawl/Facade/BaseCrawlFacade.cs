@@ -21,7 +21,7 @@ namespace tbm.Crawler
             ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
             IParser<TPost, TPostProtoBuf> parser,
-            Func<ConcurrentDictionary<ulong, TPost>, Fid, BaseSaver<TPost>> saver,
+            Func<ConcurrentDictionary<ulong, TPost>, Fid, BaseSaver<TPost>> saverFactory,
             UserParserAndSaver users,
             ClientRequesterTcs requesterTcs,
             (CrawlerLocks, ulong) lockAndIndex,
@@ -30,7 +30,7 @@ namespace tbm.Crawler
             _logger = logger;
             _crawler = crawler;
             _parser = parser;
-            _saver = saver(ParsedPosts, fid);
+            _saver = saverFactory(ParsedPosts, fid);
             Users = users;
             _requesterTcs = requesterTcs;
             (_locks, _lockIndex) = lockAndIndex;
@@ -66,7 +66,7 @@ namespace tbm.Crawler
                 var dataField = new TResponse().Descriptor.FindFieldByName("data");
                 var data = startPageResponse.Select(i => (IMessage)dataField.Accessor.GetValue(i.Item1));
                 var page = data.Select(i => (TbClient.Page)dataField.MessageType.FindFieldByName("page").Accessor.GetValue(i));
-                endPage = Math.Min(endPage, (uint)page.Max(i => i.TotalPage));
+                endPage = Math.Min(endPage, (Page)page.Max(i => i.TotalPage));
             }, startPage);
 
             if (!isCrawlFailed) await CrawlPages(
@@ -103,15 +103,7 @@ namespace tbm.Crawler
             {
                 e.Data["page"] = page;
                 e.Data["fid"] = Fid;
-                e = _crawler.FillExceptionData(e);
-                var inner = e.InnerException;
-                do
-                { // recursive merge all data of exceptions into e.Data
-                    if (inner == null) continue;
-                    foreach (var dataKey in inner.Data.Keys)
-                        e.Data[dataKey] = inner.Data[dataKey];
-                    inner = inner.InnerException;
-                } while (inner != null);
+                e = _crawler.FillExceptionData(e).ExtractInnerExceptionsData();
 
                 _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, e, "exception");
                 _requesterTcs.Decrease();

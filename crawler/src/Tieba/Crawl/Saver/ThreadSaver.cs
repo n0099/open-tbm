@@ -4,9 +4,9 @@ namespace tbm.Crawler
     {
         private readonly Fid _fid;
 
-        public delegate ThreadSaver New(ConcurrentDictionary<ulong, ThreadPost> posts, uint fid);
+        public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid);
 
-        public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<ulong, ThreadPost> posts, Fid fid)
+        public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
         public override ILookup<bool, ThreadPost> SavePosts(TbmDbContext db)
@@ -18,12 +18,11 @@ namespace tbm.Crawler
                 i => i.Tid,
                 p => new PostIndex {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},
                 p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid});
-            foreach (var post in db.Set<ThreadPost>().Local)
-            { // prevent update with default null value on fields which will be later set by ReplyCrawler
-                db.Entry(post).Properties
-                    .Where(p => p.Metadata.Name is nameof(ThreadLateSaveInfo.AntiSpamInfo) or nameof(ThreadLateSaveInfo.AuthorPhoneType))
-                    .ForEach(p => p.IsModified = false);
-            }
+
+            // prevent overwrite with default null value on field which will be update by ThreadLateSaveInfoCrawler
+            db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Properties
+                .Where(p => p.Metadata.Name is nameof(ThreadPost.AuthorPhoneType))
+                .ForEach(p => p.IsModified = false));
             return ret;
         }
     }
