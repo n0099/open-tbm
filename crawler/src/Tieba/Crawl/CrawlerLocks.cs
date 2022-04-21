@@ -41,15 +41,15 @@ namespace tbm.Crawler
                     var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
                     if (_crawling.TryAdd(index, newPage)) return lockFreePages;
                 }
-                foreach (var page in lockFreePages.ToList()) // iterate on copy
+                lockFreePages.ToList().ForEach(page => // iterate on copy in order to mutate the original lockFreePages
                 {
-                    if (_crawling[index].TryAdd(page, now)) continue;
+                    if (_crawling[index].TryAdd(page, now)) return;
                     // when page is locking:
                     var lockTimeout = _config.GetValue<ushort>("LockTimeoutSec", 300); // 5 minutes;
                     if (_crawling[index][page] < now - lockTimeout)
                         _crawling[index][page] = now;
                     else lockFreePages.Remove(page);
-                }
+                });
             }
 
             return lockFreePages;

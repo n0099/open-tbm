@@ -41,8 +41,7 @@ namespace tbm.Crawler
 
         public override IList<SubReply> GetValidPosts(SubReplyResponse response)
         {
-            var error = (Error)SubReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
-            switch (error.Errorno)
+            switch (response.Error.Errorno)
             {
                 case 4:
                     throw new TiebaException("Reply already deleted when crawling sub reply");

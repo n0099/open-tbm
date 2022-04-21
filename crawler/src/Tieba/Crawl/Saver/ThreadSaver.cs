@@ -16,8 +16,8 @@ namespace tbm.Crawler
                 PredicateBuilder.New<PostIndex>(i => i.Type == "thread" && Posts.Keys.Any(id => id == i.Tid)),
                 p => p.Tid,
                 i => i.Tid,
-                p => new PostIndex { Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime },
-                p => new ThreadRevision { Time = p.UpdatedAt, Tid = p.Tid });
+                p => new PostIndex {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},
+                p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid});
             foreach (var post in db.Set<ThreadPost>().Local)
             { // prevent update with default null value on fields which will be later set by ReplyCrawler
                 db.Entry(post).Properties

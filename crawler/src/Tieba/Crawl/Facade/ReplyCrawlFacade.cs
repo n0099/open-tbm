@@ -11,9 +11,9 @@ namespace tbm.Crawler
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid
         ) : base(logger, crawler(tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), fid), fid) => _tid = tid;
 
-        protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IEnumerable<Reply> posts)
+        protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IList<Reply> posts)
         {
-            var data = (IMessage)ReplyResponse.Descriptor.FindFieldByName("data").Accessor.GetValue(responseAndFlag.Item1);
+            var data = responseAndFlag.Item1.Data;
             /*
             var parentThread = (Thread)data.Descriptor.FindFieldByName("thread").Accessor.GetValue(data);
             _parentThread = new ThreadLateSaveInfo
@@ -22,17 +22,36 @@ namespace tbm.Crawler
                 AntiSpamInfo = RawJsonOrNullWhenEmpty(parentThread.GetProperty("antispam_info"))
             };
             */
-            var users = (IList<User>)data.Descriptor.FindFieldByNumber(ReplyResponse.Types.Data.UserListFieldNumber).Accessor.GetValue(data);
+
+            if (data.Page.CurrentPage == 1)
+            { // update parent thread of reply with new title which is extracted from the first floor reply in first page
+                using var scope = Program.Autofac.BeginLifetimeScope();
+                var db = scope.Resolve<TbmDbContext.New>()(Fid);
+                var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
+                if (parentThreadTitle == "")
+                { // thread title will be empty string as a fallback when the thread author haven't write title for this thread
+                    var newTitle = posts.FirstOrDefault(p => p.Floor == 1)?.Title;
+                    if (newTitle != null)
+                    {
+                        db.Attach(new ThreadPost {Tid = _tid, Title = newTitle}).Property(t => t.Title).IsModified = true;
+                        if (db.SaveChangesWithoutTimestamping() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
+                            throw new DbUpdateException($"parent thread title \"{newTitle}\" completion for tid {_tid} has failed");
+                    }
+                }
+            }
+
+            var users = data.UserList;
             Users.ParseUsers(users);
+
             posts.Select(p => p.Pid).ForEach(pid =>
-            { // fill the value of some fields of reply from user list which is out of post list
-                var p = Posts[pid];
+            { // fill the values of some field of reply from user list which is out of post list
+                var p = ParsedPosts[pid];
                 var author = users.First(u => u.Uid == p.AuthorUid);
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 p.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
 
                 p.Tid = _tid;
-                Posts[pid] = p;
+                ParsedPosts[pid] = p;
             });
         }
     }

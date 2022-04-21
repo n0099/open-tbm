@@ -71,8 +71,8 @@ namespace tbm.Crawler
         private Task<HttpResponseMessage> PostProtoBuf(string url, IMessage paramsProtoBuf, string clientVersion)
         {
             var dataField = paramsProtoBuf.Descriptor.FindFieldByName("data");
-            dataField.MessageType.FindFieldByName("common").Accessor
-                .SetValue((IMessage)dataField.Accessor.GetValue(paramsProtoBuf), new Common {ClientVersion = clientVersion});
+            var dataFieldValue = (IMessage)dataField.Accessor.GetValue(paramsProtoBuf);
+            dataField.MessageType.FindFieldByName("common").Accessor.SetValue(dataFieldValue, new Common {ClientVersion = clientVersion});
 
             // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
             var protoBufFile = new ByteArrayContent(paramsProtoBuf.ToByteArray());

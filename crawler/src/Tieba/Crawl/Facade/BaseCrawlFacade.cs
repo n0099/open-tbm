@@ -11,8 +11,8 @@ namespace tbm.Crawler
         private readonly IParser<TPost, TPostProtoBuf> _parser;
         private readonly BaseSaver<TPost> _saver;
         protected readonly UserParserAndSaver Users;
-        protected readonly ConcurrentDictionary<ulong, TPost> Posts = new();
-        private readonly Fid _fid;
+        protected readonly ConcurrentDictionary<ulong, TPost> ParsedPosts = new();
+        protected readonly Fid Fid;
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly ulong _lockIndex;
@@ -30,11 +30,11 @@ namespace tbm.Crawler
             _logger = logger;
             _crawler = crawler;
             _parser = parser;
-            _saver = saver(Posts, fid);
+            _saver = saver(ParsedPosts, fid);
             Users = users;
             _requesterTcs = requesterTcs;
             (_locks, _lockIndex) = lockAndIndex;
-            _fid = fid;
+            Fid = fid;
         }
 
         public void SavePosts<TPostRevision>(
@@ -44,7 +44,7 @@ namespace tbm.Crawler
             where TPostRevision : PostRevision
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
-            var db = scope.Resolve<TbmDbContext.New>()(_fid);
+            var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
 
             existingOrNewLookupOnOldPosts = _saver.SavePosts(db);
@@ -80,12 +80,12 @@ namespace tbm.Crawler
         {
             var (response, flag) = responseAndFlag;
             var posts = _crawler.GetValidPosts(response);
-            var usersStoreUnderPost = _parser.ParsePosts(flag, posts, Posts);
+            var usersStoreUnderPost = _parser.ParsePosts(flag, posts, ParsedPosts);
             if (usersStoreUnderPost != null) Users.ParseUsers(usersStoreUnderPost);
             PostParseCallback(responseAndFlag, posts);
         }
 
-        protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IEnumerable<TPostProtoBuf> posts) { }
+        protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IList<TPostProtoBuf> posts) { }
 
         private Task CrawlPages(IEnumerable<Page> pages) =>
             Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(page =>
@@ -102,7 +102,7 @@ namespace tbm.Crawler
             catch (Exception e)
             {
                 e.Data["page"] = page;
-                e.Data["fid"] = _fid;
+                e.Data["fid"] = Fid;
                 e = _crawler.FillExceptionData(e);
                 var inner = e.InnerException;
                 do

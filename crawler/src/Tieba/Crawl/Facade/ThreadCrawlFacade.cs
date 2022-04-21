@@ -11,13 +11,11 @@ namespace tbm.Crawler
         {
         }
 
-        protected override void PostParseCallback((ThreadResponse, CrawlRequestFlag) responseAndFlag, IEnumerable<Thread> posts)
+        protected override void PostParseCallback((ThreadResponse, CrawlRequestFlag) responseAndFlag, IList<Thread> posts)
         {
             var (response, flag) = responseAndFlag;
             if (flag == CrawlRequestFlag.Thread602ClientVersion) return;
-            var data = (IMessage)ThreadResponse.Descriptor.FindFieldByName("data").Accessor.GetValue(response);
-            Users.ParseUsers((IList<User>)data.Descriptor
-                .FindFieldByNumber(ThreadResponse.Types.Data.UserListFieldNumber).Accessor.GetValue(data));
+            Users.ParseUsers(response.Data.UserList);
         }
     }
 }

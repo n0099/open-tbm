@@ -35,8 +35,7 @@ namespace tbm.Crawler
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)
         {
-            var error = (Error)ReplyResponse.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
-            if (error.Errorno == 4)
+            if (response.Error.Errorno == 4)
                 throw new TiebaException("Thread already deleted when crawling reply");
             ValidateOtherErrorCode(response);
             return EnsureNonEmptyPostList(response, 6,
