@@ -3,6 +3,7 @@ namespace tbm.Crawler
     internal class Program
     {
         public static ILifetimeScope Autofac { get; private set; } = null!;
+        public static readonly IEnumerable<string> RegisteredCrawlerLocks = new List<string> {"thread", "threadLate", "reply", "subReply"};
 
         private static void Main()
         {
@@ -20,7 +21,11 @@ namespace tbm.Crawler
                         logging.ClearProviders();
                         logging.AddNLog();
                     })
-                    .ConfigureServices((_, service) => service.AddHostedService<Worker>())
+                    .ConfigureServices((_, service) =>
+                    {
+                        service.AddHostedService<Worker>();
+                        service.AddHostedService<RetryCrawlWorker>();
+                    })
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                     .ConfigureContainer((ContainerBuilder builder) =>
                     {
@@ -36,9 +41,8 @@ namespace tbm.Crawler
                             (p, _) => p.ParameterType == typeof(ClientRequester.HttpClient),
                             (_, c) => c.Resolve<ClientRequester.HttpClient>());
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
-                        builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("thread").SingleInstance();
-                        builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("reply").SingleInstance();
-                        builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>("subReply").SingleInstance();
+                        RegisteredCrawlerLocks.ForEach(l =>
+                            builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(l).SingleInstance());
                         builder.RegisterType<UserParserAndSaver>();
 
                         var baseClassOfClassesToBeRegister = new List<Type>

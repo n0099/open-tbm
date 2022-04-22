@@ -10,6 +10,7 @@ namespace tbm.Crawler
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
         public DbSet<PostIndex> PostsIndex => Set<PostIndex>();
+        public DbSet<ForumInfo> ForumsInfo => Set<ForumInfo>();
         private readonly IConfiguration _config;
 
         public delegate TbmDbContext New(Fid fid);
@@ -32,6 +33,7 @@ namespace tbm.Crawler
             b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new { e.Spid, e.Time });
             b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new { e.Uid, e.Time });
             b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasKey(e => new { e.Tid, e.Pid, e.Spid });
+            b.Entity<ForumInfo>().ToTable("tbm_forumsInfo");
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)

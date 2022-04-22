@@ -1,10 +1,13 @@
+using FailedCount = System.UInt16;
+
 namespace tbm.Crawler
 {
 #pragma warning disable IDE0058 // Expression value is never used
     public class CrawlerLocks : WithLogTrace
     {
         private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, Time>> _crawling = new();
-        private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, ushort>> _failed = new();
+        // inner value of field _failed with type ushort refers to failed times on this page and index before retry
+        private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, FailedCount>> _failed = new();
         private readonly ILogger<CrawlerLocks> _logger;
         private readonly IConfigurationSection _config;
         private readonly string _postType;
@@ -43,35 +46,63 @@ namespace tbm.Crawler
                 }
                 lockFreePages.ToList().ForEach(page => // iterate on copy in order to mutate the original lockFreePages
                 {
-                    if (_crawling[index].TryAdd(page, now)) return;
-                    // when page is locking:
-                    var lockTimeout = _config.GetValue<ushort>("LockTimeoutSec", 300); // 5 minutes;
-                    if (_crawling[index][page] < now - lockTimeout)
-                        _crawling[index][page] = now;
-                    else lockFreePages.Remove(page);
+                    var pagesLock = _crawling[index];
+                    lock (pagesLock)
+                    {
+                        if (pagesLock.TryAdd(page, now)) return;
+                        // when page is locking:
+                        var lockTimeout = _config.GetValue<Time>("LockTimeoutSec", 300); // 5 minutes;
+                        if (pagesLock[page] < now - lockTimeout)
+                            pagesLock[page] = now;
+                        else lockFreePages.Remove(page);
+                    }
                 });
             }
 
             return lockFreePages;
         }
 
-        public void AcquireFailed(FidOrPostID index, Page page)
-        {
-            var newPage = new ConcurrentDictionary<Page, ushort>();
-            newPage.TryAdd(page, 1);
-            lock (_failed)
-            {
-                if (_failed.TryAdd(index, newPage)) return;
-                if (!_failed[index].TryAdd(page, 1)) _failed[index][page]++;
-            }
-        }
-
         public void ReleaseLock(FidOrPostID index, Page page)
         {
             lock (_crawling)
             {
-                _crawling[index].TryRemove(page, out _);
-                if (_crawling[index].IsEmpty) _crawling.TryRemove(index, out _);
+                var pagesLock = _crawling[index];
+                lock (pagesLock)
+                {
+                    pagesLock.TryRemove(page, out _);
+                    if (pagesLock.IsEmpty) _crawling.TryRemove(index, out _);
+                }
+            }
+        }
+
+        public void AcquireFailed(FidOrPostID index, Page page)
+        {
+            lock (_failed)
+            {
+                if (_failed.ContainsKey(index))
+                {
+                    var pagesLock = _failed[index];
+                    lock (pagesLock) if (!pagesLock.TryAdd(page, 1)) pagesLock[page]++;
+                }
+                else
+                {
+                    var newPage = new ConcurrentDictionary<Page, FailedCount>();
+                    newPage.TryAdd(page, 1);
+                    if (_failed.TryAdd(index, newPage)) return;
+                }
+            }
+        }
+
+        public Dictionary<FidOrPostID, Dictionary<Page, FailedCount>> RetryAllFailed()
+        {
+            lock (_failed)
+            {
+                var copyOfFailed = _failed.ToDictionary(p => p.Key, p =>
+                {
+                    lock (p.Value) return p.Value.ToDictionary(p2 => p2.Key, p2 => p2.Value);
+                });
+                _failed.Clear();
+                return copyOfFailed;
             }
         }
     }

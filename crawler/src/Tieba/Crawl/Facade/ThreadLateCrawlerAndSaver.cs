@@ -25,10 +25,10 @@ namespace tbm.Crawler
             _fid = fid;
             _threadsId = threadsId;
             _requesterTcs = requesterTcs;
-            _locks = locks["threadLateSave"]("threadLateSave");
+            _locks = locks["threadLate"]("threadLate");
         }
 
-        private async void Crawl()
+        public async Task Crawl()
         {
             var threads = await Task.WhenAll(_threadsId.Select(async tid =>
             {

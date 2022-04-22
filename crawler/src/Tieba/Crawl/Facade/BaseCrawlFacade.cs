@@ -76,18 +76,7 @@ namespace tbm.Crawler
             return this;
         }
 
-        private void ValidateThenParse((TResponse, CrawlRequestFlag) responseAndFlag)
-        {
-            var (response, flag) = responseAndFlag;
-            var posts = _crawler.GetValidPosts(response);
-            var usersStoreUnderPost = _parser.ParsePosts(flag, posts, ParsedPosts);
-            if (usersStoreUnderPost != null) Users.ParseUsers(usersStoreUnderPost);
-            PostParseCallback(responseAndFlag, posts);
-        }
-
-        protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IList<TPostProtoBuf> posts) { }
-
-        private Task CrawlPages(IEnumerable<Page> pages) =>
+        public Task CrawlPages(IEnumerable<Page> pages) =>
             Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(page =>
                 CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page)
             ));
@@ -115,5 +104,16 @@ namespace tbm.Crawler
                 _locks.ReleaseLock(_lockIndex, page);
             }
         }
+
+        private void ValidateThenParse((TResponse, CrawlRequestFlag) responseAndFlag)
+        {
+            var (response, flag) = responseAndFlag;
+            var posts = _crawler.GetValidPosts(response);
+            var usersStoreUnderPost = _parser.ParsePosts(flag, posts, ParsedPosts);
+            if (usersStoreUnderPost != null) Users.ParseUsers(usersStoreUnderPost);
+            PostParseCallback(responseAndFlag, posts);
+        }
+
+        protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IList<TPostProtoBuf> posts) { }
     }
 }
