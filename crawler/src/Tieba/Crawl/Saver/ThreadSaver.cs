@@ -21,7 +21,9 @@ namespace tbm.Crawler
 
             // prevent overwrite with default null value on field which will be update by ThreadLateSaveInfoCrawler
             db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Properties
-                .Where(p => p.Metadata.Name is nameof(ThreadPost.AuthorPhoneType))
+                .Where(p => p.Metadata.Name == nameof(ThreadPost.AuthorPhoneType)
+                            // prevent overwrite empty string on thread title which have been set by ReplyCrawlFacade.PostParseCallback()
+                            || (p.Metadata.Name == nameof(ThreadPost.Title) && (string?)p.CurrentValue == ""))
                 .ForEach(p => p.IsModified = false));
             return ret;
         }

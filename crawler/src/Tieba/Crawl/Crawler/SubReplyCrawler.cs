@@ -20,7 +20,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<(Task<SubReplyResponse>, CrawlRequestFlag)> RealCrawlSinglePage(Page page) =>
+        protected override IEnumerable<(Task<SubReplyResponse>, CrawlRequestFlag)> RequestsFactory(Page page) =>
             new[]
             {
                 (Requester.RequestProtoBuf<SubReplyRequest, SubReplyResponse>(

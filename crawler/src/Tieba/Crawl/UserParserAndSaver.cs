@@ -51,13 +51,15 @@ namespace tbm.Crawler
             var existingUsers = (from user in db.Users
                 where _users.Keys.Any(uid => uid == user.Uid) select user).ToList();
             var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
-            var existingUsersBeforeSave = existingUsers.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
+            var usersBeforeSave = existingUsers.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
             bool IsExistPredicate(TiebaUser u) => existingUsersByUid.ContainsKey(u.Uid);
 
             SavePostsOrUsers(_logger, db, _users, IsExistPredicate,
                 u => existingUsersByUid[u.Uid],
                 u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid});
-            return existingUsersBeforeSave.ToLookup(IsExistPredicate);
+
+            usersBeforeSave.AddRange(_users.Values);
+            return usersBeforeSave.ToLookup(IsExistPredicate);
         }
     }
 }

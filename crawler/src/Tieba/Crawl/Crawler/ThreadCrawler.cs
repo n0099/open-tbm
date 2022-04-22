@@ -14,7 +14,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<(Task<ThreadResponse>, CrawlRequestFlag)> RealCrawlSinglePage(Page page)
+        protected override IEnumerable<(Task<ThreadResponse>, CrawlRequestFlag)> RequestsFactory(Page page)
         {
             const string url = "http://c.tieba.baidu.com/c/f/frs/page?cmd=301001";
             var requestBody602 = new ThreadRequest.Types.Data

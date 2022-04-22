@@ -28,7 +28,7 @@ namespace tbm.Crawler
             // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
             var existingPosts = dbSet.Where(postsPredicate).ToList();
             var existingPostsById = existingPosts.ToDictionary(postIdSelector);
-            var existingPostsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
+            var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
             bool IsExistPredicate(TPost p) => existingPostsById.ContainsKey(postIdSelector(p));
 
             SavePostsOrUsers(_logger, db, Posts, IsExistPredicate,
@@ -36,7 +36,8 @@ namespace tbm.Crawler
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
             db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
 
-            return existingPostsBeforeSave.ToLookup(IsExistPredicate);
+            postsBeforeSave.AddRange(Posts.Values);
+            return postsBeforeSave.ToLookup(IsExistPredicate);
         }
     }
 }
