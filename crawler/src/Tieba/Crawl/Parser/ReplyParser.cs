@@ -2,12 +2,9 @@ namespace tbm.Crawler
 {
     public class ReplyParser : IParser<ReplyPost, Reply>
     {
-        public List<User>? ParsePosts(CrawlRequestFlag requestFlag,
-            IEnumerable<Reply> inPosts, ConcurrentDictionary<ulong, ReplyPost> outPosts)
-        {
+        public void ParsePosts(CrawlRequestFlag requestFlag, IEnumerable<Reply> inPosts,
+            ConcurrentDictionary<ulong, ReplyPost> outPosts, List<User> outUsers) =>
             inPosts.Select(el => (ReplyPost)el).ForEach(i => outPosts[i.Pid] = i);
-            return null;
-        }
     }
 }
 
@@ -37,6 +34,7 @@ namespace TbClient.Post
             }
             catch (Exception e)
             {
+                e.Data["parsed"] = p;
                 e.Data["raw"] = el;
                 throw new Exception("Reply parse error", e);
             }

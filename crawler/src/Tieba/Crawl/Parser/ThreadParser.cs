@@ -2,8 +2,8 @@ namespace tbm.Crawler
 {
     public class ThreadParser : IParser<ThreadPost, Thread>
     {
-        public List<User>? ParsePosts(CrawlRequestFlag requestFlag,
-            IEnumerable<Thread> inPosts, ConcurrentDictionary<ulong, ThreadPost> outPosts)
+        public void ParsePosts(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts,
+            ConcurrentDictionary<ulong, ThreadPost> outPosts, List<User> outUsers)
         {
             if (requestFlag == CrawlRequestFlag.Thread602ClientVersion)
             {
@@ -20,8 +20,6 @@ namespace tbm.Crawler
             {
                 inPosts.Select(el => (ThreadPost)el).ForEach(i => outPosts[i.Tid] = i);
             }
-
-            return null;
         }
     }
 }
@@ -57,6 +55,7 @@ namespace TbClient.Post
             }
             catch (Exception e)
             {
+                e.Data["parsed"] = p;
                 e.Data["raw"] = el;
                 throw new Exception("Thread parse error", e);
             }

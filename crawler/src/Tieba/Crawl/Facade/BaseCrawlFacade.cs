@@ -38,8 +38,8 @@ namespace tbm.Crawler
         }
 
         public void SavePosts<TPostRevision>(
-            out ILookup<bool, TPost> existingOrNewLookupOnOldPosts,
-            out ILookup<bool, TiebaUser> existingOrNewLookupOnOldUsers,
+            out ILookup<bool, TPost>? existingOrNewLookupOnOldPosts,
+            out ILookup<bool, TiebaUser>? existingOrNewLookupOnOldUsers,
             out IEnumerable<TPostRevision> postRevisions)
             where TPostRevision : PostRevision
         {
@@ -47,7 +47,7 @@ namespace tbm.Crawler
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
 
-            existingOrNewLookupOnOldPosts = _saver.SavePosts(db);
+            existingOrNewLookupOnOldPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
             existingOrNewLookupOnOldUsers = Users.SaveUsers(db);
             _ = db.SaveChanges();
             transaction.Commit();
@@ -71,8 +71,7 @@ namespace tbm.Crawler
 
             if (!isCrawlFailed) await CrawlPages(
                 Enumerable.Range((int)(startPage + 1),
-                    (int)(endPage - startPage)).Select(i => (Page)i)
-            );
+                    (int)(endPage - startPage)).Select(i => (Page)i));
             return this;
         }
 
@@ -109,9 +108,16 @@ namespace tbm.Crawler
         {
             var (response, flag) = responseAndFlag;
             var posts = _crawler.GetValidPosts(response);
-            var usersStoreUnderPost = _parser.ParsePosts(flag, posts, ParsedPosts);
-            if (usersStoreUnderPost != null) Users.ParseUsers(usersStoreUnderPost);
-            PostParseCallback(responseAndFlag, posts);
+            try
+            {
+                var usersStoreUnderPost = new List<User>(0); // creating a list with empty initial buffer is fast
+                _parser.ParsePosts(flag, posts, ParsedPosts, usersStoreUnderPost);
+                if (usersStoreUnderPost.Any()) Users.ParseUsers(usersStoreUnderPost);
+            }
+            finally
+            {
+                PostParseCallback(responseAndFlag, posts);
+            }
         }
 
         protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IList<TPostProtoBuf> posts) { }
