@@ -23,7 +23,7 @@ namespace tbm.Crawler
                     })
                     .ConfigureServices((_, service) =>
                     {
-                        service.AddHostedService<Worker>();
+                        service.AddHostedService<MainCrawlWorker>();
                         service.AddHostedService<RetryCrawlWorker>();
                     })
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
@@ -48,7 +48,7 @@ namespace tbm.Crawler
                         var baseClassOfClassesToBeRegister = new List<Type>
                         {
                             typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
-                            typeof(IParser<,>), typeof(BaseSaver<>)
+                            typeof(BaseParser<,>), typeof(BaseSaver<>)
                         };
                         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).Where(t =>
                             baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t))).AsSelf();
