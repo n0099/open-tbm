@@ -20,7 +20,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<(Task<SubReplyResponse>, CrawlRequestFlag)> RequestsFactory(Page page) =>
+        protected override IEnumerable<(Task<SubReplyResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page) =>
             new[]
             {
                 (Requester.RequestProtoBuf<SubReplyRequest, SubReplyResponse>(
@@ -35,7 +35,7 @@ namespace tbm.Crawler
                         }
                     },
                     "12.23.1.0"
-                ), CrawlRequestFlag.None)
+                ), CrawlRequestFlag.None, page)
             };
 
 

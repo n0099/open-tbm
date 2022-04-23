@@ -14,7 +14,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<(Task<ReplyResponse>, CrawlRequestFlag)> RequestsFactory(Page page) =>
+        protected override IEnumerable<(Task<ReplyResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page) =>
             new[]
             {
                 (Requester.RequestProtoBuf<ReplyRequest, ReplyResponse>(
@@ -30,7 +30,7 @@ namespace tbm.Crawler
                         }
                     },
                     "12.12.1.0"
-                ), CrawlRequestFlag.None)
+                ), CrawlRequestFlag.None, page)
             };
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)

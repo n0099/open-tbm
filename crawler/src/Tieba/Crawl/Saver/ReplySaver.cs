@@ -4,12 +4,12 @@ namespace tbm.Crawler
     {
         private readonly Fid _fid;
 
-        public delegate ReplySaver New(ConcurrentDictionary<ulong, ReplyPost> posts, Fid fid);
+        public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts, Fid fid);
 
-        public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<ulong, ReplyPost> posts, Fid fid)
+        public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<PostId, ReplyPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override ILookup<bool, ReplyPost> SavePosts(TbmDbContext db) => SavePosts(db,
+        public override ReturnOfSaver<ReplyPost> SavePosts(TbmDbContext db) => SavePosts(db,
             PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
             PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid)),
             p => p.Pid,

@@ -1,3 +1,4 @@
+using Google.Protobuf.Reflection;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Crawler
@@ -8,23 +9,29 @@ namespace tbm.Crawler
     {
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
-        private readonly IParser<TPost, TPostProtoBuf> _parser;
+        private readonly BaseParser<TPost, TPostProtoBuf> _parser;
         private readonly BaseSaver<TPost> _saver;
         protected readonly UserParserAndSaver Users;
-        protected readonly ConcurrentDictionary<ulong, TPost> ParsedPosts = new();
-        protected readonly Fid Fid;
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
-        private readonly ulong _lockIndex;
+        private readonly FidOrPostId _lockIndex;
+
+        protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
+        public readonly ConcurrentDictionary<Page, (TPost First, TPost Last)> FirstAndLastPostInPages = new();
+        protected readonly Fid Fid;
+        // cache data and page field of protoBuf instance TResponse for every derived classes: https://stackoverflow.com/questions/5851497/static-fields-in-a-base-class-and-derived-classes
+        private static readonly FieldDescriptor ResponseDataField = new TResponse().Descriptor.FindFieldByName("data");
+        // ReSharper disable once StaticMemberInGenericType
+        private static readonly IFieldAccessor ResponsePageFieldAccessor = ResponseDataField.MessageType.FindFieldByName("page").Accessor;
 
         protected BaseCrawlFacade(
             ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
-            IParser<TPost, TPostProtoBuf> parser,
-            Func<ConcurrentDictionary<ulong, TPost>, Fid, BaseSaver<TPost>> saverFactory,
+            BaseParser<TPost, TPostProtoBuf> parser,
+            Func<ConcurrentDictionary<PostId, TPost>, Fid, BaseSaver<TPost>> saverFactory,
             UserParserAndSaver users,
             ClientRequesterTcs requesterTcs,
-            (CrawlerLocks, ulong) lockAndIndex,
+            (CrawlerLocks, FidOrPostId) lockAndIndex,
             Fid fid)
         {
             _logger = logger;
@@ -37,21 +44,22 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
-        public void SavePosts<TPostRevision>(
-            out ILookup<bool, TPost>? existingOrNewLookupOnOldPosts,
-            out ILookup<bool, TiebaUser>? existingOrNewLookupOnOldUsers,
-            out IEnumerable<TPostRevision> postRevisions)
-            where TPostRevision : PostRevision
+        public void SavePosts(out ReturnOfSaver<TPost>? savedPosts)
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
 
-            existingOrNewLookupOnOldPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
-            existingOrNewLookupOnOldUsers = Users.SaveUsers(db);
+            savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
+            Users.SaveUsers(db);
             _ = db.SaveChanges();
             transaction.Commit();
-            postRevisions = db.Set<TPostRevision>().Local.ToList();
+        }
+
+        private static TbClient.Page GetPageFromResponse(TResponse res)
+        {
+            var data = (IMessage)ResponseDataField.Accessor.GetValue(res);
+            return (TbClient.Page)ResponsePageFieldAccessor.GetValue(data);
         }
 
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
@@ -63,10 +71,8 @@ namespace tbm.Crawler
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
 
-                var dataField = new TResponse().Descriptor.FindFieldByName("data");
-                var data = startPageResponse.Select(i => (IMessage)dataField.Accessor.GetValue(i.Item1));
-                var page = data.Select(i => (TbClient.Page)dataField.MessageType.FindFieldByName("page").Accessor.GetValue(i));
-                endPage = Math.Min(endPage, (Page)page.Max(i => i.TotalPage));
+                endPage = Math.Min(endPage,
+                    startPageResponse.Select(i => GetPageFromResponse(i.Item1)).Max(i => (Page)i.TotalPage));
             }, startPage);
 
             if (!isCrawlFailed) await CrawlPages(
@@ -104,19 +110,20 @@ namespace tbm.Crawler
             }
         }
 
-        private void ValidateThenParse((TResponse, CrawlRequestFlag) responseAndFlag)
+        private void ValidateThenParse((TResponse, CrawlRequestFlag, Page) responsePair)
         {
-            var (response, flag) = responseAndFlag;
+            var (response, flag, page) = responsePair;
             var posts = _crawler.GetValidPosts(response);
             try
             {
                 var usersStoreUnderPost = new List<User>(0); // creating a list with empty initial buffer is fast
-                _parser.ParsePosts(flag, posts, ParsedPosts, usersStoreUnderPost);
+                var firstAndLast = _parser.ParsePosts(flag, posts, ParsedPosts, usersStoreUnderPost);
+                if (firstAndLast != null) FirstAndLastPostInPages[page] = firstAndLast.Value;
                 if (usersStoreUnderPost.Any()) Users.ParseUsers(usersStoreUnderPost);
             }
             finally
             {
-                PostParseCallback(responseAndFlag, posts);
+                PostParseCallback((response, flag), posts);
             }
         }
 

@@ -9,7 +9,7 @@ namespace tbm.Crawler
         public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override ILookup<bool, ThreadPost> SavePosts(TbmDbContext db)
+        public override ReturnOfSaver<ThreadPost> SavePosts(TbmDbContext db)
         {
             var ret = SavePosts(db,
                 PredicateBuilder.New<ThreadPost>(p => Posts.Keys.Any(id => id == p.Tid)),

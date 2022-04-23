@@ -33,8 +33,9 @@ global using TbClient.Wrapper;
 global using TbClient;
 
 global using Fid = System.UInt32;
-global using FidOrPostID = System.UInt64;
-global using Page = System.UInt32;
+global using FidOrPostId = System.UInt64;
+global using PostId = System.UInt64;
 global using Tid = System.UInt64;
 global using Pid = System.UInt64;
 global using Time = System.UInt32;
+global using Page = System.UInt32;

@@ -5,9 +5,9 @@ namespace tbm.Crawler
 #pragma warning disable IDE0058 // Expression value is never used
     public class CrawlerLocks : WithLogTrace
     {
-        private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, Time>> _crawling = new();
+        private readonly ConcurrentDictionary<FidOrPostId, ConcurrentDictionary<Page, Time>> _crawling = new();
         // inner value of field _failed with type ushort refers to failed times on this page and index before retry
-        private readonly ConcurrentDictionary<FidOrPostID, ConcurrentDictionary<Page, FailedCount>> _failed = new();
+        private readonly ConcurrentDictionary<FidOrPostId, ConcurrentDictionary<Page, FailedCount>> _failed = new();
         private readonly ILogger<CrawlerLocks> _logger;
         private readonly IConfigurationSection _config;
         private readonly string _postType;
@@ -32,7 +32,7 @@ namespace tbm.Crawler
                     _failed.Count, JsonSerializer.Serialize(_failed));
         }
 
-        public IEnumerable<Page> AcquireRange(FidOrPostID index, IEnumerable<Page> pages)
+        public IEnumerable<Page> AcquireRange(FidOrPostId index, IEnumerable<Page> pages)
         {
             var lockFreePages = pages.ToHashSet();
             lock (_crawling)
@@ -62,7 +62,7 @@ namespace tbm.Crawler
             return lockFreePages;
         }
 
-        public void ReleaseLock(FidOrPostID index, Page page)
+        public void ReleaseLock(FidOrPostId index, Page page)
         {
             lock (_crawling)
             {
@@ -75,7 +75,7 @@ namespace tbm.Crawler
             }
         }
 
-        public void AcquireFailed(FidOrPostID index, Page page)
+        public void AcquireFailed(FidOrPostId index, Page page)
         {
             lock (_failed)
             {
@@ -88,12 +88,12 @@ namespace tbm.Crawler
                 {
                     var newPage = new ConcurrentDictionary<Page, FailedCount>();
                     newPage.TryAdd(page, 1);
-                    if (_failed.TryAdd(index, newPage)) return;
+                    _failed.TryAdd(index, newPage);
                 }
             }
         }
 
-        public Dictionary<FidOrPostID, Dictionary<Page, FailedCount>> RetryAllFailed()
+        public Dictionary<FidOrPostId, Dictionary<Page, FailedCount>> RetryAllFailed()
         {
             lock (_failed)
             {

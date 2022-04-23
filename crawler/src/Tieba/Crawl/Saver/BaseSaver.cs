@@ -3,22 +3,22 @@ namespace tbm.Crawler
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost
     {
         private readonly ILogger<BaseSaver<TPost>> _logger;
-        protected readonly ConcurrentDictionary<ulong, TPost> Posts;
+        protected readonly ConcurrentDictionary<PostId, TPost> Posts;
 
-        public abstract ILookup<bool, TPost> SavePosts(TbmDbContext db);
+        public abstract ReturnOfSaver<TPost> SavePosts(TbmDbContext db);
 
-        protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<ulong, TPost> posts)
+        protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts)
         {
             _logger = logger;
             Posts = posts;
         }
 
-        protected ILookup<bool, TPost> SavePosts<TPostRevision>(
+        protected ReturnOfSaver<TPost> SavePosts<TPostRevision>(
             TbmDbContext db,
             ExpressionStarter<TPost> postsPredicate,
             ExpressionStarter<PostIndex> indexPredicate,
-            Func<TPost, ulong> postIdSelector,
-            Expression<Func<PostIndex, ulong>> indexPostIdSelector,
+            Func<TPost, PostId> postIdSelector,
+            Expression<Func<PostIndex, PostId>> indexPostIdSelector,
             Func<TPost, PostIndex> indexFactory,
             Func<TPost, TPostRevision> revisionFactory)
         {
@@ -29,15 +29,14 @@ namespace tbm.Crawler
             var existingPosts = dbSet.Where(postsPredicate).ToList();
             var existingPostsById = existingPosts.ToDictionary(postIdSelector);
             var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
-            bool IsExistPredicate(TPost p) => existingPostsById.ContainsKey(postIdSelector(p));
 
-            SavePostsOrUsers(_logger, db, Posts, IsExistPredicate,
-                p => existingPostsById[postIdSelector(p)], revisionFactory);
+            SavePostsOrUsers(_logger, db, Posts, revisionFactory,
+                p => existingPostsById.ContainsKey(postIdSelector(p)),
+                p => existingPostsById[postIdSelector(p)]);
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
             db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
 
-            postsBeforeSave.AddRange(Posts.Values);
-            return postsBeforeSave.ToLookup(IsExistPredicate);
+            return new ReturnOfSaver<TPost>(postsBeforeSave, Posts.Values, postIdSelector);
         }
     }
 }

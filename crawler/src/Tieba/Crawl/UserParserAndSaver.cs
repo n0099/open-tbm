@@ -46,21 +46,17 @@ namespace tbm.Crawler
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
 
-        public ILookup<bool, TiebaUser>? SaveUsers(TbmDbContext db)
+        public void SaveUsers(TbmDbContext db)
         {
-            if (_users.IsEmpty) return null;
+            if (_users.IsEmpty) return;
             // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
             var existingUsers = (from user in db.Users where _users.Keys.Any(uid => uid == user.Uid) select user).ToList();
             var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
-            var usersBeforeSave = existingUsers.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
-            bool IsExistPredicate(TiebaUser u) => existingUsersByUid.ContainsKey(u.Uid);
 
-            SavePostsOrUsers(_logger, db, _users, IsExistPredicate,
-                u => existingUsersByUid[u.Uid],
-                u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid});
-
-            usersBeforeSave.AddRange(_users.Values);
-            return usersBeforeSave.ToLookup(IsExistPredicate);
+            SavePostsOrUsers(_logger, db, _users,
+                u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid},
+                u => existingUsersByUid.ContainsKey(u.Uid),
+                u => existingUsersByUid[u.Uid]);
         }
     }
 }

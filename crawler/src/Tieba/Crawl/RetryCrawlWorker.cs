@@ -2,12 +2,12 @@ namespace tbm.Crawler
 {
     public class RetryCrawlWorker : BackgroundService
     {
-        private readonly ILogger<Worker> _logger;
+        private readonly ILogger<RetryCrawlWorker> _logger;
         private readonly IIndex<string, CrawlerLocks.New> _registeredLocksFactory;
         private readonly Timer _timer = new() {Interval = Interval};
         private const int Interval = 60 * 1000; // per minute
 
-        public RetryCrawlWorker(ILogger<Worker> logger, IIndex<string, CrawlerLocks.New> registeredLocksFactory)
+        public RetryCrawlWorker(ILogger<RetryCrawlWorker> logger, IIndex<string, CrawlerLocks.New> registeredLocksFactory)
         {
             _logger = logger;
             _registeredLocksFactory = registeredLocksFactory;
@@ -38,7 +38,7 @@ namespace tbm.Crawler
                         _logger.LogTrace("Retry for previous failed thread crawl with fid:{}, forumName:{} started", fid, forumName);
                         var crawler = scope.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                         await crawler.CrawlPages(indexPagesPair.Value.Keys);
-                        crawler.SavePosts<ThreadRevision>(out _, out _, out _);
+                        crawler.SavePosts(out _);
                     }
                     else if (lockType == "reply")
                     {
@@ -47,7 +47,7 @@ namespace tbm.Crawler
                         _logger.LogTrace("Retry for previous failed reply crawl with fid:{}, tid:{} started", parentsId.Fid, parentsId.Tid);
                         var crawler = scope.Resolve<ReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid);
                         await crawler.CrawlPages(indexPagesPair.Value.Keys);
-                        crawler.SavePosts<ReplyRevision>(out _, out _, out _);
+                        crawler.SavePosts(out _);
                     }
                     else if (lockType == "subReply")
                     {
@@ -56,7 +56,7 @@ namespace tbm.Crawler
                         _logger.LogTrace("Retry for previous failed sub reply crawl with fid:{}, tid:{}, pid:{} started", parentsId.Fid, parentsId.Tid, parentsId.Pid);
                         var crawler = scope.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid);
                         await crawler.CrawlPages(indexPagesPair.Value.Keys);
-                        crawler.SavePosts<SubReplyRevision>(out _, out _, out _);
+                        crawler.SavePosts(out _);
                     }
                     else if (lockType == "threadLate")
                     {

@@ -6,9 +6,9 @@ namespace tbm.Crawler
             ILogger<CommonInSavers<T>> logger,
             TbmDbContext db,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
+            Func<TPostOrUser, TRevision> revisionFactory,
             Func<TPostOrUser, bool> isExistPredicate,
-            Func<TPostOrUser, TPostOrUser> existedSelector,
-            Func<TPostOrUser, TRevision> revisionFactory)
+            Func<TPostOrUser, TPostOrUser> existedSelector)
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
             db.AddRange((IEnumerable<object>)GetRevisionsForObjectsThenMerge(existedOrNew[true], existedSelector, revisionFactory, logger));

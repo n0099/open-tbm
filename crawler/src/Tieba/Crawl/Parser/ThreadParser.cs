@@ -1,25 +1,25 @@
 namespace tbm.Crawler
 {
-    public class ThreadParser : IParser<ThreadPost, Thread>
+    public class ThreadParser : BaseParser<ThreadPost, Thread>
     {
-        public void ParsePosts(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts,
-            ConcurrentDictionary<ulong, ThreadPost> outPosts, List<User> outUsers)
+        protected override (IEnumerable<ThreadPost> parsed, Func<ThreadPost, PostId> postIdSelector)? ParsePostsInternal(
+            CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts,
+            ConcurrentDictionary<PostId, ThreadPost> outPosts, List<User> outUsers)
         {
             if (requestFlag == CrawlRequestFlag.Thread602ClientVersion)
             {
                 var posts = outPosts.Values;
-                Thread? GetInPostsByTid(IPost p) => inPosts.FirstOrDefault(p2 => (ulong)p2.Tid == p.Tid);
-                posts.Where(p => p.LatestReplierUid == null)
-                    .ForEach(p => p.LatestReplierUid = GetInPostsByTid(p)?.LastReplyer.Uid);
-                posts.Where(p => p.StickyType != null)
-                    .ForEach(p => p.AuthorManagerType = GetInPostsByTid(p)?.Author.BawuType);
-                posts.Where(p => p.Location != null)
-                    .ForEach(p => p.Location = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(p)?.Location));
+                Thread? GetInPostsByTid(IPost t) => inPosts.FirstOrDefault(t2 => (Tid)t2.Tid == t.Tid);
+                posts.Where(t => t.LatestReplierUid == null)
+                    .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer.Uid);
+                posts.Where(t => t.StickyType != null)
+                    .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
+                posts.Where(t => t.Location != null)
+                    .ForEach(t => t.Location = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
+                return null;
             }
-            else
-            {
-                inPosts.Select(el => (ThreadPost)el).ForEach(i => outPosts[i.Tid] = i);
-            }
+
+            return (inPosts.Select(el => (ThreadPost)el), p => p.Tid);
         }
     }
 }
