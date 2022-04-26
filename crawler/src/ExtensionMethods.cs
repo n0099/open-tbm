@@ -100,5 +100,20 @@ namespace tbm.Crawler
 
             return e;
         }
+
+        public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value) where T2 : struct
+        {
+            if (value != null) dict[key] = value.Value;
+        }
+
+        public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value)
+        {
+            if (value != null) dict[key] = value;
+        }
+
+        public static void AddIfNotNull<T>(this IList<T> list, T? item)
+        {
+            if (item != null) list.Add(item);
+        }
     }
 }

@@ -25,48 +25,51 @@ namespace tbm.Crawler
         {
             foreach (var lockType in Program.RegisteredCrawlerLocks)
             {
-                var crawlerLock = _registeredLocksFactory[lockType](lockType);
-                await Task.WhenAll(crawlerLock.RetryAllFailed().Select(async indexPagesPair =>
+                var failed = _registeredLocksFactory[lockType](lockType).RetryAllFailed();
+                if (lockType == "threadLate")
                 {
                     await using var scope = Program.Autofac.BeginLifetimeScope();
                     var db = scope.Resolve<TbmDbContext.New>()(0);
+                    var tidAndFidRecords = from t in db.PostsIndex where t.Type == "thread" && failed.Keys.Any(i => i == t.Tid) select new {t.Fid, t.Tid};
+                    foreach (var g in tidAndFidRecords.ToList().GroupBy(record => record.Fid))
+                    {
+                        var threadsId = g.Select(i => i.Tid).ToList();
+                        _logger.LogTrace("Retry for previous failed thread late crawl with fid:{}, threadsId:{} started", g.Key, JsonSerializer.Serialize(threadsId));
+                        await scope.Resolve<ThreadLateCrawlerAndSaver.New>()(g.Key, threadsId).Crawl();
+                    }
+                    continue; // skip into next lock type
+                }
+                await Task.WhenAll(failed.Select(async indexPagesPair =>
+                {
+                    await using var scope = Program.Autofac.BeginLifetimeScope();
+                    var db = scope.Resolve<TbmDbContext.New>()(0);
+                    var (fidOrPostId, pages) = indexPagesPair;
                     if (lockType == "thread")
                     {
-                        var fid = (Fid)indexPagesPair.Key;
-                        var forumName = (from f in db.ForumsInfo where f.Fid == fid select f.Name).FirstOrDefault();
+                        var forumName = (from f in db.ForumsInfo where f.Fid == fidOrPostId select f.Name).FirstOrDefault();
                         if (forumName == null) return;
-                        _logger.LogTrace("Retry for previous failed thread crawl with fid:{}, forumName:{} started", fid, forumName);
-                        var crawler = scope.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-                        await crawler.CrawlPages(indexPagesPair.Value.Keys);
-                        crawler.SavePosts(out _);
+                        _logger.LogTrace("Retry for previous failed thread crawl with fid:{}, forumName:{} started", fidOrPostId, forumName);
+                        var crawler = scope.Resolve<ThreadCrawlFacade.New>()((Fid)fidOrPostId, forumName);
+                        await crawler.CrawlPages(pages);
+                        _ = crawler.SavePosts();
                     }
                     else if (lockType == "reply")
                     {
-                        var parentsId = (from p in db.PostsIndex where p.Type == "thread" && p.Tid == indexPagesPair.Key select new {p.Fid, p.Tid}).FirstOrDefault();
+                        var parentsId = (from p in db.PostsIndex where p.Type == "thread" && p.Tid == fidOrPostId select new {p.Fid, p.Tid}).FirstOrDefault();
                         if (parentsId == null) return;
                         _logger.LogTrace("Retry for previous failed reply crawl with fid:{}, tid:{} started", parentsId.Fid, parentsId.Tid);
                         var crawler = scope.Resolve<ReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid);
-                        await crawler.CrawlPages(indexPagesPair.Value.Keys);
-                        crawler.SavePosts(out _);
+                        await crawler.CrawlPages(pages);
+                        _ = crawler.SavePosts();
                     }
                     else if (lockType == "subReply")
                     {
-                        var parentsId = (from p in db.PostsIndex where p.Type == "reply" && p.Pid == indexPagesPair.Key select new {p.Fid, p.Tid, p.Pid}).FirstOrDefault();
+                        var parentsId = (from p in db.PostsIndex where p.Type == "reply" && p.Pid == fidOrPostId select new {p.Fid, p.Tid, p.Pid}).FirstOrDefault();
                         if (parentsId == null) return;
                         _logger.LogTrace("Retry for previous failed sub reply crawl with fid:{}, tid:{}, pid:{} started", parentsId.Fid, parentsId.Tid, parentsId.Pid);
                         var crawler = scope.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid);
-                        await crawler.CrawlPages(indexPagesPair.Value.Keys);
-                        crawler.SavePosts(out _);
-                    }
-                    else if (lockType == "threadLate")
-                    {
-                        var tidAndFidPairs = from t in db.PostsIndex where t.Type == "thread" && indexPagesPair.Value.Keys.Any(i => i == t.Tid) select new {t.Fid, t.Tid};
-                        foreach (var g in tidAndFidPairs.ToList().GroupBy(pair => pair.Fid))
-                        {
-                            var threadsId = g.Select(i => i.Tid).ToList();
-                            _logger.LogTrace("Retry for previous failed thread late crawl with fid:{}, threadsId:{} started", g.Key, JsonSerializer.Serialize(threadsId));
-                            await scope.Resolve<ThreadLateCrawlerAndSaver.New>()(g.Key, threadsId).Crawl();
-                        }
+                        await crawler.CrawlPages(pages);
+                        _ = crawler.SavePosts();
                     }
                 }));
             }

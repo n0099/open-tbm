@@ -4,15 +4,15 @@ namespace tbm.Crawler
     {
         public (TPost First, TPost Last)? ParsePosts(
             CrawlRequestFlag requestFlag, IEnumerable<TPostProtoBuf> inPosts,
-            ConcurrentDictionary<ulong, TPost> outPosts, List<User> outUsers)
+            in ConcurrentDictionary<ulong, TPost> outPosts, in List<User> outUsers)
         {
-            var pair = ParsePostsInternal(requestFlag, inPosts, outPosts, outUsers);
-            if (pair == null) return null;
-            var (parsed, postIdSelector) = pair.Value;
-            var parsedList = parsed.ToList();
-            foreach (var p in parsedList) outPosts[postIdSelector(p)] = p;
+            var parsedTuple = ParsePostsInternal(requestFlag, inPosts, outPosts, outUsers);
+            if (parsedTuple == null) return null;
+            var (parsed, postIdSelector) = parsedTuple.Value;
+            var parsedPosts = parsed.ToList();
+            foreach (var p in parsedPosts) outPosts[postIdSelector(p)] = p;
 
-            IEnumerable<TPost> returnPair = parsedList;
+            IEnumerable<TPost> returnPair = parsedPosts;
             if (returnPair is List<ThreadPost> threads)
             { // filter out sticky threads
                 returnPair = (IEnumerable<TPost>)threads.Where(t => t.StickyType == null);

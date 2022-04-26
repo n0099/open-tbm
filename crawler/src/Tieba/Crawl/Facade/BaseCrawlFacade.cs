@@ -44,16 +44,17 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
-        public void SavePosts(out ReturnOfSaver<TPost>? savedPosts)
+        public ReturnOfSaver<TPost>? SavePosts()
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
 
-            savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
+            var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
             Users.SaveUsers(db);
             _ = db.SaveChanges();
             transaction.Commit();
+            return savedPosts;
         }
 
         private static TbClient.Page GetPageFromResponse(TResponse res)
@@ -110,15 +111,14 @@ namespace tbm.Crawler
             }
         }
 
-        private void ValidateThenParse((TResponse, CrawlRequestFlag, Page) responsePair)
+        private void ValidateThenParse((TResponse, CrawlRequestFlag, Page) responseTuple)
         {
-            var (response, flag, page) = responsePair;
+            var (response, flag, page) = responseTuple;
             var posts = _crawler.GetValidPosts(response);
             try
             {
                 var usersStoreUnderPost = new List<User>(0); // creating a list with empty initial buffer is fast
-                var firstAndLast = _parser.ParsePosts(flag, posts, ParsedPosts, usersStoreUnderPost);
-                if (firstAndLast != null) FirstAndLastPostInPages[page] = firstAndLast.Value;
+                FirstAndLastPostInPages.SetIfNotNull(page, _parser.ParsePosts(flag, posts, ParsedPosts, usersStoreUnderPost));
                 if (usersStoreUnderPost.Any()) Users.ParseUsers(usersStoreUnderPost);
             }
             finally
