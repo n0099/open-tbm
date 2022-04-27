@@ -47,7 +47,7 @@ namespace tbm.Crawler
                     p.SetValue(oldObj, newValue);
 
                     var revisionProp = revisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
-                    if (revisionProp == null)
+                    if (revisionProp is null and not {Name: nameof(ThreadPost.Title)}) // thread title might be set by ReplyCrawlFacade.PostParseCallback()
                         logger.LogWarning("updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             p.Name, newValue, oldValue, JsonSerializer.Serialize(newObj), JsonSerializer.Serialize(oldObj));

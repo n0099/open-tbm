@@ -15,7 +15,7 @@ namespace tbm.Crawler
         {
             var data = responseAndFlag.Item1.Data;
             if (data.Page.CurrentPage == 1)
-            { // update parent thread of reply with new title which is extracted from the first floor reply in first page
+            { // update parent thread of reply with new title that extracted from the first floor reply in first page
                 using var scope = Program.Autofac.BeginLifetimeScope();
                 var db = scope.Resolve<TbmDbContext.New>()(Fid);
                 var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
@@ -35,7 +35,7 @@ namespace tbm.Crawler
             Users.ParseUsers(users);
 
             posts.Select(p => p.Pid).ForEach(pid =>
-            { // fill the values of some field of reply from user list which is out of post list
+            { // fill the values for some field of reply from user list which is out of post list
                 var p = ParsedPosts[pid];
                 var author = users.First(u => u.Uid == p.AuthorUid);
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator

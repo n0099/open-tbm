@@ -48,7 +48,7 @@ namespace TbClient.Post
                 p.ViewNum = (uint)el.ViewNum;
                 p.ShareNum = (uint)el.ShareNum;
                 p.AgreeNum = el.AgreeNum;
-                p.DisagreeNum = (int)el.Agree.DisagreeNum;
+                p.DisagreeNum = (int)(el?.Agree.DisagreeNum ?? 0);
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.Location);
                 p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
                 return p;

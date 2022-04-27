@@ -33,7 +33,7 @@ namespace tbm.Crawler
                     u.Name = name;
                     u.DisplayName = name == nameShow ? null : nameShow;
                     u.AvatarUrl = el.Portrait;
-                    u.Gender = (ushort)el.Gender; // null when he haven't explicitly set his gender
+                    u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
                     u.IconInfo = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
                     return u;

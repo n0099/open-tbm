@@ -50,8 +50,8 @@ namespace tbm.Crawler
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
 
-            var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
             Users.SaveUsers(db);
+            var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
             _ = db.SaveChanges();
             transaction.Commit();
             return savedPosts;

@@ -22,9 +22,12 @@ namespace tbm.Crawler
             // prevent overwrite with default null value on field which will be update by ThreadLateSaveInfoCrawler
             db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Properties
                 .Where(p => p.Metadata.Name == nameof(ThreadPost.AuthorPhoneType)
-                            // prevent overwrite empty string on thread title which have been set by ReplyCrawlFacade.PostParseCallback()
+                            // prevent overwrite empty string on thread title that have been set by ReplyCrawlFacade.PostParseCallback()
                             || (p.Metadata.Name == nameof(ThreadPost.Title) && (string?)p.CurrentValue == ""))
                 .ForEach(p => p.IsModified = false));
+
+            // the value of user gender returned by thread crawler is always 0, so we shouldn't update existing value that is set before
+            db.ChangeTracker.Entries<TiebaUser>().ForEach(e => e.Property(nameof(TiebaUser.Gender)).IsModified = false);
             return ret;
         }
     }

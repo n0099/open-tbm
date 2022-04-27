@@ -1,5 +1,8 @@
 namespace tbm.Crawler
 {
+    using SavedThreads = List<ReturnOfSaver<ThreadPost>>;
+    using SavedRepliesByTid = ConcurrentDictionary<Tid, ReturnOfSaver<ReplyPost>>;
+
     public class MainCrawlWorker : BackgroundService
     {
         private readonly ILogger<MainCrawlWorker> _logger;
@@ -25,8 +28,7 @@ namespace tbm.Crawler
                 await Task.WhenAll(forums.ToList().Select(async fidAndName =>
                 {
                     var fid = fidAndName.Fid;
-                    var flatSavedThreads = (await CrawlThreads(fid, fidAndName.Name)).Select(i => i.Value);
-                    await CrawlReplies(fid, flatSavedThreads);
+                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads(fidAndName.Name, fid), fid), fid);
                 }));
             }
             catch (Exception e)
@@ -35,23 +37,23 @@ namespace tbm.Crawler
             }
         }
 
-        private async Task<Dictionary<Page, ReturnOfSaver<ThreadPost>>> CrawlThreads(Fid fid, string forumName)
+        private async Task<SavedThreads> CrawlThreads(string forumName, Fid fid)
         {
             await using var scope = Program.Autofac.BeginLifetimeScope();
-            var savedPostsByPage = new Dictionary<Page, ReturnOfSaver<ThreadPost>>();
+            var savedThreads = new SavedThreads();
             Time lastThreadTime;
             Page crawlingPage = 0;
             if (!_latestReplyTimeCheckpointCache.TryGetValue(fid, out var timeInPreviousCrawl))
                 // get the largest value of field latestReplyTime in all stored threads of this forum
                 // this approach is not as accurate as extracting the last thread in the response list
-                timeInPreviousCrawl = scope.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => t.LatestReplyTime);
+                // https://stackoverflow.com/questions/341264/max-or-default
+                timeInPreviousCrawl = scope.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
             do
             {
                 crawlingPage++;
                 await using var crawlScope = scope.BeginLifetimeScope();
                 var crawler = crawlScope.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-                savedPostsByPage.SetIfNotNull(crawlingPage,
-                    (await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts());
+                savedThreads.AddIfNotNull((await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts());
 
                 var (firstThread, lastThread) = crawler.FirstAndLastPostInPages[crawlingPage];
                 lastThreadTime = lastThread.LatestReplyTime;
@@ -59,11 +61,10 @@ namespace tbm.Crawler
                     _latestReplyTimeCheckpointCache[fid] = firstThread.LatestReplyTime;
             } while (lastThreadTime > timeInPreviousCrawl);
 
-            return savedPostsByPage;
+            return savedThreads;
         }
 
-        private static async Task<IEnumerable<ReturnOfSaver<ReplyPost>>>
-            CrawlReplies(Fid fid, IEnumerable<ReturnOfSaver<ThreadPost>> savedThreads)
+        private static async Task<SavedRepliesByTid> CrawlReplies(SavedThreads savedThreads, Fid fid)
         {
             await using var scope = Program.Autofac.BeginLifetimeScope();
             var shouldCrawlReplyTid = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
@@ -72,21 +73,43 @@ namespace tbm.Crawler
                 threads.Existing.ForEach(beforeAndAfter =>
                 {
                     var (before, after) = beforeAndAfter;
-                    if (before.ReplyNum < after.ReplyNum
-                        || before.LatestReplyTime < after.LatestReplyTime
+                    if (before.ReplyNum != after.ReplyNum
+                        || before.LatestReplyTime != after.LatestReplyTime
                         || before.LatestReplierUid != after.LatestReplierUid)
                         _ = shouldCrawl.Add(before.Tid);
                 });
                 return shouldCrawl;
             });
-            var savedPosts = new List<ReturnOfSaver<ReplyPost>>();
+            var savedRepliesByTid = new SavedRepliesByTid();
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
             {
                 await using var crawlScope = scope.BeginLifetimeScope();
                 var crawler = crawlScope.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedPosts.AddIfNotNull((await crawler.CrawlPageRange(1)).SavePosts());
+                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SavePosts());
             }));
-            return savedPosts;
+            return savedRepliesByTid;
+        }
+
+        private static async Task CrawlSubReplies(SavedRepliesByTid savedRepliesByTid, Fid fid)
+        {
+            await using var scope = Program.Autofac.BeginLifetimeScope();
+            var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid tid, Pid pid)>(), (shouldCrawl, tidAndReplies) =>
+            {
+                var (tid, replies) = tidAndReplies;
+                replies.NewlyAdded.ForEach(i => shouldCrawl.Add((tid, i.Pid)));
+                replies.Existing.ForEach(beforeAndAfter =>
+                {
+                    var (before, after) = beforeAndAfter;
+                    if (before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
+                });
+                return shouldCrawl;
+            });
+            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>
+            {
+                var (tid, pid) = tidAndPid;
+                await using var crawlScope = scope.BeginLifetimeScope();
+                _ = (await crawlScope.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SavePosts();
+            }));
         }
     }
 }
