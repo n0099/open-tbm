@@ -30,7 +30,7 @@ namespace tbm.Crawler
             var existingPostsById = existingPosts.ToDictionary(postIdSelector);
             var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
 
-            SavePostsOrUsers(_logger, db, Posts, revisionFactory,
+            SavePostsOrUsers(_logger, db, false, Posts, revisionFactory,
                 p => existingPostsById.ContainsKey(postIdSelector(p)),
                 p => existingPostsById[postIdSelector(p)]);
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);

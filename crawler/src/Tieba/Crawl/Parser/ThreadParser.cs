@@ -11,7 +11,8 @@ namespace tbm.Crawler
                 var posts = outPosts.Values;
                 Thread? GetInPostsByTid(IPost t) => inPosts.FirstOrDefault(t2 => (Tid)t2.Tid == t.Tid);
                 posts.Where(t => t.LatestReplierUid == null)
-                    .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer.Uid);
+                    // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
+                    .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
                 posts.Where(t => t.StickyType != null)
                     .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
                 posts.Where(t => t.Location != null)
@@ -48,7 +49,8 @@ namespace TbClient.Post
                 p.ViewNum = (uint)el.ViewNum;
                 p.ShareNum = (uint)el.ShareNum;
                 p.AgreeNum = el.AgreeNum;
-                p.DisagreeNum = (int)(el?.Agree.DisagreeNum ?? 0);
+                // when the thread is livepost, the agree field will not exists
+                p.DisagreeNum = (int)(el?.Agree?.DisagreeNum ?? 0);
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.Location);
                 p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
                 return p;

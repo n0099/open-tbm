@@ -27,9 +27,12 @@ namespace tbm.Crawler
             if (!ShouldLogTrace()) return;
             lock (_crawling)
             lock (_failed)
+            {
+                var crawlingWithoutEmpty = _crawling.Where(i => i.Value.Count != 0).ToList();
                 _logger.LogTrace("Lock: type={} crawlingCount={} crawlingPagesCount={} failedCount={} failed={}", _postType,
-                    _crawling.Count, JsonSerializer.Serialize(_crawling.ToDictionary(i => i.Key, i => i.Value.Count)),
+                    crawlingWithoutEmpty.Count(), JsonSerializer.Serialize(crawlingWithoutEmpty.ToDictionary(i => i.Key, i => i.Value.Count)),
                     _failed.Count, JsonSerializer.Serialize(_failed));
+            }
         }
 
         public IEnumerable<Page> AcquireRange(FidOrPostId index, IEnumerable<Page> pages)

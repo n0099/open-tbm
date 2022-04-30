@@ -1,9 +1,12 @@
+using Uid = System.Int64;
+
 namespace tbm.Crawler
 {
     public class UserParserAndSaver : CommonInSavers<UserParserAndSaver>
     {
         private readonly ILogger<UserParserAndSaver> _logger;
-        private readonly ConcurrentDictionary<long, TiebaUser> _users = new();
+        private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
+        private static readonly HashSet<Uid> UidLock = new();
 
         public UserParserAndSaver(ILogger<UserParserAndSaver> logger) => _logger = logger;
 
@@ -46,17 +49,28 @@ namespace tbm.Crawler
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
 
-        public void SaveUsers(TbmDbContext db)
+        public IEnumerable<Uid>? SaveUsers(TbmDbContext db, bool shouldIgnoreUpdatesOnGender)
         {
-            if (_users.IsEmpty) return;
-            // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
-            var existingUsers = (from user in db.Users where _users.Keys.Any(uid => uid == user.Uid) select user).ToList();
-            var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
+            if (_users.IsEmpty) return null;
+            lock (UidLock)
+            {
+                var usersExceptLocked = _users.ExceptBy(UidLock, u => u.Key).ToDictionary(i => i.Key, i => i.Value);;
+                UidLock.UnionWith(usersExceptLocked.Keys);
+                // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
+                var existingUsers = (from user in db.Users where usersExceptLocked.Keys.Any(uid => uid == user.Uid) select user).ToList();
+                var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
 
-            SavePostsOrUsers(_logger, db, _users,
-                u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid},
-                u => existingUsersByUid.ContainsKey(u.Uid),
-                u => existingUsersByUid[u.Uid]);
+                SavePostsOrUsers(_logger, db, shouldIgnoreUpdatesOnGender, usersExceptLocked,
+                    u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid},
+                    u => existingUsersByUid.ContainsKey(u.Uid),
+                    u => existingUsersByUid[u.Uid]);
+                return usersExceptLocked.Keys.ToList();
+            }
+        }
+
+        public void ReleaseLocks(IEnumerable<Uid> usersId)
+        {
+            lock (UidLock) UidLock.ExceptWith(usersId);
         }
     }
 }

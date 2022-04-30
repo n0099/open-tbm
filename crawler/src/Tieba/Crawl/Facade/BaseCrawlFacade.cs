@@ -50,10 +50,17 @@ namespace tbm.Crawler
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
             using var transaction = db.Database.BeginTransaction();
 
-            Users.SaveUsers(db);
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
-            _ = db.SaveChanges();
-            transaction.Commit();
+            var savedUsersId = Users.SaveUsers(db, GetType() == typeof(ThreadCrawlFacade));
+            try
+            {
+                _ = db.SaveChanges();
+                transaction.Commit();
+            }
+            finally
+            {
+                if (savedUsersId != null) Users.ReleaseLocks(savedUsersId);
+            }
             return savedPosts;
         }
 
@@ -100,7 +107,10 @@ namespace tbm.Crawler
                 e.Data["fid"] = Fid;
                 e = _crawler.FillExceptionData(e).ExtractInnerExceptionsData();
 
-                _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, e, "exception");
+                if (e is TiebaException)
+                    _logger.LogWarning("TiebaException: {} {}", e.Message, JsonSerializer.Serialize(e.Data));
+                else
+                    _logger.LogError(e, "Exception");
                 _requesterTcs.Decrease();
                 _locks.AcquireFailed(_lockIndex, page);
                 return true;

@@ -33,7 +33,7 @@ namespace tbm.Crawler
             }
             catch (Exception e)
             {
-                _logger.LogError("exception: {}", e);
+                _logger.LogError(e, "Exception");
             }
         }
 
@@ -93,14 +93,17 @@ namespace tbm.Crawler
         private static async Task CrawlSubReplies(SavedRepliesByTid savedRepliesByTid, Fid fid)
         {
             await using var scope = Program.Autofac.BeginLifetimeScope();
-            var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid tid, Pid pid)>(), (shouldCrawl, tidAndReplies) =>
+            var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
-                replies.NewlyAdded.ForEach(i => shouldCrawl.Add((tid, i.Pid)));
+                replies.NewlyAdded.ForEach(i =>
+                {
+                    if (i.SubReplyNum != 0) shouldCrawl.Add((tid, i.Pid));
+                });
                 replies.Existing.ForEach(beforeAndAfter =>
                 {
                     var (before, after) = beforeAndAfter;
-                    if (before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
+                    if (after.SubReplyNum != 0 && before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
                 });
                 return shouldCrawl;
             });
