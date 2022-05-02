@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class ThreadRevision : PostRevision
+    public class ThreadRevision : BaseRevision
     {
         public ulong Tid { get; set; }
         public string? StickyType { get; set; }

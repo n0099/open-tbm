@@ -49,18 +49,19 @@ namespace tbm.Crawler
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
 
-        public IEnumerable<Uid>? SaveUsers(TbmDbContext db, bool shouldIgnoreUpdatesOnGender)
+        public IEnumerable<Uid>? SaveUsers(TbmDbContext db)
         {
             if (_users.IsEmpty) return null;
             lock (UidLock)
             {
                 var usersExceptLocked = _users.ExceptBy(UidLock, u => u.Key).ToDictionary(i => i.Key, i => i.Value);;
+                if (usersExceptLocked.Count == 0) return null;
                 UidLock.UnionWith(usersExceptLocked.Keys);
                 // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
                 var existingUsers = (from user in db.Users where usersExceptLocked.Keys.Any(uid => uid == user.Uid) select user).ToList();
                 var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
 
-                SavePostsOrUsers(_logger, db, shouldIgnoreUpdatesOnGender, usersExceptLocked,
+                SavePostsOrUsers(_logger, db, usersExceptLocked,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid},
                     u => existingUsersByUid.ContainsKey(u.Uid),
                     u => existingUsersByUid[u.Uid]);

@@ -1,72 +1,64 @@
 namespace tbm.Crawler
 {
-    public abstract class CommonInSavers<T> where T : CommonInSavers<T>
+    public abstract class InternalCommonInSavers
+    {
+        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = new List<Type>
+        { // static field in this non generic class will be shared across all reified generic derived classes
+            typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)
+        }.ToDictionary(i => i, i => i.GetProperties().AsEnumerable());
+    }
+
+    public abstract class CommonInSavers<TSaver> : InternalCommonInSavers where TSaver : CommonInSavers<TSaver>
     {
         protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
-            ILogger<CommonInSavers<T>> logger,
+            ILogger<CommonInSavers<TSaver>> logger,
             TbmDbContext db,
-            bool shouldIgnoreUpdatesOnGender,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             Func<TPostOrUser, TRevision> revisionFactory,
             Func<TPostOrUser, bool> isExistPredicate,
-            Func<TPostOrUser, TPostOrUser> existedSelector)
+            Func<TPostOrUser, TPostOrUser> existedSelector) where TRevision : BaseRevision
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.AddRange((IEnumerable<object>)GetRevisionsForObjectsThenMerge(existedOrNew[true], existedSelector, revisionFactory, logger, shouldIgnoreUpdatesOnGender));
-            var newPostsOrUsers = ((IEnumerable<object>)existedOrNew[false]).ToList();
-            if (newPostsOrUsers.Any()) db.AddRange(newPostsOrUsers);
-        }
-
-        private static IEnumerable<TRevision> GetRevisionsForObjectsThenMerge<TObject, TRevision>(
-            IEnumerable<TObject> newObjects,
-            Func<TObject, TObject> oldObjectSelector,
-            Func<TObject, TRevision> revisionFactory,
-            ILogger<CommonInSavers<T>> logger,
-            bool shouldIgnoreUpdatesOnGender)
-        {
-            var objectProps = typeof(TObject).GetProperties()
-                .Where(p => p.Name is not (nameof(IEntityWithTimestampFields.CreatedAt) or nameof(IEntityWithTimestampFields.UpdatedAt))).ToList();
-            var revisionProps = typeof(TRevision).GetProperties();
-
-            return newObjects.Select(newObj =>
+            db.AddRange((IEnumerable<object>)existedOrNew[false]);
+            db.AddRange(existedOrNew[true].Select(currentPostOrUser =>
             {
+                var originalPostOrUser = existedSelector(currentPostOrUser);
+                if (currentPostOrUser == null || originalPostOrUser == null) return default;
+
+                var entry = db.Entry(originalPostOrUser);
+                entry.CurrentValues.SetValues(currentPostOrUser);
+                // prevent override fields of IEntityWithTimestampFields with the default value 0
+                entry.Properties.Where(p => p.Metadata.Name is nameof(IEntityWithTimestampFields.CreatedAt)
+                    or nameof(IEntityWithTimestampFields.UpdatedAt)).ForEach(p => p.IsModified = false);
+
                 var revision = default(TRevision);
-                var oldObj = oldObjectSelector(newObj);
-                foreach (var p in objectProps)
+                foreach (var p in entry.Properties)
                 {
-                    var newValue = p.GetValue(newObj);
-                    var oldValue = p.GetValue(oldObj);
-                    var isBlobEqual = false;
-                    if (oldValue is byte[] o && newValue is byte[] n)
-                    { // https://stackoverflow.com/questions/43289/comparing-two-byte-arrays-in-net/48599119#48599119
-                        static bool ByteArrayCompare(ReadOnlySpan<byte> a1, ReadOnlySpan<byte> a2) => a1.SequenceEqual(a2);
-                        isBlobEqual = ByteArrayCompare(o, n);
-                    }
+                    var pName = p.Metadata.Name;
+                    // the value of user gender returned by thread crawler is always 0, so we shouldn't update existing value that is set before
+                    if (pName == nameof(TiebaUser.Gender) && p.Metadata.DeclaringEntityType.ClrType == typeof(ThreadPost)) continue;
+                    if (!p.IsModified || pName is nameof(IEntityWithTimestampFields.CreatedAt)
+                            or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
 
-                    if (isBlobEqual || Equals(oldValue, newValue)
-                                    // // the value of user gender returned by thread crawler is always 0, so we shouldn't update existing value that is set before
-                                    || (shouldIgnoreUpdatesOnGender && p.Name == nameof(TiebaUser.Gender))) continue;
-                    // tell ef core to update field p of record oldObj with newValue
-                    // ef core is able to track changes made on oldObj via reflection
-                    p.SetValue(oldObj, newValue);
-
-                    var revisionProp = revisionProps.FirstOrDefault(p2 => p2.Name == p.Name);
+                    var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
                     if (revisionProp == null)
                     {
-                        if (p.Name != nameof(ThreadPost.Title)) // thread title might be set by ReplyCrawlFacade.PostParseCallback()
+                        if (pName != nameof(ThreadPost.Title))
+                        { // thread title might be set by ReplyCrawlFacade.PostParseCallback()
                             logger.LogWarning("Updating field {} is not existed in revision table, " +
                                               "newValue={}, oldValue={}, newObject={}, oldObject={}",
-                                p.Name, newValue, oldValue, JsonSerializer.Serialize(newObj), JsonSerializer.Serialize(oldObj));
+                                pName, p.CurrentValue, p.OriginalValue,
+                                JsonSerializer.Serialize(currentPostOrUser), JsonSerializer.Serialize(originalPostOrUser));
+                        }
                     }
                     else
                     {
-                        revision ??= revisionFactory(oldObj);
-                        revisionProp.SetValue(revision, oldValue);
+                        revision ??= revisionFactory(originalPostOrUser);
+                        revisionProp.SetValue(revision, p.OriginalValue);
                     }
                 }
-
                 return revision;
-            }).OfType<TRevision>();
+            }).OfType<TRevision>());
         }
     }
 }

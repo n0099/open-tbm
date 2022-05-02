@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class ReplyRevision : PostRevision
+    public class ReplyRevision : BaseRevision
     {
         public ulong Pid { get; set; }
         public string? AuthorManagerType { get; set; }

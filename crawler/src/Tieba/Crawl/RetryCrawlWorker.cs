@@ -26,6 +26,7 @@ namespace tbm.Crawler
             foreach (var lockType in Program.RegisteredCrawlerLocks)
             {
                 var failed = _registeredLocksFactory[lockType](lockType).RetryAllFailed();
+                if (!failed.Any()) continue; // skip current lock type if there's nothing needs to retry
                 if (lockType == "threadLate")
                 {
                     await using var scope = Program.Autofac.BeginLifetimeScope();

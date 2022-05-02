@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public abstract class PostRevision
+    public abstract class BaseRevision
     {
         public uint Time { get; set; }
     }

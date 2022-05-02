@@ -24,7 +24,7 @@ namespace tbm.Crawler
             try
             {
                 var db = scope.Resolve<TbmDbContext.New>()(0);
-                var forums = from f in db.ForumsInfo where f.IsCrawling == true select new {f.Fid, f.Name};
+                var forums = from f in db.ForumsInfo where f.IsCrawling select new {f.Fid, f.Name};
                 await Task.WhenAll(forums.ToList().Select(async fidAndName =>
                 {
                     var fid = fidAndName.Fid;

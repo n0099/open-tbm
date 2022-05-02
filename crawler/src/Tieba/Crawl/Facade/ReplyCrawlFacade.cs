@@ -9,7 +9,7 @@ namespace tbm.Crawler
         public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger, ReplyCrawler.New crawler,
             ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid
-        ) : base(logger, crawler(tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), tid), fid) => _tid = tid;
+        ) : base(logger, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), tid), fid) => _tid = tid;
 
         protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IList<Reply> posts)
         {

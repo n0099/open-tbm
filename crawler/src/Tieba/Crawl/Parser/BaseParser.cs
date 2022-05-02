@@ -1,6 +1,7 @@
 namespace tbm.Crawler
 {
-    public abstract class BaseParser<TPost, TPostProtoBuf> where TPostProtoBuf : IMessage<TPostProtoBuf>
+    public abstract class BaseParser<TPost, TPostProtoBuf>
+        where TPost: class, IPost where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         public (TPost First, TPost Last)? ParsePosts(
             CrawlRequestFlag requestFlag, IEnumerable<TPostProtoBuf> inPosts,

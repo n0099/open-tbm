@@ -1,5 +1,4 @@
 using Google.Protobuf.Reflection;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Crawler
 {
@@ -7,6 +6,11 @@ namespace tbm.Crawler
         where TPost : class, IPost where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
         where TResponse : IMessage<TResponse>, new() where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
+        // cache data and page field of protoBuf instance TResponse for every derived classes: https://stackoverflow.com/questions/5851497/static-fields-in-a-base-class-and-derived-classes
+        private static readonly FieldDescriptor ResponseDataField = new TResponse().Descriptor.FindFieldByName("data");
+        // ReSharper disable once StaticMemberInGenericType
+        private static readonly IFieldAccessor ResponsePageFieldAccessor = ResponseDataField.MessageType.FindFieldByName("page").Accessor;
+
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
         private readonly BaseParser<TPost, TPostProtoBuf> _parser;
@@ -19,10 +23,6 @@ namespace tbm.Crawler
         protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
         public readonly ConcurrentDictionary<Page, (TPost First, TPost Last)> FirstAndLastPostInPages = new();
         protected readonly Fid Fid;
-        // cache data and page field of protoBuf instance TResponse for every derived classes: https://stackoverflow.com/questions/5851497/static-fields-in-a-base-class-and-derived-classes
-        private static readonly FieldDescriptor ResponseDataField = new TResponse().Descriptor.FindFieldByName("data");
-        // ReSharper disable once StaticMemberInGenericType
-        private static readonly IFieldAccessor ResponsePageFieldAccessor = ResponseDataField.MessageType.FindFieldByName("page").Accessor;
 
         protected BaseCrawlFacade(
             ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
@@ -51,7 +51,7 @@ namespace tbm.Crawler
             using var transaction = db.Database.BeginTransaction();
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
-            var savedUsersId = Users.SaveUsers(db, GetType() == typeof(ThreadCrawlFacade));
+            var savedUsersId = Users.SaveUsers(db);
             try
             {
                 _ = db.SaveChanges();
@@ -111,8 +111,10 @@ namespace tbm.Crawler
                     _logger.LogWarning("TiebaException: {} {}", e.Message, JsonSerializer.Serialize(e.Data));
                 else
                     _logger.LogError(e, "Exception");
+                if (e is not TiebaException {ShouldRetry: false})
+                    _locks.AcquireFailed(_lockIndex, page);
+
                 _requesterTcs.Decrease();
-                _locks.AcquireFailed(_lockIndex, page);
                 return true;
             }
             finally

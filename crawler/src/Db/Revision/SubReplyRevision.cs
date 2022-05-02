@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class SubReplyRevision : PostRevision
+    public class SubReplyRevision : BaseRevision
     {
         public ulong Spid { get; set; }
         public string? AuthorManagerType { get; set; }

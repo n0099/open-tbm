@@ -1,8 +1,7 @@
 namespace tbm.Crawler
 {
-    public class UserRevision
+    public class UserRevision : BaseRevision
     {
-        public uint Time { get; set; }
         public long Uid { get; set; }
         public string? Name { get; set; }
         public string? DisplayName { get; set; }

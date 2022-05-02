@@ -55,12 +55,12 @@ namespace tbm.Crawler
         { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
             ChangeTracker.Entries().ForEach(e =>
             {
-                if (e.Entity is not IEntityWithTimestampFields entity
+                if (e.Entity is not IEntityWithTimestampFields
                     || e.State is not (EntityState.Added or EntityState.Modified)) return;
-
-                entity.UpdatedAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-                if (e.State == EntityState.Added)
-                    entity.CreatedAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                var timestamp = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field may not
+                if (e.State == EntityState.Added) e.Property(nameof(IEntityWithTimestampFields.CreatedAt)).CurrentValue = timestamp;
+                e.Property(nameof(IEntityWithTimestampFields.UpdatedAt)).CurrentValue = timestamp;
             });
             return base.SaveChanges();
         }
