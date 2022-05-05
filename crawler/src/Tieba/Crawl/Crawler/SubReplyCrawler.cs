@@ -23,9 +23,9 @@ namespace tbm.Crawler
         protected override IEnumerable<(Task<SubReplyResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page) =>
             new[]
             {
-                (Requester.RequestProtoBuf<SubReplyRequest, SubReplyResponse>(
-                    "http://c.tieba.baidu.com/c/f/pb/floor?cmd=302002",
-                    new SubReplyRequest
+                (Requester.RequestProtoBuf(
+                    "http://c.tieba.baidu.com/c/f/pb/floor?cmd=302002", "12.23.1.0",
+                    () => new SubReplyResponse(), new SubReplyRequest
                     {
                         Data = new SubReplyRequest.Types.Data
                         {
@@ -33,9 +33,7 @@ namespace tbm.Crawler
                             Pid = (long)_pid,
                             Pn = (int)page
                         }
-                    },
-                    "12.23.1.0"
-                ), CrawlRequestFlag.None, page)
+                    }), CrawlRequestFlag.None, page)
             };
 
 

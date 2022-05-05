@@ -22,9 +22,9 @@ namespace tbm.Crawler
         protected override IEnumerable<(Task<ReplyResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page) =>
             new[]
             {
-                (Requester.RequestProtoBuf<ReplyRequest, ReplyResponse>(
-                    "http://c.tieba.baidu.com/c/f/pb/page?cmd=302001",
-                    new ReplyRequest
+                (Requester.RequestProtoBuf(
+                    "http://c.tieba.baidu.com/c/f/pb/page?cmd=302001", "12.12.1.0",
+                    () => new ReplyResponse(), new ReplyRequest
                     {
                         Data = new ReplyRequest.Types.Data
                         { // reverse order will be {"last", "1"}, {"r", "1"}
@@ -33,9 +33,7 @@ namespace tbm.Crawler
                             Rn = 30,
                             QType = 2
                         }
-                    },
-                    "12.12.1.0"
-                ), CrawlRequestFlag.None, page)
+                    }), CrawlRequestFlag.None, page)
             };
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)

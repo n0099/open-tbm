@@ -6,14 +6,33 @@ namespace tbm.Crawler
         { // static field in this non generic class will be shared across all reified generic derived classes
             typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)
         }.ToDictionary(i => i, i => i.GetProperties().AsEnumerable());
+
+        protected static readonly FieldsChangeIgnoranceWrapper FieldsChangeIgnorance = new(
+            Update: new()
+            {
+                [typeof(ReplyPost)] = new() {new(nameof(ReplyPost.Content))}, // image url within the content of reply will be changed by each request
+                [typeof(ThreadPost)] = new()
+                {
+                    new(nameof(ThreadPost.AuthorPhoneType)), // will be update by ThreadLateCrawlerAndSaver
+                    new(nameof(ThreadPost.ZanInfo), true), // possible null values from response
+                    new(nameof(ThreadPost.Location), true), // possible null values from response
+                    new(nameof(ThreadPost.Title), true, "") // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+                }
+            },
+            Revision: new()
+            {
+                [typeof(ThreadPost)] = new() {new(nameof(ThreadPost.Title))} // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+            }
+        );
     }
 
     public abstract class CommonInSavers<TSaver> : InternalCommonInSavers where TSaver : CommonInSavers<TSaver>
     {
         protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
             ILogger<CommonInSavers<TSaver>> logger,
-            TbmDbContext db,
+            FieldsChangeIgnoranceWrapper additionalFieldsChangeIgnorance,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
+            TbmDbContext db,
             Func<TPostOrUser, TRevision> revisionFactory,
             Func<TPostOrUser, bool> isExistPredicate,
             Func<TPostOrUser, TPostOrUser> existedSelector) where TRevision : BaseRevision
@@ -35,21 +54,23 @@ namespace tbm.Crawler
                 foreach (var p in entry.Properties)
                 {
                     var pName = p.Metadata.Name;
-                    // the value of user gender returned by thread crawler is always 0, so we shouldn't update existing value that is set before
-                    if (pName == nameof(TiebaUser.Gender) && p.Metadata.DeclaringEntityType.ClrType == typeof(ThreadPost)) continue;
                     if (!p.IsModified || pName is nameof(IEntityWithTimestampFields.CreatedAt)
                             or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
 
+                    if (FieldsChangeIgnorance.Update.TestShouldIgnore<TPostOrUser>(additionalFieldsChangeIgnorance.Update, pName, p.CurrentValue))
+                    {
+                        p.IsModified = false;
+                        continue; // skip following revision check
+                    }
+
+                    if (FieldsChangeIgnorance.Revision.TestShouldIgnore<TPostOrUser>(additionalFieldsChangeIgnorance.Revision, pName, p.OriginalValue)) continue;
                     var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
                     if (revisionProp == null)
                     {
-                        if (pName != nameof(ThreadPost.Title))
-                        { // thread title might be set by ReplyCrawlFacade.PostParseCallback()
-                            logger.LogWarning("Updating field {} is not existed in revision table, " +
-                                              "newValue={}, oldValue={}, newObject={}, oldObject={}",
-                                pName, p.CurrentValue, p.OriginalValue,
-                                JsonSerializer.Serialize(currentPostOrUser), JsonSerializer.Serialize(originalPostOrUser));
-                        }
+                        logger.LogWarning("Updating field {} is not existed in revision table, " +
+                                          "newValue={}, oldValue={}, newObject={}, oldObject={}",
+                            pName, p.CurrentValue, p.OriginalValue,
+                            JsonSerializer.Serialize(currentPostOrUser), JsonSerializer.Serialize(originalPostOrUser));
                     }
                     else
                     {

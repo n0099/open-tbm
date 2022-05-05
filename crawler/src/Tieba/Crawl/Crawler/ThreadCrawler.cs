@@ -34,10 +34,10 @@ namespace tbm.Crawler
             };
             return new[]
             {
-                (Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>
-                    (url, new ThreadRequest {Data = requestBody}, "12.23.1.0"), CrawlRequestFlag.None, page),
-                (Requester.RequestProtoBuf<ThreadRequest, ThreadResponse>
-                    (url, new ThreadRequest {Data = requestBody602}, "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
+                (Requester.RequestProtoBuf(url, responseFactory: () => new ThreadResponse(),
+                    param: new ThreadRequest {Data = requestBody}, clientVersion: "12.23.1.0"), CrawlRequestFlag.None, page),
+                (Requester.RequestProtoBuf(url, responseFactory: () => new ThreadResponse(),
+                    param: new ThreadRequest {Data = requestBody602}, clientVersion: "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
             };
         }
 

@@ -1,3 +1,4 @@
+using System.Data;
 using Google.Protobuf.Reflection;
 
 namespace tbm.Crawler
@@ -48,10 +49,10 @@ namespace tbm.Crawler
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);
-            using var transaction = db.Database.BeginTransaction();
+            using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
-            var savedUsersId = Users.SaveUsers(db);
+            var savedUsersId = Users.SaveUsers(db, _saver.TiebaUserFieldsChangeIgnorance);
             try
             {
                 _ = db.SaveChanges();

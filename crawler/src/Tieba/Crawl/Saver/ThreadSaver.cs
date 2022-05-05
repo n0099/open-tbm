@@ -2,6 +2,14 @@ namespace tbm.Crawler
 {
     public class ThreadSaver : BaseSaver<ThreadPost>
     {
+        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(
+            Update: new()
+            { // the value of user gender returned by thread response is always 0
+                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.Gender), true, (ushort)0)}
+            },
+            Revision: new()
+        );
+
         private readonly Fid _fid;
 
         public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid);
@@ -9,24 +17,12 @@ namespace tbm.Crawler
         public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override ReturnOfSaver<ThreadPost> SavePosts(TbmDbContext db)
-        {
-            var ret = SavePosts(db,
+        public override ReturnOfSaver<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
                 PredicateBuilder.New<ThreadPost>(p => Posts.Keys.Any(id => id == p.Tid)),
                 PredicateBuilder.New<PostIndex>(i => i.Type == "thread" && Posts.Keys.Any(id => id == i.Tid)),
                 p => p.Tid,
                 i => i.Tid,
-                p => new PostIndex {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},
+                p => new() {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},
                 p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid});
-
-            // prevent overwrite with default null value on field which will be update by ThreadLateSaveInfoCrawler
-            db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Properties
-                .Where(p => p.Metadata.Name == nameof(ThreadPost.AuthorPhoneType)
-                            // prevent overwrite empty string on thread title that have been set by ReplyCrawlFacade.PostParseCallback()
-                            || (p.Metadata.Name == nameof(ThreadPost.Title) && (string?)p.CurrentValue == ""))
-                .ForEach(p => p.IsModified = false));
-
-            return ret;
-        }
     }
 }

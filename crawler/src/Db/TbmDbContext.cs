@@ -4,19 +4,21 @@ namespace tbm.Crawler
 {
     public class TbmDbContext : DbContext
     {
-        public Fid Fid { get; }
+        private readonly ILogger<TbmDbContext> _logger;
+        private readonly IConfiguration _config;
+        private Fid Fid { get; }
         public DbSet<TiebaUser> Users => Set<TiebaUser>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
         public DbSet<PostIndex> PostsIndex => Set<PostIndex>();
         public DbSet<ForumInfo> ForumsInfo => Set<ForumInfo>();
-        private readonly IConfiguration _config;
 
         public delegate TbmDbContext New(Fid fid);
 
-        public TbmDbContext(IConfiguration config, Fid fid)
+        public TbmDbContext(ILogger<TbmDbContext> logger, IConfiguration config, Fid fid)
         {
+            _logger = logger;
             _config = config;
             Fid = fid;
         }
@@ -60,7 +62,16 @@ namespace tbm.Crawler
                 var timestamp = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field may not
                 if (e.State == EntityState.Added) e.Property(nameof(IEntityWithTimestampFields.CreatedAt)).CurrentValue = timestamp;
-                e.Property(nameof(IEntityWithTimestampFields.UpdatedAt)).CurrentValue = timestamp;
+                var updatedAtProp = e.Property(nameof(IEntityWithTimestampFields.UpdatedAt));
+                updatedAtProp.CurrentValue = timestamp;
+
+                if (updatedAtProp.IsModified || e.State != EntityState.Modified) return;
+                _logger.LogError("Detected unchanged updatedAt timestamp for updating record: {}. " +
+                                 "This means the record is updated more than one time within one second, " +
+                                 "which usually caused by a different response of the same resource from tieba. " +
+                                 "We will cancel updates on this record, and there might be a possible duplicate keys conflict from other revision tables update in the future",
+                    JsonSerializer.Serialize(updatedAtProp.EntityEntry.Entity));
+                e.State = EntityState.Unchanged;
             });
             return base.SaveChanges();
         }

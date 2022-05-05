@@ -2,6 +2,17 @@ namespace tbm.Crawler
 {
     public class ReplySaver : BaseSaver<ReplyPost>
     {
+        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(
+            Update: new()
+            { // IconInfo.SpriteInfo will be an empty array and icon url is larger one
+                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.IconInfo))}
+            },
+            Revision: new()
+            { // the value of user gender returned by thread response is always 0
+                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.Gender), true, (ushort)0)}
+            }
+        );
+
         private readonly Fid _fid;
 
         public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts, Fid fid);
