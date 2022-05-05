@@ -45,7 +45,7 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
-        public ReturnOfSaver<TPost>? SavePosts()
+        public SaverChangeSet<TPost>? SavePosts()
         {
             using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(Fid);

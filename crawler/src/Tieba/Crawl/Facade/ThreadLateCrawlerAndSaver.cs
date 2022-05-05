@@ -32,7 +32,7 @@ namespace tbm.Crawler
         {
             var threads = await Task.WhenAll(_threadsId.Select(async tid =>
             {
-                if (!_locks.AcquireRange(tid, new List<Page> {1}).Any()) return null;
+                if (!_locks.AcquireRange(tid, new[] {(Page)1}).Any()) return null;
                 try
                 {
                     var json = await _requester.RequestJson("http://c.tieba.baidu.com/c/f/pb/page", "8.8.8.8",

@@ -2,9 +2,7 @@ namespace tbm.Crawler
 {
     public class ClientRequester
     {
-        public class HttpClient : System.Net.Http.HttpClient
-        {
-        }
+        public class HttpClient : System.Net.Http.HttpClient { }
 
         private readonly ILogger<ClientRequester> _logger;
         private readonly IConfigurationSection _config;
@@ -59,7 +57,7 @@ namespace tbm.Crawler
 
         private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> data, string clientVersion)
         {
-            Dictionary<string, string> clientInfo = new()
+            var clientInfo = new Dictionary<string, string>
             {
                 {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
                 {"_client_type", "2"},

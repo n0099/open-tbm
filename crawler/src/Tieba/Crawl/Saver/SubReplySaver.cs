@@ -9,7 +9,7 @@ namespace tbm.Crawler
         public SubReplySaver(ILogger<SubReplySaver> logger, ConcurrentDictionary<PostId, SubReplyPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override ReturnOfSaver<SubReplyPost> SavePosts(TbmDbContext db) => SavePosts(db,
+        public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db) => SavePosts(db,
             PredicateBuilder.New<SubReplyPost>(p => Posts.Keys.Any(id => id == p.Spid)),
             PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Spid)),
             p => p.Spid,

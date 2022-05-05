@@ -3,7 +3,7 @@ namespace tbm.Crawler
     internal class Program
     {
         public static ILifetimeScope Autofac { get; private set; } = null!;
-        public static readonly IEnumerable<string> RegisteredCrawlerLocks = new List<string> {"thread", "threadLate", "reply", "subReply"};
+        public static readonly List<string> RegisteredCrawlerLocks = new() {"thread", "threadLate", "reply", "subReply"};
 
         private static void Main()
         {

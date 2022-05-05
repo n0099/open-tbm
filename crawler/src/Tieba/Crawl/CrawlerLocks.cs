@@ -96,13 +96,13 @@ namespace tbm.Crawler
             }
         }
 
-        public Dictionary<FidOrPostId, ICollection<Page>> RetryAllFailed()
+        public Dictionary<FidOrPostId, IEnumerable<Page>> RetryAllFailed()
         {
             lock (_failed)
             {
                 var copyOfFailed = _failed.ToDictionary(p => p.Key, p =>
                 {
-                    lock (p.Value) return p.Value.Keys;
+                    lock (p.Value) return p.Value.Keys.AsEnumerable();
                 });
                 _failed.Clear();
                 return copyOfFailed;

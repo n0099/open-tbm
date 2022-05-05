@@ -17,7 +17,7 @@ namespace tbm.Crawler
         public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override ReturnOfSaver<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
+        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
                 PredicateBuilder.New<ThreadPost>(p => Posts.Keys.Any(id => id == p.Tid)),
                 PredicateBuilder.New<PostIndex>(i => i.Type == "thread" && Posts.Keys.Any(id => id == i.Tid)),
                 p => p.Tid,

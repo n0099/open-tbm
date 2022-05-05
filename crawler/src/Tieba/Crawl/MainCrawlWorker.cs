@@ -1,7 +1,7 @@
 namespace tbm.Crawler
 {
-    using SavedThreads = List<ReturnOfSaver<ThreadPost>>;
-    using SavedRepliesByTid = ConcurrentDictionary<Tid, ReturnOfSaver<ReplyPost>>;
+    using SavedThreads = List<SaverChangeSet<ThreadPost>>;
+    using SavedRepliesByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
     public class MainCrawlWorker : BackgroundService
     {

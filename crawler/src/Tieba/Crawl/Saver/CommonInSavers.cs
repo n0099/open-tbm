@@ -38,7 +38,7 @@ namespace tbm.Crawler
             Func<TPostOrUser, TPostOrUser> existedSelector) where TRevision : BaseRevision
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.AddRange((IEnumerable<object>)existedOrNew[false]);
+            db.AddRange(existedOrNew[false].OfType<object>());
             db.AddRange(existedOrNew[true].Select(currentPostOrUser =>
             {
                 var originalPostOrUser = existedSelector(currentPostOrUser);

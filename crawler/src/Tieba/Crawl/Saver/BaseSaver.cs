@@ -6,7 +6,7 @@ namespace tbm.Crawler
         protected readonly ConcurrentDictionary<PostId, TPost> Posts;
         public virtual FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new();
 
-        public abstract ReturnOfSaver<TPost> SavePosts(TbmDbContext db);
+        public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts)
         {
@@ -14,7 +14,7 @@ namespace tbm.Crawler
             Posts = posts;
         }
 
-        protected ReturnOfSaver<TPost> SavePosts<TRevision>(
+        protected SaverChangeSet<TPost> SavePosts<TRevision>(
             TbmDbContext db,
             ExpressionStarter<TPost> postsPredicate,
             ExpressionStarter<PostIndex> indexPredicate,
