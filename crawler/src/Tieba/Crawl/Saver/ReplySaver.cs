@@ -25,7 +25,7 @@ namespace tbm.Crawler
             PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid)),
             p => p.Pid,
             i => i.Pid,
-            p => new PostIndex {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
+            p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
             p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
     }
 }

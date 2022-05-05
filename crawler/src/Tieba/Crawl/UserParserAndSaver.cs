@@ -19,7 +19,7 @@ namespace tbm.Crawler
                 if (uid == 0) return null; // in client version 12.x the last user in list will be a empty user with uid 0
                 if (uid < 0) // historical anonymous user
                 {
-                    return new TiebaUser
+                    return new()
                     {
                         Uid = uid,
                         Name = el.NameShow,
@@ -44,7 +44,7 @@ namespace tbm.Crawler
                 catch (Exception e)
                 {
                     e.Data["rawJson"] = JsonSerializer.Serialize(el);
-                    throw new Exception("User parse error", e);
+                    throw new("User parse error", e);
                 }
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }

@@ -27,7 +27,7 @@ namespace tbm.Crawler
                     "http://c.tieba.baidu.com/c/f/pb/floor?cmd=302002", "12.23.1.0",
                     () => new SubReplyResponse(), new SubReplyRequest
                     {
-                        Data = new SubReplyRequest.Types.Data
+                        Data = new()
                         {
                             Kz = (long)_tid,
                             Pid = (long)_pid,

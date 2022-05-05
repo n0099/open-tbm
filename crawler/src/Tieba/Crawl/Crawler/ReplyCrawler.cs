@@ -26,7 +26,7 @@ namespace tbm.Crawler
                     "http://c.tieba.baidu.com/c/f/pb/page?cmd=302001", "12.12.1.0",
                     () => new ReplyResponse(), new ReplyRequest
                     {
-                        Data = new ReplyRequest.Types.Data
+                        Data = new()
                         { // reverse order will be {"last", "1"}, {"r", "1"}
                             Kz = (long)_tid,
                             Pn = (int)page,

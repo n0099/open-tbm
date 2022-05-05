@@ -12,11 +12,11 @@ namespace tbm.Crawler
         {
             var existingAfter = existingAfterAndNewly.IntersectBy(existingBefore.Select(postIdSelector), postIdSelector).OrderBy(postIdSelector).ToList();
             var beforeAndAfter = existingBefore.OrderBy(postIdSelector).Zip(existingAfter, (before, after) => (before, after));
-            if (existingAfter.Count != existingBefore.Count) throw new Exception("Length of existingAfter is not match with existingBefore");
-            Existing = new ReadOnlyCollection<(T Before, T After)>(beforeAndAfter.ToList());
+            if (existingAfter.Count != existingBefore.Count) throw new("Length of existingAfter is not match with existingBefore");
+            Existing = new(beforeAndAfter.ToList());
             var newly = existingAfterAndNewly.ExceptBy(existingBefore.Select(postIdSelector), postIdSelector).ToList();
-            NewlyAdded = new ReadOnlyCollection<T>(newly);
-            AllModified = new ReadOnlyCollection<T>(existingAfterAndNewly.ToList());
+            NewlyAdded = new(newly);
+            AllModified = new(existingAfterAndNewly.ToList());
         }
     }
 }

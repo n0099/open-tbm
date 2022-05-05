@@ -37,7 +37,7 @@ namespace tbm.Crawler
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
             db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
 
-            return new ReturnOfSaver<TPost>(postsBeforeSave, Posts.Values, postIdSelector);
+            return new(postsBeforeSave, Posts.Values, postIdSelector);
         }
     }
 }

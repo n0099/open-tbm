@@ -37,7 +37,7 @@ namespace TbClient.Post
             {
                 e.Data["parsed"] = p;
                 e.Data["raw"] = el;
-                throw new Exception("Reply parse error", e);
+                throw new("Reply parse error", e);
             }
         }
     }
