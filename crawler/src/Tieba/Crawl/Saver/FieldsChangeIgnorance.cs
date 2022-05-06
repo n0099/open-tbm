@@ -36,6 +36,7 @@ namespace tbm.Crawler
                     if (valueType == propType || valueType == propNullableType || (propNullableType != null && valueType == null)) return;
                     throw new($"The type of given test value doesn't match with the type of property {key.Name}.{i.Name}");
                 });
+                if (_dict.ContainsKey(key)) throw new($"Duplicate key for {key.Name}");
 #endif
                 _dict[key] = value;
             }

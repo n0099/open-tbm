@@ -14,14 +14,16 @@ namespace tbm.Crawler
             Posts = posts;
         }
 
-        protected SaverChangeSet<TPost> SavePosts<TRevision>(
+        protected SaverChangeSet<TPost> SavePosts<TRevision, TRevisionNullFields>(
             TbmDbContext db,
             ExpressionStarter<TPost> postsPredicate,
             ExpressionStarter<PostIndex> indexPredicate,
             Func<TPost, PostId> postIdSelector,
             Expression<Func<PostIndex, PostId>> indexPostIdSelector,
             Func<TPost, PostIndex> indexFactory,
-            Func<TPost, TRevision> revisionFactory) where TRevision : BaseRevision
+            Func<TPost, TRevision> revisionFactory,
+            Func<TRevisionNullFields> revisionNullFieldsFactory)
+            where TRevision : BaseRevision where TRevisionNullFields : IMessage<TRevisionNullFields>
         {
             var dbSet = db.Set<TPost>();
             if (dbSet == null) throw new ArgumentException($"DbSet<{typeof(TPost).Name}> is not exists in DbContext");
@@ -31,7 +33,7 @@ namespace tbm.Crawler
             var existingPostsById = existingPosts.ToDictionary(postIdSelector);
             var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
 
-            SavePostsOrUsers(_logger, TiebaUserFieldsChangeIgnorance, Posts, db, revisionFactory,
+            SavePostsOrUsers(_logger, TiebaUserFieldsChangeIgnorance, Posts, db, revisionFactory, revisionNullFieldsFactory,
                 p => existingPostsById.ContainsKey(postIdSelector(p)),
                 p => existingPostsById[postIdSelector(p)]);
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);

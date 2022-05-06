@@ -53,6 +53,10 @@ namespace tbm.Crawler
             {
                 throw new TiebaException($"Tieba client request timeout, {e.Message}");
             }
+            catch (HttpRequestException e)
+            {
+                throw new TiebaException($"HTTP {e.StatusCode} from tieba", e);
+            }
         }
 
         private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> data, string clientVersion)

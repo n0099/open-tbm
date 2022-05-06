@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -38,6 +38,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="..\tbclient.protobuf\tbm_cs\**" Link="tbclient.protobuf\%(RecursiveDir)%(Filename)%(Extension)" />
+        <Compile Include="..\tbclient.protobuf\tbm_min_cs\**" Link="tbclient.protobuf\%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 </Project>

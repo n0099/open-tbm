@@ -4,11 +4,16 @@ namespace tbm.Crawler
     {
         public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(
             Update: new()
-            { // the value of user gender returned by thread response is always 0
-                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.Gender), true, (ushort)0)}
-            },
-            Revision: new()
-        );
+            {
+                [typeof(TiebaUser)] = new()
+                {
+                    // the value of user gender returned by thread saver is always 0
+                    new(nameof(TiebaUser.Gender), true),
+                    // IconInfo.SpriteInfo will be an empty array and the icon url is a smaller one, so we should it as null temporarily
+                    // note this will cause we can't record when did a user update its iconinfo to null since these null values have been ignored in reply and sub reply saver
+                    new(nameof(TiebaUser.IconInfo))
+                }
+            }, new());
 
         private readonly Fid _fid;
 
@@ -23,6 +28,7 @@ namespace tbm.Crawler
                 p => p.Tid,
                 i => i.Tid,
                 p => new() {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},
-                p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid});
+                p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid},
+                () => new ThreadRevisionNullFields());
     }
 }

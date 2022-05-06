@@ -66,11 +66,11 @@ namespace tbm.Crawler
                 updatedAtProp.CurrentValue = timestamp;
 
                 if (updatedAtProp.IsModified || e.State != EntityState.Modified) return;
-                _logger.LogError("Detected unchanged updatedAt timestamp for updating record: {}. " +
+                _logger.LogError("Detected unchanged updatedAt timestamp for updating record with new values={}, originalValues={}. " +
                                  "This means the record is updated more than one time within one second, " +
                                  "which usually caused by a different response of the same resource from tieba. " +
                                  "We will cancel updates on this record, and there might be a possible duplicate keys conflict from other revision tables update in the future",
-                    JsonSerializer.Serialize(updatedAtProp.EntityEntry.Entity));
+                    JsonSerializer.Serialize(e.CurrentValues.ToObject()), JsonSerializer.Serialize(e.OriginalValues.ToObject()));
                 e.State = EntityState.Unchanged;
             });
             return base.SaveChanges();

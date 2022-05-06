@@ -1,11 +1,13 @@
 namespace tbm.Crawler
 {
     public abstract class InternalCommonInSavers
-    {
-        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = new List<Type>
-        { // static field in this non generic class will be shared across all reified generic derived classes
-            typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)
-        }.ToDictionary(i => i, i => i.GetProperties().AsEnumerable());
+    { // static field in this non generic class will be shared across all reified generic derived classes
+        private static Dictionary<Type, IEnumerable<PropertyInfo>> GetPropDictKeyByTypes(List<Type> types) =>
+            types.ToDictionary(i => i, i => i.GetProperties().AsEnumerable());
+        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = GetPropDictKeyByTypes(new()
+            {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
+        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionNullFieldsPropertiesCache = GetPropDictKeyByTypes(new()
+            {typeof(ThreadRevisionNullFields), typeof(ReplyRevisionNullFields), typeof(SubReplyRevisionNullFields), typeof(UserRevisionNullFields)});
 
         protected static readonly FieldsChangeIgnoranceWrapper FieldsChangeIgnorance = new(
             Update: new()
@@ -28,14 +30,16 @@ namespace tbm.Crawler
 
     public abstract class CommonInSavers<TSaver> : InternalCommonInSavers where TSaver : CommonInSavers<TSaver>
     {
-        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
+        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision, TRevisionNullFields>(
             ILogger<CommonInSavers<TSaver>> logger,
             FieldsChangeIgnoranceWrapper additionalFieldsChangeIgnorance,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             TbmDbContext db,
             Func<TPostOrUser, TRevision> revisionFactory,
+            Func<TRevisionNullFields> revisionNullFieldsFactory,
             Func<TPostOrUser, bool> isExistPredicate,
-            Func<TPostOrUser, TPostOrUser> existedSelector) where TRevision : BaseRevision
+            Func<TPostOrUser, TPostOrUser> existedSelector)
+            where TRevision : BaseRevision where TRevisionNullFields: IMessage<TRevisionNullFields>
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
             db.AddRange(existedOrNew[false].OfType<object>());
@@ -51,6 +55,7 @@ namespace tbm.Crawler
                     or nameof(IEntityWithTimestampFields.UpdatedAt)).ForEach(p => p.IsModified = false);
 
                 var revision = default(TRevision);
+                var revisionNullFields = default(TRevisionNullFields);
                 foreach (var p in entry.Properties)
                 {
                     var pName = p.Metadata.Name;
@@ -76,8 +81,13 @@ namespace tbm.Crawler
                     {
                         revision ??= revisionFactory(originalPostOrUser);
                         revisionProp.SetValue(revision, p.OriginalValue);
+
+                        if (p.OriginalValue != null) continue;
+                        revisionNullFields ??= revisionNullFieldsFactory();
+                        RevisionNullFieldsPropertiesCache[typeof(TRevisionNullFields)].First(p2 => p2.Name == pName).SetValue(revisionNullFields, true);
                     }
                 }
+                if (revision != null && revisionNullFields != null) revision.NullFields = revisionNullFields.ToByteArray();
                 return revision;
             }).OfType<TRevision>());
         }

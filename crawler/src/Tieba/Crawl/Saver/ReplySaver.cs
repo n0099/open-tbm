@@ -2,16 +2,16 @@ namespace tbm.Crawler
 {
     public class ReplySaver : BaseSaver<ReplyPost>
     {
-        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(
-            Update: new()
-            { // IconInfo.SpriteInfo will be an empty array and icon url is larger one
-                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.IconInfo))}
-            },
+        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(new(),
             Revision: new()
-            { // the value of user gender returned by thread response is always 0
-                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.Gender), true, (ushort)0)}
-            }
-        );
+            {
+                [typeof(TiebaUser)] = new()
+                { // the value of user gender returned by thread saver is always null
+                    new(nameof(TiebaUser.Gender), true),
+                    // the value of IconInfo returned by thread saver is always null since we ignored its value
+                    new(nameof(TiebaUser.IconInfo), true)
+                }
+            });
 
         private readonly Fid _fid;
 
@@ -26,6 +26,7 @@ namespace tbm.Crawler
             p => p.Pid,
             i => i.Pid,
             p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-            p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
+            p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid},
+            () => new ReplyRevisionNullFields());
     }
 }

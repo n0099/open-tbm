@@ -2,6 +2,12 @@ namespace tbm.Crawler
 {
     public class SubReplySaver : BaseSaver<SubReplyPost>
     {
+        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(new(),
+            Revision: new()
+            { // the value of IconInfo returned by thread saver is always null since we ignored its value
+                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.IconInfo), true)}
+            });
+
         private readonly Fid _fid;
 
         public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts, Fid fid);
@@ -15,6 +21,7 @@ namespace tbm.Crawler
             p => p.Spid,
             i => i.Spid,
             p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
-            p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid});
+            p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid},
+            () => new SubReplyRevisionNullFields());
     }
 }
