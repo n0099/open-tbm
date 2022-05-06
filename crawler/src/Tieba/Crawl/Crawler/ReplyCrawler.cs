@@ -2,6 +2,13 @@ namespace tbm.Crawler
 {
     public sealed class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
     {
+        protected override PropertyInfo ParamDataField => typeof(ReplyRequest).GetProperty(nameof(ReplyRequest.Data))!;
+        protected override PropertyInfo ParamCommonField => ParamDataField.PropertyType.GetProperty(nameof(ReplyRequest.Data.Common))!;
+        protected override PropertyInfo ResponseDataField => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Data))!;
+        protected override PropertyInfo ResponsePostListField => ResponseDataField.PropertyType.GetProperty(nameof(ReplyResponse.Data.PostList))!;
+        protected override PropertyInfo ResponsePageField => ResponseDataField.PropertyType.GetProperty(nameof(ReplyResponse.Data.Page))!;
+        protected override PropertyInfo ResponseErrorField => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Error))!;
+
         private readonly Fid _fid;
         private readonly Tid _tid;
 
@@ -24,7 +31,7 @@ namespace tbm.Crawler
             {
                 (Requester.RequestProtoBuf(
                     "http://c.tieba.baidu.com/c/f/pb/page?cmd=302001", "12.12.1.0",
-                    () => new ReplyResponse(), new ReplyRequest
+                    ParamDataField, ParamCommonField, () => new ReplyResponse(), new ReplyRequest
                     {
                         Data = new()
                         { // reverse order will be {"last", "1"}, {"r", "1"}
@@ -43,8 +50,7 @@ namespace tbm.Crawler
             if (response.Data.Forum.Id != _fid)
                 throw new TiebaException(false, "Parent forum id within thread response is not match with the param value of crawler ctor, this thread might be multi forum or livepost");
             ValidateOtherErrorCode(response);
-            return EnsureNonEmptyPostList(response, 6,
-                "Reply list is empty, posts might already deleted from tieba");
+            return EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba");
         }
     }
 }

@@ -67,8 +67,8 @@ namespace tbm.Crawler
                         p.IsModified = false;
                         continue; // skip following revision check
                     }
-
                     if (FieldsChangeIgnorance.Revision.TestShouldIgnore<TPostOrUser>(additionalFieldsChangeIgnorance.Revision, pName, p.OriginalValue)) continue;
+
                     var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
                     if (revisionProp == null)
                     {

@@ -2,6 +2,13 @@ namespace tbm.Crawler
 {
     public sealed class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
     {
+        protected override PropertyInfo ParamDataField => typeof(SubReplyRequest).GetProperty(nameof(SubReplyRequest.Data))!;
+        protected override PropertyInfo ParamCommonField => ParamDataField.PropertyType.GetProperty(nameof(SubReplyRequest.Data.Common))!;
+        protected override PropertyInfo ResponseDataField => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Data))!;
+        protected override PropertyInfo ResponsePostListField => ResponseDataField.PropertyType.GetProperty(nameof(SubReplyResponse.Data.SubpostList))!;
+        protected override PropertyInfo ResponsePageField => ResponseDataField.PropertyType.GetProperty(nameof(SubReplyResponse.Data.Page))!;
+        protected override PropertyInfo ResponseErrorField => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Error))!;
+
         private readonly Tid _tid;
         private readonly Pid _pid;
 
@@ -25,7 +32,7 @@ namespace tbm.Crawler
             {
                 (Requester.RequestProtoBuf(
                     "http://c.tieba.baidu.com/c/f/pb/floor?cmd=302002", "12.23.1.0",
-                    () => new SubReplyResponse(), new SubReplyRequest
+                    ParamDataField, ParamCommonField, () => new SubReplyResponse(), new SubReplyRequest
                     {
                         Data = new()
                         {
@@ -47,8 +54,7 @@ namespace tbm.Crawler
                     throw new TiebaException("Thread already deleted when crawling sub reply");
                 default:
                     ValidateOtherErrorCode(response);
-                    return EnsureNonEmptyPostList(response, 4,
-                        "Sub reply list is empty, posts might already deleted from tieba");
+                    return EnsureNonEmptyPostList(response, "Sub reply list is empty, posts might already deleted from tieba");
             }
         }
     }

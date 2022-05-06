@@ -4,6 +4,12 @@ namespace tbm.Crawler
         where TResponse : IMessage<TResponse> where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         protected ClientRequester Requester { get; }
+        protected abstract PropertyInfo ParamDataField { get; }
+        protected abstract PropertyInfo ParamCommonField { get; }
+        protected abstract PropertyInfo ResponseDataField { get; }
+        protected abstract PropertyInfo ResponsePostListField { get; }
+        protected abstract PropertyInfo ResponsePageField { get; }
+        protected abstract PropertyInfo ResponseErrorField { get; }
 
         public abstract Exception FillExceptionData(Exception e);
         protected abstract IEnumerable<(Task<TResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page);
@@ -11,21 +17,20 @@ namespace tbm.Crawler
 
         protected BaseCrawler(ClientRequester requester) => Requester = requester;
 
+        public TbClient.Page GetPageFromResponse(TResponse res) =>
+            (TbClient.Page)ResponsePageField.GetValue(ResponseDataField.GetValue(res) as IMessage)!;
+
         public Task<(TResponse, CrawlRequestFlag, Page)[]> CrawlSinglePage(Page page) =>
             Task.WhenAll(RequestsFactory(page).Select(async i => (await i.Item1, i.Item2, i.Item3)));
 
-        protected static void ValidateOtherErrorCode(TResponse response)
+        protected void ValidateOtherErrorCode(TResponse response)
         {
-            var error = (Error)response.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
-            if (error.Errorno != 0)
+            if ((ResponseErrorField.GetValue(response) as Error)?.Errorno != 0)
                 throw new TiebaException($"Error from tieba client, raw: {response}");
         }
 
-        protected static IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, int fieldNum, string exceptionMessage)
-        {
-            var data = (IMessage)response.Descriptor.FindFieldByName("data").Accessor.GetValue(response);
-            var posts = (IList<TPostProtoBuf>)data.Descriptor.FindFieldByNumber(fieldNum).Accessor.GetValue(data);
-            return posts.Any() ? posts : throw new TiebaException(exceptionMessage);
-        }
+        protected IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage) =>
+            ResponsePostListField.GetValue(ResponseDataField.GetValue(response)) is IList<TPostProtoBuf> posts
+            && posts.Any() ? posts : throw new TiebaException(exceptionMessage);
     }
 }

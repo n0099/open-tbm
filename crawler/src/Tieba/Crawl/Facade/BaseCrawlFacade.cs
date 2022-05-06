@@ -1,5 +1,4 @@
 using System.Data;
-using Google.Protobuf.Reflection;
 
 namespace tbm.Crawler
 {
@@ -7,11 +6,6 @@ namespace tbm.Crawler
         where TPost : class, IPost where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
         where TResponse : IMessage<TResponse>, new() where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
-        // cache data and page field of protoBuf instance TResponse for every derived classes: https://stackoverflow.com/questions/5851497/static-fields-in-a-base-class-and-derived-classes
-        private static readonly FieldDescriptor ResponseDataField = new TResponse().Descriptor.FindFieldByName("data");
-        // ReSharper disable once StaticMemberInGenericType
-        private static readonly IFieldAccessor ResponsePageFieldAccessor = ResponseDataField.MessageType.FindFieldByName("page").Accessor;
-
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
         private readonly BaseParser<TPost, TPostProtoBuf> _parser;
@@ -65,12 +59,6 @@ namespace tbm.Crawler
             return savedPosts;
         }
 
-        private static TbClient.Page GetPageFromResponse(TResponse res)
-        {
-            var data = (IMessage)ResponseDataField.Accessor.GetValue(res);
-            return (TbClient.Page)ResponsePageFieldAccessor.GetValue(data);
-        }
-
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
             CrawlPageRange(Page startPage, Page endPage = Page.MaxValue)
         { // cancel when startPage is already locked
@@ -80,8 +68,8 @@ namespace tbm.Crawler
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
 
-                endPage = Math.Min(endPage,
-                    startPageResponse.Select(i => GetPageFromResponse(i.Item1)).Max(i => (Page)i.TotalPage));
+                var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Item1)).Max(i => (Page)i.TotalPage);
+                endPage = Math.Min(endPage, maxPage);
             }, startPage);
 
             if (!isCrawlFailed) await CrawlPages(

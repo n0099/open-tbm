@@ -26,9 +26,10 @@ namespace tbm.Crawler
                 return doc.RootElement.Clone();
             });
 
-        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(string url, string clientVersion, Func<TResponse> responseFactory, TRequest param)
+        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>
+            (string url, string clientVersion, PropertyInfo paramDataField, PropertyInfo paramCommonField, Func<TResponse> responseFactory, TRequest param)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
-            Request(() => PostProtoBuf(url, param, clientVersion),
+            Request(() => PostProtoBuf(url, clientVersion, param, paramDataField, paramCommonField),
                 stream =>
                 {
                     try
@@ -55,7 +56,7 @@ namespace tbm.Crawler
             }
             catch (HttpRequestException e)
             {
-                throw new TiebaException($"HTTP {e.StatusCode} from tieba", e);
+                throw new TiebaException($"HTTP {e.StatusCode ?? 0} from tieba", e);
             }
         }
 
@@ -80,14 +81,12 @@ namespace tbm.Crawler
                 () => _logger.LogTrace("POST {} {}", url, data));
         }
 
-        private Task<HttpResponseMessage> PostProtoBuf(string url, IMessage paramsProtoBuf, string clientVersion)
+        private Task<HttpResponseMessage> PostProtoBuf(string url, string clientVersion, IMessage paramProtoBuf, PropertyInfo dataField, PropertyInfo commonField)
         {
-            var dataField = paramsProtoBuf.Descriptor.FindFieldByName("data");
-            var dataFieldValue = (IMessage)dataField.Accessor.GetValue(paramsProtoBuf);
-            dataField.MessageType.FindFieldByName("common").Accessor.SetValue(dataFieldValue, new Common {ClientVersion = clientVersion});
+            commonField.SetValue(dataField.GetValue(paramProtoBuf), new Common {ClientVersion = clientVersion});
 
             // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
-            var protoBufFile = new ByteArrayContent(paramsProtoBuf.ToByteArray());
+            var protoBufFile = new ByteArrayContent(paramProtoBuf.ToByteArray());
             protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
             var content = new MultipartFormDataContent {protoBufFile};
             // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
@@ -102,7 +101,7 @@ namespace tbm.Crawler
             request.Headers.Connection.Add("keep-alive");
 
             return Post(() => _http.SendAsync(request),
-                () => _logger.LogTrace("POST {} {}", url, paramsProtoBuf));
+                () => _logger.LogTrace("POST {} {}", url, paramProtoBuf));
         }
 
         private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> postCallback, Action logTraceCallback)

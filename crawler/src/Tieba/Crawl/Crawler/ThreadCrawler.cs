@@ -2,6 +2,13 @@ namespace tbm.Crawler
 {
     public sealed class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     {
+        protected override PropertyInfo ParamDataField => typeof(ThreadRequest).GetProperty(nameof(ThreadRequest.Data))!;
+        protected override PropertyInfo ParamCommonField => ParamDataField.PropertyType.GetProperty(nameof(ThreadRequest.Data.Common))!;
+        protected override PropertyInfo ResponseDataField => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Data))!;
+        protected override PropertyInfo ResponsePostListField => ResponseDataField.PropertyType.GetProperty(nameof(ThreadResponse.Data.ThreadList))!;
+        protected override PropertyInfo ResponsePageField => ResponseDataField.PropertyType.GetProperty(nameof(ThreadResponse.Data.Page))!;
+        protected override PropertyInfo ResponseErrorField => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Error))!;
+
         private readonly string _forumName;
 
         public delegate ThreadCrawler New(string forumName);
@@ -34,9 +41,9 @@ namespace tbm.Crawler
             };
             return new[]
             {
-                (Requester.RequestProtoBuf(url, responseFactory: () => new ThreadResponse(),
+                (Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
                     param: new ThreadRequest {Data = requestBody}, clientVersion: "12.23.1.0"), CrawlRequestFlag.None, page),
-                (Requester.RequestProtoBuf(url, responseFactory: () => new ThreadResponse(),
+                (Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
                     param: new ThreadRequest {Data = requestBody602}, clientVersion: "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
             };
         }
@@ -44,8 +51,7 @@ namespace tbm.Crawler
         public override IList<Thread> GetValidPosts(ThreadResponse response)
         {
             ValidateOtherErrorCode(response);
-            return EnsureNonEmptyPostList(response, 7,
-                "Forum threads list is empty, forum might doesn't existed");
+            return EnsureNonEmptyPostList(response, "Forum threads list is empty, forum might doesn't existed");
         }
     }
 }
