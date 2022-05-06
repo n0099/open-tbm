@@ -52,7 +52,7 @@ namespace tbm.Crawler
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
-            var savedUsersId = Users.SaveUsers(db, _saver.TiebaUserFieldsChangeIgnorance);
+            var savedUsersId = Users.SaveUsers(db, _saver);
             try
             {
                 _ = db.SaveChanges();

@@ -28,12 +28,13 @@ namespace tbm.Crawler
                 {
                     var propType = props.First(IsSameNamePredicate(i)).PropertyType.UnderlyingSystemType;
                     Type? propNullableType = null;
+                    // https://stackoverflow.com/questions/8550209/c-sharp-reflection-how-to-get-the-type-of-a-nullableint/8550614#8550614
                     if (propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(Nullable<>))
                         propNullableType = Nullable.GetUnderlyingType(propType);
 
                     var valueType = i.TestValue?.GetType().UnderlyingSystemType;
-                    if (valueType != propType && valueType == null && propNullableType != null)
-                        throw new($"The type of given test value doesn't match with the type of property {key.Name}.{i.Name}");
+                    if (valueType == propType || valueType == propNullableType || (propNullableType != null && valueType == null)) return;
+                    throw new($"The type of given test value doesn't match with the type of property {key.Name}.{i.Name}");
                 });
 #endif
                 _dict[key] = value;

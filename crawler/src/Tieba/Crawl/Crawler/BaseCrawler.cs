@@ -18,7 +18,7 @@ namespace tbm.Crawler
         {
             var error = (Error)response.Descriptor.FindFieldByName("error").Accessor.GetValue(response);
             if (error.Errorno != 0)
-                throw new TiebaException($"Error from tieba client, raw json: {response}");
+                throw new TiebaException($"Error from tieba client, raw: {response}");
         }
 
         protected static IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, int fieldNum, string exceptionMessage)

@@ -51,8 +51,8 @@ namespace TbClient.Post
                 p.AgreeNum = el.AgreeNum;
                 // when the thread is livepost, the agree field will not exists
                 p.DisagreeNum = (int)(el?.Agree?.DisagreeNum ?? 0);
-                p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.Location);
-                p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
+                p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el?.Location);
+                p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el?.Zan);
                 return p;
             }
             catch (Exception e)

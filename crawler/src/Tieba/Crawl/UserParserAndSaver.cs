@@ -4,6 +4,12 @@ namespace tbm.Crawler
 {
     public class UserParserAndSaver : CommonInSavers<UserParserAndSaver>
     {
+        private static readonly Dictionary<Type, string> TriggeredByPostSaverMap = new()
+        {
+            {typeof(ThreadSaver), "thread"},
+            {typeof(ReplySaver), "reply"},
+            {typeof(SubReplySaver), "subReply"}
+        };
         private static readonly HashSet<Uid> UidLock = new();
         private readonly ILogger<UserParserAndSaver> _logger;
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
@@ -49,7 +55,7 @@ namespace tbm.Crawler
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
 
-        public IEnumerable<Uid>? SaveUsers(TbmDbContext db, FieldsChangeIgnoranceWrapper fieldsChangeIgnoranceFromPostSaver)
+        public IEnumerable<Uid>? SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
         {
             if (_users.IsEmpty) return null;
             lock (UidLock)
@@ -61,8 +67,8 @@ namespace tbm.Crawler
                 var existingUsers = (from user in db.Users where usersExceptLocked.Keys.Any(uid => uid == user.Uid) select user).ToList();
                 var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
 
-                SavePostsOrUsers(_logger, fieldsChangeIgnoranceFromPostSaver, usersExceptLocked, db,
-                    u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid},
+                SavePostsOrUsers(_logger, postSaver.TiebaUserFieldsChangeIgnorance, usersExceptLocked, db,
+                    u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
                     u => existingUsersByUid.ContainsKey(u.Uid),
                     u => existingUsersByUid[u.Uid]);
                 return usersExceptLocked.Keys.ToList();
