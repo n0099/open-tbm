@@ -49,9 +49,9 @@ namespace tbm.Crawler
             switch (response.Error.Errorno)
             {
                 case 4:
-                    throw new TiebaException("Reply already deleted when crawling sub reply");
+                    throw new TiebaException(false, "Reply already deleted when crawling sub reply");
                 case 28:
-                    throw new TiebaException("Thread already deleted when crawling sub reply");
+                    throw new TiebaException(false, "Thread already deleted when crawling sub reply");
                 default:
                     ValidateOtherErrorCode(response);
                     return EnsureNonEmptyPostList(response, "Sub reply list is empty, posts might already deleted from tieba");

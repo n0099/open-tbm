@@ -16,7 +16,6 @@ global using Microsoft.Extensions.Logging;
 global using System.Collections.Concurrent;
 global using System.ComponentModel.DataAnnotations;
 global using System.Diagnostics;
-global using System.IO.Compression;
 global using System.Linq.Expressions;
 global using System.Reflection;
 global using System.Security.Cryptography;

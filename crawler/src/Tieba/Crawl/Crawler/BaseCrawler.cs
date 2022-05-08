@@ -26,11 +26,11 @@ namespace tbm.Crawler
         protected void ValidateOtherErrorCode(TResponse response)
         {
             if ((ResponseErrorField.GetValue(response) as Error)?.Errorno != 0)
-                throw new TiebaException($"Error from tieba client, raw: {response}");
+                throw new TiebaException("Error from tieba client") {Data = {{"raw", response}}};
         }
 
         protected IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage) =>
             ResponsePostListField.GetValue(ResponseDataField.GetValue(response)) is IList<TPostProtoBuf> posts
-            && posts.Any() ? posts : throw new TiebaException(exceptionMessage);
+            && posts.Any() ? posts : throw new TiebaException(false, exceptionMessage);
     }
 }

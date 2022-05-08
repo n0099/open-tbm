@@ -12,7 +12,7 @@ namespace tbm.Crawler
         public static long NextLong(this Random random, long min, long max)
         {
             if (max <= min)
-                throw new ArgumentOutOfRangeException(nameof(max), "max must be > min!");
+                throw new ArgumentOutOfRangeException(nameof(max), "Max must be > min!");
 
             var uRange = (ulong)(max - min);
             ulong ulongRand;

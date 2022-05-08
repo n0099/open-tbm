@@ -1,5 +1,3 @@
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-
 namespace tbm.Crawler
 {
     public class ThreadLateCrawlerAndSaver
@@ -40,24 +38,30 @@ namespace tbm.Crawler
                         {
                             {"kz", tid.ToString()},
                             {"pn", "1"},
-                            {"rn", "1"}
+                            {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
                         });
+                    if (json.GetStrProp("error_code") != "0") throw new TiebaException("Error from tieba client") {Data = {{"raw", json}}};
                     var thread = json.GetProperty("thread");
                     return new ThreadPost
                     {
                         Tid = Tid.Parse(thread.GetStrProp("id")),
-                        AuthorPhoneType = thread.GetStrProp("phone_type")
+                        AuthorPhoneType = thread.GetProperty("thread_info").GetStrProp("phone_type").NullIfWhiteSpace()
                     };
                 }
                 catch (Exception e)
-                {
+                { // below is similar with BaseCrawlFacade.CatchCrawlException()
                     e.Data["fid"] = _fid;
                     e.Data["tid"] = tid;
                     e = e.ExtractInnerExceptionsData();
 
-                    _logger.Log(e is TiebaException ? LogLevel.Warning : LogLevel.Error, e, "exception");
+                    if (e is TiebaException)
+                        _logger.LogWarning("TiebaException: {} {}", e.Message, JsonSerializer.Serialize(e.Data));
+                    else
+                        _logger.LogError(e, "Exception");
+                    if (e is not TiebaException {ShouldRetry: false})
+                        _locks.AcquireFailed(tid, 1);
+
                     _requesterTcs.Decrease();
-                    _locks.AcquireFailed(tid, 1);
                     return null;
                 }
                 finally

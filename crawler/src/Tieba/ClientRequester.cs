@@ -1,13 +1,18 @@
+using System.Net;
+
 namespace tbm.Crawler
 {
     public class ClientRequester
     {
-        public class HttpClient : System.Net.Http.HttpClient { }
+        public class HttpClient : System.Net.Http.HttpClient
+        {
+            public HttpClient(HttpMessageHandler handler) : base(handler) { }
+        }
 
         private readonly ILogger<ClientRequester> _logger;
         private readonly IConfigurationSection _config;
         private readonly ClientRequesterTcs _requesterTcs;
-        private static HttpClient _http = new();
+        private static HttpClient _http = null!;
         private static readonly Random Rand = new();
 
         public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
@@ -47,8 +52,7 @@ namespace tbm.Crawler
             try
             {
                 await using var stream = (await requester()).EnsureSuccessStatusCode().Content.ReadAsStream();
-                await using var gzip = new GZipStream(stream, CompressionMode.Decompress);
-                return responseConsumer(gzip);
+                return responseConsumer(stream);
             }
             catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
             {
@@ -96,7 +100,6 @@ namespace tbm.Crawler
             var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
             _ = request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
             request.Headers.Add("x_bd_data_type", "protobuf");
-            request.Headers.AcceptEncoding.ParseAdd("gzip");
             request.Headers.Accept.ParseAdd("*/*");
             request.Headers.Connection.Add("keep-alive");
 

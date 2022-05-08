@@ -54,12 +54,24 @@ namespace tbm.Crawler
                 await using var crawlScope = scope.BeginLifetimeScope();
                 var crawler = crawlScope.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                 savedThreads.AddIfNotNull((await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts());
-
-                var (firstThread, lastThread) = crawler.FirstAndLastPostInPages[crawlingPage];
-                lastThreadTime = lastThread.LatestReplyTime;
-                if (crawlingPage == 1)
-                    _latestReplyTimeCheckpointCache[fid] = firstThread.LatestReplyTime;
+                try
+                {
+                    var (firstThread, lastThread) = crawler.FirstAndLastPostInPages[crawlingPage];
+                    lastThreadTime = lastThread.LatestReplyTime;
+                    if (crawlingPage == 1) _latestReplyTimeCheckpointCache[fid] = firstThread.LatestReplyTime;
+                }
+                catch (Exception)
+                { // retry this page
+                    crawlingPage--;
+                    lastThreadTime = Time.MaxValue;
+                }
             } while (lastThreadTime > timeInPreviousCrawl);
+
+            await Task.WhenAll(savedThreads.Select(threads =>
+            {
+                using var crawlScope = scope.BeginLifetimeScope();
+                return crawlScope.Resolve<ThreadLateCrawlerAndSaver.New>()(fid, threads.NewlyAdded.Select(t => t.Tid)).Crawl();
+            }));
 
             return savedThreads;
         }
@@ -98,7 +110,7 @@ namespace tbm.Crawler
                 var (tid, replies) = tidAndReplies;
                 replies.NewlyAdded.ForEach(i =>
                 {
-                    if (i.SubReplyNum != 0) shouldCrawl.Add((tid, i.Pid));
+                    if (i.SubReplyNum != 0) _ = shouldCrawl.Add((tid, i.Pid));
                 });
                 replies.Existing.ForEach(beforeAndAfter =>
                 {

@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace tbm.Crawler
 {
     internal class Program
@@ -32,7 +34,7 @@ namespace tbm.Crawler
                         builder.RegisterType<TbmDbContext>();
                         builder.Register(c =>
                         {
-                            var http = new ClientRequester.HttpClient();
+                            var http = new ClientRequester.HttpClient(new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
                             var config = c.Resolve<IConfiguration>().GetSection("ClientRequester");
                             http.Timeout = TimeSpan.FromMilliseconds(config.GetValue("TimeoutMs", 3000));
                             return http;
@@ -44,6 +46,7 @@ namespace tbm.Crawler
                         RegisteredCrawlerLocks.ForEach(l =>
                             builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(l).SingleInstance());
                         builder.RegisterType<UserParserAndSaver>();
+                        builder.RegisterType<ThreadLateCrawlerAndSaver>();
 
                         var baseClassOfClassesToBeRegister = new List<Type>
                         {
@@ -60,7 +63,7 @@ namespace tbm.Crawler
             }
             catch (Exception e)
             {
-                logger.Fatal(e, "exception");
+                logger.Fatal(e, "Exception");
             }
             finally
             {
