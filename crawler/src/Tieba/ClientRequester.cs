@@ -1,14 +1,7 @@
-using System.Net;
-
 namespace tbm.Crawler
 {
     public class ClientRequester
     {
-        public class HttpClient : System.Net.Http.HttpClient
-        {
-            public HttpClient(HttpMessageHandler handler) : base(handler) { }
-        }
-
         private readonly ILogger<ClientRequester> _logger;
         private readonly IConfigurationSection _config;
         private readonly ClientRequesterTcs _requesterTcs;
@@ -16,12 +9,12 @@ namespace tbm.Crawler
         private static readonly Random Rand = new();
 
         public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
-            HttpClient http, ClientRequesterTcs requesterTcs)
+            IHttpClientFactory httpFactory, ClientRequesterTcs requesterTcs)
         {
             _logger = logger;
             _config = config.GetSection("ClientRequester");
+            _http = httpFactory.CreateClient("tbClient");
             _requesterTcs = requesterTcs;
-            _http = http;
         }
 
         public Task<JsonElement> RequestJson(string url, string clientVersion, Dictionary<string, string> param) =>
@@ -34,18 +27,17 @@ namespace tbm.Crawler
         public Task<TResponse> RequestProtoBuf<TRequest, TResponse>
             (string url, string clientVersion, PropertyInfo paramDataField, PropertyInfo paramCommonField, Func<TResponse> responseFactory, TRequest param)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
-            Request(() => PostProtoBuf(url, clientVersion, param, paramDataField, paramCommonField),
-                stream =>
+            Request(() => PostProtoBuf(url, clientVersion, param, paramDataField, paramCommonField), stream =>
+            {
+                try
                 {
-                    try
-                    {
-                        return new MessageParser<TResponse>(responseFactory).ParseFrom(stream);
-                    }
-                    catch (InvalidProtocolBufferException e)
-                    {
-                        throw new TiebaException($"Malformed protoBuf response from tieba {new StreamReader(stream).ReadToEnd()}", e);
-                    }
-                });
+                    return new MessageParser<TResponse>(responseFactory).ParseFrom(stream);
+                }
+                catch (InvalidProtocolBufferException e)
+                {
+                    throw new TiebaException($"Malformed protoBuf response from tieba {new StreamReader(stream).ReadToEnd()}", e);
+                }
+            });
 
         private static async Task<T> Request<T>(Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)
         {

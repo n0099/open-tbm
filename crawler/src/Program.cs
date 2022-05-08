@@ -1,4 +1,6 @@
 using System.Net;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http;
 
 namespace tbm.Crawler
 {
@@ -23,25 +25,25 @@ namespace tbm.Crawler
                         logging.ClearProviders();
                         logging.AddNLog();
                     })
-                    .ConfigureServices((_, service) =>
+                    .ConfigureServices((context, service) =>
                     {
                         service.AddHostedService<MainCrawlWorker>();
                         service.AddHostedService<RetryCrawlWorker>();
+                        var httpConfig = context.Configuration.GetSection("ClientRequester");
+                        service.AddHttpClient("tbClient", client =>
+                            {
+                                client.BaseAddress = new("http://c.tieba.baidu.com");
+                                client.Timeout = TimeSpan.FromMilliseconds(httpConfig.GetValue("TimeoutMs", 3000));
+                            })
+                            .SetHandlerLifetime(TimeSpan.FromSeconds(httpConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
+                            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
+                        service.RemoveAll<IHttpMessageHandlerBuilderFilter>(); // https://stackoverflow.com/questions/52889827/remove-http-client-logging-handler-in-asp-net-core/52970073#52970073
                     })
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                     .ConfigureContainer((ContainerBuilder builder) =>
                     {
                         builder.RegisterType<TbmDbContext>();
-                        builder.Register(c =>
-                        {
-                            var http = new ClientRequester.HttpClient(new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
-                            var config = c.Resolve<IConfiguration>().GetSection("ClientRequester");
-                            http.Timeout = TimeSpan.FromMilliseconds(config.GetValue("TimeoutMs", 3000));
-                            return http;
-                        }).AsSelf().SingleInstance();
-                        builder.RegisterType<ClientRequester>().WithParameter(
-                            (p, _) => p.ParameterType == typeof(ClientRequester.HttpClient),
-                            (_, c) => c.Resolve<ClientRequester.HttpClient>());
+                        builder.RegisterType<ClientRequester>();
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
                         RegisteredCrawlerLocks.ForEach(l =>
                             builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(l).SingleInstance());

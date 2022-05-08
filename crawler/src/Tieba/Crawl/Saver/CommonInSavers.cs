@@ -12,7 +12,8 @@ namespace tbm.Crawler
         protected static readonly FieldsChangeIgnoranceWrapper FieldsChangeIgnorance = new(
             Update: new()
             {
-                [typeof(ReplyPost)] = new() {new(nameof(ReplyPost.Content))}, // image url within the content of reply will be changed by each request
+                [typeof(ReplyPost)] = new() {new(nameof(ReplyPost.Content))}, // type=3.cdn_src, image url within the content of reply will be changed by each request
+                [typeof(SubReplyPost)] = new() {new(nameof(SubReplyPost.Content))}, // type=4.text, the displayed username within user@mentions might change, also will affect replies
                 [typeof(ThreadPost)] = new()
                 {
                     new(nameof(ThreadPost.AuthorPhoneType)), // will be update by ThreadLateCrawlerAndSaver
@@ -74,7 +75,8 @@ namespace tbm.Crawler
                     {
                         logger.LogWarning("Updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
-                            pName, p.CurrentValue, p.OriginalValue,
+                            pName, p.CurrentValue is byte[] bytes ? Convert.ToHexString(bytes) : p.CurrentValue,
+                            p.OriginalValue is byte[] bytes2 ? Convert.ToHexString(bytes2) : p.OriginalValue,
                             JsonSerializer.Serialize(currentPostOrUser), JsonSerializer.Serialize(originalPostOrUser));
                     }
                     else

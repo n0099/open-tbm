@@ -31,7 +31,7 @@ namespace tbm.Crawler
             new[]
             {
                 (Requester.RequestProtoBuf(
-                    "http://c.tieba.baidu.com/c/f/pb/floor?cmd=302002", "12.23.1.0",
+                    "c/f/pb/floor?cmd=302002", "12.23.1.0",
                     ParamDataField, ParamCommonField, () => new SubReplyResponse(), new SubReplyRequest
                     {
                         Data = new()

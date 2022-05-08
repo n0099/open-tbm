@@ -23,7 +23,7 @@ namespace tbm.Crawler
 
         protected override IEnumerable<(Task<ThreadResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page)
         {
-            const string url = "http://c.tieba.baidu.com/c/f/frs/page?cmd=301001";
+            const string url = "c/f/frs/page?cmd=301001";
             var requestBody602 = new ThreadRequest.Types.Data
             {
                 Kw = _forumName,
