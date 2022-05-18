@@ -1,5 +1,3 @@
-using FailedCount = System.UInt16;
-
 namespace tbm.Crawler
 {
 #pragma warning disable IDE0058 // Expression value is never used
@@ -78,35 +76,36 @@ namespace tbm.Crawler
             }
         }
 
-        public void AcquireFailed(FidOrPostId index, Page page)
+        public void AcquireFailed(FidOrPostId index, Page page, FailedCount failedCount)
         {
             lock (_failed)
             {
                 if (_failed.ContainsKey(index))
                 {
                     var pagesLock = _failed[index];
-                    lock (pagesLock) if (!pagesLock.TryAdd(page, 1)) pagesLock[page]++;
+                    lock (pagesLock) if (!pagesLock.TryAdd(page, failedCount)) pagesLock[page] = failedCount;
                 }
                 else
                 {
-                    var newPage = new ConcurrentDictionary<Page, FailedCount>();
-                    newPage.TryAdd(page, 1);
+                    var newPage = new ConcurrentDictionary<Page, FailedCount> { [page] = failedCount };
                     _failed.TryAdd(index, newPage);
                 }
             }
         }
 
-        public Dictionary<FidOrPostId, IEnumerable<Page>> RetryAllFailed()
+        public Dictionary<FidOrPostId, IEnumerable<PageAndFailedCount>> RetryAllFailed()
         {
             lock (_failed)
             {
                 var copyOfFailed = _failed.ToDictionary(p => p.Key, p =>
                 {
-                    lock (p.Value) return p.Value.Keys.AsEnumerable();
+                    lock (p.Value) return p.Value.Select(pair => new PageAndFailedCount(pair.Key, pair.Value));
                 });
                 _failed.Clear();
                 return copyOfFailed;
             }
         }
+
+        public record PageAndFailedCount(Page Page, FailedCount FailedCount);
     }
 }

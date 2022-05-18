@@ -70,20 +70,28 @@ namespace tbm.Crawler
 
                 var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Item1)).Max(i => (Page)i.TotalPage);
                 endPage = Math.Min(endPage, maxPage);
-            }, startPage);
+            }, startPage, 0);
 
             if (!isCrawlFailed) await CrawlPages(
                 Enumerable.Range((int)(startPage + 1),
-                    (int)(endPage - startPage)).Select(i => (Page)i));
+                    (int)(endPage - startPage)).Select(i => (Page)i), _ => 0);
             return this;
         }
 
-        public Task CrawlPages(IEnumerable<Page> pages) =>
+        private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount> previousFailedCountSelector) =>
             Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(page =>
-                CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page)
+                CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page, previousFailedCountSelector(page))
             ));
 
-        private async Task<bool> CatchCrawlException(Func<Task> callback, Page page)
+        public Task RetryPages(IEnumerable<CrawlerLocks.PageAndFailedCount> pageAndFailedCountRecords)
+        {
+            pageAndFailedCountRecords = pageAndFailedCountRecords.ToList();
+            var pagesNum = pageAndFailedCountRecords.Select(i => i.Page);
+            FailedCount FailedCountSelector(Page p) => pageAndFailedCountRecords.First(i => i.Page == p).FailedCount;
+            return CrawlPages(pagesNum, FailedCountSelector);
+        }
+
+        private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailedCount previousFailedCount)
         {
             try
             {
@@ -101,7 +109,7 @@ namespace tbm.Crawler
                 else
                     _logger.LogError(e, "Exception");
                 if (e is not TiebaException {ShouldRetry: false})
-                    _locks.AcquireFailed(_lockIndex, page);
+                    _locks.AcquireFailed(_lockIndex, page, (FailedCount)(previousFailedCount + 1));
 
                 _requesterTcs.Decrease();
                 return true;

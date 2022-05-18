@@ -26,10 +26,10 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<(Task<ReplyResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page) =>
+        protected override IEnumerable<Request> RequestsFactory(Page page) =>
             new[]
             {
-                (Requester.RequestProtoBuf(
+                new Request(Requester.RequestProtoBuf(
                     "c/f/pb/page?cmd=302001", "12.12.1.0",
                     ParamDataField, ParamCommonField, () => new ReplyResponse(), new ReplyRequest
                     {

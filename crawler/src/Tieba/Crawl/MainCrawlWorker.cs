@@ -70,7 +70,8 @@ namespace tbm.Crawler
             await Task.WhenAll(savedThreads.Select(threads =>
             {
                 using var crawlScope = scope.BeginLifetimeScope();
-                return crawlScope.Resolve<ThreadLateCrawlerAndSaver.New>()(fid, threads.NewlyAdded.Select(t => t.Tid)).Crawl();
+                return crawlScope.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
+                    .Crawl(threads.NewlyAdded.Select(t => new ThreadLateCrawlerAndSaver.TidAndFailedCount(t.Tid, 0)));
             }));
 
             return savedThreads;

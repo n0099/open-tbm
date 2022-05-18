@@ -21,7 +21,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<(Task<ThreadResponse>, CrawlRequestFlag, Page)> RequestsFactory(Page page)
+        protected override IEnumerable<Request> RequestsFactory(Page page)
         {
             const string url = "c/f/frs/page?cmd=301001";
             var requestBody602 = new ThreadRequest.Types.Data
@@ -41,9 +41,9 @@ namespace tbm.Crawler
             };
             return new[]
             {
-                (Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
+                new Request(Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
                     param: new ThreadRequest {Data = requestBody}, clientVersion: "12.23.1.0"), CrawlRequestFlag.None, page),
-                (Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
+                new Request(Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
                     param: new ThreadRequest {Data = requestBody602}, clientVersion: "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
             };
         }

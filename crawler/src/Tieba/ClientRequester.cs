@@ -43,7 +43,8 @@ namespace tbm.Crawler
         {
             try
             {
-                await using var stream = (await requester()).EnsureSuccessStatusCode().Content.ReadAsStream();
+                using var response = await requester();
+                var stream = response.EnsureSuccessStatusCode().Content.ReadAsStream();
                 return responseConsumer(stream);
             }
             catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
@@ -52,7 +53,7 @@ namespace tbm.Crawler
             }
             catch (HttpRequestException e)
             {
-                throw new TiebaException($"HTTP {e.StatusCode ?? 0} from tieba", e);
+                throw new TiebaException($"HTTP {(int?)e.StatusCode ?? 0} from tieba", e);
             }
         }
 

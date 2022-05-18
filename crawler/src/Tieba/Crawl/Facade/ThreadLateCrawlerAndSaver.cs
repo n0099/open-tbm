@@ -2,34 +2,35 @@ namespace tbm.Crawler
 {
     public class ThreadLateCrawlerAndSaver
     {
+        public record TidAndFailedCount(Tid Tid, FailedCount FailedCount);
+
         private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
         private readonly ClientRequester _requester;
         private readonly Fid _fid;
-        private readonly IEnumerable<Tid> _threadsId;
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton
 
-        public delegate ThreadLateCrawlerAndSaver New(Fid fid, IEnumerable<Tid> threadsId);
+        public delegate ThreadLateCrawlerAndSaver New(Fid fid);
 
         public ThreadLateCrawlerAndSaver(
             ILogger<ThreadLateCrawlerAndSaver> logger,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
-            Fid fid, IEnumerable<Tid> threadsId)
+            Fid fid)
         {
             _logger = logger;
             _requester = requester;
             _fid = fid;
-            _threadsId = threadsId;
             _requesterTcs = requesterTcs;
             _locks = locks["threadLate"]("threadLate");
         }
 
-        public async Task Crawl()
+        public async Task Crawl(IEnumerable<TidAndFailedCount> tidAndFailedCountRecords)
         {
-            var threads = await Task.WhenAll(_threadsId.Select(async tid =>
+            var threads = await Task.WhenAll(tidAndFailedCountRecords.Select(async tidAndFailedCount =>
             {
+                var tid = tidAndFailedCount.Tid;
                 if (!_locks.AcquireRange(tid, new[] {(Page)1}).Any()) return null;
                 try
                 {
@@ -59,7 +60,7 @@ namespace tbm.Crawler
                     else
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})
-                        _locks.AcquireFailed(tid, 1);
+                        _locks.AcquireFailed(tid, 1, tidAndFailedCount.FailedCount);
 
                     _requesterTcs.Decrease();
                     return null;
