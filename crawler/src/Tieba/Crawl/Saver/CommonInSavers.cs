@@ -73,10 +73,10 @@ namespace tbm.Crawler
                     var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
                     if (revisionProp == null)
                     {
+                        object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
                         logger.LogWarning("Updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
-                            pName, p.CurrentValue is byte[] bytes ? Convert.ToHexString(bytes) : p.CurrentValue,
-                            p.OriginalValue is byte[] bytes2 ? Convert.ToHexString(bytes2) : p.OriginalValue,
+                            pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
                             JsonSerializer.Serialize(currentPostOrUser), JsonSerializer.Serialize(originalPostOrUser));
                     }
                     else

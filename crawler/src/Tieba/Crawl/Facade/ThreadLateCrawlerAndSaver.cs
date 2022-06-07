@@ -41,13 +41,26 @@ namespace tbm.Crawler
                             {"pn", "1"},
                             {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
                         });
-                    if (json.GetStrProp("error_code") != "0") throw new TiebaException("Error from tieba client") {Data = {{"raw", json}}};
-                    var thread = json.GetProperty("thread");
-                    return new ThreadPost
+                    try
                     {
-                        Tid = Tid.Parse(thread.GetStrProp("id")),
-                        AuthorPhoneType = thread.GetProperty("thread_info").GetStrProp("phone_type").NullIfWhiteSpace()
-                    };
+                        switch (json.GetStrProp("error_code"))
+                        {
+                            case "4": throw new TiebaException(false, "Thread already deleted while thread late crawl");
+                            case not "0":
+                                throw new TiebaException("Error from tieba client") {Data = {{"raw", json}}};
+                        }
+                        var thread = json.GetProperty("thread");
+                        return new ThreadPost
+                        {
+                            Tid = Tid.Parse(thread.GetStrProp("id")),
+                            AuthorPhoneType = thread.GetProperty("thread_info").GetStrProp("phone_type").NullIfWhiteSpace()
+                        };
+                    }
+                    catch (Exception e)
+                    {
+                        e.Data["raw"] = json.GetRawText();
+                        throw;
+                    }
                 }
                 catch (Exception e)
                 { // below is similar with BaseCrawlFacade.CatchCrawlException()

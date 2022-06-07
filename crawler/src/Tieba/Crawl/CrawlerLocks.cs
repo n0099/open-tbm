@@ -26,7 +26,7 @@ namespace tbm.Crawler
             lock (_crawling)
             lock (_failed)
             {
-                var crawlingWithoutEmpty = _crawling.Where(i => i.Value.Count != 0).ToList();
+                var crawlingWithoutEmpty = _crawling.Where(i => !i.Value.IsEmpty).ToList();
                 _logger.LogTrace("Lock: type={} crawlingCount={} crawlingPagesCount={} failedCount={} failed={}", _postType,
                     crawlingWithoutEmpty.Count(), JsonSerializer.Serialize(crawlingWithoutEmpty.ToDictionary(i => i.Key, i => i.Value.Count)),
                     _failed.Count, JsonSerializer.Serialize(_failed));
@@ -78,6 +78,12 @@ namespace tbm.Crawler
 
         public void AcquireFailed(FidOrPostId index, Page page, FailedCount failedCount)
         {
+            var maxRetry = _config.GetValue<FailedCount>("MaxRetryTimes", 5);
+            if (failedCount >= maxRetry)
+            {
+                _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}", page, _postType, index, maxRetry);
+                return;
+            }
             lock (_failed)
             {
                 if (_failed.ContainsKey(index))

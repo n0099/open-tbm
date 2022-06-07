@@ -74,13 +74,15 @@ namespace tbm.Crawler
 
             if (!isCrawlFailed) await CrawlPages(
                 Enumerable.Range((int)(startPage + 1),
-                    (int)(endPage - startPage)).Select(i => (Page)i), _ => 0);
+                    (int)(endPage - startPage)).Select(i => (Page)i));
             return this;
         }
 
-        private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount> previousFailedCountSelector) =>
+        private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount>? previousFailedCountSelector = null) =>
             Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(page =>
-                CatchCrawlException(async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse), page, previousFailedCountSelector(page))
+                CatchCrawlException(
+                    async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse),
+                    page, previousFailedCountSelector?.Invoke(page) ?? 0)
             ));
 
         public Task RetryPages(IEnumerable<CrawlerLocks.PageAndFailedCount> pageAndFailedCountRecords)
