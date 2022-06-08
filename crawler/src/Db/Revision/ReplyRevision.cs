@@ -9,5 +9,7 @@ namespace tbm.Crawler
         public ushort? IsFold { get; set; }
         public int? AgreeNum { get; set; }
         public int? DisagreeNum { get; set; }
+        public byte[]? Location { get; set; }
+        public byte[]? SignInfo { get; set; }
     }
 }

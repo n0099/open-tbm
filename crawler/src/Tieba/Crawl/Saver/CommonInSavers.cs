@@ -17,14 +17,19 @@ namespace tbm.Crawler
                 [typeof(ThreadPost)] = new()
                 {
                     new(nameof(ThreadPost.AuthorPhoneType)), // will be update by ThreadLateCrawlerAndSaver
-                    new(nameof(ThreadPost.ZanInfo), true), // possible null values from response
-                    new(nameof(ThreadPost.Location), true), // possible null values from response
+                    new(nameof(ThreadPost.ZanInfo), true), // possible random null values from response
+                    new(nameof(ThreadPost.Location), true), // possible random null values from response
                     new(nameof(ThreadPost.Title), true, "") // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
                 }
             },
             Revision: new()
             {
-                [typeof(ThreadPost)] = new() {new(nameof(ThreadPost.Title))} // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+                [typeof(ThreadPost)] = new()
+                {
+                    new(nameof(ThreadPost.Title)), // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+                    new(nameof(ThreadPost.LatestReplierUid), true), // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
+                    new(nameof(ThreadPost.AuthorManagerType), true) // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
+                }
             }
         );
     }

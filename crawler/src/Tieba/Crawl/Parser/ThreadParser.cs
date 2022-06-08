@@ -14,8 +14,9 @@ namespace tbm.Crawler
                     // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
                     .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
                 posts.Where(t => t.StickyType != null)
+                    // using value from 6.0.2 response to fix that in the 12.x response author uid will be 0 and all the other fields is filled with default value
                     .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
-                posts.Where(t => t.Location != null)
+                posts.Where(t => t.Location != null) // replace with more detailed location.name in the 6.0.2 response
                     .ForEach(t => t.Location = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
                 return null;
             }

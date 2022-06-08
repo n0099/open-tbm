@@ -67,7 +67,11 @@ namespace tbm.Crawler
         {
             lock (_crawling)
             {
-                var pagesLock = _crawling[index];
+                if (!_crawling.TryGetValue(index, out var pagesLock))
+                {
+                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once", page, _postType, index);
+                    return;
+                }
                 lock (pagesLock)
                 {
                     pagesLock.TryRemove(page, out _);

@@ -3,6 +3,7 @@ namespace tbm.Crawler
     public class ThreadRevision : BaseRevision
     {
         public ulong Tid { get; set; }
+        public ulong? ThreadType { get; set; }
         public string? StickyType { get; set; }
         public string? TopicType { get; set; }
         public bool? IsGood { get; set; }
@@ -14,5 +15,6 @@ namespace tbm.Crawler
         public uint? ShareNum { get; set; }
         public int? AgreeNum { get; set; }
         public int? DisagreeNum { get; set; }
+        public byte[]? Location { get; set; }
     }
 }

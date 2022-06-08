@@ -34,7 +34,7 @@ namespace tbm.Crawler
                 }
 
                 var name = el.Name.NullIfWhiteSpace(); // null when he haven't set username for his baidu account yet
-                var nameShow = el.NameShow;
+                var nameShow = el.NameShow.NullIfWhiteSpace();
                 var u = new TiebaUser();
                 try
                 {

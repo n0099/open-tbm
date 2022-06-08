@@ -34,13 +34,12 @@ namespace tbm.Crawler
                 if (!_locks.AcquireRange(tid, new[] {(Page)1}).Any()) return null;
                 try
                 {
-                    var json = await _requester.RequestJson("c/f/pb/page", "8.8.8.8",
-                        new()
-                        {
-                            {"kz", tid.ToString()},
-                            {"pn", "1"},
-                            {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
-                        });
+                    var json = await _requester.RequestJson("c/f/pb/page", "8.8.8.8", new()
+                    {
+                        {"kz", tid.ToString()},
+                        {"pn", "1"},
+                        {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
+                    });
                     try
                     {
                         switch (json.GetStrProp("error_code"))
@@ -50,11 +49,15 @@ namespace tbm.Crawler
                                 throw new TiebaException("Error from tieba client") {Data = {{"raw", json}}};
                         }
                         var thread = json.GetProperty("thread");
-                        return new ThreadPost
+                        if (thread.GetProperty("thread_info").TryGetProperty("phone_type", out var phoneType))
                         {
-                            Tid = Tid.Parse(thread.GetStrProp("id")),
-                            AuthorPhoneType = thread.GetProperty("thread_info").GetStrProp("phone_type").NullIfWhiteSpace()
-                        };
+                            return new ThreadPost
+                            {
+                                Tid = Tid.Parse(thread.GetStrProp("id")),
+                                AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
+                            };
+                        }
+                        else throw new TiebaException(false, "Field phone_type is missing in response.thread.thread_info, it might be a historical thread");
                     }
                     catch (Exception e)
                     {
