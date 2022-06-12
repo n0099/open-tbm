@@ -2,11 +2,12 @@ namespace tbm.Crawler
 {
     public class SubReplySaver : BaseSaver<SubReplyPost>
     {
-        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(new(),
-            Revision: new()
-            { // the value of IconInfo returned by thread saver is always null since we ignored its value
-                [typeof(TiebaUser)] = new() {new(nameof(TiebaUser.IconInfo), true)}
-            });
+        public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
+            Update: (whichPostType, propertyName, originalValue, currentValue) =>
+                // always ignore updates on iconinfo due to some rare user will show some extra icons
+                // compare to reply response in the response of sub reply
+                propertyName == nameof(TiebaUser.IconInfo),
+            (_, _, _, _) => false);
 
         private readonly Fid _fid;
 

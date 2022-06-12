@@ -85,9 +85,8 @@ namespace tbm.Crawler
                     page, previousFailedCountSelector?.Invoke(page) ?? 0)
             ));
 
-        public Task RetryPages(IEnumerable<CrawlerLocks.PageAndFailedCount> pageAndFailedCountRecords)
+        public Task RetryPages(List<CrawlerLocks.PageAndFailedCount> pageAndFailedCountRecords)
         {
-            pageAndFailedCountRecords = pageAndFailedCountRecords.ToList();
             var pagesNum = pageAndFailedCountRecords.Select(i => i.Page);
             FailedCount FailedCountSelector(Page p) => pageAndFailedCountRecords.First(i => i.Page == p).FailedCount;
             return CrawlPages(pagesNum, FailedCountSelector);

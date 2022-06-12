@@ -49,7 +49,7 @@ namespace tbm.Crawler
                 }
                 catch (Exception e)
                 {
-                    e.Data["rawJson"] = JsonSerializer.Serialize(el);
+                    e.Data["raw"] = JsonSerializer.Serialize(el);
                     throw new("User parse error", e);
                 }
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
@@ -76,7 +76,7 @@ namespace tbm.Crawler
                     });
                 }
 
-                SavePostsOrUsers(_logger, postSaver.TiebaUserFieldsChangeIgnorance, usersExceptLocked, db,
+                SavePostsOrUsers(_logger, postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
                     () => new UserRevisionNullFields(),
                     u => existingUsersByUid.ContainsKey(u.Uid),

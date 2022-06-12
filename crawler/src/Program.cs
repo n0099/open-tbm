@@ -23,7 +23,7 @@ namespace tbm.Crawler
                     .ConfigureLogging((_, logging) =>
                     {
                         logging.ClearProviders();
-                        logging.AddNLog();
+                        logging.AddNLog(new NLogProviderOptions() {RemoveLoggerFactoryFilter = false});
                     })
                     .ConfigureServices((context, service) =>
                     {

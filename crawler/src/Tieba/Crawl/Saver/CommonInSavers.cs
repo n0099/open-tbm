@@ -9,36 +9,51 @@ namespace tbm.Crawler
         protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionNullFieldsPropertiesCache = GetPropDictKeyByTypes(new()
             {typeof(ThreadRevisionNullFields), typeof(ReplyRevisionNullFields), typeof(SubReplyRevisionNullFields), typeof(UserRevisionNullFields)});
 
-        protected static readonly FieldsChangeIgnoranceWrapper FieldsChangeIgnorance = new(
-            Update: new()
+        public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propertyName, object? originalValue, object? currentValue);
+        public record FieldChangeIgnoranceCallbackRecord(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);
+        protected static readonly FieldChangeIgnoranceCallbackRecord FieldChangeIgnorance = new(
+            Update: (whichPostType, propertyName, originalValue, currentValue) =>
             {
-                [typeof(ReplyPost)] = new() {new(nameof(ReplyPost.Content))}, // type=3.cdn_src, image url within the content of reply will be changed by each request
-                [typeof(SubReplyPost)] = new() {new(nameof(SubReplyPost.Content))}, // type=4.text, the displayed username within user@mentions might change, also will affect replies
-                [typeof(ThreadPost)] = new()
-                {
-                    new(nameof(ThreadPost.AuthorPhoneType)), // will be update by ThreadLateCrawlerAndSaver
-                    new(nameof(ThreadPost.ZanInfo), true), // possible random null values from response
-                    new(nameof(ThreadPost.Location), true), // possible random null values from response
-                    new(nameof(ThreadPost.Title), true, "") // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+                if (whichPostType == typeof(ReplyPost) || whichPostType == typeof(SubReplyPost))
+                { // type=3.cdn_src, image url within the content of reply will be changed by each request
+                    // type=4.text, the displayed username within user@mentions might change, also will affect replies
+                    if (propertyName is nameof(ReplyPost.Content) or nameof(SubReplyPost.Content)) return true;
                 }
+                if (whichPostType == typeof(ThreadPost))
+                {
+                    switch (propertyName)
+                    {
+                        case nameof(ThreadPost.AuthorPhoneType): // will be update by ThreadLateCrawlerAndSaver
+                        case nameof(ThreadPost.ZanInfo) when currentValue is null: // possible randomly response with null
+                        case nameof(ThreadPost.Location) when currentValue is null: // possible randomly response with null
+                        case nameof(ThreadPost.Title) when currentValue is "": // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+                            return true;
+                    }
+                }
+                return false;
             },
-            Revision: new()
+            Revision: (whichPostType, propertyName, originalValue, currentValue) =>
             {
-                [typeof(ThreadPost)] = new()
+                if (whichPostType == typeof(ThreadPost))
                 {
-                    new(nameof(ThreadPost.Title)), // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
-                    new(nameof(ThreadPost.LatestReplierUid), true), // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
-                    new(nameof(ThreadPost.AuthorManagerType), true) // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
+                    switch (propertyName)
+                    {
+                        case nameof(ThreadPost.Title) when originalValue is "": // empty string from response has been updated by ReplyCrawlFacade.PostParseCallback()
+                        case nameof(ThreadPost.LatestReplierUid) when originalValue is null: // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
+                        case nameof(ThreadPost.AuthorManagerType) when originalValue is null: // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
+                        case nameof(ThreadPost.DisagreeNum) when originalValue is not 0 && currentValue is 0: // possible randomly response with 0
+                            return true;
+                    }
                 }
-            }
-        );
+                return false;
+            });
     }
 
     public abstract class CommonInSavers<TSaver> : InternalCommonInSavers where TSaver : CommonInSavers<TSaver>
     {
         protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision, TRevisionNullFields>(
             ILogger<CommonInSavers<TSaver>> logger,
-            FieldsChangeIgnoranceWrapper additionalFieldsChangeIgnorance,
+            FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             TbmDbContext db,
             Func<TPostOrUser, TRevision> revisionFactory,
@@ -68,12 +83,17 @@ namespace tbm.Crawler
                     if (!p.IsModified || pName is nameof(IEntityWithTimestampFields.CreatedAt)
                             or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
 
-                    if (FieldsChangeIgnorance.Update.TestShouldIgnore<TPostOrUser>(additionalFieldsChangeIgnorance.Update, pName, p.CurrentValue))
+                    var whichPostType = typeof(TPostOrUser);
+                    if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                        || (whichPostType == typeof(TiebaUser)
+                            && tiebaUserFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                     {
                         p.IsModified = false;
                         continue; // skip following revision check
                     }
-                    if (FieldsChangeIgnorance.Revision.TestShouldIgnore<TPostOrUser>(additionalFieldsChangeIgnorance.Revision, pName, p.OriginalValue)) continue;
+                    if (FieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                        || (whichPostType == typeof(TiebaUser)
+                            && tiebaUserFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
 
                     var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
                     if (revisionProp == null)

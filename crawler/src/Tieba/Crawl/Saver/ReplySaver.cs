@@ -2,15 +2,20 @@ namespace tbm.Crawler
 {
     public class ReplySaver : BaseSaver<ReplyPost>
     {
-        public override FieldsChangeIgnoranceWrapper TiebaUserFieldsChangeIgnorance { get; } = new(new(),
-            Revision: new()
+        public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
+            Update: (whichPostType, propertyName, originalValue, currentValue) =>
+                // the value of IconInfo in response of reply crawler might be null even if the user haven't change his icon info
+                propertyName == nameof(TiebaUser.IconInfo) && currentValue is null,
+            Revision: (whichPostType, propertyName, originalValue, currentValue) =>
             {
-                [typeof(TiebaUser)] = new()
+                switch (propertyName)
                 { // the value of user gender returned by thread saver is always null
-                    new(nameof(TiebaUser.Gender), true),
+                    case nameof(TiebaUser.Gender) when originalValue is null:
                     // the value of IconInfo returned by thread saver is always null since we ignored its value
-                    new(nameof(TiebaUser.IconInfo), true)
+                    case nameof(TiebaUser.IconInfo) when originalValue is null:
+                        return true;
                 }
+                return false;
             });
 
         private readonly Fid _fid;

@@ -54,7 +54,7 @@ namespace tbm.Crawler
                         {
                             var forumName = (from f in db.ForumsInfo where f.Fid == fidOrPostId select f.Name).FirstOrDefault();
                             if (forumName == null) return;
-                            _logger.LogTrace("Retrying previous failed thread crawl with fid:{}, forumName:{}", fidOrPostId, forumName);
+                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", pageAndFailedCountRecords.Count(), fidOrPostId, forumName);
                             var crawler = scope.Resolve<ThreadCrawlFacade.New>()((Fid)fidOrPostId, forumName);
                             await crawler.RetryPages(pageAndFailedCountRecords);
                             _ = crawler.SavePosts();
@@ -63,7 +63,7 @@ namespace tbm.Crawler
                         {
                             var parentsId = (from p in db.PostsIndex where p.Type == "thread" && p.Tid == fidOrPostId select new {p.Fid, p.Tid}).FirstOrDefault();
                             if (parentsId == null) return;
-                            _logger.LogTrace("Retrying previous failed reply crawl with fid:{}, tid:{}", parentsId.Fid, parentsId.Tid);
+                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", pageAndFailedCountRecords.Count(), parentsId.Fid, parentsId.Tid);
                             var crawler = scope.Resolve<ReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid);
                             await crawler.RetryPages(pageAndFailedCountRecords);
                             _ = crawler.SavePosts();
@@ -72,7 +72,7 @@ namespace tbm.Crawler
                         {
                             var parentsId = (from p in db.PostsIndex where p.Type == "reply" && p.Pid == fidOrPostId select new {p.Fid, p.Tid, p.Pid}).FirstOrDefault();
                             if (parentsId == null) return;
-                            _logger.LogTrace("Retrying previous failed sub reply crawl with fid:{}, tid:{}, pid:{}", parentsId.Fid, parentsId.Tid, parentsId.Pid);
+                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", pageAndFailedCountRecords.Count(), parentsId.Fid, parentsId.Tid, parentsId.Pid);
                             var crawler = scope.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid);
                             await crawler.RetryPages(pageAndFailedCountRecords);
                             _ = crawler.SavePosts();

@@ -46,7 +46,7 @@ namespace tbm.Crawler
                 .UseCamelCaseNamingConvention();
 
             var dbSettings = _config.GetSection("DbSettings");
-            options.UseLoggerFactory(LoggerFactory.Create(builder => builder.AddNLog()
+            options.UseLoggerFactory(LoggerFactory.Create(builder => builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})
                 .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(dbSettings.GetValue("LogLevel", "Trace")).Ordinal)));
             if (dbSettings.GetValue("EnableDetailedErrors", false)) options.EnableDetailedErrors();
             if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
@@ -65,14 +65,12 @@ namespace tbm.Crawler
                 var updatedAtProp = e.Property(nameof(IEntityWithTimestampFields.UpdatedAt));
                 updatedAtProp.CurrentValue = timestamp;
 
-#if DEBUG
                 if (updatedAtProp.IsModified || e.State != EntityState.Modified) return;
                 _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with new values={}, originalValues={}. " +
                                    "This means the record is updated more than one time within one second, " +
                                    "which usually caused by a different response of the same resource from tieba. " +
                                    "We will cancel updates on this record, and there might be a possible duplicate keys conflict from other revision tables update in the future",
                     JsonSerializer.Serialize(e.CurrentValues.ToObject()), JsonSerializer.Serialize(e.OriginalValues.ToObject()));
-#endif
             });
             return base.SaveChanges();
         }
