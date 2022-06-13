@@ -27,6 +27,7 @@ namespace tbm.Crawler
                         case nameof(ThreadPost.ZanInfo) when currentValue is null: // possible randomly response with null
                         case nameof(ThreadPost.Location) when currentValue is null: // possible randomly response with null
                         case nameof(ThreadPost.Title) when currentValue is "": // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
+                        case nameof(ThreadPost.DisagreeNum) when originalValue is not 0 && currentValue is 0: // possible randomly response with 0
                             return true;
                     }
                 }
@@ -41,7 +42,6 @@ namespace tbm.Crawler
                         case nameof(ThreadPost.Title) when originalValue is "": // empty string from response has been updated by ReplyCrawlFacade.PostParseCallback()
                         case nameof(ThreadPost.LatestReplierUid) when originalValue is null: // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
                         case nameof(ThreadPost.AuthorManagerType) when originalValue is null: // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
-                        case nameof(ThreadPost.DisagreeNum) when originalValue is not 0 && currentValue is 0: // possible randomly response with 0
                             return true;
                     }
                 }
@@ -84,16 +84,15 @@ namespace tbm.Crawler
                             or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
 
                     var whichPostType = typeof(TPostOrUser);
+                    var entryIsUser = whichPostType == typeof(TiebaUser);
                     if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
-                        || (whichPostType == typeof(TiebaUser)
-                            && tiebaUserFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
+                        || (entryIsUser && tiebaUserFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                     {
                         p.IsModified = false;
                         continue; // skip following revision check
                     }
                     if (FieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
-                        || (whichPostType == typeof(TiebaUser)
-                            && tiebaUserFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
+                        || (entryIsUser && tiebaUserFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
 
                     var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
                     if (revisionProp == null)

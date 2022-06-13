@@ -3,7 +3,7 @@ namespace tbm.Crawler
     public class SubReplySaver : BaseSaver<SubReplyPost>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
-            Update: (whichPostType, propertyName, originalValue, currentValue) =>
+            Update: (_, propertyName, originalValue, currentValue) =>
                 // always ignore updates on iconinfo due to some rare user will show some extra icons
                 // compare to reply response in the response of sub reply
                 propertyName == nameof(TiebaUser.IconInfo),

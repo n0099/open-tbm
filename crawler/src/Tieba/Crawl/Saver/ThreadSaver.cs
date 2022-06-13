@@ -3,17 +3,14 @@ namespace tbm.Crawler
     public class ThreadSaver : BaseSaver<ThreadPost>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
-            Update: (whichPostType, propertyName, originalValue, currentValue) =>
+            Update: (_, propertyName, originalValue, currentValue) => propertyName switch
             {
-                switch (propertyName)
-                { // the value of user gender returned by thread saver is always 0
-                    case nameof(TiebaUser.Gender) when currentValue is 0:
-                    // IconInfo.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
-                    // note this will cause we can't record when did a user update its iconinfo to null since these null values have been ignored in reply and sub reply saver
-                    case nameof(TiebaUser.IconInfo):
-                        return true;
-                }
-                return false;
+                // the value of user gender in thread response might be 0 but in reply response it won't be 0
+                nameof(TiebaUser.Gender) when (ushort?)currentValue is 0 && (ushort?)originalValue is not 0 => true,
+                // IconInfo.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
+                // note this will cause we can't record when did a user update its iconinfo to null since these null values have been ignored in reply and sub reply saver
+                nameof(TiebaUser.IconInfo) => true,
+                _ => false
             }, (_, _, _, _) => false);
 
         private readonly Fid _fid;

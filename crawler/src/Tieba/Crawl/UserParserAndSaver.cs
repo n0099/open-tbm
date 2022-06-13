@@ -67,15 +67,6 @@ namespace tbm.Crawler
                 var existingUsers = (from user in db.Users where usersExceptLocked.Keys.Any(uid => uid == user.Uid) select user).ToList();
                 var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
 
-                if (postSaver is ThreadSaver)
-                {
-                    usersExceptLocked.ForEach(i =>
-                    { // see ThreadSaver.TiebaUserFieldsChangeIgnorance.Update
-                        i.Value.IconInfo = null;
-                        i.Value.Gender = null;
-                    });
-                }
-
                 SavePostsOrUsers(_logger, postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
                     () => new UserRevisionNullFields(),
@@ -85,7 +76,7 @@ namespace tbm.Crawler
             }
         }
 
-        public void ReleaseLocks(IEnumerable<Uid> usersId)
+        public static void ReleaseLocks(IEnumerable<Uid> usersId)
         {
             lock (UidLock) UidLock.ExceptWith(usersId);
         }

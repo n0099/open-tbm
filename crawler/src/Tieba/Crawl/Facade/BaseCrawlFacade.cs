@@ -54,7 +54,7 @@ namespace tbm.Crawler
             }
             finally
             {
-                if (savedUsersId != null) Users.ReleaseLocks(savedUsersId);
+                if (savedUsersId != null) UserParserAndSaver.ReleaseLocks(savedUsersId);
             }
             return savedPosts;
         }
