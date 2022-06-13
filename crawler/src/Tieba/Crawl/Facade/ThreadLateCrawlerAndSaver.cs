@@ -72,7 +72,7 @@ namespace tbm.Crawler
                     e = e.ExtractInnerExceptionsData();
 
                     if (e is TiebaException)
-                        _logger.LogWarning("TiebaException: {} {}", e.Message, JsonSerializer.Serialize(e.Data));
+                        _logger.LogWarning("TiebaException: {} {}", e.Message, Helper.UnescapedJsonSerialize(e.Data));
                     else
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})

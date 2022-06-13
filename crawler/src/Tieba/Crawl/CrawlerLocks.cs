@@ -28,8 +28,8 @@ namespace tbm.Crawler
             {
                 var crawlingWithoutEmpty = _crawling.Where(i => !i.Value.IsEmpty).ToList();
                 _logger.LogTrace("Lock: type={} crawlingCount={} crawlingPagesCount={} failedCount={} failed={}", _postType,
-                    crawlingWithoutEmpty.Count(), JsonSerializer.Serialize(crawlingWithoutEmpty.ToDictionary(i => i.Key, i => i.Value.Count)),
-                    _failed.Count, JsonSerializer.Serialize(_failed));
+                    crawlingWithoutEmpty.Count, Helper.UnescapedJsonSerialize(crawlingWithoutEmpty.ToDictionary(i => i.Key, i => i.Value.Count)),
+                    _failed.Count, Helper.UnescapedJsonSerialize(_failed));
             }
         }
 

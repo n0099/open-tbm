@@ -102,7 +102,7 @@ namespace tbm.Crawler
                         logger.LogWarning("Updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
-                            JsonSerializer.Serialize(currentPostOrUser), JsonSerializer.Serialize(originalPostOrUser));
+                            Helper.UnescapedJsonSerialize(currentPostOrUser), Helper.UnescapedJsonSerialize(originalPostOrUser));
                     }
                     else
                     {

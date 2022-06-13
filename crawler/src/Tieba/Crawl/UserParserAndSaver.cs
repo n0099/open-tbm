@@ -49,7 +49,7 @@ namespace tbm.Crawler
                 }
                 catch (Exception e)
                 {
-                    e.Data["raw"] = JsonSerializer.Serialize(el);
+                    e.Data["raw"] = Helper.UnescapedJsonSerialize(el);
                     throw new("User parse error", e);
                 }
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
