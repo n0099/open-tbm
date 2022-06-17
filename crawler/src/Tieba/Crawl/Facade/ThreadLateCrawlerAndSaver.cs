@@ -44,7 +44,7 @@ namespace tbm.Crawler
                     {
                         switch (json.GetStrProp("error_code"))
                         {
-                            case "4": throw new TiebaException(false, "Thread already deleted while thread late crawl");
+                            case "4" or "350008": throw new TiebaException(false, "Thread already deleted while thread late crawl");
                             case not "0":
                                 throw new TiebaException("Error from tieba client") {Data = {{"raw", json}}};
                         }

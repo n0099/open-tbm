@@ -30,7 +30,6 @@ namespace TbClient.Post
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
                 p.SignInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);
-                p.TailInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.TailInfo);
                 return p;
             }
             catch (Exception e)

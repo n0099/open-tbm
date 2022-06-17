@@ -20,7 +20,7 @@ namespace tbm.Crawler
             PredicateBuilder.New<SubReplyPost>(p => Posts.Keys.Any(id => id == p.Spid)),
             PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Spid)),
             p => p.Spid,
-            i => i.Spid,
+            i => i.Spid ?? 0,
             p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
             p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid},
             () => new SubReplyRevisionNullFields());

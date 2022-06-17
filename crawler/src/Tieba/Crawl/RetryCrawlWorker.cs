@@ -73,7 +73,7 @@ namespace tbm.Crawler
                             var parentsId = (from p in db.PostsIndex where p.Type == "reply" && p.Pid == fidOrPostId select new {p.Fid, p.Tid, p.Pid}).FirstOrDefault();
                             if (parentsId == null) return;
                             _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", pageAndFailedCountRecords.Count, parentsId.Fid, parentsId.Tid, parentsId.Pid);
-                            var crawler = scope.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid);
+                            var crawler = scope.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid ?? 0);
                             await crawler.RetryPages(pageAndFailedCountRecords);
                             _ = crawler.SavePosts();
                         }

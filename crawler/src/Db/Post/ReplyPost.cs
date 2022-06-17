@@ -17,7 +17,6 @@ namespace tbm.Crawler
         public int DisagreeNum { get; set; }
         public byte[]? Location { get; set; }
         public byte[]? SignInfo { get; set; }
-        public byte[]? TailInfo { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
     }
