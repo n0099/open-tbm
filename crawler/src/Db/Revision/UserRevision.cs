@@ -6,7 +6,8 @@ namespace tbm.Crawler
         public string TriggeredBy { get; set; } = "";
         public string? Name { get; set; }
         public string? DisplayName { get; set; }
-        public string? AvatarUrl { get; set; }
+        public string Portrait { get; set; } = "";
+        public uint? PortraitUpdateTime { get; set; }
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
         public byte[]? IconInfo { get; set; }

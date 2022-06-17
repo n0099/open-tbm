@@ -6,12 +6,9 @@ namespace tbm.Crawler
             Update: (_, propertyName, originalValue, currentValue) =>
                 // the value of IconInfo in response of reply crawler might be null even if the user haven't change his icon info
                 propertyName == nameof(TiebaUser.IconInfo) && currentValue is null,
-            Revision: (_, propertyName, originalValue, currentValue) => propertyName switch
-            {
-                // the value of IconInfo returned by thread saver is always null since we ignored its value
-                nameof(TiebaUser.IconInfo) when originalValue is null => true,
-                _ => false
-            });
+            (_, propertyName, originalValue, currentValue) =>
+                // the value of user gender in thread response might be 0 but in reply response it won't be 0
+                propertyName == nameof(TiebaUser.Gender) && (ushort?)originalValue is 0 && (ushort?)currentValue is not 0);
 
         private readonly Fid _fid;
 

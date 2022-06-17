@@ -4,8 +4,7 @@ namespace tbm.Crawler
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propertyName, originalValue, currentValue) => propertyName switch
-            {
-                // the value of user gender in thread response might be 0 but in reply response it won't be 0
+            { // the value of user gender in thread response might be 0 but in reply response it won't be 0
                 nameof(TiebaUser.Gender) when (ushort?)currentValue is 0 && (ushort?)originalValue is not 0 => true,
                 // IconInfo.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
                 // note this will cause we can't record when did a user update its iconinfo to null since these null values have been ignored in reply and sub reply saver

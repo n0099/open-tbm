@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Uid = System.Int64;
 
 namespace tbm.Crawler
@@ -11,6 +12,7 @@ namespace tbm.Crawler
             {typeof(SubReplySaver), "subReply"}
         };
         private static readonly HashSet<Uid> UidLock = new();
+        private static readonly Regex PortraitExtractingRegex = new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private readonly ILogger<UserParserAndSaver> _logger;
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
 
@@ -21,15 +23,21 @@ namespace tbm.Crawler
             if (!users.Any()) throw new TiebaException("User list is empty");
             users.Select(el =>
             {
+                static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
+                    PortraitExtractingRegex.Match(portrait) is {Success: true} m
+                        ? (m.Groups[1].Value, Time.Parse(m.Groups[2].ValueSpan)) : (portrait, null);
+
                 var uid = el.Uid;
                 if (uid == 0) return null; // in client version 12.x the last user in list will be a empty user with uid 0
+                var (portrait, portraitUpdateTime) = ExtractPortrait(el.Portrait);
                 if (uid < 0) // historical anonymous user
                 {
                     return new()
                     {
                         Uid = uid,
                         Name = el.NameShow,
-                        AvatarUrl = el.Portrait
+                        Portrait = portrait,
+                        PortraitUpdateTime = portraitUpdateTime
                     };
                 }
 
@@ -41,7 +49,8 @@ namespace tbm.Crawler
                     u.Uid = uid;
                     u.Name = name;
                     u.DisplayName = name == nameShow ? null : nameShow;
-                    u.AvatarUrl = el.Portrait;
+                    u.Portrait = portrait;
+                    u.PortraitUpdateTime = portraitUpdateTime;
                     u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
                     u.IconInfo = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
