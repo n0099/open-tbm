@@ -34,7 +34,7 @@ namespace tbm.Crawler
             b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new { e.Pid, e.Time });
             b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new { e.Spid, e.Time });
             b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new { e.Uid, e.Time });
-            b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasKey(e => new { e.Tid, e.Pid, e.Spid });
+            b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasIndex(e => new { e.Tid, e.Pid, e.Spid }).IsUnique();
             b.Entity<ForumInfo>().ToTable("tbm_forumsInfo");
         }
 
