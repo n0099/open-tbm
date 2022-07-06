@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace tbm.Crawler
 {
     public class SubReplyPost : IPost
@@ -6,7 +8,7 @@ namespace tbm.Crawler
         public ulong Tid { get; set; }
         public ulong Pid { get; set; }
         [Key] public ulong Spid { get; set; }
-        public byte[]? Content { get; set; }
+        [NotMapped] public byte[]? Content { get; set; }
         public long AuthorUid { get; set; }
         public string? AuthorManagerType { get; set; }
         public ushort AuthorExpGrade { get; set; }

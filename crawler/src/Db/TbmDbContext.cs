@@ -10,7 +10,10 @@ namespace tbm.Crawler
         public DbSet<TiebaUser> Users => Set<TiebaUser>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
+        public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
+        public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
+        public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
         public DbSet<PostIndex> PostsIndex => Set<PostIndex>();
         public DbSet<ForumInfo> ForumsInfo => Set<ForumInfo>();
 
@@ -29,12 +32,15 @@ namespace tbm.Crawler
             b.Entity<TiebaUser>().ToTable("tbm_tiebaUsers");
             b.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
             b.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
+            b.Entity<ReplySignature>().ToTable("tbm_reply_signatures").HasKey(e => new {e.SignatureId, e.SignatureMd5});
+            b.Entity<ReplyContent>().ToTable($"tbm_f{Fid}_replies_content");
             b.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
-            b.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new { e.Tid, e.Time });
-            b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new { e.Pid, e.Time });
-            b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new { e.Spid, e.Time });
-            b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new { e.Uid, e.Time });
-            b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasIndex(e => new { e.Tid, e.Pid, e.Spid }).IsUnique();
+            b.Entity<SubReplyContent>().ToTable($"tbm_f{Fid}_subReplies_content");
+            b.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new {e.Tid, e.Time});
+            b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new {e.Pid, e.Time});
+            b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new {e.Spid, e.Time});
+            b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new {e.Uid, e.Time});
+            b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasIndex(e => new {e.Tid, e.Pid, e.Spid}).IsUnique();
             b.Entity<ForumInfo>().ToTable("tbm_forumsInfo");
         }
 
