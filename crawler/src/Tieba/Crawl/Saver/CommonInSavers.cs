@@ -33,7 +33,7 @@ namespace tbm.Crawler
                 }
                 return false;
             },
-            Revision: (whichPostType, propertyName, originalValue, currentValue) =>
+            Revision: (whichPostType, propertyName, originalValue, _) =>
             {
                 if (whichPostType == typeof(ThreadPost))
                 {

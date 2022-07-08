@@ -21,13 +21,19 @@ namespace tbm.Crawler
         public SubReplySaver(ILogger<SubReplySaver> logger, ConcurrentDictionary<PostId, SubReplyPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db) => SavePosts(db,
-            PredicateBuilder.New<SubReplyPost>(p => Posts.Keys.Any(id => id == p.Spid)),
-            PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Spid!.Value)),
-            p => p.Spid,
-            i => i.Spid!.Value,
-            p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
-            p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid},
-            () => new SubReplyRevisionNullFields());
+        public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
+        {
+            var changeSet = SavePosts(db,
+                PredicateBuilder.New<SubReplyPost>(p => Posts.Keys.Any(id => id == p.Spid)),
+                PredicateBuilder.New<PostIndex>(i => i.Type == "subReply" && Posts.Keys.Any(id => id == i.Spid!.Value)),
+                p => p.Spid,
+                i => i.Spid!.Value,
+                p => new() {Type = "subReply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
+                p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid},
+                () => new SubReplyRevisionNullFields());
+
+            db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(p => new SubReplyContent {Spid = p.Spid, Content = p.Content}));
+            return changeSet;
+        }
     }
 }

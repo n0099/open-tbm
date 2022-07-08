@@ -3,7 +3,7 @@ namespace tbm.Crawler
     public class ReplySaver : BaseSaver<ReplyPost>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
-            Update: (_, propertyName, originalValue, currentValue) =>
+            Update: (_, propertyName, _, currentValue) =>
                 // the value of IconInfo in response of reply crawler might be null even if the user haven't change his icon info
                 propertyName == nameof(TiebaUser.IconInfo) && currentValue is null,
             (_, propertyName, originalValue, currentValue) =>
@@ -17,13 +17,46 @@ namespace tbm.Crawler
         public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<PostId, ReplyPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db) => SavePosts(db,
-            PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
-            PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid!.Value)),
-            p => p.Pid,
-            i => i.Pid!.Value,
-            p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-            p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid},
-            () => new ReplyRevisionNullFields());
+        public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
+        {
+            var changeSet = SavePosts(db,
+                PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Any(id => id == p.Pid)),
+                PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Any(id => id == i.Pid!.Value)),
+                p => p.Pid,
+                i => i.Pid!.Value,
+                p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
+                p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid},
+                () => new ReplyRevisionNullFields());
+
+            db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(p => new ReplyContent {Pid = p.Pid, Content = p.Content}));
+
+            // we have to get the value of field p.CreatedAt from existing posts that is fetched from db
+            // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
+            // because of Posts.Values.* is not the same instances as changeSet.Existing.*.After
+            // so Posts.Values.* won't sync with new instances queried from db
+            var signatures = changeSet.NewlyAdded.Concat(changeSet.Existing.Select(p => p.After))
+                .Where(p => p.SignatureId != null && p.Signature != null).Select(p => new ReplySignature
+            {
+                UserId = p.AuthorUid,
+                SignatureId = (uint)p.SignatureId!,
+                SignatureMd5 = MD5.HashData(p.Signature!),
+                Signature = p.Signature!,
+                // we have to generate the value of two field below in here, since its value will be set by TbmDbContext.SaveChanges() which is invoked after current method had returned
+                FirstSeen = p.CreatedAt != 0 ? p.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(), // CreatedAt will be the default 0 value when the post is newly added
+                LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
+            }).ToList();
+            if (signatures.Any())
+            {
+                var uniqueSignature = signatures.Select(s => new {s.SignatureId, s.SignatureMd5}).ToList();
+                var existingSignatures = from s in db.ReplySignatures
+                    where uniqueSignature.Select(us => us.SignatureId).Contains(s.SignatureId)
+                          && uniqueSignature.Select(us => us.SignatureMd5).Contains(s.SignatureMd5) select s;
+                existingSignatures.ForEach(s => s.LastSeen = signatures.First(p => p.SignatureId == s.SignatureId).LastSeen);
+                var newSignatures = signatures.Where(p => !existingSignatures.Any(s => s.SignatureId == p.SignatureId));
+                db.ReplySignatures.AddRange(newSignatures);
+            }
+
+            return changeSet;
+        }
     }
 }
