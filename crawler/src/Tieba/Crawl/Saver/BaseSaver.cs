@@ -26,7 +26,7 @@ namespace tbm.Crawler
             where TRevision : BaseRevision where TRevisionNullFields : IMessage<TRevisionNullFields>
         {
             var dbSet = db.Set<TPost>();
-            if (dbSet == null) throw new ArgumentException($"DbSet<{typeof(TPost).Name}> is not exists in DbContext");
+            if (dbSet == null) throw new ArgumentException($"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
 
             // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
             var existingPosts = dbSet.Where(postsPredicate).ToList();

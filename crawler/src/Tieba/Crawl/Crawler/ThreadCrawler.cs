@@ -51,7 +51,7 @@ namespace tbm.Crawler
         public override IList<Thread> GetValidPosts(ThreadResponse response)
         {
             ValidateOtherErrorCode(response);
-            return EnsureNonEmptyPostList(response, "Forum threads list is empty, forum might doesn't existed");
+            return EnsureNonEmptyPostList(response, "Forum threads list is empty, forum might doesn't existed.");
         }
     }
 }

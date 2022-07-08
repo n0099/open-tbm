@@ -20,7 +20,7 @@ namespace tbm.Crawler
 
         public void ParseUsers(IList<User> users)
         {
-            if (!users.Any()) throw new TiebaException("User list is empty");
+            if (!users.Any()) throw new TiebaException("User list is empty.");
             users.Select(el =>
             {
                 static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
@@ -59,7 +59,7 @@ namespace tbm.Crawler
                 catch (Exception e)
                 {
                     e.Data["raw"] = Helper.UnescapedJsonSerialize(el);
-                    throw new("User parse error", e);
+                    throw new("User parse error.", e);
                 }
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
@@ -70,7 +70,7 @@ namespace tbm.Crawler
             lock (UidLock)
             {
                 var usersExceptLocked = _users.ExceptBy(UidLock, u => u.Key).ToDictionary(i => i.Key, i => i.Value);
-                if (usersExceptLocked.Count == 0) return null;
+                if (!usersExceptLocked.Any()) return null;
                 UidLock.UnionWith(usersExceptLocked.Keys);
                 // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
                 var existingUsers = (from user in db.Users where usersExceptLocked.Keys.Any(uid => uid == user.Uid) select user).ToList();

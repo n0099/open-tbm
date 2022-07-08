@@ -38,7 +38,7 @@ namespace tbm.Crawler
                 }
                 catch (InvalidProtocolBufferException e)
                 { // the invalid protoBuf bytes usually is just a plain html string
-                    throw new TiebaException($"Malformed protoBuf response from tieba {Encoding.UTF8.GetString(bytes)}", e);
+                    throw new TiebaException($"Malformed protoBuf response from tieba. {Encoding.UTF8.GetString(bytes)}", e);
                 }
             });
 
@@ -52,11 +52,11 @@ namespace tbm.Crawler
             }
             catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
             {
-                throw new TiebaException($"Tieba client request timeout, {e.Message}");
+                throw new TiebaException("Tieba client request timeout.", e);
             }
             catch (HttpRequestException e)
             {
-                throw new TiebaException($"HTTP {(int?)e.StatusCode ?? 0} from tieba", e);
+                throw new TiebaException($"HTTP {(int?)e.StatusCode ?? 0} from tieba.", e);
             }
         }
 

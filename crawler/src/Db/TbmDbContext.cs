@@ -75,7 +75,7 @@ namespace tbm.Crawler
                 _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with new values={}, originalValues={}. " +
                                    "This means the record is updated more than one time within one second, " +
                                    "which usually caused by a different response of the same resource from tieba. " +
-                                   "There might be a possible duplicate keys conflict from other revision tables update in the future",
+                                   "There might be a possible duplicate keys conflict from other revision tables update in the future.",
                     Helper.UnescapedJsonSerialize(e.CurrentValues.ToObject()), Helper.UnescapedJsonSerialize(e.OriginalValues.ToObject()));
             });
             return base.SaveChanges();

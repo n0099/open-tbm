@@ -101,6 +101,20 @@ namespace tbm.Crawler
             return e;
         }
 
+        /// <see>https://stackoverflow.com/questions/9314172/getting-all-messages-from-innerexceptions/9314368#9314368</see>
+        public static IEnumerable<Exception> GetInnerExceptions(this Exception ex)
+        {
+            if (ex == null) throw new ArgumentNullException(nameof(ex));
+
+            var inner = ex;
+            do
+            {
+                yield return inner;
+                inner = inner.InnerException;
+            }
+            while (inner != null);
+        }
+
         public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value) where T2 : struct
         {
             if (value != null) dict[key] = value.Value;

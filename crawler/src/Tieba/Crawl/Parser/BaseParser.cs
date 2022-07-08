@@ -13,14 +13,12 @@ namespace tbm.Crawler
             var parsedPosts = parsed.ToList();
             foreach (var p in parsedPosts) outPosts[postIdSelector(p)] = p;
 
-            IEnumerable<TPost> returnPair = parsedPosts;
-            if (returnPair is List<ThreadPost> threads)
+            if (parsedPosts is List<ThreadPost> threads)
             { // filter out sticky threads
-                returnPair = (IEnumerable<TPost>)threads.Where(t => t.StickyType == null);
+                var parsedThreads = threads.Where(t => t.StickyType == null).ToList();
+                return ((TPost, TPost))((IPost, IPost))(parsedThreads.First(), parsedThreads.Last());
             }
-            // ReSharper disable PossibleMultipleEnumeration
-            return (returnPair.First(), returnPair.Last());
-            // ReSharper restore PossibleMultipleEnumeration
+            return (parsedPosts.First(), parsedPosts.Last());
         }
 
         protected abstract (IEnumerable<TPost> parsed, Func<TPost, ulong> postIdSelector)? ParsePostsInternal(

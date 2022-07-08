@@ -46,11 +46,11 @@ namespace tbm.Crawler
         public override IList<Reply> GetValidPosts(ReplyResponse response)
         {
             if (response.Error.Errorno == 4)
-                throw new TiebaException(false, "Thread already deleted when crawling reply");
+                throw new TiebaException(false, "Thread already deleted when crawling reply.");
             ValidateOtherErrorCode(response);
-            var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba");
+            var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba.");
             if (response.Data.Forum.Id != _fid) // response.Data.Forum.Id will be the default value 0 when reply list is empty
-                throw new TiebaException(false, $"Parent forum id within thread response: {response.Data.Forum.Id} is not match with the param value of crawler ctor: {_fid}, this thread might be multi forum or livepost");
+                throw new TiebaException(false, $"Parent forum id within thread response: {response.Data.Forum.Id} is not match with the param value of crawler ctor: {_fid}, this thread might be multi forum or livepost.");
             return ret;
         }
     }

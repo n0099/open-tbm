@@ -10,11 +10,9 @@ namespace tbm.Crawler
         public SaverChangeSet(ICollection<T> existingBefore, ICollection<T> existingAfterAndNewly, Func<T, PostId> postIdSelector)
         {
             var existingAfter = existingAfterAndNewly.IntersectBy(existingBefore.Select(postIdSelector), postIdSelector).OrderBy(postIdSelector).ToList();
-            var beforeAndAfter = existingBefore.OrderBy(postIdSelector).Zip(existingAfter, (before, after) => (before, after));
-            if (existingAfter.Count != existingBefore.Count) throw new("Length of existingAfter is not match with existingBefore");
-            Existing = new(beforeAndAfter.ToList());
-            var newly = existingAfterAndNewly.ExceptBy(existingBefore.Select(postIdSelector), postIdSelector).ToList();
-            NewlyAdded = new(newly);
+            if (existingAfter.Count != existingBefore.Count) throw new("Length of existingAfter is not match with existingBefore.");
+            Existing = new(existingBefore.OrderBy(postIdSelector).Zip(existingAfter, (before, after) => (before, after)).ToList());
+            NewlyAdded = new(existingAfterAndNewly.ExceptBy(existingBefore.Select(postIdSelector), postIdSelector).ToList());
         }
     }
 }

@@ -29,14 +29,15 @@ namespace TbClient.Post
                 p.AgreeNum = (int)el.Agree.AgreeNum;
                 p.DisagreeNum = (int)el.Agree.DisagreeNum;
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
-                p.SignInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);
+                p.SignatureId = (uint?)el.Signature?.SignatureId;
+                p.Signature = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);
                 return p;
             }
             catch (Exception e)
             {
                 e.Data["parsed"] = p;
                 e.Data["raw"] = el;
-                throw new("Reply parse error", e);
+                throw new("Reply parse error.", e);
             }
         }
     }

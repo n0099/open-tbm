@@ -60,7 +60,7 @@ namespace TbClient.Post
             {
                 e.Data["parsed"] = p;
                 e.Data["raw"] = el;
-                throw new("Thread parse error", e);
+                throw new("Thread parse error.", e);
             }
         }
     }

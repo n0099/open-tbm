@@ -44,9 +44,9 @@ namespace tbm.Crawler
                     {
                         switch (json.GetStrProp("error_code"))
                         {
-                            case "4" or "350008": throw new TiebaException(false, "Thread already deleted while thread late crawl");
+                            case "4" or "350008": throw new TiebaException(false, "Thread already deleted while thread late crawl.");
                             case not "0":
-                                throw new TiebaException("Error from tieba client") {Data = {{"raw", json}}};
+                                throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
                         }
                         var thread = json.GetProperty("thread");
                         if (thread.GetProperty("thread_info").TryGetProperty("phone_type", out var phoneType))
@@ -57,7 +57,7 @@ namespace tbm.Crawler
                                 AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
                             };
                         }
-                        else throw new TiebaException(false, "Field phone_type is missing in response.thread.thread_info, it might be a historical thread");
+                        else throw new TiebaException(false, "Field phone_type is missing in response.thread.thread_info, it might be a historical thread.");
                     }
                     catch (Exception e)
                     {
@@ -72,7 +72,7 @@ namespace tbm.Crawler
                     e = e.ExtractInnerExceptionsData();
 
                     if (e is TiebaException)
-                        _logger.LogWarning("TiebaException: {} {}", e.Message, Helper.UnescapedJsonSerialize(e.Data));
+                        _logger.LogWarning("TiebaException: {} {}", string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)), Helper.UnescapedJsonSerialize(e.Data));
                     else
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})
