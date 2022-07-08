@@ -7,6 +7,7 @@ namespace tbm.Crawler
         public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
 
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
+        public virtual void PostSaveCallback() {}
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts)
         {

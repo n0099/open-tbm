@@ -33,7 +33,7 @@ namespace tbm.Crawler
                     {
                         await using var scope = Program.Autofac.BeginLifetimeScope();
                         var db = scope.Resolve<TbmDbContext.New>()(0);
-                        var tidAndFidRecords = from t in db.PostsIndex where t.Type == "thread" && failed.Keys.Any(i => i == t.Tid) select new {t.Fid, t.Tid};
+                        var tidAndFidRecords = from t in db.PostsIndex where t.Type == "thread" && failed.Keys.Contains(t.Tid) select new {t.Fid, t.Tid};
                         foreach (var tidGroupByFid in tidAndFidRecords.ToList().GroupBy(record => record.Fid))
                         {
                             FailedCount FailedCountSelector(Tid tid) => failed.First(i => i.Key == tid).Value.First().FailedCount; // it should always contains only one page which is 1

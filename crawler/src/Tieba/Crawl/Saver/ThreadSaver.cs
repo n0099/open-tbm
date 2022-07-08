@@ -20,8 +20,8 @@ namespace tbm.Crawler
             : base(logger, posts) => _fid = fid;
 
         public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
-                PredicateBuilder.New<ThreadPost>(p => Posts.Keys.Any(id => id == p.Tid)),
-                PredicateBuilder.New<PostIndex>(i => i.Type == "thread" && Posts.Keys.Any(id => id == i.Tid)),
+                PredicateBuilder.New<ThreadPost>(p => Posts.Keys.Contains(p.Tid)),
+                PredicateBuilder.New<PostIndex>(i => i.Type == "thread" && Posts.Keys.Contains(i.Tid)),
                 p => p.Tid,
                 i => i.Tid,
                 p => new() {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},

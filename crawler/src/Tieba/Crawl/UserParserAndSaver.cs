@@ -11,8 +11,9 @@ namespace tbm.Crawler
             {typeof(ReplySaver), "reply"},
             {typeof(SubReplySaver), "subReply"}
         };
-        private static readonly HashSet<Uid> UidLock = new();
         private static readonly Regex PortraitExtractingRegex = new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        private static readonly HashSet<Uid> UsersIdLock = new();
+        private IEnumerable<Uid>? _savedUsersId;
         private readonly ILogger<UserParserAndSaver> _logger;
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
 
@@ -64,30 +65,28 @@ namespace tbm.Crawler
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
         }
 
-        public IEnumerable<Uid>? SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
+        public void SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
         {
-            if (_users.IsEmpty) return null;
-            lock (UidLock)
+            if (_users.IsEmpty) return;
+            lock (UsersIdLock)
             {
-                var usersExceptLocked = _users.ExceptBy(UidLock, u => u.Key).ToDictionary(i => i.Key, i => i.Value);
-                if (!usersExceptLocked.Any()) return null;
-                UidLock.UnionWith(usersExceptLocked.Keys);
-                // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
-                var existingUsers = (from user in db.Users where usersExceptLocked.Keys.Any(uid => uid == user.Uid) select user).ToList();
-                var existingUsersByUid = existingUsers.ToDictionary(i => i.Uid);
+                var usersExceptLocked = _users.ExceptBy(UsersIdLock, u => u.Key).ToDictionary(i => i.Key, i => i.Value);
+                if (!usersExceptLocked.Any()) return;
+                _savedUsersId = usersExceptLocked.Keys;
+                UsersIdLock.UnionWith(_savedUsersId);
+                var existingUsersByUid = (from user in db.Users where usersExceptLocked.Keys.Contains(user.Uid) select user).ToDictionary(i => i.Uid);
 
                 SavePostsOrUsers(_logger, postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
                     () => new UserRevisionNullFields(),
                     u => existingUsersByUid.ContainsKey(u.Uid),
                     u => existingUsersByUid[u.Uid]);
-                return usersExceptLocked.Keys.ToList();
             }
         }
 
-        public static void ReleaseLocks(IEnumerable<Uid> usersId)
+        public void PostSaveCallback()
         {
-            lock (UidLock) UidLock.ExceptWith(usersId);
+            if (_savedUsersId != null) lock (UsersIdLock) UsersIdLock.ExceptWith(_savedUsersId);
         }
     }
 }

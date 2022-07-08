@@ -24,8 +24,8 @@ namespace tbm.Crawler
         public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
         {
             var changeSet = SavePosts(db,
-                PredicateBuilder.New<SubReplyPost>(p => Posts.Keys.Any(id => id == p.Spid)),
-                PredicateBuilder.New<PostIndex>(i => i.Type == "subReply" && Posts.Keys.Any(id => id == i.Spid!.Value)),
+                PredicateBuilder.New<SubReplyPost>(p => Posts.Keys.Contains(p.Spid)),
+                PredicateBuilder.New<PostIndex>(i => i.Type == "subReply" && Posts.Keys.Contains(i.Spid!.Value)),
                 p => p.Spid,
                 i => i.Spid!.Value,
                 p => new() {Type = "subReply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},

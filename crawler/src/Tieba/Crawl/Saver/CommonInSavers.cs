@@ -14,11 +14,6 @@ namespace tbm.Crawler
         protected static readonly FieldChangeIgnoranceCallbackRecord FieldChangeIgnorance = new(
             Update: (whichPostType, propertyName, originalValue, currentValue) =>
             {
-                if (whichPostType == typeof(ReplyPost) || whichPostType == typeof(SubReplyPost))
-                { // type=3.cdn_src, image url within the content of reply will be changed by each request
-                    // type=4.text, the displayed username within user@mentions might change, also will affect replies
-                    if (propertyName is nameof(ReplyPost.Content) or nameof(SubReplyPost.Content)) return true;
-                }
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propertyName)

@@ -45,7 +45,7 @@ namespace tbm.Crawler
             Page crawlingPage = 0;
             if (!_latestReplyTimeCheckpointCache.TryGetValue(fid, out var timeInPreviousCrawl))
                 // get the largest value of field latestReplyTime in all stored threads of this forum
-                // this approach is not as accurate as extracting the last thread in the response list
+                // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
                 // https://stackoverflow.com/questions/341264/max-or-default
                 timeInPreviousCrawl = scope.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
             do
@@ -54,14 +54,14 @@ namespace tbm.Crawler
                 await using var crawlScope = scope.BeginLifetimeScope();
                 var crawler = crawlScope.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                 savedThreads.AddIfNotNull((await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts());
-                try
+                if (crawler.FirstAndLastPostInPages.TryGetValue(crawlingPage, out var threadsTuple))
                 {
-                    var (firstThread, lastThread) = crawler.FirstAndLastPostInPages[crawlingPage];
+                    var (firstThread, lastThread) = threadsTuple;
                     lastThreadTime = lastThread.LatestReplyTime;
                     if (crawlingPage == 1) _latestReplyTimeCheckpointCache[fid] = firstThread.LatestReplyTime;
                 }
-                catch (Exception)
-                { // retry this page
+                else
+                {// retry this page
                     crawlingPage--;
                     lastThreadTime = Time.MaxValue;
                 }
