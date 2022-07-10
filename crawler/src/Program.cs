@@ -8,7 +8,7 @@ namespace tbm.Crawler
     {
         public static readonly List<string> RegisteredCrawlerLocks = new() {"thread", "threadLate", "reply", "subReply"};
 
-        private static void Main()
+        private static async Task Main()
         {
             var logger = LogManager.GetCurrentClassLogger();
             AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -57,7 +57,7 @@ namespace tbm.Crawler
                             baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t))).AsSelf();
                     })
                     .Build();
-                host.Run();
+                await host.RunAsync();
 #pragma warning restore IDE0058 // Expression value is never used
             }
             catch (Exception e)

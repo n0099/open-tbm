@@ -45,7 +45,7 @@ namespace tbm.Crawler
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)
         {
-            if (response.Error.Errorno == 4)
+            if (response.Error.Errorno is 4 or 350008)
                 throw new TiebaException(false, "Thread already deleted when crawling reply.");
             ValidateOtherErrorCode(response);
             var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba.");

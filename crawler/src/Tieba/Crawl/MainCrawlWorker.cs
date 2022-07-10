@@ -76,7 +76,7 @@ namespace tbm.Crawler
                     if (crawlingPage == 1) _latestReplyTimeCheckpointCache[fid] = firstThread.LatestReplyTime;
                 }
                 else
-                {// retry this page
+                { // retry this page
                     crawlingPage--;
                     lastThreadTime = Time.MaxValue;
                 }

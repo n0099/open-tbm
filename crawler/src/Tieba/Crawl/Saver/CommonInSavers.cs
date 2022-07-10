@@ -22,15 +22,19 @@ namespace tbm.Crawler
                         case nameof(ThreadPost.ZanInfo) when currentValue is null: // possible randomly response with null
                         case nameof(ThreadPost.Location) when currentValue is null: // possible randomly response with null
                         case nameof(ThreadPost.Title) when currentValue is "": // empty string from response will be later set by ReplyCrawlFacade.PostParseCallback()
-                        case nameof(ThreadPost.DisagreeNum) when originalValue is not 0 && currentValue is 0: // possible randomly response with 0
+                        case nameof(ThreadPost.DisagreeNum) when currentValue is 0 && originalValue is not 0: // possible randomly response with 0
                             return true;
                     }
                 }
-                if (whichPostType == typeof(ReplyPost)
-                    && propertyName == nameof(ReplyPost.AuthorUid)
-                    && currentValue != null && originalValue != null
-                    // possible randomly response with 0 and in the latter responses it will back to noraml
-                    && (long)currentValue == 0 && (long)originalValue != 0) return true;
+                if (whichPostType == typeof(ReplyPost))
+                {
+                    switch (propertyName)
+                    {
+                        case nameof(ReplyPost.AuthorUid) when currentValue is 0L && originalValue is not 0L: // possible randomly response with 0 and in the latter responses it will back to normal
+                        case nameof(ReplyPost.SignatureId) when currentValue is null && originalValue is not null: // possible randomly response with null
+                            return true;
+                    }
+                }
                 return false;
             },
             Revision: (whichPostType, propertyName, originalValue, _) =>

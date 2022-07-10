@@ -64,7 +64,7 @@ namespace tbm.Crawler
                     }
                     catch (Exception e)
                     {
-                        e.Data["raw"] = json.GetRawText();
+                        e.Data["raw"] = json;
                         throw;
                     }
                 }
