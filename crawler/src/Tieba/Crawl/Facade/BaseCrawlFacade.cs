@@ -7,6 +7,7 @@ namespace tbm.Crawler
         where TResponse : IMessage<TResponse>, new() where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
+        private readonly TbmDbContext.New _dbContextFactory;
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
         private readonly BaseParser<TPost, TPostProtoBuf> _parser;
         private readonly BaseSaver<TPost> _saver;
@@ -21,6 +22,7 @@ namespace tbm.Crawler
 
         protected BaseCrawlFacade(
             ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
+            TbmDbContext.New dbContextFactory,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
             BaseParser<TPost, TPostProtoBuf> parser,
             Func<ConcurrentDictionary<PostId, TPost>, Fid, BaseSaver<TPost>> saverFactory,
@@ -30,6 +32,7 @@ namespace tbm.Crawler
             Fid fid)
         {
             _logger = logger;
+            _dbContextFactory = dbContextFactory;
             _crawler = crawler;
             _parser = parser;
             _saver = saverFactory(ParsedPosts, fid);
@@ -41,8 +44,7 @@ namespace tbm.Crawler
 
         public SaverChangeSet<TPost>? SavePosts()
         {
-            using var scope = Program.Autofac.BeginLifetimeScope();
-            var db = scope.Resolve<TbmDbContext.New>()(Fid);
+            using var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);

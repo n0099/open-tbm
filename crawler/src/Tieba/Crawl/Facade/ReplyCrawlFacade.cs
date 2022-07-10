@@ -2,22 +2,27 @@ namespace tbm.Crawler
 {
     public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, ReplyResponse, Reply, ReplyCrawler>
     {
+        private readonly TbmDbContext.New _dbContextFactory;
         private readonly Tid _tid;
 
         public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
-        public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger, ReplyCrawler.New crawler,
-            ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
+        public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger,
+            TbmDbContext.New parentDbContextFactory, TbmDbContext.New dbContextFactory,
+            ReplyCrawler.New crawler, ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid
-        ) : base(logger, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), tid), fid) => _tid = tid;
+        ) : base(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), tid), fid)
+        {
+            _dbContextFactory = dbContextFactory;
+            _tid = tid;
+        }
 
         protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IList<Reply> posts)
         {
             var data = responseAndFlag.Item1.Data;
             if (data.Page.CurrentPage == 1)
             { // update parent thread of reply with new title that extracted from the first floor reply in first page
-                using var scope = Program.Autofac.BeginLifetimeScope();
-                var db = scope.Resolve<TbmDbContext.New>()(Fid);
+                using var db = _dbContextFactory(Fid);
                 var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
                 if (parentThreadTitle == "")
                 { // thread title will be empty string as a fallback when the thread author haven't write title for this thread

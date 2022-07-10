@@ -7,10 +7,10 @@ namespace tbm.Crawler
 
         public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 
-        public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, SubReplyCrawler.New crawler,
-            SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users,
+        public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, TbmDbContext.New dbContextFactory,
+            SubReplyCrawler.New crawler, SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid, Pid pid
-        ) : base(logger, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"]("subReply"), pid), fid)
+        ) : base(logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"]("subReply"), pid), fid)
         {
             _tid = tid;
             _pid = pid;

@@ -6,7 +6,6 @@ namespace tbm.Crawler
 {
     internal class Program
     {
-        public static ILifetimeScope Autofac { get; private set; } = null!;
         public static readonly List<string> RegisteredCrawlerLocks = new() {"thread", "threadLate", "reply", "subReply"};
 
         private static void Main()
@@ -58,7 +57,6 @@ namespace tbm.Crawler
                             baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t))).AsSelf();
                     })
                     .Build();
-                Autofac = host.Services.GetAutofacRoot();
                 host.Run();
 #pragma warning restore IDE0058 // Expression value is never used
             }

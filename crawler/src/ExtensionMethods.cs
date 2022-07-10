@@ -29,7 +29,7 @@ namespace tbm.Crawler
         /// <see>https://stackoverflow.com/questions/1651619/optimal-linq-query-to-get-a-random-sub-collection-shuffle/1653204#1653204</see>
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source) => source.Shuffle(new());
 
-        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rng)
+        private static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rng)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (rng == null) throw new ArgumentNullException(nameof(rng));

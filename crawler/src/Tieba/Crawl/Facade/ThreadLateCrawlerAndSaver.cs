@@ -5,6 +5,7 @@ namespace tbm.Crawler
         public record TidAndFailedCount(Tid Tid, FailedCount FailedCount);
 
         private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
+        private readonly TbmDbContext.New _dbContextFactory;
         private readonly ClientRequester _requester;
         private readonly Fid _fid;
         private readonly ClientRequesterTcs _requesterTcs;
@@ -14,12 +15,14 @@ namespace tbm.Crawler
 
         public ThreadLateCrawlerAndSaver(
             ILogger<ThreadLateCrawlerAndSaver> logger,
+            TbmDbContext.New dbContextFactory,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
             IIndex<string, CrawlerLocks.New> locks,
             Fid fid)
         {
             _logger = logger;
+            _dbContextFactory = dbContextFactory;
             _requester = requester;
             _fid = fid;
             _requesterTcs = requesterTcs;
@@ -87,8 +90,7 @@ namespace tbm.Crawler
                 }
             }));
 
-            await using var scope = Program.Autofac.BeginLifetimeScope();
-            var db = scope.Resolve<TbmDbContext.New>()(_fid);
+            await using var db = _dbContextFactory(_fid);
             await using var transaction = await db.Database.BeginTransactionAsync();
 
             db.AttachRange(threads.OfType<ThreadPost>());
