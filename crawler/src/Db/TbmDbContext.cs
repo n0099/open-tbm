@@ -74,10 +74,15 @@ namespace tbm.Crawler
                 updatedAtProp.CurrentValue = timestamp;
 
                 if (updatedAtProp.IsModified || e.State != EntityState.Modified) return;
+                do
+                {
+                    updatedAtProp.CurrentValue = (Time)updatedAtProp.CurrentValue + 1;
+                } while (!updatedAtProp.IsModified && e.State == EntityState.Modified);
                 _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with new values={}, originalValues={}. " +
                                    "This means the record is updated more than one time within one second, " +
                                    "which usually caused by a different response of the same resource from tieba. " +
-                                   "There might be a possible duplicate keys conflict from other revision tables update in the future.",
+                                   "In order to prevent any possible duplicate keys conflicts from other revision tables update in the future, " +
+                                   "we've increased the value of updatedAt field back to the feature.",
                     Helper.UnescapedJsonSerialize(e.CurrentValues.ToObject()), Helper.UnescapedJsonSerialize(e.OriginalValues.ToObject()));
             });
             return base.SaveChanges();

@@ -22,12 +22,15 @@ resharper_csharp_empty_block_style = together_same_line
 resharper_csharp_max_line_length = 0
 resharper_csharp_naming_rule.constants = AaBb
 resharper_csharp_naming_rule.private_constants = AaBb
+resharper_csharp_wrap_before_binary_opsign = true
 resharper_enforce_line_ending_style = true
 resharper_local_function_body = expression_body
 resharper_method_or_operator_body = block_body
 resharper_object_creation_when_type_not_evident = target_typed
+resharper_place_simple_embedded_statement_on_same_line = true
 resharper_space_within_single_line_array_initializer_braces = false
 resharper_use_heuristics_for_body_style = true
+resharper_wrap_chained_binary_expressions = chop_if_long
 
 # Standard properties
 end_of_line = lf

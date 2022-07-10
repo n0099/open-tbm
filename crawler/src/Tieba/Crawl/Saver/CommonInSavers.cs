@@ -26,6 +26,11 @@ namespace tbm.Crawler
                             return true;
                     }
                 }
+                if (whichPostType == typeof(ReplyPost)
+                    && propertyName == nameof(ReplyPost.AuthorUid)
+                    && currentValue != null && originalValue != null
+                    // possible randomly response with 0 and in the latter responses it will back to noraml
+                    && (long)currentValue == 0 && (long)originalValue != 0) return true;
                 return false;
             },
             Revision: (whichPostType, propertyName, originalValue, _) =>
@@ -55,15 +60,13 @@ namespace tbm.Crawler
             Func<TRevisionNullFields> revisionNullFieldsFactory,
             Func<TPostOrUser, bool> isExistPredicate,
             Func<TPostOrUser, TPostOrUser> existedSelector)
-            where TRevision : BaseRevision where TRevisionNullFields: IMessage<TRevisionNullFields>
+            where TPostOrUser : class where TRevision : BaseRevision where TRevisionNullFields: IMessage<TRevisionNullFields>
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.AddRange(existedOrNew[false].OfType<object>());
+            db.AddRange(existedOrNew[false]); // newly added
             db.AddRange(existedOrNew[true].Select(currentPostOrUser =>
             {
                 var originalPostOrUser = existedSelector(currentPostOrUser);
-                if (currentPostOrUser == null || originalPostOrUser == null) return default;
-
                 var entry = db.Entry(originalPostOrUser);
                 entry.CurrentValues.SetValues(currentPostOrUser);
                 // prevent override fields of IEntityWithTimestampFields with the default value 0
@@ -96,7 +99,7 @@ namespace tbm.Crawler
                         logger.LogWarning("Updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
-                            Helper.UnescapedJsonSerialize(currentPostOrUser), Helper.UnescapedJsonSerialize(originalPostOrUser));
+                            Helper.UnescapedJsonSerialize(currentPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
                     }
                     else
                     {

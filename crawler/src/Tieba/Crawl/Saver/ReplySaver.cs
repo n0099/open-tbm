@@ -10,7 +10,19 @@ namespace tbm.Crawler
                 // the value of user gender in thread response might be 0 but in reply response it won't be 0
                 propertyName == nameof(TiebaUser.Gender) && (ushort?)originalValue is 0 && (ushort?)currentValue is not 0);
 
-        private record UniqueSignature(uint Id, byte[] Md5);
+        private record UniqueSignature(uint Id, byte[] Md5)
+        {
+            public virtual bool Equals(UniqueSignature? other) =>
+                ReferenceEquals(this, other) || (other != null && Id == other.Id && Md5.SequenceEqual(other.Md5));
+            // https://stackoverflow.com/questions/7244699/gethashcode-on-byte-array/72925335#72925335
+            public override int GetHashCode()
+            {
+                var hash = new HashCode();
+                hash.Add(Id);
+                hash.AddBytes(Md5);
+                return hash.ToHashCode();
+            }
+        }
         private static readonly HashSet<UniqueSignature> SignaturesLock = new();
         private IEnumerable<UniqueSignature>? _savedSignatures;
         private readonly Fid _fid;
@@ -57,7 +69,7 @@ namespace tbm.Crawler
                 existingSignatures.ForEach(s => s.LastSeen = signatures.First(p => p.SignatureId == s.SignatureId).LastSeen);
                 lock (SignaturesLock)
                 {
-                    var newSignaturesExceptLocked = signatures.Where(p => existingSignatures.All(s => s.SignatureId != p.SignatureId))
+                    var newSignaturesExceptLocked = signatures.Where(s => existingSignatures.All(es => es.SignatureId != s.SignatureId))
                         .ExceptBy(SignaturesLock, s => new(s.SignatureId, s.SignatureMd5)).ToList();
                     if (newSignaturesExceptLocked.Any())
                     {
