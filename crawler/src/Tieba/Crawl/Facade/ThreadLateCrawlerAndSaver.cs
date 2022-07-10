@@ -90,7 +90,7 @@ namespace tbm.Crawler
                 }
             }));
 
-            await using var db = _dbContextFactory(_fid);
+            var db = _dbContextFactory(_fid);
             await using var transaction = await db.Database.BeginTransactionAsync();
 
             db.AttachRange(threads.OfType<ThreadPost>());

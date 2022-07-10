@@ -28,17 +28,17 @@ namespace tbm.Crawler
             (string url, string clientVersion, PropertyInfo paramDataField, PropertyInfo paramCommonField, Func<TResponse> responseFactory, TRequest param)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
             Request(() => PostProtoBuf(url, clientVersion, param, paramDataField, paramCommonField), stream =>
-            { // read the stream into a byte array since we have to use its value more than once (in the try-catch block)
-                var buffer = new MemoryStream();
-                stream.CopyTo(buffer);
-                var bytes = buffer.ToArray();
+            {
                 try
                 {
-                    return new MessageParser<TResponse>(responseFactory).ParseFrom(bytes);
+                    return new MessageParser<TResponse>(responseFactory).ParseFrom(stream);
                 }
                 catch (InvalidProtocolBufferException e)
                 { // the invalid protoBuf bytes usually is just a plain html string
-                    throw new TiebaException($"Malformed protoBuf response from tieba. {Encoding.UTF8.GetString(bytes)}", e);
+                    _ = stream.Seek(0, SeekOrigin.Begin);
+                    var stream2 = new MemoryStream((int)stream.Length);
+                    stream.CopyTo(stream2);
+                    throw new TiebaException($"Malformed protoBuf response from tieba. {Encoding.UTF8.GetString(stream2.ToArray())}", e);
                 }
             });
 

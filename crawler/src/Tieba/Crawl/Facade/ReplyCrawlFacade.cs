@@ -22,7 +22,7 @@ namespace tbm.Crawler
             var data = responseAndFlag.Item1.Data;
             if (data.Page.CurrentPage == 1)
             { // update parent thread of reply with new title that extracted from the first floor reply in first page
-                using var db = _dbContextFactory(Fid);
+                var db = _dbContextFactory(Fid);
                 var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
                 if (parentThreadTitle == "")
                 { // thread title will be empty string as a fallback when the thread author haven't write title for this thread

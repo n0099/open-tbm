@@ -6,28 +6,15 @@ namespace tbm.Crawler
     public class MainCrawlWorker : BackgroundService
     {
         private readonly ILogger<MainCrawlWorker> _logger;
-        private readonly TbmDbContext.New _dbContextFactory;
-        private readonly ThreadCrawlFacade.New _threadCrawlFacadeFactory;
-        private readonly ReplyCrawlFacade.New _replyCrawlFacadeFactory;
-        private readonly SubReplyCrawlFacade.New _subReplyCrawlFacadeFactory;
-        private readonly ThreadLateCrawlerAndSaver.New _threadLateCrawlerAndSaverFactory;
+        private readonly ILifetimeScope _scope0;
         // stores the latestReplyTime of first thread appears in the page of previous crawl worker, key by fid
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
         private readonly Timer _timer = new() {Enabled = true, Interval = 60 * 1000}; // per minute
 
-        public MainCrawlWorker(ILogger<MainCrawlWorker> logger,
-            TbmDbContext.New dbContextFactory,
-            ThreadCrawlFacade.New threadCrawlFacadeFactory,
-            ReplyCrawlFacade.New replyCrawlFacadeFactory,
-            SubReplyCrawlFacade.New subReplyCrawlFacadeFactory,
-            ThreadLateCrawlerAndSaver.New threadLateCrawlerAndSaverFactory)
+        public MainCrawlWorker(ILogger<MainCrawlWorker> logger, ILifetimeScope scope0)
         {
             _logger = logger;
-            _dbContextFactory = dbContextFactory;
-            _threadCrawlFacadeFactory = threadCrawlFacadeFactory;
-            _replyCrawlFacadeFactory = replyCrawlFacadeFactory;
-            _subReplyCrawlFacadeFactory = subReplyCrawlFacadeFactory;
-            _threadLateCrawlerAndSaverFactory = threadLateCrawlerAndSaverFactory;
+            _scope0 = scope0;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -40,7 +27,8 @@ namespace tbm.Crawler
         {
             try
             {
-                await using var db = _dbContextFactory(0);
+                await using var scope1 = _scope0.BeginLifetimeScope();
+                var db = scope1.Resolve<TbmDbContext.New>()(0);
                 var forums = from f in db.ForumsInfo where f.IsCrawling select new {f.Fid, f.Name};
                 await Task.WhenAll(forums.ToList().Select(async fidAndName =>
                 {
@@ -59,15 +47,17 @@ namespace tbm.Crawler
             var savedThreads = new SavedThreads();
             Time lastThreadTime;
             Page crawlingPage = 0;
+            await using var scope1 = _scope0.BeginLifetimeScope();
             if (!_latestReplyTimeCheckpointCache.TryGetValue(fid, out var timeInPreviousCrawl))
                 // get the largest value of field latestReplyTime in all stored threads of this forum
                 // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
                 // https://stackoverflow.com/questions/341264/max-or-default
-                timeInPreviousCrawl = _dbContextFactory(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
+                timeInPreviousCrawl = scope1.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
             do
             {
                 crawlingPage++;
-                var crawler = _threadCrawlFacadeFactory(fid, forumName);
+                await using var scope2 = scope1.BeginLifetimeScope();
+                var crawler = scope2.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                 savedThreads.AddIfNotNull((await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts());
                 if (crawler.FirstAndLastPostInPages.TryGetValue(crawlingPage, out var threadsTuple))
                 {
@@ -83,8 +73,11 @@ namespace tbm.Crawler
             } while (lastThreadTime > timeInPreviousCrawl);
 
             await Task.WhenAll(savedThreads.Select(threads =>
-                _threadLateCrawlerAndSaverFactory(fid).Crawl(threads.NewlyAdded.Select(t =>
-                    new ThreadLateCrawlerAndSaver.TidAndFailedCount(t.Tid, 0)))));
+            {
+                using var scope3 = _scope0.BeginLifetimeScope();
+                return scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
+                    .Crawl(threads.NewlyAdded.Select(t => new ThreadLateCrawlerAndSaver.TidAndFailedCount(t.Tid, 0)));
+            }));
 
             return savedThreads;
         }
@@ -107,7 +100,8 @@ namespace tbm.Crawler
             var savedRepliesByTid = new SavedRepliesByTid();
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
             {
-                var crawler = _replyCrawlFacadeFactory(fid, tid);
+                await using var scope1 = _scope0.BeginLifetimeScope();
+                var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
                 savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SavePosts());
             }));
             return savedRepliesByTid;
@@ -132,7 +126,8 @@ namespace tbm.Crawler
             await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>
             {
                 var (tid, pid) = tidAndPid;
-                _ = (await _subReplyCrawlFacadeFactory(fid, tid, pid).CrawlPageRange(1)).SavePosts();
+                await using var scope1 = _scope0.BeginLifetimeScope();
+                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SavePosts();
             }));
         }
     }

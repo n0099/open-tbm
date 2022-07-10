@@ -44,7 +44,7 @@ namespace tbm.Crawler
 
         public SaverChangeSet<TPost>? SavePosts()
         {
-            using var db = _dbContextFactory(Fid);
+            var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
