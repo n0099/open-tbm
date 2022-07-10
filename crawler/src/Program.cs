@@ -45,8 +45,7 @@ namespace tbm.Crawler
                         builder.RegisterType<TbmDbContext>();
                         builder.RegisterType<ClientRequester>();
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
-                        RegisteredCrawlerLocks.ForEach(l =>
-                            builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(l).SingleInstance());
+                        RegisteredCrawlerLocks.ForEach(l => builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(l).SingleInstance());
                         builder.RegisterType<UserParserAndSaver>();
                         builder.RegisterType<ThreadLateCrawlerAndSaver>();
 

@@ -111,8 +111,7 @@ namespace tbm.Crawler
             {
                 yield return inner;
                 inner = inner.InnerException;
-            }
-            while (inner != null);
+            } while (inner != null);
         }
 
         public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value) where T2 : struct

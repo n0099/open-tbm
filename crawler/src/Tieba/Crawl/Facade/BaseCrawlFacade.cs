@@ -49,7 +49,7 @@ namespace tbm.Crawler
             Users.SaveUsers(db, _saver);
             try
             {
-                _ = db.SaveChanges();
+                _ = db.SaveChangesWithTimestamping();
                 transaction.Commit();
             }
             finally

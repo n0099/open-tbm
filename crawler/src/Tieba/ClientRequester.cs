@@ -47,7 +47,7 @@ namespace tbm.Crawler
             try
             {
                 using var response = await requester();
-                var stream = response.EnsureSuccessStatusCode().Content.ReadAsStream();
+                var stream = await response.EnsureSuccessStatusCode().Content.ReadAsStreamAsync();
                 return responseConsumer(stream);
             }
             catch (TaskCanceledException e) when (e.InnerException is TimeoutException)

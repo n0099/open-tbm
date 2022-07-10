@@ -59,7 +59,7 @@ namespace tbm.Crawler
         }
 #pragma warning restore IDE0058 // Expression value is never used
 
-        public override int SaveChanges()
+        public int SaveChangesWithTimestamping()
         { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
             ChangeTracker.Entries().ForEach(e =>
             {
@@ -67,7 +67,9 @@ namespace tbm.Crawler
                     || e.State is not (EntityState.Added or EntityState.Modified)) return;
                 var timestamp = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field may not
-                if (e.State == EntityState.Added) e.Property(nameof(IEntityWithTimestampFields.CreatedAt)).CurrentValue = timestamp;
+                if (e.State == EntityState.Added)
+                    e.Property(nameof(IEntityWithTimestampFields.CreatedAt)).CurrentValue = timestamp;
+
                 var updatedAtProp = e.Property(nameof(IEntityWithTimestampFields.UpdatedAt));
                 updatedAtProp.CurrentValue = timestamp;
 

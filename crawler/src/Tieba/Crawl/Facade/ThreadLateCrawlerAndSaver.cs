@@ -89,13 +89,13 @@ namespace tbm.Crawler
 
             await using var scope = Program.Autofac.BeginLifetimeScope();
             var db = scope.Resolve<TbmDbContext.New>()(_fid);
-            await using var transaction = db.Database.BeginTransaction();
+            await using var transaction = await db.Database.BeginTransactionAsync();
 
             db.AttachRange(threads.OfType<ThreadPost>());
             db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
 
             _ = db.SaveChangesWithoutTimestamping(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
-            transaction.Commit();
+            await transaction.CommitAsync();
         }
     }
 }

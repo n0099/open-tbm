@@ -51,6 +51,7 @@ namespace TbClient.Post
                 p.ShareNum = (uint)el.ShareNum;
                 p.AgreeNum = el.AgreeNum;
                 // when the thread is livepost, the agree field will not exists
+                // ReSharper disable once ConstantConditionalAccessQualifier
                 p.DisagreeNum = (int?)el?.Agree?.DisagreeNum ?? 0;
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el?.Location);
                 p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el?.Zan);
