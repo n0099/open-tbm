@@ -6,15 +6,18 @@ namespace tbm.Crawler
     public class MainCrawlWorker : BackgroundService
     {
         private readonly ILogger<MainCrawlWorker> _logger;
+        private readonly IConfiguration _config;
         private readonly ILifetimeScope _scope0;
         // stores the latestReplyTime of first thread appears in the page of previous crawl worker, key by fid
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
-        private readonly Timer _timer = new() {Enabled = true, Interval = 60 * 1000}; // per minute
+        private readonly Timer _timer = new() {Enabled = true};
 
-        public MainCrawlWorker(ILogger<MainCrawlWorker> logger, ILifetimeScope scope0)
+        public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config, ILifetimeScope scope0)
         {
             _logger = logger;
+            _config = config;
             _scope0 = scope0;
+            _ = SyncCrawlIntervalWithConfig();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -23,18 +26,34 @@ namespace tbm.Crawler
             await CrawlThenSave();
         }
 
+        private int SyncCrawlIntervalWithConfig()
+        {
+            var interval = _config.GetValue("CrawlInterval", 60);
+            _timer.Interval = interval * 1000;
+            return interval;
+        }
+
+        private record FidAndName(Fid Fid, string Name);
+
+        private async IAsyncEnumerable<FidAndName> ForumGenerator()
+        {
+            await using var scope1 = _scope0.BeginLifetimeScope();
+            var db = scope1.Resolve<TbmDbContext.New>()(0);
+            var forums = (from f in db.ForumsInfo where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
+            var yieldInterval = SyncCrawlIntervalWithConfig() / forums.Count;
+            foreach (var fidAndName in forums)
+            {
+                await Task.Delay(yieldInterval * 1000);
+                yield return fidAndName;
+            }
+        }
+
         private async Task CrawlThenSave()
         {
             try
             {
-                await using var scope1 = _scope0.BeginLifetimeScope();
-                var db = scope1.Resolve<TbmDbContext.New>()(0);
-                var forums = from f in db.ForumsInfo where f.IsCrawling select new {f.Fid, f.Name};
-                await Task.WhenAll(forums.ToList().Select(async fidAndName =>
-                {
-                    var fid = fidAndName.Fid;
-                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads(fidAndName.Name, fid), fid), fid);
-                }));
+                await foreach (var (fid, forumName) in ForumGenerator())
+                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid), fid), fid);
             }
             catch (Exception e)
             {
