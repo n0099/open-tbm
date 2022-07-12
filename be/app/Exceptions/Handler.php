@@ -33,8 +33,6 @@ class Handler extends ExceptionHandler
      */
     public function report(\Throwable $exception)
     {
-        // report exception addition info
-        \Log::error('Exception addition info: ' . ExceptionAdditionInfo::format() . " for exception:\n" . $exception->getMessage());
         parent::report($exception);
     }
 
