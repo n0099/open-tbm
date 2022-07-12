@@ -72,10 +72,10 @@ namespace tbm.Crawler
                 }
             } while (lastThreadTime > timeInPreviousCrawl);
 
-            await Task.WhenAll(savedThreads.Select(threads =>
+            await Task.WhenAll(savedThreads.Select(async threads =>
             {
-                using var scope3 = _scope0.BeginLifetimeScope();
-                return scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
+                await using var scope3 = _scope0.BeginLifetimeScope();
+                await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
                     .Crawl(threads.NewlyAdded.Select(t => new ThreadLateCrawlerAndSaver.TidAndFailedCount(t.Tid, 0)));
             }));
 

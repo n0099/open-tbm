@@ -71,19 +71,22 @@ namespace tbm.Crawler
                     e.Property(nameof(IEntityWithTimestampFields.CreatedAt)).CurrentValue = timestamp;
 
                 var updatedAtProp = e.Property(nameof(IEntityWithTimestampFields.UpdatedAt));
+                // prevent overwrite existing future timestamp, this will happens when a record is updated >=3 times within a second
+                if (e.State == EntityState.Modified && updatedAtProp.CurrentValue is Time c && c > timestamp) return;
                 updatedAtProp.CurrentValue = timestamp;
 
-                if (updatedAtProp.IsModified || e.State != EntityState.Modified) return;
-                var changedPropsValueDiff = e.Properties.Where(p => p.IsModified).Select(p => new {p.CurrentValue, p.OriginalValue});
+                if (e.State != EntityState.Modified || updatedAtProp.IsModified) return;
+                var changedPropsValueDiff = e.Properties.Where(p => p.IsModified) // not using lazy eval to prevent including the updatedAt field itself
+                    .Select(p => new {p.Metadata.Name, New = p.CurrentValue, Old = p.OriginalValue}).ToList();
                 do
                 {
                     updatedAtProp.CurrentValue = (Time)updatedAtProp.CurrentValue + 1;
                 } while (!updatedAtProp.IsModified && e.State == EntityState.Modified);
-                _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with following fields changed:{}, new record={}, original record={}. " +
+                _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with following fields changed:{}, new record={}, old record={}. " +
                                    "This means the record is updated more than one time within one second, " +
                                    "which usually caused by a different response of the same resource from tieba. " +
                                    "In order to prevent any possible duplicate keys conflicts from other revision tables update in the future, " +
-                                   "we've increased the value of updatedAt field back to the feature.",
+                                   "we've increased the value of updatedAt field back to the future.",
                     Helper.UnescapedJsonSerialize(changedPropsValueDiff), Helper.UnescapedJsonSerialize(e.CurrentValues.ToObject()), Helper.UnescapedJsonSerialize(e.OriginalValues.ToObject()));
             });
             return base.SaveChanges();

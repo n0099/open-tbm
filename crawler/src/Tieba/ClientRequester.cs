@@ -52,12 +52,12 @@ namespace tbm.Crawler
             }
             catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
             {
-                throw new TiebaException("Tieba client request timeout.", e);
+                throw new TiebaException("Tieba client request timeout.");
             }
             catch (HttpRequestException e)
             {
                 if (e.StatusCode == null) throw;
-                throw new TiebaException($"HTTP {(int)e.StatusCode} from tieba.", e);
+                throw new TiebaException($"HTTP {(int)e.StatusCode} from tieba.");
             }
         }
 
