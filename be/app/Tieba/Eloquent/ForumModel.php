@@ -2,12 +2,15 @@
 
 namespace App\Tieba\Eloquent;
 
+use App\Eloquent\ModelHelper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class ForumModel extends Model
 {
+    use ModelHelper;
+
     protected $table = 'tbm_forumsInfo';
 
     protected $guarded = [];
@@ -21,11 +24,6 @@ class ForumModel extends Model
     protected array $hidedFields = [
         'id'
     ];
-
-    public function scopeHidePrivateFields(Builder $query): Builder
-    {
-        return $query->select(array_diff($this->fields, $this->hidedFields));
-    }
 
     public function scopeIsCrawling(Builder $query, bool $isCrawling): Builder
     {

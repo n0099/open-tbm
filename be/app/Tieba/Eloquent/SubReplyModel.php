@@ -23,22 +23,11 @@ class SubReplyModel extends PostModel
         'authorManagerType',
         'authorExpGrade',
         'postTime',
-        'clientVersion',
-        'created_at',
-        'updated_at'
+        'createdAt',
+        'updatedAt'
     ];
 
-    protected array $hidedFields = [
-        'id',
-        'clientVersion'
-    ];
-
-    public array $updateExpectFields = [
-        ...Helper::POSTS_ID,
-        'postTime',
-        'authorUid',
-        'created_at'
-    ];
+    protected array $hidedFields = ['id'];
 
     public function post(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

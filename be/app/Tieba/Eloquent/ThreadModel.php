@@ -41,23 +41,11 @@ class ThreadModel extends PostModel
         'location',
         'agreeInfo',
         'zanInfo',
-        'clientVersion',
-        'created_at',
-        'updated_at'
+        'createdAt',
+        'updatedAt'
     ];
 
-    protected array $hidedFields = [
-        'id',
-        'clientVersion'
-    ];
-
-    public array $updateExpectFields = [
-        'tid',
-        'title',
-        'postTime',
-        'authorUid',
-        'created_at'
-    ];
+    protected array $hidedFields = ['id'];
 
     public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

@@ -35,8 +35,6 @@ abstract class PostModel extends Model
 
     protected array $hidedFields;
 
-    public array $updateExpectFields;
-
     abstract public function toPost(): Post;
 
     /**
@@ -70,11 +68,6 @@ abstract class PostModel extends Model
             return $query->whereIn($postIDName, $postID);
         }
         throw new \InvalidArgumentException("{$postIDName} must be int or array");
-    }
-
-    public function scopeHidePrivateFields(Builder $query): Builder
-    {
-        return $query->select(array_diff($this->fields, $this->hidedFields));
     }
 
     /**

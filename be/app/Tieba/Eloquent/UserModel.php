@@ -2,19 +2,21 @@
 
 namespace App\Tieba\Eloquent;
 
+use App\Eloquent\ModelHelper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class UserModel extends Model
 {
+    use ModelHelper;
+
     protected $table = 'tbm_tiebaUsers';
 
     protected $guarded = [];
 
     protected $casts = [
-        'iconInfo' => 'array',
-        'alaInfo' => 'array'
+        'iconInfo' => 'array'
     ];
 
     protected array $fields = [
@@ -25,19 +27,13 @@ class UserModel extends Model
         'avatarUrl',
         'gender',
         'fansNickname',
-        'iconInfo',
-        'alaInfo'
+        'iconInfo'
     ];
 
     protected array $hidedFields = [
         'id',
-        'alaInfo',
-        'created_at',
-        'updated_at'
-    ];
-
-    public array $updateExpectFields = [
-        'created_at'
+        'createdAt',
+        'updatedAt'
     ];
 
     public function scopeUid(Builder $query, $uid): Builder
@@ -49,10 +45,5 @@ class UserModel extends Model
             return $query->whereIn('uid', $uid);
         }
         throw new \InvalidArgumentException('Uid must be int or array');
-    }
-
-    public function scopeHidePrivateFields(Builder $query): Builder
-    {
-        return $query->select(array_diff($this->fields, $this->hidedFields));
     }
 }

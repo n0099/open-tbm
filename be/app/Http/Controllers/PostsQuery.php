@@ -56,7 +56,7 @@ class PostsQuery extends Controller
                     array_map(
                         static fn ($type) => array_column($result[$type], 'authorUid'),
                         Helper::POST_TYPES_PLURAL
-                    ),
+                    )
                 ])->flatten()->unique()->sort()->toArray()
             )->hidePrivateFields()->get()->toArray()
         ];

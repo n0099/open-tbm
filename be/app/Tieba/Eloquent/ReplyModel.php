@@ -33,24 +33,11 @@ class ReplyModel extends PostModel
         'agreeInfo',
         'signInfo',
         'tailInfo',
-        'clientVersion',
-        'created_at',
-        'updated_at'
+        'createdAt',
+        'updatedAt'
     ];
 
-    protected array $hidedFields = [
-        'id',
-        'clientVersion'
-    ];
-
-    public array $updateExpectFields = [
-        'tid',
-        'pid',
-        'floor',
-        'postTime',
-        'authorUid',
-        'created_at'
-    ];
+    protected array $hidedFields = ['id'];
 
     public function post(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
