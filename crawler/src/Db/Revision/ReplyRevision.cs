@@ -3,6 +3,7 @@ namespace tbm.Crawler
     public class ReplyRevision : BaseRevision
     {
         public ulong Pid { get; set; }
+        public uint? Floor { get; set; }
         public string? AuthorManagerType { get; set; }
         public ushort? AuthorExpGrade { get; set; }
         public int? SubReplyNum { get; set; }
