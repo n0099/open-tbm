@@ -26,29 +26,6 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Report or log an exception.
-     *
-     * @param \Throwable $exception
-     * @return void
-     */
-    public function report(\Throwable $exception)
-    {
-        parent::report($exception);
-    }
-
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \Throwable $exception
-     * @return \Illuminate\Http\Response
-     */
-    public function render($request, \Throwable $exception)
-    {
-        return parent::render($request, $exception);
-    }
-
-    /**
      * Override parent method to replace validate fail redirect with global error info json format
      *
      * @param  \Illuminate\Validation\ValidationException  $e

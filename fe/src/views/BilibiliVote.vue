@@ -140,9 +140,10 @@ const votesCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, curr
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;
 };
 
+type ChartOptionTop10CandidatesTimeline = echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {
     top50CandidatesCount: echarts.ComposeOption<BarSeriesOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
-    top10CandidatesTimeline: echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
+    top10CandidatesTimeline: ChartOptionTop10CandidatesTimeline,
     top5CandidatesCountByTime: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | TooltipComponentOption>,
     allVotesCountByTime: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>
 } = {
@@ -486,7 +487,7 @@ export default defineComponent({
                     invalid: _.filter(top10CandidatesTimeline, { isValid: 0 })
                 };
 
-                const options: Array<echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | MarkLineComponentOption | PieSeriesOption | TimelineComponentOption>> = [];
+                const options: ChartOptionTop10CandidatesTimeline[] = [];
                 _.each(_.groupBy(top10CandidatesTimeline, 'endTime'), (timeGroup, time) => {
                     // [{ voteFor: formatCandidateNameByID(1), validCount: 1, invalidCount: 0, officialValidCount: null }, ... ]
                     const dataset: Top10CandidatesTimelineDataset = _.chain(timeGroup)
@@ -537,7 +538,7 @@ export default defineComponent({
                         graphic: {
                             style: {
                                 fill: '#989898',
-                                textAlign: 'right',
+                                align: 'right',
                                 font: '28px "Microsoft YaHei"',
                                 text: `共${totalVotesCount()}票\n${DateTime.fromSeconds(Number(time)).toLocaleString(
                                     { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }
@@ -574,7 +575,7 @@ export default defineComponent({
 
                 const timelineRanges = _.chain(top10CandidatesTimeline).map('endTime').sort().sortedUniq().value();
                 timelineRanges.push(1552292800); // 2019-03-11T18:26:40+08:00 is the showtime of official votes count
-                charts.top10CandidatesTimeline?.setOption<echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>>({
+                charts.top10CandidatesTimeline?.setOption<ChartOptionTop10CandidatesTimeline>({
                     baseOption: { timeline: { autoPlay: true, data: timelineRanges } },
                     options
                 });

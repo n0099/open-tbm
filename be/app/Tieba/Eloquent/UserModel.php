@@ -2,15 +2,12 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Eloquent\InsertOnDuplicateKey;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class UserModel extends Model
 {
-    use InsertOnDuplicateKey;
-
     protected $table = 'tbm_tiebaUsers';
 
     protected $guarded = [];

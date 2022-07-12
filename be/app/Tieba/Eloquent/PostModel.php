@@ -2,7 +2,6 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Eloquent\InsertOnDuplicateKey;
 use App\Eloquent\ModelHelper;
 use App\Tieba\Post\Post;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +16,6 @@ use Illuminate\Support\Collection;
  */
 abstract class PostModel extends Model
 {
-    use InsertOnDuplicateKey;
     use ModelHelper;
 
     /**
