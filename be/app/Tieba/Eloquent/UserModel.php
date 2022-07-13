@@ -2,15 +2,12 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Eloquent\ModelHelper;
+use App\Eloquent\ModelWithHiddenFields;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class UserModel extends Model
+class UserModel extends ModelWithHiddenFields
 {
-    use ModelHelper;
-
     protected $table = 'tbm_tiebaUsers';
 
     protected $guarded = [];
@@ -19,19 +16,15 @@ class UserModel extends Model
         'iconInfo' => 'array'
     ];
 
-    protected array $fields = [
-        'id',
+    protected static array $fields = [
         'uid',
         'name',
         'displayName',
-        'avatarUrl',
+        'portrait',
+        'portraitUpdateTime',
         'gender',
         'fansNickname',
-        'iconInfo'
-    ];
-
-    protected array $hidedFields = [
-        'id',
+        'iconInfo',
         'createdAt',
         'updatedAt'
     ];

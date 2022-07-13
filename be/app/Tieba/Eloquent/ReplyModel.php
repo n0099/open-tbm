@@ -17,29 +17,25 @@ class ReplyModel extends PostModel
         'tailInfo' => 'array'
     ];
 
-    protected array $fields = [
-        'id',
+    protected static array $fields = [
         'tid',
         'pid',
         'floor',
-        'content',
         'authorUid',
         'authorManagerType',
         'authorExpGrade',
         'subReplyNum',
         'postTime',
         'isFold',
+        'agreeNum',
+        'disagreeNum',
         'location',
-        'agreeInfo',
-        'signInfo',
-        'tailInfo',
+        'signatureId',
         'createdAt',
         'updatedAt'
     ];
 
-    protected array $hidedFields = ['id'];
-
-    public function post(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
     }

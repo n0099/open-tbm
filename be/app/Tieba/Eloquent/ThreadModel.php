@@ -21,31 +21,30 @@ class ThreadModel extends PostModel
         'location' => 'array'
     ];
 
-    protected array $fields = [
-        'id',
+    protected static array $fields = [
         'tid',
         'firstPid',
         'threadType',
         'stickyType',
-        'isGood',
         'topicType',
+        'isGood',
         'title',
         'authorUid',
         'authorManagerType',
         'postTime',
-        'latestReplierUid',
         'latestReplyTime',
+        'latestReplierUid',
         'replyNum',
         'viewNum',
         'shareNum',
-        'location',
-        'agreeInfo',
+        'agreeNum',
+        'disagreeNum',
         'zanInfo',
+        'location',
+        'authorPhoneType',
         'createdAt',
         'updatedAt'
     ];
-
-    protected array $hidedFields = ['id'];
 
     public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

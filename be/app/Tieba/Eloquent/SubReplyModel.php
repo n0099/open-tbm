@@ -15,10 +15,8 @@ class SubReplyModel extends PostModel
         'content' => 'array'
     ];
 
-    protected array $fields = [
-        'id',
+    protected static array $fields = [
         ...Helper::POSTS_ID,
-        'content',
         'authorUid',
         'authorManagerType',
         'authorExpGrade',
@@ -27,9 +25,7 @@ class SubReplyModel extends PostModel
         'updatedAt'
     ];
 
-    protected array $hidedFields = ['id'];
-
-    public function post(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
     }

@@ -2,28 +2,17 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Eloquent\ModelHelper;
+use App\Eloquent\ModelWithHiddenFields;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class ForumModel extends Model
+class ForumModel extends ModelWithHiddenFields
 {
-    use ModelHelper;
-
     protected $table = 'tbm_forumsInfo';
 
     protected $guarded = [];
 
-    protected array $fields = [
-        'id',
-        'fid',
-        'name'
-    ];
-
-    protected array $hidedFields = [
-        'id'
-    ];
+    protected static array $fields = ['fid', 'name'];
 
     public function scopeIsCrawling(Builder $query, bool $isCrawling): Builder
     {

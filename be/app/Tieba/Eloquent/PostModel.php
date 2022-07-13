@@ -2,10 +2,9 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Eloquent\ModelHelper;
+use App\Eloquent\ModelWithHiddenFields;
 use App\Tieba\Post\Post;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
@@ -14,10 +13,8 @@ use Illuminate\Support\Collection;
  *
  * @package App\Tieba\Eloquent
  */
-abstract class PostModel extends Model
+abstract class PostModel extends ModelWithHiddenFields
 {
-    use ModelHelper;
-
     /**
      * @var string Default table name
      * @throw SQL:NoSuchTableException
@@ -31,9 +28,11 @@ abstract class PostModel extends Model
 
     protected int $fid = 0;
 
-    protected array $fields;
-
-    protected array $hidedFields;
+    private static array $postTypeClassNamePlural = [
+        ThreadModel::class => 'threads',
+        ReplyModel::class => 'replies',
+        SubReplyModel::class => 'subReplies'
+    ];
 
     abstract public function toPost(): Post;
 
@@ -43,13 +42,7 @@ abstract class PostModel extends Model
     public function setFid(int $fid): static
     {
         $this->fid = $fid;
-
-        $postTypeClassNamePlural = [
-            ThreadModel::class => 'threads',
-            ReplyModel::class => 'replies',
-            SubReplyModel::class => 'subReplies'
-        ];
-        $this->setTable("tbm_f{$fid}_" . $postTypeClassNamePlural[\get_class($this)]);
+        $this->setTable("tbm_f{$fid}_" . self::$postTypeClassNamePlural[\get_class($this)]);
 
         return $this;
     }
