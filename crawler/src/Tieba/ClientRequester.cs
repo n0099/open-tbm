@@ -56,7 +56,7 @@ namespace tbm.Crawler
             }
             catch (HttpRequestException e)
             {
-                if (e.StatusCode == null) throw;
+                if (e.StatusCode == null) throw new TiebaException("Network error from tieba.", e);
                 throw new TiebaException($"HTTP {(int)e.StatusCode} from tieba.");
             }
         }

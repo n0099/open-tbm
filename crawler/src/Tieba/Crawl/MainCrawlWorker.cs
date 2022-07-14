@@ -43,8 +43,8 @@ namespace tbm.Crawler
             var yieldInterval = SyncCrawlIntervalWithConfig() / forums.Count;
             foreach (var fidAndName in forums)
             {
-                await Task.Delay(yieldInterval * 1000);
                 yield return fidAndName;
+                await Task.Delay(yieldInterval * 1000);
             }
         }
 
