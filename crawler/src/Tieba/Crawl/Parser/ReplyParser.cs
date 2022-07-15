@@ -20,6 +20,14 @@ namespace TbClient.Post
             {
                 p.Pid = el.Pid;
                 p.Floor = el.Floor;
+                foreach (var c in el.Content.Where(c => c.Type == 3))
+                { // set with protoBuf default value to remove these image related fields that has similar value by reference
+                    c.BigCdnSrc = "";
+                    c.CdnSrc = "";
+                    c.CdnSrcActive = "";
+                    c.ShowOriginalBtn = 0;
+                    c.IsLongPic = 0;
+                }
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
                 // values of property tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
