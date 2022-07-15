@@ -6,7 +6,7 @@ namespace tbm.Crawler
         public ulong? ThreadType { get; set; }
         public string? StickyType { get; set; }
         public string? TopicType { get; set; }
-        public bool? IsGood { get; set; }
+        public ushort? IsGood { get; set; }
         public string? AuthorManagerType { get; set; }
         public uint? LatestReplyTime { get; set; }
         public long? LatestReplierUid { get; set; }

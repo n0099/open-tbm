@@ -39,20 +39,19 @@ namespace TbClient.Post
                 p.FirstPid = (Pid)el.FirstPostId;
                 p.ThreadType = (ulong)el.ThreadTypes;
                 p.StickyType = el.IsMembertop == 1 ? "membertop" : el.IsTop == 0 ? null : "top";
-                p.IsGood = el.IsGood == 1;
+                p.IsGood = (ushort?)el.IsGood.NullIfZero();
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
                 p.AuthorUid = el.AuthorId;
                 p.AuthorManagerType = el.Author.BawuType.NullIfWhiteSpace();
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
-                p.ReplyNum = (uint)el.ReplyNum;
-                p.ViewNum = (uint)el.ViewNum;
-                p.ShareNum = (uint)el.ShareNum;
-                p.AgreeNum = el.AgreeNum;
+                p.ReplyNum = (uint?)el.ReplyNum.NullIfZero();
+                p.ViewNum = (uint?)el.ViewNum.NullIfZero();
+                p.ShareNum = (uint?)el.ShareNum.NullIfZero();
+                p.AgreeNum = el.AgreeNum.NullIfZero();
                 // when the thread is livepost, the agree field will not exists
-                // ReSharper disable once ConstantConditionalAccessQualifier
-                p.DisagreeNum = (int?)el?.Agree?.DisagreeNum ?? 0;
+                p.DisagreeNum = (int?)el?.Agree?.DisagreeNum.NullIfZero();
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el?.Location);
                 p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el?.Zan);
                 return p;

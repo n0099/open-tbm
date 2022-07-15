@@ -128,5 +128,9 @@ namespace tbm.Crawler
         {
             if (item != null) list.Add(item);
         }
+
+        public static int? NullIfZero(this int num) => num == 0 ? null : num;
+        public static uint? NullIfZero(this uint num) => num == 0 ? null : num;
+        public static long? NullIfZero(this long num) => num == 0 ? null : num;
     }
 }

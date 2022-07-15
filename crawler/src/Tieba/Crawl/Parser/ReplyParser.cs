@@ -23,11 +23,11 @@ namespace TbClient.Post
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
                 // values of property tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
-                p.SubReplyNum = (int)el.SubPostNumber;
+                p.SubReplyNum = el.SubPostNumber.NullIfZero();
                 p.PostTime = el.Time;
-                p.IsFold = (ushort)el.IsFold;
-                p.AgreeNum = (int)el.Agree.AgreeNum;
-                p.DisagreeNum = (int)el.Agree.DisagreeNum;
+                p.IsFold = (ushort?)el.IsFold.NullIfZero();
+                p.AgreeNum = (int?)el.Agree.AgreeNum.NullIfZero();
+                p.DisagreeNum = (int?)el.Agree.DisagreeNum.NullIfZero();
                 p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
                 p.SignatureId = (uint?)el.Signature?.SignatureId;
                 p.Signature = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);
