@@ -22,7 +22,7 @@ namespace tbm.Crawler
                         case nameof(ThreadPost.ZanInfo): // prevent overwrite existing values of field liker_id which is saved by legacy crawler, and ZanInfo itself is deprecated by tieba so it shouldn't get updated
                         case nameof(ThreadPost.Location) when currentValue is null: // possible randomly response with null
                         case nameof(ThreadPost.Title) when currentValue is "": // empty string means the author had not write a title, its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.PostParseCallback()
-                        case nameof(ThreadPost.DisagreeNum) when currentValue is 0 && originalValue is not 0: // possible randomly response with 0
+                        case nameof(ThreadPost.DisagreeNum) when currentValue is null && originalValue is not null: // possible randomly response with 0.NullIfZero()
                         case nameof(ThreadPost.LatestReplierUid) when currentValue is null: // when the latest reply post is deleted and there's no new reply after delete, this field but not LatestReplyTime will be null
                             return true;
                     }

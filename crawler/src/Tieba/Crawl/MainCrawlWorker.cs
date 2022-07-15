@@ -133,12 +133,12 @@ namespace tbm.Crawler
                 var (tid, replies) = tidAndReplies;
                 replies.NewlyAdded.ForEach(i =>
                 {
-                    if (i.SubReplyNum != 0) _ = shouldCrawl.Add((tid, i.Pid));
+                    if (i.SubReplyNum != null) _ = shouldCrawl.Add((tid, i.Pid));
                 });
                 replies.Existing.ForEach(beforeAndAfter =>
                 {
                     var (before, after) = beforeAndAfter;
-                    if (after.SubReplyNum != 0 && before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
+                    if (after.SubReplyNum != null && before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
                 });
                 return shouldCrawl;
             });
