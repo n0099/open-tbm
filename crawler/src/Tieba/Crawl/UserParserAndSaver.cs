@@ -5,6 +5,15 @@ namespace tbm.Crawler
 {
     public class UserParserAndSaver : CommonInSavers<UserParserAndSaver>
     {
+        protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+        {
+            {nameof(TiebaUser.Name),               1},
+            {nameof(TiebaUser.DisplayName),        1 << 1},
+            {nameof(TiebaUser.PortraitUpdateTime), 1 << 2},
+            {nameof(TiebaUser.Gender),             1 << 3},
+            {nameof(TiebaUser.FansNickname),       1 << 4},
+            {nameof(TiebaUser.IconInfo),           1 << 5}
+        };
         private static readonly Dictionary<Type, string> TriggeredByPostSaverMap = new()
         {
             {typeof(ThreadSaver), "thread"},
@@ -78,7 +87,6 @@ namespace tbm.Crawler
 
                 SavePostsOrUsers(_logger, postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
-                    () => new UserRevisionNullFields(),
                     u => existingUsersByUid.ContainsKey(u.Uid),
                     u => existingUsersByUid[u.Uid]);
             }

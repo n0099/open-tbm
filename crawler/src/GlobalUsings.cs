@@ -30,7 +30,6 @@ global using TbClient.Api.Response;
 global using TbClient.Post;
 global using Thread = TbClient.Post.Thread;
 global using TbClient.Wrapper;
-global using TbClient.Revision;
 global using TbClient;
 
 global using Fid = System.UInt32;

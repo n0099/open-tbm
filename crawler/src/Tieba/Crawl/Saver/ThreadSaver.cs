@@ -12,6 +12,21 @@ namespace tbm.Crawler
                 _ => false
             }, (_, _, _, _) => false);
 
+        protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+        {
+            {nameof(ThreadPost.StickyType),        1},
+            {nameof(ThreadPost.TopicType),         1 << 1},
+            {nameof(ThreadPost.IsGood),            1 << 2},
+            {nameof(ThreadPost.AuthorManagerType), 1 << 3},
+            {nameof(ThreadPost.LatestReplierUid),  1 << 4},
+            {nameof(ThreadPost.ReplyNum),          1 << 5},
+            {nameof(ThreadPost.ViewNum),           1 << 6},
+            {nameof(ThreadPost.ShareNum),          1 << 7},
+            {nameof(ThreadPost.AgreeNum),          1 << 8},
+            {nameof(ThreadPost.DisagreeNum),       1 << 9},
+            {nameof(ThreadPost.Location),          1 << 10}
+        };
+
         private readonly Fid _fid;
 
         public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid);
@@ -25,7 +40,6 @@ namespace tbm.Crawler
                 p => p.Tid,
                 i => i.Tid,
                 p => new() {Type = "thread", Fid = _fid, Tid = p.Tid, PostTime = p.PostTime},
-                p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid},
-                () => new ThreadRevisionNullFields());
+                p => new ThreadRevision {Time = p.UpdatedAt, Tid = p.Tid});
     }
 }

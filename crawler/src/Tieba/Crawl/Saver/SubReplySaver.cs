@@ -14,6 +14,13 @@ namespace tbm.Crawler
                 },
             (_, _, _, _) => false);
 
+        protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+        {
+            {nameof(SubReplyPost.AuthorManagerType), 1},
+            {nameof(SubReplyPost.AgreeNum),          1 << 1},
+            {nameof(SubReplyPost.DisagreeNum),       1 << 2}
+        };
+
         private readonly Fid _fid;
 
         public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts, Fid fid);
@@ -29,8 +36,7 @@ namespace tbm.Crawler
                 p => p.Spid,
                 i => i.Spid!.Value,
                 p => new() {Type = "subReply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, Spid = p.Spid, PostTime = p.PostTime},
-                p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid},
-                () => new SubReplyRevisionNullFields());
+                p => new SubReplyRevision {Time = p.UpdatedAt, Spid = p.Spid});
 
             db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(p => new SubReplyContent {Spid = p.Spid, Content = p.Content}));
             return changeSet;

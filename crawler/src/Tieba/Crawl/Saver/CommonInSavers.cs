@@ -6,8 +6,6 @@ namespace tbm.Crawler
             types.ToDictionary(i => i, i => i.GetProperties().AsEnumerable());
         protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = GetPropDictKeyByTypes(new()
             {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
-        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionNullFieldsPropertiesCache = GetPropDictKeyByTypes(new()
-            {typeof(ThreadRevisionNullFields), typeof(ReplyRevisionNullFields), typeof(SubReplyRevisionNullFields), typeof(UserRevisionNullFields)});
 
         public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propertyName, object? originalValue, object? currentValue);
         public record FieldChangeIgnoranceCallbackRecord(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);
@@ -56,16 +54,17 @@ namespace tbm.Crawler
 
     public abstract class CommonInSavers<TSaver> : InternalCommonInSavers where TSaver : CommonInSavers<TSaver>
     {
-        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision, TRevisionNullFields>(
+        protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => null!;
+
+        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
             ILogger<CommonInSavers<TSaver>> logger,
             FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             TbmDbContext db,
             Func<TPostOrUser, TRevision> revisionFactory,
-            Func<TRevisionNullFields> revisionNullFieldsFactory,
             Func<TPostOrUser, bool> isExistPredicate,
             Func<TPostOrUser, TPostOrUser> existedSelector)
-            where TPostOrUser : class where TRevision : BaseRevision where TRevisionNullFields: IMessage<TRevisionNullFields>
+            where TPostOrUser : class where TRevision : BaseRevision
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
             db.AddRange(existedOrNew[false]); // newly added
@@ -79,7 +78,7 @@ namespace tbm.Crawler
                     or nameof(IEntityWithTimestampFields.UpdatedAt)).ForEach(p => p.IsModified = false);
 
                 var revision = default(TRevision);
-                var revisionNullFields = default(TRevisionNullFields);
+                int? revisionNullFieldsBitMask = null;
                 foreach (var p in entry.Properties)
                 {
                     var pName = p.Metadata.Name;
@@ -112,11 +111,12 @@ namespace tbm.Crawler
                         revisionProp.SetValue(revision, p.OriginalValue);
 
                         if (p.OriginalValue != null) continue;
-                        revisionNullFields ??= revisionNullFieldsFactory();
-                        RevisionNullFieldsPropertiesCache[typeof(TRevisionNullFields)].First(p2 => p2.Name == pName).SetValue(revisionNullFields, true);
+                        revisionNullFieldsBitMask ??= 0;
+                        // mask the corresponding field bit with 1
+                        revisionNullFieldsBitMask |= RevisionNullFieldsBitMasks[pName];
                     }
                 }
-                if (revision != null && revisionNullFields != null) revision.NullFields = revisionNullFields.ToByteArray();
+                if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask;
                 return revision;
             }).OfType<TRevision>());
         }

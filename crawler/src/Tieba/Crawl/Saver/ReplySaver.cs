@@ -10,6 +10,16 @@ namespace tbm.Crawler
                 // the value of user gender in thread response might be 0 but in reply response it won't be 0
                 propertyName == nameof(TiebaUser.Gender) && (ushort?)originalValue is 0 && (ushort?)currentValue is not 0);
 
+        protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+        {
+            {nameof(ReplyPost.AuthorManagerType), 1},
+            {nameof(ReplyPost.SubReplyNum),       1 << 1},
+            {nameof(ReplyPost.IsFold),            1 << 2},
+            {nameof(ReplyPost.AgreeNum),          1 << 3},
+            {nameof(ReplyPost.DisagreeNum),       1 << 4},
+            {nameof(ReplyPost.Location),          1 << 5}
+        };
+
         private record UniqueSignature(uint Id, byte[] Md5)
         {
             public virtual bool Equals(UniqueSignature? other) =>
@@ -40,8 +50,7 @@ namespace tbm.Crawler
                 p => p.Pid,
                 i => i.Pid!.Value,
                 p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-                p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid},
-                () => new ReplyRevisionNullFields());
+                p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(p => new ReplyContent {Pid = p.Pid, Content = p.Content}));
 
