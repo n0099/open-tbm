@@ -30,8 +30,7 @@ namespace tbm.Crawler
         protected override IEnumerable<Request> RequestsFactory(Page page) =>
             new[]
             {
-                new Request(Requester.RequestProtoBuf(
-                    "c/f/pb/floor?cmd=302002", "12.23.1.0",
+                new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
                     ParamDataField, ParamCommonField, () => new SubReplyResponse(), new SubReplyRequest
                     {
                         Data = new()
@@ -42,7 +41,6 @@ namespace tbm.Crawler
                         }
                     }), CrawlRequestFlag.None, page)
             };
-
 
         public override IList<SubReply> GetValidPosts(SubReplyResponse response)
         {

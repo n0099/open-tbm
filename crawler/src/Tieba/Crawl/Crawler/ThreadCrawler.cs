@@ -24,13 +24,13 @@ namespace tbm.Crawler
         protected override IEnumerable<Request> RequestsFactory(Page page)
         {
             const string url = "c/f/frs/page?cmd=301001";
-            var requestBody602 = new ThreadRequest.Types.Data
+            var data602 = new ThreadRequest.Types.Data
             {
                 Kw = _forumName,
                 Pn = (int)page,
                 Rn = 30
             };
-            var requestBody = new ThreadRequest.Types.Data
+            var data = new ThreadRequest.Types.Data
             {
                 Kw = _forumName,
                 Pn = (int)page,
@@ -42,9 +42,9 @@ namespace tbm.Crawler
             return new[]
             {
                 new Request(Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
-                    param: new ThreadRequest {Data = requestBody}, clientVersion: "12.23.1.0"), CrawlRequestFlag.None, page),
+                    param: new ThreadRequest {Data = data}, clientVersion: "12.26.1.0"), CrawlRequestFlag.None, page),
                 new Request(Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
-                    param: new ThreadRequest {Data = requestBody602}, clientVersion: "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
+                    param: new ThreadRequest {Data = data602}, clientVersion: "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
             };
         }
 

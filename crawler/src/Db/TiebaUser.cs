@@ -10,6 +10,7 @@ namespace tbm.Crawler
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
         public byte[]? IconInfo { get; set; }
+        public string? IpProvince { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
     }

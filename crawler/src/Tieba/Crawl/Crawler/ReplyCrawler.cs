@@ -26,22 +26,26 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<Request> RequestsFactory(Page page) =>
-            new[]
-            {
-                new Request(Requester.RequestProtoBuf(
-                    "c/f/pb/page?cmd=302001", "12.12.1.0",
-                    ParamDataField, ParamCommonField, () => new ReplyResponse(), new ReplyRequest
-                    {
-                        Data = new()
-                        { // reverse order will be {"last", "1"}, {"r", "1"}
-                            Kz = (long)_tid,
-                            Pn = (int)page,
-                            Rn = 30,
-                            QType = 2
-                        }
-                    }), CrawlRequestFlag.None, page)
+        protected override IEnumerable<Request> RequestsFactory(Page page)
+        {
+            const string url = "c/f/pb/page?cmd=302001";
+            var data = new ReplyRequest.Types.Data
+            { // reverse order will be {"last", "1"}, {"r", "1"}
+                Kz = (long)_tid,
+                Pn = (int)page,
+                Rn = 30,
+                QType = 2
             };
+            var dataShowOnlyFolded = data.Clone();
+            dataShowOnlyFolded.IsFoldCommentReq = 1;
+            return new[]
+            {
+                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataField, ParamCommonField,
+                    () => new ReplyResponse(), new ReplyRequest {Data = data}), CrawlRequestFlag.None, page),
+                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataField, ParamCommonField,
+                    () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), CrawlRequestFlag.None, page)
+            };
+        }
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)
         {
