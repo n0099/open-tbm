@@ -3,16 +3,14 @@ namespace tbm.Crawler
     public class SubReplySaver : BaseSaver<SubReplyPost>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
-            Update: (_, propertyName, originalValue, currentValue) =>
-                propertyName switch
-                { // always ignore updates on iconinfo due to some rare user will show some extra icons
-                    // compare to reply response in the response of sub reply
-                    nameof(TiebaUser.IconInfo) => true,
-                    // fans nick name within sub reply response will always be null
-                    nameof(TiebaUser.FansNickname) when originalValue is not null && currentValue is null => true,
-                    _ => false
-                },
-            (_, _, _, _) => false);
+            Update: (_, propertyName, originalValue, currentValue) => propertyName switch
+            { // always ignore updates on iconinfo due to some rare user will show some extra icons
+                // compare to reply response in the response of sub reply
+                nameof(TiebaUser.IconInfo) => true,
+                // fans nick name within sub reply response will always be null
+                nameof(TiebaUser.FansNickname) when originalValue is not null && currentValue is null => true,
+                _ => false
+            }, (_, _, _, _) => false);
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {

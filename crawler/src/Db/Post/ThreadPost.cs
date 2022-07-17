@@ -21,7 +21,7 @@ namespace tbm.Crawler
         public int? AgreeNum { get; set; }
         public int? DisagreeNum { get; set; }
         public byte[]? ZanInfo { get; set; }
-        public byte[]? Location { get; set; }
+        public byte[]? Geolocation { get; set; }
         public string? AuthorPhoneType { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }

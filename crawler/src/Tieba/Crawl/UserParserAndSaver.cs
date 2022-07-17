@@ -13,7 +13,7 @@ namespace tbm.Crawler
             {nameof(TiebaUser.Gender),             1 << 3},
             {nameof(TiebaUser.FansNickname),       1 << 4},
             {nameof(TiebaUser.IconInfo),           1 << 5},
-            {nameof(TiebaUser.IpProvince),         1 << 6}
+            {nameof(TiebaUser.IpGeolocation),      1 << 6}
         };
         private static readonly Dictionary<Type, string> TriggeredByPostSaverMap = new()
         {
@@ -65,7 +65,7 @@ namespace tbm.Crawler
                     u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
                     u.IconInfo = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
-                    u.IpProvince = el.IpAddress.NullIfWhiteSpace();
+                    u.IpGeolocation = el.IpAddress.NullIfWhiteSpace();
                     return u;
                 }
                 catch (Exception e)

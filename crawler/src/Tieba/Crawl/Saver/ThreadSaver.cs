@@ -24,7 +24,7 @@ namespace tbm.Crawler
             {nameof(ThreadPost.ShareNum),          1 << 7},
             {nameof(ThreadPost.AgreeNum),          1 << 8},
             {nameof(ThreadPost.DisagreeNum),       1 << 9},
-            {nameof(ThreadPost.Location),          1 << 10}
+            {nameof(ThreadPost.Geolocation),       1 << 10}
         };
 
         private readonly Fid _fid;

@@ -15,6 +15,6 @@ namespace tbm.Crawler
         public uint? ShareNum { get; set; }
         public int? AgreeNum { get; set; }
         public int? DisagreeNum { get; set; }
-        public byte[]? Location { get; set; }
+        public byte[]? Geolocation { get; set; }
     }
 }

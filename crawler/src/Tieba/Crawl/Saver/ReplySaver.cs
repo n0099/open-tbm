@@ -17,7 +17,7 @@ namespace tbm.Crawler
             {nameof(ReplyPost.IsFold),            1 << 2},
             {nameof(ReplyPost.AgreeNum),          1 << 3},
             {nameof(ReplyPost.DisagreeNum),       1 << 4},
-            {nameof(ReplyPost.Location),          1 << 5}
+            {nameof(ReplyPost.Geolocation),       1 << 5}
         };
 
         private record UniqueSignature(uint Id, byte[] Md5)

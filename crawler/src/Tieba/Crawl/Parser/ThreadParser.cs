@@ -16,8 +16,8 @@ namespace tbm.Crawler
                 posts.Where(t => t.StickyType != null)
                     // using value from 6.0.2 response to fix that in the 12.x response author uid will be 0 and all the other fields is filled with default value
                     .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
-                posts.Where(t => t.Location != null) // replace with more detailed location.name in the 6.0.2 response
-                    .ForEach(t => t.Location = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
+                posts.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
+                    .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
                 return null;
             }
 
@@ -52,7 +52,7 @@ namespace TbClient.Post
                 p.AgreeNum = el.AgreeNum.NullIfZero();
                 // when the thread is livepost, the agree field will not exists
                 p.DisagreeNum = (int?)el?.Agree?.DisagreeNum.NullIfZero();
-                p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el?.Location);
+                p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el?.Location);
                 p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el?.Zan);
                 return p;
             }

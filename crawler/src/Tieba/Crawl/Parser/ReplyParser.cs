@@ -36,7 +36,7 @@ namespace TbClient.Post
                 p.IsFold = (ushort?)el.IsFold.NullIfZero();
                 p.AgreeNum = (int?)el.Agree.AgreeNum.NullIfZero();
                 p.DisagreeNum = (int?)el.Agree.DisagreeNum.NullIfZero();
-                p.Location = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
+                p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
                 p.SignatureId = (uint?)el.Signature?.SignatureId;
                 p.Signature = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);
                 return p;

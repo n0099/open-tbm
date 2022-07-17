@@ -15,7 +15,7 @@ namespace tbm.Crawler
         public ushort? IsFold { get; set; }
         public int? AgreeNum { get; set; }
         public int? DisagreeNum { get; set; }
-        public byte[]? Location { get; set; }
+        public byte[]? Geolocation { get; set; }
         public uint? SignatureId { get; set; }
         [NotMapped] public byte[]? Signature { get; set; }
         public uint CreatedAt { get; set; }
