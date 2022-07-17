@@ -27,8 +27,8 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<Request> RequestsFactory(Page page) =>
-            new[]
+        protected override Task<IEnumerable<Request>> RequestsFactory(Page page) =>
+            Task.FromResult(new[]
             {
                 new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
                     ParamDataField, ParamCommonField, () => new SubReplyResponse(), new SubReplyRequest
@@ -39,8 +39,8 @@ namespace tbm.Crawler
                             Pid = (long)_pid,
                             Pn = (int)page
                         }
-                    }), CrawlRequestFlag.None, page)
-            };
+                    }), page)
+            }.AsEnumerable());
 
         public override IList<SubReply> GetValidPosts(SubReplyResponse response)
         {

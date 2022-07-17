@@ -26,9 +26,10 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<Request> RequestsFactory(Page page)
+        protected override async Task<IEnumerable<Request>> RequestsFactory(Page page)
         {
             const string url = "c/f/pb/page?cmd=302001";
+            const string clientVersion = "12.26.1.0";
             var data = new ReplyRequest.Types.Data
             { // reverse order will be {"last", "1"}, {"r", "1"}
                 Kz = (long)_tid,
@@ -36,15 +37,20 @@ namespace tbm.Crawler
                 Rn = 30,
                 QType = 2
             };
-            var dataShowOnlyFolded = data.Clone();
-            dataShowOnlyFolded.IsFoldCommentReq = 1;
-            return new[]
+            var response = await Requester.RequestProtoBuf(url, clientVersion, ParamDataField, ParamCommonField,
+                () => new ReplyResponse(), new ReplyRequest {Data = data});
+            var ret = new List<Request>(2) {new(Task.FromResult(response), page)};
+            // as of client version 12.12.1.0 (not including), folded replies won't be include in response:
+            // https://github.com/n0099/TiebaMonitor/commit/b8e7d2645e456271f52457f56500aaedaf28a010#diff-cf67f7f9e82d44aa5be8f85cd24946e5bb7829ca7940c9d056bb1e3849b8f981R32
+            // so we have to manually requesting the folded replies by appending the returned request tasks
+            if (response.Data.HasFoldComment != 0)
             {
-                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataField, ParamCommonField,
-                    () => new ReplyResponse(), new ReplyRequest {Data = data}), CrawlRequestFlag.None, page),
-                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataField, ParamCommonField,
-                    () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), CrawlRequestFlag.None, page)
-            };
+                var dataShowOnlyFolded = data.Clone();
+                dataShowOnlyFolded.IsFoldCommentReq = 1;
+                ret.Add(new(Requester.RequestProtoBuf(url, clientVersion, ParamDataField, ParamCommonField,
+                    () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), page));
+            }
+            return ret;
         }
 
         public override IList<Reply> GetValidPosts(ReplyResponse response)

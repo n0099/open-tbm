@@ -21,7 +21,7 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override IEnumerable<Request> RequestsFactory(Page page)
+        protected override Task<IEnumerable<Request>> RequestsFactory(Page page)
         {
             const string url = "c/f/frs/page?cmd=301001";
             var data602 = new ThreadRequest.Types.Data
@@ -39,13 +39,13 @@ namespace tbm.Crawler
                 QType = 2,
                 SortType = 5
             };
-            return new[]
+            return Task.FromResult(new[]
             {
-                new Request(Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
-                    param: new ThreadRequest {Data = data}, clientVersion: "12.26.1.0"), CrawlRequestFlag.None, page),
-                new Request(Requester.RequestProtoBuf(url, paramDataField: ParamDataField, paramCommonField: ParamCommonField, responseFactory: () => new ThreadResponse(),
-                    param: new ThreadRequest {Data = data602}, clientVersion: "6.0.2"), CrawlRequestFlag.Thread602ClientVersion, page)
-            };
+                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataField, ParamCommonField, () => new ThreadResponse(),
+                    new ThreadRequest {Data = data}), page),
+                new Request(Requester.RequestProtoBuf(url, "6.0.2", ParamDataField, ParamCommonField, () => new ThreadResponse(),
+                    new ThreadRequest {Data = data602}), page, CrawlRequestFlag.Thread602ClientVersion)
+            }.AsEnumerable());
         }
 
         public override IList<Thread> GetValidPosts(ThreadResponse response)
