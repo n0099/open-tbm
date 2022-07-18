@@ -4,18 +4,9 @@ namespace tbm.Crawler
     {
         protected override ulong PostIdSelector(ReplyPost post) => post.Pid;
 
-        protected override IEnumerable<ReplyPost> ParsePostsInternal(
-            CrawlRequestFlag requestFlag, IEnumerable<Reply> inPosts,
-            ConcurrentDictionary<PostId, ReplyPost> outPosts, List<User> outUsers) =>
-            inPosts.Select(el => (ReplyPost)el);
-    }
-}
+        protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) => inPosts.Select(Convert);
 
-namespace TbClient.Post
-{
-    public partial class Reply
-    {
-        public static implicit operator ReplyPost(Reply el)
+        protected override ReplyPost Convert(Reply el)
         {
             var p = new ReplyPost();
             try

@@ -4,22 +4,14 @@ namespace tbm.Crawler
     {
         protected override ulong PostIdSelector(SubReplyPost post) => post.Spid;
 
-        protected override IEnumerable<SubReplyPost> ParsePostsInternal(
-            CrawlRequestFlag requestFlag, IEnumerable<SubReply> inPosts,
-            ConcurrentDictionary<PostId, SubReplyPost> outPosts, List<User> outUsers) =>
+        protected override IEnumerable<SubReplyPost> ParsePostsInternal(IEnumerable<SubReply> inPosts, List<User> outUsers) =>
             inPosts.Select(el =>
             {
                 outUsers.Add(el.Author);
-                return (SubReplyPost)el;
+                return Convert(el);
             });
-    }
-}
 
-namespace TbClient.Post
-{
-    public partial class SubReply
-    {
-        public static implicit operator SubReplyPost(SubReply el)
+        protected override SubReplyPost Convert(SubReply el)
         {
             var p = new SubReplyPost();
             try

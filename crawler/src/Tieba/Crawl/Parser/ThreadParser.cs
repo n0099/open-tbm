@@ -4,35 +4,31 @@ namespace tbm.Crawler
     {
         protected override ulong PostIdSelector(ThreadPost post) => post.Tid;
 
-        protected override IEnumerable<ThreadPost>? ParsePostsInternal(
-            CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts,
-            ConcurrentDictionary<PostId, ThreadPost> outPosts, List<User> outUsers)
+        protected override bool TrySkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<ulong, ThreadPost> outPosts)
         {
-            if (requestFlag == CrawlRequestFlag.Thread602ClientVersion)
-            {
-                var posts = outPosts.Values;
-                Thread? GetInPostsByTid(IPost t) => inPosts.FirstOrDefault(t2 => (Tid)t2.Tid == t.Tid);
-                posts.Where(t => t.LatestReplierUid == null)
-                    // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
-                    .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
-                posts.Where(t => t.StickyType != null)
-                    // using value from 6.0.2 response to fix that in the 12.x response author uid will be 0 and all the other fields is filled with default value
-                    .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
-                posts.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
-                    .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
-                return null;
-            }
-
-            return inPosts.Select(el => (ThreadPost)el);
+            if (requestFlag != CrawlRequestFlag.Thread602ClientVersion) return false;
+            var posts = outPosts.Values;
+            Thread? GetInPostsByTid(IPost t) => inPosts.FirstOrDefault(t2 => (Tid)t2.Tid == t.Tid);
+            posts.Where(t => t.LatestReplierUid == null)
+                // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
+                .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
+            posts.Where(t => t.StickyType != null)
+                // using value from 6.0.2 response to fix that in the 12.x response author uid will be 0 and all the other fields is filled with default value
+                .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
+            posts.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
+                .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
+            return true;
         }
-    }
-}
 
-namespace TbClient.Post
-{
-    public partial class Thread
-    {
-        public static implicit operator ThreadPost(Thread el)
+        protected override (ThreadPost First, ThreadPost Last) GetFirstAndLastOfParsed(List<ThreadPost> parsed)
+        {
+            parsed = parsed.Where(t => t.StickyType == null).ToList();
+            return (parsed.First(), parsed.Last());
+        }
+
+        protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) => inPosts.Select(Convert);
+
+        protected override ThreadPost Convert(Thread el)
         {
             var p = new ThreadPost();
             try

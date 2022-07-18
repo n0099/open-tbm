@@ -79,9 +79,10 @@ namespace tbm.Crawler
                     else
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})
+                    {
                         _locks.AcquireFailed(tid, 1, tidAndFailedCount.FailedCount);
-
-                    _requesterTcs.Decrease();
+                        _requesterTcs.Decrease();
+                    }
                     return null;
                 }
                 finally

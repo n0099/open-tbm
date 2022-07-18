@@ -3,28 +3,24 @@ namespace tbm.Crawler
     public abstract class BaseParser<TPost, TPostProtoBuf>
         where TPost: class, IPost where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
-        protected abstract IEnumerable<TPost>? ParsePostsInternal(
-            CrawlRequestFlag requestFlag, IEnumerable<TPostProtoBuf> inPosts,
-            ConcurrentDictionary<ulong, TPost> outPosts, List<User> outUsers);
-
         protected abstract ulong PostIdSelector(TPost post);
+        protected abstract TPost Convert(TPostProtoBuf el);
+        protected abstract IEnumerable<TPost> ParsePostsInternal(IEnumerable<TPostProtoBuf> inPosts, List<User> outUsers);
+        protected virtual bool TrySkipParse(CrawlRequestFlag requestFlag, IEnumerable<TPostProtoBuf> inPosts, ConcurrentDictionary<ulong, TPost> outPosts) => false;
+        protected virtual (TPost First, TPost Last) GetFirstAndLastOfParsed(List<TPost> parsed) => (parsed.First(), parsed.Last());
 
         public (TPost First, TPost Last)? ParsePosts(
-            CrawlRequestFlag requestFlag, IEnumerable<TPostProtoBuf> inPosts,
+            CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
             in ConcurrentDictionary<ulong, TPost> outPosts, out List<User> outUsers)
         {
             outUsers = new();
-            var parsed = ParsePostsInternal(requestFlag, inPosts, outPosts, outUsers);
-            if (parsed == null) return null;
+            if (TrySkipParse(requestFlag, inPosts, outPosts)) return null;
+
+            var parsed = ParsePostsInternal(inPosts, outUsers);
             parsed = parsed.ToList();
             foreach (var p in parsed) outPosts[PostIdSelector(p)] = p;
 
-            if (parsed is List<ThreadPost> threads)
-            { // filter out sticky threads
-                var parsedThreads = threads.Where(t => t.StickyType == null).ToList();
-                return ((TPost, TPost))((IPost, IPost))(parsedThreads.First(), parsedThreads.Last());
-            }
-            return (parsed.First(), parsed.Last());
+            return GetFirstAndLastOfParsed((List<TPost>)parsed);
         }
     }
 }
