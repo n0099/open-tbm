@@ -137,10 +137,10 @@ namespace tbm.Crawler
             }
             finally
             {
-                PostParseCallback((response, flag), posts);
+                PostParseCallback(response, flag);
             }
         }
 
-        protected virtual void PostParseCallback((TResponse, CrawlRequestFlag) responseAndFlag, IList<TPostProtoBuf> posts) { }
+        protected virtual void PostParseCallback(TResponse response, CrawlRequestFlag flag) { }
     }
 }

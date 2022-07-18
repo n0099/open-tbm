@@ -56,7 +56,7 @@ namespace tbm.Crawler
         public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
         {
             if (response.Error.Errorno != 4 || flag != CrawlRequestFlag.ReplyShowOnlyFolded)
-            {
+            { // skip throw exception when error_no=4 and the response is request with is_fold_comment_req=1
                 if (response.Error.Errorno is 4 or 350008)
                     throw new TiebaException(false, "Thread already deleted when crawling reply.");
                 ValidateOtherErrorCode(response);

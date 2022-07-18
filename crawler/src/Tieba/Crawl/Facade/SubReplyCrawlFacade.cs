@@ -16,7 +16,7 @@ namespace tbm.Crawler
             _pid = pid;
         }
 
-        protected override void PostParseCallback((SubReplyResponse, CrawlRequestFlag) responseAndFlag, IList<SubReply> posts) =>
+        protected override void PostParseCallback(SubReplyResponse response, CrawlRequestFlag flag) =>
             ParsedPosts.Values.ForEach(p =>
             {
                 p.Tid = _tid;

@@ -17,16 +17,16 @@ namespace tbm.Crawler
             _tid = tid;
         }
 
-        protected override void PostParseCallback((ReplyResponse, CrawlRequestFlag) responseAndFlag, IList<Reply> posts)
+        protected override void PostParseCallback(ReplyResponse response, CrawlRequestFlag flag)
         {
-            var data = responseAndFlag.Item1.Data;
+            var data = response.Data;
             if (data.Page.CurrentPage == 1)
             { // update parent thread of reply with new title that extracted from the first floor reply in first page
                 var db = _dbContextFactory(Fid);
                 var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
                 if (parentThreadTitle == "")
                 { // thread title will be empty string as a fallback when the thread author haven't write title for this thread
-                    var newTitle = posts.FirstOrDefault(p => p.Floor == 1)?.Title;
+                    var newTitle = data.PostList.FirstOrDefault(p => p.Floor == 1)?.Title;
                     if (newTitle != null)
                     {
                         db.Attach(new ThreadPost {Tid = _tid, Title = newTitle}).Property(t => t.Title).IsModified = true;
@@ -39,15 +39,12 @@ namespace tbm.Crawler
             var users = data.UserList;
             Users.ParseUsers(users);
 
-            posts.Select(p => p.Pid).ForEach(pid =>
+            ParsedPosts.Values.IntersectBy(data.PostList.Select(p => p.Pid), p => p.Pid).ForEach(p =>
             { // fill the values for some field of reply from user list which is out of post list
-                var p = ParsedPosts[pid];
                 var author = users.First(u => u.Uid == p.AuthorUid);
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 p.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
-
                 p.Tid = _tid;
-                ParsedPosts[pid] = p;
             });
         }
     }

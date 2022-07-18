@@ -12,9 +12,6 @@ namespace tbm.Crawler
             posts.Where(t => t.LatestReplierUid == null)
                 // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
                 .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
-            posts.Where(t => t.StickyType != null)
-                // using value from 6.0.2 response to fix that in the 12.x response author uid will be 0 and all the other fields is filled with default value
-                .ForEach(t => t.AuthorManagerType = GetInPostsByTid(t)?.Author.BawuType);
             posts.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
                 .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
             return true;
@@ -40,9 +37,11 @@ namespace tbm.Crawler
                 p.IsGood = (ushort?)el.IsGood.NullIfZero();
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
-                p.AuthorUid = el.AuthorId.NullIfZero() ?? el.Author.Uid;
+                p.AuthorUid = el.AuthorId.NullIfZero() ?? el.Author.Uid; // el.Author will exists when the thread is from reply response
+                // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseCallback()
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
+                // value of LatestReplierUid will be write back from the response of client version 6.0.2 by TrySkipParse()
                 p.ReplyNum = (uint?)el.ReplyNum.NullIfZero();
                 p.ViewNum = (uint?)el.ViewNum.NullIfZero();
                 p.ShareNum = (uint?)el.ShareNum.NullIfZero();

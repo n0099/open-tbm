@@ -17,7 +17,7 @@ namespace tbm.Crawler
             try
             {
                 var author = el.Author;
-                // values of property tid and pid will be write back in SubReplyCrawlFacade.PostParseCallback()
+                // values of tid and pid will be write back in SubReplyCrawlFacade.PostParseCallback()
                 p.Spid = el.Spid;
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = author.Uid;

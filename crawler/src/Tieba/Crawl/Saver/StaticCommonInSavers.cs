@@ -45,7 +45,6 @@ namespace tbm.Crawler
                     {
                         case nameof(ThreadPost.Title) when originalValue is "": // empty string from response has been updated by ReplyCrawlFacade.PostParseCallback()
                         case nameof(ThreadPost.LatestReplierUid) when originalValue is null: // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
-                        case nameof(ThreadPost.AuthorManagerType) when originalValue is null: // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
                             return true;
                     }
                 }
