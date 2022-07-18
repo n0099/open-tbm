@@ -45,7 +45,7 @@ namespace tbm.Crawler
         {
             if (!ShouldLogTrace()) return;
             _logger.LogTrace("TCS: queueLen={} maxLimitRps={:F2} avgRps={:F2} elapsed={:F1}s",
-                QueueLength, MaxRps, AverageRps, (float)_stopwatch.ElapsedMilliseconds / 1000);
+                QueueLength, MaxRps, AverageRps, _stopwatch.ElapsedMilliseconds / 1000f);
             if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
         }
 

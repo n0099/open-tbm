@@ -71,8 +71,8 @@ namespace tbm.Crawler
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
 
-                var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Item1)).Max(i => (Page)i.TotalPage);
-                endPage = Math.Min(endPage, maxPage);
+                var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Item1)).Max(i => (Page?)i?.TotalPage);
+                endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
             }, startPage, 0);
 
             if (!isCrawlFailed) await CrawlPages(

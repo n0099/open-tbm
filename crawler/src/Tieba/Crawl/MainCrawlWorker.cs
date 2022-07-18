@@ -3,34 +3,30 @@ namespace tbm.Crawler
     using SavedThreads = List<SaverChangeSet<ThreadPost>>;
     using SavedRepliesByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
-    public class MainCrawlWorker : BackgroundService
+    public class MainCrawlWorker : CyclicCrawlWorker
     {
         private readonly ILogger<MainCrawlWorker> _logger;
-        private readonly IConfiguration _config;
         private readonly ILifetimeScope _scope0;
         // stores the latestReplyTime of first thread appears in the page of previous crawl worker, key by fid
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
-        private readonly Timer _timer = new() {Enabled = true};
 
-        public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config, ILifetimeScope scope0)
+        public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
+            ILifetimeScope scope0, IIndex<string, CrawlerLocks.New> locks) : base(config)
         {
             _logger = logger;
-            _config = config;
             _scope0 = scope0;
             _ = SyncCrawlIntervalWithConfig();
+            // eager initial all keyed CrawlerLocks singleton instances, in order to sync its timer of WithLogTrace
+            _ = locks["thread"];
+            _ = locks["threadLate"];
+            _ = locks["reply"];
+            _ = locks["subReply"];
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer.Elapsed += async (_, _) => await CrawlThenSave();
+            Timer.Elapsed += async (_, _) => await CrawlThenSave();
             await CrawlThenSave();
-        }
-
-        private int SyncCrawlIntervalWithConfig()
-        {
-            var interval = _config.GetValue("CrawlInterval", 60);
-            _timer.Interval = interval * 1000;
-            return interval;
         }
 
         private record FidAndName(Fid Fid, string Name);
@@ -40,11 +36,11 @@ namespace tbm.Crawler
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<TbmDbContext.New>()(0);
             var forums = (from f in db.ForumsInfo where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
-            var yieldInterval = SyncCrawlIntervalWithConfig() / forums.Count;
+            var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
             foreach (var fidAndName in forums)
             {
                 yield return fidAndName;
-                await Task.Delay(yieldInterval * 1000);
+                await Task.Delay((int)yieldInterval * 1000);
             }
         }
 

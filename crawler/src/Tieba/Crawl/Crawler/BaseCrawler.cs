@@ -18,8 +18,8 @@ namespace tbm.Crawler
 
         protected BaseCrawler(ClientRequester requester) => Requester = requester;
 
-        public TbClient.Page GetPageFromResponse(TResponse res) =>
-            (TbClient.Page)ResponsePageField.GetValue(ResponseDataField.GetValue(res) as IMessage)!;
+        public TbClient.Page? GetPageFromResponse(TResponse res) =>
+            (TbClient.Page?)ResponsePageField.GetValue(ResponseDataField.GetValue(res) as IMessage);
 
         public async Task<(TResponse, CrawlRequestFlag, Page)[]> CrawlSinglePage(Page page) =>
             await Task.WhenAll((await RequestsFactory(page)).Select(async i => (await i.Response, i.Flag, i.Page)));

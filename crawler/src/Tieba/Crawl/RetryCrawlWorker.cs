@@ -1,30 +1,29 @@
 namespace tbm.Crawler
 {
-    public class RetryCrawlWorker : BackgroundService
+    public class RetryCrawlWorker : CyclicCrawlWorker
     {
         private readonly ILogger<RetryCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
         private readonly IIndex<string, CrawlerLocks.New> _registeredLocksFactory;
-        private readonly Timer _timer = new() {Interval = Interval};
-        private const int Interval = 60 * 1000; // per minute
 
-        public RetryCrawlWorker(ILogger<RetryCrawlWorker> logger, ILifetimeScope scope0, IIndex<string, CrawlerLocks.New> registeredLocksFactory)
+        public RetryCrawlWorker(ILogger<RetryCrawlWorker> logger, IConfiguration config,
+            ILifetimeScope scope0, IIndex<string, CrawlerLocks.New> registeredLocksFactory) : base(config)
         {
             _logger = logger;
             _scope0 = scope0;
             _registeredLocksFactory = registeredLocksFactory;
+            _ = SyncCrawlIntervalWithConfig();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Delay(Interval / 2, stoppingToken);
-            _timer.Enabled = true; // delay timer start to stagger execution with main crawling worker
-            _timer.Elapsed += async (_, _) => await Retry();
+            Timer.Elapsed += async (_, _) => await Retry();
             await Retry();
         }
 
         private async Task Retry()
         {
+            _ = SyncCrawlIntervalWithConfig();
             try
             {
                 foreach (var lockType in Program.RegisteredCrawlerLocks)
