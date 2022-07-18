@@ -5,8 +5,9 @@ namespace tbm.Crawler
     {
         public (TPost First, TPost Last)? ParsePosts(
             CrawlRequestFlag requestFlag, IEnumerable<TPostProtoBuf> inPosts,
-            in ConcurrentDictionary<ulong, TPost> outPosts, in List<User> outUsers)
+            in ConcurrentDictionary<ulong, TPost> outPosts, out List<User> outUsers)
         {
+            outUsers = new();
             var parsedTuple = ParsePostsInternal(requestFlag, inPosts, outPosts, outUsers);
             if (parsedTuple == null) return null;
             var (parsed, postIdSelector) = parsedTuple.Value;

@@ -42,18 +42,18 @@ namespace TbClient.Post
                 p.IsGood = (ushort?)el.IsGood.NullIfZero();
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
-                p.AuthorUid = el.AuthorId;
+                p.AuthorUid = el.AuthorId.NullIfZero() ?? el.Author.Uid;
                 p.AuthorManagerType = el.Author.BawuType.NullIfWhiteSpace();
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
                 p.ReplyNum = (uint?)el.ReplyNum.NullIfZero();
                 p.ViewNum = (uint?)el.ViewNum.NullIfZero();
                 p.ShareNum = (uint?)el.ShareNum.NullIfZero();
-                p.AgreeNum = el.AgreeNum.NullIfZero();
                 // when the thread is livepost, the agree field will not exists
-                p.DisagreeNum = (int?)el?.Agree?.DisagreeNum.NullIfZero();
-                p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el?.Location);
-                p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el?.Zan);
+                p.AgreeNum = (int?)el.Agree?.AgreeNum.NullIfZero() ?? el.AgreeNum;
+                p.DisagreeNum = (int?)el.Agree?.DisagreeNum.NullIfZero();
+                p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el.Location);
+                p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
                 return p;
             }
             catch (Exception e)

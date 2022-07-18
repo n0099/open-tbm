@@ -130,8 +130,8 @@ namespace tbm.Crawler
             var posts = _crawler.GetValidPosts(response);
             try
             {
-                var usersStoreUnderPost = new List<User>(0); // creating a list with empty initial buffer is fast
-                FirstAndLastPostInPages.SetIfNotNull(page, _parser.ParsePosts(flag, posts, ParsedPosts, usersStoreUnderPost));
+                FirstAndLastPostInPages.SetIfNotNull(page, _parser.ParsePosts(flag, posts, ParsedPosts, out var usersStoreUnderPost));
+                // currently only sub reply parser will return with users under every sub reply
                 if (usersStoreUnderPost.Any()) Users.ParseUsers(usersStoreUnderPost);
             }
             finally
