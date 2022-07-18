@@ -2,12 +2,12 @@ namespace tbm.Crawler
 {
     public sealed class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
     {
-        protected override PropertyInfo ParamDataField => typeof(SubReplyRequest).GetProperty(nameof(SubReplyRequest.Data))!;
-        protected override PropertyInfo ParamCommonField => ParamDataField.PropertyType.GetProperty(nameof(SubReplyRequest.Data.Common))!;
-        protected override PropertyInfo ResponseDataField => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Data))!;
-        protected override PropertyInfo ResponsePostListField => ResponseDataField.PropertyType.GetProperty(nameof(SubReplyResponse.Data.SubpostList))!;
-        protected override PropertyInfo ResponsePageField => ResponseDataField.PropertyType.GetProperty(nameof(SubReplyResponse.Data.Page))!;
-        protected override PropertyInfo ResponseErrorField => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Error))!;
+        protected override PropertyInfo ParamDataProp => typeof(SubReplyRequest).GetProperty(nameof(SubReplyRequest.Data))!;
+        protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(SubReplyRequest.Data.Common))!;
+        protected override PropertyInfo ResponseDataProp => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Data))!;
+        protected override PropertyInfo ResponsePostListProp => ResponseDataProp.PropertyType.GetProperty(nameof(SubReplyResponse.Data.SubpostList))!;
+        protected override PropertyInfo ResponsePageProp => ResponseDataProp.PropertyType.GetProperty(nameof(SubReplyResponse.Data.Page))!;
+        protected override PropertyInfo ResponseErrorProp => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Error))!;
 
         private readonly Tid _tid;
         private readonly Pid _pid;
@@ -31,7 +31,7 @@ namespace tbm.Crawler
             Task.FromResult(new[]
             {
                 new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
-                    ParamDataField, ParamCommonField, () => new SubReplyResponse(), new SubReplyRequest
+                    ParamDataProp, ParamCommonProp, () => new SubReplyResponse(), new SubReplyRequest
                     {
                         Data = new()
                         {

@@ -25,9 +25,9 @@ namespace tbm.Crawler
             });
 
         public Task<TResponse> RequestProtoBuf<TRequest, TResponse>
-            (string url, string clientVersion, PropertyInfo paramDataField, PropertyInfo paramCommonField, Func<TResponse> responseFactory, TRequest param)
+            (string url, string clientVersion, PropertyInfo paramDataProp, PropertyInfo paramCommonProp, Func<TResponse> responseFactory, TRequest param)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
-            Request(() => PostProtoBuf(url, clientVersion, param, paramDataField, paramCommonField), stream =>
+            Request(() => PostProtoBuf(url, clientVersion, param, paramDataProp, paramCommonProp), stream =>
             {
                 try
                 {
@@ -82,9 +82,9 @@ namespace tbm.Crawler
                 () => _logger.LogTrace("POST {} {}", url, data));
         }
 
-        private Task<HttpResponseMessage> PostProtoBuf(string url, string clientVersion, IMessage paramProtoBuf, PropertyInfo dataField, PropertyInfo commonField)
+        private Task<HttpResponseMessage> PostProtoBuf(string url, string clientVersion, IMessage paramProtoBuf, PropertyInfo dataProp, PropertyInfo commonProp)
         {
-            commonField.SetValue(dataField.GetValue(paramProtoBuf), new Common {ClientVersion = clientVersion});
+            commonProp.SetValue(dataProp.GetValue(paramProtoBuf), new Common {ClientVersion = clientVersion});
 
             // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
             var protoBufFile = new ByteArrayContent(paramProtoBuf.ToByteArray());

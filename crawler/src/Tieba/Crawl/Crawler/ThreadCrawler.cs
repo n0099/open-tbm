@@ -2,12 +2,12 @@ namespace tbm.Crawler
 {
     public sealed class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     {
-        protected override PropertyInfo ParamDataField => typeof(ThreadRequest).GetProperty(nameof(ThreadRequest.Data))!;
-        protected override PropertyInfo ParamCommonField => ParamDataField.PropertyType.GetProperty(nameof(ThreadRequest.Data.Common))!;
-        protected override PropertyInfo ResponseDataField => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Data))!;
-        protected override PropertyInfo ResponsePostListField => ResponseDataField.PropertyType.GetProperty(nameof(ThreadResponse.Data.ThreadList))!;
-        protected override PropertyInfo ResponsePageField => ResponseDataField.PropertyType.GetProperty(nameof(ThreadResponse.Data.Page))!;
-        protected override PropertyInfo ResponseErrorField => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Error))!;
+        protected override PropertyInfo ParamDataProp => typeof(ThreadRequest).GetProperty(nameof(ThreadRequest.Data))!;
+        protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(ThreadRequest.Data.Common))!;
+        protected override PropertyInfo ResponseDataProp => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Data))!;
+        protected override PropertyInfo ResponsePostListProp => ResponseDataProp.PropertyType.GetProperty(nameof(ThreadResponse.Data.ThreadList))!;
+        protected override PropertyInfo ResponsePageProp => ResponseDataProp.PropertyType.GetProperty(nameof(ThreadResponse.Data.Page))!;
+        protected override PropertyInfo ResponseErrorProp => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Error))!;
 
         private readonly string _forumName;
 
@@ -41,9 +41,9 @@ namespace tbm.Crawler
             };
             return Task.FromResult(new[]
             {
-                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataField, ParamCommonField, () => new ThreadResponse(),
+                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
                     new ThreadRequest {Data = data}), page),
-                new Request(Requester.RequestProtoBuf(url, "6.0.2", ParamDataField, ParamCommonField, () => new ThreadResponse(),
+                new Request(Requester.RequestProtoBuf(url, "6.0.2", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
                     new ThreadRequest {Data = data602}), page, CrawlRequestFlag.Thread602ClientVersion)
             }.AsEnumerable());
         }

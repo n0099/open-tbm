@@ -2,12 +2,12 @@ namespace tbm.Crawler
 {
     public sealed class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
     {
-        protected override PropertyInfo ParamDataField => typeof(ReplyRequest).GetProperty(nameof(ReplyRequest.Data))!;
-        protected override PropertyInfo ParamCommonField => ParamDataField.PropertyType.GetProperty(nameof(ReplyRequest.Data.Common))!;
-        protected override PropertyInfo ResponseDataField => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Data))!;
-        protected override PropertyInfo ResponsePostListField => ResponseDataField.PropertyType.GetProperty(nameof(ReplyResponse.Data.PostList))!;
-        protected override PropertyInfo ResponsePageField => ResponseDataField.PropertyType.GetProperty(nameof(ReplyResponse.Data.Page))!;
-        protected override PropertyInfo ResponseErrorField => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Error))!;
+        protected override PropertyInfo ParamDataProp => typeof(ReplyRequest).GetProperty(nameof(ReplyRequest.Data))!;
+        protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(ReplyRequest.Data.Common))!;
+        protected override PropertyInfo ResponseDataProp => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Data))!;
+        protected override PropertyInfo ResponsePostListProp => ResponseDataProp.PropertyType.GetProperty(nameof(ReplyResponse.Data.PostList))!;
+        protected override PropertyInfo ResponsePageProp => ResponseDataProp.PropertyType.GetProperty(nameof(ReplyResponse.Data.Page))!;
+        protected override PropertyInfo ResponseErrorProp => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Error))!;
 
         private readonly Fid _fid;
         private readonly Tid _tid;
@@ -37,7 +37,7 @@ namespace tbm.Crawler
                 Rn = 30,
                 QType = 2
             };
-            var response = await Requester.RequestProtoBuf(url, clientVersion, ParamDataField, ParamCommonField,
+            var response = await Requester.RequestProtoBuf(url, clientVersion, ParamDataProp, ParamCommonProp,
                 () => new ReplyResponse(), new ReplyRequest {Data = data});
             var ret = new List<Request>(2) {new(Task.FromResult(response), page)};
             // as of client version 12.12.1.0 (not including), folded replies won't be include in response:
@@ -47,7 +47,7 @@ namespace tbm.Crawler
             {
                 var dataShowOnlyFolded = data.Clone();
                 dataShowOnlyFolded.IsFoldCommentReq = 1;
-                ret.Add(new(Requester.RequestProtoBuf(url, clientVersion, ParamDataField, ParamCommonField,
+                ret.Add(new(Requester.RequestProtoBuf(url, clientVersion, ParamDataProp, ParamCommonProp,
                     () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), page, CrawlRequestFlag.ReplyShowOnlyFolded));
             }
             return ret;
