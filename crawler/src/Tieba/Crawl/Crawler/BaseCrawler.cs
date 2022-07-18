@@ -3,6 +3,7 @@ namespace tbm.Crawler
     public abstract class BaseCrawler<TResponse, TPostProtoBuf>
         where TResponse : IMessage<TResponse> where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
+        public record Response(TResponse Result, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
         protected record Request(Task<TResponse> Response, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
         protected ClientRequester Requester { get; }
         protected abstract PropertyInfo ParamDataField { get; }
@@ -14,15 +15,15 @@ namespace tbm.Crawler
 
         public abstract Exception FillExceptionData(Exception e);
         protected abstract Task<IEnumerable<Request>> RequestsFactory(Page page);
-        public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response);
+        public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
 
         protected BaseCrawler(ClientRequester requester) => Requester = requester;
 
         public TbClient.Page? GetPageFromResponse(TResponse res) =>
             (TbClient.Page?)ResponsePageField.GetValue(ResponseDataField.GetValue(res) as IMessage);
 
-        public async Task<(TResponse, CrawlRequestFlag, Page)[]> CrawlSinglePage(Page page) =>
-            await Task.WhenAll((await RequestsFactory(page)).Select(async i => (await i.Response, i.Flag, i.Page)));
+        public async Task<Response[]> CrawlSinglePage(Page page) =>
+            await Task.WhenAll((await RequestsFactory(page)).Select(async i => new Response(await i.Response, i.Page, i.Flag)));
 
         protected void ValidateOtherErrorCode(TResponse response)
         {

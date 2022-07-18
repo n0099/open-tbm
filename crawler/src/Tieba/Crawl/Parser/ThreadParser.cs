@@ -2,7 +2,9 @@ namespace tbm.Crawler
 {
     public class ThreadParser : BaseParser<ThreadPost, Thread>
     {
-        protected override (IEnumerable<ThreadPost> parsed, Func<ThreadPost, PostId> postIdSelector)? ParsePostsInternal(
+        protected override ulong PostIdSelector(ThreadPost post) => post.Tid;
+
+        protected override IEnumerable<ThreadPost>? ParsePostsInternal(
             CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts,
             ConcurrentDictionary<PostId, ThreadPost> outPosts, List<User> outUsers)
         {
@@ -21,7 +23,7 @@ namespace tbm.Crawler
                 return null;
             }
 
-            return (inPosts.Select(el => (ThreadPost)el), p => p.Tid);
+            return inPosts.Select(el => (ThreadPost)el);
         }
     }
 }
@@ -43,7 +45,6 @@ namespace TbClient.Post
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
                 p.AuthorUid = el.AuthorId.NullIfZero() ?? el.Author.Uid;
-                p.AuthorManagerType = el.Author.BawuType.NullIfWhiteSpace();
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
                 p.ReplyNum = (uint?)el.ReplyNum.NullIfZero();

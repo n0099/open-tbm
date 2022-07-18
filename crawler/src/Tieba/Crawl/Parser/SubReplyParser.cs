@@ -2,14 +2,16 @@ namespace tbm.Crawler
 {
     public class SubReplyParser : BaseParser<SubReplyPost, SubReply>
     {
-        protected override (IEnumerable<SubReplyPost> parsed, Func<SubReplyPost, PostId> postIdSelector)? ParsePostsInternal(
+        protected override ulong PostIdSelector(SubReplyPost post) => post.Spid;
+
+        protected override IEnumerable<SubReplyPost> ParsePostsInternal(
             CrawlRequestFlag requestFlag, IEnumerable<SubReply> inPosts,
             ConcurrentDictionary<PostId, SubReplyPost> outPosts, List<User> outUsers) =>
-            (inPosts.Select(el =>
+            inPosts.Select(el =>
             {
                 outUsers.Add(el.Author);
                 return (SubReplyPost)el;
-            }), p => p.Spid);
+            });
     }
 }
 

@@ -42,7 +42,7 @@ namespace tbm.Crawler
                     }), page)
             }.AsEnumerable());
 
-        public override IList<SubReply> GetValidPosts(SubReplyResponse response)
+        public override IList<SubReply> GetValidPosts(SubReplyResponse response, CrawlRequestFlag flag)
         {
             switch (response.Error.Errorno)
             {

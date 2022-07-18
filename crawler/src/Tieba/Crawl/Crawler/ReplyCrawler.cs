@@ -48,16 +48,19 @@ namespace tbm.Crawler
                 var dataShowOnlyFolded = data.Clone();
                 dataShowOnlyFolded.IsFoldCommentReq = 1;
                 ret.Add(new(Requester.RequestProtoBuf(url, clientVersion, ParamDataField, ParamCommonField,
-                    () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), page));
+                    () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), page, CrawlRequestFlag.ReplyShowOnlyFolded));
             }
             return ret;
         }
 
-        public override IList<Reply> GetValidPosts(ReplyResponse response)
+        public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
         {
-            if (response.Error.Errorno is 4 or 350008)
-                throw new TiebaException(false, "Thread already deleted when crawling reply.");
-            ValidateOtherErrorCode(response);
+            if (response.Error.Errorno != 4 || flag != CrawlRequestFlag.ReplyShowOnlyFolded)
+            {
+                if (response.Error.Errorno is 4 or 350008)
+                    throw new TiebaException(false, "Thread already deleted when crawling reply.");
+                ValidateOtherErrorCode(response);
+            }
             var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba.");
             if (response.Data.Forum.Id != _fid) // response.Data.Forum.Id will be the default value 0 when reply list is empty
                 throw new TiebaException(false, $"Parent forum id within thread response: {response.Data.Forum.Id} is not match with the param value of crawler ctor: {_fid}, this thread might be multi forum or livepost.");

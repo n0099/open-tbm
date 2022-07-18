@@ -71,7 +71,7 @@ namespace tbm.Crawler
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
 
-                var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Item1)).Max(i => (Page?)i?.TotalPage);
+                var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Result)).Max(i => (Page?)i?.TotalPage);
                 endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
             }, startPage, 0);
 
@@ -124,10 +124,10 @@ namespace tbm.Crawler
             }
         }
 
-        private void ValidateThenParse((TResponse, CrawlRequestFlag, Page) responseTuple)
+        private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
         {
-            var (response, flag, page) = responseTuple;
-            var posts = _crawler.GetValidPosts(response);
+            var (response, page, flag) = responseTuple;
+            var posts = _crawler.GetValidPosts(response, flag);
             try
             {
                 FirstAndLastPostInPages.SetIfNotNull(page, _parser.ParsePosts(flag, posts, ParsedPosts, out var usersStoreUnderPost));
