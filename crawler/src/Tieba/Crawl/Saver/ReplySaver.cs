@@ -58,8 +58,8 @@ namespace tbm.Crawler
             // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
             // because of Posts.Values.* is not the same instances as changeSet.Existing.*.After
             // so Posts.Values.* won't sync with new instances queried from db
-            var signatures = changeSet.NewlyAdded.Concat(changeSet.Existing.Select(p => p.After))
-                .Where(p => p.SignatureId != null && p.Signature != null).DistinctBy(p => p.SignatureId).Select(p => new ReplySignature
+            var signatures = changeSet.AllAfter.Where(p => p.SignatureId != null && p.Signature != null)
+                .DistinctBy(p => p.SignatureId).Select(p => new ReplySignature
             {
                 UserId = p.AuthorUid,
                 SignatureId = (uint)p.SignatureId!,

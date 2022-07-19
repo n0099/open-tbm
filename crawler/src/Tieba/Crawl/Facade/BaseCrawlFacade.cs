@@ -17,7 +17,6 @@ namespace tbm.Crawler
         private readonly FidOrPostId _lockIndex;
 
         protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
-        public readonly ConcurrentDictionary<Page, (TPost First, TPost Last)> FirstAndLastPostInPages = new();
         protected readonly Fid Fid;
 
         protected BaseCrawlFacade(
@@ -131,7 +130,7 @@ namespace tbm.Crawler
             var posts = _crawler.GetValidPosts(response, flag);
             try
             {
-                FirstAndLastPostInPages.SetIfNotNull(page, _parser.ParsePosts(flag, posts, ParsedPosts, out var usersStoreUnderPost));
+                _parser.ParsePosts(flag, posts, ParsedPosts, out var usersStoreUnderPost);
                 // currently only sub reply parser will return with users under every sub reply
                 if (usersStoreUnderPost.Any()) Users.ParseUsers(usersStoreUnderPost);
             }

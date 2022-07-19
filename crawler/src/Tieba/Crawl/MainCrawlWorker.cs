@@ -7,7 +7,7 @@ namespace tbm.Crawler
     {
         private readonly ILogger<MainCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
-        // stores the latestReplyTime of first thread appears in the page of previous crawl worker, key by fid
+        // store the max latestReplyTime of threads appeared in the previous crawl worker, key by fid
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
 
         public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
@@ -40,7 +40,7 @@ namespace tbm.Crawler
             foreach (var fidAndName in forums)
             {
                 yield return fidAndName;
-                await Task.Delay((int)yieldInterval * 1000);
+                await Task.Delay((int)(yieldInterval * 1000));
             }
         }
 
@@ -60,32 +60,33 @@ namespace tbm.Crawler
         private async Task<SavedThreads> CrawlThreads(string forumName, Fid fid)
         {
             var savedThreads = new SavedThreads();
-            Time lastThreadTime;
+            Time minLatestReplyTime;
             Page crawlingPage = 0;
             await using var scope1 = _scope0.BeginLifetimeScope();
-            if (!_latestReplyTimeCheckpointCache.TryGetValue(fid, out var timeInPreviousCrawl))
+            if (!_latestReplyTimeCheckpointCache.TryGetValue(fid, out var maxLatestReplyTimeInPreviousCrawl))
                 // get the largest value of field latestReplyTime in all stored threads of this forum
                 // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
                 // https://stackoverflow.com/questions/341264/max-or-default
-                timeInPreviousCrawl = scope1.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
+                maxLatestReplyTimeInPreviousCrawl = scope1.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
             do
             {
                 crawlingPage++;
                 await using var scope2 = scope1.BeginLifetimeScope();
                 var crawler = scope2.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-                savedThreads.AddIfNotNull((await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts());
-                if (crawler.FirstAndLastPostInPages.TryGetValue(crawlingPage, out var threadsTuple))
+                var currentPageChangeSet = (await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts();
+                if (currentPageChangeSet != null)
                 {
-                    var (firstThread, lastThread) = threadsTuple;
-                    lastThreadTime = lastThread.LatestReplyTime;
-                    if (crawlingPage == 1) _latestReplyTimeCheckpointCache[fid] = firstThread.LatestReplyTime;
+                    savedThreads.Add(currentPageChangeSet);
+                    var latestReplyTimes = currentPageChangeSet.AllAfter.Select(t => t.LatestReplyTime).ToList();
+                    minLatestReplyTime = latestReplyTimes.Min();
+                    if (crawlingPage == 1) _latestReplyTimeCheckpointCache[fid] = latestReplyTimes.Max();
                 }
                 else
                 { // retry this page
                     crawlingPage--;
-                    lastThreadTime = Time.MaxValue;
+                    minLatestReplyTime = Time.MaxValue;
                 }
-            } while (lastThreadTime > timeInPreviousCrawl);
+            } while (minLatestReplyTime > maxLatestReplyTimeInPreviousCrawl);
 
             await Task.WhenAll(savedThreads.Select(async threads =>
             {

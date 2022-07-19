@@ -4,7 +4,7 @@ namespace tbm.Crawler
     {
         protected override ulong PostIdSelector(ThreadPost post) => post.Tid;
 
-        protected override bool TrySkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<ulong, ThreadPost> outPosts)
+        protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<ulong, ThreadPost> outPosts)
         {
             if (requestFlag != CrawlRequestFlag.Thread602ClientVersion) return false;
             var posts = outPosts.Values;
@@ -15,12 +15,6 @@ namespace tbm.Crawler
             posts.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
                 .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
             return true;
-        }
-
-        protected override (ThreadPost First, ThreadPost Last) GetFirstAndLastOfParsed(List<ThreadPost> parsed)
-        {
-            parsed = parsed.Where(t => t.StickyType == null).ToList();
-            return (parsed.First(), parsed.Last());
         }
 
         protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) => inPosts.Select(Convert);
