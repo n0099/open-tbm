@@ -2,9 +2,9 @@ using System.Data;
 
 namespace tbm.Crawler
 {
-    public abstract class BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>
+    public abstract class BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> : IDisposable
         where TPost : class, IPost where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
-        where TResponse : IMessage<TResponse>, new() where TPostProtoBuf : IMessage<TPostProtoBuf>
+        where TResponse : IMessage<TResponse> where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
         private readonly TbmDbContext.New _dbContextFactory;
@@ -42,6 +42,14 @@ namespace tbm.Crawler
             Fid = fid;
         }
 
+        ~BaseCrawlFacade() => Dispose();
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            _locks.ReleaseRange(_lockIndex, _lockingPages);
+        }
+
         public SaverChangeSet<TPost>? SavePosts()
         {
             var db = _dbContextFactory(Fid);
@@ -59,7 +67,6 @@ namespace tbm.Crawler
                 _saver.PostSaveCallback();
                 Users.PostSaveCallback();
             }
-            _locks.ReleaseRange(_lockIndex, _lockingPages);
             return savedPosts;
         }
 

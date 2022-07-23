@@ -38,9 +38,9 @@ namespace tbm.Crawler
                         foreach (var tidGroupByFid in tidAndFidRecords.ToList().GroupBy(record => record.Fid))
                         {
                             FailedCount FailedCountSelector(Tid tid) => failed[tid].First().Value; // it should always contains only one page which is 1
-                            var tidAndFailedCountList = tidGroupByFid.Select(g => new ThreadLateCrawlerAndSaver.TidAndFailedCount(g.Tid, FailedCountSelector(g.Tid))).ToList();
+                            var tidAndFailedCountList = tidGroupByFid.ToDictionary(g => g.Tid, g => FailedCountSelector(g.Tid));
                             _logger.LogTrace("Retrying previous failed thread late crawl with fid:{}, threadsId:{}",
-                                tidGroupByFid.Key, Helper.UnescapedJsonSerialize(tidAndFailedCountList.Select(i => i.Tid)));
+                                tidGroupByFid.Key, Helper.UnescapedJsonSerialize(tidAndFailedCountList.Select(i => i.Key)));
                             await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(tidGroupByFid.Key).Crawl(tidAndFailedCountList);
                         }
                         continue; // skip into next lock type

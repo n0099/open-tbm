@@ -91,8 +91,7 @@ namespace tbm.Crawler
             await Task.WhenAll(savedThreads.Select(async threads =>
             {
                 await using var scope3 = _scope0.BeginLifetimeScope();
-                await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                    .Crawl(threads.NewlyAdded.Select(t => new ThreadLateCrawlerAndSaver.TidAndFailedCount(t.Tid, 0)));
+                await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).Crawl(threads.NewlyAdded.ToDictionary(i => i.Tid, _ => (FailedCount)0));
             }));
 
             return savedThreads;

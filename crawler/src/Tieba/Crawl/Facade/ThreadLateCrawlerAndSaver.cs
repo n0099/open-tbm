@@ -2,8 +2,6 @@ namespace tbm.Crawler
 {
     public class ThreadLateCrawlerAndSaver
     {
-        public record TidAndFailedCount(Tid Tid, FailedCount FailedCount);
-
         private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
         private readonly TbmDbContext.New _dbContextFactory;
         private readonly ClientRequester _requester;
@@ -29,11 +27,11 @@ namespace tbm.Crawler
             _locks = locks["threadLate"]("threadLate");
         }
 
-        public async Task Crawl(IEnumerable<TidAndFailedCount> tidAndFailedCountRecords)
+        public async Task Crawl(Dictionary<Tid, FailedCount> tidAndFailedCountRecords)
         {
-            var threads = await Task.WhenAll(tidAndFailedCountRecords.Select(async tidAndFailedCount =>
+            var threads = await Task.WhenAll(tidAndFailedCountRecords.Select(async pair =>
             {
-                var tid = tidAndFailedCount.Tid;
+                var (tid, failedCount) = pair;
                 if (!_locks.AcquireRange(tid, new[] {(Page)1}).Any()) return null;
                 try
                 {
@@ -80,7 +78,7 @@ namespace tbm.Crawler
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})
                     {
-                        _locks.AcquireFailed(tid, 1, tidAndFailedCount.FailedCount);
+                        _locks.AcquireFailed(tid, 1, failedCount);
                         _requesterTcs.Decrease();
                     }
                     return null;
