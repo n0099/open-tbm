@@ -3,7 +3,7 @@ namespace tbm.Crawler
     public abstract class BaseCrawler<TResponse, TPostProtoBuf>
         where TResponse : IMessage<TResponse> where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
-        public record Response(TResponse Result, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
+        public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
         protected record Request(Task<TResponse> Response, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
         protected ClientRequester Requester { get; }
         protected abstract PropertyInfo ParamDataProp { get; }
@@ -23,7 +23,7 @@ namespace tbm.Crawler
             (TbClient.Page?)ResponsePageProp.GetValue(ResponseDataProp.GetValue(res) as IMessage);
 
         public async Task<Response[]> CrawlSinglePage(Page page) =>
-            await Task.WhenAll((await RequestsFactory(page)).Select(async i => new Response(await i.Response, i.Page, i.Flag)));
+            await Task.WhenAll((await RequestsFactory(page)).Select(async i => new Response(await i.Response, i.Flag)));
 
         protected void ValidateOtherErrorCode(TResponse response)
         {

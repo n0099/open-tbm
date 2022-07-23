@@ -15,9 +15,10 @@ namespace tbm.Crawler
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly FidOrPostId _lockIndex;
+        protected readonly Fid Fid;
 
         protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
-        protected readonly Fid Fid;
+        private readonly HashSet<Page> _lockingPages = new();
 
         protected BaseCrawlFacade(
             ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
@@ -58,14 +59,19 @@ namespace tbm.Crawler
                 _saver.PostSaveCallback();
                 Users.PostSaveCallback();
             }
+            _locks.ReleaseRange(_lockIndex, _lockingPages);
             return savedPosts;
         }
 
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
             CrawlPageRange(Page startPage, Page endPage = Page.MaxValue)
         { // cancel when startPage is already locked
-            if (!_locks.AcquireRange(_lockIndex, new[] {startPage}).Any()) return this;
-            var isCrawlFailed = await CatchCrawlException(async () =>
+            if (_lockingPages.Any()) throw new("CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+            var acquiredLocks = _locks.AcquireRange(_lockIndex, new[] {startPage}).ToHashSet();
+            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within the range [{}-{}] for lock index {} since they've already been locked.", startPage, endPage, _lockIndex);
+            _lockingPages.UnionWith(acquiredLocks);
+
+            var isStartPageCrawlFailed = await CatchCrawlException(async () =>
             {
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
@@ -74,25 +80,31 @@ namespace tbm.Crawler
                 endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
             }, startPage, 0);
 
-            if (!isCrawlFailed) await CrawlPages(
-                Enumerable.Range((int)(startPage + 1),
-                    (int)(endPage - startPage)).Select(i => (Page)i));
+            if (!isStartPageCrawlFailed)
+            {
+                var pagesAfterStart = Enumerable.Range((int)(startPage + 1), (int)(endPage - startPage)).ToList();
+                if (pagesAfterStart.Any()) await CrawlPages(pagesAfterStart.Select(i => (Page)i));
+            }
             return this;
         }
 
-        private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount>? previousFailedCountSelector = null) =>
-            Task.WhenAll(_locks.AcquireRange(_lockIndex, pages).Shuffle().Select(page =>
+        private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount>? previousFailedCountSelector = null)
+        {
+            pages = pages.ToList();
+            var acquiredLocks = _locks.AcquireRange(_lockIndex, pages).ToList();
+            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within {} for lock index {} since they've already been locked.", JsonSerializer.Serialize(pages), _lockIndex);
+            _lockingPages.UnionWith(acquiredLocks);
+
+            return Task.WhenAll(acquiredLocks.Shuffle().Select(page =>
                 CatchCrawlException(
                     async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse),
-                    page, previousFailedCountSelector?.Invoke(page) ?? 0)
-            ));
-
-        public Task RetryPages(List<CrawlerLocks.PageAndFailedCount> pageAndFailedCountRecords)
-        {
-            var pagesNum = pageAndFailedCountRecords.Select(i => i.Page);
-            FailedCount FailedCountSelector(Page p) => pageAndFailedCountRecords.First(i => i.Page == p).FailedCount;
-            return CrawlPages(pagesNum, FailedCountSelector);
+                    page, previousFailedCountSelector?.Invoke(page) ?? 0)));
         }
+
+        public Task RetryPages(IEnumerable<Page> pages, Func<Page, FailedCount> failedCountSelector) =>
+            _lockingPages.Any()
+                ? CrawlPages(pages, failedCountSelector)
+                : throw new("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailedCount previousFailedCount)
         {
@@ -118,15 +130,11 @@ namespace tbm.Crawler
                 }
                 return true;
             }
-            finally
-            {
-                _locks.ReleaseLock(_lockIndex, page);
-            }
         }
 
         private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
         {
-            var (response, page, flag) = responseTuple;
+            var (response, flag) = responseTuple;
             var posts = _crawler.GetValidPosts(response, flag);
             try
             {

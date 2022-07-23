@@ -37,13 +37,12 @@ namespace tbm.Crawler
                         var tidAndFidRecords = from t in db.PostsIndex where t.Type == "thread" && failed.Keys.Contains(t.Tid) select new {t.Fid, t.Tid};
                         foreach (var tidGroupByFid in tidAndFidRecords.ToList().GroupBy(record => record.Fid))
                         {
-                            FailedCount FailedCountSelector(Tid tid) => failed.First(i => i.Key == tid).Value.First().FailedCount; // it should always contains only one page which is 1
+                            FailedCount FailedCountSelector(Tid tid) => failed[tid].First().Value; // it should always contains only one page which is 1
                             var tidAndFailedCountList = tidGroupByFid.Select(g => new ThreadLateCrawlerAndSaver.TidAndFailedCount(g.Tid, FailedCountSelector(g.Tid))).ToList();
                             _logger.LogTrace("Retrying previous failed thread late crawl with fid:{}, threadsId:{}",
                                 tidGroupByFid.Key, Helper.UnescapedJsonSerialize(tidAndFailedCountList.Select(i => i.Tid)));
                             await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(tidGroupByFid.Key).Crawl(tidAndFailedCountList);
                         }
-
                         continue; // skip into next lock type
                     }
 
@@ -51,32 +50,34 @@ namespace tbm.Crawler
                     {
                         await using var scope1 = _scope0.BeginLifetimeScope();
                         var db = scope1.Resolve<TbmDbContext.New>()(0);
-                        var (fidOrPostId, pageAndFailedCountRecords) = indexPagesPair;
+                        var (fidOrPostId, failedCountKeyByPage) = indexPagesPair;
+                        var pages = failedCountKeyByPage.Keys;
+                        FailedCount FailedCountSelector(Page p) => failedCountKeyByPage[p];
                         if (lockType == "thread")
                         {
                             var forumName = (from f in db.ForumsInfo where f.Fid == fidOrPostId select f.Name).FirstOrDefault();
                             if (forumName == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", pageAndFailedCountRecords.Count, fidOrPostId, forumName);
+                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", failedCountKeyByPage.Count, fidOrPostId, forumName);
                             var crawler = scope1.Resolve<ThreadCrawlFacade.New>()((Fid)fidOrPostId, forumName);
-                            await crawler.RetryPages(pageAndFailedCountRecords);
+                            await crawler.RetryPages(pages, FailedCountSelector);
                             _ = crawler.SavePosts();
                         }
                         else if (lockType == "reply")
                         {
                             var parentsId = (from p in db.PostsIndex where p.Type == "thread" && p.Tid == fidOrPostId select new {p.Fid, p.Tid}).FirstOrDefault();
                             if (parentsId == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", pageAndFailedCountRecords.Count, parentsId.Fid, parentsId.Tid);
+                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", failedCountKeyByPage.Count, parentsId.Fid, parentsId.Tid);
                             var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid);
-                            await crawler.RetryPages(pageAndFailedCountRecords);
+                            await crawler.RetryPages(pages, FailedCountSelector);
                             _ = crawler.SavePosts();
                         }
                         else if (lockType == "subReply")
                         {
                             var parentsId = (from p in db.PostsIndex where p.Type == "reply" && p.Pid == fidOrPostId select new {p.Fid, p.Tid, p.Pid}).FirstOrDefault();
                             if (parentsId == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", pageAndFailedCountRecords.Count, parentsId.Fid, parentsId.Tid, parentsId.Pid);
+                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", failedCountKeyByPage.Count, parentsId.Fid, parentsId.Tid, parentsId.Pid);
                             var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid ?? 0);
-                            await crawler.RetryPages(pageAndFailedCountRecords);
+                            await crawler.RetryPages(pages, FailedCountSelector);
                             _ = crawler.SavePosts();
                         }
                     }));

@@ -87,7 +87,7 @@ namespace tbm.Crawler
                 }
                 finally
                 {
-                    _locks.ReleaseLock(tid, 1);
+                    _locks.ReleaseRange(tid, new Page[] {1});
                 }
             }));
 

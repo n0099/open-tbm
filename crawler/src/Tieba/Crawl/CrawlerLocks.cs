@@ -26,10 +26,10 @@ namespace tbm.Crawler
             lock (_crawling)
             lock (_failed)
             {
-                var crawlingWithoutEmpty = _crawling.Where(i => !i.Value.IsEmpty).ToList();
-                _logger.LogTrace("Lock: type={} crawlingCount={} crawlingPagesCount={} failedCount={} failed={}", _postType,
-                    crawlingWithoutEmpty.Count, Helper.UnescapedJsonSerialize(crawlingWithoutEmpty.ToDictionary(i => i.Key, i => i.Value.Count)),
-                    _failed.Count, Helper.UnescapedJsonSerialize(_failed));
+                _logger.LogTrace("Lock: type={} crawlingIdsCount={} crawlingPagesCount={} crawlingPagesCountKeyById={} failedIdsCount={} failedPagesCount={} failedAll={}", _postType,
+                    _crawling.Count, _crawling.Values.Select(i => i.Count).Sum(),
+                    Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key, i => i.Value.Count)),
+                    _failed.Count, _failed.Values.Select(i => i.Count).Sum(), Helper.UnescapedJsonSerialize(_failed));
             }
         }
 
@@ -63,18 +63,18 @@ namespace tbm.Crawler
             return lockFreePages;
         }
 
-        public void ReleaseLock(FidOrPostId index, Page page)
+        public void ReleaseRange(FidOrPostId index, IEnumerable<Page> pages)
         {
             lock (_crawling)
             {
                 if (!_crawling.TryGetValue(index, out var pagesLock))
                 {
-                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once", page, _postType, index);
+                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once", pages, _postType, index);
                     return;
                 }
                 lock (pagesLock)
                 {
-                    pagesLock.TryRemove(page, out _);
+                    pages.ForEach(p => pagesLock.TryRemove(p, out _));
                     if (pagesLock.IsEmpty) _crawling.TryRemove(index, out _);
                 }
             }
@@ -103,19 +103,17 @@ namespace tbm.Crawler
             }
         }
 
-        public Dictionary<FidOrPostId, List<PageAndFailedCount>> RetryAllFailed()
+        public Dictionary<FidOrPostId, Dictionary<Page, FailedCount>> RetryAllFailed()
         {
             lock (_failed)
             {
                 var copyOfFailed = _failed.ToDictionary(p => p.Key, p =>
                 {
-                    lock (p.Value) return p.Value.Select(pair => new PageAndFailedCount(pair.Key, pair.Value)).ToList();
+                    lock (p.Value) return new Dictionary<Page, FailedCount>(p.Value);
                 });
                 _failed.Clear();
                 return copyOfFailed;
             }
         }
-
-        public record PageAndFailedCount(Page Page, FailedCount FailedCount);
     }
 }
