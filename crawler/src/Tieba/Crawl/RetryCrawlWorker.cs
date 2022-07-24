@@ -59,8 +59,7 @@ namespace tbm.Crawler
                             if (forumName == null) return;
                             _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", failedCountKeyByPage.Count, fidOrPostId, forumName);
                             var crawler = scope1.Resolve<ThreadCrawlFacade.New>()((Fid)fidOrPostId, forumName);
-                            await crawler.RetryPages(pages, FailedCountSelector);
-                            _ = crawler.SavePosts();
+                            await crawler.RetryThenSave(pages, FailedCountSelector);
                         }
                         else if (lockType == "reply")
                         {
@@ -68,8 +67,7 @@ namespace tbm.Crawler
                             if (parentsId == null) return;
                             _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", failedCountKeyByPage.Count, parentsId.Fid, parentsId.Tid);
                             var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid);
-                            await crawler.RetryPages(pages, FailedCountSelector);
-                            _ = crawler.SavePosts();
+                            await crawler.RetryThenSave(pages, FailedCountSelector);
                         }
                         else if (lockType == "subReply")
                         {
@@ -77,8 +75,7 @@ namespace tbm.Crawler
                             if (parentsId == null) return;
                             _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", failedCountKeyByPage.Count, parentsId.Fid, parentsId.Tid, parentsId.Pid);
                             var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid ?? 0);
-                            await crawler.RetryPages(pages, FailedCountSelector);
-                            _ = crawler.SavePosts();
+                            await crawler.RetryThenSave(pages, FailedCountSelector);
                         }
                     }));
                 }

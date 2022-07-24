@@ -95,7 +95,7 @@ namespace tbm.Crawler
             db.AttachRange(threads.OfType<ThreadPost>());
             db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
 
-            _ = db.SaveChangesWithoutTimestamping(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
+            _ = await db.SaveChangesAsync(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
             await transaction.CommitAsync();
         }
     }

@@ -75,7 +75,7 @@ namespace tbm.Crawler
         { // cancel when startPage is already locked
             if (_lockingPages.Any()) throw new("CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             var acquiredLocks = _locks.AcquireRange(_lockIndex, new[] {startPage}).ToHashSet();
-            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within the range [{}-{}] for lock index {} since they've already been locked.", startPage, endPage, _lockIndex);
+            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.", startPage, endPage, _locks.PostType, _lockIndex);
             _lockingPages.UnionWith(acquiredLocks);
 
             var isStartPageCrawlFailed = await CatchCrawlException(async () =>
@@ -99,7 +99,7 @@ namespace tbm.Crawler
         {
             pages = pages.ToList();
             var acquiredLocks = _locks.AcquireRange(_lockIndex, pages).ToList();
-            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within {} for lock index {} since they've already been locked.", JsonSerializer.Serialize(pages), _lockIndex);
+            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within {} for lock type {}, index {} since they've already been locked.", JsonSerializer.Serialize(pages), _locks.PostType, _lockIndex);
             _lockingPages.UnionWith(acquiredLocks);
 
             return Task.WhenAll(acquiredLocks.Shuffle().Select(page =>
@@ -108,10 +108,12 @@ namespace tbm.Crawler
                     page, previousFailedCountSelector?.Invoke(page) ?? 0)));
         }
 
-        public Task RetryPages(IEnumerable<Page> pages, Func<Page, FailedCount> failedCountSelector) =>
-            _lockingPages.Any()
-                ? CrawlPages(pages, failedCountSelector)
-                : throw new("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+        public async Task RetryThenSave(IEnumerable<Page> pages, Func<Page, FailedCount> failedCountSelector)
+        {
+            if (_lockingPages.Any()) throw new("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+            await CrawlPages(pages, failedCountSelector);
+            _ = SavePosts();
+        }
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailedCount previousFailedCount)
         {

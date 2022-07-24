@@ -8,7 +8,7 @@ namespace tbm.Crawler
         private readonly ConcurrentDictionary<FidOrPostId, ConcurrentDictionary<Page, FailedCount>> _failed = new();
         private readonly ILogger<CrawlerLocks> _logger;
         private readonly IConfigurationSection _config;
-        private readonly string _postType;
+        public string PostType { get; }
 
         public delegate CrawlerLocks New(string postType);
 
@@ -16,7 +16,7 @@ namespace tbm.Crawler
         {
             _logger = logger;
             _config = config.GetSection($"CrawlerLocks:{postType}");
-            _postType = postType;
+            PostType = postType;
             InitLogTrace(_config);
         }
 
@@ -26,7 +26,7 @@ namespace tbm.Crawler
             lock (_crawling)
             lock (_failed)
             {
-                _logger.LogTrace("Lock: type={} crawlingIdsCount={} crawlingPagesCount={} crawlingPagesCountKeyById={} failedIdsCount={} failedPagesCount={} failedAll={}", _postType,
+                _logger.LogTrace("Lock: type={} crawlingIdsCount={} crawlingPagesCount={} crawlingPagesCountKeyById={} failedIdsCount={} failedPagesCount={} failedAll={}", PostType,
                     _crawling.Count, _crawling.Values.Select(i => i.Count).Sum(),
                     Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key, i => i.Value.Count)),
                     _failed.Count, _failed.Values.Select(i => i.Count).Sum(), Helper.UnescapedJsonSerialize(_failed));
@@ -69,7 +69,7 @@ namespace tbm.Crawler
             {
                 if (!_crawling.TryGetValue(index, out var pagesLock))
                 {
-                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once", pages, _postType, index);
+                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once", pages, PostType, index);
                     return;
                 }
                 lock (pagesLock)
@@ -85,7 +85,7 @@ namespace tbm.Crawler
             var maxRetry = _config.GetValue<FailedCount>("MaxRetryTimes", 5);
             if (failedCount >= maxRetry)
             {
-                _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}", page, _postType, index, maxRetry);
+                _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}", page, PostType, index, maxRetry);
                 return;
             }
             lock (_failed)

@@ -107,14 +107,13 @@ namespace tbm.Crawler
         private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> postCallback, Action logTraceCallback)
         {
             _requesterTcs.Wait();
-            var res = postCallback();
             if (_config.GetValue("LogTrace", false)) logTraceCallback();
-            _ = res.ContinueWith(i =>
+            return postCallback().ContinueWith(i =>
             {
                 if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
                 else _requesterTcs.Decrease();
+                return i.Result;
             });
-            return res;
         }
     }
 }
