@@ -4,9 +4,13 @@ namespace tbm.Crawler
 
     public class ArchiveCrawlWorker : BackgroundService
     {
+        // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
+        // any request with page offset that larger than 10k threads will be response with results from the first page
+        private const int MaxCrawlablePage = 334; // 10k threads / 30 per request (from Rn param) = 333.3...
         private readonly ILogger<ArchiveCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
-
+        private readonly string _forumName = "";
+        private readonly Fid _fid = 0;
         public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0)
         {
             _logger = logger;
@@ -17,25 +21,14 @@ namespace tbm.Crawler
         {
             try
             {
-                const Fid fid = 0;
-                const string forumName = "";
-                // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
-                // any request with page offset that larger than 10k threads will be response with results from the first page
-                const int maxCrawlablePage = 334; // 10k threads / 30 per request (from Rn param) = 333.3...
-                var scope1 = _scope0.BeginLifetimeScope();
-
-                var totalPages = (await scope1.Resolve<ThreadCrawler.New>()(forumName).CrawlSinglePage(1))
-                    .Select(tuple => tuple.Item1.Data.Page.TotalPage).Max();
-                _logger.LogInformation("Archive for forum {}, started.", forumName);
-                await Task.WhenAll(Enumerable.Range(1, Math.Min(maxCrawlablePage, totalPages)).Select(async page =>
+                await Task.WhenAll(Enumerable.Range(1, Math.Min(MaxCrawlablePage, await GetTotalPageForForum())).Select(async page =>
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
-                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads((Page)page, forumName, fid), fid), fid);
-                    _logger.LogInformation("Archive for forum {}, page {} finished after {:F2}s", forumName, page, stopWatch.ElapsedMilliseconds / 1000f);
+                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads((Page)page, _forumName, _fid), _fid), _fid);
+                    _logger.LogInformation("Archive for forum {}, page {} finished after {:F2}s", _forumName, page, stopWatch.ElapsedMilliseconds / 1000f);
                 }));
-                _logger.LogInformation("Archive for forum {}, all pages 1~{} finished.", forumName, maxCrawlablePage);
-                Environment.Exit(0);
+                _logger.LogInformation("Archive for forum {}, all pages 1~{} finished.", _forumName, MaxCrawlablePage);
             }
             catch (Exception e)
             {
@@ -43,10 +36,17 @@ namespace tbm.Crawler
             }
         }
 
+        private async Task<int> GetTotalPageForForum()
+        {
+            await using var scope1 = _scope0.BeginLifetimeScope();
+            return (await scope1.Resolve<ThreadArchiveCrawler.New>()(_forumName).CrawlSinglePage(1))
+                .Select(response => response.Result.Data.Page.TotalPage).Max();
+        }
+
         private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid)
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
-            var crawler = scope1.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
+            var crawler = scope1.Resolve<ThreadArchiveCrawlFacade.New>()(fid, forumName);
             var savedThreads = (await crawler.CrawlPageRange(page, page)).SaveAll();
             if (savedThreads != null)
             {
