@@ -91,13 +91,14 @@ namespace tbm.Crawler
             }
         }
 
-        public IEnumerable<Uid> AcquireUidLock(List<Uid> usersId)
+        public IEnumerable<Uid> AcquireUidLock(IEnumerable<long> usersId)
         {
             lock (UsersIdLock)
             {
-                _savedUsersId.AddRange(usersId);
-                var exceptLocked = usersId.Except(UsersIdLock);
-                UsersIdLock.UnionWith(usersId);
+                var exceptLocked = usersId.Except(UsersIdLock).ToList();
+                if (!exceptLocked.Any()) return exceptLocked;
+                _savedUsersId.AddRange(exceptLocked);
+                UsersIdLock.UnionWith(exceptLocked);
                 return exceptLocked;
             }
         }

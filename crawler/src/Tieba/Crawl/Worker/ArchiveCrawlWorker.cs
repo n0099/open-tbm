@@ -61,16 +61,7 @@ namespace tbm.Crawler
             var shouldCrawlReplyTid = new HashSet<Tid>();
             var savedRepliesByTid = new SavedRepliesByTid();
             if (savedThreads == null) return savedRepliesByTid;
-
-            savedThreads.NewlyAdded.ForEach(t => shouldCrawlReplyTid.Add(t.Tid));
-            savedThreads.Existing.ForEach(beforeAndAfter =>
-            {
-                var (before, after) = beforeAndAfter;
-                if (before.ReplyNum != after.ReplyNum
-                    || before.LatestReplyTime != after.LatestReplyTime
-                    || before.LatestReplierUid != after.LatestReplierUid)
-                    _ = shouldCrawlReplyTid.Add(before.Tid);
-            });
+            savedThreads.AllAfter.ForEach(t => shouldCrawlReplyTid.Add(t.Tid));
 
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
             {
@@ -86,15 +77,7 @@ namespace tbm.Crawler
             var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
-                replies.NewlyAdded.ForEach(r =>
-                {
-                    if (r.SubReplyNum != null) _ = shouldCrawl.Add((tid, r.Pid));
-                });
-                replies.Existing.ForEach(beforeAndAfter =>
-                {
-                    var (before, after) = beforeAndAfter;
-                    if (after.SubReplyNum != null && before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
-                });
+                replies.AllAfter.ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;
             });
             await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>

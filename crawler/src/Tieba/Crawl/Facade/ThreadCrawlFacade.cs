@@ -18,9 +18,9 @@ namespace tbm.Crawler
             existingUsersId.UnionWith(db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid)); // users not exists in db but have already been added and tracking
             var newLatestRepliers = _latestRepliers.ExceptBy(existingUsersId, i => i.Key).Select(i => i.Value).ToList();
 
-            if (!newLatestRepliers.Any()) return; // quick exits
-            db.AddRange(newLatestRepliers.ExceptBy(
-                Users.AcquireUidLock(newLatestRepliers.Select(u => u.Uid).ToList()),
+            if (!newLatestRepliers.Any()) return;
+            db.AddRange(newLatestRepliers.IntersectBy(
+                Users.AcquireUidLock(newLatestRepliers.Select(u => u.Uid)),
                 u => u.Uid));
         }
 
