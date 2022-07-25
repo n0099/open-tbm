@@ -73,7 +73,7 @@ namespace tbm.Crawler
                 crawlingPage++;
                 await using var scope2 = scope1.BeginLifetimeScope();
                 var crawler = scope2.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-                var currentPageChangeSet = (await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SavePosts();
+                var currentPageChangeSet = (await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SaveAll();
                 if (currentPageChangeSet != null)
                 {
                     savedThreads.Add(currentPageChangeSet);
@@ -117,7 +117,7 @@ namespace tbm.Crawler
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SavePosts());
+                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
             }));
             return savedRepliesByTid;
         }
@@ -142,7 +142,7 @@ namespace tbm.Crawler
             {
                 var (tid, pid) = tidAndPid;
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SavePosts();
+                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveAll();
             }));
         }
     }

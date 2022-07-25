@@ -78,7 +78,7 @@ namespace tbm.Crawler
                 existingSignatures.ForEach(s => s.LastSeen = signatures.First(p => p.SignatureId == s.SignatureId).LastSeen);
                 lock (SignaturesLock)
                 {
-                    var newSignaturesExceptLocked = signatures.Where(s => existingSignatures.All(es => es.SignatureId != s.SignatureId))
+                    var newSignaturesExceptLocked = signatures.ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
                         .ExceptBy(SignaturesLock, s => new(s.SignatureId, s.SignatureMd5)).ToList();
                     if (newSignaturesExceptLocked.Any())
                     {

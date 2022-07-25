@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public sealed class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
+    public class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
     {
         protected override PropertyInfo ParamDataProp => typeof(SubReplyRequest).GetProperty(nameof(SubReplyRequest.Data))!;
         protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(SubReplyRequest.Data.Common))!;

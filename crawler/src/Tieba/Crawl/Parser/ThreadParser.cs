@@ -31,7 +31,7 @@ namespace tbm.Crawler
                 p.IsGood = (ushort?)el.IsGood.NullIfZero();
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
-                p.AuthorUid = el.AuthorId.NullIfZero() ?? el.Author.Uid; // el.Author will exists when the thread is from reply response
+                p.AuthorUid = el.AuthorId;
                 // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseCallback()
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;

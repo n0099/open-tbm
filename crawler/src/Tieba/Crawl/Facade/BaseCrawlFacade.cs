@@ -50,7 +50,7 @@ namespace tbm.Crawler
 
         protected virtual void ExtraSavings(TbmDbContext db) { }
 
-        public SaverChangeSet<TPost>? SavePosts()
+        public SaverChangeSet<TPost>? SaveAll()
         {
             var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -74,7 +74,7 @@ namespace tbm.Crawler
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
             CrawlPageRange(Page startPage, Page endPage = Page.MaxValue)
         { // cancel when startPage is already locked
-            if (_lockingPages.Any()) throw new("CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+            if (_lockingPages.Any()) throw new InvalidOperationException("CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             var acquiredLocks = _locks.AcquireRange(_lockIndex, new[] {startPage}).ToHashSet();
             if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.", startPage, endPage, _locks.PostType, _lockIndex);
             _lockingPages.UnionWith(acquiredLocks);
@@ -111,9 +111,9 @@ namespace tbm.Crawler
 
         public async Task RetryThenSave(IEnumerable<Page> pages, Func<Page, FailedCount> failedCountSelector)
         {
-            if (_lockingPages.Any()) throw new("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+            if (_lockingPages.Any()) throw new InvalidOperationException("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             await CrawlPages(pages, failedCountSelector);
-            _ = SavePosts();
+            _ = SaveAll();
         }
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailedCount previousFailedCount)

@@ -11,7 +11,7 @@ namespace tbm.Crawler
         ) : base(logger, dbContextFactory, crawler(forumName), parser, saver.Invoke, users, requesterTcs, (locks["thread"]("thread"), fid), fid) { }
 
         protected override void ExtraSavings(TbmDbContext db)
-        { // ExtraSavings() should get invoked after UserParserAndSaver.SaveUsers() by the base.SavePosts()
+        { // ExtraSavings() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveAll()
             // so only users that not exists in parsed users is being inserted
             // note this will bypass user revision detection since its not invoking CommonInSavers.SavePostsOrUsers()
             var existingUsersId = (from u in db.Users where _latestReplierUsers.Keys.Any(uid => uid == u.Uid) select u.Uid).ToHashSet();

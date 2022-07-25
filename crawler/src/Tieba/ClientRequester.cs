@@ -104,16 +104,17 @@ namespace tbm.Crawler
                 () => _logger.LogTrace("POST {} {}", url, paramProtoBuf));
         }
 
-        private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> postCallback, Action logTraceCallback)
+        private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)
         {
             _requesterTcs.Wait();
             if (_config.GetValue("LogTrace", false)) logTraceCallback();
-            return postCallback().ContinueWith(i =>
+            return responseTaskFactory().ContinueWith(i =>
             {
                 if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
                 else _requesterTcs.Decrease();
-                return i.Result;
-            });
+                // there should be only one inner exception since the task is not create by Task.WhenAll/Any()
+                return i.IsFaulted ? throw i.Exception?.InnerException! : i.Result;
+            }, TaskContinuationOptions.ExecuteSynchronously);
         }
     }
 }

@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public sealed class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
+    public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     {
         protected override PropertyInfo ParamDataProp => typeof(ThreadRequest).GetProperty(nameof(ThreadRequest.Data))!;
         protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(ThreadRequest.Data.Common))!;
