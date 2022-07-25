@@ -17,10 +17,10 @@ namespace tbm.Crawler
         }
 
         protected override void PostParseCallback(SubReplyResponse response, CrawlRequestFlag flag) =>
-            ParsedPosts.Values.ForEach(p =>
+            ParsedPosts.Values.ForEach(sr =>
             {
-                p.Tid = _tid;
-                p.Pid = _pid;
+                sr.Tid = _tid;
+                sr.Pid = _pid;
             });
     }
 }

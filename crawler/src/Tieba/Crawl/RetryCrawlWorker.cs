@@ -35,7 +35,7 @@ namespace tbm.Crawler
                         await using var scope1 = _scope0.BeginLifetimeScope();
                         var db = scope1.Resolve<TbmDbContext.New>()(0);
                         var tidAndFidRecords = from t in db.PostsIndex where t.Type == "thread" && failed.Keys.Contains(t.Tid) select new {t.Fid, t.Tid};
-                        foreach (var tidGroupByFid in tidAndFidRecords.ToList().GroupBy(record => record.Fid))
+                        foreach (var tidGroupByFid in tidAndFidRecords.ToList().GroupBy(i => i.Fid))
                         {
                             FailedCount FailedCountSelector(Tid tid) => failed[tid].First().Value; // it should always contains only one page which is 1
                             var tidAndFailedCountList = tidGroupByFid.ToDictionary(g => g.Tid, g => FailedCountSelector(g.Tid));

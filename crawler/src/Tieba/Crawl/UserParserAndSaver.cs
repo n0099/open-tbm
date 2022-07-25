@@ -23,7 +23,7 @@ namespace tbm.Crawler
         };
         private static readonly Regex PortraitExtractingRegex = new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly HashSet<Uid> UsersIdLock = new();
-        private IEnumerable<Uid>? _savedUsersId;
+        private readonly List<Uid> _savedUsersId = new();
         private readonly ILogger<UserParserAndSaver> _logger;
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
 
@@ -71,18 +71,18 @@ namespace tbm.Crawler
                     e.Data["raw"] = Helper.UnescapedJsonSerialize(el);
                     throw new("User parse error.", e);
                 }
-            }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
+            }).OfType<TiebaUser>().ForEach(u => _users[u.Uid] = u);
 
         public void SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
         {
             if (_users.IsEmpty) return;
             lock (UsersIdLock)
             {
-                var usersExceptLocked = _users.ExceptBy(UsersIdLock, u => u.Key).ToDictionary(i => i.Key, i => i.Value);
+                var usersExceptLocked = _users.ExceptBy(UsersIdLock, i => i.Key).ToDictionary(i => i.Key, i => i.Value);
                 if (!usersExceptLocked.Any()) return;
-                _savedUsersId = usersExceptLocked.Keys;
+                _savedUsersId.AddRange(usersExceptLocked.Keys);
                 UsersIdLock.UnionWith(_savedUsersId);
-                var existingUsersByUid = (from user in db.Users where usersExceptLocked.Keys.Contains(user.Uid) select user).ToDictionary(i => i.Uid);
+                var existingUsersByUid = (from user in db.Users where usersExceptLocked.Keys.Contains(user.Uid) select user).ToDictionary(u => u.Uid);
 
                 SavePostsOrUsers(_logger, postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
@@ -91,9 +91,20 @@ namespace tbm.Crawler
             }
         }
 
+        public IEnumerable<Uid> AcquireUidLock(List<Uid> usersId)
+        {
+            lock (UsersIdLock)
+            {
+                _savedUsersId.AddRange(usersId);
+                var exceptLocked = usersId.Except(UsersIdLock);
+                UsersIdLock.UnionWith(usersId);
+                return exceptLocked;
+            }
+        }
+
         public void PostSaveCallback()
         {
-            if (_savedUsersId != null) lock (UsersIdLock) UsersIdLock.ExceptWith(_savedUsersId);
+            lock (UsersIdLock) if (_savedUsersId.Any()) UsersIdLock.ExceptWith(_savedUsersId);
         }
     }
 }

@@ -27,9 +27,9 @@ namespace tbm.Crawler
             lock (_failed)
             {
                 _logger.LogTrace("Lock: type={} crawlingIdsCount={} crawlingPagesCount={} crawlingPagesCountKeyById={} failedIdsCount={} failedPagesCount={} failedAll={}", PostType,
-                    _crawling.Count, _crawling.Values.Select(i => i.Count).Sum(),
+                    _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
                     Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key, i => i.Value.Count)),
-                    _failed.Count, _failed.Values.Select(i => i.Count).Sum(), Helper.UnescapedJsonSerialize(_failed));
+                    _failed.Count, _failed.Values.Select(d => d.Count).Sum(), Helper.UnescapedJsonSerialize(_failed));
             }
         }
 
@@ -41,7 +41,7 @@ namespace tbm.Crawler
                 var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 if (!_crawling.ContainsKey(index))
                 { // if no one is locking any page in index, just insert pages then return it as is
-                    var pageTimeDict = lockFreePages.Select(p => KeyValuePair.Create(p, now));
+                    var pageTimeDict = lockFreePages.Select(i => KeyValuePair.Create(i, now));
                     var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
                     if (_crawling.TryAdd(index, newPage)) return lockFreePages;
                 }
@@ -74,7 +74,7 @@ namespace tbm.Crawler
                 }
                 lock (pagesLock)
                 {
-                    pages.ForEach(p => pagesLock.TryRemove(p, out _));
+                    pages.ForEach(i => pagesLock.TryRemove(i, out _));
                     if (pagesLock.IsEmpty) _crawling.TryRemove(index, out _);
                 }
             }
@@ -107,9 +107,9 @@ namespace tbm.Crawler
         {
             lock (_failed)
             {
-                var copyOfFailed = _failed.ToDictionary(p => p.Key, p =>
+                var copyOfFailed = _failed.ToDictionary(i => i.Key, i =>
                 {
-                    lock (p.Value) return new Dictionary<Page, FailedCount>(p.Value);
+                    lock (i.Value) return new Dictionary<Page, FailedCount>(i.Value);
                 });
                 _failed.Clear();
                 return copyOfFailed;

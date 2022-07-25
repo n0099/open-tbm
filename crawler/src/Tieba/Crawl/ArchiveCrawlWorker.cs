@@ -47,11 +47,11 @@ namespace tbm.Crawler
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var crawler = scope1.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-            var savedThreads = (await crawler.CrawlPageRange(page, page)).SavePosts();
+            var savedThreads = (await crawler.CrawlPageRange(page, page)).SaveAll();
             if (savedThreads != null)
             {
                 await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                    .Crawl(savedThreads.NewlyAdded.Select(t => new ThreadLateCrawlerAndSaver.TidAndFailedCount(t.Tid, 0)));
+                    .Crawl(savedThreads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailedCount)0));
             }
             return savedThreads;
         }
@@ -59,24 +59,24 @@ namespace tbm.Crawler
         private async Task<SavedRepliesByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid)
         {
             var shouldCrawlReplyTid = new HashSet<Tid>();
-            if (savedThreads != null)
-            {
-                savedThreads.NewlyAdded.ForEach(i => shouldCrawlReplyTid.Add(i.Tid));
-                savedThreads.Existing.ForEach(beforeAndAfter =>
-                {
-                    var (before, after) = beforeAndAfter;
-                    if (before.ReplyNum != after.ReplyNum
-                        || before.LatestReplyTime != after.LatestReplyTime
-                        || before.LatestReplierUid != after.LatestReplierUid)
-                        _ = shouldCrawlReplyTid.Add(before.Tid);
-                });
-            }
             var savedRepliesByTid = new SavedRepliesByTid();
+            if (savedThreads == null) return savedRepliesByTid;
+
+            savedThreads.NewlyAdded.ForEach(t => shouldCrawlReplyTid.Add(t.Tid));
+            savedThreads.Existing.ForEach(beforeAndAfter =>
+            {
+                var (before, after) = beforeAndAfter;
+                if (before.ReplyNum != after.ReplyNum
+                    || before.LatestReplyTime != after.LatestReplyTime
+                    || before.LatestReplierUid != after.LatestReplierUid)
+                    _ = shouldCrawlReplyTid.Add(before.Tid);
+            });
+
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SavePosts());
+                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
             }));
             return savedRepliesByTid;
         }
@@ -86,9 +86,9 @@ namespace tbm.Crawler
             var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
-                replies.NewlyAdded.ForEach(i =>
+                replies.NewlyAdded.ForEach(r =>
                 {
-                    if (i.SubReplyNum != null) _ = shouldCrawl.Add((tid, i.Pid));
+                    if (r.SubReplyNum != null) _ = shouldCrawl.Add((tid, r.Pid));
                 });
                 replies.Existing.ForEach(beforeAndAfter =>
                 {
@@ -101,7 +101,7 @@ namespace tbm.Crawler
             {
                 var (tid, pid) = tidAndPid;
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SavePosts();
+                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveAll();
             }));
         }
     }

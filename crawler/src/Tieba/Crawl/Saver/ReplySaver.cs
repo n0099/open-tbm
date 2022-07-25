@@ -45,28 +45,28 @@ namespace tbm.Crawler
         public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
         {
             var changeSet = SavePosts(db,
-                PredicateBuilder.New<ReplyPost>(p => Posts.Keys.Contains(p.Pid)),
-                PredicateBuilder.New<PostIndex>(i => i.Type == "reply" && Posts.Keys.Contains(i.Pid!.Value)),
-                p => p.Pid,
-                i => i.Pid!.Value,
-                p => new() {Type = "reply", Fid = _fid, Tid = p.Tid, Pid = p.Pid, PostTime = p.PostTime},
-                p => new ReplyRevision {Time = p.UpdatedAt, Pid = p.Pid});
+                PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)),
+                PredicateBuilder.New<PostIndex>(pi => pi.Type == "reply" && Posts.Keys.Contains(pi.Pid!.Value)),
+                r => r.Pid,
+                pi => pi.Pid!.Value,
+                r => new() {Type = "reply", Fid = _fid, Tid = r.Tid, Pid = r.Pid, PostTime = r.PostTime},
+                r => new ReplyRevision {Time = r.UpdatedAt, Pid = r.Pid});
 
-            db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(p => new ReplyContent {Pid = p.Pid, Content = p.Content}));
+            db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
 
             // we have to get the value of field p.CreatedAt from existing posts that is fetched from db
             // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
             // because of Posts.Values.* is not the same instances as changeSet.Existing.*.After
             // so Posts.Values.* won't sync with new instances queried from db
-            var signatures = changeSet.AllAfter.Where(p => p.SignatureId != null && p.Signature != null)
-                .DistinctBy(p => p.SignatureId).Select(p => new ReplySignature
+            var signatures = changeSet.AllAfter.Where(r => r.SignatureId != null && r.Signature != null)
+                .DistinctBy(r => r.SignatureId).Select(r => new ReplySignature
             {
-                UserId = p.AuthorUid,
-                SignatureId = (uint)p.SignatureId!,
-                SignatureMd5 = MD5.HashData(p.Signature!),
-                Signature = p.Signature!,
+                UserId = r.AuthorUid,
+                SignatureId = (uint)r.SignatureId!,
+                SignatureMd5 = MD5.HashData(r.Signature!),
+                Signature = r.Signature!,
                 // we have to generate the value of two field below in here, since its value will be set by TbmDbContext.SaveChanges() which is invoked after current method had returned
-                FirstSeen = p.CreatedAt != 0 ? p.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(), // CreatedAt will be the default 0 value when the post is newly added
+                FirstSeen = r.CreatedAt != 0 ? r.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(), // CreatedAt will be the default 0 value when the post is newly added
                 LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
             }).ToList();
             if (signatures.Any())
@@ -75,7 +75,7 @@ namespace tbm.Crawler
                 var existingSignatures = (from s in db.ReplySignatures
                     where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
                           && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5) select s).ToList();
-                existingSignatures.ForEach(s => s.LastSeen = signatures.First(p => p.SignatureId == s.SignatureId).LastSeen);
+                existingSignatures.ForEach(s => s.LastSeen = signatures.First(s2 => s2.SignatureId == s.SignatureId).LastSeen);
                 lock (SignaturesLock)
                 {
                     var newSignaturesExceptLocked = signatures.ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)

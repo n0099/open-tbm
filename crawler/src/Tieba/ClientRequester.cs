@@ -91,7 +91,7 @@ namespace tbm.Crawler
             protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
             var content = new MultipartFormDataContent {protoBufFile};
             // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
-            var boundary = content.Headers.ContentType?.Parameters.First(o => o.Name == "boundary");
+            var boundary = content.Headers.ContentType?.Parameters.First(i => i.Value == "boundary");
             if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
 
             var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};

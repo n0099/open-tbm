@@ -27,7 +27,7 @@ namespace tbm.Crawler
                 var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
                 if (parentThreadTitle == "")
                 { // thread title will be empty string as a fallback when the thread author haven't write title for this thread
-                    var newTitle = data.PostList.FirstOrDefault(p => p.Floor == 1)?.Title;
+                    var newTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
                     if (newTitle != null)
                     {
                         db.Attach(new ThreadPost {Tid = _tid, Title = newTitle}).Property(t => t.Title).IsModified = true;
@@ -42,12 +42,12 @@ namespace tbm.Crawler
             if (!users.Any()) return;
             Users.ParseUsers(users);
 
-            ParsedPosts.Values.IntersectBy(data.PostList.Select(p => p.Pid), p => p.Pid).ForEach(p =>
+            ParsedPosts.Values.IntersectBy(data.PostList.Select(r => r.Pid), r => r.Pid).ForEach(r =>
             { // fill the values for some field of reply from user list which is out of post list
-                var author = users.First(u => u.Uid == p.AuthorUid);
-                p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
-                p.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
-                p.Tid = _tid;
+                var author = users.First(u => u.Uid == r.AuthorUid);
+                r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
+                r.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
+                r.Tid = _tid;
             });
         }
     }

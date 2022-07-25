@@ -91,7 +91,8 @@ namespace tbm.Crawler
             await Task.WhenAll(savedThreads.Select(async threads =>
             {
                 await using var scope3 = _scope0.BeginLifetimeScope();
-                await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).Crawl(threads.NewlyAdded.ToDictionary(i => i.Tid, _ => (FailedCount)0));
+                await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
+                    .Crawl(threads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailedCount)0));
             }));
 
             return savedThreads;
@@ -101,7 +102,7 @@ namespace tbm.Crawler
         {
             var shouldCrawlReplyTid = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
-                threads.NewlyAdded.ForEach(i => shouldCrawl.Add(i.Tid));
+                threads.NewlyAdded.ForEach(t => shouldCrawl.Add(t.Tid));
                 threads.Existing.ForEach(beforeAndAfter =>
                 {
                     var (before, after) = beforeAndAfter;
@@ -127,9 +128,9 @@ namespace tbm.Crawler
             var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
-                replies.NewlyAdded.ForEach(i =>
+                replies.NewlyAdded.ForEach(r =>
                 {
-                    if (i.SubReplyNum != null) _ = shouldCrawl.Add((tid, i.Pid));
+                    if (r.SubReplyNum != null) _ = shouldCrawl.Add((tid, r.Pid));
                 });
                 replies.Existing.ForEach(beforeAndAfter =>
                 {
