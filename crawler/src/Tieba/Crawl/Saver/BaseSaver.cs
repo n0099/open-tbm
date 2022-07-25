@@ -2,18 +2,13 @@ namespace tbm.Crawler
 {
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost
     {
-        private readonly ILogger<BaseSaver<TPost>> _logger;
         protected readonly ConcurrentDictionary<PostId, TPost> Posts;
         public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
 
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
         public virtual void PostSaveCallback() {}
 
-        protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts)
-        {
-            _logger = logger;
-            Posts = posts;
-        }
+        protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts) : base(logger) => Posts = posts;
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(
             TbmDbContext db,
@@ -33,7 +28,7 @@ namespace tbm.Crawler
             var existingPostsById = existingPosts.ToDictionary(postIdSelector);
             var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
 
-            SavePostsOrUsers(_logger, TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
+            SavePostsOrUsers(TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
                 p => existingPostsById.ContainsKey(postIdSelector(p)),
                 p => existingPostsById[postIdSelector(p)]);
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);

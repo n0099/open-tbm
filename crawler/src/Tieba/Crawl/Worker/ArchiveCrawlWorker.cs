@@ -21,13 +21,14 @@ namespace tbm.Crawler
         {
             try
             {
-                await Task.WhenAll(Enumerable.Range(1, Math.Min(MaxCrawlablePage, await GetTotalPageForForum())).Select(async page =>
+                var pages = Enumerable.Range(1, Math.Min(MaxCrawlablePage, await GetTotalPageForForum()));
+                await Parallel.ForEachAsync(pages, stoppingToken, async (page, _) =>
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();
                     await CrawlSubReplies(await CrawlReplies(await CrawlThreads((Page)page, _forumName, _fid), _fid), _fid);
                     _logger.LogInformation("Archive for forum {}, page {} finished after {:F2}s", _forumName, page, stopWatch.ElapsedMilliseconds / 1000f);
-                }));
+                });
                 _logger.LogInformation("Archive for forum {}, all pages 1~{} finished.", _forumName, MaxCrawlablePage);
             }
             catch (Exception e)

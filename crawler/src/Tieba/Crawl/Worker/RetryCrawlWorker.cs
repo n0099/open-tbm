@@ -1,3 +1,5 @@
+using static tbm.Crawler.MainCrawlWorker;
+
 namespace tbm.Crawler
 {
     public class RetryCrawlWorker : CyclicCrawlWorker
@@ -50,32 +52,37 @@ namespace tbm.Crawler
                     {
                         await using var scope1 = _scope0.BeginLifetimeScope();
                         var db = scope1.Resolve<TbmDbContext.New>()(0);
-                        var (fidOrPostId, failedCountKeyByPage) = indexPagesPair;
-                        var pages = failedCountKeyByPage.Keys;
-                        FailedCount FailedCountSelector(Page p) => failedCountKeyByPage[p];
+                        var (fidOrPostId, failsCountByPage) = indexPagesPair;
+                        var pages = failsCountByPage.Keys;
+                        FailedCount FailedCountSelector(Page p) => failsCountByPage[p];
                         if (lockType == "thread")
                         {
                             var forumName = (from f in db.ForumsInfo where f.Fid == fidOrPostId select f.Name).FirstOrDefault();
                             if (forumName == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", failedCountKeyByPage.Count, fidOrPostId, forumName);
-                            var crawler = scope1.Resolve<ThreadCrawlFacade.New>()((Fid)fidOrPostId, forumName);
-                            await crawler.RetryThenSave(pages, FailedCountSelector);
+                            var fid = (Fid)fidOrPostId;
+                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", failsCountByPage.Count, fid, forumName);
+                            var crawler = scope1.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
+                            var savedThreads = await crawler.RetryThenSave(pages, FailedCountSelector);
+                            if (savedThreads == null) return;
+                            await CrawlSubReplies(await CrawlReplies(new() {savedThreads}, fid, scope1), fid, scope1);
                         }
                         else if (lockType == "reply")
                         {
                             var parentsId = (from p in db.PostsIndex where p.Type == "thread" && p.Tid == fidOrPostId select new {p.Fid, p.Tid}).FirstOrDefault();
                             if (parentsId == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", failedCountKeyByPage.Count, parentsId.Fid, parentsId.Tid);
+                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", failsCountByPage.Count, parentsId.Fid, parentsId.Tid);
                             var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid);
-                            await crawler.RetryThenSave(pages, FailedCountSelector);
+                            var savedReplies = await crawler.RetryThenSave(pages, FailedCountSelector);
+                            if (savedReplies == null) return;
+                            await CrawlSubReplies(new Dictionary<ulong, SaverChangeSet<ReplyPost>> {{parentsId.Tid, savedReplies}}, parentsId.Fid, scope1);
                         }
                         else if (lockType == "subReply")
                         {
                             var parentsId = (from p in db.PostsIndex where p.Type == "reply" && p.Pid == fidOrPostId select new {p.Fid, p.Tid, p.Pid}).FirstOrDefault();
                             if (parentsId == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", failedCountKeyByPage.Count, parentsId.Fid, parentsId.Tid, parentsId.Pid);
+                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", failsCountByPage.Count, parentsId.Fid, parentsId.Tid, parentsId.Pid);
                             var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(parentsId.Fid, parentsId.Tid, parentsId.Pid ?? 0);
-                            await crawler.RetryThenSave(pages, FailedCountSelector);
+                            _ = await crawler.RetryThenSave(pages, FailedCountSelector);
                         }
                     }));
                 }

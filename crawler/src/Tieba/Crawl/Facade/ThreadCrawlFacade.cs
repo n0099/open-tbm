@@ -25,7 +25,8 @@ namespace tbm.Crawler
         }
 
         protected void ParseLatestRepliers(ThreadResponse.Types.Data data) =>
-            data.ThreadList.Select(t => t.LastReplyer).Select(u => new TiebaUser {
+            // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
+            data.ThreadList.Select(t => t.LastReplyer).Where(u => u.Uid != 0).Select(u => new TiebaUser {
                 Uid = u.Uid,
                 Name = u.Name.NullIfWhiteSpace(),
                 DisplayName = u.Name == u.NameShow ? null : u.NameShow

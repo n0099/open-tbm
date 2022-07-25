@@ -2,9 +2,9 @@ namespace tbm.Crawler
 {
     public abstract class StaticCommonInSavers
     { // static field in this non generic class will be shared across all reified generic derived classes
-        private static Dictionary<Type, IEnumerable<PropertyInfo>> GetPropDictKeyByTypes(List<Type> types) =>
+        private static Dictionary<Type, IEnumerable<PropertyInfo>> GetPropDictByType(List<Type> types) =>
             types.ToDictionary(t => t, t => t.GetProperties().AsEnumerable());
-        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = GetPropDictKeyByTypes(new()
+        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = GetPropDictByType(new()
             {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
 
         public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propertyName, object? originalValue, object? currentValue);
@@ -48,6 +48,18 @@ namespace tbm.Crawler
             },
             Revision: (whichPostType, propertyName, originalValue, _) =>
             {
+                if (whichPostType == typeof(TiebaUser))
+                {
+                    switch (propertyName)
+                    {
+                        // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty stirng as portrait
+                        // they will soon be updated by (sub) reply crawler after it find out the latest reply
+                        case nameof(TiebaUser.Portrait) when originalValue is "":
+                        // ignore revision that figures update existing old users that don't have ip geolocation
+                        case nameof(TiebaUser.IpGeolocation) when originalValue is null:
+                            return true;
+                    }
+                }
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propertyName)

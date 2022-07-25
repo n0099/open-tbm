@@ -109,11 +109,11 @@ namespace tbm.Crawler
                     page, previousFailedCountSelector?.Invoke(page) ?? 0)));
         }
 
-        public async Task RetryThenSave(IEnumerable<Page> pages, Func<Page, FailedCount> failedCountSelector)
+        public async Task<SaverChangeSet<TPost>?> RetryThenSave(IEnumerable<Page> pages, Func<Page, FailedCount> failedCountSelector)
         {
             if (_lockingPages.Any()) throw new InvalidOperationException("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             await CrawlPages(pages, failedCountSelector);
-            _ = SaveAll();
+            return SaveAll();
         }
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailedCount previousFailedCount)

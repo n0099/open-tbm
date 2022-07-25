@@ -24,10 +24,9 @@ namespace tbm.Crawler
         private static readonly Regex PortraitExtractingRegex = new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly HashSet<Uid> UsersIdLock = new();
         private readonly List<Uid> _savedUsersId = new();
-        private readonly ILogger<UserParserAndSaver> _logger;
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
 
-        public UserParserAndSaver(ILogger<UserParserAndSaver> logger) => _logger = logger;
+        public UserParserAndSaver(ILogger<UserParserAndSaver> logger) : base(logger) { }
 
         public void ParseUsers(IEnumerable<User> users) =>
             users.Select(el =>
@@ -84,7 +83,7 @@ namespace tbm.Crawler
                 UsersIdLock.UnionWith(_savedUsersId);
                 var existingUsersByUid = (from user in db.Users where usersExceptLocked.Keys.Contains(user.Uid) select user).ToDictionary(u => u.Uid);
 
-                SavePostsOrUsers(_logger, postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
+                SavePostsOrUsers(postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
                     u => existingUsersByUid.ContainsKey(u.Uid),
                     u => existingUsersByUid[u.Uid]);

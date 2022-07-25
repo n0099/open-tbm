@@ -2,10 +2,13 @@ namespace tbm.Crawler
 {
     public abstract class CommonInSavers<TSaver> : StaticCommonInSavers where TSaver : CommonInSavers<TSaver>
     {
+        private readonly ILogger<CommonInSavers<TSaver>> _logger;
+
+        protected CommonInSavers(ILogger<CommonInSavers<TSaver>> logger) => _logger = logger;
+
         protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => null!;
 
         protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
-            ILogger<CommonInSavers<TSaver>> logger,
             FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance,
             IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             TbmDbContext db,
@@ -48,7 +51,7 @@ namespace tbm.Crawler
                     if (revisionProp == null)
                     {
                         object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
-                        logger.LogWarning("Updating field {} is not existed in revision table, " +
+                        _logger.LogWarning("Updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
                             Helper.UnescapedJsonSerialize(currentPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
