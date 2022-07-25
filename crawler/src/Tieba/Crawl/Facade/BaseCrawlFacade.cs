@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace tbm.Crawler
 {
     public abstract class BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> : IDisposable
@@ -50,6 +48,8 @@ namespace tbm.Crawler
             _locks.ReleaseRange(_lockIndex, _lockingPages);
         }
 
+        protected virtual void ExtraSavings(TbmDbContext db) { }
+
         public SaverChangeSet<TPost>? SavePosts()
         {
             var db = _dbContextFactory(Fid);
@@ -57,6 +57,7 @@ namespace tbm.Crawler
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
             Users.SaveUsers(db, _saver);
+            ExtraSavings(db);
             try
             {
                 _ = db.SaveChangesWithTimestamping();

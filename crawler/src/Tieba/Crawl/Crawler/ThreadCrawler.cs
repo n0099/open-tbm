@@ -21,15 +21,19 @@ namespace tbm.Crawler
             return e;
         }
 
-        protected override Task<IEnumerable<Request>> RequestsFactory(Page page)
-        {
-            const string url = "c/f/frs/page?cmd=301001";
-            var data602 = new ThreadRequest.Types.Data
+        protected const string EndPointUrl = "c/f/frs/page?cmd=301001";
+
+        protected ThreadRequest.Types.Data RequestData602Factory(Page page) =>
+            new()
             {
                 Kw = _forumName,
                 Pn = (int)page,
                 Rn = 30
             };
+
+        protected override Task<IEnumerable<Request>> RequestsFactory(Page page)
+        {
+            var data602 = RequestData602Factory(page);
             var data = new ThreadRequest.Types.Data
             {
                 Kw = _forumName,
@@ -41,9 +45,9 @@ namespace tbm.Crawler
             };
             return Task.FromResult(new[]
             {
-                new Request(Requester.RequestProtoBuf(url, "12.26.1.0", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
+                new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
                     new ThreadRequest {Data = data}), page),
-                new Request(Requester.RequestProtoBuf(url, "6.0.2", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
+                new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
                     new ThreadRequest {Data = data602}), page, CrawlRequestFlag.Thread602ClientVersion)
             }.AsEnumerable());
         }

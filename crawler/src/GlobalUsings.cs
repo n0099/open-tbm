@@ -22,6 +22,7 @@ global using System.Reflection;
 global using System.Security.Cryptography;
 global using System.Text.Json;
 global using System.Text;
+global using System.Data;
 global using Timer = System.Timers.Timer;
 
 global using tbm.Crawler;

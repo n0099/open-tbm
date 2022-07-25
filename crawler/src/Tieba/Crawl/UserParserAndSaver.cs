@@ -29,9 +29,7 @@ namespace tbm.Crawler
 
         public UserParserAndSaver(ILogger<UserParserAndSaver> logger) => _logger = logger;
 
-        public void ParseUsers(IList<User> users)
-        {
-            if (!users.Any()) throw new TiebaException("User list is empty.");
+        public void ParseUsers(IEnumerable<User> users) =>
             users.Select(el =>
             {
                 static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
@@ -74,7 +72,6 @@ namespace tbm.Crawler
                     throw new("User parse error.", e);
                 }
             }).OfType<TiebaUser>().ForEach(i => _users[i.Uid] = i);
-        }
 
         public void SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
         {

@@ -23,6 +23,7 @@ namespace tbm.Crawler
             if (data.Page.CurrentPage == 1)
             { // update parent thread of reply with new title that extracted from the first floor reply in first page
                 var db = _dbContextFactory(Fid);
+                using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
                 var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
                 if (parentThreadTitle == "")
                 { // thread title will be empty string as a fallback when the thread author haven't write title for this thread
@@ -32,11 +33,13 @@ namespace tbm.Crawler
                         db.Attach(new ThreadPost {Tid = _tid, Title = newTitle}).Property(t => t.Title).IsModified = true;
                         if (db.SaveChanges() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
                             throw new DbUpdateException($"Parent thread title \"{newTitle}\" completion for tid {_tid} has failed.");
+                        transaction.Commit();
                     }
                 }
             }
 
             var users = data.UserList;
+            if (!users.Any()) return;
             Users.ParseUsers(users);
 
             ParsedPosts.Values.IntersectBy(data.PostList.Select(p => p.Pid), p => p.Pid).ForEach(p =>
