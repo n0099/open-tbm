@@ -55,12 +55,15 @@ namespace tbm.Crawler
 
         public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
         {
-            if (response.Error.Errorno != 4 || flag != CrawlRequestFlag.ReplyShowOnlyFolded)
-            { // skip throw exception when error_no=4 and the response is request with is_fold_comment_req=1
-                if (response.Error.Errorno is 4 or 350008)
+            switch (response.Error.Errorno)
+            {
+                case 4 when flag == CrawlRequestFlag.ReplyShowOnlyFolded:
+                    // silent exception and do not retry when error_no=4 and the response is request with is_fold_comment_req=1
+                    throw new TiebaException(false, true);
+                case 4 or 350008:
                     throw new TiebaException(false, "Thread already deleted when crawling reply.");
-                ValidateOtherErrorCode(response);
             }
+            ValidateOtherErrorCode(response);
             var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba.");
             if (response.Data.Forum.Id != _fid) // response.Data.Forum.Id will be the default value 0 when reply list is empty
                 throw new TiebaException(false, $"Parent forum id within thread response: {response.Data.Forum.Id} is not match with the param value of crawler ctor: {_fid}, this thread might be multi forum or livepost.");

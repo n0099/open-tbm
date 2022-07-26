@@ -1,3 +1,5 @@
+using Humanizer;
+
 namespace tbm.Crawler
 {
     using SavedRepliesByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
@@ -21,9 +23,15 @@ namespace tbm.Crawler
         {
             try
             {
-                foreach (var pages in Enumerable.Range(1, Math.Min(MaxCrawlablePage, await GetTotalPageForForum())).Chunk(Environment.ProcessorCount))
+                var averageElapsed = 0f;
+                var finishedPageCount = 0;
+                float GetCumulativeAverage(float current, float previous, int currentCount) =>
+                    (current + ((currentCount - 1) * previous)) / currentCount; // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
+
+                var totalPage = Math.Min(MaxCrawlablePage, await GetTotalPageForForum());
+                foreach (var pages in Enumerable.Range(1, totalPage).Chunk(Environment.ProcessorCount))
                 {
-                    await Parallel.ForEachAsync(pages, stoppingToken, async (page, _) =>
+                    await Parallel.ForEachAsync(pages, stoppingToken, async (page, cancellationToken) =>
                     {
                         var stopWatchTotal = new Stopwatch();
                         stopWatchTotal.Start();
@@ -49,8 +57,19 @@ namespace tbm.Crawler
                         var savedSubRepliesCount = await CrawlSubReplies(savedReplies, _fid);
                         _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                             savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                        var totalElapsed = stopWatchTotal.ElapsedMilliseconds / 1000f;
                         _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
-                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.ElapsedMilliseconds / 1000f);
+                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, totalElapsed);
+
+                        _ = Interlocked.CompareExchange(ref averageElapsed, totalElapsed, 0); // first run
+                        _ = Interlocked.Increment(ref finishedPageCount);
+                        var ca = GetCumulativeAverage(totalElapsed, averageElapsed, finishedPageCount);
+                        _ = Interlocked.Exchange(ref averageElapsed, ca);
+                        var etaDateTime = DateTime.Now.Add(TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca));
+                        var etaRelative = etaDateTime.Humanize();
+                        var etaAt = etaDateTime.ToString("MM-dd HH:mm");
+                        _logger.LogInformation("Archive progress={}/{} avgDuration={:F2}s ETA={} {}", finishedPageCount, totalPage, ca, etaRelative, etaAt);
+                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} {etaAt}";
                     });
                 }
                 _logger.LogInformation("Archive for all pages 1~{} of forum {} finished.", _forumName, MaxCrawlablePage);
@@ -86,6 +105,10 @@ namespace tbm.Crawler
             var shouldCrawlReplyTid = new HashSet<Tid>();
             var savedRepliesByTid = new SavedRepliesByTid();
             if (savedThreads == null) return savedRepliesByTid;
+            // some rare thread will have replyNum=0, but contains reply and can be revealed by requesting
+            // we choose TO crawl these rare thread's replies for archive since most thread will have replies
+            // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
+            // SELECT COUNT(*) FROM tbm_f{fid}_threads AS A INNER JOIN tbm_f{fid}_replies AS B ON A.tid = B.tid AND A.replyNum IS NULL
             savedThreads.AllAfter.ForEach(t => shouldCrawlReplyTid.Add(t.Tid));
 
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
@@ -102,7 +125,11 @@ namespace tbm.Crawler
             var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
-                replies.AllAfter.ForEach(r => shouldCrawl.Add((tid, r.Pid)));
+                // some rare reply will have subReplyNum=0, but contains sub reply and can be revealed by requesting
+                // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
+                // following sql can figure out existing sub replies that not matched with parent reply's subReplyNum in db:
+                // SELECT COUNT(*) FROM tbm_f{fid}97650_replies AS A INNER JOIN tbm_f{fid}_subReplies AS B ON A.pid = B.pid AND A.subReplyNum IS NULL
+                replies.AllAfter.Where(r => r.SubReplyNum != null).ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;
             });
             var savedSubRepliesCount = 0;

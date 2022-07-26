@@ -76,7 +76,7 @@ namespace tbm.Crawler
         { // cancel when startPage is already locked
             if (_lockingPages.Any()) throw new InvalidOperationException("CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             var acquiredLocks = _locks.AcquireRange(_lockIndex, new[] {startPage}).ToHashSet();
-            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.", startPage, endPage, _locks.PostType, _lockIndex);
+            if (!acquiredLocks.Any()) _logger.LogInformation("Cannot crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.", startPage, endPage, _locks.PostType, _lockIndex);
             _lockingPages.UnionWith(acquiredLocks);
 
             var isStartPageCrawlFailed = await CatchCrawlException(async () =>
@@ -100,7 +100,7 @@ namespace tbm.Crawler
         {
             pages = pages.ToList();
             var acquiredLocks = _locks.AcquireRange(_lockIndex, pages).ToList();
-            if (!acquiredLocks.Any()) _logger.LogInformation("Can't crawl any page within {} for lock type {}, index {} since they've already been locked.", JsonSerializer.Serialize(pages), _locks.PostType, _lockIndex);
+            if (!acquiredLocks.Any()) _logger.LogInformation("Cannot crawl any page within {} for lock type {}, index {} since they've already been locked.", JsonSerializer.Serialize(pages), _locks.PostType, _lockIndex);
             _lockingPages.UnionWith(acquiredLocks);
 
             return Task.WhenAll(acquiredLocks.Shuffle().Select(page =>
@@ -129,10 +129,14 @@ namespace tbm.Crawler
                 e.Data["fid"] = Fid;
                 e = _crawler.FillExceptionData(e).ExtractInnerExceptionsData();
 
-                if (e is TiebaException)
-                    _logger.LogWarning("TiebaException: {} {}", string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)), Helper.UnescapedJsonSerialize(e.Data));
-                else
-                    _logger.LogError(e, "Exception");
+                if (e is TiebaException te)
+                {
+                    var innerExceptionsMessage = string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message));
+                    if (!te.ShouldSilent)
+                        _logger.LogWarning("TiebaException: {} {}", innerExceptionsMessage, Helper.UnescapedJsonSerialize(e.Data));
+                }
+                else _logger.LogError(e, "Exception");
+
                 if (e is not TiebaException {ShouldRetry: false})
                 {
                     _locks.AcquireFailed(_lockIndex, page, (FailedCount)(previousFailedCount + 1));

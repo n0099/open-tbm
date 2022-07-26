@@ -26,7 +26,7 @@ namespace tbm.Crawler
             // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
             var existingPosts = dbSet.Where(postsPredicate).ToList();
             var existingPostsById = existingPosts.ToDictionary(postIdSelector);
-            var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.GetRevisionsForObjectsThenMerge()
+            var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.SavePostsOrUsers()
 
             SavePostsOrUsers(TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
                 p => existingPostsById.ContainsKey(postIdSelector(p)),
