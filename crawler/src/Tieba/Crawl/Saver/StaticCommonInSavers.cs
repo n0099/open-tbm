@@ -48,18 +48,8 @@ namespace tbm.Crawler
             },
             Revision: (whichPostType, propertyName, originalValue, _) =>
             {
-                if (whichPostType == typeof(TiebaUser))
-                {
-                    switch (propertyName)
-                    {
-                        // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty stirng as portrait
-                        // they will soon be updated by (sub) reply crawler after it find out the latest reply
-                        case nameof(TiebaUser.Portrait) when originalValue is "":
-                        // ignore revision that figures update existing old users that don't have ip geolocation
-                        case nameof(TiebaUser.IpGeolocation) when originalValue is null:
-                            return true;
-                    }
-                }
+                // ignore revision that figures update existing old users that don't have ip geolocation
+                if (whichPostType == typeof(TiebaUser) && propertyName == nameof(TiebaUser.IpGeolocation) && originalValue is null) return true;
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propertyName)

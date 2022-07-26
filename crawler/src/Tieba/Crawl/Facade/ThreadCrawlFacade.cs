@@ -24,13 +24,14 @@ namespace tbm.Crawler
                 u => u.Uid));
         }
 
+        public static TiebaUser LatestReplierFactory(long uid, string? name, string? displayName) =>
+            new() {Uid = uid, Name = name, DisplayName = displayName};
+
         protected void ParseLatestRepliers(ThreadResponse.Types.Data data) =>
             // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
-            data.ThreadList.Select(t => t.LastReplyer).Where(u => u.Uid != 0).Select(u => new TiebaUser {
-                Uid = u.Uid,
-                Name = u.Name.NullIfWhiteSpace(),
-                DisplayName = u.Name == u.NameShow ? null : u.NameShow
-            }).ForEach(u => _latestRepliers[u.Uid] = u);
+            data.ThreadList.Select(t => t.LastReplyer).Where(u => u.Uid != 0).Select(u =>
+                LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
+                .ForEach(u => _latestRepliers[u.Uid] = u);
 
         protected override void PostParseCallback(ThreadResponse response, CrawlRequestFlag flag)
         {

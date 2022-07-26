@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class TiebaUser : IEntityWithTimestampFields
+    public class TiebaUser : IEntityWithTimestampFields, IEquatable<TiebaUser>
     {
         [Key] public long Uid { get; set; }
         public string? Name { get; set; }
@@ -13,5 +13,45 @@ namespace tbm.Crawler
         public string? IpGeolocation { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
+
+        public bool Equals(TiebaUser? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Uid == other.Uid
+                   && Name == other.Name
+                   && DisplayName == other.DisplayName
+                   && Portrait == other.Portrait
+                   && PortraitUpdateTime == other.PortraitUpdateTime
+                   && Gender == other.Gender
+                   && FansNickname == other.FansNickname
+                   && (IconInfo == other.IconInfo
+                       || (IconInfo != null && other.IconInfo != null && IconInfo.SequenceEqual(other.IconInfo)))
+                   && IpGeolocation == other.IpGeolocation;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((TiebaUser)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            // ReSharper disable NonReadonlyMemberInGetHashCode
+            hashCode.Add(Uid);
+            hashCode.Add(Name);
+            hashCode.Add(DisplayName);
+            hashCode.Add(Portrait);
+            hashCode.Add(PortraitUpdateTime);
+            hashCode.Add(Gender);
+            hashCode.Add(FansNickname);
+            hashCode.AddBytes(IconInfo);
+            hashCode.Add(IpGeolocation);
+            // ReSharper restore NonReadonlyMemberInGetHashCode
+            return hashCode.ToHashCode();
+        }
     }
 }

@@ -21,15 +21,39 @@ namespace tbm.Crawler
         {
             try
             {
-                var pages = Enumerable.Range(1, Math.Min(MaxCrawlablePage, await GetTotalPageForForum()));
-                await Parallel.ForEachAsync(pages, stoppingToken, async (page, _) =>
+                foreach (var pages in Enumerable.Range(1, Math.Min(MaxCrawlablePage, await GetTotalPageForForum())).Chunk(Environment.ProcessorCount))
                 {
-                    var stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads((Page)page, _forumName, _fid), _fid), _fid);
-                    _logger.LogInformation("Archive for forum {}, page {} finished after {:F2}s", _forumName, page, stopWatch.ElapsedMilliseconds / 1000f);
-                });
-                _logger.LogInformation("Archive for forum {}, all pages 1~{} finished.", _forumName, MaxCrawlablePage);
+                    await Parallel.ForEachAsync(pages, stoppingToken, async (page, _) =>
+                    {
+                        var stopWatchTotal = new Stopwatch();
+                        stopWatchTotal.Start();
+                        var stopWatch = new Stopwatch();
+                        stopWatch.Start();
+                        float GetElapsedMsThenRestart()
+                        {
+                            var ret = stopWatch.ElapsedMilliseconds / 1000f;
+                            stopWatch.Restart();
+                            return ret;
+                        }
+                        var savedThreads = await CrawlThreads((Page)page, _forumName, _fid);
+                        if (savedThreads == null) return;
+                        var savedThreadsCount = savedThreads.AllAfter.Count;
+                        _logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
+                            savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+
+                        var savedReplies = await CrawlReplies(savedThreads, _fid);
+                        var savedRepliesCount = savedReplies.Select(i => i.Value.AllAfter.Count).Sum();
+                        _logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
+                            savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+
+                        var savedSubRepliesCount = await CrawlSubReplies(savedReplies, _fid);
+                        _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
+                            savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                        _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
+                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.ElapsedMilliseconds / 1000f);
+                    });
+                }
+                _logger.LogInformation("Archive for all pages 1~{} of forum {} finished.", _forumName, MaxCrawlablePage);
             }
             catch (Exception e)
             {
@@ -73,7 +97,7 @@ namespace tbm.Crawler
             return savedRepliesByTid;
         }
 
-        private async Task CrawlSubReplies(SavedRepliesByTid savedRepliesByTid, Fid fid)
+        private async Task<int> CrawlSubReplies(SavedRepliesByTid savedRepliesByTid, Fid fid)
         {
             var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
@@ -81,12 +105,16 @@ namespace tbm.Crawler
                 replies.AllAfter.ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;
             });
+            var savedSubRepliesCount = 0;
             await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>
             {
                 var (tid, pid) = tidAndPid;
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveAll();
+                var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveAll();
+                if (saved == null) return;
+                _ = Interlocked.Add(ref savedSubRepliesCount, saved.AllAfter.Count);
             }));
+            return savedSubRepliesCount;
         }
     }
 }

@@ -13,14 +13,14 @@ namespace tbm.Crawler
             {
                 p.Pid = el.Pid;
                 p.Floor = el.Floor;
-                foreach (var c in el.Content.Where(c => c.Type == 3))
+                el.Content.Where(c => c.Type == 3).ForEach(c =>
                 { // set with protoBuf default value to remove these image related fields that has similar value by reference
                     c.BigCdnSrc = "";
                     c.CdnSrc = "";
                     c.CdnSrcActive = "";
                     c.ShowOriginalBtn = 0;
                     c.IsLongPic = 0;
-                }
+                });
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
                 // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()

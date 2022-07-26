@@ -108,13 +108,13 @@ namespace tbm.Crawler
         {
             _requesterTcs.Wait();
             if (_config.GetValue("LogTrace", false)) logTraceCallback();
-            return responseTaskFactory().ContinueWith(i =>
+            var ret = responseTaskFactory();
+            _ = ret.ContinueWith(i =>
             {
                 if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
                 else _requesterTcs.Decrease();
-                // there should be only one inner exception since the task is not create by Task.WhenAll/Any()
-                return i.IsFaulted ? throw i.Exception?.InnerException! : i.Result;
             }, TaskContinuationOptions.ExecuteSynchronously);
+            return ret;
         }
     }
 }
