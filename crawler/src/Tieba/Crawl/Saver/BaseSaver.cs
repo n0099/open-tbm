@@ -23,10 +23,9 @@ namespace tbm.Crawler
             var dbSet = db.Set<TPost>();
             if (dbSet == null) throw new ArgumentException($"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
 
-            // IQueryable.ToList() works like AsEnumerable() which will eager eval the sql results from db
-            var existingPosts = dbSet.Where(postsPredicate).ToList();
-            var existingPostsById = existingPosts.ToDictionary(postIdSelector);
-            var postsBeforeSave = existingPosts.ToCloned(); // clone before it get updated by CommonInSavers.SavePostsOrUsers()
+            var existingPostsById = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
+            // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
+            var postsBeforeSave = existingPostsById.Select(i => (TPost)i.Value.Clone()).ToList();
 
             SavePostsOrUsers(TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
                 p => existingPostsById.ContainsKey(postIdSelector(p)),

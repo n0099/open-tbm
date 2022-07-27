@@ -85,8 +85,6 @@ namespace tbm.Crawler
         public static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>
             generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
 
-        public static List<T> ToCloned<T>(this IEnumerable<T> list) where T : ICloneable => list.Select(i => (T)i.Clone()).ToList();
-
         public static Exception ExtractInnerExceptionsData(this Exception e)
         {
             var inner = e.InnerException;
@@ -114,19 +112,9 @@ namespace tbm.Crawler
             } while (inner != null);
         }
 
-        public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value) where T2 : struct
-        {
-            if (value != null) dict[key] = value.Value;
-        }
-
         public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value)
         {
             if (value != null) dict[key] = value;
-        }
-
-        public static void AddIfNotNull<T>(this IList<T> list, T? item)
-        {
-            if (item != null) list.Add(item);
         }
 
         public static int? NullIfZero(this int num) => num == 0 ? null : num;

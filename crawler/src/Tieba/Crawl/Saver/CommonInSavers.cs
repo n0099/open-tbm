@@ -18,13 +18,14 @@ namespace tbm.Crawler
             where TPostOrUser : class where TRevision : BaseRevision
         {
             var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.AddRange(existedOrNew[false]); // newly added
-            db.AddRange(existedOrNew[true].Select(currentPostOrUser =>
+            db.Set<TPostOrUser>().AddRange(existedOrNew[false]); // newly added
+            db.AddRange(existedOrNew[true].Select(newPostOrUser =>
             {
-                var originalPostOrUser = existedSelector(currentPostOrUser);
-                var entry = db.Entry(originalPostOrUser);
-                entry.CurrentValues.SetValues(currentPostOrUser);
-                // prevent override fields of IEntityWithTimestampFields with the default value 0
+                var postOrUserInTracking = existedSelector(newPostOrUser);
+                var entry = db.Entry(postOrUserInTracking);
+                entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
+
+                // rollback writes on the fields of IEntityWithTimestampFields with the default value 0, this will also affects postOrUserInTracking
                 entry.Properties.Where(p => p.Metadata.Name is nameof(IEntityWithTimestampFields.CreatedAt)
                     or nameof(IEntityWithTimestampFields.UpdatedAt)).ForEach(p => p.IsModified = false);
 
@@ -53,7 +54,7 @@ namespace tbm.Crawler
                     // ignore entire record is not possible via FieldChangeIgnorance.Revision() since it can only determine one field at the time
                     if (entryIsUser && pName == nameof(TiebaUser.Portrait) && p.OriginalValue is "")
                     {
-                        // invokes OriginalValues.ToObject() to get a new instance since originalPostOrUser is reference to the changed one
+                        // invokes OriginalValues.ToObject() to get a new instance since postOrUserInTracking is reference to the changed one
                         var user = (TiebaUser)entry.OriginalValues.ToObject();
                         // create another user instance with only fields of latest replier filled
                         var latestReplier = ThreadCrawlFacade.LatestReplierFactory(user.Uid, user.Name, user.DisplayName);
@@ -68,11 +69,11 @@ namespace tbm.Crawler
                         _logger.LogWarning("Updating field {} is not existed in revision table, " +
                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
-                            Helper.UnescapedJsonSerialize(currentPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
+                            Helper.UnescapedJsonSerialize(newPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
                     }
                     else
                     {
-                        revision ??= revisionFactory(originalPostOrUser);
+                        revision ??= revisionFactory(postOrUserInTracking);
                         revisionProp.SetValue(revision, p.OriginalValue);
 
                         if (p.OriginalValue != null) continue;

@@ -25,8 +25,13 @@ namespace tbm.Crawler
             {
                 var averageElapsed = 0f;
                 var finishedPageCount = 0;
-                float GetCumulativeAverage(float current, float previous, int currentCount) =>
+                float CalcCumulativeAverage(float current, float previous, int currentCount) =>
                     (current + ((currentCount - 1) * previous)) / currentCount; // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
+                var totalSavedThreadsCount = 0;
+                var totalSavedRepliesCount = 0;
+                var totalSavedSubRepliesCount = 0;
+                var stopWatchPageInterval = new Stopwatch();
+                stopWatchPageInterval.Start();
 
                 var totalPage = Math.Min(MaxCrawlablePage, await GetTotalPageForForum());
                 foreach (var pages in Enumerable.Range(1, totalPage).Chunk(Environment.ProcessorCount))
@@ -48,31 +53,41 @@ namespace tbm.Crawler
                         var savedThreadsCount = savedThreads.AllAfter.Count;
                         _logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
                             savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                        _ = Interlocked.Add(ref totalSavedThreadsCount, savedThreadsCount);
 
                         var savedReplies = await CrawlReplies(savedThreads, _fid);
                         var savedRepliesCount = savedReplies.Select(i => i.Value.AllAfter.Count).Sum();
                         _logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                             savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                        _ = Interlocked.Add(ref totalSavedRepliesCount, savedRepliesCount);
 
                         var savedSubRepliesCount = await CrawlSubReplies(savedReplies, _fid);
                         _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                             savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
-                        var totalElapsed = stopWatchTotal.ElapsedMilliseconds / 1000f;
                         _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
-                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, totalElapsed);
+                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.ElapsedMilliseconds / 1000f);
+                        _ = Interlocked.Add(ref totalSavedSubRepliesCount, savedSubRepliesCount);
 
-                        _ = Interlocked.CompareExchange(ref averageElapsed, totalElapsed, 0); // first run
+                        var intervalBetweenPage = stopWatchPageInterval.ElapsedMilliseconds / 1000f;
+                        stopWatchPageInterval.Restart();
+                        _ = Interlocked.CompareExchange(ref averageElapsed, intervalBetweenPage, 0); // first run
                         _ = Interlocked.Increment(ref finishedPageCount);
-                        var ca = GetCumulativeAverage(totalElapsed, averageElapsed, finishedPageCount);
+                        var ca = CalcCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPageCount);
                         _ = Interlocked.Exchange(ref averageElapsed, ca);
                         var etaDateTime = DateTime.Now.Add(TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca));
                         var etaRelative = etaDateTime.Humanize();
                         var etaAt = etaDateTime.ToString("MM-dd HH:mm");
-                        _logger.LogInformation("Archive progress={}/{} avgDuration={:F2}s ETA={} {}", finishedPageCount, totalPage, ca, etaRelative, etaAt);
+                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={}({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s avgInterval={:F2}s ETA={} {}",
+                            finishedPageCount, totalPage,
+                            totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
+                            totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount,
+                            intervalBetweenPage, ca, etaRelative, etaAt);
                         Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} {etaAt}";
                     });
                 }
-                _logger.LogInformation("Archive for all pages 1~{} of forum {} finished.", _forumName, MaxCrawlablePage);
+                _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished.",
+                    totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
+                    totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount, totalPage, _forumName);
             }
             catch (Exception e)
             {
