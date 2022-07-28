@@ -1,7 +1,10 @@
+using System.Text.RegularExpressions;
+
 namespace tbm.Crawler
 {
     public class ReplyParser : BaseParser<ReplyPost, Reply>
     {
+        private static readonly Regex ImgUrlExtractingRegex = new(@"^https?://(tiebapic|imgsrc)\.baidu\.com/forum/pic/item/(?<hash>.*?)\.jpg(\?.*)*$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         protected override ulong PostIdSelector(ReplyPost post) => post.Pid;
 
         protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) => inPosts.Select(Convert);
@@ -20,6 +23,8 @@ namespace tbm.Crawler
                     c.CdnSrcActive = "";
                     c.ShowOriginalBtn = 0;
                     c.IsLongPic = 0;
+                    // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
+                    if (ImgUrlExtractingRegex.Match(c.OriginSrc).Groups["hash"] is {Success: true} hash) c.OriginSrc = hash.Value;
                 });
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
