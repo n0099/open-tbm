@@ -12,7 +12,7 @@ namespace tbm.Crawler
         public byte[]? IconInfo { get; set; }
         public string? IpGeolocation { get; set; }
         public uint CreatedAt { get; set; }
-        public uint UpdatedAt { get; set; }
+        public uint? UpdatedAt { get; set; }
 
         public bool Equals(TiebaUser? other)
         {

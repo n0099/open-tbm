@@ -40,6 +40,6 @@ namespace tbm.Crawler
                 t => t.Tid,
                 pi => pi.Tid,
                 t => new() {Type = "thread", Fid = _fid, Tid = t.Tid, PostTime = t.PostTime},
-                t => new ThreadRevision {Time = t.UpdatedAt, Tid = t.Tid});
+                t => new ThreadRevision {Time = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid});
     }
 }

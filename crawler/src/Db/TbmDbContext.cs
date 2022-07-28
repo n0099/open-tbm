@@ -65,14 +65,18 @@ namespace tbm.Crawler
             {
                 var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 var originalEntityState = e.State; // e.State might change after any prop value updated
-                // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field requires invoking ChangeTracker.DetectChanges()
-                if (originalEntityState == EntityState.Added) e.Property(ie => ie.CreatedAt).CurrentValue = now;
-
+                var updatedAtProp = e.Property(ie => ie.UpdatedAt);
                 var lastSeenProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeen) : null;
+
+                if (originalEntityState == EntityState.Added)
+                { // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field requires invoking ChangeTracker.DetectChanges()
+                    e.Property(ie => ie.CreatedAt).CurrentValue = now;
+                    updatedAtProp.CurrentValue = null; // null means it's same with createdAt
+                }
+
                 if (originalEntityState == EntityState.Unchanged && lastSeenProp != null)
                     lastSeenProp.CurrentValue = now; // updatedAt won't change when entity is unchanged
 
-                var updatedAtProp = e.Property(ie => ie.UpdatedAt);
                 // prevent overwrite existing future timestamp, this will happens when a record is updated >=3 times within a second
                 if (updatedAtProp.CurrentValue > now) return;
                 if (originalEntityState == EntityState.Modified)

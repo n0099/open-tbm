@@ -50,7 +50,7 @@ namespace tbm.Crawler
                 r => r.Pid,
                 pi => pi.Pid!.Value,
                 r => new() {Type = "reply", Fid = _fid, Tid = r.Tid, Pid = r.Pid, PostTime = r.PostTime},
-                r => new ReplyRevision {Time = r.UpdatedAt, Pid = r.Pid});
+                r => new ReplyRevision {Time = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid});
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
 
