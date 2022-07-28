@@ -25,5 +25,6 @@ namespace tbm.Crawler
         public string? AuthorPhoneType { get; set; }
         public uint CreatedAt { get; set; }
         public uint UpdatedAt { get; set; }
+        public uint? LastSeen { get; set; }
     }
 }

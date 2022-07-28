@@ -36,7 +36,8 @@ namespace tbm.Crawler
                 foreach (var p in entry.Properties)
                 {
                     var pName = p.Metadata.Name;
-                    if (!p.IsModified || pName is nameof(IEntityWithTimestampFields.CreatedAt)
+                    if (!p.IsModified || pName is nameof(IPost.LastSeen)
+                            or nameof(IEntityWithTimestampFields.CreatedAt)
                             or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
 
                     if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)

@@ -61,26 +61,32 @@ namespace tbm.Crawler
 
         public int SaveChangesWithTimestamping()
         { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-            ChangeTracker.Entries().ForEach(e =>
+            ChangeTracker.Entries<IEntityWithTimestampFields>().ForEach(e =>
             {
-                if (e.Entity is not IEntityWithTimestampFields
-                    || e.State is not (EntityState.Added or EntityState.Modified)) return;
-                var timestamp = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-                // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field may not
-                if (e.State == EntityState.Added)
-                    e.Property(nameof(IEntityWithTimestampFields.CreatedAt)).CurrentValue = timestamp;
+                var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                var originalEntityState = e.State; // e.State might change after any prop value updated
+                // mutates Entry.CurrentValue will always update Entry.IsModified, while mutating Entry.Entity.Field requires invoking ChangeTracker.DetectChanges()
+                if (originalEntityState == EntityState.Added) e.Property(ie => ie.CreatedAt).CurrentValue = now;
 
-                var updatedAtProp = e.Property(nameof(IEntityWithTimestampFields.UpdatedAt));
+                var lastSeenProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeen) : null;
+                if (originalEntityState == EntityState.Unchanged && lastSeenProp != null)
+                    lastSeenProp.CurrentValue = now; // updatedAt won't change when entity is unchanged
+
+                var updatedAtProp = e.Property(ie => ie.UpdatedAt);
                 // prevent overwrite existing future timestamp, this will happens when a record is updated >=3 times within a second
-                if (e.State == EntityState.Modified && updatedAtProp.CurrentValue is Time c && c > timestamp) return;
-                updatedAtProp.CurrentValue = timestamp;
+                if (updatedAtProp.CurrentValue > now) return;
+                if (originalEntityState == EntityState.Modified)
+                {
+                    updatedAtProp.CurrentValue = now;
+                    if (lastSeenProp != null) lastSeenProp.CurrentValue = null; // null means it's same with updatedAt
+                }
 
-                if (e.State != EntityState.Modified || updatedAtProp.IsModified) return;
+                if (originalEntityState != EntityState.Modified || updatedAtProp.IsModified) return;
                 var changedPropsValueDiff = e.Properties.Where(p => p.IsModified) // not using lazy eval to prevent including the updatedAt field itself
                     .Select(p => new {p.Metadata.Name, New = p.CurrentValue, Old = p.OriginalValue}).ToList();
                 do
                 {
-                    updatedAtProp.CurrentValue = (Time)updatedAtProp.CurrentValue + 1;
+                    updatedAtProp.CurrentValue += 1;
                 } while (!updatedAtProp.IsModified && e.State == EntityState.Modified);
                 _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with following fields changed:{}, new record={}, old record={}. " +
                                    "This means the record is updated more than one time within one second, " +
