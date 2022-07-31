@@ -33,23 +33,21 @@ namespace tbm.Crawler
                             return true;
                     }
                 }
-                if (whichPostType == typeof(ReplyPost))
-                {
-                    switch (propertyName)
-                    {
-                        // possible randomly response with 0 and in the latter responses it will back to normal
-                        case nameof(ReplyPost.AuthorUid) when currentValue is 0L && originalValue is not 0L:
-                        // possible randomly response with null
-                        case nameof(ReplyPost.SignatureId) when currentValue is null && originalValue is not null:
-                            return true;
-                    }
-                }
+                // possible randomly response with null
+                if (whichPostType == typeof(ReplyPost)
+                    && propertyName == nameof(ReplyPost.SignatureId)
+                    && currentValue is null && originalValue is not null) return true;
+                // possible randomly response with 0 and in the latter responses it will back to normal
+                if ((whichPostType == typeof(ReplyPost) || whichPostType == typeof(SubReplyPost))
+                    && propertyName is nameof(ReplyPost.AuthorUid) or nameof(SubReplyPost.AuthorUid)
+                    && currentValue is 0L && originalValue is not 0L) return true;
                 return false;
             },
             Revision: (whichPostType, propertyName, originalValue, _) =>
             {
                 // ignore revision that figures update existing old users that don't have ip geolocation
-                if (whichPostType == typeof(TiebaUser) && propertyName == nameof(TiebaUser.IpGeolocation) && originalValue is null) return true;
+                if (whichPostType == typeof(TiebaUser)
+                    && propertyName == nameof(TiebaUser.IpGeolocation) && originalValue is null) return true;
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propertyName)
