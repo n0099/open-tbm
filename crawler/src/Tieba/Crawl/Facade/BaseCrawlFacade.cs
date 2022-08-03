@@ -98,9 +98,14 @@ namespace tbm.Crawler
 
         private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount>? previousFailedCountSelector = null)
         {
-            pages = pages.ToList();
-            var acquiredLocks = _locks.AcquireRange(_lockIndex, pages).ToList();
-            if (!acquiredLocks.Any()) _logger.LogInformation("Cannot crawl any page within {} for lock type {}, index {} since they've already been locked.", JsonSerializer.Serialize(pages), _locks.PostType, _lockIndex);
+            var pagesList = pages.ToList();
+            var acquiredLocks = _locks.AcquireRange(_lockIndex, pagesList).ToList();
+            if (!acquiredLocks.Any())
+            {
+                var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1]).Select(i => (Page)i).SequenceEqual(pagesList)
+                    ? $"within the range [{pagesList[0]}-{pagesList[^1]}]" : JsonSerializer.Serialize(pagesList);
+                _logger.LogInformation("Cannot crawl any page within {} for lock type {}, index {} since they've already been locked.", pagesText, _locks.PostType, _lockIndex);
+            }
             _lockingPages.UnionWith(acquiredLocks);
 
             return Task.WhenAll(acquiredLocks.Shuffle().Select(page =>

@@ -24,8 +24,11 @@ namespace tbm.Crawler
                         case nameof(ThreadPost.ZanInfo):
                         // possible randomly response with null
                         case nameof(ThreadPost.Geolocation) when currentValue is null:
-                        // empty string means the author had not write a title, its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.PostParseCallback()
-                        case nameof(ThreadPost.Title) when currentValue is "":
+                        // empty string means the author had not write a title
+                        // its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.PostParseCallback()
+                        case nameof(ThreadPost.Title) when currentValue is ""
+                            // prevent repeatedly update with different title due to the thread is a multi forum topic thread thus its title can be vary within the forum and within the thread
+                                                           || (currentValue is not "" && originalValue is not ""):
                         // possible randomly response with 0.NullIfZero()
                         case nameof(ThreadPost.DisagreeNum) when currentValue is null && originalValue is not null:
                         // when the latest reply post is deleted and there's no new reply after delete, this field but not LatestReplyTime will be null
