@@ -96,7 +96,7 @@ namespace tbm.Crawler
                 do
                 {
                     updatedAtProp.CurrentValue += 1;
-                } while (!updatedAtProp.IsModified && e.State == EntityState.Modified);
+                } while (updatedAtProp.CurrentValue == (updatedAtProp.OriginalValue ?? createdAtProp.CurrentValue));
                 _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with following fields changed:{}, new record={}, old record={}. " +
                                    "This means the record is updated more than one time within one second, " +
                                    "which usually caused by a different response of the same resource from tieba. " +
