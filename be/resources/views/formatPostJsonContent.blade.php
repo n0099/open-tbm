@@ -2,15 +2,16 @@
 use Spatie\Regex\Regex;
 
 $replaceWithHttps = static fn (string $url) => str_replace('http://', 'https://', $url);
-$replaceImageEndpoint = static fn (string $url) => str_replace('//t.hiphotos.baidu.com', '//tiebapic.baidu.com', $replaceWithHttps($url));
+$getImageUrl = static fn (string $hash) => "https://tiebapic.baidu.com/forum/pic/item/{$hash}.jpg";
 
+/* @var array<\TbClient\Post\Common\Content> $content */
 try {
 ?>
 @spaceless
     @foreach ($content as $item)
-        @switch ($item['type'])
+        @switch ($item->getType())
             @case (0) {{--文本 {"text": "content\n", "type": "0"} --}}
-                <span>{!! nl2br(htmlspecialchars(trim($item['text'], "\n"))) !!}</span>
+                <span>{!! nl2br(htmlspecialchars(trim($item->getText(), "\n"))) !!}</span>
                 @break
             @case (1)
                 {{--链接
@@ -23,11 +24,11 @@ try {
                     $skipCheckUrl = rawurldecode(
                         Regex::match(
                             '@^http://tieba\.baidu\.com/mo/q/checkurl\?url=(.+?)(&|$)@',
-                            $item['link']
-                        )->groupOr(1, $item['link'])
+                            $item->getLink()
+                        )->groupOr(1, $item->getLink())
                     );
                 ?>
-                <a href="{{ empty($skipCheckUrl) ? $item['link'] : $skipCheckUrl }}" target="_blank">{{ $item['text'] }}</a>
+                <a href="{{ empty($skipCheckUrl) ? $item->getLink() : $skipCheckUrl }}" target="_blank">{{ $item->getText() }}</a>
                 @break
             @case (2) {{--表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"} --}}
                 <?php
@@ -52,19 +53,21 @@ try {
                     'w_' => ['class' => 'ldw', 'type' => 'gif'], // 绿豆蛙
                     '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
                 ];
-                $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item['text']);
+                $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item->getText());
                 $emoticonInfo = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2)];
                 if ($emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] === '') {
                     $emoticonInfo['index'] = 1; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
                 }
-                $emoticonInfo = array_merge($emoticonInfo,
-                    $emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] >= 51 && $emoticonInfo['index'] <= 61
+                $emoticonInfo = [
+                    ...$emoticonInfo,
+                    ...($emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] >= 51 && $emoticonInfo['index'] <= 61
                         ? $emoticonsIndex['image_emoticon>51']
-                        : $emoticonsIndex[$emoticonInfo['prefix']]);
+                        : $emoticonsIndex[$emoticonInfo['prefix']])
+                ];
                 $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonInfo['class']}/{$emoticonInfo['prefix']}{$emoticonInfo['index']}.{$emoticonInfo['type']}";
                 ?>
                 <img class="lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $emoticonUrl }}" alt="{{ $item['c'] }}" />
+                     data-src="{{ $emoticonUrl }}" alt="{{ $item->getC() }}" />
                 @break
             @case (3)
                 {{--图片
@@ -84,11 +87,10 @@ try {
                     http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
                 --}}
                 <img class="tieba-image lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $replaceImageEndpoint($item['cdn_src']) }}"
-                     data-origin="{{ $replaceImageEndpoint($item['origin_src'] ?? $item['src']) }}" />
+                     data-src="{{ $getImageUrl($item->getOriginSrc()) }}" />
                 @break
             @case (4) {{--@用户 {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
-                <a href="http://tieba.baidu.com/home/main?un={{ ltrim($item['text'], '@') }}" target="_blank">{{ $item['text'] }}</a>
+                <a href="http://tieba.baidu.com/home/main?un={{ ltrim($item->getText(), '@') }}" target="_blank">{{ $item->getText() }}</a>
                 @break
             @case (5)
                 {{--视频
@@ -114,12 +116,12 @@ try {
                         "is_native_app": "0"
                     }
                 --}}
-                @if (isset($item['src']))
-                    <video controls poster="{{ $item['src'] }}" src="{{ $item['link'] }}"></video>
-                    <a href="{{ $item['text'] }}" target="_blank">贴吧视频播放页</a>
+                @if ($item->getSrc() !== '')
+                    <video controls poster="{{ $item->getSrc() }}" src="{{ $item->getLink() }}"></video>
+                    <a href="{{ $item->getText() }}" target="_blank">贴吧视频播放页</a>
                 @else
-                    <a href="{{ $item['text'] }}" target="_blank">
-                        [[外站视频：{{ $item['text'] }}]]
+                    <a href="{{ $item->getText() }}" target="_blank">
+                        [[外站视频：{{ $item->getText() }}]]
                     </a>
                 @endif
                 @break
@@ -127,7 +129,7 @@ try {
                 <br />
                 @break
             @case (9) {{--电话 {"text": "12345678 \d{8}", "type": "9", "phonetype": "2"} --}}
-                <span>{{ $item['text'] }}</span>
+                <span>{{ $item->getText() }}</span>
                 @break
             @case (10)
                 {{--语音
@@ -140,7 +142,7 @@ try {
                     }
                 --}}
                 {{-- TODO: fill with voice player and play source url --}}
-                <span>[[语音 {{ $item['voice_md5'] }} 时长:{{ $item['during_time'] }}s]]</span>
+                <span>[[语音 {{ $item->getVoiceMd5() }} 时长:{{ $item->getDuringTime() }}s]]</span>
                 @break
             @case (11)
                 {{--客户端表情包
@@ -156,7 +158,7 @@ try {
                     }
                 --}}
                 <img class="d-block lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $replaceWithHttps($item['dynamic']) }}" alt="{{ $item['c'] }}" />
+                     data-src="{{ $replaceWithHttps($item->getDynamic()) }}" alt="{{ $item->getC() }}" />
                 @break
             @case (16)
                 {{--涂鸦
@@ -175,12 +177,12 @@ try {
                     }
                 --}}
                 <img class="tieba-image lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $replaceWithHttps($item['graffiti_info']['url']) }}" alt="贴吧涂鸦" />
+                     data-src="{{ $replaceWithHttps($item->getGraffitiInfo()->getUrl()) }}" alt="贴吧涂鸦" />
                 @break
             @case (17) {{--活动 not found --}}
                 @break
             @case (18) {{--话题 {"link": "http://tieba.baidu.com/mo/q/hotMessage?topic_id={topic id}&fid={forum id}&topic_name={topic name}", "text": "#{topic name}#", "type": "18"} --}}
-                <a href="{{ $item['link'] }}" target="_blank">{{ $item['text'] }}</a>
+                <a href="{{ $item->getLink() }}" target="_blank">{{ $item->getText() }}</a>
                 @break
             @case (20)
                 {{--客户端表情商店
@@ -199,9 +201,9 @@ try {
                         }
                     }
                 --}}
-                <a href="{{ $item['meme_info']['detail_link'] }}" target="_blank">
+                <a href="{{ $item->getMemeInfo()->getDetailLink() }}" target="_blank">
                     <img class="tieba-image lazy" referrerpolicy="no-referrer"
-                         data-src="{{ $replaceWithHttps($item['src']) }}" />
+                         data-src="{{ $replaceWithHttps($item->getSrc()) }}" />
                 </a>
                 @break
             @default

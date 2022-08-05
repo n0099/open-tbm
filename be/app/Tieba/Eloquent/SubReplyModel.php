@@ -6,6 +6,7 @@ use App\Helper;
 use App\Tieba\Post\Post;
 use App\Tieba\Post\SubReply;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class SubReplyModel extends PostModel
 {
@@ -36,12 +37,12 @@ class SubReplyModel extends PostModel
         return $this->belongsTo(ReplyModel::class, 'pid', 'pid');
     }
 
-    public function scopePid(Builder $query, $pid): Builder
+    public function scopePid(Builder $query, Collection|array|int $pid): Builder
     {
         return $this->scopeIDType($query, 'pid', $pid);
     }
 
-    public function scopeSpid(Builder $query, $spid): Builder
+    public function scopeSpid(Builder $query, Collection|array|int $spid): Builder
     {
         return $this->scopeIDType($query, 'spid', $spid);
     }

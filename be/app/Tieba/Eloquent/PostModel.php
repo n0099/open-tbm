@@ -3,7 +3,6 @@
 namespace App\Tieba\Eloquent;
 
 use App\Eloquent\ModelWithHiddenFields;
-use App\Tieba\Post\Post;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -21,11 +20,6 @@ abstract class PostModel extends ModelWithHiddenFields
      */
     protected $table = 'tbm_f0';
 
-    /**
-     * @var array Let all model attributes assignable
-     */
-    protected $guarded = [];
-
     protected int $fid = 0;
 
     protected const TIMESTAMP_FIELD_NAMES = [
@@ -34,26 +28,26 @@ abstract class PostModel extends ModelWithHiddenFields
         'lastSeen'
     ];
 
-    private static array $postTypeClassNamePlural = [
+    private const POST_TYPE_CLASS_PLURAL_NAMES = [
         ThreadModel::class => 'threads',
         ReplyModel::class => 'replies',
-        SubReplyModel::class => 'subReplies'
+        ReplyContentModel::class => 'replies_content',
+        SubReplyModel::class => 'subReplies',
+        SubReplyContentModel::class => 'subReplies_content'
     ];
 
-    abstract public function toPost(): Post;
-
     /**
-     * Setting model table name by forum id and post type
+     * Setting model table name by fid and post type
      */
     public function setFid(int $fid): static
     {
         $this->fid = $fid;
-        $this->setTable("tbm_f{$fid}_" . self::$postTypeClassNamePlural[\get_class($this)]);
+        $this->setTable("tbm_f{$fid}_" . self::POST_TYPE_CLASS_PLURAL_NAMES[\get_class($this)]);
 
         return $this;
     }
 
-    public function scopeTid(Builder $query, $tid): Builder
+    public function scopeTid(Builder $query, Collection|array|int $tid): Builder
     {
         return $this->scopeIDType($query, 'tid', $tid);
     }
@@ -70,7 +64,7 @@ abstract class PostModel extends ModelWithHiddenFields
     }
 
     /**
-     * Override the parent relation instance method for passing valid forum id to new related post model
+     * Override the parent relation instance method for passing valid fid to new related post model
      */
     protected function newRelatedInstance($class)
     {
@@ -82,7 +76,7 @@ abstract class PostModel extends ModelWithHiddenFields
     }
 
     /**
-     * Override the parent newInstance method for passing valid forum id to model's query builder
+     * Override the parent newInstance method for passing valid fid to model's query builder
      */
     public function newInstance($attributes = [], $exists = false): static
     {

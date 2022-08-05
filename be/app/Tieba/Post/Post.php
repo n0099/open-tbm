@@ -40,16 +40,4 @@ abstract class Post
             throw new \InvalidArgumentException('Unexpected initial object: ' . \gettype($postData));
         }
     }
-
-    /**
-     * Format post content json to html using formatPostJsonContent view
-     *
-     * @param array $content
-     * @return string
-     */
-    public static function convertJsonContentToHtml(array $content): string
-    {
-        // remove spamming \n then trim spaces due to blade @break directive
-        return str_replace("\n", '', trim((string)view('formatPostJsonContent', ['content' => $content])));
-    }
 }

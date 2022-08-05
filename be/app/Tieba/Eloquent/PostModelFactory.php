@@ -17,9 +17,19 @@ class PostModelFactory
         return (new ReplyModel())->setFid($fid);
     }
 
+    public static function newReplyContent(int $fid): ReplyContentModel
+    {
+        return (new ReplyContentModel())->setFid($fid);
+    }
+
     public static function newSubReply(int $fid): SubReplyModel
     {
         return (new SubReplyModel())->setFid($fid);
+    }
+
+    public static function newSubReplyContent(int $fid): SubReplyContentModel
+    {
+        return (new SubReplyContentModel())->setFid($fid);
     }
 
     /**

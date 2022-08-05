@@ -4,8 +4,9 @@ namespace App\Http\PostsQuery;
 
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
-use App\Tieba\Post\Post;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use TbClient\Wrapper\PostContentWrapper;
 
 trait BaseQuery
 {
@@ -32,7 +33,8 @@ trait BaseQuery
     public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
-        $postModels = PostModelFactory::getPostModelsByFid($result['fid']);
+        $fid = $result['fid'];
+        $postModels = PostModelFactory::getPostModelsByFid($fid);
         $tids = array_column($result['threads'], 'tid');
         $pids = array_column($result['replies'], 'pid');
         $spids = array_column($result['subReplies'], 'spid');
@@ -51,8 +53,8 @@ trait BaseQuery
         $replies = $queryDetailedPostsInfo($pids, 'reply');
         $subReplies = $queryDetailedPostsInfo($spids, 'subReply');
 
-        $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs)
-            => $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
+        $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs) =>
+            $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
 
         $tidsInReplies = $replies->pluck('tid')
             ->concat($subReplies->pluck('tid'))->unique()->sort()->values();
@@ -70,23 +72,33 @@ trait BaseQuery
             ->unique()->sort()->values();
         // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
         if ($isSubPostIDMissFormParent(collect($pids), $pidsInThreadsAndSubReplies)) {
-            // fetch complete replies info which appeared in threads and sub replies info but missing in $pids
+            // fetch complete replies info, which appeared in threads and sub replies info but missing in $pids
             $replies = collect($postModels['reply']
                 ->pid($pidsInThreadsAndSubReplies->concat($pids)->toArray())
                 ->hidePrivateFields()->get()->toArray());
         }
 
-        $convertJsonContentToHtml = static function (array $post) {
-            if ($post['content'] !== null) {
-                $post['content'] = Post::convertJsonContentToHtml($post['content']);
+        $parseProtoBufContent = static function (string|null $content): string|null {
+            if ($content === null) {
+                return null;
             }
-            return $post;
+            $proto = new PostContentWrapper();
+            $proto->mergeFromString($content);
+            return str_replace("\n", '', trim(view('formatPostJsonContent', ['content' => $proto->getValue()])->render()));
         };
-        $replies->transform($convertJsonContentToHtml);
-        $subReplies->transform($convertJsonContentToHtml);
+        $parseContentModel = static fn (Model $i) => $parseProtoBufContent($i->content);
+        $replyContents = PostModelFactory::newReplyContent($fid)->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);
+        $subReplyContents = PostModelFactory::newSubReplyContent($fid)->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseContentModel);
+        $appendParsedContent = static fn (Collection $contents, string $postIDName) =>
+            static function (array $post) use ($contents, $postIDName) {
+                $post['content'] = $contents[$post[$postIDName]];
+                return $post;
+            };
+        $replies->transform($appendParsedContent($replyContents, 'pid'));
+        $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
 
         return array_merge(
-            ['fid' => $result['fid']],
+            ['fid' => $fid],
             array_combine(Helper::POST_TYPES_PLURAL, [$threads->toArray(), $replies->toArray(), $subReplies->toArray()])
         );
     }
