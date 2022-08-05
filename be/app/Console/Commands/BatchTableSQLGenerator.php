@@ -19,11 +19,13 @@ class BatchTableSQLGenerator extends Command
     public function handle(): void
     {
         $input = $this->ask('请输入需替换表名SQL 不支持多行文本
-        占位符：
-        {t_thread} => 主题帖表
-        {t_reply} => 回复帖表
-        {t_subReply} => 楼中楼表');
+            占位符：
+            {fid} => 吧ID
+            {t_thread} => 主题帖表
+            {t_reply} => 回复帖表
+            {t_subReply} => 楼中楼表');
         $placeholders = [
+            '{fid}' => '{fid}',
             '{t_thread}' => 'tbm_f{fid}_threads',
             '{t_reply}' => 'tbm_f{fid}_replies',
             '{t_subReply}' => 'tbm_f{fid}_subReplies'

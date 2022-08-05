@@ -7,6 +7,4 @@ use Illuminate\Database\Eloquent\Model;
 class BilibiliVoteModel extends Model
 {
     protected $table = 'tbm_bilibiliVote';
-
-    protected $guarded = [];
 }

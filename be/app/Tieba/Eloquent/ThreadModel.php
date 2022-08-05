@@ -2,9 +2,6 @@
 
 namespace App\Tieba\Eloquent;
 
-use App\Tieba\Post\Post;
-use App\Tieba\Post\Thread;
-
 /**
  * Class Post
  * Model for every Tieba thread post
@@ -42,10 +39,5 @@ class ThreadModel extends PostModel
     public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ReplyModel::class, 'tid', 'tid');
-    }
-
-    public function toPost(): Post
-    {
-        return new Thread($this);
     }
 }
