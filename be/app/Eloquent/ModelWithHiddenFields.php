@@ -13,6 +13,6 @@ abstract class ModelWithHiddenFields extends Model
 
     public function scopeHidePrivateFields(Builder $query): Builder
     {
-        return $query->select(array_diff(self::$fields, self::$hiddenFields));
+        return $query->select(array_diff(static::$fields, static::$hiddenFields));
     }
 }

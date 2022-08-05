@@ -15,12 +15,6 @@ class ThreadModel extends PostModel
 {
     protected $primaryKey = 'tid';
 
-    protected $casts = [
-        'agreeInfo' => 'array',
-        'zanInfo' => 'array',
-        'location' => 'array'
-    ];
-
     protected static array $fields = [
         'tid',
         'firstPid',
@@ -40,10 +34,9 @@ class ThreadModel extends PostModel
         'agreeNum',
         'disagreeNum',
         'zanInfo',
-        'location',
+        'geolocation',
         'authorPhoneType',
-        'createdAt',
-        'updatedAt'
+        ...parent::TIMESTAMP_FIELD_NAMES
     ];
 
     public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany

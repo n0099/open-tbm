@@ -28,6 +28,12 @@ abstract class PostModel extends ModelWithHiddenFields
 
     protected int $fid = 0;
 
+    protected const TIMESTAMP_FIELD_NAMES = [
+        'createdAt',
+        'updatedAt',
+        'lastSeen'
+    ];
+
     private static array $postTypeClassNamePlural = [
         ThreadModel::class => 'threads',
         ReplyModel::class => 'replies',

@@ -21,8 +21,9 @@ class SubReplyModel extends PostModel
         'authorManagerType',
         'authorExpGrade',
         'postTime',
-        'createdAt',
-        'updatedAt'
+        'agreeNum',
+        'disagreeNum',
+        ...parent::TIMESTAMP_FIELD_NAMES
     ];
 
     public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo

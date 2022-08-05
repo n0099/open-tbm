@@ -10,13 +10,6 @@ class ReplyModel extends PostModel
 {
     protected $primaryKey = 'pid';
 
-    protected $casts = [
-        'content' => 'array',
-        'agreeInfo' => 'array',
-        'signInfo' => 'array',
-        'tailInfo' => 'array'
-    ];
-
     protected static array $fields = [
         'tid',
         'pid',
@@ -29,10 +22,9 @@ class ReplyModel extends PostModel
         'isFold',
         'agreeNum',
         'disagreeNum',
-        'location',
+        'geolocation',
         'signatureId',
-        'createdAt',
-        'updatedAt'
+        ...parent::TIMESTAMP_FIELD_NAMES
     ];
 
     public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo
