@@ -253,7 +253,8 @@
       },
       {
         "selector": "objectLiteralProperty",
-        "format": ["camelCase", "PascalCase"] // vue component
+        "format": ["camelCase", "PascalCase"], // vue component
+        "custom": { "regex": ":?", "match": true } // vue event names in component.emit
       },
       {
         "selector": "function",
@@ -318,6 +319,7 @@
     // as of eslint-plugin-vue 8.2.0
     "vue/html-indent": ["error", 4],
     "vue/max-attributes-per-line": "off",
+    "vue/no-reserved-component-names": "off", // for component in antdv
     "vue/attribute-hyphenation": ["error", "never"],
     "vue/singleline-html-element-content-newline": "off",
     "vue/attributes-order": ["error", {

@@ -41,6 +41,7 @@
                     }" />
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
+                    <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
                     <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-viewer.static v-html="content" />
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
@@ -76,7 +77,7 @@ import { tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
 import type { PropType } from 'vue';
 import { defineComponent, onMounted, reactive, toRefs } from 'vue';
 import { RouterLink } from 'vue-router';
-import type { ColumnProps } from 'ant-design-vue/es/table/interface';
+import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import { Table } from 'ant-design-vue';
 import _ from 'lodash';
 
@@ -90,9 +91,9 @@ export default defineComponent({
             threads: ApiPostsQuery['threads'],
             threadsReply: Record<Tid, ApiPostsQuery['threads'][number]['replies']>,
             repliesSubReply: Record<Pid, SubReplyRecord[]>,
-            threadColumns: ColumnProps[],
-            replyColumns: ColumnProps[],
-            subReplyColumns: ColumnProps[]
+            threadColumns: ColumnType[],
+            replyColumns: ColumnType[],
+            subReplyColumns: ColumnType[]
         }>({
             threads: [],
             threadsReply: [],
