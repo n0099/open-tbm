@@ -73,10 +73,10 @@ class QueryParams
         ];
         foreach ($uniqueParamsDefaultValue as $name => $value) {
             // add unique params with default value when it's not presented in $this->params
-            $paramFilledWithDefaults = new Param(array_merge(
-                [$name => $this->getUniqueParamValue($name) ?? $value['value']],
-                $this->pick($name)[0]->subParam ?? $value['subParam'] ?? []
-            ));
+            $paramFilledWithDefaults = new Param([
+                $name => $this->getUniqueParamValue($name) ?? $value['value'],
+                ...($this->pick($name)[0]->subParam ?? $value['subParam'] ?? [])
+            ]);
             $paramsIndex = $this->getParamsIndexByName($name);
             if ($paramsIndex === []) {
                 $this->params[] = $paramFilledWithDefaults;

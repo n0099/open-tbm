@@ -97,10 +97,10 @@ trait BaseQuery
         $replies->transform($appendParsedContent($replyContents, 'pid'));
         $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
 
-        return array_merge(
-            ['fid' => $fid],
-            array_combine(Helper::POST_TYPES_PLURAL, [$threads->toArray(), $replies->toArray(), $subReplies->toArray()])
-        );
+        return [
+            'fid' => $fid,
+            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads->toArray(), $replies->toArray(), $subReplies->toArray()])
+        ];
     }
 
     public static function nestPostsWithParent(array $threads, array $replies, array $subReplies, int $fid): array
@@ -118,7 +118,7 @@ trait BaseQuery
                 // values() and array_values() remove keys to simplify json data
                 $threadReplies[$pid]['subReplies'] = collect($subReplies)->where('pid', $pid)->values()->toArray();
             }
-            $nestedPostsInfo[$tid] = array_merge($thread, ['replies' => array_values($threadReplies)]);
+            $nestedPostsInfo[$tid] = [...$thread, 'replies' => array_values($threadReplies)];
         }
 
         return array_values($nestedPostsInfo);

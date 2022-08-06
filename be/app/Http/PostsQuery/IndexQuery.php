@@ -15,7 +15,7 @@ class IndexQuery
         $flatParams = array_reduce(
             $params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POSTS_ID),
             static fn (array $accParams, Param $param) =>
-                array_merge($accParams, [$param->name => $param->value], $param->getAllSub()),
+                [...$accParams, $param->name => $param->value, ...$param->getAllSub()],
             []
         ); // flatten unique query params
 
@@ -34,13 +34,13 @@ class IndexQuery
         $result = $query->simplePaginate($this->perPageItems);
         Helper::abortAPIIf(40401, $result->isEmpty());
 
-        $this->queryResult = array_merge(
-            ['fid' => $result->pluck('fid')->first()],
-            array_combine(Helper::POST_TYPES_PLURAL, array_map( // assign queried posts id from $query
+        $this->queryResult = [
+            'fid' => $result->pluck('fid')->first(),
+            ...array_combine(Helper::POST_TYPES_PLURAL, array_map( // assign queried posts id from $query
                 static fn ($postType) => $result->where('type', $postType)->toArray(),
                 Helper::POST_TYPES
             ))
-        );
+        ];
         $this->queryResultPages = [
             'firstItem' => $result->firstItem(),
             'itemsCount' => $result->count(),
