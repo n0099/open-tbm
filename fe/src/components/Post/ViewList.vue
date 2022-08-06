@@ -183,9 +183,8 @@ export default defineComponent({
                         (groupedSubReplies, subReply, index, subReplies) => {
                             if (_.isArray(subReply)) return [subReply]; // useless since subReply will never be an array
                             // group sub replies item by continuous and same author info
-                            const previousSubReply = subReplies[index - 1] as SubReplyRecord;
+                            const previousSubReply = subReplies[index - 1] as SubReplyRecord | undefined;
                             // https://github.com/microsoft/TypeScript/issues/13778
-                            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                             if (previousSubReply !== undefined
                                 && subReply.authorUid === previousSubReply.authorUid
                                 && subReply.authorManagerType === previousSubReply.authorManagerType

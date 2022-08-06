@@ -99,8 +99,10 @@ export default <
         let ret = value;
         if (_.isString(value)) {
             _.each({ // we don't escape ',' since array type params is already known
+                /* eslint-disable @typescript-eslint/naming-convention */
                 '/': '%2F',
                 ';': '%3B'
+                /* eslint-enable @typescript-eslint/naming-convention */
             }, (encode, char) => {
                 ret = value.replace(shouldUnescape ? encode : char, shouldUnescape ? char : encode);
             });

@@ -37,9 +37,11 @@ export default defineComponent({
     setup(props) {
         const userGender = (gender: TiebaUserGender) => {
             const gendersList = {
+                /* eslint-disable @typescript-eslint/naming-convention */
                 0: '未指定（显示为男）',
                 1: '男 ♂',
                 2: '女 ♀'
+                /* eslint-enable @typescript-eslint/naming-convention */
             } as const;
             return gender === null ? 'NULL' : gendersList[gender];
         };

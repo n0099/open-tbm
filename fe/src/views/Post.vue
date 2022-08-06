@@ -72,7 +72,7 @@ export default defineComponent({
             selectedRenderTypes: ['list']
         });
         useHead({ title: computed(() => titleTemplate(state.title)) });
-        const queryFormRef = ref<InstanceType<typeof QueryForm>>();
+        const queryFormRef = ref<typeof QueryForm>();
         const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page = 1) => {
             const startTime = Date.now();
             state.lastFetchError = null;
@@ -95,19 +95,18 @@ export default defineComponent({
             if (isNewQuery) state.postPages = [postsQuery];
             else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
 
-            { // update title
-                const forumName = `${state.postPages[0].forum.name}吧`;
-                const threadTitle = state.postPages[0].threads[0].title;
-                switch (queryFormRef.value?.getCurrentQueryType()) {
-                    case 'fid':
-                    case 'search':
-                        state.title = `第${page}页 - ${forumName} - 帖子查询`;
-                        break;
-                    case 'postID':
-                        state.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
-                        break;
-                }
+            const forumName = `${state.postPages[0].forum.name}吧`;
+            const threadTitle = state.postPages[0].threads[0].title;
+            switch (queryFormRef.value?.getCurrentQueryType()) {
+                case 'fid':
+                case 'search':
+                    state.title = `第${page}页 - ${forumName} - 帖子查询`;
+                    break;
+                case 'postID':
+                    state.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
+                    break;
             }
+
             const networkTime = Date.now() - startTime;
             await nextTick(); // wait for child components finish dom update
             notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);

@@ -66,11 +66,10 @@ export default defineComponent({
         };
 
         const submitQueryForm = () => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            /* eslint-disable @typescript-eslint/no-unsafe-argument */
             const params = boolPropToStr<LocationQueryValueRaw>(state.selectUser.params);
-            const { selectBy } = state.selectUser;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            const routeName = removeEnd(selectBy, 'NULL');
+            const routeName = removeEnd(state.selectUser.selectBy, 'NULL');
+            /* eslint-enable @typescript-eslint/no-unsafe-argument */
             router.push({
                 name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
                 query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: state.gender }),
