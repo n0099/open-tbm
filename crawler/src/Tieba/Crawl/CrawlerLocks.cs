@@ -2,7 +2,10 @@ namespace tbm.Crawler
 {
     public class CrawlerLocks : WithLogTrace
     {
-        public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null);
+        public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
+        {
+            public override string ToString() => $"f{Fid}" + (Tid == null ? "" : $" t{Tid}") + (Pid == null ? "" : $" p{Pid}");
+        };
         private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
         // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
         private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailedCount>> _failed = new();
@@ -26,8 +29,9 @@ namespace tbm.Crawler
             {
                 _logger.LogTrace("Lock: type={} crawlingIdsCount={} crawlingPagesCount={} crawlingPagesCountsKeyById={} failedIdsCount={} failedPagesCount={} failedAll={}", LockType,
                     _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
-                    Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key, i => i.Value.Count)),
-                    _failed.Count, _failed.Values.Select(d => d.Count).Sum(), Helper.UnescapedJsonSerialize(_failed));
+                    Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key.ToString(), i => i.Value.Count)),
+                    _failed.Count, _failed.Values.Select(d => d.Count).Sum(),
+                    Helper.UnescapedJsonSerialize(_failed.ToDictionary(i => i.Key.ToString(), i => i.Value)));
             }
         }
 
@@ -105,12 +109,12 @@ namespace tbm.Crawler
         {
             lock (_failed)
             {
-                var copyOfFailed = _failed.ToDictionary(i => i.Key, i =>
+                var deepCloneOfFailed = _failed.ToDictionary(i => i.Key, i =>
                 {
                     lock (i.Value) return new Dictionary<Page, FailedCount>(i.Value);
                 });
                 _failed.Clear();
-                return copyOfFailed;
+                return deepCloneOfFailed;
             }
         }
     }
