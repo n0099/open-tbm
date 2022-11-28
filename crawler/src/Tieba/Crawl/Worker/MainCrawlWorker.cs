@@ -1,7 +1,7 @@
 namespace tbm.Crawler
 {
     using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
-    using SavedRepliesByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
+    using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
     public class MainCrawlWorker : CyclicCrawlWorker
     {
@@ -98,9 +98,9 @@ namespace tbm.Crawler
             return savedThreads;
         }
 
-        private Task<SavedRepliesByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid) => CrawlReplies(savedThreads, fid, _scope0);
+        private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid) => CrawlReplies(savedThreads, fid, _scope0);
 
-        public static async Task<SavedRepliesByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope)
+        public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope)
         {
             var shouldCrawlReplyTid = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
@@ -115,21 +115,21 @@ namespace tbm.Crawler
                 });
                 return shouldCrawl;
             });
-            var savedRepliesByTid = new SavedRepliesByTid();
+            var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
             {
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
             }));
-            return savedRepliesByTid;
+            return savedRepliesKeyByTid;
         }
 
-        private Task CrawlSubReplies(SavedRepliesByTid savedRepliesByTid, Fid fid) => CrawlSubReplies(savedRepliesByTid, fid, _scope0);
+        private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid) => CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0);
 
-        public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesByTid, Fid fid, ILifetimeScope scope)
+        public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope)
         {
-            var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
+            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
                 replies.NewlyAdded.ForEach(r =>

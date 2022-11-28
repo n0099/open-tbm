@@ -2,7 +2,7 @@ using Humanizer;
 
 namespace tbm.Crawler
 {
-    using SavedRepliesByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
+    using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
     public class ArchiveCrawlWorker : BackgroundService
     {
@@ -115,11 +115,11 @@ namespace tbm.Crawler
             return savedThreads;
         }
 
-        private async Task<SavedRepliesByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid)
+        private async Task<SavedRepliesKeyByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid)
         {
             var shouldCrawlReplyTid = new HashSet<Tid>();
-            var savedRepliesByTid = new SavedRepliesByTid();
-            if (savedThreads == null) return savedRepliesByTid;
+            var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
+            if (savedThreads == null) return savedRepliesKeyByTid;
             // some rare thread will have replyNum=0, but contains reply and can be revealed by requesting
             // we choose TO crawl these rare thread's replies for archive since most thread will have replies
             // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
@@ -130,14 +130,14 @@ namespace tbm.Crawler
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
             }));
-            return savedRepliesByTid;
+            return savedRepliesKeyByTid;
         }
 
-        private async Task<int> CrawlSubReplies(SavedRepliesByTid savedRepliesByTid, Fid fid)
+        private async Task<int> CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid)
         {
-            var shouldCrawlSubReplyPid = savedRepliesByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
+            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
                 // some rare reply will have subReplyNum=0, but contains sub reply and can be revealed by requesting

@@ -2,9 +2,9 @@ namespace tbm.Crawler
 {
     public abstract class StaticCommonInSavers
     { // static field in this non generic class will be shared across all reified generic derived classes
-        private static Dictionary<Type, IEnumerable<PropertyInfo>> GetPropDictByType(List<Type> types) =>
+        private static Dictionary<Type, IEnumerable<PropertyInfo>> GetPropsKeyByType(List<Type> types) =>
             types.ToDictionary(t => t, t => t.GetProperties().AsEnumerable());
-        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = GetPropDictByType(new()
+        protected static readonly Dictionary<Type, IEnumerable<PropertyInfo>> RevisionPropertiesCache = GetPropsKeyByType(new()
             {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
 
         public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propertyName, object? originalValue, object? currentValue);

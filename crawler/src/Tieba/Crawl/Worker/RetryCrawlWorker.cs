@@ -52,16 +52,16 @@ namespace tbm.Crawler
                     {
                         await using var scope1 = _scope0.BeginLifetimeScope();
                         var db = scope1.Resolve<TbmDbContext.New>()(0);
-                        var (lockId, failedCountKeyByPage) = pair;
-                        var pages = failedCountKeyByPage.Keys;
-                        FailedCount FailedCountSelector(Page p) => failedCountKeyByPage[p];
+                        var (lockId, failedCountsKeyByPage) = pair;
+                        var pages = failedCountsKeyByPage.Keys;
+                        FailedCount FailedCountSelector(Page p) => failedCountsKeyByPage[p];
 
                         if (lockType == "thread")
                         {
                             var fid = lockId.Fid;
                             var forumName = (from f in db.ForumsInfo where f.Fid == fid select f.Name).FirstOrDefault();
                             if (forumName == null) return;
-                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", failedCountKeyByPage.Count, fid, forumName);
+                            _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid:{}, forumName:{}", failedCountsKeyByPage.Count, fid, forumName);
                             var crawler = scope1.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                             var savedThreads = await crawler.RetryThenSave(pages, FailedCountSelector);
                             if (savedThreads == null) return;
@@ -69,7 +69,7 @@ namespace tbm.Crawler
                         }
                         else if (lockType == "reply" && lockId.Tid != null)
                         {
-                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", failedCountKeyByPage.Count, lockId.Fid, lockId.Tid);
+                            _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid:{}, tid:{}", failedCountsKeyByPage.Count, lockId.Fid, lockId.Tid);
                             var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(lockId.Fid, lockId.Tid.Value);
                             var savedReplies = await crawler.RetryThenSave(pages, FailedCountSelector);
                             if (savedReplies == null) return;
@@ -77,7 +77,7 @@ namespace tbm.Crawler
                         }
                         else if (lockType == "subReply" && lockId.Tid != null && lockId.Pid != null)
                         {
-                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", failedCountKeyByPage.Count, lockId.Fid, lockId.Tid, lockId.Pid);
+                            _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid:{}, tid:{}, pid:{}", failedCountsKeyByPage.Count, lockId.Fid, lockId.Tid, lockId.Pid);
                             var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(lockId.Fid, lockId.Tid.Value, lockId.Pid.Value);
                             _ = await crawler.RetryThenSave(pages, FailedCountSelector);
                         }

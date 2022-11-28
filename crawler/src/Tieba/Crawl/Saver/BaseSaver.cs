@@ -23,13 +23,13 @@ namespace tbm.Crawler
             var dbSet = db.Set<TPost>();
             if (dbSet == null) throw new ArgumentException($"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
 
-            var existingPostsById = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
+            var existingPostsKeyById = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
             // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
-            var postsBeforeSave = existingPostsById.Select(i => (TPost)i.Value.Clone()).ToList();
+            var postsBeforeSave = existingPostsKeyById.Select(i => (TPost)i.Value.Clone()).ToList();
 
             SavePostsOrUsers(TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
-                p => existingPostsById.ContainsKey(postIdSelector(p)),
-                p => existingPostsById[postIdSelector(p)]);
+                p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
+                p => existingPostsKeyById[postIdSelector(p)]);
             var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
             db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
 
