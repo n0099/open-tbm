@@ -10,8 +10,8 @@ namespace tbm.Crawler
         public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger,
             TbmDbContext.New parentDbContextFactory, TbmDbContext.New dbContextFactory,
             ReplyCrawler.New crawler, ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
-            ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks.New> locks, Fid fid, Tid tid
-        ) : base(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"]("reply"), tid), fid)
+            ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, Tid tid
+        ) : base(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"], new (fid, tid)), fid)
         {
             _dbContextFactory = dbContextFactory;
             _tid = tid;

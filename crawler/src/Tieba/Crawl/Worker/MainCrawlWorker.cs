@@ -11,12 +11,12 @@ namespace tbm.Crawler
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
 
         public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
-            ILifetimeScope scope0, IIndex<string, CrawlerLocks.New> locks) : base(config)
+            ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks) : base(config)
         {
             _logger = logger;
             _scope0 = scope0;
             _ = SyncCrawlIntervalWithConfig();
-            // eager initial all keyed CrawlerLocks singleton instances, in order to sync its timer of WithLogTrace
+            // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
             _ = locks["thread"];
             _ = locks["threadLate"];
             _ = locks["reply"];

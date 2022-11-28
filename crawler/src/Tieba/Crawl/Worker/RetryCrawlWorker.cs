@@ -6,10 +6,10 @@ namespace tbm.Crawler
     {
         private readonly ILogger<RetryCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
-        private readonly IIndex<string, CrawlerLocks.New> _registeredLocksFactory;
+        private readonly IIndex<string, CrawlerLocks> _registeredLocksFactory;
 
         public RetryCrawlWorker(ILogger<RetryCrawlWorker> logger, IConfiguration config,
-            ILifetimeScope scope0, IIndex<string, CrawlerLocks.New> registeredLocksFactory) : base(config)
+            ILifetimeScope scope0, IIndex<string, CrawlerLocks> registeredLocksFactory) : base(config)
         {
             _logger = logger;
             _scope0 = scope0;
@@ -30,7 +30,7 @@ namespace tbm.Crawler
             {
                 foreach (var lockType in Program.RegisteredCrawlerLocks)
                 {
-                    var failed = _registeredLocksFactory[lockType](lockType).RetryAllFailed();
+                    var failed = _registeredLocksFactory[lockType].RetryAllFailed();
                     if (!failed.Any()) continue; // skip current lock type if there's nothing needs to retry
                     if (lockType == "threadLate")
                     {

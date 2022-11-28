@@ -16,7 +16,7 @@ namespace tbm.Crawler
             TbmDbContext.New dbContextFactory,
             ClientRequester requester,
             ClientRequesterTcs requesterTcs,
-            IIndex<string, CrawlerLocks.New> locks,
+            IIndex<string, CrawlerLocks> locks,
             Fid fid)
         {
             _logger = logger;
@@ -24,7 +24,7 @@ namespace tbm.Crawler
             _requester = requester;
             _fid = fid;
             _requesterTcs = requesterTcs;
-            _locks = locks["threadLate"]("threadLate");
+            _locks = locks["threadLate"];
         }
 
         public async Task Crawl(Dictionary<Tid, FailedCount> failedCountsKeyByTid)
