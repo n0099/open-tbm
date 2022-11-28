@@ -27,12 +27,13 @@ namespace tbm.Crawler
             _locks = locks["threadLate"]("threadLate");
         }
 
-        public async Task Crawl(Dictionary<Tid, FailedCount> tidAndFailedCountRecords)
+        public async Task Crawl(Dictionary<Tid, FailedCount> failedCountsKeyByTid)
         {
-            var threads = await Task.WhenAll(tidAndFailedCountRecords.Select(async pair =>
+            var threads = await Task.WhenAll(failedCountsKeyByTid.Select(async pair =>
             {
                 var (tid, failedCount) = pair;
-                if (!_locks.AcquireRange(tid, new[] {(Page)1}).Any()) return null;
+                var crawlerLockId = new CrawlerLocks.LockId(_fid, tid);
+                if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
                 try
                 {
                     var json = await _requester.RequestJson("c/f/pb/page", "8.8.8.8", new()
@@ -78,14 +79,14 @@ namespace tbm.Crawler
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})
                     {
-                        _locks.AcquireFailed(tid, 1, failedCount);
+                        _locks.AcquireFailed(crawlerLockId, 1, failedCount);
                         _requesterTcs.Decrease();
                     }
                     return null;
                 }
                 finally
                 {
-                    _locks.ReleaseRange(tid, new Page[] {1});
+                    _locks.ReleaseRange(crawlerLockId, new Page[] {1});
                 }
             }));
 

@@ -12,7 +12,7 @@ namespace tbm.Crawler
         protected readonly UserParserAndSaver Users;
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
-        private readonly FidOrPostId _lockIndex;
+        private readonly CrawlerLocks.LockId _lockId;
         protected readonly Fid Fid;
 
         protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
@@ -26,7 +26,7 @@ namespace tbm.Crawler
             Func<ConcurrentDictionary<PostId, TPost>, Fid, BaseSaver<TPost>> saverFactory,
             UserParserAndSaver users,
             ClientRequesterTcs requesterTcs,
-            (CrawlerLocks, FidOrPostId) lockAndIndex,
+            (CrawlerLocks, CrawlerLocks.LockId) lockAndId,
             Fid fid)
         {
             _logger = logger;
@@ -36,7 +36,7 @@ namespace tbm.Crawler
             _saver = saverFactory(ParsedPosts, fid);
             Users = users;
             _requesterTcs = requesterTcs;
-            (_locks, _lockIndex) = lockAndIndex;
+            (_locks, _lockId) = lockAndId;
             Fid = fid;
         }
 
@@ -45,7 +45,7 @@ namespace tbm.Crawler
         public void Dispose()
         {
             GC.SuppressFinalize(this);
-            _locks.ReleaseRange(_lockIndex, _lockingPages);
+            _locks.ReleaseRange(_lockId, _lockingPages);
         }
 
         protected virtual void ExtraSavings(TbmDbContext db) { }
@@ -74,9 +74,12 @@ namespace tbm.Crawler
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
             CrawlPageRange(Page startPage, Page endPage = Page.MaxValue)
         { // cancel when startPage is already locked
-            if (_lockingPages.Any()) throw new InvalidOperationException("CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
-            var acquiredLocks = _locks.AcquireRange(_lockIndex, new[] {startPage}).ToHashSet();
-            if (!acquiredLocks.Any()) _logger.LogInformation("Cannot crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.", startPage, endPage, _locks.PostType, _lockIndex);
+            if (_lockingPages.Any()) throw new InvalidOperationException(
+                "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+            var acquiredLocks = _locks.AcquireRange(_lockId, new[] {startPage}).ToHashSet();
+            if (!acquiredLocks.Any()) _logger.LogInformation(
+                "Cannot crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.",
+                startPage, endPage, _locks.LockType, _lockId);
             _lockingPages.UnionWith(acquiredLocks);
 
             var isStartPageCrawlFailed = await CatchCrawlException(async () =>
@@ -99,12 +102,14 @@ namespace tbm.Crawler
         private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailedCount>? previousFailedCountSelector = null)
         {
             var pagesList = pages.ToList();
-            var acquiredLocks = _locks.AcquireRange(_lockIndex, pagesList).ToList();
+            var acquiredLocks = _locks.AcquireRange(_lockId, pagesList).ToList();
             if (!acquiredLocks.Any())
             {
                 var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1]).Select(i => (Page)i).SequenceEqual(pagesList)
                     ? $"within the range [{pagesList[0]}-{pagesList[^1]}]" : JsonSerializer.Serialize(pagesList);
-                _logger.LogInformation("Cannot crawl any page within {} for lock type {}, index {} since they've already been locked.", pagesText, _locks.PostType, _lockIndex);
+                _logger.LogInformation(
+                    "Cannot crawl any page within {} for lock type {}, index {} since they've already been locked.",
+                    pagesText, _locks.LockType, _lockId);
             }
             _lockingPages.UnionWith(acquiredLocks);
 
@@ -144,7 +149,7 @@ namespace tbm.Crawler
 
                 if (e is not TiebaException {ShouldRetry: false})
                 {
-                    _locks.AcquireFailed(_lockIndex, page, (FailedCount)(previousFailedCount + 1));
+                    _locks.AcquireFailed(_lockId, page, (FailedCount)(previousFailedCount + 1));
                     _requesterTcs.Decrease();
                 }
                 return true;
