@@ -10,13 +10,9 @@ namespace tbm.Crawler
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts) : base(logger) => Posts = posts;
 
-        protected SaverChangeSet<TPost> SavePosts<TRevision>(
-            TbmDbContext db,
+        protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
+            Func<TPost, ulong> postIdSelector,
             ExpressionStarter<TPost> postsPredicate,
-            ExpressionStarter<PostIndex> indexPredicate,
-            Func<TPost, PostId> postIdSelector,
-            Expression<Func<PostIndex, PostId>> indexPostIdSelector,
-            Func<TPost, PostIndex> indexFactory,
             Func<TPost, TRevision> revisionFactory)
             where TRevision : BaseRevision
         {
@@ -30,8 +26,6 @@ namespace tbm.Crawler
             SavePostsOrUsers(TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
                 p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
                 p => existingPostsKeyById[postIdSelector(p)]);
-            var existingIndexPostId = db.PostsIndex.Where(indexPredicate).Select(indexPostIdSelector);
-            db.AddRange(Posts.GetValuesByKeys(Posts.Keys.Except(existingIndexPostId)).Select(indexFactory));
 
             return new(postsBeforeSave, Posts.Values, postIdSelector);
         }

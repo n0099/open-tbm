@@ -14,7 +14,6 @@ namespace tbm.Crawler
         public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
         public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
-        public DbSet<PostIndex> PostsIndex => Set<PostIndex>();
         public DbSet<ForumInfo> ForumsInfo => Set<ForumInfo>();
 
         public delegate TbmDbContext New(Fid fid);
@@ -40,7 +39,6 @@ namespace tbm.Crawler
             b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new {e.Pid, e.Time});
             b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new {e.Spid, e.Time});
             b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new {e.Uid, e.Time});
-            b.Entity<PostIndex>().ToTable("tbm_postsIndex").HasIndex(e => new {e.Tid, e.Pid, e.Spid}).IsUnique();
             b.Entity<ForumInfo>().ToTable("tbm_forumsInfo");
         }
 

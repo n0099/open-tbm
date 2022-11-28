@@ -34,12 +34,8 @@ namespace tbm.Crawler
         public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid)
             : base(logger, posts) => _fid = fid;
 
-        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
-                PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)),
-                PredicateBuilder.New<PostIndex>(pi => pi.Type == "thread" && Posts.Keys.Contains(pi.Tid)),
-                t => t.Tid,
-                pi => pi.Tid,
-                t => new() {Type = "thread", Fid = _fid, Tid = t.Tid, PostTime = t.PostTime},
-                t => new ThreadRevision {Time = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid});
+        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, t => t.Tid,
+            PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)),
+            t => new ThreadRevision {Time = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid});
     }
 }
