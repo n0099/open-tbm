@@ -17,7 +17,7 @@ namespace tbm.Crawler
             _tid = tid;
         }
 
-        protected override void PostParseCallback(ReplyResponse response, CrawlRequestFlag flag)
+        protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag)
         {
             var data = response.Data;
             if (data.Page.CurrentPage == 1)
@@ -42,7 +42,7 @@ namespace tbm.Crawler
             if (!users.Any()) return;
             Users.ParseUsers(users);
 
-            ParsedPosts.Values.IntersectBy(data.PostList.Select(r => r.Pid), r => r.Pid).ForEach(r =>
+            ParsedPosts.Values.IntersectBy(data.PostList.Select(r => r.Pid), r => r.Pid).ForEach(r => // only mutate posts which occurs in current response
             { // fill the values for some field of reply from user list which is out of post list
                 var author = users.First(u => u.Uid == r.AuthorUid);
                 r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator

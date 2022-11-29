@@ -102,7 +102,7 @@ namespace tbm.Crawler
             }
         }
 
-        public void PostSaveCallback()
+        public void PostSaveHook()
         {
             lock (UsersIdLock) if (_savedUsersId.Any()) UsersIdLock.ExceptWith(_savedUsersId);
         }

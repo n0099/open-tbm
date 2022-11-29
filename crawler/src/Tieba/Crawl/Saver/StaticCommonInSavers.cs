@@ -25,7 +25,7 @@ namespace tbm.Crawler
                         // possible randomly response with null
                         case nameof(ThreadPost.Geolocation) when currentValue is null:
                         // empty string means the author had not write a title
-                        // its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.PostParseCallback()
+                        // its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.PostParseHook()
                         case nameof(ThreadPost.Title) when currentValue is ""
                             // prevent repeatedly update with different title due to the thread is a multi forum topic thread thus its title can be vary within the forum and within the thread
                                                            || (currentValue is not "" && originalValue is not ""):
@@ -55,7 +55,7 @@ namespace tbm.Crawler
                 {
                     switch (propertyName)
                     {
-                        // empty string from response has been updated by ReplyCrawlFacade.PostParseCallback()
+                        // empty string from response has been updated by ReplyCrawlFacade.PostParseHook()
                         case nameof(ThreadPost.Title) when originalValue is "":
                         // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
                         case nameof(ThreadPost.LatestReplierUid) when originalValue is null:

@@ -48,16 +48,16 @@ namespace tbm.Crawler
             _locks.ReleaseRange(_lockId, _lockingPages);
         }
 
-        protected virtual void ExtraSavings(TbmDbContext db) { }
+        protected virtual void BeforeCommitSaveHook(TbmDbContext db) { }
 
-        public SaverChangeSet<TPost>? SaveAll()
+        public SaverChangeSet<TPost>? SaveCrawled()
         {
             var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
             Users.SaveUsers(db, _saver);
-            ExtraSavings(db);
+            BeforeCommitSaveHook(db);
             try
             {
                 _ = db.SaveChangesWithTimestamping();
@@ -65,8 +65,8 @@ namespace tbm.Crawler
             }
             finally
             {
-                _saver.PostSaveCallback();
-                Users.PostSaveCallback();
+                _saver.PostSaveHook();
+                Users.PostSaveHook();
             }
             return savedPosts;
         }
@@ -78,7 +78,7 @@ namespace tbm.Crawler
                 "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             var acquiredLocks = _locks.AcquireRange(_lockId, new[] {startPage}).ToHashSet();
             if (!acquiredLocks.Any()) _logger.LogInformation(
-                "Cannot crawl any page within the range [{}-{}] for lock type {}, index {} since they've already been locked.",
+                "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked.",
                 startPage, endPage, _locks.LockType, _lockId);
             _lockingPages.UnionWith(acquiredLocks);
 
@@ -108,7 +108,7 @@ namespace tbm.Crawler
                 var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1]).Select(i => (Page)i).SequenceEqual(pagesList)
                     ? $"within the range [{pagesList[0]}-{pagesList[^1]}]" : JsonSerializer.Serialize(pagesList);
                 _logger.LogInformation(
-                    "Cannot crawl any page within {} for lock type {}, index {} since they've already been locked.",
+                    "Cannot crawl any page within {} for lock type {}, id {} since they've already been locked.",
                     pagesText, _locks.LockType, _lockId);
             }
             _lockingPages.UnionWith(acquiredLocks);
@@ -123,7 +123,7 @@ namespace tbm.Crawler
         {
             if (_lockingPages.Any()) throw new InvalidOperationException("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             await CrawlPages(pages, failedCountSelector);
-            return SaveAll();
+            return SaveCrawled();
         }
 
         private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailedCount previousFailedCount)
@@ -168,10 +168,10 @@ namespace tbm.Crawler
             }
             finally
             {
-                PostParseCallback(response, flag);
+                PostParseHook(response, flag);
             }
         }
 
-        protected virtual void PostParseCallback(TResponse response, CrawlRequestFlag flag) { }
+        protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
     }
 }

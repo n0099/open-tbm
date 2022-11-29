@@ -88,7 +88,7 @@ namespace tbm.Crawler
             return changeSet;
         }
 
-        public override void PostSaveCallback()
+        public override void PostSaveHook()
         {
             if (_savedSignatures != null) lock (SignaturesLock) SignaturesLock.ExceptWith(_savedSignatures);
         }

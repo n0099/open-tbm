@@ -10,8 +10,8 @@ namespace tbm.Crawler
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, string forumName
         ) : base(logger, dbContextFactory, crawler(forumName), parser, saver.Invoke, users, requesterTcs, (locks["thread"], new (fid)), fid) { }
 
-        protected override void ExtraSavings(TbmDbContext db)
-        { // ExtraSavings() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveAll()
+        protected override void BeforeCommitSaveHook(TbmDbContext db)
+        { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
             // so only users that not exists in parsed users is being inserted
             // note this will bypass user revision detection since its not invoking CommonInSavers.SavePostsOrUsers()
             var existingUsersId = (from u in db.Users where _latestRepliers.Keys.Any(uid => uid == u.Uid) select u.Uid).ToHashSet();
@@ -33,7 +33,7 @@ namespace tbm.Crawler
                 LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
                 .ForEach(u => _latestRepliers[u.Uid] = u);
 
-        protected override void PostParseCallback(ThreadResponse response, CrawlRequestFlag flag)
+        protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
             var data = response.Data;
             if (flag == CrawlRequestFlag.Thread602ClientVersion)
@@ -45,7 +45,7 @@ namespace tbm.Crawler
             if (!users.Any()) return;
             Users.ParseUsers(users);
 
-            ParsedPosts.Values.IntersectBy(data.ThreadList.Select(t => (Tid)t.Tid), t => t.Tid)
+            ParsedPosts.Values.IntersectBy(data.ThreadList.Select(t => (Tid)t.Tid), t => t.Tid) // only mutate posts which occurs in current response
                 .Where(t => t.StickyType == null).ForEach(t =>
                     // fill the values of author manager type from the external user list
                     t.AuthorManagerType = users.First(u => u.Uid == t.AuthorUid).BawuType.NullIfWhiteSpace());

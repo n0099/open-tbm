@@ -106,7 +106,7 @@ namespace tbm.Crawler
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var crawler = scope1.Resolve<ThreadArchiveCrawlFacade.New>()(fid, forumName);
-            var savedThreads = (await crawler.CrawlPageRange(page, page)).SaveAll();
+            var savedThreads = (await crawler.CrawlPageRange(page, page)).SaveCrawled();
             if (savedThreads != null)
             {
                 await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
@@ -130,7 +130,7 @@ namespace tbm.Crawler
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveAll());
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveCrawled());
             }));
             return savedRepliesKeyByTid;
         }
@@ -152,7 +152,7 @@ namespace tbm.Crawler
             {
                 var (tid, pid) = tidAndPid;
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveAll();
+                var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveCrawled();
                 if (saved == null) return;
                 _ = Interlocked.Add(ref savedSubRepliesCount, saved.AllAfter.Count);
             }));

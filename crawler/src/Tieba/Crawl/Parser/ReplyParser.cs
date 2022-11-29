@@ -28,7 +28,7 @@ namespace tbm.Crawler
                 });
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
-                // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseCallback()
+                // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
                 p.SubReplyNum = el.SubPostNumber.NullIfZero();
                 p.PostTime = el.Time;
                 p.IsFold = (ushort?)el.IsFold.NullIfZero();

@@ -32,7 +32,7 @@ namespace tbm.Crawler
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
                 p.AuthorUid = el.AuthorId;
-                // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseCallback()
+                // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseHook()
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
                 // value of LatestReplierUid will be write back from the response of client version 6.0.2 by TrySkipParse()

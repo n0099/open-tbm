@@ -9,7 +9,7 @@ namespace tbm.Crawler
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, uint fid, string forumName
         ) : base(logger, dbContextFactory, crawler.Invoke, parser, saver, users, requesterTcs, locks, fid, forumName) { }
 
-        protected override void PostParseCallback(ThreadResponse response, CrawlRequestFlag flag)
+        protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
             // the second response with flag is as same as the first one so just skip it
             if (flag == CrawlRequestFlag.Thread602ClientVersion) return;
