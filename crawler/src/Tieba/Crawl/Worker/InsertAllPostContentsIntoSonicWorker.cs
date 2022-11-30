@@ -61,11 +61,16 @@ namespace tbm.Crawler
             foreach (var fid in from f in scope1.Resolve<TbmDbContext.New>()(0).ForumsInfo select f.Fid)
             {
                 var dbWithFid = scope1.Resolve<TbmDbContext.New>()(fid);
-                _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}f{fid}", "replies");
-                PushPostContents(fid, "replies", dbWithFid.ReplyContents.AsNoTracking(),
+                _ = await dbWithFid.Database.ExecuteSqlRawAsync(
+                    "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
+                _logger.LogInformation("Flushed {} {}' content of fid {} in sonic",
+                    _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}f{fid}", "replies"), "replies", fid);
+                PushPostContents(fid, "replies", dbWithFid.ReplyContents.Count(), dbWithFid.ReplyContents.AsNoTracking(),
                     r => _pusher.PushPost(fid, "replies", r.Pid, r.Content));
-                _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}f{fid}", "subReplies");
-                PushPostContents(fid, "sub replies", dbWithFid.SubReplyContents.AsNoTracking(),
+
+                _logger.LogInformation("Flushed {} {}' content of fid {} in sonic",
+                    _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}f{fid}", "subReplies"), "sub replies", fid);
+                PushPostContents(fid, "sub replies", dbWithFid.SubReplyContents.Count(), dbWithFid.SubReplyContents.AsNoTracking(),
                     sr => _pusher.PushPost(fid, "subReplies", sr.Spid, sr.Content));
             }
             NSonicFactory.Control(
@@ -75,21 +80,33 @@ namespace tbm.Crawler
             ).Trigger("consolidate");
         }
 
-        private void PushPostContents<T>(uint fid, string postTypeInLog, IEnumerable<T> postContents, Action<T> pushCallback)
+        private void PushPostContents<T>(uint fid, string postTypeInLog, int postsTotalCount, IEnumerable<T> postContents, Action<T> pushCallback)
         {
             var stopWatch = new Stopwatch();
             var stopWatchPushing = new Stopwatch();
             _logger.LogInformation("Pushing all historical {}' content into sonic for fid {} started", postTypeInLog, fid);
             stopWatch.Start();
-            var pushedStats = postContents.Aggregate((Count: 0, AvgTime: 0f), (acc, post) =>
+            var pushedStats = postContents.Aggregate((Count: 0, CumulativeAvg: 0f), (acc, post) =>
             {
                 stopWatchPushing.Restart();
                 pushCallback(post);
-                return (acc.Count + 1, acc.AvgTime + (1f / stopWatchPushing.ElapsedMilliseconds)); // harmonic mean
+                var elapsedMs = stopWatchPushing.ElapsedMilliseconds;
+                if (elapsedMs > 500) _logger.LogWarning("Pushing a single {}' content into sonic for fid {} spending {}ms", postTypeInLog, fid, elapsedMs);
+                var finishedCount = acc.Count + 1;
+                var ca = ArchiveCrawlWorker.CalcCumulativeAverage(elapsedMs, acc.CumulativeAvg, finishedCount);
+                if (finishedCount % 1000 == 0)
+                {
+                    var etaDateTime = DateTime.Now.Add(TimeSpan.FromMilliseconds((postsTotalCount - finishedCount) * ca));
+                    var etaRelative = etaDateTime.Humanize();
+                    var etaAt = etaDateTime.ToString("MM-dd HH:mm:ss");
+                    _logger.LogInformation("Pushing progress: {}/{} cumulativeAvg={:F2}ms ETA={} {}",
+                        finishedCount, postsTotalCount, ca, etaRelative, etaAt);
+                    Console.Title = $"Pushing progress: {finishedCount}/{postsTotalCount} ETA: {etaRelative} {etaAt}";
+                }
+                return (finishedCount, ca); // harmonic mean
             });
-            pushedStats.AvgTime /= pushedStats.Count;
-            _logger.LogInformation("Pushing {} historical {}' content into sonic for fid {} finished after {} ({}ms)",
-                pushedStats.Count, postTypeInLog, fid, stopWatch.Elapsed.Humanize(), stopWatch.ElapsedMilliseconds);
+            _logger.LogInformation("Pushing {} historical {}' content into sonic for fid {} finished after {} (total={}ms, cumulativeAvg={}ms)",
+                pushedStats.Count, postTypeInLog, fid, stopWatch.Elapsed.Humanize(), stopWatch.ElapsedMilliseconds, pushedStats.CumulativeAvg);
         }
     }
 }

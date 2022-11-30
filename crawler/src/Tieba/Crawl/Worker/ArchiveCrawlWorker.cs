@@ -13,20 +13,22 @@ namespace tbm.Crawler
         private readonly ILifetimeScope _scope0;
         private readonly string _forumName = "";
         private readonly Fid _fid = 0;
+
         public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0)
         {
             _logger = logger;
             _scope0 = scope0;
         }
 
+        public static float CalcCumulativeAverage(float current, float previousCa, int currentCount) =>
+            (current + ((currentCount - 1) * previousCa)) / currentCount; // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
-                var averageElapsed = 0f;
+                var averageElapsed = 0f; // in seconds
                 var finishedPageCount = 0;
-                float CalcCumulativeAverage(float current, float previous, int currentCount) =>
-                    (current + ((currentCount - 1) * previous)) / currentCount; // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
                 var totalSavedThreadsCount = 0;
                 var totalSavedRepliesCount = 0;
                 var totalSavedSubRepliesCount = 0;
@@ -68,7 +70,7 @@ namespace tbm.Crawler
                             savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.ElapsedMilliseconds / 1000f);
                         _ = Interlocked.Add(ref totalSavedSubRepliesCount, savedSubRepliesCount);
 
-                        var intervalBetweenPage = stopWatchPageInterval.ElapsedMilliseconds / 1000f;
+                        var intervalBetweenPage = stopWatchPageInterval.ElapsedMilliseconds / 1000f; // in seconds
                         stopWatchPageInterval.Restart();
                         _ = Interlocked.CompareExchange(ref averageElapsed, intervalBetweenPage, 0); // first run
                         _ = Interlocked.Increment(ref finishedPageCount);
@@ -77,7 +79,7 @@ namespace tbm.Crawler
                         var etaDateTime = DateTime.Now.Add(TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca));
                         var etaRelative = etaDateTime.Humanize();
                         var etaAt = etaDateTime.ToString("MM-dd HH:mm");
-                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={}({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s avgInterval={:F2}s ETA={} {}",
+                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={}({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA={} {}",
                             finishedPageCount, totalPage,
                             totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
                             totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount,
