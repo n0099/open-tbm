@@ -85,7 +85,7 @@ namespace tbm.Crawler
                         Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} {etaAt}";
                     });
                 }
-                _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished.",
+                _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
                     totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
                     totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount, totalPage, _forumName);
             }

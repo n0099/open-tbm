@@ -7,11 +7,11 @@ namespace tbm.Crawler
         private readonly ConcurrentQueue<TaskCompletionSource> _queue = new();
         private readonly Timer _timer = new() {Enabled = true};
         private double _maxRps;
-        private readonly Stopwatch _stopwatch = new();
+        private readonly Stopwatch _stopWatch = new();
         private int _requestCounter;
 
         private int QueueLength => _queue.Count;
-        private float AverageRps => (float)_requestCounter / _stopwatch.ElapsedMilliseconds * 1000;
+        private float AverageRps => (float)_requestCounter / _stopWatch.ElapsedMilliseconds * 1000;
         private double MaxRps
         {
             get => _maxRps;
@@ -33,7 +33,7 @@ namespace tbm.Crawler
             _config = config.GetSection("ClientRequesterTcs");
             InitLogTrace(_config);
             MaxRps = _config.GetValue("InitialRps", 15);
-            _stopwatch.Start();
+            _stopWatch.Start();
 
             _timer.Elapsed += (_, _) =>
             {
@@ -45,7 +45,7 @@ namespace tbm.Crawler
         {
             if (!ShouldLogTrace()) return;
             _logger.LogTrace("TCS: queueLen={} maxLimitRps={:F2} avgRps={:F2} elapsed={:F1}s",
-                QueueLength, MaxRps, AverageRps, _stopwatch.ElapsedMilliseconds / 1000f);
+                QueueLength, MaxRps, AverageRps, _stopWatch.ElapsedMilliseconds / 1000f);
             if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
         }
 
@@ -67,7 +67,7 @@ namespace tbm.Crawler
         private void ResetAverageRps()
         {
             _ = Interlocked.Exchange(ref _requestCounter, 0);
-            _stopwatch.Restart();
+            _stopWatch.Restart();
         }
     }
 }

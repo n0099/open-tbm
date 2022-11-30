@@ -1,3 +1,4 @@
+using Humanizer;
 using NSonic;
 
 namespace tbm.Crawler
@@ -39,11 +40,13 @@ namespace tbm.Crawler
             }
         }
 
+        private readonly ILogger<InsertAllPostContentsIntoSonicWorker> _logger;
         private readonly ILifetimeScope _scope0;
         private readonly SonicPusher _pusher;
 
-        public InsertAllPostContentsIntoSonicWorker(ILifetimeScope scope0, SonicPusher pusher)
+        public InsertAllPostContentsIntoSonicWorker(ILogger<InsertAllPostContentsIntoSonicWorker> logger, ILifetimeScope scope0, SonicPusher pusher)
         {
+            _logger = logger;
             _scope0 = scope0;
             _pusher = pusher;
         }
@@ -51,12 +54,29 @@ namespace tbm.Crawler
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
-            foreach (var fid in from f in scope1.Resolve<TbmDbContext>().ForumsInfo select f.Fid)
+            foreach (var fid in from f in scope1.Resolve<TbmDbContext.New>()(0).ForumsInfo select f.Fid)
             {
                 var dbWithFid = scope1.Resolve<TbmDbContext.New>()(fid);
-                dbWithFid.ReplyContents.ForEach(r => _pusher.PushPost(fid, "replies", r.Pid, r.Content));
-                dbWithFid.SubReplyContents.ForEach(sr => _pusher.PushPost(fid, "subReplies", sr.Spid, sr.Content));
+                PushPostContents(fid, "replies", dbWithFid.ReplyContents, r => _pusher.PushPost(fid, "replies", r.Pid, r.Content));
+                PushPostContents(fid, "sub replies", dbWithFid.SubReplyContents, sr => _pusher.PushPost(fid, "replies", sr.Spid, sr.Content));
             }
+        }
+
+        private void PushPostContents<T>(uint fid, string postTypeInLog, IEnumerable<T> postContents, Action<T> pushCallback)
+        {
+            var stopWatch = new Stopwatch();
+            var stopWatchPushing = new Stopwatch();
+            _logger.LogInformation("Pushing all historical {} content for fid {} started", postTypeInLog, fid);
+            stopWatch.Start();
+            var pushedStats = postContents.Aggregate((Count: 0, AvgTime: 0f), (acc, post) =>
+            {
+                stopWatchPushing.Restart();
+                pushCallback(post);
+                return (acc.Count + 1, acc.AvgTime + (1f / stopWatchPushing.ElapsedMilliseconds)); // harmonic mean
+            });
+            pushedStats.AvgTime /= pushedStats.Count;
+            _logger.LogInformation("Pushing {} historical {} content for fid {} finished after {} ({}ms)",
+                pushedStats.Count, postTypeInLog, fid, stopWatch.Elapsed.Humanize(), stopWatch.ElapsedMilliseconds);
         }
     }
 }

@@ -80,7 +80,7 @@ namespace tbm.Crawler
                 "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             var acquiredLocks = _locks.AcquireRange(_lockId, new[] {startPage}).ToHashSet();
             if (!acquiredLocks.Any()) _logger.LogInformation(
-                "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked.",
+                "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked",
                 startPage, endPage, _locks.LockType, _lockId);
             _lockingPages.UnionWith(acquiredLocks);
 
@@ -110,7 +110,7 @@ namespace tbm.Crawler
                 var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1]).Select(i => (Page)i).SequenceEqual(pagesList)
                     ? $"within the range [{pagesList[0]}-{pagesList[^1]}]" : JsonSerializer.Serialize(pagesList);
                 _logger.LogInformation(
-                    "Cannot crawl any page within {} for lock type {}, id {} since they've already been locked.",
+                    "Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
                     pagesText, _locks.LockType, _lockId);
             }
             _lockingPages.UnionWith(acquiredLocks);
