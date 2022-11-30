@@ -35,12 +35,10 @@ namespace tbm.Crawler
         }
         private static readonly HashSet<UniqueSignature> SignaturesLock = new();
         private IEnumerable<UniqueSignature>? _savedSignatures;
-        private readonly Fid _fid;
 
-        public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts, Fid fid);
+        public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-        public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<PostId, ReplyPost> posts, Fid fid)
-            : base(logger, posts) => _fid = fid;
+        public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<PostId, ReplyPost> posts) : base(logger, posts) { }
 
         public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
         {

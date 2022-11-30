@@ -27,12 +27,9 @@ namespace tbm.Crawler
             {nameof(ThreadPost.Geolocation),       1 << 10}
         };
 
-        private readonly Fid _fid;
+        public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-        public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid);
-
-        public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts, Fid fid)
-            : base(logger, posts) => _fid = fid;
+        public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts) : base(logger, posts) { }
 
         public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, t => t.Tid,
             PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)),

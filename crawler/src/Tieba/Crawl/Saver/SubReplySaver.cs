@@ -19,12 +19,9 @@ namespace tbm.Crawler
             {nameof(SubReplyPost.DisagreeNum),       1 << 2}
         };
 
-        private readonly Fid _fid;
+        public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-        public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts, Fid fid);
-
-        public SubReplySaver(ILogger<SubReplySaver> logger, ConcurrentDictionary<PostId, SubReplyPost> posts, Fid fid)
-            : base(logger, posts) => _fid = fid;
+        public SubReplySaver(ILogger<SubReplySaver> logger, ConcurrentDictionary<PostId, SubReplyPost> posts) : base(logger, posts) { }
 
         public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
         {

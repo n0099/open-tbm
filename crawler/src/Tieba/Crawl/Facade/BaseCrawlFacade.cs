@@ -23,7 +23,7 @@ namespace tbm.Crawler
             TbmDbContext.New dbContextFactory,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
             BaseParser<TPost, TPostProtoBuf> parser,
-            Func<ConcurrentDictionary<PostId, TPost>, Fid, BaseSaver<TPost>> saverFactory,
+            Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost>> saverFactory,
             UserParserAndSaver users,
             ClientRequesterTcs requesterTcs,
             (CrawlerLocks, CrawlerLocks.LockId) lockAndId,
@@ -33,7 +33,7 @@ namespace tbm.Crawler
             _dbContextFactory = dbContextFactory;
             _crawler = crawler;
             _parser = parser;
-            _saver = saverFactory(ParsedPosts, fid);
+            _saver = saverFactory(ParsedPosts);
             Users = users;
             _requesterTcs = requesterTcs;
             (_locks, _lockId) = lockAndId;
