@@ -49,6 +49,7 @@ namespace tbm.Crawler
         }
 
         protected virtual void BeforeCommitSaveHook(TbmDbContext db) { }
+        protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts) { }
 
         public SaverChangeSet<TPost>? SaveCrawled()
         {
@@ -62,6 +63,7 @@ namespace tbm.Crawler
             {
                 _ = db.SaveChangesWithTimestamping();
                 transaction.Commit();
+                if (savedPosts != null) PostCommitSaveHook(savedPosts);
             }
             finally
             {

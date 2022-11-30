@@ -49,6 +49,7 @@ namespace tbm.Crawler
                         builder.RegisterType<UserParserAndSaver>();
                         builder.RegisterType<ThreadLateCrawlerAndSaver>();
                         builder.RegisterType<ThreadArchiveCrawler>();
+                        builder.RegisterType<InsertAllPostContentsIntoSonicWorker.SonicPusher>();
 
                         var baseClassOfClassesToBeRegister = new List<Type>
                         {
