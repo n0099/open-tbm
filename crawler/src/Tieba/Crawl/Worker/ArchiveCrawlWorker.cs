@@ -1,4 +1,5 @@
 using Humanizer;
+using Humanizer.Localisation;
 
 namespace tbm.Crawler
 {
@@ -44,28 +45,32 @@ namespace tbm.Crawler
                         stopWatchTotal.Start();
                         var stopWatch = new Stopwatch();
                         stopWatch.Start();
-                        float GetElapsedMsThenRestart()
+                        string GetHumanizedElapsedTimeThenRestart()
                         {
-                            var ret = stopWatch.ElapsedMilliseconds / 1000f;
+                            var ret = stopWatch.Elapsed.Humanize(minUnit: TimeUnit.Second);
                             stopWatch.Restart();
                             return ret;
                         }
+
+                        if (cancellationToken.IsCancellationRequested) return;
                         var savedThreads = await CrawlThreads((Page)page, _forumName, _fid);
                         if (savedThreads == null) return;
                         var savedThreadsCount = savedThreads.AllAfter.Count;
                         _logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
-                            savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                            savedThreadsCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
                         _ = Interlocked.Add(ref totalSavedThreadsCount, savedThreadsCount);
 
+                        if (cancellationToken.IsCancellationRequested) return;
                         var savedReplies = await CrawlReplies(savedThreads, _fid);
                         var savedRepliesCount = savedReplies.Select(i => i.Value.AllAfter.Count).Sum();
                         _logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
-                            savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                            savedRepliesCount, savedThreadsCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
                         _ = Interlocked.Add(ref totalSavedRepliesCount, savedRepliesCount);
 
+                        if (cancellationToken.IsCancellationRequested) return;
                         var savedSubRepliesCount = await CrawlSubReplies(savedReplies, _fid);
                         _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
-                            savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
+                            savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
                         _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
                             savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.Elapsed.TotalSeconds);
                         _ = Interlocked.Add(ref totalSavedSubRepliesCount, savedSubRepliesCount);
@@ -76,15 +81,16 @@ namespace tbm.Crawler
                         _ = Interlocked.Increment(ref finishedPageCount);
                         var ca = CalcCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPageCount);
                         _ = Interlocked.Exchange(ref averageElapsed, ca);
-                        var etaDateTime = DateTime.Now.Add(TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca));
-                        var etaRelative = etaDateTime.Humanize();
-                        var etaAt = etaDateTime.ToString("MM-dd HH:mm");
-                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={}({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA={} {}",
+
+                        var etaTimeSpan = TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca);
+                        var etaRelative = etaTimeSpan.Humanize(precision: 5, minUnit: TimeUnit.Second);
+                        var etaAt = DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm");
+                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={}({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA={}@{}",
                             finishedPageCount, totalPage,
                             totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
                             totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount,
                             intervalBetweenPage, ca, etaRelative, etaAt);
-                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} {etaAt}";
+                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative}@{etaAt}";
                     });
                 }
                 _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
