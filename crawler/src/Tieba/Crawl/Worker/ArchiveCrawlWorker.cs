@@ -67,10 +67,10 @@ namespace tbm.Crawler
                         _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                             savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetElapsedMsThenRestart());
                         _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
-                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.ElapsedMilliseconds / 1000f);
+                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.Elapsed.TotalSeconds);
                         _ = Interlocked.Add(ref totalSavedSubRepliesCount, savedSubRepliesCount);
 
-                        var intervalBetweenPage = stopWatchPageInterval.ElapsedMilliseconds / 1000f; // in seconds
+                        var intervalBetweenPage = (float)stopWatchPageInterval.Elapsed.TotalSeconds;
                         stopWatchPageInterval.Restart();
                         _ = Interlocked.CompareExchange(ref averageElapsed, intervalBetweenPage, 0); // first run
                         _ = Interlocked.Increment(ref finishedPageCount);

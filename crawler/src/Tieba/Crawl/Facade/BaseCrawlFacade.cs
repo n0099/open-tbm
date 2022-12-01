@@ -109,8 +109,7 @@ namespace tbm.Crawler
             {
                 var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1]).Select(i => (Page)i).SequenceEqual(pagesList)
                     ? $"within the range [{pagesList[0]}-{pagesList[^1]}]" : JsonSerializer.Serialize(pagesList);
-                _logger.LogInformation(
-                    "Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
+                _logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
                     pagesText, _locks.LockType, _lockId);
             }
             _lockingPages.UnionWith(acquiredLocks);

@@ -11,7 +11,7 @@ namespace tbm.Crawler
         private int _requestCounter;
 
         private int QueueLength => _queue.Count;
-        private float AverageRps => (float)_requestCounter / _stopWatch.ElapsedMilliseconds * 1000;
+        private float AverageRps => _requestCounter / (float)_stopWatch.Elapsed.TotalSeconds;
         private double MaxRps
         {
             get => _maxRps;
@@ -45,7 +45,7 @@ namespace tbm.Crawler
         {
             if (!ShouldLogTrace()) return;
             _logger.LogTrace("TCS: queueLen={} maxLimitRps={:F2} avgRps={:F2} elapsed={:F1}s",
-                QueueLength, MaxRps, AverageRps, _stopWatch.ElapsedMilliseconds / 1000f);
+                QueueLength, MaxRps, AverageRps, _stopWatch.Elapsed.TotalSeconds);
             if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
         }
 

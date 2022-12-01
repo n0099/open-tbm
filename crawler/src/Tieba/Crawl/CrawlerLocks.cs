@@ -71,7 +71,8 @@ namespace tbm.Crawler
             {
                 if (!_crawling.TryGetValue(lockId, out var pagesLock))
                 {
-                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once", pages, LockType, lockId);
+                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once",
+                        pages, LockType, lockId);
                     return;
                 }
                 lock (pagesLock)
@@ -87,7 +88,8 @@ namespace tbm.Crawler
             var maxRetry = _config.GetValue<FailedCount>("MaxRetryTimes", 5);
             if (failedCount >= maxRetry)
             {
-                _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}", page, LockType, lockId, maxRetry);
+                _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}",
+                    page, LockType, lockId, maxRetry);
                 return;
             }
             lock (_failed)
