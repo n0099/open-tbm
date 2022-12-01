@@ -73,7 +73,7 @@ namespace tbm.Crawler
                             var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(lockId.Fid, lockId.Tid.Value);
                             var savedReplies = await crawler.RetryThenSave(pages, FailedCountSelector);
                             if (savedReplies == null) return;
-                            await CrawlSubReplies(new Dictionary<ulong, SaverChangeSet<ReplyPost>> {{lockId.Tid.Value, savedReplies}}, lockId.Fid, scope1);
+                            await CrawlSubReplies(new Dictionary<PostId, SaverChangeSet<ReplyPost>> {{lockId.Tid.Value, savedReplies}}, lockId.Fid, scope1);
                         }
                         else if (lockType == "subReply" && lockId.Tid != null && lockId.Pid != null)
                         {

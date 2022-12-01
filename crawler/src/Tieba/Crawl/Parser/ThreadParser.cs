@@ -2,9 +2,9 @@ namespace tbm.Crawler
 {
     public class ThreadParser : BaseParser<ThreadPost, Thread>
     {
-        protected override ulong PostIdSelector(ThreadPost post) => post.Tid;
+        protected override PostId PostIdSelector(ThreadPost post) => post.Tid;
 
-        protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<ulong, ThreadPost> outPosts)
+        protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<PostId, ThreadPost> outPosts)
         {
             if (requestFlag != CrawlRequestFlag.Thread602ClientVersion) return false;
             var posts = outPosts.Values;

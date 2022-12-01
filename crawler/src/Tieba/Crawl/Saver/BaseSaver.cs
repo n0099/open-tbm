@@ -11,7 +11,7 @@ namespace tbm.Crawler
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts) : base(logger) => Posts = posts;
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
-            Func<TPost, ulong> postIdSelector,
+            Func<TPost, PostId> postIdSelector,
             ExpressionStarter<TPost> postsPredicate,
             Func<TPost, TRevision> revisionFactory)
             where TRevision : BaseRevision

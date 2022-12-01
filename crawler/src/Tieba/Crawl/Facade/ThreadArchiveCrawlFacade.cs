@@ -6,7 +6,7 @@ namespace tbm.Crawler
 
         public ThreadArchiveCrawlFacade(ILogger<ThreadCrawlFacade> logger, TbmDbContext.New dbContextFactory,
             ThreadArchiveCrawler.New crawler, ThreadParser parser, ThreadSaver.New saver, UserParserAndSaver users,
-            ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, uint fid, string forumName
+            ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, string forumName
         ) : base(logger, dbContextFactory, crawler.Invoke, parser, saver, users, requesterTcs, locks, fid, forumName) { }
 
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)

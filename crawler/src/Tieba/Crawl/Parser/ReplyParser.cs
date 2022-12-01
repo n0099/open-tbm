@@ -5,7 +5,7 @@ namespace tbm.Crawler
     public class ReplyParser : BaseParser<ReplyPost, Reply>
     {
         private static readonly Regex ImgUrlExtractingRegex = new(@"^https?://(tiebapic|imgsrc)\.baidu\.com/forum/pic/item/(?<hash>.*?)\.jpg(\?.*)*$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
-        protected override ulong PostIdSelector(ReplyPost post) => post.Pid;
+        protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
         protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) => inPosts.Select(Convert);
 

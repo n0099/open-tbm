@@ -2,7 +2,7 @@ namespace tbm.Crawler
 {
     public class SubReplyParser : BaseParser<SubReplyPost, SubReply>
     {
-        protected override ulong PostIdSelector(SubReplyPost post) => post.Spid;
+        protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
 
         protected override IEnumerable<SubReplyPost> ParsePostsInternal(IEnumerable<SubReply> inPosts, List<User> outUsers) =>
             inPosts.Select(el =>
