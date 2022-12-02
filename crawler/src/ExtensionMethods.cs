@@ -120,5 +120,9 @@ namespace tbm.Crawler
         public static int? NullIfZero(this int num) => num == 0 ? null : num;
         public static uint? NullIfZero(this uint num) => num == 0 ? null : num;
         public static long? NullIfZero(this long num) => num == 0 ? null : num;
+
+        /// <see>https://stackoverflow.com/questions/43021/how-do-you-get-the-index-of-the-current-iteration-of-a-foreach-loop/39997157#39997157</see>
+        public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> self) =>
+            self.Select((item, index) => (item, index));
     }
 }

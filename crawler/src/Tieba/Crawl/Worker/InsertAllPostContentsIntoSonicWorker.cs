@@ -71,31 +71,37 @@ namespace tbm.Crawler
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var control = NSonicFactory.Control(
+            void TriggerConsolidate() => NSonicFactory.Control(
                 _config.GetValue("Hostname", "localhost"),
                 _config.GetValue("Port", 1491),
                 _config.GetValue("Secret", "SecretPassword")
-            );
+            ).Trigger("consolidate");
             await using var scope1 = _scope0.BeginLifetimeScope();
-            foreach (var fid in from f in scope1.Resolve<TbmDbContext.New>()(0).ForumsInfo select f.Fid)
+            var fids = (from f in scope1.Resolve<TbmDbContext.New>()(0).ForumsInfo select f.Fid).ToList();
+            var fidsCount = fids.Count * 2; // reply and sub reply
+            foreach (var (fid, index) in fids.WithIndex())
             {
                 var dbWithFid = scope1.Resolve<TbmDbContext.New>()(fid);
                 _ = await dbWithFid.Database.ExecuteSqlRawAsync(
+                    // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
+                    // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure
                     "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
 
                 _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}replies_content", $"f{fid}");
-                PushPostContents(fid, "replies", dbWithFid.ReplyContents.Count(), dbWithFid.ReplyContents.AsNoTracking(),
+                PushPostContents(fid, index, fidsCount, "replies", dbWithFid.ReplyContents.Count(), dbWithFid.ReplyContents.AsNoTracking(),
                     r => _pusher.PushPost(fid, "replies", r.Pid, r.Content), stoppingToken);
-                control.Trigger("consolidate");
+                TriggerConsolidate();
 
                 _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}subReplies_content", $"f{fid}");
-                PushPostContents(fid, "sub replies", dbWithFid.SubReplyContents.Count(), dbWithFid.SubReplyContents.AsNoTracking(),
+                PushPostContents(fid, index + 1, fidsCount, "sub replies", dbWithFid.SubReplyContents.Count(), dbWithFid.SubReplyContents.AsNoTracking(),
                     sr => _pusher.PushPost(fid, "subReplies", sr.Spid, sr.Content), stoppingToken);
-                control.Trigger("consolidate");
+                TriggerConsolidate();
             }
         }
 
         private void PushPostContents<T>(Fid fid,
+            int currentFidIndex,
+            int fidTotalCount,
             string postTypeInLog,
             int postsTotalCount,
             IEnumerable<T> postContents,
@@ -116,9 +122,9 @@ namespace tbm.Crawler
                     var etaTimeSpan = TimeSpan.FromMilliseconds((postsTotalCount - finishedCount) * ca);
                     var etaRelative = etaTimeSpan.Humanize(precision: 5, minUnit: TimeUnit.Second);
                     var etaAt = DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm:ss");
-                    _logger.LogInformation("Pushing progress for fid {}: {}/{} cumulativeAvg={:F3}ms ETA={}@{}",
-                        fid, finishedCount, postsTotalCount, ca, etaRelative, etaAt);
-                    Console.Title = $"Pushing progress for fid {fid}: {finishedCount}/{postsTotalCount} ETA: {etaRelative}@{etaAt}";
+                    _logger.LogInformation("Pushing progress for {} in fid {}: {}/{} cumulativeAvg={:F3}ms ETA: {} @ {}. Total fids progress: {}/{}",
+                        postTypeInLog, fid, finishedCount, postsTotalCount, ca, etaRelative, etaAt, currentFidIndex, fidTotalCount);
+                    Console.Title = $"Pushing progress for {postTypeInLog} in fid {fid}: {finishedCount}/{postsTotalCount} ETA: {etaRelative} @ {etaAt}. Total fids progress: {currentFidIndex}/{fidTotalCount}";
                 }
                 return (finishedCount, ca);
             });

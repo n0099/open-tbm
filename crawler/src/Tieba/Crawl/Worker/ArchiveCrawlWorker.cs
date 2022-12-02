@@ -12,13 +12,17 @@ namespace tbm.Crawler
         private const int MaxCrawlablePage = 334; // 10k threads / 30 per request (from Rn param) = 333.3...
         private readonly ILogger<ArchiveCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
-        private readonly string _forumName = "";
-        private readonly Fid _fid = 0;
+        private readonly string _forumName;
+        private readonly Fid _fid;
 
-        public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0)
+        public delegate ArchiveCrawlWorker New(Fid fid, string forumName);
+
+        public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0, Fid fid, string forumName)
         {
             _logger = logger;
             _scope0 = scope0;
+            _fid = fid;
+            _forumName = forumName;
         }
 
         public static float CalcCumulativeAverage(float current, float previousCa, int currentCount) =>
@@ -85,12 +89,12 @@ namespace tbm.Crawler
                         var etaTimeSpan = TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca);
                         var etaRelative = etaTimeSpan.Humanize(precision: 5, minUnit: TimeUnit.Second);
                         var etaAt = DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm");
-                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={}({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA={}@{}",
+                        _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={} ({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA: {} @ {}",
                             finishedPageCount, totalPage,
                             totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
                             totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount,
                             intervalBetweenPage, ca, etaRelative, etaAt);
-                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative}@{etaAt}";
+                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} @ {etaAt}";
                     });
                 }
                 _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
