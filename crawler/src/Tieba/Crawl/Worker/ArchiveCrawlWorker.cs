@@ -25,15 +25,21 @@ namespace tbm.Crawler
             _forumName = forumName;
         }
 
-        public static float CalcCumulativeAverage(float current, float previousCa, int currentCount) =>
-            (current + ((currentCount - 1) * previousCa)) / currentCount; // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
+        public static float CalcCumulativeAverage(float currentCa, float previousCa, int currentIndex) =>
+            (currentCa + ((currentIndex - 1) * previousCa)) / currentIndex; // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
+
+        public static (string Relative, string At) CalcEta(int total, int completed, float averageDurationInMs)
+        {
+            var etaTimeSpan = TimeSpan.FromMilliseconds((total - completed) * averageDurationInMs);
+            return (etaTimeSpan.Humanize(precision: 5, minUnit: TimeUnit.Second), DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm:ss"));
+        }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
                 var averageElapsed = 0f; // in seconds
-                var finishedPageCount = 0;
+                var finishedPagesCount = 0;
                 var totalSavedThreadsCount = 0;
                 var totalSavedRepliesCount = 0;
                 var totalSavedSubRepliesCount = 0;
@@ -82,19 +88,17 @@ namespace tbm.Crawler
                         var intervalBetweenPage = (float)stopWatchPageInterval.Elapsed.TotalSeconds;
                         stopWatchPageInterval.Restart();
                         _ = Interlocked.CompareExchange(ref averageElapsed, intervalBetweenPage, 0); // first run
-                        _ = Interlocked.Increment(ref finishedPageCount);
-                        var ca = CalcCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPageCount);
+                        _ = Interlocked.Increment(ref finishedPagesCount);
+                        var ca = CalcCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPagesCount); // in seconds
                         _ = Interlocked.Exchange(ref averageElapsed, ca);
 
-                        var etaTimeSpan = TimeSpan.FromSeconds((totalPage - finishedPageCount) * ca);
-                        var etaRelative = etaTimeSpan.Humanize(precision: 5, minUnit: TimeUnit.Second);
-                        var etaAt = DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm");
+                        var (etaRelative, etaAt) = CalcEta(totalPage, finishedPagesCount, ca * 1000);
                         _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={} ({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA: {} @ {}",
-                            finishedPageCount, totalPage,
+                            finishedPagesCount, totalPage,
                             totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
                             totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount,
                             intervalBetweenPage, ca, etaRelative, etaAt);
-                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} @ {etaAt}";
+                        Console.Title = $"Archive progress: {finishedPagesCount}/{totalPage} ETA: {etaRelative} @ {etaAt}";
                     });
                 }
                 _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
