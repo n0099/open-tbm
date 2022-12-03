@@ -1,53 +1,53 @@
-import allCandidatesVotesCount from './allCandidatesVotesCount.json';
-import allVotesCountByTimeHourGranularity from './allVotesCountByTimeHourGranularity.json';
-import allVotesCountByTimeMinuteGranularity from './allVotesCountByTimeMinuteGranularity.json';
-import candidatesName from './candidatesName.json';
-import top5CandidatesVotesCountByTimeHourGranularity from './top5CandidatesVotesCountByTimeHourGranularity.json';
-import top5CandidatesVotesCountByTimeMinuteGranularity from './top5CandidatesVotesCountByTimeMinuteGranularity.json';
+import allCandidatesVoteCount from './allCandidatesVoteCount.json';
+import allVotesCountGroupByHour from './allVotesCountGroupByHour.json';
+import allVotesCountGroupByMinute from './allVotesCountGroupByMinute.json';
+import candidateNames from './candidateNames.json';
+import top5CandidatesVoteCountGroupByHour from './top5CandidatesVoteCountGroupByHour.json';
+import top5CandidatesVoteCountGroupByMinute from './top5CandidatesVoteCountGroupByMinute.json';
 import top10CandidatesTimeline from './top10CandidatesTimeline.json';
-import top50CandidatesVotesCount from './top50CandidatesVotesCount.json';
-import top50OfficialValidVotesCount from './top50OfficialValidVotesCount.json';
+import top50CandidatesVoteCount from './top50CandidatesVoteCount.json';
+import top50CandidatesOfficialValidVoteCount from './top50CandidatesOfficialValidVoteCount.json';
 import type { BoolInt, Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 
 export const json: {
-    allCandidatesVotesCount: AllCandidatesVotesCount,
-    allVotesCountByTimeHourGranularity: AllVotesCountByTime,
-    allVotesCountByTimeMinuteGranularity: AllVotesCountByTime,
-    candidatesName: CandidatesName,
-    top5CandidatesVotesCountByTimeHourGranularity: Top5CandidatesVotesCountByTime,
-    top5CandidatesVotesCountByTimeMinuteGranularity: Top5CandidatesVotesCountByTime,
+    allCandidatesVoteCount: AllCandidatesVoteCount,
+    allVotesCountGroupByHour: AllVoteCountsGroupByTime,
+    allVotesCountGroupByMinute: AllVoteCountsGroupByTime,
+    candidateNames: CandidatesName,
+    top5CandidatesVoteCountGroupByHour: Top5CandidatesVoteCountGroupByTime,
+    top5CandidatesVoteCountGroupByMinute: Top5CandidatesVoteCountGroupByTime,
     top10CandidatesTimeline: Top10CandidatesTimeline,
-    top50CandidatesVotesCount: Top50CandidatesVotesCount,
-    top50OfficialValidVotesCount: Top50OfficialValidVotesCount
+    top50CandidatesVoteCount: Top50CandidatesVoteCount,
+    top50CandidatesOfficialValidVoteCount: Top50CandidatesOfficialValidVoteCount
 } = {
-    allCandidatesVotesCount: allCandidatesVotesCount as AllCandidatesVotesCount,
-    allVotesCountByTimeHourGranularity: allVotesCountByTimeHourGranularity as AllVotesCountByTime,
-    allVotesCountByTimeMinuteGranularity: allVotesCountByTimeMinuteGranularity as AllVotesCountByTime,
-    candidatesName,
-    top5CandidatesVotesCountByTimeHourGranularity: top5CandidatesVotesCountByTimeHourGranularity as Top5CandidatesVotesCountByTime,
-    top5CandidatesVotesCountByTimeMinuteGranularity: top5CandidatesVotesCountByTimeMinuteGranularity as Top5CandidatesVotesCountByTime,
+    allCandidatesVoteCount: allCandidatesVoteCount as AllCandidatesVoteCount,
+    allVotesCountGroupByHour: allVotesCountGroupByHour as AllVoteCountsGroupByTime,
+    allVotesCountGroupByMinute: allVotesCountGroupByMinute as AllVoteCountsGroupByTime,
+    candidateNames,
+    top5CandidatesVoteCountGroupByHour: top5CandidatesVoteCountGroupByHour as Top5CandidatesVoteCountGroupByTime,
+    top5CandidatesVoteCountGroupByMinute: top5CandidatesVoteCountGroupByMinute as Top5CandidatesVoteCountGroupByTime,
     top10CandidatesTimeline: top10CandidatesTimeline as Top10CandidatesTimeline,
-    top50CandidatesVotesCount: top50CandidatesVotesCount as Top50CandidatesVotesCount,
-    top50OfficialValidVotesCount
+    top50CandidatesVoteCount: top50CandidatesVoteCount as Top50CandidatesVoteCount,
+    top50CandidatesOfficialValidVoteCount
 };
 
 export type IsValid = BoolInt;
-export type CountByTimeGranularity = 'hour' | 'minute';
+export type GroupByTimeGranularity = 'hour' | 'minute';
 export type CandidatesName = string[];
-export type AllCandidatesVotesCount = Array<{
+export type AllCandidatesVoteCount = Array<{
     isValid: IsValid,
     voteFor: UInt,
     count: UInt
 }>;
-export type Top50OfficialValidVotesCount = Array<{
+export type Top50CandidatesOfficialValidVoteCount = Array<{
     voteFor: UInt,
     officialValidCount: UInt
 }>;
-export type Top50CandidatesVotesCount = AllCandidatesVotesCount & Array<{ voterAvgGrade: Float }>;
-export type Top5CandidatesVotesCountByTime = AllCandidatesVotesCount & Array<{ time: SqlDateTimeUtcPlus8 }>;
-export type AllVotesCountByTime = Array<{
+export type Top50CandidatesVoteCount = AllCandidatesVoteCount & Array<{ voterAvgGrade: Float }>;
+export type Top5CandidatesVoteCountGroupByTime = AllCandidatesVoteCount & Array<{ time: SqlDateTimeUtcPlus8 }>;
+export type AllVoteCountsGroupByTime = Array<{
     time: SqlDateTimeUtcPlus8,
     isValid: IsValid,
     count: UInt
 }>;
-export type Top10CandidatesTimeline = AllCandidatesVotesCount & Array<{ endTime: UnixTimestamp }>;
+export type Top10CandidatesTimeline = AllCandidatesVoteCount & Array<{ endTime: UnixTimestamp }>;

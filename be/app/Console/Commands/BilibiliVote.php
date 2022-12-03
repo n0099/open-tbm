@@ -31,7 +31,7 @@ class BilibiliVote extends Command
             ->chunk(10, static function (Collection $voteReplies) use ($voteResultModel) {
                 $voteResults = [];
                 $candidateIDRange = range(1, 1056);
-                $votersPreviousValidVotesCount = $voteResultModel
+                $votersPreviousValidVoteCount = $voteResultModel
                     ::select('authorUid')
                     ->selectRaw('COUNT(*)')
                     ->whereIn('authorUid', $voteReplies->pluck('authorUid'))
@@ -48,7 +48,7 @@ class BilibiliVote extends Command
                         && $voteReply['authorExpGrade'] >= 4
                         // && $voteBy === ($votersUsername->where('uid', $voterUid)->first()['name'] ?? null)
                         && \in_array((int)$voteFor, $candidateIDRange, true)
-                        && $votersPreviousValidVotesCount->where('authorUid', $voterUid)->first() === null;
+                        && $votersPreviousValidVoteCount->where('authorUid', $voterUid)->first() === null;
                     $voteResults[] = [
                         'pid' => $voteReply['pid'],
                         'authorUid' => $voteReply['authorUid'],

@@ -19,13 +19,13 @@ use Spatie\Regex\Regex;
 class BilibiliVote
 {
     /**
-     * Generate a query builder, which returns top $candidatesCount candidates based on valid votes
+     * Generate a query builder, which returns top $candidateCount candidates based on valid votes
      *
-     * @sql select `voteFor` from (select `voteFor`, COUNT(*) AS count from `tbm_bilibiliVote` where `isValid` = 1 group by `voteFor` order by `count` desc limit $candidatesCount) as `T`
-     * @param int $candidatesCount
+     * @sql select `voteFor` from (select `voteFor`, COUNT(*) AS count from `tbm_bilibiliVote` where `isValid` = 1 group by `voteFor` order by `count` desc limit $candidateCount) as `T`
+     * @param int $candidateCount
      * @return \Illuminate\Database\Query\Builder
      */
-    private static function getTopVotesCandidatesSQL(int $candidatesCount): \Illuminate\Database\Query\Builder
+    private static function getCandidatesWithMostVotes(int $candidateCount): \Illuminate\Database\Query\Builder
     {
         return \DB::query()->select('voteFor')->fromSub(
             BilibiliVoteModel::select('voteFor')
@@ -33,7 +33,7 @@ class BilibiliVote
                 ->where('isValid', true)
                 ->groupBy('voteFor')
                 ->orderBy('count', 'DESC')
-                ->limit($candidatesCount)
+                ->limit($candidateCount)
         , 'T');
     }
 
@@ -44,7 +44,7 @@ class BilibiliVote
      * @param Request $request
      * @return string
      */
-    public static function allCandidatesVotesCount(Request $request): string
+    public static function allCandidatesVoteCount(Request $request): string
     {
         return self::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
@@ -62,7 +62,7 @@ class BilibiliVote
      * @param Request $request
      * @return string
      */
-    public static function allVotesCountByTime(Request $request): string
+    public static function allVoteCountsGroupByTime(Request $request): string
     {
         $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
@@ -82,11 +82,11 @@ class BilibiliVote
      * @param Request $request
      * @return string
      */
-    public static function top50CandidatesVotesCount(Request $request): string
+    public static function top50CandidatesVoteCount(Request $request): string
     {
         return self::sanitizeVoteForField(BilibiliVoteModel::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade')
-            ->whereIn('voteFor', self::getTopVotesCandidatesSQL(50))
+            ->whereIn('voteFor', self::getCandidatesWithMostVotes(50))
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
             ->get())
@@ -104,7 +104,7 @@ class BilibiliVote
      * @param Request $request
      * @return string
      */
-    public static function top5CandidatesVotesCountByTime(Request $request): string
+    public static function top5CandidatesVoteCountGroupByTime(Request $request): string
     {
         $groupBytimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
@@ -113,7 +113,7 @@ class BilibiliVote
         return self::sanitizeVoteForField(BilibiliVoteModel::selectRaw($groupBytimeGranularity[$request->query()['timeGranularity']])
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
-            ->whereIn('voteFor', self::getTopVotesCandidatesSQL(5))
+            ->whereIn('voteFor', self::getCandidatesWithMostVotes(5))
             ->groupBy('time', 'isValid', 'voteFor')
             ->orderBy('time', 'ASC')
             ->get())
@@ -150,7 +150,7 @@ class BilibiliVote
             ->selectRaw('CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
             ->fromSub(BilibiliVoteModel
                 ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeGranularity})*{$timeGranularity} as endTime, isValid, voteFor, COUNT(*) as count")
-                ->whereIn('voteFor', self::getTopVotesCandidatesSQL(10))
+                ->whereIn('voteFor', self::getCandidatesWithMostVotes(10))
                 ->groupBy('endTime', 'isValid', 'voteFor')
             , 'timeGroups')
             ->join(\DB::raw("({$timeGranularityRawSQL}) AS timeGranularityRawSQL"),
