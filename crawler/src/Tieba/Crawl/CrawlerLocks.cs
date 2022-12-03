@@ -27,7 +27,7 @@ namespace tbm.Crawler
             lock (_crawling)
             lock (_failed)
             {
-                _logger.LogTrace("Lock: type={} crawlingIdsCount={} crawlingPagesCount={} crawlingPagesCountsKeyById={} failedIdsCount={} failedPagesCount={} failedAll={}", LockType,
+                _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
                     _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
                     Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key.ToString(), i => i.Value.Count)),
                     _failed.Count, _failed.Values.Select(d => d.Count).Sum(),

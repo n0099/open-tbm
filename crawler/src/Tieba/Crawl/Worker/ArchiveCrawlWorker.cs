@@ -39,10 +39,10 @@ namespace tbm.Crawler
             try
             {
                 var averageElapsed = 0f; // in seconds
-                var finishedPagesCount = 0;
-                var totalSavedThreadsCount = 0;
-                var totalSavedRepliesCount = 0;
-                var totalSavedSubRepliesCount = 0;
+                var finishedPageCount = 0;
+                var totalSavedThreadCount = 0;
+                var totalSavedReplyCount = 0;
+                var totalSavedSubReplyCount = 0;
                 var stopWatchPageInterval = new Stopwatch();
                 stopWatchPageInterval.Start();
 
@@ -65,45 +65,45 @@ namespace tbm.Crawler
                         if (cancellationToken.IsCancellationRequested) return;
                         var savedThreads = await CrawlThreads((Page)page, _forumName, _fid);
                         if (savedThreads == null) return;
-                        var savedThreadsCount = savedThreads.AllAfter.Count;
+                        var savedThreadCount = savedThreads.AllAfter.Count;
                         _logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
-                            savedThreadsCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
-                        _ = Interlocked.Add(ref totalSavedThreadsCount, savedThreadsCount);
+                            savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
+                        _ = Interlocked.Add(ref totalSavedThreadCount, savedThreadCount);
 
                         if (cancellationToken.IsCancellationRequested) return;
                         var savedReplies = await CrawlReplies(savedThreads, _fid);
-                        var savedRepliesCount = savedReplies.Select(i => i.Value.AllAfter.Count).Sum();
+                        var savedReplyCount = savedReplies.Select(i => i.Value.AllAfter.Count).Sum();
                         _logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
-                            savedRepliesCount, savedThreadsCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
-                        _ = Interlocked.Add(ref totalSavedRepliesCount, savedRepliesCount);
+                            savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
+                        _ = Interlocked.Add(ref totalSavedReplyCount, savedReplyCount);
 
                         if (cancellationToken.IsCancellationRequested) return;
-                        var savedSubRepliesCount = await CrawlSubReplies(savedReplies, _fid);
+                        var savedSubReplyCount = await CrawlSubReplies(savedReplies, _fid);
                         _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
-                            savedSubRepliesCount, savedRepliesCount, savedThreadsCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
+                            savedSubReplyCount, savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
                         _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
-                            savedSubRepliesCount + savedRepliesCount + savedThreadsCount, page, _forumName, stopWatchTotal.Elapsed.TotalSeconds);
-                        _ = Interlocked.Add(ref totalSavedSubRepliesCount, savedSubRepliesCount);
+                            savedSubReplyCount + savedReplyCount + savedThreadCount, page, _forumName, stopWatchTotal.Elapsed.TotalSeconds);
+                        _ = Interlocked.Add(ref totalSavedSubReplyCount, savedSubReplyCount);
 
                         var intervalBetweenPage = (float)stopWatchPageInterval.Elapsed.TotalSeconds;
                         stopWatchPageInterval.Restart();
                         _ = Interlocked.CompareExchange(ref averageElapsed, intervalBetweenPage, 0); // first run
-                        _ = Interlocked.Increment(ref finishedPagesCount);
-                        var ca = CalcCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPagesCount); // in seconds
+                        _ = Interlocked.Increment(ref finishedPageCount);
+                        var ca = CalcCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPageCount); // in seconds
                         _ = Interlocked.Exchange(ref averageElapsed, ca);
 
-                        var (etaRelative, etaAt) = CalcEta(totalPage, finishedPagesCount, ca * 1000);
+                        var (etaRelative, etaAt) = CalcEta(totalPage, finishedPageCount, ca * 1000);
                         _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={} ({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA: {} @ {}",
-                            finishedPagesCount, totalPage,
-                            totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
-                            totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount,
+                            finishedPageCount, totalPage,
+                            totalSavedThreadCount + totalSavedReplyCount + totalSavedSubReplyCount,
+                            totalSavedThreadCount, totalSavedReplyCount, totalSavedSubReplyCount,
                             intervalBetweenPage, ca, etaRelative, etaAt);
-                        Console.Title = $"Archive progress: {finishedPagesCount}/{totalPage} ETA: {etaRelative} @ {etaAt}";
+                        Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} @ {etaAt}";
                     });
                 }
                 _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
-                    totalSavedThreadsCount + totalSavedRepliesCount + totalSavedSubRepliesCount,
-                    totalSavedThreadsCount, totalSavedRepliesCount, totalSavedSubRepliesCount, totalPage, _forumName);
+                    totalSavedThreadCount + totalSavedReplyCount + totalSavedSubReplyCount,
+                    totalSavedThreadCount, totalSavedReplyCount, totalSavedSubReplyCount, totalPage, _forumName);
             }
             catch (Exception e)
             {
@@ -163,16 +163,16 @@ namespace tbm.Crawler
                 replies.AllAfter.Where(r => r.SubReplyNum != null).ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;
             });
-            var savedSubRepliesCount = 0;
+            var savedSubReplyCount = 0;
             await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>
             {
                 var (tid, pid) = tidAndPid;
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveCrawled();
                 if (saved == null) return;
-                _ = Interlocked.Add(ref savedSubRepliesCount, saved.AllAfter.Count);
+                _ = Interlocked.Add(ref savedSubReplyCount, saved.AllAfter.Count);
             }));
-            return savedSubRepliesCount;
+            return savedSubReplyCount;
         }
     }
 }
