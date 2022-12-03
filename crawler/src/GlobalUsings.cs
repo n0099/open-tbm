@@ -39,4 +39,4 @@ global using Tid = System.UInt64;
 global using Pid = System.UInt64;
 global using Time = System.UInt32;
 global using Page = System.UInt32;
-global using FailedCount = System.UInt16;
+global using FailureCount = System.UInt16;

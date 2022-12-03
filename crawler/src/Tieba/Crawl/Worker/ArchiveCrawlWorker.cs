@@ -126,7 +126,7 @@ namespace tbm.Crawler
             if (savedThreads != null)
             {
                 await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                    .Crawl(savedThreads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailedCount)0));
+                    .Crawl(savedThreads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailureCount)0));
             }
             return savedThreads;
         }

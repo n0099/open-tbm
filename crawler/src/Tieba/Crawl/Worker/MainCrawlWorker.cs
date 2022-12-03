@@ -92,7 +92,7 @@ namespace tbm.Crawler
             {
                 await using var scope3 = _scope0.BeginLifetimeScope();
                 await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                    .Crawl(threads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailedCount)0));
+                    .Crawl(threads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailureCount)0));
             }));
 
             return savedThreads;

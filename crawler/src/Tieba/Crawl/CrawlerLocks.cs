@@ -8,7 +8,7 @@ namespace tbm.Crawler
         };
         private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
         // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
-        private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailedCount>> _failed = new();
+        private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
         private readonly ILogger<CrawlerLocks> _logger;
         private readonly IConfigurationSection _config;
         public string LockType { get; }
@@ -83,10 +83,10 @@ namespace tbm.Crawler
             }
         }
 
-        public void AcquireFailed(LockId lockId, Page page, FailedCount failedCount)
+        public void AcquireFailed(LockId lockId, Page page, FailureCount failureCount)
         {
-            var maxRetry = _config.GetValue<FailedCount>("MaxRetryTimes", 5);
-            if (failedCount >= maxRetry)
+            var maxRetry = _config.GetValue<FailureCount>("MaxRetryTimes", 5);
+            if (failureCount >= maxRetry)
             {
                 _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}",
                     page, LockType, lockId, maxRetry);
@@ -97,23 +97,23 @@ namespace tbm.Crawler
                 if (_failed.ContainsKey(lockId))
                 {
                     var pagesLock = _failed[lockId];
-                    lock (pagesLock) if (!pagesLock.TryAdd(page, failedCount)) pagesLock[page] = failedCount;
+                    lock (pagesLock) if (!pagesLock.TryAdd(page, failureCount)) pagesLock[page] = failureCount;
                 }
                 else
                 {
-                    var newPage = new ConcurrentDictionary<Page, FailedCount> { [page] = failedCount };
+                    var newPage = new ConcurrentDictionary<Page, FailureCount> { [page] = failureCount };
                     _failed.TryAdd(lockId, newPage);
                 }
             }
         }
 
-        public Dictionary<LockId, Dictionary<Page, FailedCount>> RetryAllFailed()
+        public Dictionary<LockId, Dictionary<Page, FailureCount>> RetryAllFailed()
         {
             lock (_failed)
             {
                 var deepCloneOfFailed = _failed.ToDictionary(i => i.Key, i =>
                 {
-                    lock (i.Value) return new Dictionary<Page, FailedCount>(i.Value);
+                    lock (i.Value) return new Dictionary<Page, FailureCount>(i.Value);
                 });
                 _failed.Clear();
                 return deepCloneOfFailed;
