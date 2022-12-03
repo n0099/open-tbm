@@ -61,7 +61,7 @@ namespace tbm.Crawler
             BeforeCommitSaveHook(db);
             try
             {
-                _ = db.SaveChangesWithTimestamping();
+                _ = db.SaveChangesWithTimestamp();
                 transaction.Commit();
                 if (savedPosts != null) PostCommitSaveHook(savedPosts);
             }

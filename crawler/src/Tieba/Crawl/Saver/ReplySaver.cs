@@ -3,12 +3,12 @@ namespace tbm.Crawler
     public class ReplySaver : BaseSaver<ReplyPost>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
-            Update: (_, propertyName, _, currentValue) =>
+            Update: (_, propName, _, newValue) =>
                 // the value of IconInfo in response of reply crawler might be null even if the user haven't change his icon info
-                propertyName == nameof(TiebaUser.IconInfo) && currentValue is null,
-            (_, propertyName, originalValue, currentValue) =>
+                propName == nameof(TiebaUser.IconInfo) && newValue is null,
+            (_, propName, oldValue, newValue) =>
                 // the value of user gender in thread response might be 0 but in reply response it won't be 0
-                propertyName == nameof(TiebaUser.Gender) && (ushort?)originalValue is 0 && (ushort?)currentValue is not 0);
+                propName == nameof(TiebaUser.Gender) && (ushort?)oldValue is 0 && (ushort?)newValue is not 0);
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {

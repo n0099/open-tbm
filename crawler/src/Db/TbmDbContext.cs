@@ -57,7 +57,7 @@ namespace tbm.Crawler
         }
 #pragma warning restore IDE0058 // Expression value is never used
 
-        public int SaveChangesWithTimestamping()
+        public int SaveChangesWithTimestamp()
         { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
             ChangeTracker.Entries<IEntityWithTimestampFields>().ForEach(e =>
             {
