@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class CommonInSavers<TSaver> : StaticCommonInSavers where TSaver : CommonInSavers<TSaver>
     {

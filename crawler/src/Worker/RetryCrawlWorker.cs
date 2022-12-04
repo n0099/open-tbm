@@ -1,6 +1,6 @@
-using static tbm.Crawler.MainCrawlWorker;
+using static tbm.Crawler.Worker.MainCrawlWorker;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Worker
 {
     public class RetryCrawlWorker : CyclicCrawlWorker
     {

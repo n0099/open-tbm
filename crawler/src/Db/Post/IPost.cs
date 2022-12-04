@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Db.Post
 {
     public interface IPost : IEntityWithTimestampFields, ICloneable
     {

@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Facade
 {
     public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, ThreadResponse, Thread, ThreadCrawler>
     {

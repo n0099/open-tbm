@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Parser
 {
     public abstract class BaseParser<TPost, TPostProtoBuf>
         where TPost: class, IPost where TPostProtoBuf : IMessage<TPostProtoBuf>

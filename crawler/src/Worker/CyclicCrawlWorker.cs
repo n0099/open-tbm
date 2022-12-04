@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Worker
 {
     public abstract class CyclicCrawlWorker : BackgroundService
     {

@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class StaticCommonInSavers
     { // static field in this non generic class will be shared across all reified generic derived classes

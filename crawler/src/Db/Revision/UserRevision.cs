@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Db.Revision
 {
     public class UserRevision : BaseRevision
     {

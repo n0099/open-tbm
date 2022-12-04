@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Parser
 {
     public class ThreadParser : BaseParser<ThreadPost, Thread>
     {

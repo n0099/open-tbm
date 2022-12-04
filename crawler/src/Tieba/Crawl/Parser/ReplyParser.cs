@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Parser
 {
     public class ReplyParser : BaseParser<ReplyPost, Reply>
     {

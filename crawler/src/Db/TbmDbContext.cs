@@ -1,6 +1,6 @@
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Db
 {
     public class TbmDbContext : DbContext
     {

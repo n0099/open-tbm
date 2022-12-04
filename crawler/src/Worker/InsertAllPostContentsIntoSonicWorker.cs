@@ -3,7 +3,7 @@ using Humanizer;
 using Humanizer.Localisation;
 using NSonic;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Worker
 {
     public class InsertAllPostContentsIntoSonicWorker : BackgroundService
     {

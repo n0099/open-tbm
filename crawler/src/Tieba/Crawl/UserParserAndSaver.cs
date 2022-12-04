@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Uid = System.Int64;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl
 {
     public class UserParserAndSaver : CommonInSavers<UserParserAndSaver>
     {

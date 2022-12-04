@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Facade
 {
     public abstract class BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> : IDisposable
         where TPost : class, IPost where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>

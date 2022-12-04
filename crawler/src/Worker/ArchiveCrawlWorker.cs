@@ -1,7 +1,7 @@
 using Humanizer;
 using Humanizer.Localisation;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Worker
 {
     using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 

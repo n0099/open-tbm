@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Db
 {
     public class TiebaUser : IEntityWithTimestampFields, IEquatable<TiebaUser>
     {

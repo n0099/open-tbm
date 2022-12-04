@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Crawler
 {
     public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     {

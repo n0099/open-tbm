@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class SaverChangeSet<T> where T : class, IPost
     {

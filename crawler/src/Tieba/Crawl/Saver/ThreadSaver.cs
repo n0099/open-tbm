@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class ThreadSaver : BaseSaver<ThreadPost>
     {

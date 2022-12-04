@@ -1,4 +1,4 @@
-namespace tbm.Crawler
+namespace tbm.Crawler.Worker
 {
     using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
     using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
