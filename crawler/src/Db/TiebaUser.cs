@@ -9,7 +9,7 @@ namespace tbm.Crawler
         public uint? PortraitUpdateTime { get; set; }
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
-        public byte[]? IconInfo { get; set; }
+        public byte[]? Icon { get; set; }
         public string? IpGeolocation { get; set; }
         public uint CreatedAt { get; set; }
         public uint? UpdatedAt { get; set; }
@@ -25,8 +25,8 @@ namespace tbm.Crawler
                    && PortraitUpdateTime == other.PortraitUpdateTime
                    && Gender == other.Gender
                    && FansNickname == other.FansNickname
-                   && (IconInfo == other.IconInfo
-                       || (IconInfo != null && other.IconInfo != null && IconInfo.SequenceEqual(other.IconInfo)))
+                   && (Icon == other.Icon
+                       || (Icon != null && other.Icon != null && Icon.SequenceEqual(other.Icon)))
                    && IpGeolocation == other.IpGeolocation;
         }
 
@@ -48,7 +48,7 @@ namespace tbm.Crawler
             hashCode.Add(PortraitUpdateTime);
             hashCode.Add(Gender);
             hashCode.Add(FansNickname);
-            hashCode.AddBytes(IconInfo);
+            hashCode.AddBytes(Icon);
             hashCode.Add(IpGeolocation);
             // ReSharper restore NonReadonlyMemberInGetHashCode
             return hashCode.ToHashCode();

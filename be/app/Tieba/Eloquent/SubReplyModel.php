@@ -20,8 +20,8 @@ class SubReplyModel extends PostModel
         'authorManagerType',
         'authorExpGrade',
         'postTime',
-        'agreeNum',
-        'disagreeNum',
+        'agreeCount',
+        'disagreeCount',
         ...parent::TIMESTAMP_FIELD_NAMES
     ];
 

@@ -156,11 +156,11 @@ namespace tbm.Crawler
             var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
             {
                 var (tid, replies) = tidAndReplies;
-                // some rare reply will have subReplyNum=0, but contains sub reply and can be revealed by requesting
+                // some rare reply will have SubReplyCount=0, but contains sub reply and can be revealed by requesting
                 // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
-                // following sql can figure out existing sub replies that not matched with parent reply's subReplyNum in db:
-                // SELECT COUNT(*) FROM tbm_f{fid}97650_replies AS A INNER JOIN tbm_f{fid}_subReplies AS B ON A.pid = B.pid AND A.subReplyNum IS NULL
-                replies.AllAfter.Where(r => r.SubReplyNum != null).ForEach(r => shouldCrawl.Add((tid, r.Pid)));
+                // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:
+                // SELECT COUNT(*) FROM tbm_f{fid}_replies AS A INNER JOIN tbm_f{fid}_subReplies AS B ON A.pid = B.pid AND A.subReplyCount IS NULL
+                replies.AllAfter.Where(r => r.SubReplyCount != null).ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;
             });
             var savedSubReplyCount = 0;

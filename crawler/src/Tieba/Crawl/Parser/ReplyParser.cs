@@ -29,11 +29,11 @@ namespace tbm.Crawler
                 p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
                 p.AuthorUid = el.AuthorId;
                 // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
-                p.SubReplyNum = el.SubPostNumber.NullIfZero();
+                p.SubReplyCount = el.SubPostNumber.NullIfZero();
                 p.PostTime = el.Time;
                 p.IsFold = (ushort?)el.IsFold.NullIfZero();
-                p.AgreeNum = (int?)el.Agree.AgreeNum.NullIfZero();
-                p.DisagreeNum = (int?)el.Agree.DisagreeNum.NullIfZero();
+                p.AgreeCount = (int?)el.Agree.AgreeNum.NullIfZero();
+                p.DisagreeCount = (int?)el.Agree.DisagreeNum.NullIfZero();
                 p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
                 p.SignatureId = (uint?)el.Signature?.SignatureId;
                 p.Signature = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);

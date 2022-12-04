@@ -87,7 +87,7 @@
                     <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)" type="text" class="form-control" required />
                     <InputTextMatchParam v-model="params[pI]" :paramIndex="pI" />
                 </template>
-                <template v-if="['threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum'].includes(p.name)">
+                <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
                     <InputNumericParam v-model="params[pI]" :paramIndex="pI"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: '100' }" />

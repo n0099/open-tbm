@@ -20,8 +20,8 @@ namespace tbm.Crawler
                     {
                         // will be update by ThreadLateCrawlerAndSaver
                         case nameof(ThreadPost.AuthorPhoneType):
-                        // prevent overwrite existing values of field liker_id which is saved by legacy crawler, and ZanInfo itself is deprecated by tieba so it shouldn't get updated
-                        case nameof(ThreadPost.ZanInfo):
+                        // prevent overwrite existing values of field liker_id which is saved by legacy crawler, and Zan itself is deprecated by tieba so it shouldn't get updated
+                        case nameof(ThreadPost.Zan):
                         // possible randomly response with null
                         case nameof(ThreadPost.Geolocation) when newValue is null:
                         // empty string means the author had not write a title
@@ -30,7 +30,7 @@ namespace tbm.Crawler
                             // prevent repeatedly update with different title due to the thread is a multi forum topic thread thus its title can be vary within the forum and within the thread
                                                            || (newValue is not "" && oldValue is not ""):
                         // possible randomly response with 0.NullIfZero()
-                        case nameof(ThreadPost.DisagreeNum) when newValue is null && oldValue is not null:
+                        case nameof(ThreadPost.DisagreeCount) when newValue is null && oldValue is not null:
                         // when the latest reply post is deleted and there's no new reply after delete, this field but not LatestReplyTime will be null
                         case nameof(ThreadPost.LatestReplierUid) when newValue is null:
                             return true;

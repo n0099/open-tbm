@@ -12,10 +12,10 @@ export const paramsRequiredPostTypes: RequiredPostTypes = {
     latestReplyTime: ['ALL', ['thread']],
     threadTitle: ['ALL', ['thread']],
     postContent: ['SUB', ['reply', 'subReply']],
-    threadViewNum: ['ALL', ['thread']],
-    threadShareNum: ['ALL', ['thread']],
-    threadReplyNum: ['ALL', ['thread']],
-    replySubReplyNum: ['ALL', ['reply']],
+    threadViewCount: ['ALL', ['thread']],
+    threadShareCount: ['ALL', ['thread']],
+    threadReplyCount: ['ALL', ['thread']],
+    replySubReplyCount: ['ALL', ['reply']],
     threadProperties: ['ALL', ['thread']],
     authorExpGrade: ['SUB', ['reply', 'subReply']],
     latestReplierUid: ['ALL', ['thread']],
@@ -64,10 +64,10 @@ export const paramsNameByType = {
         'tid',
         'pid',
         'spid',
-        'threadViewNum',
-        'threadShareNum',
-        'threadReplyNum',
-        'replySubReplyNum',
+        'threadViewCount',
+        'threadShareCount',
+        'threadReplyCount',
+        'replySubReplyCount',
         'authorUid',
         'authorExpGrade',
         'latestReplierUid'
@@ -85,8 +85,8 @@ export const paramsNameByType = {
         'latestReplyTime'
     ]
 } as const;
-export const paramTypeNumSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
-export interface ParamTypeNum { value: string, subParam: { range: typeof paramTypeNumSubParamRangeValues[number] } }
+export const paramTypeNumericSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
+export interface ParamTypeNumeric { value: string, subParam: { range: typeof paramTypeNumericSubParamRangeValues[number] } }
 export const paramTypeTextSubParamMatchByValues = ['explicit', 'implicit', 'regex'] as const;
 export interface ParamTypeText { value: string, subParam: { matchBy: typeof paramTypeTextSubParamMatchByValues[number], spaceSplit: boolean } }
 interface ParamTypeDateTime { value: string, subParam: { range: undefined } }
@@ -99,7 +99,7 @@ export type ParamTypeWithCommon<N, P> = P & { name: N, value: unknown, subParam:
 export type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamTypeWithCommon<P, ParamTypeGender> }
 & { [P in keyof ParamTypeOther]: ParamTypeWithCommon<P, ParamTypeOther[P]> }
 & { [P in typeof paramsNameByType.dateTime[number]]: ParamTypeWithCommon<P, ParamTypeDateTime> }
-& { [P in typeof paramsNameByType.numeric[number]]: ParamTypeWithCommon<P, ParamTypeNum> }
+& { [P in typeof paramsNameByType.numeric[number]]: ParamTypeWithCommon<P, ParamTypeNumeric> }
 & { [P in typeof paramsNameByType.text[number]]: ParamTypeWithCommon<P, ParamTypeText> };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },

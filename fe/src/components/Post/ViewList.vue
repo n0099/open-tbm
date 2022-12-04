@@ -18,24 +18,24 @@
                 <div class="row justify-content-between mt-2">
                     <div class="col-auto d-flex gap-1 align-items-center">
                         <span data-tippy-content="回复量" class="badge bg-secondary">
-                            <FontAwesomeIcon icon="comment-alt" class="me-1" />{{ thread.replyNum }}
+                            <FontAwesomeIcon icon="comment-alt" class="me-1" />{{ thread.replyCount }}
                         </span>
                         <span data-tippy-content="浏览量" class="badge bg-info">
-                            <FontAwesomeIcon icon="eye" class="me-1" />{{ thread.viewNum }}
+                            <FontAwesomeIcon icon="eye" class="me-1" />{{ thread.viewCount }}
                         </span>
-                        <span v-if="thread.shareNum !== 0" data-tippy-content="分享量" class="badge bg-info">
-                            <FontAwesomeIcon icon="share-alt" class="me-1" /> {{ thread.shareNum }}
+                        <span v-if="thread.shareCount !== 0" data-tippy-content="分享量" class="badge bg-info">
+                            <FontAwesomeIcon icon="share-alt" class="me-1" /> {{ thread.shareCount }}
                         </span>
-                        <span v-if="thread.agreeInfo !== null" data-tippy-content="赞踩量" class="badge bg-info">
-                            <FontAwesomeIcon icon="thumbs-up" class="me-1" /> {{ thread.agreeInfo.agree_num }}
-                            <FontAwesomeIcon icon="thumbs-down" class="me-1" /> {{ thread.agreeInfo.disagree_num }}
+                        <span v-if="thread.agree !== null" data-tippy-content="赞踩量" class="badge bg-info">
+                            <FontAwesomeIcon icon="thumbs-up" class="me-1" /> {{ thread.agree.agree_num }}
+                            <FontAwesomeIcon icon="thumbs-down" class="me-1" /> {{ thread.agree.disagree_num }}
                         </span>
-                        <span v-if="thread.zanInfo !== null" :data-tippy-content="`
-                            点赞量：${thread.zanInfo.num}<br />
-                            最后点赞时间：${DateTime.fromSeconds(Number(thread.zanInfo.last_time)).toRelative({ round: false })}
-                            （${DateTime.fromSeconds(Number(thread.zanInfo.last_time)).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
-                            近期点赞用户：${thread.zanInfo.user_id_list}<br />`" class="badge bg-info">
-                            <!-- todo: fetch users info in zanInfo.user_id_list -->
+                        <span v-if="thread.zan !== null" :data-tippy-content="`
+                            点赞量：${thread.zan.num}<br />
+                            最后点赞时间：${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })}
+                            （${DateTime.fromSeconds(Number(thread.zan.last_time)).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
+                            近期点赞用户：${thread.zan.user_id_list}<br />`" class="badge bg-info">
+                            <!-- todo: fetch users info in zan.user_id_list -->
                             <FontAwesomeIcon icon="thumbs-up" class="me-1" /> 旧版客户端赞
                         </span>
                         <span v-if="thread.location !== null" data-tippy-content="发帖位置" class="badge bg-info">
@@ -65,14 +65,14 @@
                 <div class="reply-title sticky-top card-header">
                     <div class="d-inline-flex gap-1 h5">
                         <span class="badge bg-secondary">{{ reply.floor }}楼</span>
-                        <span v-if="reply.subReplyNum > 0" class="badge bg-info">
-                            {{ reply.subReplyNum }}条<FontAwesomeIcon icon="comment-dots" />
+                        <span v-if="reply.subReplyCount > 0" class="badge bg-info">
+                            {{ reply.subReplyCount }}条<FontAwesomeIcon icon="comment-dots" />
                         </span>
                         <!-- TODO: implement these reply's property
                             <span>fold:{{ reply.isFold }}</span>
-                            <span>{{ reply.agreeInfo }}</span>
-                            <span>{{ reply.signInfo }}</span>
-                            <span>{{ reply.tailInfo }}</span>
+                            <span>{{ reply.agree }}</span>
+                            <span>{{ reply.sign }}</span>
+                            <span>{{ reply.tail }}</span>
                         -->
                     </div>
                     <div class="float-end badge bg-light">

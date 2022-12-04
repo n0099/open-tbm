@@ -13,7 +13,7 @@ class UserModel extends ModelWithHiddenFields
     protected $guarded = [];
 
     protected $casts = [
-        'iconInfo' => 'array'
+        'icon' => 'array'
     ];
 
     protected static array $fields = [
@@ -24,7 +24,7 @@ class UserModel extends ModelWithHiddenFields
         'portraitUpdateTime',
         'gender',
         'fansNickname',
-        'iconInfo',
+        'icon',
         'createdAt',
         'updatedAt'
     ];

@@ -101,8 +101,8 @@ export default defineComponent({
             threadColumns: [
                 { title: 'tid', dataIndex: 'tid', slots: { customRender: 'tid' } },
                 { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },
-                { title: '回复量', dataIndex: 'replyNum' },
-                { title: '浏览量', dataIndex: 'viewNum' },
+                { title: '回复量', dataIndex: 'replyCount' },
+                { title: '浏览量', dataIndex: 'viewCount' },
                 { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖时间', dataIndex: 'postTime' },
                 { title: '最后回复人', slots: { customRender: 'postLatestReplier' } },
@@ -111,9 +111,9 @@ export default defineComponent({
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
                 { title: '1楼pid', dataIndex: 'firstPid', slots: { customRender: 'firstPid' } },
                 { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
-                { title: '分享量', dataIndex: 'shareNum' },
-                { title: '赞踩量', dataIndex: 'agreeInfo' }, // todo: unknown json struct
-                { title: '旧版客户端赞', dataIndex: 'zanInfo' }, // todo: unknown json struct
+                { title: '分享量', dataIndex: 'shareCount' },
+                { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
+                { title: '旧版客户端赞', dataIndex: 'zan' }, // todo: unknown json struct
                 { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }
@@ -121,14 +121,14 @@ export default defineComponent({
             replyColumns: [
                 { title: 'pid', dataIndex: 'pid' },
                 { title: '楼层', dataIndex: 'floor' },
-                { title: '楼中楼回复量', dataIndex: 'subReplyNum' },
+                { title: '楼中楼回复量', dataIndex: 'subReplyCount' },
                 { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '发帖时间', dataIndex: 'postTime' },
                 { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
-                { title: '赞踩量', dataIndex: 'agreeInfo' }, // todo: unknown json struct
-                { title: '客户端小尾巴', dataIndex: 'signInfo' }, // todo: unknown json struct
-                { title: '发帖来源', dataIndex: 'tailInfo' }, // todo: unknown json struct
+                { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
+                { title: '客户端小尾巴', dataIndex: 'sign' }, // todo: unknown json struct
+                { title: '发帖来源', dataIndex: 'tail' }, // todo: unknown json struct
                 { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }

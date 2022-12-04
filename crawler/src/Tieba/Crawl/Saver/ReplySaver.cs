@@ -4,8 +4,8 @@ namespace tbm.Crawler
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propName, _, newValue) =>
-                // the value of IconInfo in response of reply crawler might be null even if the user haven't change his icon info
-                propName == nameof(TiebaUser.IconInfo) && newValue is null,
+                // the value of Icon in response of reply crawler might be null even if the user haven't change his icon info
+                propName == nameof(TiebaUser.Icon) && newValue is null,
             (_, propName, oldValue, newValue) =>
                 // the value of user gender in thread response might be 0 but in reply response it won't be 0
                 propName == nameof(TiebaUser.Gender) && (ushort?)oldValue is 0 && (ushort?)newValue is not 0);
@@ -13,10 +13,10 @@ namespace tbm.Crawler
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
             {nameof(ReplyPost.AuthorManagerType), 1},
-            {nameof(ReplyPost.SubReplyNum),       1 << 1},
+            {nameof(ReplyPost.SubReplyCount),     1 << 1},
             {nameof(ReplyPost.IsFold),            1 << 2},
-            {nameof(ReplyPost.AgreeNum),          1 << 3},
-            {nameof(ReplyPost.DisagreeNum),       1 << 4},
+            {nameof(ReplyPost.AgreeCount),        1 << 3},
+            {nameof(ReplyPost.DisagreeCount),     1 << 4},
             {nameof(ReplyPost.Geolocation),       1 << 5}
         };
 

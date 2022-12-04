@@ -10,7 +10,7 @@ namespace tbm.Crawler
         public uint? PortraitUpdateTime { get; set; }
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
-        public byte[]? IconInfo { get; set; }
+        public byte[]? Icon { get; set; }
         public string? IpGeolocation { get; set; }
     }
 }

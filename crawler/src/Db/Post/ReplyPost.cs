@@ -10,11 +10,11 @@ namespace tbm.Crawler
         public long AuthorUid { get; set; }
         public string? AuthorManagerType { get; set; }
         public ushort AuthorExpGrade { get; set; }
-        public uint? SubReplyNum { get; set; }
+        public uint? SubReplyCount { get; set; }
         public uint PostTime { get; set; }
         public ushort? IsFold { get; set; }
-        public int? AgreeNum { get; set; }
-        public int? DisagreeNum { get; set; }
+        public int? AgreeCount { get; set; }
+        public int? DisagreeCount { get; set; }
         public byte[]? Geolocation { get; set; }
         public uint? SignatureId { get; set; }
         [NotMapped] public byte[]? Signature { get; set; }

@@ -13,21 +13,21 @@
 </template>
 
 <script lang="ts">
-import type { ParamTypeNum, ParamTypeWithCommon } from './queryParams';
-import { paramTypeNumSubParamRangeValues } from './queryParams';
+import type { ParamTypeNumeric, ParamTypeWithCommon } from './queryParams';
+import { paramTypeNumericSubParamRangeValues } from './queryParams';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import _ from 'lodash';
 
 export default defineComponent({
     props: {
-        modelValue: { type: Object as PropType<ParamTypeWithCommon<string, ParamTypeNum>>, required: true },
+        modelValue: { type: Object as PropType<ParamTypeWithCommon<string, ParamTypeNumeric>>, required: true },
         placeholders: { type: Object as PropType<{ [P in 'BETWEEN' | 'IN' | 'number']: string }>, required: true }
     },
     emits: {
-        'update:modelValue': (p: ParamTypeWithCommon<string, ParamTypeNum>) =>
+        'update:modelValue': (p: ParamTypeWithCommon<string, ParamTypeNumeric>) =>
             _.isString(p.name) && _.isString(p.value)
-                && paramTypeNumSubParamRangeValues.includes(p.subParam.range)
+                && paramTypeNumericSubParamRangeValues.includes(p.subParam.range)
     },
     setup(props, { emit }) {
         const emitModelChange = (e: InputEvent & { target: HTMLInputElement }) => {

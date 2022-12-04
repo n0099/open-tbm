@@ -61,10 +61,10 @@ class ParamsValidator
             '*.spid' => 'integer',
             '*.postTime' => $dateRangeValidator,
             '*.latestReplyTime' => $dateRangeValidator,
-            '*.threadViewNum' => 'integer',
-            '*.threadShareNum' => 'integer',
-            '*.threadReplyNum' => 'integer',
-            '*.replySubReplyNum' => 'integer',
+            '*.threadViewCount' => 'integer',
+            '*.threadShareCount' => 'integer',
+            '*.threadReplyCount' => 'integer',
+            '*.replySubReplyCount' => 'integer',
             '*.threadProperties' => 'array|in:good,sticky',
             '*.authorUid' => 'integer',
             '*.authorExpGrade' => 'integer',
@@ -74,7 +74,7 @@ class ParamsValidator
             '*.latestReplierGender' => Rule::in($paramsPossibleValue['userGender']),
 
             '*.not' => 'boolean',
-            // sub param of tid, pid, spid, threadViewNum, threadShareNum, threadReplyNum, replySubReplyNum, authorUid, authorExpGrade, latestReplierUid
+            // sub param of tid, pid, spid, threadViewCount, threadShareCount, threadReplyCount, replySubReplyCount, authorUid, authorExpGrade, latestReplierUid
             '*.range' => 'in:<,=,>,IN,BETWEEN',
             // sub param of threadTitle, postContent, authorName, authorDisplayName, latestReplierName, latestReplierDisplayName
             '*.matchBy' => 'in:implicit,explicit,regex',
@@ -111,10 +111,10 @@ class ParamsValidator
             'latestReplyTime' => ['ALL', ['thread']],
             'threadTitle' => ['ALL', ['thread']],
             'postContent' => ['SUB', ['reply', 'subReply']],
-            'threadViewNum' => ['ALL', ['thread']],
-            'threadShareNum' => ['ALL', ['thread']],
-            'threadReplyNum' => ['ALL', ['thread']],
-            'replySubReplyNum' => ['ALL', ['reply']],
+            'threadViewCount' => ['ALL', ['thread']],
+            'threadShareCount' => ['ALL', ['thread']],
+            'threadReplyCount' => ['ALL', ['thread']],
+            'replySubReplyCount' => ['ALL', ['reply']],
             'threadProperties' => ['ALL', ['thread']],
             'authorExpGrade' => ['SUB', ['reply', 'subReply']],
             'latestReplierUid' => ['ALL', ['thread']],

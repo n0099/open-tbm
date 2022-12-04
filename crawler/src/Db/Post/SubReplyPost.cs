@@ -11,8 +11,8 @@ namespace tbm.Crawler
         public string? AuthorManagerType { get; set; }
         public ushort AuthorExpGrade { get; set; }
         public uint PostTime { get; set; }
-        public int? AgreeNum { get; set; }
-        public int? DisagreeNum { get; set; }
+        public int? AgreeCount { get; set; }
+        public int? DisagreeCount { get; set; }
         public uint CreatedAt { get; set; }
         public uint? UpdatedAt { get; set; }
         public uint? LastSeen { get; set; }

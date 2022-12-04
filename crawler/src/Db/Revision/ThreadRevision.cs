@@ -10,11 +10,11 @@ namespace tbm.Crawler
         public string? AuthorManagerType { get; set; }
         public uint? LatestReplyTime { get; set; }
         public long? LatestReplierUid { get; set; }
-        public uint? ReplyNum { get; set; }
-        public uint? ViewNum { get; set; }
-        public uint? ShareNum { get; set; }
-        public int? AgreeNum { get; set; }
-        public int? DisagreeNum { get; set; }
+        public uint? ReplyCount { get; set; }
+        public uint? ViewCount { get; set; }
+        public uint? ShareCount { get; set; }
+        public int? AgreeCount { get; set; }
+        public int? DisagreeCount { get; set; }
         public byte[]? Geolocation { get; set; }
     }
 }

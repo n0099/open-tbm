@@ -36,14 +36,14 @@ namespace tbm.Crawler
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
                 // value of LatestReplierUid will be write back from the response of client version 6.0.2 by TrySkipParse()
-                p.ReplyNum = (uint?)el.ReplyNum.NullIfZero();
-                p.ViewNum = (uint?)el.ViewNum.NullIfZero();
-                p.ShareNum = (uint?)el.ShareNum.NullIfZero();
+                p.ReplyCount = (uint?)el.ReplyNum.NullIfZero();
+                p.ViewCount = (uint?)el.ViewNum.NullIfZero();
+                p.ShareCount = (uint?)el.ShareNum.NullIfZero();
                 // when the thread is livepost, the agree field will not exists
-                p.AgreeNum = (int?)el.Agree?.AgreeNum.NullIfZero() ?? el.AgreeNum;
-                p.DisagreeNum = (int?)el.Agree?.DisagreeNum.NullIfZero();
+                p.AgreeCount = (int?)el.Agree?.AgreeNum.NullIfZero() ?? el.AgreeNum;
+                p.DisagreeCount = (int?)el.Agree?.DisagreeNum.NullIfZero();
                 p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el.Location);
-                p.ZanInfo = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
+                p.Zan = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
                 return p;
             }
             catch (Exception e)

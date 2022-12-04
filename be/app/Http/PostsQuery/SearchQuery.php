@@ -81,10 +81,10 @@ class SearchQuery
         $inverseNot = $sub['not'] ? '' : 'Not';
 
         $fieldNameOfNumericParams = [
-            'threadViewNum' => 'viewNum',
-            'threadShareNum' => 'shareNum',
-            'threadReplyNum' => 'replyNum',
-            'replySubReplyNum' => 'subReplyNum'
+            'threadViewCount' => 'viewCount',
+            'threadShareCount' => 'shareCount',
+            'threadReplyCount' => 'replyCount',
+            'replySubReplyCount' => 'subReplyCount'
         ][$name] ?? $name;
         $inverseRangeOfNumericParams = [
             '<' => '>=',
@@ -108,7 +108,7 @@ class SearchQuery
             // numeric
             'tid', 'pid', 'spid',
             'authorUid', 'authorExpGrade', 'latestReplierUid',
-            'threadViewNum', 'threadShareNum', 'threadReplyNum', 'replySubReplyNum' =>
+            'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
                 $sub['range'] === 'IN' || $sub['range'] === 'BETWEEN'
                     ? $qb->{"where{$not}{$sub['range']}"}($fieldNameOfNumericParams, explode(',', $value))
                     : $qb->where(

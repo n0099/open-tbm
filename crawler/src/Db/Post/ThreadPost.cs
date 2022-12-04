@@ -15,12 +15,12 @@ namespace tbm.Crawler
         public uint PostTime { get; set; }
         public uint LatestReplyTime { get; set; }
         public long? LatestReplierUid { get; set; }
-        public uint? ReplyNum { get; set; }
-        public uint? ViewNum { get; set; }
-        public uint? ShareNum { get; set; }
-        public int? AgreeNum { get; set; }
-        public int? DisagreeNum { get; set; }
-        public byte[]? ZanInfo { get; set; }
+        public uint? ReplyCount { get; set; }
+        public uint? ViewCount { get; set; }
+        public uint? ShareCount { get; set; }
+        public int? AgreeCount { get; set; }
+        public int? DisagreeCount { get; set; }
+        public byte[]? Zan { get; set; }
         public byte[]? Geolocation { get; set; }
         public string? AuthorPhoneType { get; set; }
         public uint CreatedAt { get; set; }

@@ -24,8 +24,8 @@ namespace tbm.Crawler
                 p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 p.AuthorExpGrade = (ushort)author.LevelId;
                 p.PostTime = el.Time;
-                p.AgreeNum = (int?)el.Agree.AgreeNum.NullIfZero();
-                p.DisagreeNum = (int?)el.Agree.DisagreeNum.NullIfZero();
+                p.AgreeCount = (int?)el.Agree.AgreeNum.NullIfZero();
+                p.DisagreeCount = (int?)el.Agree.DisagreeNum.NullIfZero();
                 return p;
             }
             catch (Exception e)

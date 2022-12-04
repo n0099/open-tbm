@@ -51,7 +51,7 @@ export interface TiebaUserRecord {
     displayName: string | null,
     fansNickname: string | null,
     gender: TiebaUserGender,
-    iconInfo: ObjUnknown[] | null
+    icon: ObjUnknown[] | null
 }
 export interface ApiUsersQuery {
     pages: Pagination,
@@ -74,12 +74,12 @@ export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampField
     postTime: SqlDateTimeUtcPlus8,
     latestReplierUid: BaiduUserID,
     latestReplyTime: SqlDateTimeUtcPlus8,
-    replyNum: UInt,
-    viewNum: UInt,
-    shareNum: UInt,
+    replyCount: UInt,
+    viewCount: UInt,
+    shareCount: UInt,
     location: ObjUnknown | null,
-    agreeInfo: ObjUnknown | null,
-    zanInfo: ObjUnknown | null
+    agree: ObjUnknown | null,
+    zan: ObjUnknown | null
 }
 export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields {
@@ -90,13 +90,13 @@ export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,
     authorExpGrade: AuthorExpGrade,
-    subReplyNum: UInt,
+    subReplyCount: UInt,
     postTime: SqlDateTimeUtcPlus8,
     isFold: 0 | 6,
     location: ObjUnknown | null,
-    agreeInfo: ObjUnknown | null,
-    signInfo: ObjUnknown | null,
-    tailInfo: ObjUnknown | null
+    agree: ObjUnknown | null,
+    sign: ObjUnknown | null,
+    tail: ObjUnknown | null
 }
 export interface SubReplyRecord extends LaravelEloquentRecordsCommonTimestampFields {
     tid: Tid,

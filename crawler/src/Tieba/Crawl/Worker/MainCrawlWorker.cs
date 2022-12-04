@@ -108,7 +108,7 @@ namespace tbm.Crawler
                 threads.Existing.ForEach(beforeAndAfter =>
                 {
                     var (before, after) = beforeAndAfter;
-                    if (before.ReplyNum != after.ReplyNum
+                    if (before.ReplyCount != after.ReplyCount
                         || before.LatestReplyTime != after.LatestReplyTime
                         || before.LatestReplierUid != after.LatestReplierUid)
                         _ = shouldCrawl.Add(before.Tid);
@@ -134,12 +134,12 @@ namespace tbm.Crawler
                 var (tid, replies) = tidAndReplies;
                 replies.NewlyAdded.ForEach(r =>
                 {
-                    if (r.SubReplyNum != null) _ = shouldCrawl.Add((tid, r.Pid));
+                    if (r.SubReplyCount != null) _ = shouldCrawl.Add((tid, r.Pid));
                 });
                 replies.Existing.ForEach(beforeAndAfter =>
                 {
                     var (before, after) = beforeAndAfter;
-                    if (after.SubReplyNum != null && before.SubReplyNum != after.SubReplyNum) _ = shouldCrawl.Add((tid, before.Pid));
+                    if (after.SubReplyCount != null && before.SubReplyCount != after.SubReplyCount) _ = shouldCrawl.Add((tid, before.Pid));
                 });
                 return shouldCrawl;
             });

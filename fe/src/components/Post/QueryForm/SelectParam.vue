@@ -38,9 +38,9 @@ export default defineComponent({
             仅主题帖: {
                 latestReplyTime: '最后回复时间',
                 threadTitle: '主题帖标题',
-                threadViewNum: '主题帖浏览量',
-                threadShareNum: '主题帖分享量',
-                threadReplyNum: '主题帖回复量',
+                threadViewCount: '主题帖浏览量',
+                threadShareCount: '主题帖分享量',
+                threadReplyCount: '主题帖回复量',
                 threadProperties: '主题帖属性',
                 latestReplierUid: '最后回复人UID',
                 latestReplierName: '最后回复人用户名',
@@ -48,7 +48,7 @@ export default defineComponent({
                 latestReplierGender: '最后回复人性别'
             },
             仅回复帖: {
-                replySubReplyNum: '楼中楼回复量'
+                replySubReplyCount: '楼中楼回复量'
             },
             仅回复帖或楼中楼: {
                 postContent: '帖子内容',
