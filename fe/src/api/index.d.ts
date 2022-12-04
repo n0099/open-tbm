@@ -27,12 +27,12 @@ export interface ApiStatusQP {
 }
 
 interface TimeCountPair { time: Mix, count: UInt }
-export interface ApiStatsForumPostsCount {
+export interface ApiStatsForumPostCount {
     thread: TimeCountPair[],
     reply: TimeCountPair[],
     subReply: TimeCountPair[]
 }
-export interface ApiStatsForumPostsCountQP {
+export interface ApiStatsForumPostCountQP {
     fid: Fid,
     timeGranularity: 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year',
     startTime: UnixTimestamp,

@@ -37,8 +37,8 @@
 <script lang="ts">
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
-import type { ApiForumList, ApiStatsForumPostsCountQP } from '@/api/index.d';
-import { apiForumList, apiStatsForumPostsCount, throwIfApiError } from '@/api';
+import type { ApiForumList, ApiStatsForumPostCountQP } from '@/api/index.d';
+import { apiForumList, apiStatsForumsPostCount, throwIfApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 import { titleTemplate } from '@/shared';
 
@@ -94,12 +94,12 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
         ...commonSeriesOption,
         id: 'reply',
         name: '回复帖',
-        stack: 'postsCount'
+        stack: 'postCount'
     }, {
         ...commonSeriesOption,
         id: 'subReply',
         name: '楼中楼',
-        stack: 'postsCount'
+        stack: 'postCount'
     }]
 };
 
@@ -109,7 +109,7 @@ export default defineComponent({
         useHead({ title: titleTemplate('统计') });
         const chartDom = ref<HTMLElement>();
         const state = reactive<{
-            query: ApiStatsForumPostsCountQP,
+            query: ApiStatsForumPostCountQP,
             forumList: ApiForumList
         }>({
             query: {
@@ -132,7 +132,7 @@ export default defineComponent({
                 { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧帖量统计` } }
             );
 
-            const statsResult = throwIfApiError(await apiStatsForumPostsCount(state.query)
+            const statsResult = throwIfApiError(await apiStatsForumsPostCount(state.query)
                 .finally(() => { chartDom.value?.classList.remove('loading') }));
             const series = _.map(statsResult, (dates, postType) => ({
                 id: postType,

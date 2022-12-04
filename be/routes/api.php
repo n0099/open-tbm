@@ -62,7 +62,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
             ->groupBy('startTime')
             ->get()->toJson();
     });
-    Route::get('/stats/forumPostsCount', static function (Request $request): array {
+    Route::get('/stats/forumsPostCount', static function (Request $request): array {
         $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime');
         $queryParams = $request->validate([
             'fid' => 'required|integer',
@@ -71,10 +71,10 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
             'endTime' => 'required|integer|numeric'
         ]);
 
-        $forumPostsCount = [];
+        $forumsPostCount = [];
         foreach (PostModelFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
             /** @var \Illuminate\Database\Eloquent\Model $forumPostModel */
-            $forumPostsCount[$postType] = $forumPostModel
+            $forumsPostCount[$postType] = $forumPostModel
                 ->selectRaw($groupByTimeGranularity[$queryParams['timeGranularity']])
                 ->selectRaw('COUNT(*) AS count')
                 ->whereBetween('postTime', [Helper::timestampToLocalDateTime($queryParams['startTime']), Helper::timestampToLocalDateTime($queryParams['endTime'])])
@@ -82,8 +82,8 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
                 ->orderBy('time')
                 ->get()->toArray();
         }
-        Helper::abortAPIIf(40403, Helper::isArrayValuesAllEqualTo($forumPostsCount, []));
+        Helper::abortAPIIf(40403, Helper::isArrayValuesAllEqualTo($forumsPostCount, []));
 
-        return $forumPostsCount;
+        return $forumsPostCount;
     });
 });
