@@ -69,12 +69,12 @@ export const getRequesterWithReCAPTCHA = async <T extends ApiError | unknown, Q>
     getRequester<T, Q>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) } as Q);
 
 export const apiForumList = async (): Promise<ApiError | ApiForumList> =>
-    getRequester('/forumList');
+    getRequester('/forums');
 export const apiStatus = async (qp: ApiStatusQP): Promise<ApiError | ApiStatus> =>
     getRequesterWithReCAPTCHA('/status', qp);
 export const apiStatsForumsPostCount = async (qp: ApiStatsForumPostCountQP): Promise<ApiError | ApiStatsForumPostCount> =>
-    getRequesterWithReCAPTCHA('/stats/forumsPostCount', qp);
+    getRequesterWithReCAPTCHA('/stats/forums/postCount', qp);
 export const apiUsersQuery = async (qp: ApiUsersQueryQP): Promise<ApiError | ApiUsersQuery> =>
-    getRequesterWithReCAPTCHA('/usersQuery', qp);
+    getRequesterWithReCAPTCHA('/users/query', qp);
 export const apiPostsQuery = async (qp: ApiPostsQueryQP): Promise<ApiError | ApiPostsQuery> =>
-    getRequesterWithReCAPTCHA('/postsQuery', qp);
+    getRequesterWithReCAPTCHA('/posts/query', qp);

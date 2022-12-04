@@ -17,11 +17,11 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/forumList', static fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
+Route::get('/forums', static fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(static function () {
-    Route::get('/postsQuery', 'PostsQuery@query');
-    Route::get('/usersQuery', 'UsersQuery@query');
+    Route::get('/posts/query', 'PostsQuery@query');
+    Route::get('/users/query', 'UsersQuery@query');
     Route::get('/status', static function (Request $request): string {
         $groupByTimeGranularity = [
             'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',
@@ -62,7 +62,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
             ->groupBy('startTime')
             ->get()->toJson();
     });
-    Route::get('/stats/forumsPostCount', static function (Request $request): array {
+    Route::get('/stats/forums/postCount', static function (Request $request): array {
         $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime');
         $queryParams = $request->validate([
             'fid' => 'required|integer',
