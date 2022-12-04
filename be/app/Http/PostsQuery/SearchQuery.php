@@ -46,7 +46,7 @@ class SearchQuery
         $this->queryResult = $results;
         $this->queryResultPages = [ // todo: should cast simplePagination to array in $queries to prevent dynamic call method by string
             'firstItem' => self::unionPageStats($queries, 'firstItem', static fn (array $v) => min($v)),
-            'itemsCount' => self::unionPageStats($queries, 'count', static fn (array $v) => array_sum($v)),
+            'itemCount' => self::unionPageStats($queries, 'count', static fn (array $v) => array_sum($v)),
             'currentPage' => self::unionPageStats($queries, 'currentPage', static fn (array $v) => min($v))
         ];
 

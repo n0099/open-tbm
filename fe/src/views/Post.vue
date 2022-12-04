@@ -109,7 +109,7 @@ export default defineComponent({
 
             const networkTime = Date.now() - startTime;
             await nextTick(); // wait for child components finish dom update
-            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemsCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
             lazyLoadUpdate();
             return true;
         };

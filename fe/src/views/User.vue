@@ -76,7 +76,7 @@ export default defineComponent({
             else state.userPages = _.sortBy([...state.userPages, usersQuery], i => i.pages.currentPage);
             const networkTime = Date.now() - startTime;
             await nextTick(); // wait for child components finish dom update
-            notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemsCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+            notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
             return true;
         };
         fetchUsersData(route, true);

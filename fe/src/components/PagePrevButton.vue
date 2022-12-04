@@ -6,7 +6,7 @@
                 <RouterLink v-if="pageInfo.currentPage > 1" :to="pageRoutes.prev"
                             class="badge bg-primary link-light">上一页</RouterLink>
                 <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
-                <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.itemsCount - 1 }} 条</span>
+                <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.itemCount - 1 }} 条</span>
             </div>
         </div>
         <div class="col align-middle"><hr /></div>

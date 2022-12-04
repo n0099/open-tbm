@@ -43,7 +43,7 @@ class IndexQuery
         ];
         $this->queryResultPages = [
             'firstItem' => $result->firstItem(),
-            'itemsCount' => $result->count(),
+            'itemCount' => $result->count(),
             'currentPage' => $result->currentPage()
         ];
 

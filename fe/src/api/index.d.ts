@@ -39,7 +39,7 @@ export interface ApiStatsForumPostsCountQP {
     endTime: UnixTimestamp
 }
 
-export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemsCount']: number };
+export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemCount']: number };
 interface ApiQPPagination { page?: number }
 export type BaiduUserID = Int;
 export type TiebaUserGender = 0 | 1 | 2 | null;
