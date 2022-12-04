@@ -35,7 +35,7 @@ namespace tbm.Crawler
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<TbmDbContext.New>()(0);
-            var forums = (from f in db.ForumsInfo where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
+            var forums = (from f in db.Forum where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
             var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
             foreach (var fidAndName in forums)
             {

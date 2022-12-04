@@ -14,7 +14,7 @@ namespace tbm.Crawler
         public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
         public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
         public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
-        public DbSet<ForumInfo> ForumsInfo => Set<ForumInfo>();
+        public DbSet<Forum> Forum => Set<Forum>();
 
         public delegate TbmDbContext New(Fid fid);
 
@@ -28,7 +28,7 @@ namespace tbm.Crawler
 #pragma warning disable IDE0058 // Expression value is never used
         protected override void OnModelCreating(ModelBuilder b)
         {
-            b.Entity<TiebaUser>().ToTable("tbm_tiebaUsers");
+            b.Entity<TiebaUser>().ToTable("tbm_tieba_users");
             b.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
             b.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
             b.Entity<ReplySignature>().ToTable("tbm_reply_signatures").HasKey(e => new {e.SignatureId, e.SignatureMd5});
@@ -39,7 +39,7 @@ namespace tbm.Crawler
             b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new {e.Pid, e.Time});
             b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new {e.Spid, e.Time});
             b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new {e.Uid, e.Time});
-            b.Entity<ForumInfo>().ToTable("tbm_forumsInfo");
+            b.Entity<Forum>().ToTable("tbm_forums");
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)

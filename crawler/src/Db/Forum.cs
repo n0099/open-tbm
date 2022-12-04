@@ -1,6 +1,6 @@
 namespace tbm.Crawler
 {
-    public class ForumInfo
+    public class Forum
     {
         [Key] public Fid Fid { get; set; }
         public string Name { get; set; } = "";

@@ -77,7 +77,7 @@ namespace tbm.Crawler
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<TbmDbContext.New>()(0);
             var forumAndPostCountList = db.Database.GetDbConnection().Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
-                string.Join(" UNION ALL ", (from f in db.ForumsInfo select f.Fid).ToList().Select(fid =>
+                string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
                     $"SELECT {fid} AS Fid,"
                     + $"IFNULL((SELECT id FROM tbm_f{fid}_replies ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
                     + $"IFNULL((SELECT id FROM tbm_f{fid}_subReplies ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))).ToList();

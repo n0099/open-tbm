@@ -59,7 +59,7 @@ namespace tbm.Crawler
                         if (lockType == "thread")
                         {
                             var fid = lockId.Fid;
-                            var forumName = (from f in db.ForumsInfo where f.Fid == fid select f.Name).FirstOrDefault();
+                            var forumName = (from f in db.Forum where f.Fid == fid select f.Name).FirstOrDefault();
                             if (forumName == null) return;
                             _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid={}, forumName={}",
                                 failureCountsKeyByPage.Count, fid, forumName);
