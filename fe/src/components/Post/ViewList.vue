@@ -82,9 +82,9 @@
                         <PostTimeBadge :time="reply.postTime" badgeColor="primary" />
                     </div>
                 </div>
-                <div class="reply-info row shadow-sm bs-callout bs-callout-info">
+                <div class="reply row shadow-sm bs-callout bs-callout-info">
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
-                         class="reply-user-info col-auto text-center sticky-top shadow-sm badge bg-light">
+                         class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
                         <RouterLink :to="userRoute(author.uid)" target="_blank" class="d-block">
                             <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
                                  class="tieba-user-portrait-large lazy" />
@@ -110,7 +110,7 @@
                                         <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                                             <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"
                                                         :to="userRoute(author.uid)" target="_blank"
-                                                        class="sub-reply-user-info text-wrap badge bg-light">
+                                                        class="sub-reply-author text-wrap badge bg-light">
                                                 <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-portrait-small lazy" />
                                                 <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
                                                 <UserTag :user="{
@@ -182,7 +182,7 @@ export default defineComponent({
                     reply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
                         (groupedSubReplies, subReply, index, subReplies) => {
                             if (_.isArray(subReply)) return [subReply]; // useless since subReply will never be an array
-                            // group sub replies item by continuous and same author info
+                            // group sub replies item by continuous and same post author
                             const previousSubReply = subReplies[index - 1] as SubReplyRecord | undefined;
                             // https://github.com/microsoft/TypeScript/issues/13778
                             if (previousSubReply !== undefined
@@ -236,12 +236,12 @@ export default defineComponent({
     border-bottom: 0;
     background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
 }
-.reply-info {
+.reply {
     padding: .625rem;
     margin: 0;
     border-top: 0;
 }
-.reply-user-info {
+.reply-author {
     z-index: 1018;
     top: 8rem;
     padding: .25rem;
@@ -259,7 +259,7 @@ export default defineComponent({
 .sub-reply-item > * {
     padding: .25rem;
 }
-.sub-reply-user-info {
+.sub-reply-author {
     font-size: .9rem;
 }
 </style>

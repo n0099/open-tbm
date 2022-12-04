@@ -12,14 +12,14 @@
             <ThreadTag :thread="record" />
             <span>{{ record.title }}</span>
         </template>
-        <template #authorInfo="{ record: { authorUid, authorManagerType } }">
+        <template #postAuthor="{ record: { authorUid, authorManagerType } }">
             <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                 <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
             </a>
             <UserTag :user="{ managerType: authorManagerType }" />
         </template>
-        <template #latestReplierInfo="{ record: { latestReplierUid } }">
+        <template #postLatestReplier="{ record: { latestReplierUid } }">
             <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
                 <img :data-src="tiebaUserPortraitUrl(getUser(latestReplierUid).avatarUrl)"
                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(latestReplierUid) }}
@@ -29,7 +29,7 @@
             <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
                    :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
-                <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                <template #postAuthor="{ record: { authorUid, authorManagerType, authorExpGrade } }">
                     <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                         <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
@@ -46,7 +46,7 @@
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                            :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
-                        <template #authorInfo="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                        <template #postAuthor="{ record: { authorUid, authorManagerType, authorExpGrade } }">
                             <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
                                 <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
                                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
@@ -103,9 +103,9 @@ export default defineComponent({
                 { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },
                 { title: '回复量', dataIndex: 'replyNum' },
                 { title: '浏览量', dataIndex: 'viewNum' },
-                { title: '发帖人', slots: { customRender: 'authorInfo' } },
+                { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖时间', dataIndex: 'postTime' },
-                { title: '最后回复人', slots: { customRender: 'latestReplierInfo' } },
+                { title: '最后回复人', slots: { customRender: 'postLatestReplier' } },
                 { title: '最后回复时间', dataIndex: 'latestReplyTime' },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
@@ -122,7 +122,7 @@ export default defineComponent({
                 { title: 'pid', dataIndex: 'pid' },
                 { title: '楼层', dataIndex: 'floor' },
                 { title: '楼中楼回复量', dataIndex: 'subReplyNum' },
-                { title: '发帖人', slots: { customRender: 'authorInfo' } },
+                { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '发帖时间', dataIndex: 'postTime' },
                 { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
@@ -135,7 +135,7 @@ export default defineComponent({
             ],
             subReplyColumns: [
                 { title: 'spid', dataIndex: 'spid' },
-                { title: '发帖人', slots: { customRender: 'authorInfo' } },
+                { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '发帖时间', dataIndex: 'postTime' },
                 { title: '首次收录时间', dataIndex: 'created_at' },

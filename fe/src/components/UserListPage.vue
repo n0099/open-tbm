@@ -1,6 +1,6 @@
 <template>
     <div>
-        <PagePrevButton :pageInfo="users.pages" :pageRoutes="pageRoutes" />
+        <PagePrevButton :page="users.pages" :pageRoutes="pageRoutes" />
         <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="user.uid" class="row">
             <div class="col-3">
                 <img :data-src="tiebaUserPortraitUrl(user.avatarUrl)"

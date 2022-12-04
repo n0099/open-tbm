@@ -3,10 +3,10 @@
         <div class="col align-middle"><hr /></div>
         <div class="w-auto">
             <div class="p-2 badge bg-light text-dark">
-                <RouterLink v-if="pageInfo.currentPage > 1" :to="pageRoutes.prev"
+                <RouterLink v-if="page.currentPage > 1" :to="pageRoutes.prev"
                             class="badge bg-primary link-light">上一页</RouterLink>
-                <p class="h4">第 {{ pageInfo.currentPage }} 页</p>
-                <span class="small">第 {{ pageInfo.firstItem }}~{{ pageInfo.firstItem + pageInfo.itemCount - 1 }} 条</span>
+                <p class="h4">第 {{ page.currentPage }} 页</p>
+                <span class="small">第 {{ page.firstItem }}~{{ page.firstItem + page.itemCount - 1 }} 条</span>
             </div>
         </div>
         <div class="col align-middle"><hr /></div>
@@ -23,7 +23,7 @@ import { RouterLink } from 'vue-router';
 export default defineComponent({
     components: { RouterLink },
     props: {
-        pageInfo: { type: Object as PropType<Pagination>, required: true },
+        page: { type: Object as PropType<Pagination>, required: true },
         pageRoutes: { type: Object as PropType<{ prev: RouteLocationRaw }>, required: true }
     }
 });

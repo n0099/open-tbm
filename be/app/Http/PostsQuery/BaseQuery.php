@@ -39,19 +39,19 @@ trait BaseQuery
         $pids = array_column($result['replies'], 'pid');
         $spids = array_column($result['subReplies'], 'spid');
 
-        $isInfoOnlyContainsPostsID = $this instanceof IndexQuery;
-        $queryDetailedPostsInfo = static function (array $postIDs, string $postType) use ($result, $postModels, $isInfoOnlyContainsPostsID) {
+        $shouldQueryDetailedPosts = $this instanceof IndexQuery;
+        $tryQueryDetailedPosts = static function (array $postIDs, string $postType) use ($result, $postModels, $shouldQueryDetailedPosts) {
             if ($postIDs === []) {
                 return collect();
             }
             $model = $postModels[$postType];
-            return collect($isInfoOnlyContainsPostsID
+            return collect($shouldQueryDetailedPosts
                 ? $model->{Helper::POSTS_TYPE_ID[$postType]}($postIDs)->hidePrivateFields()->get()->toArray()
                 : $result[Helper::POST_TYPES_TO_PLURAL[$postType]]);
         };
-        $threads = $queryDetailedPostsInfo($tids, 'thread');
-        $replies = $queryDetailedPostsInfo($pids, 'reply');
-        $subReplies = $queryDetailedPostsInfo($spids, 'subReply');
+        $threads = $tryQueryDetailedPosts($tids, 'thread');
+        $replies = $tryQueryDetailedPosts($pids, 'reply');
+        $subReplies = $tryQueryDetailedPosts($spids, 'subReply');
 
         $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs) =>
             $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
@@ -109,7 +109,7 @@ trait BaseQuery
         $threads = Helper::keyBy($threads, 'tid');
         $replies = Helper::keyBy($replies, 'pid');
         $subReplies = Helper::keyBy($subReplies, 'spid');
-        $nestedPostsInfo = [];
+        $nestedPosts = [];
 
         foreach ($threads as $tid => $thread) {
             // can't invoke values() here to prevent losing key with posts id
@@ -118,9 +118,9 @@ trait BaseQuery
                 // values() and array_values() remove keys to simplify json data
                 $threadReplies[$pid]['subReplies'] = collect($subReplies)->where('pid', $pid)->values()->toArray();
             }
-            $nestedPostsInfo[$tid] = [...$thread, 'replies' => array_values($threadReplies)];
+            $nestedPosts[$tid] = [...$thread, 'replies' => array_values($threadReplies)];
         }
 
-        return array_values($nestedPostsInfo);
+        return array_values($nestedPosts);
     }
 }

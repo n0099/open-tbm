@@ -1,5 +1,5 @@
 <template>
-    <PagePrevButton :pageInfo="posts.pages" :pageRoutes="pageRoutes" />
+    <PagePrevButton :page="posts.pages" :pageRoutes="pageRoutes" />
     <ViewList v-if="renderType === 'list'" :initialPosts="posts" />
     <ViewTable v-else-if="renderType === 'table'" :posts="posts" />
     <PageNextButton v-if="!isLoadingNewPage && isLastPageInPages" :pageRoutes="pageRoutes" />
