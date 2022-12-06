@@ -4,13 +4,14 @@ import NProgress from 'nprogress';
 import qs from 'qs';
 import _ from 'lodash';
 
-export const isApiError = <T>(r: ApiError | T): r is ApiError => 'errorCode' in r && 'errorInfo' in r;
-export const throwIfApiError = <T>(api: ApiError | T): T => {
-    if (isApiError(api)) throw Error(JSON.stringify(api));
-    return api;
+export const isApiError = (response: ApiError | unknown): response is ApiError =>
+    _.isObject(response) && 'errorCode' in response && 'errorInfo' in response;
+export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TResponse => {
+    if (isApiError(response)) throw Error(JSON.stringify(response));
+    return response;
 };
-export const getRequester = async <T extends ApiError | unknown, Q>
-(endpoint: string, queryString?: Q & { reCAPTCHA?: string }): Promise<ApiError | T> => {
+export const getRequester = async <TResponse extends ApiError | unknown, TQueryParam>
+(endpoint: string, queryString?: TQueryParam & { reCAPTCHA?: string }): Promise<ApiError | TResponse> => {
     NProgress.start();
     document.body.style.cursor = 'progress';
     let errorCode = 0;
@@ -22,7 +23,7 @@ export const getRequester = async <T extends ApiError | unknown, Q>
         );
         errorCode = response.status;
         errorMessage += `HTTP ${response.status} `;
-        const json = await response.json() as T;
+        const json = await response.json() as TResponse;
         if (isApiError(json)) {
             ({ errorCode } = json);
             errorMessage += `错误码：${json.errorCode}<br />`;
@@ -64,9 +65,9 @@ const reCAPTCHACheck = async (action = ''): Promise<{ reCAPTCHA?: string }> => n
         reslove({});
     }
 });
-export const getRequesterWithReCAPTCHA = async <T extends ApiError | unknown, Q>
-(endpoint: string, queryString?: Q, action = '') =>
-    getRequester<T, Q>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) } as Q);
+export const getRequesterWithReCAPTCHA = async <TResponse extends ApiError | unknown, TQueryParam>
+(endpoint: string, queryString?: TQueryParam, action = '') =>
+    getRequester<TResponse, TQueryParam>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) } as TQueryParam & { reCAPTCHA?: string });
 
 export const apiForumList = async (): Promise<ApiError | ApiForumList> =>
     getRequester('/forums');

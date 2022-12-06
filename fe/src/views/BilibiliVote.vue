@@ -135,7 +135,7 @@ const voteCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, curre
     const [timeline] = charts.top10CandidatesTimeline?.getOption()?.timeline as [{ data: number[], currentIndex: number }];
     const previousTimelineValue = _.find(votesData, {
         endTime: timeline.data[timeline.currentIndex - 1],
-        voteFor: Number(candidateIndex.substr(0, candidateIndex.indexOf('号'))) // trim trailing '号' in series name
+        voteFor: Number(candidateIndex.substring(0, candidateIndex.indexOf('号'))) // trim trailing '号' in series name
     });
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;
 };
@@ -319,7 +319,7 @@ const chartsInitialOption: {
                 type: 'text',
                 right: '10%',
                 bottom: '15%',
-                style: { fill: '#989898', textAlign: 'right', font: '28px "Microsoft YaHei"' } // https://github.com/apache/echarts/issues/15966
+                style: { fill: '#989898', align: 'right', font: '28px "Microsoft YaHei"' }
             }
         }
     },

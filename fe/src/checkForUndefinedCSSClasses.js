@@ -67,7 +67,7 @@ function ingestRules(rules) {
             // get defined classes
             const classes = rule.selectorText?.match(/\.[\w-]+/g);
             if (classes) {
-                for (const cl of classes) { defined.add(cl.substr(1)); }
+                for (const cl of classes) { defined.add(cl.substring(1)); }
             }
         }
     }
