@@ -15,7 +15,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.2",
     "@popperjs/core": "^2.11.6",
     "@vueuse/core": "^9.6.0",
-    "@vueuse/head": "^1.0.19",
+    "@vueuse/head": "^1.0.20",
     "ant-design-vue": "^3.2.15",
     "bootstrap": "^5.2.3",
     "core-js": "^3.26.1",
@@ -38,11 +38,11 @@
     "@types/gtag.js": "^0.0.12",
     "@types/lodash": "^4.14.191",
     "@types/luxon": "^3.1.0",
-    "@types/node": "^18.11.10",
+    "@types/node": "^18.11.11",
     "@types/nprogress": "^0.2.0",
     "@types/qs": "^6.9.7",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.1",
+    "@typescript-eslint/parser": "^5.45.1",
     "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-plugin-eslint": "^5.0.8",
     "@vue/cli-plugin-router": "^5.0.8",
@@ -56,10 +56,6 @@
     "stats.js": "^0.17.0",
     "typescript": "^4.9.3",
     "vue-cli-plugin-webpack-bundle-analyzer": "^4.0.0"
-  },
-  "resolutions": {
-    "@typescript-eslint/eslint-plugin": "^5.32.0",
-    "@typescript-eslint/parser": "^5.32.0"
   },
   "browserslist": [
     "> 1% in CN",
