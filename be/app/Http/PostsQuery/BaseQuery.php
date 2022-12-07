@@ -13,7 +13,7 @@ trait BaseQuery
 {
     protected array $queryResult;
 
-    protected array $queryResultPages;
+    private array $queryResultPages;
 
     abstract public function query(QueryParams $params): self;
 
@@ -26,7 +26,7 @@ trait BaseQuery
         return $this->queryResultPages;
     }
 
-    protected function setResult(int $fid, Collection $paginators, Collection $results)
+    protected function setResult(int $fid, Collection $paginators, Collection $results): void
     {
         Helper::abortAPIIf(40401, $results->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$results->map(static fn (Collection $i) => $i->toArray())->toArray()];
@@ -66,9 +66,9 @@ trait BaseQuery
             if ($postIDs === []) {
                 return collect();
             }
-            $model = $postModels[$postType];
             return collect($shouldQueryDetailedPosts
-                ? $model->{Helper::POSTS_TYPE_ID[$postType]}($postIDs)->hidePrivateFields()->get()->toArray()
+                ? $postModels[$postType]->{Helper::POSTS_TYPE_ID[$postType]}($postIDs)
+                    ->hidePrivateFields()->get()->toArray()
                 : $result[Helper::POST_TYPES_TO_PLURAL[$postType]]);
         };
         $threads = $tryQueryDetailedPosts($tids, 'thread');
@@ -127,7 +127,7 @@ trait BaseQuery
 
     public static function nestPostsWithParent(array $threads, array $replies, array $subReplies, int $fid): array
     {
-        // adding useless parameter $fid will compatible with array shape of field $this->queryResult when passing it as spread arguments
+        // the useless parameter $fid will compatible with array shape of field $this->queryResult when passing it as spread arguments
         $threads = Helper::keyBy($threads, 'tid');
         $replies = Helper::keyBy($replies, 'pid');
         $subReplies = Helper::keyBy($subReplies, 'spid');

@@ -45,22 +45,4 @@ class PostModelFactory
     {
         return array_combine(Helper::POST_TYPES, [self::newThread($fid), self::newReply($fid), self::newSubReply($fid)]);
     }
-
-    public static function getThreadByID(int $tid): ThreadModel
-    {
-        $fid = (new IndexModel())::where('tid', $tid)->value('fid');
-        return self::newThread($fid);
-    }
-
-    public static function getReplyByID(int $pid): ReplyModel
-    {
-        $fid = (new IndexModel())::where('pid', $pid)->value('fid');
-        return self::newReply($fid);
-    }
-
-    public static function getSubReplyByID(int $spid): SubReplyModel
-    {
-        $fid = (new IndexModel())::where('spid', $spid)->value('fid');
-        return self::newSubReply($fid);
-    }
 }

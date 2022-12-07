@@ -47,7 +47,7 @@ class PostsQuery extends Controller
 
         return [
             'pages' => $query->getResultPages(),
-            'forum' => ForumModel::where('fid', $result['fid'])->hidePrivateFields()->first()?->toArray(),
+            'forum' => ForumModel::fid($result['fid'])->hidePrivateFields()->first()?->toArray(),
             'threads' => $query::nestPostsWithParent(...$result),
             'users' => UserModel::whereIn(
                 'uid',

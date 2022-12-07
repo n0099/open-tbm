@@ -14,7 +14,11 @@ class Helper
 
     public const POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
 
-    public const POST_TYPES_TO_PLURAL = ['thread' => 'threads', 'reply' => 'replies', 'subReply' => 'subReplies'];
+    public const POST_TYPES_TO_PLURAL = [
+        'thread' => 'threads',
+        'reply' => 'replies',
+        'subReply' => 'subReplies'
+    ];
 
     public const POSTS_ID_TYPE = [
         'tid' => 'thread',
@@ -42,7 +46,7 @@ class Helper
         }
     }
 
-    public static function abortAPI(int $errorCode): void
+    public static function abortAPI(int $errorCode): never
     {
         $statusCodeAndErrorInfos = [
             // httpStatusCode => [ errorCode => errorInfo ]
@@ -87,7 +91,7 @@ class Helper
     {
         // similar with Illuminate\Support\Collection::keyBy()
         // https://stackoverflow.com/questions/56108051/is-it-possible-to-assign-keys-to-array-elements-in-php-from-a-value-column-with
-        // note array_column won't check is every item have determined key, if not it will fill with numeric key
+        // note array_column() won't check is every item have determined key, if not it will fill with numeric key
         return array_column($array, null, $itemsKey);
     }
 

@@ -8,7 +8,6 @@ use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class SearchQuery
@@ -95,7 +94,7 @@ class SearchQuery
                     ),
             // textMatch
             'threadTitle', 'postContent' =>
-                self::applyTextMatchParamsOnQuery($qb, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
+                self::applyTextMatchParamOnQuery($qb, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
             // dateTimeRange
             'postTime', 'latestReplyTime' =>
                 $qb->{"where{$not}Between"}($name, explode(',', $value)),
@@ -112,7 +111,7 @@ class SearchQuery
             'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
                 $qb->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
-                    $getAndCacheUserQuery(self::applyTextMatchParamsOnQuery(
+                    $getAndCacheUserQuery(self::applyTextMatchParamOnQuery(
                         UserModel::select('uid'), $fieldNameOfUserNameParams, $value, $sub
                     ))
                 ),
@@ -129,7 +128,7 @@ class SearchQuery
         };
     }
 
-    private static function applyTextMatchParamsOnQuery(Builder $qb, string $field, string $value, array $subParams): Builder
+    private static function applyTextMatchParamOnQuery(Builder $qb, string $field, string $value, array $subParams): Builder
     {
         $not = $subParams['not'] ? 'Not' : '';
         if ($subParams['matchBy'] === 'regex') {

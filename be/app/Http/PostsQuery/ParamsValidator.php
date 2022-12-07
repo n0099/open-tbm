@@ -38,7 +38,7 @@ class ParamsValidator
         $this->validate40004();
     }
 
-    protected static function validateParamsValue(array $params): void
+    private static function validateParamsValue(array $params): void
     {
         $paramsPossibleValue = [
             'userGender' => [0, 1, 2],
@@ -82,13 +82,13 @@ class ParamsValidator
         ])->validate();
     }
 
-    protected function validate40001(): void
+    private function validate40001(): void
     {
         // only fill postTypes and/or orderBy uniqueParam doesn't query anything
         Helper::abortAPIIf(40001, $this->params->count() === \count($this->params->pick('postTypes', 'orderBy')));
     }
 
-    protected function validate40005(): void
+    private function validate40005(): void
     {
         foreach (self::UNIQUE_PARAMS_NAME as $uniqueParamName) { // is all unique param only appeared once
             Helper::abortAPIIf(40005, \count($this->params->pick($uniqueParamName)) > 1);
@@ -103,7 +103,7 @@ class ParamsValidator
             : $current === $required[1];
     }
 
-    protected function validate40003(): void
+    private function validate40003(): void
     {
         $paramsRequiredPostTypes = [
             'pid' => ['SUB', ['reply', 'subReply']],
@@ -129,7 +129,7 @@ class ParamsValidator
         }
     }
 
-    protected function validate40004(): void
+    private function validate40004(): void
     {
         $orderByRequiredPostTypes = [
             'pid' => ['SUB', ['reply', 'subReply']],
