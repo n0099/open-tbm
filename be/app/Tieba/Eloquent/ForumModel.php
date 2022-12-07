@@ -19,6 +19,11 @@ class ForumModel extends ModelWithHiddenFields
         return $query->where('isCrawling', $isCrawling);
     }
 
+    public function scopeFid(Builder $query, int $fid): Builder
+    {
+        return $query->where('fid', $fid);
+    }
+
     public static function getName(int $fid): Collection
     {
         return self::where('fid', $fid)->value('name');

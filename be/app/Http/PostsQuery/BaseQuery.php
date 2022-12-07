@@ -5,6 +5,7 @@ namespace App\Http\PostsQuery;
 use App\Helper;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use TbClient\Wrapper\PostContentWrapper;
 
@@ -20,14 +21,35 @@ trait BaseQuery
     {
     }
 
-    public function getResult(): array
-    {
-        return $this->queryResult;
-    }
-
     public function getResultPages(): array
     {
         return $this->queryResultPages;
+    }
+
+    protected function setResult(int $fid, Collection $paginators, Collection $results)
+    {
+        Helper::abortAPIIf(40401, $results->every(static fn (Collection $i) => $i->isEmpty()));
+        $this->queryResult = ['fid' => $fid, ...$results->map(static fn (Collection $i) => $i->toArray())->toArray()];
+        $this->queryResultPages = [
+            'firstItem' => self::unionPageStats($paginators, 'firstItem', static fn (array $v) => min($v)),
+            'itemCount' => self::unionPageStats($paginators, 'count', static fn (array $v) => array_sum($v)),
+            'currentPage' => self::unionPageStats($paginators, 'currentPage', static fn (array $v) => min($v))
+        ];
+    }
+
+    /**
+     * Union builders pagination $unionMethodName data by $unionStatement
+     *
+     * @param Collection<Paginator> $paginators
+     * @param string $unionMethodName
+     * @param callable $unionCallback
+     * @return mixed returned by $unionCallback()
+     */
+    private static function unionPageStats(Collection $paginators, string $unionMethodName, callable $unionCallback): mixed
+    {
+        // Collection::filter() will remove falsy values
+        $unionValues = $paginators->map(static fn ($p) => $p->$unionMethodName())->filter()->toArray();
+        return $unionCallback($unionValues === [] ? [0] : $unionValues); // prevent empty array
     }
 
     public function fillWithParentPost(): array
@@ -84,7 +106,7 @@ trait BaseQuery
             }
             $proto = new PostContentWrapper();
             $proto->mergeFromString($content);
-            return str_replace("\n", '', trim(view('formatPostJsonContent', ['content' => $proto->getValue()])->render()));
+            return str_replace("\n", '', trim(view('renderPostContent', ['content' => $proto->getValue()])->render()));
         };
         $parseContentModel = static fn (Model $i) => $parseProtoBufContent($i->content);
         $replyContents = PostModelFactory::newReplyContent($fid)->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);

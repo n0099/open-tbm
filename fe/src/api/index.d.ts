@@ -86,7 +86,7 @@ export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields
     tid: Tid,
     pid: Pid,
     floor: UInt,
-    content: string, // original json convert to html string via be/app/resources/views/formatPostJsonContent.blade.php
+    content: string, // original json convert to html string via be/app/resources/views/renderPostContent.blade.php
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,
     authorExpGrade: AuthorExpGrade,
@@ -102,7 +102,7 @@ export interface SubReplyRecord extends LaravelEloquentRecordsCommonTimestampFie
     tid: Tid,
     pid: Pid,
     spid: Spid,
-    content: string, // original json convert to html string via be/app/resources/views/formatPostJsonContent.blade.php
+    content: string, // original json convert to html string via be/app/resources/views/renderPostContent.blade.php
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,
     authorExpGrade: AuthorExpGrade,

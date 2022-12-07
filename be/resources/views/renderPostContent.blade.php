@@ -54,17 +54,17 @@ try {
                     '10th_' => ['class' => '10th', 'type' => 'gif'], // 贴吧十周年
                 ];
                 $emoticonRegex = Regex::match('/(.+?)(\d+|$)/', $item->getText());
-                $emoticonInfo = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2)];
-                if ($emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] === '') {
-                    $emoticonInfo['index'] = 1; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
+                $emoticon = ['prefix' => $emoticonRegex->group(1), 'index' => $emoticonRegex->group(2)];
+                if ($emoticon['prefix'] === 'image_emoticon' && $emoticon['index'] === '') {
+                    $emoticon['index'] = 1; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
                 }
-                $emoticonInfo = [
-                    ...$emoticonInfo,
-                    ...($emoticonInfo['prefix'] === 'image_emoticon' && $emoticonInfo['index'] >= 51 && $emoticonInfo['index'] <= 61
+                $emoticon = [
+                    ...$emoticon,
+                    ...($emoticon['prefix'] === 'image_emoticon' && $emoticon['index'] >= 51 && $emoticon['index'] <= 61
                         ? $emoticonsIndex['image_emoticon>51']
-                        : $emoticonsIndex[$emoticonInfo['prefix']])
+                        : $emoticonsIndex[$emoticon['prefix']])
                 ];
-                $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticonInfo['class']}/{$emoticonInfo['prefix']}{$emoticonInfo['index']}.{$emoticonInfo['type']}";
+                $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticon['class']}/{$emoticon['prefix']}{$emoticon['index']}.{$emoticon['type']}";
                 ?>
                 <img class="lazy" referrerpolicy="no-referrer"
                      data-src="{{ $emoticonUrl }}" alt="{{ $item->getC() }}" />

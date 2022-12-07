@@ -18,54 +18,31 @@ class SearchQuery
     public function query(QueryParams $params): self
     {
         $fid = $params->getUniqueParamValue('fid');
+        $postTypes = $params->getUniqueParamValue('postTypes');
         /** @var array<string, Collection> $cachedUserQuery */
         $cachedUserQuery = [];
-        $queries = array_map(function (PostModel $postModel) use ($params, &$cachedUserQuery): Paginator {
-            $postQuery = $postModel->newQuery();
-            foreach ($params->omit() as $param) {
-                // even when $cachedUserQuery[$param->name] is null, it will still pass as a reference to the array item
-                // which is null at this point, but will be later updated by ref
-                self::applyQueryParamsOnQuery($postQuery, $param, $cachedUserQuery[$param->name]);
-            }
-            return $postQuery->hidePrivateFields()->simplePaginate($this->perPageItems);
-        }, Arr::only(
-            PostModelFactory::getPostModelsByFid($fid),
-            $params->getUniqueParamValue('postTypes')
-        ));
-
-        $queryResults = array_map(static fn ($qb) => $qb->toArray()['data'], $queries);
-        $results = [
-            'fid' => $fid,
-            ...array_combine(Arr::only(
-                Helper::POST_TYPES_TO_PLURAL,
-                $params->getUniqueParamValue('postTypes')
-            ), $queryResults)
-        ];
-        Helper::abortAPIIf(40401, array_keys(array_filter($results)) === ['fid']);
-
-        $this->queryResult = $results;
-        $this->queryResultPages = [ // todo: should cast simplePagination to array in $queries to prevent dynamic call method by string
-            'firstItem' => self::unionPageStats($queries, 'firstItem', static fn (array $v) => min($v)),
-            'itemCount' => self::unionPageStats($queries, 'count', static fn (array $v) => array_sum($v)),
-            'currentPage' => self::unionPageStats($queries, 'currentPage', static fn (array $v) => min($v))
-        ];
+        /** @var Collection<Builder> $queries */
+        $queries = collect(PostModelFactory::getPostModelsByFid($fid))
+            ->only($postTypes)
+            ->map(function (PostModel $postModel, string $postType) use ($params, &$cachedUserQuery): Builder {
+                $postQuery = $postModel->newQuery();
+                foreach ($params->omit() as $param) {
+                    // even when $cachedUserQuery[$param->name] is null, it will still pass as a reference to the array item
+                    // which is null at this point, but will be later updated by ref
+                    self::applyQueryParamsOnQuery($postQuery, $param, $cachedUserQuery[$param->name]);
+                }
+                return $postQuery->hidePrivateFields()
+                    // only fetch posts id when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
+                    ->select(array_slice(Helper::POSTS_TYPE_ID, 0,
+                        array_search($postType, Helper::POST_TYPES) + 1));
+            });
+        $paginators = $queries->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));
+        $this->setResult($fid, $paginators, $paginators
+            ->flatMap(static fn (Paginator $result, string $type) => [
+                Helper::POST_TYPES_TO_PLURAL[$type] => $result->collect()
+            ]));
 
         return $this;
-    }
-
-    /**
-     * Union builders pagination $unionMethodName data by $unionStatement
-     *
-     * @param Paginator[] $paginators
-     * @param string $unionMethodName
-     * @param callable $unionCallback
-     * @return mixed returned by $unionCallback()
-     */
-    private static function unionPageStats(array $paginators, string $unionMethodName, callable $unionCallback): mixed
-    {
-        // array_filter() will remove falsy values
-        $unionValues = array_filter(array_map(static fn ($p) => $p->$unionMethodName(), $paginators));
-        return $unionCallback($unionValues === [] ? [0] : $unionValues); // prevent empty array
     }
 
     /**
