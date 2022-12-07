@@ -60,7 +60,7 @@ abstract class PostModel extends ModelWithHiddenFields
         if (\is_array($postID) || $postID instanceof Collection) {
             return $query->whereIn($postIDName, $postID);
         }
-        throw new \InvalidArgumentException("{$postIDName} must be int or array");
+        throw new \InvalidArgumentException("$postIDName must be int or array");
     }
 
     /**

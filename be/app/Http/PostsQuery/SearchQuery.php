@@ -86,7 +86,7 @@ class SearchQuery
             'authorUid', 'authorExpGrade', 'latestReplierUid',
             'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
                 $sub['range'] === 'IN' || $sub['range'] === 'BETWEEN'
-                    ? $qb->{"where{$not}{$sub['range']}"}($fieldNameOfNumericParams, explode(',', $value))
+                    ? $qb->{"where$not{$sub['range']}"}($fieldNameOfNumericParams, explode(',', $value))
                     : $qb->where(
                         $fieldNameOfNumericParams,
                         $sub['not'] ? $inverseRangeOfNumericParams : $sub['range'],
@@ -132,7 +132,7 @@ class SearchQuery
     {
         $not = $subParams['not'] ? 'Not' : '';
         if ($subParams['matchBy'] === 'regex') {
-            return $qb->where($field, "{$not} REGEXP", $value);
+            return $qb->where($field, "$not REGEXP", $value);
         }
         return $qb->where(static function (Builder $subQuery) use ($subParams, $field, $not, $value) {
             // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
@@ -140,8 +140,8 @@ class SearchQuery
             $addMatchKeyword = static fn (string $keyword) =>
                 $subQuery->{"{$isOrWhere}Where"}(
                     $field,
-                    trim("{$not} LIKE"),
-                    $subParams['matchBy'] === 'implicit' ? "%{$keyword}%" : $keyword
+                    trim("$not LIKE"),
+                    $subParams['matchBy'] === 'implicit' ? "%$keyword%" : $keyword
                 );
             if ($subParams['spaceSplit']) { // split multiple search keyword by space char
                 foreach (explode(' ', $value) as $splitedKeyword) {

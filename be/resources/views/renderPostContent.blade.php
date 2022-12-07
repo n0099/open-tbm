@@ -2,7 +2,7 @@
 use Spatie\Regex\Regex;
 
 $replaceWithHttps = static fn (string $url) => str_replace('http://', 'https://', $url);
-$getImageUrl = static fn (string $hash) => "https://tiebapic.baidu.com/forum/pic/item/{$hash}.jpg";
+$getImageUrl = static fn (string $hash) => "https://tiebapic.baidu.com/forum/pic/item/$hash.jpg";
 
 /* @var array<\TbClient\Post\Common\Content> $content */
 try {

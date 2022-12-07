@@ -143,17 +143,17 @@ class BilibiliVote
         $timeGranularity = 5 * 60; // 5 mins
         $timeGranularityRawSQL = [];
         for ($time = strtotime($voteStartTime); $time <= strtotime($voteEndTime); $time += $timeGranularity) {
-            $timeGranularityRawSQL[] = "SELECT \"{$time}\" AS endTime";
+            $timeGranularityRawSQL[] = "SELECT '$time' AS endTime";
         }
         $timeGranularityRawSQL = implode(' UNION ', $timeGranularityRawSQL);
         return self::sanitizeVoteForField(\DB::query()
             ->selectRaw('CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime, isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
             ->fromSub(BilibiliVoteModel
-                ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/{$timeGranularity})*{$timeGranularity} as endTime, isValid, voteFor, COUNT(*) as count")
+                ::selectRaw("FLOOR(UNIX_TIMESTAMP(postTime)/$timeGranularity)*$timeGranularity as endTime, isValid, voteFor, COUNT(*) as count")
                 ->whereIn('voteFor', self::getCandidatesWithMostVotes(10))
                 ->groupBy('endTime', 'isValid', 'voteFor')
             , 'timeGroups')
-            ->join(\DB::raw("({$timeGranularityRawSQL}) AS timeGranularityRawSQL"),
+            ->join(\DB::raw("($timeGranularityRawSQL) AS timeGranularityRawSQL"),
             'timeGroups.endTime', '<', 'timeGranularityRawSQL.endTime') // cumulative
             ->groupBy('endTime', 'isValid', 'voteFor')
             ->orderBy('endTime', 'ASC')
