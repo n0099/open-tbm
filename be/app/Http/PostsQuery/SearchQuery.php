@@ -6,6 +6,7 @@ use App\Helper;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Eloquent\PostModelFactory;
+use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -70,7 +71,7 @@ class SearchQuery
 
         $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
         $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
-        $getAndCacheUserQuery = static function (Builder $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
+        $getAndCacheUserQuery = static function (BuilderContract $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
             // $outCachedUserQueryResult === null means it's the first call
             $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->get();
             return $outCachedUserQueryResult;
@@ -128,7 +129,7 @@ class SearchQuery
         };
     }
 
-    private static function applyTextMatchParamOnQuery(Builder $qb, string $field, string $value, array $subParams): Builder
+    private static function applyTextMatchParamOnQuery(BuilderContract $qb, string $field, string $value, array $subParams): BuilderContract
     {
         $not = $subParams['not'] ? 'Not' : '';
         if ($subParams['matchBy'] === 'regex') {

@@ -63,13 +63,12 @@ namespace tbm.Crawler.Tieba
 
         private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> data, string clientVersion)
         {
-            var clientInfo = new Dictionary<string, string>
+            var postData = new Dictionary<string, string>
             {
                 {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
                 {"_client_type", "2"},
                 {"_client_version", clientVersion}
-            };
-            var postData = clientInfo.Concat(data).ToList();
+            }.Concat(data).ToList();
             var sign = postData.Aggregate("", (acc, i) =>
             {
                 acc += i.Key + '=' + i.Value;

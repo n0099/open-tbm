@@ -12,17 +12,13 @@ namespace tbm.Crawler.Worker
         private const int MaxCrawlablePage = 334; // 10k threads / 30 per request (from Rn param) = 333.3...
         private readonly ILogger<ArchiveCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
-        private readonly string _forumName;
-        private readonly Fid _fid;
+        private readonly string _forumName = "";
+        private readonly Fid _fid = 0;
 
-        public delegate ArchiveCrawlWorker New(Fid fid, string forumName);
-
-        public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0, Fid fid, string forumName)
+        public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0)
         {
             _logger = logger;
             _scope0 = scope0;
-            _fid = fid;
-            _forumName = forumName;
         }
 
         public static float CalcCumulativeAverage(float currentCa, float previousCa, int currentIndex) =>
