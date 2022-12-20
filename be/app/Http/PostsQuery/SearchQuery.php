@@ -17,13 +17,13 @@ class SearchQuery
 
     public function query(QueryParams $params): self
     {
+        /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
-        $postTypes = $params->getUniqueParamValue('postTypes');
-        /** @var array<string, Collection> $cachedUserQuery */
+        /** @var array<string, Collection> $cachedUserQuery keyed by param name */
         $cachedUserQuery = [];
-        /** @var Collection<Builder> $queries */
+        /** @var Collection<string, Builder> $queries keyed by post type */
         $queries = collect(PostModelFactory::getPostModelsByFid($fid))
-            ->only($postTypes)
+            ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostModel $postModel, string $postType) use ($params, &$cachedUserQuery): Builder {
                 $postQuery = $postModel->newQuery();
                 foreach ($params->omit() as $param) { // omit nothing to get all params
@@ -36,6 +36,7 @@ class SearchQuery
                     ->select(array_slice(Helper::POSTS_TYPE_ID, 0,
                         array_search($postType, Helper::POST_TYPES) + 1));
             });
+        /** @var Collection<string, Paginator> $paginators keyed by post type */
         $paginators = $queries->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));
         $this->setResult($fid, $paginators, $paginators
             ->mapWithKeys(static fn (Paginator $paginator, string $type) =>

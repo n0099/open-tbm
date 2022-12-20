@@ -7,11 +7,17 @@ use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
+use JetBrains\PhpStorm\ArrayShape;
 use TbClient\Wrapper\PostContentWrapper;
 
 trait BaseQuery
 {
-    protected array $queryResult;
+    #[ArrayShape([
+        'fid' => 'int',
+        'threads' => '?array<array>',
+        'replies' => '?array<array>',
+        'subReplies' => '?array<array>',
+    ])] protected array $queryResult;
 
     private array $queryResultPages;
 
@@ -55,6 +61,9 @@ trait BaseQuery
     public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
+        /** @var array<int> $tids */
+        /** @var array<int> $pids */
+        /** @var array<int> $spids */
         $fid = $result['fid'];
         $postModels = PostModelFactory::getPostModelsByFid($fid);
         $tids = array_column($result['threads'], 'tid');
@@ -62,6 +71,11 @@ trait BaseQuery
         $spids = array_column($result['subReplies'], 'spid');
 
         $shouldQueryDetailedPosts = $this instanceof IndexQuery;
+        /**
+         * @param array<int> $postIDs
+         * @param string $postType
+         * @return Collection
+         */
         $tryQueryDetailedPosts = static function (array $postIDs, string $postType) use ($result, $postModels, $shouldQueryDetailedPosts) {
             if ($postIDs === []) {
                 return collect();
@@ -71,10 +85,15 @@ trait BaseQuery
                     ->hidePrivateFields()->get()->toArray()
                 : $result[Helper::POST_TYPES_TO_PLURAL[$postType]]);
         };
-        $threads = $tryQueryDetailedPosts($tids, 'thread');
-        $replies = $tryQueryDetailedPosts($pids, 'reply');
-        $subReplies = $tryQueryDetailedPosts($spids, 'subReply');
+        /** @var Collection<PostModel> $threads */
+        /** @var Collection<PostModel> $replies */
+        /** @var Collection<PostModel> $subReplies */
 
+        /**
+         * @param Collection<int> $parentIDs
+         * @param Collection<int> $subIDs
+         * @return bool
+         */
         $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs) =>
             $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
 
@@ -109,8 +128,11 @@ trait BaseQuery
             return str_replace("\n", '', trim(view('renderPostContent', ['content' => $proto->getValue()])->render()));
         };
         $parseContentModel = static fn (Model $i) => $parseProtoBufContent($i->content);
-        $replyContents = PostModelFactory::newReplyContent($fid)->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);
-        $subReplyContents = PostModelFactory::newSubReplyContent($fid)->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseContentModel);
+        /**
+         * @param Collection<?string> $contents
+         * @param string $postIDName
+         * @return \Closure
+         */
         $appendParsedContent = static fn (Collection $contents, string $postIDName) =>
             static function (array $post) use ($contents, $postIDName) {
                 $post['content'] = $contents[$post[$postIDName]];

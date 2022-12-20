@@ -17,13 +17,16 @@ class IndexQuery
 
     public function query(QueryParams $params): self
     {
+        /** @var array<string, mixed> $flatParams keyed by param name */
         $flatParams = array_reduce(
             $params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POSTS_ID),
             static fn (array $accParams, Param $param) =>
                 [...$accParams, $param->name => $param->value, ...$param->getAllSub()],
             []
         ); // flatten unique query params
+        /** @var array<string, int> $postIDParams keyed by post id name */
         $postIDParams = Arr::only($flatParams, Helper::POSTS_ID);
+        /** @var array<string> $postTypes */
         $postTypes = $flatParams['postTypes'];
 
         $getBuilders = function (int $fid) use ($postTypes, $postIDParams): Collection {
@@ -60,8 +63,13 @@ class IndexQuery
         }
 
         if ($flatParams['orderBy'] !== 'default') {
+            /**
+             * @param Builder $qb
+             * @return Builder
+             */
             $queryOrderByTranformer = static fn (Builder $qb) =>
                 $qb->addSelect($flatParams['orderBy'])->orderBy($flatParams['orderBy'], $flatParams['direction']);
+            /** @var array{callback: callable(PostModel): mixed, descending: bool} $resultSortBySelector */
             $resultSortBySelector = [
                 'callback' => static fn (PostModel $i) => $i->{$flatParams['orderBy']},
                 'descending' => $flatParams['direction'] === 'DESC'
