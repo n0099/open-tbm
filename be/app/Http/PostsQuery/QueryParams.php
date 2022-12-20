@@ -114,7 +114,7 @@ class QueryParams
                 'latestReplierDisplayName'
             ]
         ];
-        $subParamsDefaultValue = collect($paramsNameByType)->flatMap(static fn (array $names, string $type) =>
+        $subParamsDefaultValue = collect($paramsNameByType)->mapWithKeys(static fn (array $names, string $type) =>
             array_fill_keys($names, $paramDefaultValueByType[$type]))->toArray();
         foreach ($this->params as $param) { // set sub params with default value
             foreach ($subParamsDefaultValue[$param->name] ?? [] as $name => $value) {

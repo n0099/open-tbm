@@ -100,7 +100,7 @@ trait BaseQuery
                 ->hidePrivateFields()->get()->toArray());
         }
 
-        $parseProtoBufContent = static function (string|null $content): string|null {
+        $parseProtoBufContent = static function (?string $content): ?string {
             if ($content === null) {
                 return null;
             }
@@ -134,7 +134,7 @@ trait BaseQuery
         $nestedPosts = [];
 
         foreach ($threads as $tid => $thread) {
-            // can't invoke values() here to prevent losing key with posts id
+            // can't invoke values() here to prevent losing key with posts ID
             $threadReplies = collect($replies)->where('tid', $tid)->toArray();
             foreach ($threadReplies as $pid => $reply) {
                 // values() and array_values() remove keys to simplify json data

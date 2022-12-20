@@ -9,7 +9,7 @@ abstract class ModelWithHiddenFields extends Model
 {
     protected static array $fields;
 
-    protected static array $hiddenFields = ['id'];
+    protected static array $hiddenFields = [];
 
     public function scopeHidePrivateFields(Builder $query): Builder
     {

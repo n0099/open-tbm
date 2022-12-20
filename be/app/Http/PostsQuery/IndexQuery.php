@@ -44,12 +44,12 @@ class IndexQuery
             /** @var int $fid */ $fid = $flatParams['fid'];
             if ((new ForumModel())->fid($fid)->exists()) {
                 $queries = $getBuilders($fid);
-            } elseif (count($postIDParams) > 0) { // query by post id and fid, but the provided fid is invalid
+            } elseif (count($postIDParams) > 0) { // query by post ID and fid, but the provided fid is invalid
                 $queries = $getBuilders($getFidByPostsID($postIDParams));
             } else {
                 Helper::abortAPI(40006);
             }
-        } elseif (count($postIDParams) > 0) { // query by post id only
+        } elseif (count($postIDParams) > 0) { // query by post ID only
             $queries = $getBuilders($getFidByPostsID($postIDParams));
         } else {
             Helper::abortAPI(40001);
@@ -67,14 +67,14 @@ class IndexQuery
                 'descending' => $flatParams['direction'] === 'DESC'
             ];
         } elseif (\array_key_exists('fid', $flatParams) && count($postIDParams) === 0) { // query by fid only
-            // order by postTime to prevent posts out of order when order by post id
+            // order by postTime to prevent posts out of order when order by post ID
             $queryOrderByTranformer = static fn (Builder $qb) =>
                 $qb->addSelect('postTime')->orderByDesc('postTime');
             $resultSortBySelector = [
                 'callback' => static fn (PostModel $i) => $i->postTime,
                 'descending' => true
             ];
-        } elseif (count($postIDParams) > 0) { // query by post id (with or without fid)
+        } elseif (count($postIDParams) > 0) { // query by post ID (with or without fid)
             $queryOrderByTranformer = static fn (Builder $qb) =>
                 $qb->addSelect('postTime')->orderBy('postTime', 'ASC');
             $resultSortBySelector = [

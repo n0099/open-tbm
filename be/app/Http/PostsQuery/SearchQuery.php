@@ -26,21 +26,21 @@ class SearchQuery
             ->only($postTypes)
             ->map(function (PostModel $postModel, string $postType) use ($params, &$cachedUserQuery): Builder {
                 $postQuery = $postModel->newQuery();
-                foreach ($params->omit() as $param) {
+                foreach ($params->omit() as $param) { // omit nothing to get all params
                     // even when $cachedUserQuery[$param->name] is null, it will still pass as a reference to the array item
                     // which is null at this point, but will be later updated by ref
                     self::applyQueryParamsOnQuery($postQuery, $param, $cachedUserQuery[$param->name]);
                 }
                 return $postQuery->hidePrivateFields()
-                    // only fetch posts id when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
+                    // only fetch posts ID when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
                     ->select(array_slice(Helper::POSTS_TYPE_ID, 0,
                         array_search($postType, Helper::POST_TYPES) + 1));
             });
         $paginators = $queries->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));
         $this->setResult($fid, $paginators, $paginators
-            ->flatMap(static fn (Paginator $result, string $type) => [
-                Helper::POST_TYPES_TO_PLURAL[$type] => $result->collect()
-            ]));
+            ->mapWithKeys(static fn (Paginator $paginator, string $type) =>
+                [Helper::POST_TYPE_TO_PLURAL[$type] => $paginator->collect()]
+            ));
 
         return $this;
     }
