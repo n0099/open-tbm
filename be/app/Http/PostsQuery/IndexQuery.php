@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class IndexQuery
 {
@@ -29,31 +30,56 @@ class IndexQuery
         /** @var array<string> $postTypes */
         $postTypes = $flatParams['postTypes'];
 
-        $getBuilders = function (int $fid) use ($postTypes, $postIDParams): Collection {
+        $getQueryBuilderKeyByPostType = function (int $fid) use ($postTypes, $postIDParams): Collection {
             $postModelBuilders = collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
                 ->transform(static fn (PostModel $model, string $type) =>
-                $model->selectRaw('"' . Helper::POST_TYPES_TO_PLURAL[$type] . '" AS type') // latter we can do Collection::groupBy(type)
-                ->addSelect(Helper::POSTS_TYPE_ID[$type])); // only fetch posts id when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
+                $model->selectRaw('"' . Helper::POST_TYPE_TO_PLURAL[$type] . '" AS typePluralName') // latter we can do Collection::groupBy(type)
+                ->addSelect(Helper::POST_TYPE_TO_ID[$type])); // only fetch posts id when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
             return count($postIDParams) > 0
-                ? collect($postIDParams)->flatMap( // query with both post id and fid, array_merge(...array_map()) is flatmap
-                    static fn (int $postID, string $type) => [$type => $postModelBuilders[$type]->where($type, $postID)])
+                ? collect($postIDParams)->mapWithKeys( // query with both post ID and fid
+                    static function (int $postID, string $postIDName) use ($postModelBuilders) {
+                        $type = Helper::POST_ID_TO_TYPE[$postIDName];
+                        return [$type => $postModelBuilders[$type]->where($postIDName, $postID)];
+                    })
                 : $postModelBuilders; // query by fid only
         };
+        /**
+         * @param array<string, int> $postsID keyed by post ID name
+         * @return int fid
+         */
         $getFidByPostsID = function (array $postsID): int {
-            // TODO
+            $fidKeyByPostIDName = collect($postsID)->map(function (int $id, string $postIDName): int {
+                $pluralPostTypeName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
+                $counts = collect(DB::select(
+                    implode(' UNION ALL ', array_map(
+                        fn (int $fid) => "(SELECT $fid AS fid, COUNT(*) AS count FROM tbm_f{$fid}_{$pluralPostTypeName} WHERE $postIDName = ?)",
+                        ForumModel::get('fid')->pluck('fid')->toArray()
+                    )),
+                    [$id]
+                ))->where('count', '!=', 0);
+                Helper::abortAPIIf(50001, $counts->count() > 1);
+                Helper::abortAPIIf(40401, $counts->count() == 0);
+                return $counts->pluck('fid')->first();
+            });
+            Helper::abortAPIIf(40007, $fidKeyByPostIDName->unique()->count() > 1);
+            /** @noinspection PhpStrictTypeCheckingInspection */
+            return $fidKeyByPostIDName->first();
         };
 
         if (\array_key_exists('fid', $flatParams)) {
             /** @var int $fid */ $fid = $flatParams['fid'];
             if ((new ForumModel())->fid($fid)->exists()) {
-                $queries = $getBuilders($fid);
+                /** @var Collection<string, Builder> $queries keyed by post type */
+                $queries = $getQueryBuilderKeyByPostType($fid);
             } elseif (count($postIDParams) > 0) { // query by post ID and fid, but the provided fid is invalid
-                $queries = $getBuilders($getFidByPostsID($postIDParams));
+                $fid = $getFidByPostsID($postIDParams);
+                $queries = $getQueryBuilderKeyByPostType($fid);
             } else {
                 Helper::abortAPI(40006);
             }
         } elseif (count($postIDParams) > 0) { // query by post ID only
-            $queries = $getBuilders($getFidByPostsID($postIDParams));
+            $fid = $getFidByPostsID($postIDParams);
+            $queries = $getQueryBuilderKeyByPostType($fid);
         } else {
             Helper::abortAPI(40001);
         }
@@ -93,14 +119,14 @@ class IndexQuery
             Helper::abortAPI(40004);
         }
 
-        $paginators = $queries->map($queryOrderByTranformer)->flatMap(
-            fn (Builder $qb, string $type) => [$type => $qb->simplePaginate($this->perPageItems)]);
+        /** @var Collection<string, Paginator> $paginators keyed by post type */
+        $paginators = $queries->map($queryOrderByTranformer)
+            ->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));
         $this->setResult($fid, $paginators, $paginators
-            ->flatMap(static fn(Paginator $result, string $type) => [$type => $result->collect()])
-            ->flatten(1)
-            ->sortBy(...$resultSortBySelector)
-            ->take($this->perPageItems)
-            ->groupBy('type'));
+            ->flatMap(static fn(Paginator $paginator) => $paginator->collect()) // cast queried posts to collection for each post type, then flatten all types of posts
+            ->sortBy(...$resultSortBySelector) // sort by the required sorting field and direction
+            ->take($this->perPageItems) // LIMIT $perPageItems
+            ->groupBy('typePluralName')); // gather limited posts by their type
 
         return $this;
     }

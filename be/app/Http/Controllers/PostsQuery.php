@@ -26,14 +26,15 @@ class PostsQuery extends Controller
         $params = $validator->params;
 
         $postsIDParams = $params->pick(...Helper::POSTS_ID);
-        $isPostIDQuery = // is there no other params, note we ignored the existence of unique params
-            \count($params->omit('postTypes')) === \count($postsIDParams)
-            && \count($postsIDParams) === 1 // is there only one post id param
-            && array_filter($postsIDParams, static fn ($p) => $p->getAllSub() !== []) === []; // is post id param haven't any sub param
-        // is the fid param exists and there's no other params
+        $isQueryByPostID =
+            // is there no other params except post id params
+            \count($params->omit(...Helper::POSTS_ID)) === 0
+            // is all post ID params doesn't own any sub param
+            && array_filter($postsIDParams, static fn ($p) => $p->getAllSub() !== []) === [];
         $isFidParamNull = $params->getUniqueParamValue('fid') === null;
-        $isFidQuery = !$isFidParamNull && $params->count() === \count($params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME));
-        $isIndexQuery = $isPostIDQuery || $isFidQuery;
+        // is the fid param exists and there's no other params
+        $isQueryByFid = !$isFidParamNull && $params->count() === \count($params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME));
+        $isIndexQuery = $isQueryByPostID || $isQueryByFid;
         $isSearchQuery = !$isIndexQuery;
         if ($isSearchQuery) {
             Helper::abortAPIIf(40002, $isFidParamNull);

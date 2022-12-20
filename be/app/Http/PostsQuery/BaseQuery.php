@@ -3,6 +3,7 @@
 namespace App\Http\PostsQuery;
 
 use App\Helper;
+use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
@@ -61,33 +62,41 @@ trait BaseQuery
     public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
+        $tryPluckPostsID = function (string $postIDName) use ($result): array {
+            $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
+            return \array_key_exists($postTypePluralName, $result) ? array_column($result[$postTypePluralName], $postIDName) : [];
+        };
         /** @var array<int> $tids */
         /** @var array<int> $pids */
         /** @var array<int> $spids */
+        [$tids, $pids, $spids] = array_map(fn (string $postIDName) => $tryPluckPostsID($postIDName), Helper::POSTS_ID);
+
+        /** @var int $fid */
         $fid = $result['fid'];
         $postModels = PostModelFactory::getPostModelsByFid($fid);
-        $tids = array_column($result['threads'], 'tid');
-        $pids = array_column($result['replies'], 'pid');
-        $spids = array_column($result['subReplies'], 'spid');
-
         $shouldQueryDetailedPosts = $this instanceof IndexQuery;
         /**
          * @param array<int> $postIDs
          * @param string $postType
-         * @return Collection
+         * @return Collection<PostModel>
          */
         $tryQueryDetailedPosts = static function (array $postIDs, string $postType) use ($result, $postModels, $shouldQueryDetailedPosts) {
             if ($postIDs === []) {
                 return collect();
             }
             return collect($shouldQueryDetailedPosts
-                ? $postModels[$postType]->{Helper::POSTS_TYPE_ID[$postType]}($postIDs)
-                    ->hidePrivateFields()->get()->toArray()
-                : $result[Helper::POST_TYPES_TO_PLURAL[$postType]]);
+                ? $postModels[$postType]->where(Helper::POST_TYPE_TO_ID[$postType], $postIDs)
+                    ->hidePrivateFields()->get()
+                : $result[Helper::POST_TYPE_TO_PLURAL[$postType]]);
         };
         /** @var Collection<PostModel> $threads */
         /** @var Collection<PostModel> $replies */
         /** @var Collection<PostModel> $subReplies */
+        [$threads, $replies, $subReplies] = array_map(
+            fn (array $ids, string $type) => $tryQueryDetailedPosts($ids, $type),
+            [$tids, $pids, $spids],
+            Helper::POST_TYPES
+        );
 
         /**
          * @param Collection<int> $parentIDs
@@ -97,26 +106,25 @@ trait BaseQuery
         $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs) =>
             $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
 
-        $tidsInReplies = $replies->pluck('tid')
+        /** @var Collection<int> $tidsInRepliesAndSubReplies */
+        $tidsInRepliesAndSubReplies = $replies->pluck('tid')
             ->concat($subReplies->pluck('tid'))->unique()->sort()->values();
-        // $tids must be first argument to ensure the existence of diffed $tidsInReplies
-        if ($isSubPostIDMissFormParent(collect($tids), $tidsInReplies)) {
+        // $tids must be first argument to ensure the existence of diffed $tidsInRepliesAndSubReplies
+        if ($isSubPostIDMissFormParent(collect($tids), $tidsInRepliesAndSubReplies)) {
             // fetch complete threads info which appeared in replies and sub replies info but missing in $tids
             $threads = collect($postModels['thread']
-                ->tid($tidsInReplies->concat($tids)->toArray())
-                ->hidePrivateFields()->get()->toArray());
+                ->tid($tidsInRepliesAndSubReplies->concat($tids)->toArray())
+                ->hidePrivateFields()->get());
         }
 
-        $pidsInThreadsAndSubReplies = $subReplies->pluck('pid')
-            // append thread's first reply when there's no pid
-            // ->concat($pids === [] ? $threads->pluck('firstPid') : [])
-            ->unique()->sort()->values();
+        /** @var Collection<int> $pidsInSubReplies */
+        $pidsInSubReplies = $subReplies->pluck('pid')->unique()->sort()->values();
         // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
-        if ($isSubPostIDMissFormParent(collect($pids), $pidsInThreadsAndSubReplies)) {
+        if ($isSubPostIDMissFormParent(collect($pids), $pidsInSubReplies)) {
             // fetch complete replies info, which appeared in threads and sub replies info but missing in $pids
             $replies = collect($postModels['reply']
-                ->pid($pidsInThreadsAndSubReplies->concat($pids)->toArray())
-                ->hidePrivateFields()->get()->toArray());
+                ->pid($pidsInSubReplies->concat($pids)->toArray())
+                ->hidePrivateFields()->get());
         }
 
         $parseProtoBufContent = static function (?string $content): ?string {
@@ -134,12 +142,20 @@ trait BaseQuery
          * @return \Closure
          */
         $appendParsedContent = static fn (Collection $contents, string $postIDName) =>
-            static function (array $post) use ($contents, $postIDName) {
-                $post['content'] = $contents[$post[$postIDName]];
+            static function (PostModel $post) use ($contents, $postIDName) {
+                $post->content = $contents[$post[$postIDName]];
                 return $post;
             };
-        $replies->transform($appendParsedContent($replyContents, 'pid'));
-        $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
+        if ($replies->isNotEmpty()) {
+            /** @var Collection<?string> $replyContents */
+            $replyContents = PostModelFactory::newReplyContent($fid)->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);
+            $replies->transform($appendParsedContent($replyContents, 'pid'));
+        }
+        if ($subReplies->isNotEmpty()) {
+            /** @var Collection<?string> $subReplyContents */
+            $subReplyContents = PostModelFactory::newSubReplyContent($fid)->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseContentModel);
+            $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
+        }
 
         return [
             'fid' => $fid,

@@ -210,9 +210,8 @@ export default defineComponent({
                 }
             }
             const isPostsIDParam = (param: ObjValues<Params>) => (postsID as unknown as string[]).includes(param.name);
-            if (_.isEmpty(_.reject(clearedParams, isPostsIDParam)) // is there no other params
-                && _.filter(clearedParams, isPostsIDParam).length === 1 // is there only one post id param
-                && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is post id param haven't any sub param
+            if (_.isEmpty(_.reject(clearedParams, isPostsIDParam)) // is there no other params except post id params
+                && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is all post ID params doesn't own any sub param
                 return 'postID';
             }
             return 'search';

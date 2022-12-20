@@ -14,19 +14,25 @@ class Helper
 
     public const POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
 
-    public const POST_TYPES_TO_PLURAL = [
+    public const POST_TYPE_TO_PLURAL = [
         'thread' => 'threads',
         'reply' => 'replies',
         'subReply' => 'subReplies'
     ];
 
-    public const POSTS_ID_TYPE = [
+    public const POST_ID_TO_TYPE_PLURAL = [
+        'tid' => 'threads',
+        'pid' => 'replies',
+        'spid' => 'subReplies'
+    ];
+
+    public const POST_ID_TO_TYPE = [
         'tid' => 'thread',
         'pid' => 'reply',
         'spid' => 'subReply'
     ];
 
-    public const POSTS_TYPE_ID = [
+    public const POST_TYPE_TO_ID = [
         'thread' => 'tid',
         'reply' => 'pid',
         'subReply' => 'spid'
@@ -56,16 +62,20 @@ class Helper
                 40002 => '搜索查询必须指定查询贴吧',
                 40003 => '部分查询参数与查询帖子类型要求不匹配',
                 40004 => '排序方式与查询帖子类型要求不匹配',
-                40005 => '请只提供一个唯一查询参数',
-                40006 => '指定查询的贴吧不存在'
+                40005 => '提供了多个唯一查询参数',
+                40006 => '指定查询的贴吧不存在',
+                40007 => '提供了不同吧表中所存储的帖子 ID',
             ],
             401 => [
-                40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试'
+                40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试',
             ],
             404 => [
                 40401 => '帖子查询结果为空',
                 40402 => '用户查询结果为空',
-                40403 => '吧帖量统计查询结果为空'
+                40403 => '吧帖量统计查询结果为空',
+            ],
+            500 => [
+                50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
             ]
         ];
 

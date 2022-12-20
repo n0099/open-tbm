@@ -33,7 +33,7 @@ class SearchQuery
                 }
                 return $postQuery->hidePrivateFields()
                     // only fetch posts ID when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
-                    ->select(array_slice(Helper::POSTS_TYPE_ID, 0,
+                    ->select(array_slice(Helper::POST_TYPE_TO_ID, 0,
                         array_search($postType, Helper::POST_TYPES) + 1));
             });
         /** @var Collection<string, Paginator> $paginators keyed by post type */
