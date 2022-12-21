@@ -19,8 +19,8 @@ export type ObjValues<T> = T[keyof T];
 
 export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type PostType = 'reply' | 'subReply' | 'thread';
-export type PostID = typeof postsID[number];
-export const postsID = ['tid', 'pid', 'spid'] as const;
+export type PostID = typeof postID[number];
+export const postID = ['tid', 'pid', 'spid'] as const;
 export const postTypeToID = { thread: 'tid', reply: 'pid', subReply: 'spid' };
 export type Fid = UInt;
 export type Tid = UInt;

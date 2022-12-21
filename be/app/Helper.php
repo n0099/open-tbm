@@ -8,7 +8,7 @@ use GuzzleHttp\Utils;
 
 class Helper
 {
-    public const POSTS_ID = ['tid', 'pid', 'spid'];
+    public const POST_ID = ['tid', 'pid', 'spid'];
 
     public const POST_TYPES = ['thread', 'reply', 'subReply'];
 

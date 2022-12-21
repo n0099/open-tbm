@@ -25,12 +25,11 @@ class PostsQuery extends Controller
         ));
         $params = $validator->params;
 
-        $postsIDParams = $params->pick(...Helper::POSTS_ID);
         $isQueryByPostID =
-            // is there no other params except post id params
-            \count($params->omit(...Helper::POSTS_ID)) === 0
+            // is there no other params except post ID params
+            \count($params->omit(...Helper::POST_ID)) === 0
             // is all post ID params doesn't own any sub param
-            && array_filter($postsIDParams, static fn ($p) => $p->getAllSub() !== []) === [];
+            && array_filter($params->pick(...Helper::POST_ID), static fn ($p) => $p->getAllSub() !== []) === [];
         $isFidParamNull = $params->getUniqueParamValue('fid') === null;
         // is the fid param exists and there's no other params
         $isQueryByFid = !$isFidParamNull && $params->count() === \count($params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME));

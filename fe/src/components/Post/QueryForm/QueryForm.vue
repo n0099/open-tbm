@@ -71,7 +71,7 @@
                                class="text-secondary fw-bold form-check-label">非</label>
                     </div>
                 </div>
-                <template v-if="postsID.includes(p.name)">
+                <template v-if="postID.includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
                     <InputNumericParam v-model="params[pI]" :placeholders="{
                         IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
@@ -159,7 +159,7 @@ import type { Params, RequiredPostTypes, UniqueParams } from './queryParams';
 import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
 import type { ObjValues, PostType } from '@/shared';
-import { notyShow, postsID, removeEnd } from '@/shared';
+import { notyShow, postID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
 import type { PropType } from 'vue';
@@ -209,8 +209,8 @@ export default defineComponent({
                     return 'fid'; // note when query with postTypes and/or orderBy param, the route will go params instead of fid
                 }
             }
-            const isPostsIDParam = (param: ObjValues<Params>) => (postsID as unknown as string[]).includes(param.name);
-            if (_.isEmpty(_.reject(clearedParams, isPostsIDParam)) // is there no other params except post id params
+            const isPostIDParam = (param: ObjValues<Params>) => (postID as unknown as string[]).includes(param.name);
+            if (_.isEmpty(_.reject(clearedParams, isPostIDParam)) // is there no other params except post id params
                 && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is all post ID params doesn't own any sub param
                 return 'postID';
             }
@@ -229,7 +229,7 @@ export default defineComponent({
             const clearedParams = clearedParamsDefaultValue();
             const clearedUniqueParams = clearedUniqueParamsDefaultValue();
             if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
-                for (const postIDName of _.reverse(postsID)) {
+                for (const postIDName of _.reverse(postID)) {
                     const postIDParam = _.filter(clearedParams, param => param.name === postIDName);
                     if (_.isEmpty(_.reject(clearedParams, param => param.name === postIDName)) // is there no other params
                         && postIDParam.length === 1 // is there only one post id param
@@ -344,7 +344,7 @@ export default defineComponent({
             if (to.length === 0) useState.uniqueParams.postTypes.value = from; // to prevent empty post types
         });
 
-        return { upperFirst: _.upperFirst, postsID, inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), queryFormSubmit, parseRouteToGetFlattenParams, getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam };
+        return { upperFirst: _.upperFirst, postID, inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), queryFormSubmit, parseRouteToGetFlattenParams, getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam };
     }
 });
 </script>

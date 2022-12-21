@@ -15,7 +15,7 @@ class SubReplyModel extends PostModel
     ];
 
     protected static array $fields = [
-        ...Helper::POSTS_ID,
+        ...Helper::POST_ID,
         'authorUid',
         'authorManagerType',
         'authorExpGrade',

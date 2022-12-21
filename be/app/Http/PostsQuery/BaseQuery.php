@@ -74,7 +74,7 @@ trait BaseQuery
          * @param string $postIDName
          * @return array{0: array<int>, 1: Collection<PostModel>}
          */
-        $getPostsAndIDTuple = function (string $postIDName) use ($result): array {
+        $getPostsAndIDTuple = static function (string $postIDName) use ($result): array {
             $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
             return \array_key_exists($postTypePluralName, $result)
                 ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)->toArray()]
@@ -87,7 +87,7 @@ trait BaseQuery
         /** @var Collection<ReplyModel> $replies */
         /** @var Collection<SubReplyModel> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] =
-            array_map(fn (string $postIDName) => $getPostsAndIDTuple($postIDName), Helper::POSTS_ID);
+            array_map(static fn (string $postIDName) => $getPostsAndIDTuple($postIDName), Helper::POST_ID);
 
         /** @var int $fid */
         $fid = $result['fid'];
@@ -102,6 +102,15 @@ trait BaseQuery
             ->hidePrivateFields()->get();
         $subReplies = $postModels['subReply']->spid($spids)->hidePrivateFields()->get();
 
+        self::fillPostsContent($fid, $replies, $subReplies);
+        return [
+            'fid' => $fid,
+            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
+        ];
+    }
+
+    private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies)
+    {
         $parseProtoBufContent = static function (?string $content): ?string {
             if ($content === null) {
                 return null;
@@ -123,19 +132,16 @@ trait BaseQuery
             };
         if ($replies->isNotEmpty()) {
             /** @var Collection<?string> $replyContents */
-            $replyContents = PostModelFactory::newReplyContent($fid)->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);
+            $replyContents = PostModelFactory::newReplyContent($fid)
+                ->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);
             $replies->transform($appendParsedContent($replyContents, 'pid'));
         }
         if ($subReplies->isNotEmpty()) {
             /** @var Collection<?string> $subReplyContents */
-            $subReplyContents = PostModelFactory::newSubReplyContent($fid)->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseContentModel);
+            $subReplyContents = PostModelFactory::newSubReplyContent($fid)
+                ->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseContentModel);
             $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
         }
-
-        return [
-            'fid' => $fid,
-            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
-        ];
     }
 
     public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, int $fid): array
