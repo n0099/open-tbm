@@ -9,7 +9,7 @@ use App\Tieba\Eloquent\ReplyModel;
 use App\Tieba\Eloquent\SubReplyModel;
 use App\Tieba\Eloquent\ThreadModel;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use JetBrains\PhpStorm\ArrayShape;
 use TbClient\Wrapper\PostContentWrapper;
@@ -41,25 +41,25 @@ trait BaseQuery
         Helper::abortAPIIf(40401, $resultKeyByPostTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$resultKeyByPostTypePluralName];
         $this->queryResultPages = [
-            'firstItem' => self::unionPageStats($paginators, 'firstItem', static fn (array $v) => min($v)),
-            'itemCount' => self::unionPageStats($paginators, 'count', static fn (array $v) => array_sum($v)),
-            'currentPage' => self::unionPageStats($paginators, 'currentPage', static fn (array $v) => min($v))
+            'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
+                static fn (Collection $v) => $v->filter()->count() !== 0), // Collection->filter() will remove false values
+            'queryMatchCount' => self::unionPageStats($paginators, 'count', static fn (Collection $v) => $v->sum())
         ];
     }
 
     /**
      * Union builders pagination $unionMethodName data by $unionStatement
      *
-     * @param Collection<Paginator> $paginators
+     * @param Collection<CursorPaginator> $paginators
      * @param string $unionMethodName
-     * @param callable $unionCallback
+     * @param callable $unionCallback (Collection)
      * @return mixed returned by $unionCallback()
      */
     private static function unionPageStats(Collection $paginators, string $unionMethodName, callable $unionCallback): mixed
     {
         // Collection::filter() will remove falsy values
-        $unionValues = $paginators->map(static fn ($p) => $p->$unionMethodName())->filter()->toArray();
-        return $unionCallback($unionValues === [] ? [0] : $unionValues); // prevent empty array
+        $unionValues = $paginators->map(static fn (CursorPaginator $p) => $p->$unionMethodName());
+        return $unionCallback($unionValues->isEmpty() ? collect(0) : $unionValues); // prevent empty array
     }
 
     #[ArrayShape([

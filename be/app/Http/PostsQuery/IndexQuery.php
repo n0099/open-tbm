@@ -7,7 +7,7 @@ use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -122,11 +122,11 @@ class IndexQuery
             Helper::abortAPI(40004);
         }
 
-        /** @var Collection<string, Paginator> $paginators keyed by post type */
+        /** @var Collection<string, CursorPaginator> $paginators keyed by post type */
         $paginators = $queries->map($queryOrderByTranformer)
-            ->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));
+            ->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
         $this->setResult($fid, $paginators, $paginators
-            ->flatMap(static fn(Paginator $paginator) => $paginator->collect()) // cast queried posts to collection for each post type, then flatten all types of posts
+            ->flatMap(static fn(CursorPaginator $paginator) => $paginator->collect()) // cast queried posts to collection for each post type, then flatten all types of posts
             ->sortBy(...$resultSortBySelector) // sort by the required sorting field and direction
             ->take($this->perPageItems) // LIMIT $perPageItems
             ->groupBy('typePluralName')); // gather limited posts by their type

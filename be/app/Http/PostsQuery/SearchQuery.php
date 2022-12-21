@@ -8,7 +8,7 @@ use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 
 class SearchQuery
@@ -33,10 +33,10 @@ class SearchQuery
                 }
                 return $postQuery->selectCurrentAndParentPostID();
             });
-        /** @var Collection<string, Paginator> $paginators keyed by post type */
-        $paginators = $queries->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));
+        /** @var Collection<string, CursorPaginator> $paginators keyed by post type */
+        $paginators = $queries->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
         $this->setResult($fid, $paginators, $paginators
-            ->mapWithKeys(static fn (Paginator $paginator, string $type) =>
+            ->mapWithKeys(static fn (CursorPaginator $paginator, string $type) =>
                 [Helper::POST_TYPE_TO_PLURAL[$type] => $paginator->collect()]
             ));
 
