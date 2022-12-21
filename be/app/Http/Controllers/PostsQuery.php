@@ -9,6 +9,7 @@ use App\Http\PostsQuery\ParamsValidator;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\UserModel;
 use GuzzleHttp\Utils;
+use Illuminate\Support\Arr;
 
 class PostsQuery extends Controller
 {
@@ -46,7 +47,11 @@ class PostsQuery extends Controller
         $result = $query->fillWithParentPost();
 
         return [
-            'pages' => $query->getResultPages(),
+            'type' => $isIndexQuery ? 'index' : 'search',
+            'pages' => [
+                ...$query->getResultPages(),
+                ...Arr::only($result, ['parentThreadCount', 'parentReplyCount'])
+            ],
             'forum' => ForumModel::fid($result['fid'])->hidePrivateFields()->first()?->toArray(),
             'threads' => $query::nestPostsWithParent(...$result),
             'users' => UserModel::whereIn(

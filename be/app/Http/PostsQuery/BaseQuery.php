@@ -64,6 +64,8 @@ trait BaseQuery
 
     #[ArrayShape([
         'fid' => 'int',
+        'parentThreadCount' => 'int',
+        'parentReplyCount' => 'int',
         'threads' => 'Collection<ThreadModel>',
         'replies' => 'Collection<ReplyModel>',
         'subReplies' => 'Collection<SubReplyModel>'
@@ -92,19 +94,30 @@ trait BaseQuery
         /** @var int $fid */
         $fid = $result['fid'];
         $postModels = PostModelFactory::getPostModelsByFid($fid);
+
+        /** @var Collection<int> $parentThreadsID parent tid of all replies and their sub replies */
+        $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         $threads = $postModels['thread']
-            ->tid($replies->pluck('tid')->concat($subReplies->pluck('tid')) // parent tid of all replies and their sub replies
-                ->unique()->sort()->values()->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
-            ->hidePrivateFields()->get();
+            ->tid($parentThreadsID->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            ->hidePrivateFields()->get()
+            ->map(static fn(ThreadModel $t) => // mark threads that in the original $this->queryResult
+                $t->setAttribute('isQueryMatch', \in_array($t->tid, $tids, true)));
+
+        /** @var Collection<int> $parentRepliesID parent pid of all sub replies */
+        $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = $postModels['reply']
-            ->pid($subReplies->pluck('pid') // parent pid of all sub replies
-                ->unique()->sort()->values()->concat($pids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
-            ->hidePrivateFields()->get();
+            ->pid($parentRepliesID->concat($pids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            ->hidePrivateFields()->get()
+            ->map(static fn(ReplyModel $r) => // mark replies that in the original $this->queryResult
+                $r->setAttribute('isQueryMatch', \in_array($r->pid, $pids, true)));
+
         $subReplies = $postModels['subReply']->spid($spids)->hidePrivateFields()->get();
 
         self::fillPostsContent($fid, $replies, $subReplies);
         return [
             'fid' => $fid,
+            'parentThreadCount' => $parentThreadsID->count(),
+            'parentReplyCount' => $parentRepliesID->count(),
             ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
         ];
     }
@@ -144,9 +157,9 @@ trait BaseQuery
         }
     }
 
-    public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, int $fid): array
+    public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, ...$_): array
     {
-        // the useless parameter $fid will compatible with array shape of field $this->queryResult when passing it as spread arguments
+        // the useless spread parameter $_ will compatible with the array shape which returned by $this->fillWithParentPost()
         return $threads->map(fn (ThreadModel $thread) => [
             ...$thread->toArray(),
             'replies' => $replies->where('tid', $thread->tid)->values() // remove numeric indexed keys
