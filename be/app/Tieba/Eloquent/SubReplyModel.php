@@ -4,15 +4,12 @@ namespace App\Tieba\Eloquent;
 
 use App\Helper;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 
 class SubReplyModel extends PostModel
 {
     protected $primaryKey = 'spid';
-
-    protected $casts = [
-        'content' => 'array'
-    ];
 
     protected static array $fields = [
         ...Helper::POST_ID,
@@ -22,15 +19,20 @@ class SubReplyModel extends PostModel
         'postTime',
         'agreeCount',
         'disagreeCount',
-        ...parent::TIMESTAMP_FIELD_NAMES
+        ...parent::TIMESTAMP_FIELDS
     ];
 
-    public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    protected $casts = [
+        'agreeCount' => NullableNumericAttributeCast::class,
+        'disagreeCount' => NullableNumericAttributeCast::class
+    ];
+
+    public function thread(): BelongsTo
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
     }
 
-    public function reply(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function reply(): BelongsTo
     {
         return $this->belongsTo(ReplyModel::class, 'pid', 'pid');
     }

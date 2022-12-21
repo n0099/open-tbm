@@ -3,7 +3,9 @@
 namespace App\Tieba\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Collection;
+use TbClient\Post\Common\Lbs;
 
 class ReplyModel extends PostModel
 {
@@ -23,8 +25,20 @@ class ReplyModel extends PostModel
         'disagreeCount',
         'geolocation',
         'signatureId',
-        ...parent::TIMESTAMP_FIELD_NAMES
+        ...parent::TIMESTAMP_FIELDS
     ];
+
+    protected $casts = [
+        'subReplyCount' => NullableNumericAttributeCast::class,
+        'isFold' => NullableBooleanAttributeCast::class,
+        'agreeCount' => NullableNumericAttributeCast::class,
+        'disagreeCount' => NullableNumericAttributeCast::class
+    ];
+
+    protected function geolocation(): Attribute
+    {
+        return self::makeProtoBufAttribute(Lbs::class);
+    }
 
     public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

@@ -5,6 +5,7 @@ namespace App\Tieba\Eloquent;
 use App\Eloquent\ModelWithHiddenFields;
 use App\Helper;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Collection;
 
 /**
@@ -23,7 +24,7 @@ abstract class PostModel extends ModelWithHiddenFields
 
     protected int $fid = 0;
 
-    protected const TIMESTAMP_FIELD_NAMES = [
+    protected const TIMESTAMP_FIELDS = [
         'createdAt',
         'updatedAt',
         'lastSeen'
@@ -70,6 +71,22 @@ abstract class PostModel extends ModelWithHiddenFields
             return $query->whereIn($postIDName, $postID);
         }
         throw new \InvalidArgumentException("$postIDName must be int or array");
+    }
+
+    /**
+     * @param class-string $protoBufClass
+     * @return Attribute
+     */
+    protected static function makeProtoBufAttribute(string $protoBufClass)
+    {
+        return Attribute::make(get: static function (?string $value) use ($protoBufClass) {
+            if ($value === null) {
+                return null;
+            }
+            $proto = new $protoBufClass();
+            $proto->mergeFromString($value);
+            return json_decode($proto->serializeToJsonString());
+        });
     }
 
     /**

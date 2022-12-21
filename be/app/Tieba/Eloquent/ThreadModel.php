@@ -2,8 +2,11 @@
 
 namespace App\Tieba\Eloquent;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use TbClient\Post\Common\Lbs;
+use TbClient\Post\Common\Zan;
+
 /**
- * Class Post
  * Model for every Tieba thread post
  *
  * @package App\Tieba\Eloquent
@@ -33,8 +36,27 @@ class ThreadModel extends PostModel
         'zan',
         'geolocation',
         'authorPhoneType',
-        ...parent::TIMESTAMP_FIELD_NAMES
+        ...parent::TIMESTAMP_FIELDS
     ];
+
+    protected $casts = [
+        'isGood' => NullableBooleanAttributeCast::class,
+        'replyCount' => NullableNumericAttributeCast::class,
+        'viewCount' => NullableNumericAttributeCast::class,
+        'shareCount' => NullableNumericAttributeCast::class,
+        'agreeCount' => NullableNumericAttributeCast::class,
+        'disagreeCount' => NullableNumericAttributeCast::class
+    ];
+
+    protected function zan(): Attribute
+    {
+        return self::makeProtoBufAttribute(Zan::class);
+    }
+
+    protected function geolocation(): Attribute
+    {
+        return self::makeProtoBufAttribute(Lbs::class);
+    }
 
     public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
