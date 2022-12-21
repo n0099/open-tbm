@@ -30,11 +30,16 @@ class IndexQuery
         /** @var array<string> $postTypes */
         $postTypes = $flatParams['postTypes'];
 
-        $getQueryBuilderKeyByPostType = function (int $fid) use ($postTypes, $postIDParams): Collection {
+        /**
+         * @param int $fid
+         * @return Collection<string, Builder> keyed by post type
+         */
+        $getQueryBuilders = function (int $fid) use ($postTypes, $postIDParams): Collection {
             $postModelBuilders = collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
-                ->transform(static fn (PostModel $model, string $type) =>
-                $model->selectRaw('"' . Helper::POST_TYPE_TO_PLURAL[$type] . '" AS typePluralName') // latter we can do Collection::groupBy(type)
-                ->addSelect(Helper::POST_TYPE_TO_ID[$type])); // only fetch posts id when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
+                ->transform(static fn (PostModel $model, string $type) => $model
+                    // latter we can do Collection::groupBy(type)
+                    ->selectRaw('"' . Helper::POST_TYPE_TO_PLURAL[$type] . '" AS typePluralName')
+                    ->selectCurrentAndParentPostID());
             return count($postIDParams) > 0
                 ? collect($postIDParams)->mapWithKeys( // query with both post ID and fid
                     static function (int $postID, string $postIDName) use ($postModelBuilders) {
@@ -48,13 +53,12 @@ class IndexQuery
          * @return int fid
          */
         $getFidByPostsID = function (array $postsID): int {
-            $fidKeyByPostIDName = collect($postsID)->map(function (int $id, string $postIDName): int {
+            $fids = ForumModel::get('fid')->pluck('fid')->toArray();
+            $fidKeyByPostIDName = collect($postsID)->map(function (int $id, string $postIDName) use ($fids): int {
                 $pluralPostTypeName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
                 $counts = collect(DB::select(
-                    implode(' UNION ALL ', array_map(
-                        fn (int $fid) => "(SELECT $fid AS fid, COUNT(*) AS count FROM tbm_f{$fid}_{$pluralPostTypeName} WHERE $postIDName = ?)",
-                        ForumModel::get('fid')->pluck('fid')->toArray()
-                    )),
+                    implode(' UNION ALL ', array_map(fn (int $fid) =>
+                        "(SELECT $fid AS fid, COUNT(*) AS count FROM tbm_f{$fid}_{$pluralPostTypeName} WHERE $postIDName = ?)", $fids)),
                     [$id]
                 ))->where('count', '!=', 0);
                 Helper::abortAPIIf(50001, $counts->count() > 1);
@@ -70,16 +74,16 @@ class IndexQuery
             /** @var int $fid */ $fid = $flatParams['fid'];
             if ((new ForumModel())->fid($fid)->exists()) {
                 /** @var Collection<string, Builder> $queries keyed by post type */
-                $queries = $getQueryBuilderKeyByPostType($fid);
+                $queries = $getQueryBuilders($fid);
             } elseif (count($postIDParams) > 0) { // query by post ID and fid, but the provided fid is invalid
                 $fid = $getFidByPostsID($postIDParams);
-                $queries = $getQueryBuilderKeyByPostType($fid);
+                $queries = $getQueryBuilders($fid);
             } else {
                 Helper::abortAPI(40006);
             }
         } elseif (count($postIDParams) > 0) { // query by post ID only
             $fid = $getFidByPostsID($postIDParams);
-            $queries = $getQueryBuilderKeyByPostType($fid);
+            $queries = $getQueryBuilders($fid);
         } else {
             Helper::abortAPI(40001);
         }

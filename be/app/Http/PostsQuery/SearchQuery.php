@@ -31,10 +31,7 @@ class SearchQuery
                     // which is null at this point, but will be later updated by ref
                     self::applyQueryParamsOnQuery($postQuery, $param, $cachedUserQuery[$param->name]);
                 }
-                return $postQuery->hidePrivateFields()
-                    // only fetch posts ID when we can fetch all fields since BaseQuery::fillWithParentPost() will do the rest
-                    ->select(array_slice(Helper::POST_TYPE_TO_ID, 0,
-                        array_search($postType, Helper::POST_TYPES) + 1));
+                return $postQuery->selectCurrentAndParentPostID();
             });
         /** @var Collection<string, Paginator> $paginators keyed by post type */
         $paginators = $queries->map(fn (Builder $qb) => $qb->simplePaginate($this->perPageItems));

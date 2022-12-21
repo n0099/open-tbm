@@ -5,6 +5,9 @@ namespace App\Http\PostsQuery;
 use App\Helper;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
+use App\Tieba\Eloquent\ReplyModel;
+use App\Tieba\Eloquent\SubReplyModel;
+use App\Tieba\Eloquent\ThreadModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -15,9 +18,9 @@ trait BaseQuery
 {
     #[ArrayShape([
         'fid' => 'int',
-        'threads' => '?array<array>',
-        'replies' => '?array<array>',
-        'subReplies' => '?array<array>',
+        'threads' => '?Collection<ThreadModel>',
+        'replies' => '?Collection<ReplyModel>',
+        'subReplies' => '?Collection<SubReplyModel>',
     ])] protected array $queryResult;
 
     private array $queryResultPages;
@@ -33,10 +36,10 @@ trait BaseQuery
         return $this->queryResultPages;
     }
 
-    protected function setResult(int $fid, Collection $paginators, Collection $results): void
+    protected function setResult(int $fid, Collection $paginators, Collection $resultKeyByPostTypePluralName): void
     {
-        Helper::abortAPIIf(40401, $results->every(static fn (Collection $i) => $i->isEmpty()));
-        $this->queryResult = ['fid' => $fid, ...$results->map(static fn (Collection $i) => $i->toArray())->toArray()];
+        Helper::abortAPIIf(40401, $resultKeyByPostTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
+        $this->queryResult = ['fid' => $fid, ...$resultKeyByPostTypePluralName];
         $this->queryResultPages = [
             'firstItem' => self::unionPageStats($paginators, 'firstItem', static fn (array $v) => min($v)),
             'itemCount' => self::unionPageStats($paginators, 'count', static fn (array $v) => array_sum($v)),
@@ -59,73 +62,45 @@ trait BaseQuery
         return $unionCallback($unionValues === [] ? [0] : $unionValues); // prevent empty array
     }
 
-    public function fillWithParentPost(): array
+    #[ArrayShape([
+        'fid' => 'int',
+        'threads' => 'Collection<ThreadModel>',
+        'replies' => 'Collection<ReplyModel>',
+        'subReplies' => 'Collection<SubReplyModel>'
+    ])] public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
-        $tryPluckPostsID = function (string $postIDName) use ($result): array {
+        /**
+         * @param string $postIDName
+         * @return array{0: array<int>, 1: Collection<PostModel>}
+         */
+        $getPostsAndIDTuple = function (string $postIDName) use ($result): array {
             $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
-            return \array_key_exists($postTypePluralName, $result) ? array_column($result[$postTypePluralName], $postIDName) : [];
+            return \array_key_exists($postTypePluralName, $result)
+                ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)->toArray()]
+                : [collect(), []];
         };
         /** @var array<int> $tids */
         /** @var array<int> $pids */
         /** @var array<int> $spids */
-        [$tids, $pids, $spids] = array_map(fn (string $postIDName) => $tryPluckPostsID($postIDName), Helper::POSTS_ID);
+        /** @var Collection<ThreadModel> $threads */
+        /** @var Collection<ReplyModel> $replies */
+        /** @var Collection<SubReplyModel> $subReplies */
+        [[, $tids], [$replies, $pids], [$subReplies, $spids]] =
+            array_map(fn (string $postIDName) => $getPostsAndIDTuple($postIDName), Helper::POSTS_ID);
 
         /** @var int $fid */
         $fid = $result['fid'];
         $postModels = PostModelFactory::getPostModelsByFid($fid);
-        $shouldQueryDetailedPosts = $this instanceof IndexQuery;
-        /**
-         * @param array<int> $postIDs
-         * @param string $postType
-         * @return Collection<PostModel>
-         */
-        $tryQueryDetailedPosts = static function (array $postIDs, string $postType) use ($result, $postModels, $shouldQueryDetailedPosts) {
-            if ($postIDs === []) {
-                return collect();
-            }
-            return collect($shouldQueryDetailedPosts
-                ? $postModels[$postType]->where(Helper::POST_TYPE_TO_ID[$postType], $postIDs)
-                    ->hidePrivateFields()->get()
-                : $result[Helper::POST_TYPE_TO_PLURAL[$postType]]);
-        };
-        /** @var Collection<PostModel> $threads */
-        /** @var Collection<PostModel> $replies */
-        /** @var Collection<PostModel> $subReplies */
-        [$threads, $replies, $subReplies] = array_map(
-            fn (array $ids, string $type) => $tryQueryDetailedPosts($ids, $type),
-            [$tids, $pids, $spids],
-            Helper::POST_TYPES
-        );
-
-        /**
-         * @param Collection<int> $parentIDs
-         * @param Collection<int> $subIDs
-         * @return bool
-         */
-        $isSubPostIDMissFormParent = static fn (Collection $parentIDs, Collection $subIDs) =>
-            $subIDs->contains(static fn (int $subID) => !$parentIDs->contains($subID));
-
-        /** @var Collection<int> $tidsInRepliesAndSubReplies */
-        $tidsInRepliesAndSubReplies = $replies->pluck('tid')
-            ->concat($subReplies->pluck('tid'))->unique()->sort()->values();
-        // $tids must be first argument to ensure the existence of diffed $tidsInRepliesAndSubReplies
-        if ($isSubPostIDMissFormParent(collect($tids), $tidsInRepliesAndSubReplies)) {
-            // fetch complete threads info which appeared in replies and sub replies info but missing in $tids
-            $threads = collect($postModels['thread']
-                ->tid($tidsInRepliesAndSubReplies->concat($tids)->toArray())
-                ->hidePrivateFields()->get());
-        }
-
-        /** @var Collection<int> $pidsInSubReplies */
-        $pidsInSubReplies = $subReplies->pluck('pid')->unique()->sort()->values();
-        // $pids must be first argument to ensure the diffed $pidsInSubReplies existing
-        if ($isSubPostIDMissFormParent(collect($pids), $pidsInSubReplies)) {
-            // fetch complete replies info, which appeared in threads and sub replies info but missing in $pids
-            $replies = collect($postModels['reply']
-                ->pid($pidsInSubReplies->concat($pids)->toArray())
-                ->hidePrivateFields()->get());
-        }
+        $threads = $postModels['thread']
+            ->tid($replies->pluck('tid')->concat($subReplies->pluck('tid')) // parent tid of all replies and their sub replies
+                ->unique()->sort()->values()->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            ->hidePrivateFields()->get();
+        $replies = $postModels['reply']
+            ->pid($subReplies->pluck('pid') // parent pid of all sub replies
+                ->unique()->sort()->values()->concat($pids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            ->hidePrivateFields()->get();
+        $subReplies = $postModels['subReply']->spid($spids)->hidePrivateFields()->get();
 
         $parseProtoBufContent = static function (?string $content): ?string {
             if ($content === null) {
@@ -159,28 +134,20 @@ trait BaseQuery
 
         return [
             'fid' => $fid,
-            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads->toArray(), $replies->toArray(), $subReplies->toArray()])
+            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
         ];
     }
 
-    public static function nestPostsWithParent(array $threads, array $replies, array $subReplies, int $fid): array
+    public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, int $fid): array
     {
         // the useless parameter $fid will compatible with array shape of field $this->queryResult when passing it as spread arguments
-        $threads = Helper::keyBy($threads, 'tid');
-        $replies = Helper::keyBy($replies, 'pid');
-        $subReplies = Helper::keyBy($subReplies, 'spid');
-        $nestedPosts = [];
-
-        foreach ($threads as $tid => $thread) {
-            // can't invoke values() here to prevent losing key with posts ID
-            $threadReplies = collect($replies)->where('tid', $tid)->toArray();
-            foreach ($threadReplies as $pid => $reply) {
-                // values() and array_values() remove keys to simplify json data
-                $threadReplies[$pid]['subReplies'] = collect($subReplies)->where('pid', $pid)->values()->toArray();
-            }
-            $nestedPosts[$tid] = [...$thread, 'replies' => array_values($threadReplies)];
-        }
-
-        return array_values($nestedPosts);
+        return $threads->map(fn (ThreadModel $thread) => [
+            ...$thread->toArray(),
+            'replies' => $replies->where('tid', $thread->tid)->values() // remove numeric indexed keys
+                ->map(fn (ReplyModel $reply) => [
+                    ...$reply->toArray(),
+                    'subReplies' => $subReplies->where('pid', $reply->pid)->values()
+                ])
+        ])->toArray();
     }
 }

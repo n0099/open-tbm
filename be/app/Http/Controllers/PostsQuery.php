@@ -52,13 +52,14 @@ class PostsQuery extends Controller
             'threads' => $query::nestPostsWithParent(...$result),
             'users' => UserModel::whereIn(
                 'uid',
-                collect([
-                    array_column($result['threads'], 'latestReplierUid'),
-                    array_map(
-                        static fn ($type) => array_column($result[$type], 'authorUid'),
+                $result['threads']
+                    ->pluck('latestReplierUid')
+                    ->concat(array_map(
+                        static fn (string $type) => $result[$type]->pluck('authorUid'),
                         Helper::POST_TYPES_PLURAL
-                    )
-                ])->flatten()->unique()->sort()->toArray()
+                    ))
+                    ->flatten()->unique()
+                    ->sort()->toArray()
             )->hidePrivateFields()->get()->toArray()
         ];
     }
