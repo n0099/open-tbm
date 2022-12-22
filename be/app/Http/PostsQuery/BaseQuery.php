@@ -42,8 +42,7 @@ trait BaseQuery
         $this->queryResult = ['fid' => $fid, ...$resultKeyByPostTypePluralName];
         $this->queryResultPages = [
             'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
-                static fn (Collection $v) => $v->filter()->count() !== 0), // Collection->filter() will remove false values
-            'queryMatchCount' => self::unionPageStats($paginators, 'count', static fn (Collection $v) => $v->sum())
+                static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
         ];
     }
 
@@ -116,8 +115,9 @@ trait BaseQuery
         self::fillPostsContent($fid, $replies, $subReplies);
         return [
             'fid' => $fid,
-            'parentThreadCount' => $parentThreadsID->count(),
-            'parentReplyCount' => $parentRepliesID->count(),
+            'queryMatchCount' => array_sum(array_map('\count', [$tids, $pids, $spids])),
+            'parentThreadCount' => $parentThreadsID->diff($tids)->count(),
+            'parentReplyCount' => $parentRepliesID->diff($pids)->count(),
             ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
         ];
     }

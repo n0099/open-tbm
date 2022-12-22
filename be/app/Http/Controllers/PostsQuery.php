@@ -53,7 +53,7 @@ class PostsQuery extends Controller
             'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
                 ...$query->getResultPages(),
-                ...Arr::only($result, ['parentThreadCount', 'parentReplyCount'])
+                ...Arr::only($result, ['queryMatchCount', 'parentThreadCount', 'parentReplyCount'])
             ],
             'forum' => ForumModel::fid($result['fid'])->hidePrivateFields()->first()?->toArray(),
             'threads' => $query::nestPostsWithParent(...$result),
@@ -65,8 +65,7 @@ class PostsQuery extends Controller
                         static fn (string $type) => $result[$type]->pluck('authorUid'),
                         Helper::POST_TYPES_PLURAL
                     ))
-                    ->flatten()->unique()
-                    ->sort()->toArray()
+                    ->flatten()->unique()->toArray()
             )->hidePrivateFields()->get()->toArray()
         ];
     }

@@ -6,6 +6,7 @@ use App\Helper;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
+use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
@@ -24,8 +25,13 @@ class IndexQuery
                 [...$accParams, $param->name => $param->value, ...$param->getAllSub()],
             []
         ); // flatten unique query params
-        /** @var Collection<string, int> $postIDParams keyed by post ID name */
-        $postIDParams = collect($flatParams)->only(Helper::POST_ID);
+        /** @var Collection<string, int> $postIDParam keyed by post ID name, should contains only one param */
+        $postIDParam = collect($flatParams)->only(Helper::POST_ID);
+        /** @var string $postIDParamName */
+        $postIDParamName = $postIDParam->keys()->first();
+        /** @var int $postIDParamValue */
+        $postIDParamValue = $postIDParam->first();
+        $hasPostIDParam = $postIDParam->count() === 1;
         /** @var array<string> $postTypes */
         $postTypes = $flatParams['postTypes'];
 
@@ -43,22 +49,19 @@ class IndexQuery
          * @param array<string, int> $postsID keyed by post ID name
          * @return int fid
          */
-        $getFidByPostsID = static function (Collection $postsID): int {
+        $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
             $fids = ForumModel::get('fid')->pluck('fid')->toArray();
-            $fidKeyByPostIDName = $postsID->map(function (int $id, string $postIDName) use ($fids): int {
-                $pluralPostTypeName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
-                $counts = collect(DB::select(
-                    implode(' UNION ALL ', array_map(static fn (int $fid) =>
-                        "(SELECT $fid AS fid, COUNT(*) AS count FROM tbm_f{$fid}_{$pluralPostTypeName} WHERE $postIDName = ?)", $fids)),
-                    [$id]
-                ))->where('count', '!=', 0);
-                Helper::abortAPIIf(50001, $counts->count() > 1);
-                Helper::abortAPIIf(40401, $counts->count() == 0);
-                return $counts->pluck('fid')->first();
-            });
-            Helper::abortAPIIf(40007, $fidKeyByPostIDName->unique()->count() > 1);
-            /** @noinspection PhpStrictTypeCheckingInspection */
-            return $fidKeyByPostIDName->first();
+            $counts = collect($fids)
+                ->map(static fn (int $fid) =>
+                    DB::table("tbm_f{$fid}_" . (Helper::POST_ID_TO_TYPE_PLURAL[$postIDName]))
+                        ->selectRaw("$fid AS fid, COUNT(*) AS count")
+                        ->where($postIDName, $postID))
+                ->reduce(static fn (?BuilderContract $acc, Builder|\Illuminate\Database\Query\Builder $cur): BuilderContract =>
+                    $acc === null ? $cur : $acc->union($cur))
+                ->get()->where('count', '!=', 0);
+            Helper::abortAPIIf(50001, $counts->count() > 1);
+            Helper::abortAPIIf(40401, $counts->count() == 0);
+            return $counts->pluck('fid')->first();
         };
 
         if (\array_key_exists('fid', $flatParams)) {
@@ -66,44 +69,45 @@ class IndexQuery
             if ((new ForumModel())->fid($fid)->exists()) {
                 /** @var Collection<string, Builder> $queries keyed by post type */
                 $queries = $getQueryBuilders($fid);
-            } elseif ($postIDParams->count() === 1) { // query by post ID and fid, but the provided fid is invalid
-                $fid = $getFidByPostsID($postIDParams);
+            } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid
+                $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
                 $queries = $getQueryBuilders($fid);
             } else {
                 Helper::abortAPI(40006);
             }
-        } elseif ($postIDParams->count() === 1) { // query by post ID only
-            $fid = $getFidByPostsID($postIDParams);
+        } elseif ($hasPostIDParam) { // query by post ID only
+            $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
             $queries = $getQueryBuilders($fid);
         } else {
             Helper::abortAPI(40001);
         }
 
-        if ($postIDParams->count() === 1) {
-            $postIDName = $postIDParams->keys()->first();
+        if ($hasPostIDParam) {
             $queries = $queries
                 ->only(\array_slice(Helper::POST_TYPES, // only query post types that own the querying post ID param
-                    array_search($postIDName, Helper::POST_ID, true)))
-                ->map(static fn (Builder $qb, string $type) => $qb->where($postIDName, $postIDParams->first()));
+                    array_search($postIDParamName, Helper::POST_ID, true)))
+                ->map(static fn (Builder $qb, string $type) => $qb->where($postIDParamName, $postIDParamValue));
         }
 
         if (array_diff($postTypes, Helper::POST_TYPES) !== []) {
             $queries = $queries->only($postTypes);
         }
 
-        if ($flatParams['orderBy'] !== 'default') {
+        /** @var string $orderByParam */
+        $orderByParam = $flatParams['orderBy'];
+        if ($orderByParam !== 'default') {
             /**
              * @param Builder $qb
              * @return Builder
              */
             $queryOrderByTranformer = static fn (Builder $qb) =>
-                $qb->addSelect($flatParams['orderBy'])->orderBy($flatParams['orderBy'], $flatParams['direction']);
+                $qb->addSelect($orderByParam)->orderBy($orderByParam, $flatParams['direction']);
             /** @var array{callback: callable(PostModel): mixed, descending: bool} $resultSortBySelector */
             $resultSortBySelector = [
-                'callback' => static fn (PostModel $i) => $i->{$flatParams['orderBy']},
+                'callback' => static fn (PostModel $i) => $i->{$orderByParam},
                 'descending' => $flatParams['direction'] === 'DESC'
             ];
-        } elseif (\array_key_exists('fid', $flatParams) && $postIDParams->count() === 0) { // query by fid only
+        } elseif (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
             // order by postTime to prevent posts out of order when order by post ID
             $queryOrderByTranformer = static fn (Builder $qb) =>
                 $qb->addSelect('postTime')->orderByDesc('postTime');
@@ -111,7 +115,7 @@ class IndexQuery
                 'callback' => static fn (PostModel $i) => $i->postTime,
                 'descending' => true
             ];
-        } elseif ($postIDParams->count() === 1) { // query by post ID (with or without fid)
+        } elseif ($hasPostIDParam) { // query by post ID (with or without fid)
             $queryOrderByTranformer = static fn (Builder $qb) =>
                 $qb->addSelect('postTime')->orderBy('postTime', 'ASC');
             $resultSortBySelector = [
