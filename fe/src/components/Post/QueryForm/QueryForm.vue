@@ -199,7 +199,7 @@ export default defineComponent({
             isFidInvalid: false
         });
         const getCurrentQueryType = () => {
-            const clearedParams = clearedParamsDefaultValue();
+            const clearedParams = clearedParamsDefaultValue(); // not including unique params
             if (_.isEmpty(clearedParams)) { // is there no other params
                 // ignore the post type param since index query (postID or fid) doesn't restrict them
                 const clearedUniqueParams = _.omit(clearedUniqueParamsDefaultValue(), 'postTypes');
@@ -211,7 +211,8 @@ export default defineComponent({
             }
             const isPostIDParam = (param: ObjValues<Params>) => (postID as unknown as string[]).includes(param.name);
             if (_.isEmpty(_.reject(clearedParams, isPostIDParam)) // is there no other params except post id params
-                && _.isEmpty(_.filter(_.map(clearedParams, 'subParam')))) { // is all post ID params doesn't own any sub param
+                && _.filter(clearedParams, isPostIDParam).length === 1 // is there only one post id param
+                && _.chain(clearedParams).map('subParam').filter().isEmpty().value()) { // is all post ID params doesn't own any sub param
                 return 'postID';
             }
             return 'search';
@@ -224,14 +225,13 @@ export default defineComponent({
             return '空查询';
         });
 
-        const submitRoute = () => {
-            // deciding which route to go
+        const submitRoute = () => { // decide that route to go
             const clearedParams = clearedParamsDefaultValue();
             const clearedUniqueParams = clearedUniqueParamsDefaultValue();
             if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
                 for (const postIDName of _.reverse(postID)) {
-                    const postIDParam = _.filter(clearedParams, param => param.name === postIDName);
-                    if (_.isEmpty(_.reject(clearedParams, param => param.name === postIDName)) // is there no other params
+                    const postIDParam = _.filter(clearedParams, p => p.name === postIDName);
+                    if (_.isEmpty(_.reject(clearedParams, p => p.name === postIDName)) // is there no other params
                         && postIDParam.length === 1 // is there only one post id param
                         && postIDParam[0]?.subParam === undefined) { // is range subParam not set
                         router.push({ name: `post/${postIDName}`, params: { [postIDName]: postIDParam[0].value?.toString() } });

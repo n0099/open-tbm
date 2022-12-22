@@ -33,20 +33,12 @@ class IndexQuery
          * @param int $fid
          * @return Collection<string, Builder> keyed by post type
          */
-        $getQueryBuilders = static function (int $fid) use ($postTypes, $postIDParams): Collection {
-            $postModelBuilders = collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
+        $getQueryBuilders = static fn (int $fid): Collection =>
+            collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
                 ->transform(static fn (PostModel $model, string $type) => $model
                     // latter we can do Collection::groupBy(type)
                     ->selectRaw('"' . Helper::POST_TYPE_TO_PLURAL[$type] . '" AS typePluralName')
                     ->selectCurrentAndParentPostID());
-            return $postIDParams->count() > 0
-                ? $postIDParams->mapWithKeys( // query with both post ID and fid
-                    static function (int $postID, string $postIDName) use ($postModelBuilders) {
-                        $type = Helper::POST_ID_TO_TYPE[$postIDName];
-                        return [$type => $postModelBuilders[$type]->where($postIDName, $postID)];
-                    })
-                : $postModelBuilders; // query by fid only
-        };
         /**
          * @param array<string, int> $postsID keyed by post ID name
          * @return int fid
@@ -74,17 +66,25 @@ class IndexQuery
             if ((new ForumModel())->fid($fid)->exists()) {
                 /** @var Collection<string, Builder> $queries keyed by post type */
                 $queries = $getQueryBuilders($fid);
-            } elseif ($postIDParams->count() > 0) { // query by post ID and fid, but the provided fid is invalid
+            } elseif ($postIDParams->count() === 1) { // query by post ID and fid, but the provided fid is invalid
                 $fid = $getFidByPostsID($postIDParams);
                 $queries = $getQueryBuilders($fid);
             } else {
                 Helper::abortAPI(40006);
             }
-        } elseif ($postIDParams->count() > 0) { // query by post ID only
+        } elseif ($postIDParams->count() === 1) { // query by post ID only
             $fid = $getFidByPostsID($postIDParams);
             $queries = $getQueryBuilders($fid);
         } else {
             Helper::abortAPI(40001);
+        }
+
+        if ($postIDParams->count() === 1) {
+            $postIDName = $postIDParams->keys()->first();
+            $queries = $queries
+                ->only(\array_slice(Helper::POST_TYPES, // only query post types that own the querying post ID param
+                    array_search($postIDName, Helper::POST_ID, true)))
+                ->map(static fn (Builder $qb, string $type) => $qb->where($postIDName, $postIDParams->first()));
         }
 
         if (array_diff($postTypes, Helper::POST_TYPES) !== []) {
@@ -111,7 +111,7 @@ class IndexQuery
                 'callback' => static fn (PostModel $i) => $i->postTime,
                 'descending' => true
             ];
-        } elseif ($postIDParams->count() > 0) { // query by post ID (with or without fid)
+        } elseif ($postIDParams->count() === 1) { // query by post ID (with or without fid)
             $queryOrderByTranformer = static fn (Builder $qb) =>
                 $qb->addSelect('postTime')->orderBy('postTime', 'ASC');
             $resultSortBySelector = [
