@@ -30,7 +30,7 @@ abstract class PostModel extends ModelWithHiddenFields
         'lastSeen'
     ];
 
-    private const POST_TYPE_CLASS_PLURAL_NAMES = [
+    public const POST_CLASS_TO_PLURAL_NAME = [
         ThreadModel::class => 'threads',
         ReplyModel::class => 'replies',
         ReplyContentModel::class => 'replies_content',
@@ -44,7 +44,7 @@ abstract class PostModel extends ModelWithHiddenFields
     public function setFid(int $fid): static
     {
         $this->fid = $fid;
-        $this->setTable("tbm_f{$fid}_" . self::POST_TYPE_CLASS_PLURAL_NAMES[$this::class]);
+        $this->setTable("tbm_f{$fid}_" . self::POST_CLASS_TO_PLURAL_NAME[$this::class]);
 
         return $this;
     }
@@ -54,7 +54,7 @@ abstract class PostModel extends ModelWithHiddenFields
         // only fetch current post ID and its parent posts ID when we can fetch all fields
         // since BaseQuery::fillWithParentPost() will query detailed value of other fields
         return $query->addSelect(array_values(\array_slice(Helper::POST_TYPE_TO_ID, 0,
-            array_search(self::POST_TYPE_CLASS_PLURAL_NAMES[$this::class], Helper::POST_TYPES_PLURAL) + 1)));
+            array_search(self::POST_CLASS_TO_PLURAL_NAME[$this::class], Helper::POST_TYPES_PLURAL) + 1)));
     }
 
     public function scopeTid(Builder $query, Collection|array|int $tid): Builder

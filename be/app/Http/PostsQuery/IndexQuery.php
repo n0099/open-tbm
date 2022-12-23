@@ -41,10 +41,7 @@ class IndexQuery
          */
         $getQueryBuilders = static fn (int $fid): Collection =>
             collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
-                ->transform(static fn (PostModel $model, string $type) => $model
-                    // latter we can do Collection::groupBy(type)
-                    ->selectRaw('"' . Helper::POST_TYPE_TO_PLURAL[$type] . '" AS typePluralName')
-                    ->selectCurrentAndParentPostID());
+                ->transform(static fn (PostModel $model, string $type) => $model->selectCurrentAndParentPostID());
         /**
          * @param array<string, int> $postsID keyed by post ID name
          * @return int fid
@@ -93,48 +90,16 @@ class IndexQuery
             $queries = $queries->only($postTypes);
         }
 
-        /** @var string $orderByParam */
-        $orderByParam = $flatParams['orderBy'];
-        if ($orderByParam !== 'default') {
-            /**
-             * @param Builder $qb
-             * @return Builder
-             */
-            $queryOrderByTranformer = static fn (Builder $qb) =>
-                $qb->addSelect($orderByParam)->orderBy($orderByParam, $flatParams['direction']);
-            /** @var array{callback: callable(PostModel): mixed, descending: bool} $resultSortBySelector */
-            $resultSortBySelector = [
-                'callback' => static fn (PostModel $i) => $i->{$orderByParam},
-                'descending' => $flatParams['direction'] === 'DESC'
-            ];
-        } elseif (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
-            // order by postTime to prevent posts out of order when order by post ID
-            $queryOrderByTranformer = static fn (Builder $qb) =>
-                $qb->addSelect('postTime')->orderByDesc('postTime');
-            $resultSortBySelector = [
-                'callback' => static fn (PostModel $i) => $i->postTime,
-                'descending' => true
-            ];
-        } elseif ($hasPostIDParam) { // query by post ID (with or without fid)
-            $queryOrderByTranformer = static fn (Builder $qb) =>
-                $qb->addSelect('postTime')->orderBy('postTime', 'ASC');
-            $resultSortBySelector = [
-                'callback' => static fn (PostModel $i) => $i->postTime,
-                'descending' => false
-            ];
-        } else {
-            Helper::abortAPI(40004);
+        if ($flatParams['orderBy'] === 'default') {
+            $this->orderByField = 'postTime'; // order by postTime to prevent posts out of order when order by post ID
+            if (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
+                $this->orderByDirection = 'DESC';
+            } elseif ($hasPostIDParam) { // query by post ID (with or without fid)
+                $this->orderByDirection = 'ASC';
+            }
         }
 
-        /** @var Collection<string, CursorPaginator> $paginators keyed by post type */
-        $paginators = $queries->map($queryOrderByTranformer)
-            ->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
-        $this->setResult($fid, $paginators, $paginators
-            ->flatMap(static fn(CursorPaginator $paginator) => $paginator->collect()) // cast queried posts to collection for each post type, then flatten all types of posts
-            ->sortBy(...$resultSortBySelector) // sort by the required sorting field and direction
-            ->take($this->perPageItems) // LIMIT $perPageItems
-            ->groupBy('typePluralName')); // gather limited posts by their type
-
+        $this->setResult($fid, $queries);
         return $this;
     }
 }

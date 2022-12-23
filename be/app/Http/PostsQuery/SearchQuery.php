@@ -33,13 +33,16 @@ class SearchQuery
                 }
                 return $postQuery->selectCurrentAndParentPostID();
             });
-        /** @var Collection<string, CursorPaginator> $paginators keyed by post type */
-        $paginators = $queries->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
-        $this->setResult($fid, $paginators, $paginators
-            ->mapWithKeys(static fn (CursorPaginator $paginator, string $type) =>
-                [Helper::POST_TYPE_TO_PLURAL[$type] => $paginator->collect()]
-            ));
 
+        $orderByParam = $params->pick('orderBy')[0];
+        $this->orderByField = $orderByParam->value;
+        $this->orderByDirection = $orderByParam->getSub('direction');
+        if ($this->orderByField === 'default') {
+            $this->orderByField = 'postTime';
+            $this->orderByDirection = 'DESC';
+        }
+
+        $this->setResult($fid, $queries);
         return $this;
     }
 
@@ -76,10 +79,6 @@ class SearchQuery
         };
 
         return match ($name) {
-            // unique
-            'orderBy' => $value === 'default'
-                ? $qb->orderByDesc('postTime')
-                : $qb->orderBy($value, $sub['direction']),
             // numeric
             'tid', 'pid', 'spid',
             'authorUid', 'authorExpGrade', 'latestReplierUid',

@@ -8,6 +8,8 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\Eloquent\ReplyModel;
 use App\Tieba\Eloquent\SubReplyModel;
 use App\Tieba\Eloquent\ThreadModel;
+use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
@@ -25,6 +27,10 @@ trait BaseQuery
 
     private array $queryResultPages;
 
+    protected string $orderByField;
+
+    protected string $orderByDirection;
+
     abstract public function query(QueryParams $params): self;
 
     public function __construct(protected int $perPageItems)
@@ -36,10 +42,36 @@ trait BaseQuery
         return $this->queryResultPages;
     }
 
-    protected function setResult(int $fid, Collection $paginators, Collection $resultKeyByPostTypePluralName): void
+    /**
+     * @param int $fid
+     * @param Collection<string, Builder> $queries keyed by post type
+     * @return void
+     */
+    protected function setResult(int $fid, Collection $queries): void
     {
-        Helper::abortAPIIf(40401, $resultKeyByPostTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
-        $this->queryResult = ['fid' => $fid, ...$resultKeyByPostTypePluralName];
+        /**
+         * @param Builder $qb
+         * @return Builder
+         */
+        $addOrderByForBuilder = fn (Builder $qb) =>
+            $qb->addSelect($this->orderByField)->orderBy($this->orderByField, $this->orderByDirection);
+        /** @var array{callback: \Closure(PostModel): mixed, descending: bool}|null $resultSortByParams */
+        $resultSortByParams = [
+            'callback' => fn (PostModel $i) => $i->getAttribute($this->orderByField),
+            'descending' => $this->orderByDirection === 'DESC'
+        ];
+
+        /** @var Collection<string, CursorPaginator> $paginators keyed by post type */
+        $paginators = $queries->map($addOrderByForBuilder)->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
+        /** @var Collection<string, Collection> $postKeyByTypePluralName */
+        $postKeyByTypePluralName = $paginators
+            ->flatMap(static fn (CursorPaginator $paginator) => $paginator->collect()) // cast queried posts to Collection<PostModel> then flatten all types of posts
+            ->sortBy(...$resultSortByParams) // sort by the required sorting field and direction
+            ->take($this->perPageItems) // LIMIT $perPageItems
+            ->groupBy(static fn (PostModel $p) => PostModel::POST_CLASS_TO_PLURAL_NAME[$p::class]); // gather limited posts by their type
+
+        Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
+        $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
         $this->queryResultPages = [
             'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
                 static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
