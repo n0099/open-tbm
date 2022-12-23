@@ -20,7 +20,7 @@ class SearchQuery extends BaseQuery
         /** @var Collection<string, Builder> $queries key by post type */
         $queries = collect(PostModelFactory::getPostModelsByFid($fid))
             ->only($params->getUniqueParamValue('postTypes'))
-            ->map(function (PostModel $postModel, string $postType) use ($params, &$cachedUserQuery): Builder {
+            ->map(function (PostModel $postModel) use ($params, &$cachedUserQuery): Builder {
                 $postQuery = $postModel->newQuery();
                 foreach ($params->omit() as $param) { // omit nothing to get all params
                     // even when $cachedUserQuery[$param->name] is null, it will still pass as a reference to the array item

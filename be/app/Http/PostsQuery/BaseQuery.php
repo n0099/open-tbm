@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use JetBrains\PhpStorm\ArrayShape;
 use TbClient\Wrapper\PostContentWrapper;
 
@@ -74,9 +75,52 @@ abstract class BaseQuery
         Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
         $this->queryResultPages = [
+            'nextCursor' => $this->serializeNextPageCursor($postKeyByTypePluralName),
             'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
                 static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
         ];
+    }
+
+    private function serializeNextPageCursor(Collection $postKeyByTypePluralName): string
+    {
+        return collect(Helper::POST_TYPES_PLURAL)
+            ->flip()->replace($postKeyByTypePluralName) // reorder the keys to match the order of Helper::POST_TYPES_PLURAL
+            ->mapWithKeys(static fn (Collection $posts, string $type) =>
+                [array_flip(Helper::POST_TYPE_TO_PLURAL)[$type] => $posts->last()]) // [singularPostTypeName => lastPostInResult]
+            ->map(fn (PostModel $post, string $typePluralName) => [ // [postID, orderByField]
+                $post->getAttribute(Helper::POST_TYPE_TO_ID[$typePluralName]),
+                $post->getAttribute($this->orderByField)
+            ])
+            ->map(static fn (array $tuple) => collect($tuple)
+                ->each(static function (int $value): void {
+                    // pack('P') only supports positive integers
+                    Helper::abortAPIIf(50002, $value < 0);
+                })
+                ->map(static fn (int $value, int $index): string =>
+                    str_replace(['+', '/', '='], ['-', '_', ''], // https://en.wikipedia.org/wiki/Base64#URL_applications
+                        base64_encode(
+                            rtrim( // remove trailing 0x00
+                                pack('P', $value), // unsigned int64 with little endian byte order
+                                "\x00"))))
+                ->join(','))
+            ->join(',');
+    }
+
+    private static function unserializeNextPageCursor(string $nextCursor): array
+    {
+        return array_combine(Helper::POST_TYPES, Str::of($nextCursor)
+            ->explode(',')
+            ->map(static fn (string $cursorBase64): int =>
+                ((array)(
+                    unpack('P',
+                        str_pad( // re-add removed trailing 0x00
+                            base64_decode(
+                                str_replace(['-', '_'], ['+', '/'], $cursorBase64) // https://en.wikipedia.org/wiki/Base64#URL_applications
+                            ), 8, "\x00"))
+                ))[1]) // the returned array of unpack() will starts index from 1
+            ->chunk(2) // split six values into three post type pairs
+            ->map(static fn (Collection $i) => $i->values()) // reorder keys
+            ->toArray());
     }
 
     /**
@@ -104,24 +148,25 @@ abstract class BaseQuery
     ])] public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
-        /**
-         * @param string $postIDName
-         * @return array{0: array<int>, 1: Collection<PostModel>}
-         */
-        $getPostsAndIDTuple = static function (string $postIDName) use ($result): array {
-            $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
-            return \array_key_exists($postTypePluralName, $result)
-                ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)->toArray()]
-                : [collect(), []];
-        };
         /** @var array<int> $tids */
         /** @var array<int> $pids */
         /** @var array<int> $spids */
         /** @var Collection<ThreadModel> $threads */
         /** @var Collection<ReplyModel> $replies */
         /** @var Collection<SubReplyModel> $subReplies */
-        [[, $tids], [$replies, $pids], [$subReplies, $spids]] =
-            array_map(static fn (string $postIDName) => $getPostsAndIDTuple($postIDName), Helper::POST_ID);
+        [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
+            /**
+             * @param string $postIDName
+             * @return array{0: array<int>, 1: Collection<PostModel>}
+             */
+            static function (string $postIDName) use ($result): array {
+                $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
+                return \array_key_exists($postTypePluralName, $result)
+                    ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)->toArray()]
+                    : [collect(), []];
+            },
+            Helper::POST_ID
+        );
 
         /** @var int $fid */
         $fid = $result['fid'];
