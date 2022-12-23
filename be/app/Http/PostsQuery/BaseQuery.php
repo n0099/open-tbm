@@ -11,6 +11,7 @@ use App\Tieba\Eloquent\ThreadModel;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -32,7 +33,7 @@ abstract class BaseQuery
 
     protected bool $orderByDesc;
 
-    abstract public function query(QueryParams $params): self;
+    abstract public function query(QueryParams $params, ?string $cursor): self;
 
     public function __construct(protected int $perPageItems)
     {
@@ -48,23 +49,33 @@ abstract class BaseQuery
      * @param Collection<string, Builder> $queries key by post type
      * @return void
      */
-    protected function setResult(int $fid, Collection $queries): void
+    protected function setResult(int $fid, Collection $queries, ?string $cursorParamValue): void
     {
         /**
          * @param Builder $qb
          * @return Builder
          */
-        $addOrderByForBuilder = fn (Builder $qb) =>
+        $addOrderByForBuilder = fn (Builder $qb, string $postType) =>
             $qb->addSelect($this->orderByField)
-                ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC');
+                ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
+                // cursor paginator requires values of orderBy column are unique
+                // if not it should fall back to other unique field (here is the post id primary key)
+                // we don't have to select the post id since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
+                ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
         /** @var array{callback: \Closure(PostModel): mixed, descending: bool}|null $resultSortByParams */
         $resultSortByParams = [
             'callback' => fn (PostModel $i) => $i->getAttribute($this->orderByField),
             'descending' => $this->orderByDesc
         ];
 
+        if ($cursorParamValue !== null) {
+            $cursorKeyByPostType = $this->unserializeNextPageCursor($cursorParamValue)
+                ->reject(static fn (Collection $cursors) => $cursors->every(static fn (int $cursor) => $cursor === 0))
+                ->map(static fn (Collection $cursors) => new Cursor($cursors->toArray()));
+        }
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
-        $paginators = $queries->map($addOrderByForBuilder)->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
+        $paginators = $queries->map($addOrderByForBuilder)
+            ->map(fn (Builder $qb, string $type) => $qb->cursorPaginate($this->perPageItems, cursor: $cursorKeyByPostType[$type] ?? null));
         /** @var Collection<string, Collection> $postKeyByTypePluralName */
         $postKeyByTypePluralName = $paginators
             ->flatMap(static fn (CursorPaginator $paginator) => $paginator->collect()) // cast queried posts to Collection<PostModel> then flatten all types of posts

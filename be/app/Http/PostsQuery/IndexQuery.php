@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class IndexQuery extends BaseQuery
 {
-    public function query(QueryParams $params): self
+    public function query(QueryParams $params, ?string $cursor): self
     {
         /** @var array<string, mixed> $flatParams key by param name */
         $flatParams = array_reduce(
@@ -96,7 +96,7 @@ class IndexQuery extends BaseQuery
             }
         }
 
-        $this->setResult($fid, $queries);
+        $this->setResult($fid, $queries, $params->getUniqueParamValue('cursor'));
         return $this;
     }
 }

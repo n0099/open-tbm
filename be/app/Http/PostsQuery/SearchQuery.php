@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 
 class SearchQuery extends BaseQuery
 {
-    public function query(QueryParams $params): self
+    public function query(QueryParams $params, ?string $cursor): self
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
@@ -38,7 +38,7 @@ class SearchQuery extends BaseQuery
             $this->orderByDesc = true;
         }
 
-        $this->setResult($fid, $queries);
+        $this->setResult($fid, $queries, $cursor);
         return $this;
     }
 

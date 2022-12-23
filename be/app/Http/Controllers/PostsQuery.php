@@ -19,7 +19,10 @@ class PostsQuery extends Controller
     {
         $validator = new ParamsValidator((array)Utils::jsonDecode(
             $request->validate([
-                'page' => 'integer',
+                'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+                    // (,|$)|,){6} means allow at most six parts of base64 segment or empty string to co-exist
+                    'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2}|[A-Za-z0-9-_]{3})(,|$)|,){6}/'
+                ],
                 'query' => 'json'
             ])['query'],
             true
@@ -44,7 +47,7 @@ class PostsQuery extends Controller
         $validator->addDefaultParamsThenValidate($isIndexQuery);
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
-        $query = (new $queryClass($this->perPageItems))->query($params);
+        $query = (new $queryClass($this->perPageItems))->query($params, $request->get('cursor'));
         $result = $query->fillWithParentPost();
 
         return [
