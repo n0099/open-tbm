@@ -32,10 +32,10 @@ class SearchQuery extends BaseQuery
 
         $orderByParam = $params->pick('orderBy')[0];
         $this->orderByField = $orderByParam->value;
-        $this->orderByDirection = $orderByParam->getSub('direction');
+        $this->orderByDesc = $orderByParam->getSub('direction');
         if ($this->orderByField === 'default') {
             $this->orderByField = 'postTime';
-            $this->orderByDirection = 'DESC';
+            $this->orderByDesc = true;
         }
 
         $this->setResult($fid, $queries);

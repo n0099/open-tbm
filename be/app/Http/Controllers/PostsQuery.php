@@ -54,7 +54,7 @@ class PostsQuery extends Controller
                 ...Arr::only($result, ['queryMatchCount', 'parentThreadCount', 'parentReplyCount'])
             ],
             'forum' => ForumModel::fid($result['fid'])->hidePrivateFields()->first()?->toArray(),
-            'threads' => $query::nestPostsWithParent(...$result),
+            'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
             'users' => UserModel::whereIn(
                 'uid',
                 $result['threads']

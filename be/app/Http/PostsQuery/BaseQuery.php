@@ -29,7 +29,7 @@ abstract class BaseQuery
 
     protected string $orderByField;
 
-    protected string $orderByDirection;
+    protected bool $orderByDesc;
 
     abstract public function query(QueryParams $params): self;
 
@@ -54,11 +54,12 @@ abstract class BaseQuery
          * @return Builder
          */
         $addOrderByForBuilder = fn (Builder $qb) =>
-            $qb->addSelect($this->orderByField)->orderBy($this->orderByField, $this->orderByDirection);
+            $qb->addSelect($this->orderByField)
+                ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC');
         /** @var array{callback: \Closure(PostModel): mixed, descending: bool}|null $resultSortByParams */
         $resultSortByParams = [
             'callback' => fn (PostModel $i) => $i->getAttribute($this->orderByField),
-            'descending' => $this->orderByDirection === 'DESC'
+            'descending' => $this->orderByDesc
         ];
 
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
@@ -188,7 +189,7 @@ abstract class BaseQuery
         }
     }
 
-    public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, ...$_): array
+    public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, ...$_): Collection
     {
         // the useless spread parameter $_ will compatible with the array shape which returned by $this->fillWithParentPost()
         return $threads->map(fn (ThreadModel $thread) => [
@@ -196,8 +197,66 @@ abstract class BaseQuery
             'replies' => $replies->where('tid', $thread->tid)->values() // remove numeric indexed keys
                 ->map(fn (ReplyModel $reply) => [
                     ...$reply->toArray(),
-                    'subReplies' => $subReplies->where('pid', $reply->pid)->values()
+                    'subReplies' => $subReplies
+                        ->where('pid', $reply->pid)->values()
+                        ->map(static fn (SubReplyModel $m) => $m->toArray())
                 ])
-        ])->toArray();
+        ]);
+    }
+
+    /**
+     * @param Collection<array<array>> $nestedPosts
+     * @return array<array<array>>
+     * @test-input [{"postTime":1,"isQueryMatch":true,"replies":[{"postTime":2,"isQueryMatch":true,"subReplies":[{"postTime":30}]},{"postTime":20,"isQueryMatch":false,"subReplies":[{"postTime":3}]},{"postTime":4,"isQueryMatch":false,"subReplies":[{"postTime":5},{"postTime":60}]}]},{"postTime":7,"isQueryMatch":false,"replies":[{"postTime":31,"isQueryMatch":true,"subReplies":[]}]}]
+     * @test-output [{"postTime":1,"isQueryMatch":true,"replies":[{"postTime":4,"isQueryMatch":false,"subReplies":[{"postTime":60},{"postTime":5}],"sortingKey":60},{"postTime":2,"isQueryMatch":true,"subReplies":[{"postTime":30}],"sortingKey":30},{"postTime":20,"isQueryMatch":false,"subReplies":[{"postTime":3}],"sortingKey":3}],"sortingKey":60},{"postTime":7,"isQueryMatch":false,"replies":[{"postTime":31,"isQueryMatch":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
+     */
+    public function reOrderNestedPosts(Collection $nestedPosts): array
+    {
+        $getSortingKeyFromCurrentAndChildPosts = function (array $curPost, string $childPostTypePluralName) {
+            /** @var Collection<array> $childPosts sorted child posts */
+            $childPosts = $curPost[$childPostTypePluralName];
+            $curPost[$childPostTypePluralName] = $childPosts->values()->toArray(); // assign child post back to current post
+
+            /** @var Collection<array> $topmostChildPostInQueryMatch the first child post which is isQueryMatch after previous sorting */
+            $topmostChildPostInQueryMatch = $childPosts
+                ->filter(static fn (array $p) => ($p['isQueryMatch'] ?? true) === true);  // sub replies won't have isQueryMatch
+            // use the topmost value between sorting key or value of orderBy field within its child posts
+            $curAndChildSortingKeys = collect([
+                // value of orderBy field in the first sorted child post
+                // if no child posts matching the query, use null as the sorting key
+                $topmostChildPostInQueryMatch->first()[$this->orderByField] ?? null,
+                // sorting key from the first sorted child posts
+                // not requiring isQueryMatch since a child post without isQueryMatch might have its own child posts with isQueryMatch
+                // and its sortingKey would be selected from its own child posts
+                $childPosts->first()['sortingKey'] ?? null
+            ]);
+            if ($curPost['isQueryMatch'] === true) {
+                // also try to use the value of orderBy field in current post
+                $curAndChildSortingKeys->push($curPost[$this->orderByField]);
+            }
+
+            $curAndChildSortingKeys = $curAndChildSortingKeys->filter()->sort(); // Collection->filter() will remove falsy values like null
+            $curPost['sortingKey'] = $this->orderByDesc ? $curAndChildSortingKeys->last() : $curAndChildSortingKeys->first();
+            return $curPost;
+        };
+        $sortPosts = fn (Collection $posts) => $posts
+            ->sortBy('sortingKey', descending: $this->orderByDesc)
+            ->map(static function (array $post) { // remove sorting key from posts after sorting
+                unset($post['sortingKey']);
+                return $post;
+            });
+        return $sortPosts($nestedPosts
+            ->map(function (array $thread) use ($sortPosts, $getSortingKeyFromCurrentAndChildPosts) {
+                $thread['replies'] = $sortPosts(collect($thread['replies'])
+                    ->map(function (array $reply) use ($getSortingKeyFromCurrentAndChildPosts) {
+                        $reply['subReplies'] = collect($reply['subReplies'])->sortBy(
+                            fn (array $subReplies) => $subReplies[$this->orderByField],
+                            descending: $this->orderByDesc
+                        );
+                        return $getSortingKeyFromCurrentAndChildPosts($reply, 'subReplies');
+                    }));
+                return $getSortingKeyFromCurrentAndChildPosts($thread, 'replies');
+            })
+        )->values()->toArray();
     }
 }
