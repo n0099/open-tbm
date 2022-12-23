@@ -30,7 +30,7 @@ class PostsQuery extends Controller
         $isQueryByPostID =
             // is there no other params except unique params and post ID params
             \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID)) === 0
-            // is there only one post id param
+            // is there only one post ID param
             && \count($postIDParams) === 1
             // is all post ID params doesn't own any sub param
             && array_filter($postIDParams, static fn ($p) => $p->getAllSub() !== []) === [];
@@ -39,9 +39,7 @@ class PostsQuery extends Controller
         $isQueryByFid = !$isFidParamNull && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0;
         $isIndexQuery = $isQueryByPostID || $isQueryByFid;
         $isSearchQuery = !$isIndexQuery;
-        if ($isSearchQuery) {
-            Helper::abortAPIIf(40002, $isFidParamNull);
-        }
+        Helper::abortAPIIf(40002, $isSearchQuery && $isFidParamNull);
 
         $validator->addDefaultParamsThenValidate($isIndexQuery);
 

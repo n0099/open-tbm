@@ -157,7 +157,7 @@ export default defineComponent({
                 .flatten() // flatten every thread's replies
                 .map(i => i.subReplies)
                 .reject(_.isEmpty) // remove replies which have no sub reply
-                .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which keyed by pid
+                .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which key by pid
                 .value();
         });
 

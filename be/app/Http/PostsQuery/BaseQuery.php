@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
 use JetBrains\PhpStorm\ArrayShape;
 use TbClient\Wrapper\PostContentWrapper;
 
-trait BaseQuery
+abstract class BaseQuery
 {
     #[ArrayShape([
         'fid' => 'int',
@@ -44,7 +44,7 @@ trait BaseQuery
 
     /**
      * @param int $fid
-     * @param Collection<string, Builder> $queries keyed by post type
+     * @param Collection<string, Builder> $queries key by post type
      * @return void
      */
     protected function setResult(int $fid, Collection $queries): void
@@ -61,7 +61,7 @@ trait BaseQuery
             'descending' => $this->orderByDirection === 'DESC'
         ];
 
-        /** @var Collection<string, CursorPaginator> $paginators keyed by post type */
+        /** @var Collection<string, CursorPaginator> $paginators key by post type */
         $paginators = $queries->map($addOrderByForBuilder)->map(fn (Builder $qb) => $qb->cursorPaginate($this->perPageItems));
         /** @var Collection<string, Collection> $postKeyByTypePluralName */
         $postKeyByTypePluralName = $paginators
@@ -83,10 +83,10 @@ trait BaseQuery
      *
      * @param Collection<CursorPaginator> $paginators
      * @param string $unionMethodName
-     * @param callable $unionCallback (Collection)
+     * @param Closure $unionCallback (Collection)
      * @return mixed returned by $unionCallback()
      */
-    private static function unionPageStats(Collection $paginators, string $unionMethodName, callable $unionCallback): mixed
+    private static function unionPageStats(Collection $paginators, string $unionMethodName, Closure $unionCallback): mixed
     {
         // Collection::filter() will remove falsy values
         $unionValues = $paginators->map(static fn (CursorPaginator $p) => $p->$unionMethodName());
@@ -131,7 +131,7 @@ trait BaseQuery
         $threads = $postModels['thread']
             ->tid($parentThreadsID->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->hidePrivateFields()->get()
-            ->map(static fn(ThreadModel $t) => // mark threads that in the original $this->queryResult
+            ->map(static fn (ThreadModel $t) => // mark threads that in the original $this->queryResult
                 $t->setAttribute('isQueryMatch', \in_array($t->tid, $tids, true)));
 
         /** @var Collection<int> $parentRepliesID parent pid of all sub replies */
@@ -139,7 +139,7 @@ trait BaseQuery
         $replies = $postModels['reply']
             ->pid($parentRepliesID->concat($pids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->hidePrivateFields()->get()
-            ->map(static fn(ReplyModel $r) => // mark replies that in the original $this->queryResult
+            ->map(static fn (ReplyModel $r) => // mark replies that in the original $this->queryResult
                 $r->setAttribute('isQueryMatch', \in_array($r->pid, $pids, true)));
 
         $subReplies = $postModels['subReply']->spid($spids)->hidePrivateFields()->get();
@@ -156,15 +156,14 @@ trait BaseQuery
 
     private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies)
     {
-        $parseProtoBufContent = static function (?string $content): ?string {
-            if ($content === null) {
+        $parseThenRenderContentModel = static function (Model $contentModel) {
+            if ($contentModel->content === null) {
                 return null;
             }
             $proto = new PostContentWrapper();
-            $proto->mergeFromString($content);
+            $proto->mergeFromString($contentModel->content);
             return str_replace("\n", '', trim(view('renderPostContent', ['content' => $proto->getValue()])->render()));
         };
-        $parseContentModel = static fn (Model $i) => $parseProtoBufContent($i->content);
         /**
          * @param Collection<?string> $contents
          * @param string $postIDName
@@ -178,13 +177,13 @@ trait BaseQuery
         if ($replies->isNotEmpty()) {
             /** @var Collection<?string> $replyContents */
             $replyContents = PostModelFactory::newReplyContent($fid)
-                ->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseContentModel);
+                ->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseThenRenderContentModel);
             $replies->transform($appendParsedContent($replyContents, 'pid'));
         }
         if ($subReplies->isNotEmpty()) {
             /** @var Collection<?string> $subReplyContents */
             $subReplyContents = PostModelFactory::newSubReplyContent($fid)
-                ->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseContentModel);
+                ->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseThenRenderContentModel);
             $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
         }
     }

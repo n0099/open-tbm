@@ -8,24 +8,21 @@ use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class IndexQuery
+class IndexQuery extends BaseQuery
 {
-    use BaseQuery;
-
     public function query(QueryParams $params): self
     {
-        /** @var array<string, mixed> $flatParams keyed by param name */
+        /** @var array<string, mixed> $flatParams key by param name */
         $flatParams = array_reduce(
             $params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID),
             static fn (array $accParams, Param $param) =>
                 [...$accParams, $param->name => $param->value, ...$param->getAllSub()],
             []
         ); // flatten unique query params
-        /** @var Collection<string, int> $postIDParam keyed by post ID name, should contains only one param */
+        /** @var Collection<string, int> $postIDParam key by post ID name, should contains only one param */
         $postIDParam = collect($flatParams)->only(Helper::POST_ID);
         /** @var string $postIDParamName */
         $postIDParamName = $postIDParam->keys()->first();
@@ -37,13 +34,13 @@ class IndexQuery
 
         /**
          * @param int $fid
-         * @return Collection<string, Builder> keyed by post type
+         * @return Collection<string, Builder> key by post type
          */
         $getQueryBuilders = static fn (int $fid): Collection =>
             collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
                 ->transform(static fn (PostModel $model, string $type) => $model->selectCurrentAndParentPostID());
         /**
-         * @param array<string, int> $postsID keyed by post ID name
+         * @param array<string, int> $postsID key by post ID name
          * @return int fid
          */
         $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
@@ -64,7 +61,7 @@ class IndexQuery
         if (\array_key_exists('fid', $flatParams)) {
             /** @var int $fid */ $fid = $flatParams['fid'];
             if ((new ForumModel())->fid($fid)->exists()) {
-                /** @var Collection<string, Builder> $queries keyed by post type */
+                /** @var Collection<string, Builder> $queries key by post type */
                 $queries = $getQueryBuilders($fid);
             } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid
                 $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);

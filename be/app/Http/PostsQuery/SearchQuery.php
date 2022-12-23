@@ -2,26 +2,22 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Helper;
 use App\Tieba\Eloquent\PostModel;
 use App\Tieba\Eloquent\UserModel;
 use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 
-class SearchQuery
+class SearchQuery extends BaseQuery
 {
-    use BaseQuery;
-
     public function query(QueryParams $params): self
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
-        /** @var array<string, Collection> $cachedUserQuery keyed by param name */
+        /** @var array<string, Collection> $cachedUserQuery key by param name */
         $cachedUserQuery = [];
-        /** @var Collection<string, Builder> $queries keyed by post type */
+        /** @var Collection<string, Builder> $queries key by post type */
         $queries = collect(PostModelFactory::getPostModelsByFid($fid))
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostModel $postModel, string $postType) use ($params, &$cachedUserQuery): Builder {
