@@ -69,9 +69,7 @@ abstract class BaseQuery
         ];
 
         if ($cursorParamValue !== null) {
-            $cursorKeyByPostType = $this->unserializeNextPageCursor($cursorParamValue)
-                ->reject(static fn (Collection $cursors) => $cursors->every(static fn (int $cursor) => $cursor === 0))
-                ->map(static fn (Collection $cursors) => new Cursor($cursors->toArray()));
+            $cursorKeyByPostType = $this->decodePageCursor($cursorParamValue);
         }
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
         $paginators = $queries->map($addOrderByForBuilder)
@@ -86,66 +84,100 @@ abstract class BaseQuery
         Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
         $this->queryResultPages = [
-            'nextCursor' => $this->serializeNextPageCursor($postKeyByTypePluralName),
+            'nextCursor' => $this->encodePageCursor($postKeyByTypePluralName),
             'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
                 static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
         ];
     }
 
-    private function serializeNextPageCursor(Collection $postKeyByTypePluralName): string
+    /**
+     * @param Collection<string, PostModel> $postKeyByTypePluralName
+     * @return string
+     * @test-input collect(['threads' => collect([new ThreadModel(['tid' => 1,'postTime' => null])]),'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])])
+     */
+    private function encodePageCursor(Collection $postKeyByTypePluralName): string
     {
-        return collect(Helper::POST_TYPES_PLURAL)
-            // reorder the keys to match the order of Helper::POST_TYPES_PLURAL
-            // value of keys that non exists in $postKeyByTypePluralName will remain as int
-            ->flip()->replace($postKeyByTypePluralName)
-            ->mapWithKeys(static fn (Collection|int $posts, string $type) => [
-                array_flip(Helper::POST_TYPE_TO_PLURAL)[$type] =>
-                    is_int($posts) ? null : $posts->last() // if $posts is an integer there's no posts of this type (type key not exists in $postKeyByTypePluralName)
+        $encodedCursorKeyByPostType = $postKeyByTypePluralName
+            ->mapWithKeys(static fn (Collection $posts, string $type) => [
+                Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last()
             ]) // [singularPostTypeName => lastPostInResult]
-            ->map(fn (?PostModel $post, string $typePluralName) => [ // [postID, orderByField]
-                $post?->getAttribute(Helper::POST_TYPE_TO_ID[$typePluralName]),
-                $post?->getAttribute($this->orderByField)
+            ->map(fn (PostModel $post, string $typePluralName) => [ // [postID, orderByField]
+                $post->getAttribute(Helper::POST_TYPE_TO_ID[$typePluralName]),
+                $post->getAttribute($this->orderByField)
             ])
             ->map(static fn (array $cursors) => collect($cursors)
-                ->map(static function (?int $cursor): string {
+                ->map(static function (int|string|null $cursor): string {
                     if ($cursor === null) {
-                        return '';
+                        return 'N'; // a single 'N' is not an valid encoded base64
+                        // so it won't get confused with a valid encoded base64, which value is packed with the default format 'P'
                     }
-                    Helper::abortAPIIf(50002, $cursor < 0); // pack('P') only supports positive integers
-                    return str_replace(['+', '/', '='], ['-', '_', ''], // https://en.wikipedia.org/wiki/Base64#URL_applications
-                        base64_encode(
-                            rtrim( // remove trailing 0x00
-                                pack('P', $cursor), // unsigned int64 with little endian byte order
-                                "\x00")));
+                    $firstKeyFromFilteredTable = static fn (array $table, string $default): string =>
+                        array_keys(array_filter($table, static fn (bool $f) => $f === true))[0] ?? $default;
+                    $packFormat = $firstKeyFromFilteredTable([
+                        'P' => \is_int($cursor) && $cursor >= 0, // unsigned int64 with little endian byte order
+                        'q' => \is_int($cursor) && $cursor < 0 // signed int64 with machine byte order (on x86 will be little endian)
+                    ], '');
+                    $prefix = $firstKeyFromFilteredTable([
+                        $packFormat => \is_int($cursor),
+                        'S' => \is_string($cursor)
+                    ], '');
+                    $value = \is_int($cursor)
+                        // remove trailing 0x00 for unsigned int or 0xFF for signed negative int
+                        ? rtrim(pack($packFormat, $cursor), $cursor >= 0 ? "\x00" : "\xFF")
+                        : ($prefix === 'S'
+                            ? $cursor // keep string as is since encoded string will always longer than the original string
+                            : throw new \RuntimeException('Invalid cursor value'));
+                    if ($prefix !== 'S') {
+                        $value = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($value)); // https://en.wikipedia.org/wiki/Base64#URL_applications
+                    }
+                    return ($prefix === 'P' ? '' : $prefix . ':') . $value;
                 })
-                ->join(','))
+                ->join(','));
+        return collect(Helper::POST_TYPES)
+            // merge cursors into flipped Helper::POST_TYPES with the same post type key
+            // value of keys that non exists in $encodedCursorKeyByPostType will remain as int
+            ->flip()->merge($encodedCursorKeyByPostType)
+            // if the flipped value is an default int key there's no posts of this type (type key not exists in $postKeyByTypePluralName)
+            // so we just return an empty ',' as placeholder
+            ->map(static fn (string|int $cursor) => \is_int($cursor) ? ',' : $cursor)
             ->join(',');
     }
 
     /**
-     * @param string $nextCursor
-     * @return Collection<string, Collection<string, int>>
+     * @param string $encodedCursors
+     * @return Collection<string, Cursor>
      */
-    private function unserializeNextPageCursor(string $nextCursor): Collection
+    private function decodePageCursor(string $encodedCursors): Collection
     {
         return collect(Helper::POST_TYPES)
-            ->combine(Str::of($nextCursor)
+            ->combine(Str::of($encodedCursors)
                 ->explode(',')
-                ->map(static fn (string $cursorBase64): int =>
-                    ((array)(
-                        unpack('P',
-                            str_pad( // re-add removed trailing 0x00
-                                base64_decode(
-                                    str_replace(['-', '_'], ['+', '/'], $cursorBase64) // https://en.wikipedia.org/wiki/Base64#URL_applications
-                                ), 8, "\x00"))
-                    ))[1]) // the returned array of unpack() will starts index from 1
+                ->map(static function (string $cursorValueWithPrefix): int|string|null {
+                    [$prefix, $value] = array_pad(explode(':', $cursorValueWithPrefix), 2, null);
+                    if ($value === null && $prefix !== 'N') { // no prefix being provided means it will be the default 'P'
+                        $value = $prefix;
+                        $prefix = 'P';
+                    }
+                    return match($prefix) {
+                        'N' => null, // null literal
+                        'S' => $value, // string literal is not base64 encoded
+                        default => ((array)(
+                            unpack($prefix,
+                                str_pad( // re-add removed trailing 0x00 or 0xFF
+                                    base64_decode(
+                                        str_replace(['-', '_'], ['+', '/'], $value) // https://en.wikipedia.org/wiki/Base64#URL_applications
+                                    ), 8, $prefix === 'P' ? "\x00" : "\xFF"))
+                        ))[1] // the returned array of unpack() will starts index from 1
+                    };
+                })
                 ->chunk(2) // split six values into three post type pairs
-                ->map(static fn (Collection $i) => $i->values())) // reorder keys
+                ->map(static fn (Collection $i) => $i->values())) // reorder keys after chunk
             ->mapWithKeys(fn (Collection $cursors, string $postType) =>
                 [$postType =>
-                    $cursors->mapWithKeys(fn (int $cursor, int $index) =>
+                    $cursors->mapWithKeys(fn (int|string|null $cursor, int $index) =>
                         [$index === 0 ? Helper::POST_TYPE_TO_ID[$postType] : $this->orderByField => $cursor])
-                ]);
+                ])
+            ->map(static fn (Collection $cursors) => new Cursor($cursors->toArray()));
     }
 
     /**

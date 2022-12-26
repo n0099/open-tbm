@@ -20,6 +20,12 @@ class Helper
         'subReply' => 'subReplies'
     ];
 
+    public const POST_TYPE_PLURAL_TO_TYPE = [
+        'threads' => 'thread',
+        'replies' => 'reply',
+        'subReplies' => 'subReply'
+    ];
+
     public const POST_ID_TO_TYPE_PLURAL = [
         'tid' => 'threads',
         'pid' => 'replies',
@@ -75,7 +81,6 @@ class Helper
             ],
             500 => [
                 50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
-                50002 => '本页帖子中存在无法用于分页游标的负数排序字段值',
             ]
         ];
 
