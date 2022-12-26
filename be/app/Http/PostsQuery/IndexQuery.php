@@ -37,7 +37,8 @@ class IndexQuery extends BaseQuery
          * @return Collection<string, Builder> key by post type
          */
         $getQueryBuilders = static fn (int $fid): Collection =>
-            collect(PostModelFactory::getPostModelsByFid($fid))->only($postTypes)
+            collect(PostModelFactory::getPostModelsByFid($fid))
+                ->only($postTypes)
                 ->transform(static fn (PostModel $model, string $type) => $model->selectCurrentAndParentPostID());
         /**
          * @param array<string, int> $postsID key by post ID name
@@ -96,7 +97,7 @@ class IndexQuery extends BaseQuery
             }
         }
 
-        $this->setResult($fid, $queries, $params->getUniqueParamValue('cursor'));
+        $this->setResult($fid, $queries, $cursor);
         return $this;
     }
 }

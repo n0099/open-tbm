@@ -13,15 +13,13 @@ use Illuminate\Support\Arr;
 
 class PostsQuery extends Controller
 {
-    private int $perPageItems = 200;
-
     public function query(\Illuminate\Http\Request $request): array
     {
         $validator = new ParamsValidator((array)Utils::jsonDecode(
             $request->validate([
                 'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                     // (,|$)|,){6} means allow at most six parts of base64 segment or empty string to co-exist
-                    'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2}|[A-Za-z0-9-_]{3})(,|$)|,){6}/'
+                    'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/'
                 ],
                 'query' => 'json'
             ])['query'],
@@ -47,7 +45,7 @@ class PostsQuery extends Controller
         $validator->addDefaultParamsThenValidate($isIndexQuery);
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
-        $query = (new $queryClass($this->perPageItems))->query($params, $request->get('cursor'));
+        $query = (new $queryClass())->query($params, $request->get('cursor'));
         $result = $query->fillWithParentPost();
 
         return [

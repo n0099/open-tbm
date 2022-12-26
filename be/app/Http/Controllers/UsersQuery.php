@@ -23,13 +23,14 @@ class UsersQuery extends Controller
 
         $nullableParams = ['name', 'displayName', 'gender'];
         foreach ($nullableParams as $nullableParamName) {
-            if (array_key_exists($nullableParamName, $queryParams) && $queryParams[$nullableParamName] === 'NULL') {
+            if (\array_key_exists($nullableParamName, $queryParams) && $queryParams[$nullableParamName] === 'NULL') {
                 $queryBuilder = $queryBuilder->whereNull($nullableParamName);
                 unset($queryParams[$nullableParamName]);
             }
         }
 
-        $queriedInfo = $queryBuilder->where($queryParams)
+        $queriedInfo = $queryBuilder
+            ->where($queryParams)
             ->orderBy('id', 'DESC')
             ->hidePrivateFields()
             ->simplePaginate($this->pagingPerPageItems);
