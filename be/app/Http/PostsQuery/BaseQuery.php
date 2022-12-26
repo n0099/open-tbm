@@ -204,30 +204,30 @@ abstract class BaseQuery
 
     #[ArrayShape([
         'fid' => 'int',
-        'parentThreadCount' => 'int',
-        'parentReplyCount' => 'int',
+        'postsQueryMatchCount' => 'array{thread: int, reply: int, subReply: int}',
+        'notMatchQueryParentPostsCount' => 'array{thread: int, reply: int}',
         'threads' => 'Collection<ThreadModel>',
         'replies' => 'Collection<ReplyModel>',
         'subReplies' => 'Collection<SubReplyModel>'
     ])] public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
-        /** @var array<int> $tids */
-        /** @var array<int> $pids */
-        /** @var array<int> $spids */
+        /** @var Collection<int> $tids */
+        /** @var Collection<int> $pids */
+        /** @var Collection<int> $spids */
         /** @var Collection<ThreadModel> $threads */
         /** @var Collection<ReplyModel> $replies */
         /** @var Collection<SubReplyModel> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
             /**
              * @param string $postIDName
-             * @return array{0: array<int>, 1: Collection<PostModel>}
+             * @return array{0: Collection<PostModel>, 1: Collection<int>}
              */
             static function (string $postIDName) use ($result): array {
                 $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
                 return \array_key_exists($postTypePluralName, $result)
-                    ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)->toArray()]
-                    : [collect(), []];
+                    ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)]
+                    : [collect(), collect()];
             },
             Helper::POST_ID
         );
@@ -236,37 +236,45 @@ abstract class BaseQuery
         $fid = $result['fid'];
         $postModels = PostModelFactory::getPostModelsByFid($fid);
 
+        Debugbar::startMeasure('fillWithThreadsFields');
         /** @var Collection<int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         $threads = $postModels['thread']
             ->tid($parentThreadsID->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->hidePrivateFields()->get()
             ->map(static fn (ThreadModel $t) => // mark threads that in the original $this->queryResult
-                $t->setAttribute('isQueryMatch', \in_array($t->tid, $tids, true)));
+                $t->setAttribute('isQueryMatch', $tids->contains($t->tid)));
+        Debugbar::stopMeasure('fillWithThreadsFields');
 
+        Debugbar::startMeasure('fillWithRepliesFields');
         /** @var Collection<int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = $postModels['reply']
             ->pid($parentRepliesID->concat($pids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->hidePrivateFields()->get()
             ->map(static fn (ReplyModel $r) => // mark replies that in the original $this->queryResult
-                $r->setAttribute('isQueryMatch', \in_array($r->pid, $pids, true)));
+                $r->setAttribute('isQueryMatch', $pids->contains($r->pid)));
 
         $subReplies = $postModels['subReply']->spid($spids)->hidePrivateFields()->get();
+        Debugbar::stopMeasure('fillWithRepliesFields');
 
         self::fillPostsContent($fid, $replies, $subReplies);
         return [
             'fid' => $fid,
-            'queryMatchCount' => array_sum(array_map('\count', [$tids, $pids, $spids])),
-            'parentThreadCount' => $parentThreadsID->diff($tids)->count(),
-            'parentReplyCount' => $parentRepliesID->diff($pids)->count(),
+            'postsQueryMatchCount' => collect(Helper::POST_TYPES)
+                ->combine([$tids, $pids, $spids])
+                ->map(static fn (Collection $ids, string $type) => $ids->count()),
+            'notMatchQueryParentPostsCount' => [
+                'thread' => $parentThreadsID->diff($tids)->count(),
+                'reply' => $parentRepliesID->diff($pids)->count(),
+            ],
             ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
         ];
     }
 
-    private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies)
+    private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies): void
     {
-        $parseThenRenderContentModel = static function (Model $contentModel) {
+        $parseThenRenderContentModel = static function (Model $contentModel): ?string {
             if ($contentModel->content === null) {
                 return null;
             }
@@ -280,37 +288,46 @@ abstract class BaseQuery
          * @return \Closure
          */
         $appendParsedContent = static fn (Collection $contents, string $postIDName) =>
-            static function (PostModel $post) use ($contents, $postIDName) {
+            static function (PostModel $post) use ($contents, $postIDName): PostModel {
                 $post->content = $contents[$post[$postIDName]];
                 return $post;
             };
         if ($replies->isNotEmpty()) {
-            /** @var Collection<?string> $replyContents */
-            $replyContents = PostModelFactory::newReplyContent($fid)
-                ->pid($replies->pluck('pid'))->get()->keyBy('pid')->map($parseThenRenderContentModel);
-            $replies->transform($appendParsedContent($replyContents, 'pid'));
+            Debugbar::measure('fillRepliesContent', static fn () =>
+                $replies->transform($appendParsedContent(
+                    PostModelFactory::newReplyContent($fid)
+                        ->pid($replies->pluck('pid'))->get()
+                        ->keyBy('pid')->map($parseThenRenderContentModel),
+                    'pid')));
         }
         if ($subReplies->isNotEmpty()) {
-            /** @var Collection<?string> $subReplyContents */
-            $subReplyContents = PostModelFactory::newSubReplyContent($fid)
-                ->spid($subReplies->pluck('spid'))->get()->keyBy('spid')->map($parseThenRenderContentModel);
-            $subReplies->transform($appendParsedContent($subReplyContents, 'spid'));
+            Debugbar::measure('fillSubRepliesContent', static fn () =>
+            $subReplies->transform($appendParsedContent(
+                PostModelFactory::newSubReplyContent($fid)
+                    ->spid($subReplies->pluck('spid'))->get()
+                    ->keyBy('spid')->map($parseThenRenderContentModel),
+                'spid')));
         }
     }
 
     public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, ...$_): Collection
     {
-        // the useless spread parameter $_ will compatible with the array shape which returned by $this->fillWithParentPost()
-        return $threads->map(fn (ThreadModel $thread) => [
+        Debugbar::startMeasure('nestPostsWithParent');
+
+        $replies = $replies->groupBy('tid');
+        $subReplies = $subReplies->groupBy('pid');
+        $ret = $threads->map(fn (ThreadModel $thread) => [
             ...$thread->toArray(),
-            'replies' => $replies->where('tid', $thread->tid)->values() // remove numeric indexed keys
+            'replies' => $replies->get($thread->tid, collect())
                 ->map(fn (ReplyModel $reply) => [
                     ...$reply->toArray(),
-                    'subReplies' => $subReplies
-                        ->where('pid', $reply->pid)->values()
-                        ->map(static fn (SubReplyModel $m) => $m->toArray())
+                    'subReplies' => $subReplies->get($reply->pid, collect())
+                        ->map(static fn (SubReplyModel $subReply) => $subReply->toArray())
                 ])
         ]);
+
+        Debugbar::stopMeasure('nestPostsWithParent');
+        return $ret;
     }
 
     /**
@@ -321,6 +338,8 @@ abstract class BaseQuery
      */
     public function reOrderNestedPosts(Collection $nestedPosts): array
     {
+        Debugbar::startMeasure('reOrderNestedPosts');
+
         $getSortingKeyFromCurrentAndChildPosts = function (array $curPost, string $childPostTypePluralName) {
             /** @var Collection<array> $childPosts sorted child posts */
             $childPosts = $curPost[$childPostTypePluralName];
@@ -354,7 +373,7 @@ abstract class BaseQuery
                 unset($post['sortingKey']);
                 return $post;
             });
-        return $sortPosts($nestedPosts
+        $ret = $sortPosts($nestedPosts
             ->map(function (array $thread) use ($sortPosts, $getSortingKeyFromCurrentAndChildPosts) {
                 $thread['replies'] = $sortPosts(collect($thread['replies'])
                     ->map(function (array $reply) use ($getSortingKeyFromCurrentAndChildPosts) {
@@ -367,5 +386,8 @@ abstract class BaseQuery
                 return $getSortingKeyFromCurrentAndChildPosts($thread, 'replies');
             })
         )->values()->toArray();
+
+        Debugbar::stopMeasure('reOrderNestedPosts');
+        return $ret;
     }
 }
