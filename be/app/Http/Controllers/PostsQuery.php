@@ -8,6 +8,7 @@ use App\Http\PostsQuery\SearchQuery;
 use App\Http\PostsQuery\ParamsValidator;
 use App\Tieba\Eloquent\ForumModel;
 use App\Tieba\Eloquent\UserModel;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
@@ -45,8 +46,12 @@ class PostsQuery extends Controller
         $validator->addDefaultParamsThenValidate($isIndexQuery);
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
+        Debugbar::startMeasure('$queryClass->query()');
         $query = (new $queryClass())->query($params, $request->get('cursor'));
+        Debugbar::stopMeasure('$queryClass->query()');
+        Debugbar::startMeasure('fillWithParentPost');
         $result = $query->fillWithParentPost();
+        Debugbar::stopMeasure('fillWithParentPost');
 
         return [
             'type' => $isIndexQuery ? 'index' : 'search',

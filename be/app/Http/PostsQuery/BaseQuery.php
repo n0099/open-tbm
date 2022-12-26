@@ -8,6 +8,7 @@ use App\Tieba\Eloquent\PostModelFactory;
 use App\Tieba\Eloquent\ReplyModel;
 use App\Tieba\Eloquent\SubReplyModel;
 use App\Tieba\Eloquent\ThreadModel;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -47,47 +48,46 @@ abstract class BaseQuery
     /**
      * @param int $fid
      * @param Collection<string, Builder> $queries key by post type
+     * @param string|null $cursorParamValue
      * @return void
      */
     protected function setResult(int $fid, Collection $queries, ?string $cursorParamValue): void
     {
-        /**
-         * @param Builder $qb
-         * @return Builder
-         */
-        $addOrderByForBuilder = fn (Builder $qb, string $postType) =>
-            $qb->addSelect($this->orderByField)
-                ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
-                // cursor paginator requires values of orderBy column are unique
-                // if not it should fall back to other unique field (here is the post id primary key)
-                // we don't have to select the post id since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
-                ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
-        /** @var array{callback: \Closure(PostModel): mixed, descending: bool}|null $resultSortByParams */
-        $resultSortByParams = [
-            'callback' => fn (PostModel $i) => $i->getAttribute($this->orderByField),
-            'descending' => $this->orderByDesc
-        ];
+        Debugbar::startMeasure('setResult');
 
+        $addOrderByForBuilder = fn (Builder $qb, string $postType): Builder => $qb
+            ->addSelect($this->orderByField)
+            ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
+            // cursor paginator requires values of orderBy column are unique
+            // if not it should fall back to other unique field (here is the post id primary key)
+            // we don't have to select the post id since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
+            ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
+
+        $queriesWithOrderBy = $queries->map($addOrderByForBuilder);
         if ($cursorParamValue !== null) {
             $cursorKeyByPostType = $this->decodePageCursor($cursorParamValue);
+            // remove queries for post types with encoded cursor ',,'
+            $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorKeyByPostType);
         }
+        Debugbar::startMeasure('initPaginators');
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
-        $paginators = $queries->map($addOrderByForBuilder)
-            ->map(fn (Builder $qb, string $type) => $qb->cursorPaginate($this->perPageItems, cursor: $cursorKeyByPostType[$type] ?? null));
+        $paginators = $queriesWithOrderBy->map(fn (Builder $qb, string $type) =>
+            $qb->cursorPaginate($this->perPageItems, cursor: $cursorKeyByPostType[$type] ?? null));
+        Debugbar::stopMeasure('initPaginators');
         /** @var Collection<string, Collection> $postKeyByTypePluralName */
         $postKeyByTypePluralName = $paginators
-            ->flatMap(static fn (CursorPaginator $paginator) => $paginator->collect()) // cast queried posts to Collection<PostModel> then flatten all types of posts
-            ->sortBy(...$resultSortByParams) // sort by the required sorting field and direction
-            ->take($this->perPageItems) // LIMIT $perPageItems
-            ->groupBy(static fn (PostModel $p) => PostModel::POST_CLASS_TO_PLURAL_NAME[$p::class]); // gather limited posts by their type
+            ->map(static fn (CursorPaginator $paginator) => $paginator->collect()) // cast paginator with queried posts to Collection<PostModel>
+            ->mapWithKeys(static fn (Collection $posts, string $type) => [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
 
         Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
         $this->queryResultPages = [
-            'nextCursor' => $this->encodePageCursor($postKeyByTypePluralName),
+            'nextCursor' => $this->encodeNextPageCursor($postKeyByTypePluralName, $paginators),
             'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
                 static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
         ];
+
+        Debugbar::stopMeasure('setResult');
     }
 
     /**
@@ -95,29 +95,31 @@ abstract class BaseQuery
      * @return string
      * @test-input collect(['threads' => collect([new ThreadModel(['tid' => 1,'postTime' => null])]),'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])])
      */
-    private function encodePageCursor(Collection $postKeyByTypePluralName): string
+    private function encodeNextPageCursor(Collection $postKeyByTypePluralName, Collection $paginators): string
     {
         $encodedCursorKeyByPostType = $postKeyByTypePluralName
+            ->only($paginators // filter out post types that have no more pages, they will have a blank ',,' encoded cursor
+                ->map(static fn (CursorPaginator $p) => $p->hasMorePages())
+                ->filter() // remove false values, that is post types with no more pages
+                ->keys()
+                ->map(static fn (string $type) => Helper::POST_TYPE_TO_PLURAL[$type]))
             ->mapWithKeys(static fn (Collection $posts, string $type) => [
-                Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last()
+                Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last() // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
+            ->filter() // remove post types that have no posts
             ->map(fn (PostModel $post, string $typePluralName) => [ // [postID, orderByField]
                 $post->getAttribute(Helper::POST_TYPE_TO_ID[$typePluralName]),
                 $post->getAttribute($this->orderByField)
             ])
             ->map(static fn (array $cursors) => collect($cursors)
-                ->map(static function (int|string|null $cursor): string {
-                    if ($cursor === null) {
-                        return 'N'; // a single 'N' is not an valid encoded base64
-                        // so it won't get confused with a valid encoded base64, which value is packed with the default format 'P'
-                    }
-                    $firstKeyFromFilteredTable = static fn (array $table, string $default): string =>
+                ->map(static function (int|string $cursor): string {
+                    $firstKeyFromTableFilterByTrue = static fn (array $table, string $default): string =>
                         array_keys(array_filter($table, static fn (bool $f) => $f === true))[0] ?? $default;
-                    $packFormat = $firstKeyFromFilteredTable([
+                    $packFormat = $firstKeyFromTableFilterByTrue([
                         'P' => \is_int($cursor) && $cursor >= 0, // unsigned int64 with little endian byte order
                         'q' => \is_int($cursor) && $cursor < 0 // signed int64 with machine byte order (on x86 will be little endian)
                     ], '');
-                    $prefix = $firstKeyFromFilteredTable([
+                    $prefix = $firstKeyFromTableFilterByTrue([
                         $packFormat => \is_int($cursor),
                         'S' => \is_string($cursor)
                     ], '');
@@ -153,13 +155,15 @@ abstract class BaseQuery
             ->combine(Str::of($encodedCursors)
                 ->explode(',')
                 ->map(static function (string $cursorValueWithPrefix): int|string|null {
+                    if ($cursorValueWithPrefix === '') {
+                        return null;
+                    }
                     [$prefix, $value] = array_pad(explode(':', $cursorValueWithPrefix), 2, null);
                     if ($value === null && $prefix !== 'N') { // no prefix being provided means it will be the default 'P'
                         $value = $prefix;
                         $prefix = 'P';
                     }
                     return match($prefix) {
-                        'N' => null, // null literal
                         'S' => $value, // string literal is not base64 encoded
                         default => ((array)(
                             unpack($prefix,
@@ -177,6 +181,9 @@ abstract class BaseQuery
                     $cursors->mapWithKeys(fn (int|string|null $cursor, int $index) =>
                         [$index === 0 ? Helper::POST_TYPE_TO_ID[$postType] : $this->orderByField => $cursor])
                 ])
+            // filter out cursors with all fields value being null, their encoded cursor is ',,'
+            ->reject(static fn (Collection $cursors) =>
+                $cursors->every(static fn (int|string|null $cursor) => $cursor === null))
             ->map(static fn (Collection $cursors) => new Cursor($cursors->toArray()));
     }
 
