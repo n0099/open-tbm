@@ -8,6 +8,8 @@ namespace tbm.Crawler.Db
         private readonly IConfiguration _config;
         private Fid Fid { get; }
         public DbSet<TiebaUser> Users => Set<TiebaUser>();
+        public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
+        public DbSet<AuthorManagerTypeRevision> AuthorManagerTypeRevisions => Set<AuthorManagerTypeRevision>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
@@ -39,6 +41,8 @@ namespace tbm.Crawler.Db
             b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new {e.Pid, e.Time});
             b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new {e.Spid, e.Time});
             b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new {e.Uid, e.Time});
+            b.Entity<AuthorExpGradeRevision>().ToTable("tbm_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.Time});
+            b.Entity<AuthorManagerTypeRevision>().ToTable("tbm_revision_authorManagerType").HasKey(e => new {e.Fid, e.Uid, e.Time});
             b.Entity<Forum>().ToTable("tbm_forums");
         }
 

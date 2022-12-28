@@ -8,8 +8,8 @@ namespace tbm.Crawler.Db.Post
         [Key] public ulong Spid { get; set; }
         [NotMapped] public byte[]? Content { get; set; }
         public long AuthorUid { get; set; }
-        public string? AuthorManagerType { get; set; }
-        public ushort AuthorExpGrade { get; set; }
+        [NotMapped] public string? AuthorManagerType { get; set; }
+        [NotMapped] public ushort AuthorExpGrade { get; set; }
         public uint PostTime { get; set; }
         public int? AgreeCount { get; set; }
         public int? DisagreeCount { get; set; }

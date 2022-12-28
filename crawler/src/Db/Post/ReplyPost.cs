@@ -8,8 +8,8 @@ namespace tbm.Crawler.Db.Post
         public uint Floor { get; set; }
         [NotMapped] public byte[]? Content { get; set; }
         public long AuthorUid { get; set; }
-        public string? AuthorManagerType { get; set; }
-        public ushort AuthorExpGrade { get; set; }
+        [NotMapped] public string? AuthorManagerType { get; set; }
+        [NotMapped] public ushort AuthorExpGrade { get; set; }
         public uint? SubReplyCount { get; set; }
         public uint PostTime { get; set; }
         public ushort? IsFold { get; set; }
