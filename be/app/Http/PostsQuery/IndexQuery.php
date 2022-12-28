@@ -24,9 +24,9 @@ class IndexQuery extends BaseQuery
         ); // flatten unique query params
         /** @var Collection<string, int> $postIDParam key by post ID name, should contains only one param */
         $postIDParam = collect($flatParams)->only(Helper::POST_ID);
-        /** @var string $postIDParamName */
+        /** @var ?string $postIDParamName */
         $postIDParamName = $postIDParam->keys()->first();
-        /** @var int $postIDParamValue */
+        /** @var ?int $postIDParamValue */
         $postIDParamValue = $postIDParam->first();
         $hasPostIDParam = $postIDParam->count() === 1;
         /** @var array<string> $postTypes */
@@ -97,7 +97,7 @@ class IndexQuery extends BaseQuery
             }
         }
 
-        $this->setResult($fid, $queries, $cursor);
+        $this->setResult($fid, $queries, $cursor, $hasPostIDParam ? $postIDParamName : null);
         return $this;
     }
 }

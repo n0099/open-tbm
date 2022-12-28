@@ -49,9 +49,10 @@ abstract class BaseQuery
      * @param int $fid
      * @param Collection<string, Builder> $queries key by post type
      * @param string|null $cursorParamValue
+     * @param string|null $queryByPostIDParamName
      * @return void
      */
-    protected function setResult(int $fid, Collection $queries, ?string $cursorParamValue): void
+    protected function setResult(int $fid, Collection $queries, ?string $cursorParamValue, ?string $queryByPostIDParamName = null): void
     {
         Debugbar::startMeasure('setResult');
 
@@ -82,7 +83,9 @@ abstract class BaseQuery
         Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
         $this->queryResultPages = [
-            'nextCursor' => $this->encodeNextPageCursor($postKeyByTypePluralName, $paginators),
+            'nextCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
+                ? $postKeyByTypePluralName
+                : $postKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
             'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
                 static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
         ];
@@ -93,16 +96,11 @@ abstract class BaseQuery
     /**
      * @param Collection<string, PostModel> $postKeyByTypePluralName
      * @return string
-     * @test-input collect(['threads' => collect([new ThreadModel(['tid' => 1,'postTime' => null])]),'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])])
+     * @test-input collect(['threads' => collect([new ThreadModel(['tid' => 1,'postTime' => 0])]),'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])])
      */
-    private function encodeNextPageCursor(Collection $postKeyByTypePluralName, Collection $paginators): string
+    private function encodeNextPageCursor(Collection $postKeyByTypePluralName): string
     {
         $encodedCursorKeyByPostType = $postKeyByTypePluralName
-            ->only($paginators // filter out post types that have no more pages, they will have a blank ',,' encoded cursor
-                ->map(static fn (CursorPaginator $p) => $p->hasMorePages())
-                ->filter() // remove false values, that is post types with no more pages
-                ->keys()
-                ->map(static fn (string $type) => Helper::POST_TYPE_TO_PLURAL[$type]))
             ->mapWithKeys(static fn (Collection $posts, string $type) => [
                 Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last() // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
@@ -113,6 +111,12 @@ abstract class BaseQuery
             ])
             ->map(static fn (array $cursors) => collect($cursors)
                 ->map(static function (int|string $cursor): string {
+                    if (\is_int($cursor) && $cursor === 0) {
+                        // quick exit to keep 0 as is
+                        // to prevent packed 0 with the default format 'P' after 0x00 trimming is an empty string
+                        // that will be confused with post types without a cursor, they will have a blank encoded cursor ',,'
+                        return '0';
+                    }
                     $firstKeyFromTableFilterByTrue = static fn (array $table, string $default): string =>
                         array_keys(array_filter($table, static fn (bool $f) => $f === true))[0] ?? $default;
                     $packFormat = $firstKeyFromTableFilterByTrue([
@@ -154,22 +158,21 @@ abstract class BaseQuery
         return collect(Helper::POST_TYPES)
             ->combine(Str::of($encodedCursors)
                 ->explode(',')
-                ->map(static function (string $cursorValueWithPrefix): int|string|null {
-                    if ($cursorValueWithPrefix === '') {
-                        return null;
-                    }
-                    [$prefix, $value] = array_pad(explode(':', $cursorValueWithPrefix), 2, null);
-                    if ($value === null && $prefix !== 'N') { // no prefix being provided means it will be the default 'P'
-                        $value = $prefix;
+                ->map(static function (string $encodedCursor): int|string|null {
+                    [$prefix, $cursor] = array_pad(explode(':', $encodedCursor), 2, null);
+                    if ($cursor === null && $prefix !== 'N') { // no prefix being provided means it will be the default 'P'
+                        $cursor = $prefix;
                         $prefix = 'P';
                     }
                     return match($prefix) {
-                        'S' => $value, // string literal is not base64 encoded
+                        null => null, // original encoded cursor is an empty string
+                        '0' => 0,
+                        'S' => $cursor, // string literal is not base64 encoded
                         default => ((array)(
                             unpack($prefix,
                                 str_pad( // re-add removed trailing 0x00 or 0xFF
                                     base64_decode(
-                                        str_replace(['-', '_'], ['+', '/'], $value) // https://en.wikipedia.org/wiki/Base64#URL_applications
+                                        str_replace(['-', '_'], ['+', '/'], $cursor) // https://en.wikipedia.org/wiki/Base64#URL_applications
                                     ), 8, $prefix === 'P' ? "\x00" : "\xFF"))
                         ))[1] // the returned array of unpack() will starts index from 1
                     };
