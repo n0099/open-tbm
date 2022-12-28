@@ -1,3 +1,4 @@
+// ReSharper disable UnusedMemberInSuper.Global
 namespace tbm.Crawler.Db.Post
 {
     public interface IPost : IEntityWithTimestampFields, ICloneable

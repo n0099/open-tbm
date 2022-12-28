@@ -1,3 +1,4 @@
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace tbm.Crawler.Db.Post
 {
     public class ReplyPost : IPost
