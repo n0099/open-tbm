@@ -117,26 +117,26 @@ abstract class BaseQuery
                         // that will be confused with post types without a cursor, they will have a blank encoded cursor ',,'
                         return '0';
                     }
+
                     $firstKeyFromTableFilterByTrue = static fn (array $table, string $default): string =>
                         array_keys(array_filter($table, static fn (bool $f) => $f === true))[0] ?? $default;
-                    $packFormat = $firstKeyFromTableFilterByTrue([
-                        'P' => \is_int($cursor) && $cursor >= 0, // unsigned int64 with little endian byte order
-                        'q' => \is_int($cursor) && $cursor < 0 // signed int64 with machine byte order (on x86 will be little endian)
-                    ], '');
                     $prefix = $firstKeyFromTableFilterByTrue([
-                        $packFormat => \is_int($cursor),
+                        '-' => \is_int($cursor) && $cursor < 0,
+                        '' => \is_int($cursor),
                         'S' => \is_string($cursor)
                     ], '');
+
                     $value = \is_int($cursor)
                         // remove trailing 0x00 for unsigned int or 0xFF for signed negative int
-                        ? rtrim(pack($packFormat, $cursor), $cursor >= 0 ? "\x00" : "\xFF")
+                        ? rtrim(pack('P', $cursor), $cursor >= 0 ? "\x00" : "\xFF")
                         : ($prefix === 'S'
                             ? $cursor // keep string as is since encoded string will always longer than the original string
                             : throw new \RuntimeException('Invalid cursor value'));
                     if ($prefix !== 'S') {
                         $value = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($value)); // https://en.wikipedia.org/wiki/Base64#URL_applications
                     }
-                    return ($prefix === 'P' ? '' : $prefix . ':') . $value;
+
+                    return $prefix . ($prefix === '' ? '' : ':') . $value;
                 })
                 ->join(','));
         return collect(Helper::POST_TYPES)
@@ -160,20 +160,20 @@ abstract class BaseQuery
                 ->explode(',')
                 ->map(static function (string $encodedCursor): int|string|null {
                     [$prefix, $cursor] = array_pad(explode(':', $encodedCursor), 2, null);
-                    if ($cursor === null && $prefix !== 'N') { // no prefix being provided means it will be the default 'P'
+                    if ($cursor === null) { // no prefix being provided means the value of cursor is an positive int
                         $cursor = $prefix;
-                        $prefix = 'P';
+                        $prefix = '';
                     }
                     return match($prefix) {
                         null => null, // original encoded cursor is an empty string
-                        '0' => 0,
+                        '0' => 0, // keep 0 as is
                         'S' => $cursor, // string literal is not base64 encoded
                         default => ((array)(
-                            unpack($prefix,
+                            unpack('P',
                                 str_pad( // re-add removed trailing 0x00 or 0xFF
                                     base64_decode(
                                         str_replace(['-', '_'], ['+', '/'], $cursor) // https://en.wikipedia.org/wiki/Base64#URL_applications
-                                    ), 8, $prefix === 'P' ? "\x00" : "\xFF"))
+                                    ), 8, $prefix === '-' ? "\xFF" : "\x00"))
                         ))[1] // the returned array of unpack() will starts index from 1
                     };
                 })
