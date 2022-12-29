@@ -34,6 +34,6 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 
         protected IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage) =>
             ResponsePostListProp.GetValue(ResponseDataProp.GetValue(response)) is IList<TPostProtoBuf> posts
-            && posts.Any() ? posts : throw new TiebaException(false, exceptionMessage);
+            && posts.Any() ? posts : throw new EmptyPostListException(exceptionMessage);
     }
 }

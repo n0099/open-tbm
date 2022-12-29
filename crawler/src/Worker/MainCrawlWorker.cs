@@ -120,7 +120,34 @@ namespace tbm.Crawler.Worker
             {
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveCrawled());
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.SetExceptionHandler(ex =>
+                {
+                    if (ex is not EmptyPostListException) return;
+                    var parentThread = savedThreads
+                        .SelectMany(c => c.AllAfter.Where(t => t.Tid == tid)).FirstOrDefault();
+                    if (parentThread == null) return;
+
+                    var db = scope1.Resolve<TbmDbContext.New>()(fid);
+                    using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+                    var existingEntity = db.ThreadsMissingFirstReplies.SingleOrDefault(e => e.Tid == tid);
+                    var newEntity = new ThreadsMissingFirstReply {
+                        Tid = tid,
+                        Pid = parentThread.FirstReplyPid,
+                        Excerpt = parentThread.FirstReplyExcerpt
+                    };
+                    if (existingEntity == null)
+                    {
+                        _ = db.Add(newEntity);
+                    }
+                    else
+                    {
+                        var entry = db.Update(newEntity);
+                        if (newEntity.Pid == null) entry.Property(e => e.Pid).IsModified = false;
+                        if (newEntity.Excerpt == null) entry.Property(e => e.Excerpt).IsModified = false;
+                    }
+                    _ = db.SaveChanges();
+                    transaction.Commit();
+                }).CrawlPageRange(1)).SaveCrawled());
             }));
             return savedRepliesKeyByTid;
         }

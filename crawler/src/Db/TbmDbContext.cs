@@ -11,6 +11,7 @@ namespace tbm.Crawler.Db
         public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
         public DbSet<AuthorManagerTypeRevision> AuthorManagerTypeRevisions => Set<AuthorManagerTypeRevision>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
+        public DbSet<ThreadsMissingFirstReply> ThreadsMissingFirstReplies => Set<ThreadsMissingFirstReply>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
         public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
@@ -32,6 +33,7 @@ namespace tbm.Crawler.Db
         {
             b.Entity<TiebaUser>().ToTable("tbm_tieba_users");
             b.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
+            b.Entity<ThreadsMissingFirstReply>().ToTable("tbm_threads_missingFirstReply");
             b.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
             b.Entity<ReplySignature>().ToTable("tbm_reply_signatures").HasKey(e => new {e.SignatureId, e.SignatureMd5});
             b.Entity<ReplyContent>().ToTable($"tbm_f{Fid}_replies_content");

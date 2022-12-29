@@ -13,8 +13,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly CrawlerLocks.LockId _lockId;
-        protected readonly Fid Fid;
+        private Action<Exception> _exceptionHandler = _ => { };
 
+        protected readonly Fid Fid;
         protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
         private readonly HashSet<Page> _lockingPages = new();
 
@@ -84,7 +85,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 startPage, endPage, _locks.LockType, _lockId);
             _lockingPages.UnionWith(acquiredLocks);
 
-            var isStartPageCrawlFailed = await CatchCrawlException(async () =>
+            var isStartPageCrawlFailed = await SilenceException(async () =>
             {
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
@@ -120,8 +121,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             }
             _lockingPages.UnionWith(acquiredLocks);
 
-            return Task.WhenAll(acquiredLocks.Shuffle().Select(page =>
-                CatchCrawlException(
+            return Task.WhenAll(acquiredLocks.Shuffle()
+                .Select(page => SilenceException(
                     async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse),
                     page, previousFailureCountSelector?.Invoke(page) ?? 0)));
         }
@@ -133,7 +134,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             return SaveCrawled();
         }
 
-        private async Task<bool> CatchCrawlException(Func<Task> callback, Page page, FailureCount previousFailureCount)
+        private async Task<bool> SilenceException(Func<Task> callback, Page page, FailureCount previousFailureCount)
         {
             try
             {
@@ -160,8 +161,23 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     _locks.AcquireFailed(_lockId, page, (FailureCount)(previousFailureCount + 1));
                     _requesterTcs.Decrease();
                 }
+
+                try
+                {
+                    _exceptionHandler(e);
+                }
+                catch
+                {
+                    return true;
+                }
                 return true;
             }
+        }
+
+        public BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> SetExceptionHandler(Action<Exception> handler)
+        {
+            _exceptionHandler = handler;
+            return this;
         }
 
         private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
