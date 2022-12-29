@@ -40,22 +40,19 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
                 .ForEach(u => _latestRepliers[u.Uid] = u);
 
+        protected override void ThrowIfEmptyUsersEmbedInPosts() =>
+            throw new TiebaException($"User list in response of thread list for fid {Fid} is empty.");
+
+        protected override void PostParseUsersEmbedInPost(List<User> usersEmbedInPost, IList<Thread> postsInCurrentResponse) =>
+            ParsedPosts.Values
+                .IntersectBy(postsInCurrentResponse.Select(t => (Tid)t.Tid), t => t.Tid) // only mutate posts which occurs in current response
+                .Where(t => t.StickyType == null) // manager type for the author of sticky threads will be default empty string
+                .ForEach(t => // fill the values of author manager type from the external user list
+                    t.AuthorManagerType = usersEmbedInPost.First(u => u.Uid == t.AuthorUid).BawuType.NullIfWhiteSpace());
+
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
-            var data = response.Data;
-            if (flag == CrawlRequestFlag.ThreadClientVersion602) ParseLatestRepliers(data);
-            if (flag != CrawlRequestFlag.None) return;
-
-            var users = data.UserList;
-            if (!users.Any() && !ParsedPosts.IsEmpty)
-                throw new TiebaException($"User list in response of thread list for fid {Fid} is empty.");
-            Users.ParseUsers(users);
-            ParsedPosts.Values
-                .IntersectBy(data.ThreadList.Select(t => (Tid)t.Tid), t => t.Tid) // only mutate posts which occurs in current response
-                .Where(t => t.StickyType == null)
-                .ForEach(t =>
-                    // fill the values of author manager type from the external user list
-                    t.AuthorManagerType = users.First(u => u.Uid == t.AuthorUid).BawuType.NullIfWhiteSpace());
+            if (flag == CrawlRequestFlag.ThreadClientVersion602) ParseLatestRepliers(response.Data);
         }
     }
 }

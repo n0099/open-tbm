@@ -171,9 +171,13 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             try
             {
                 _parser.ParsePosts(flag, posts, ParsedPosts, out var postEmbedUsers);
-                // currently only sub reply parser will return with users under every sub reply
-                if (postEmbedUsers.Any()) Users.ParseUsers(postEmbedUsers);
-                if (!postEmbedUsers.Any() && posts.Any()) ThrowIfEmptyUserEmbedInPosts();
+                if (flag != CrawlRequestFlag.None) return;
+                if (!postEmbedUsers.Any() && posts.Any()) ThrowIfEmptyUsersEmbedInPosts();
+                if (postEmbedUsers.Any())
+                {
+                    Users.ParseUsers(postEmbedUsers);
+                    PostParseUsersEmbedInPost(postEmbedUsers, posts);
+                }
             }
             finally
             {
@@ -181,8 +185,10 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             }
         }
 
-        protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
+        protected virtual void ThrowIfEmptyUsersEmbedInPosts() {}
 
-        protected virtual void ThrowIfEmptyUserEmbedInPosts() {}
+        protected virtual void PostParseUsersEmbedInPost(List<User> usersEmbedInPost, IList<TPostProtoBuf> postsInCurrentResponse) {}
+
+        protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
     }
 }

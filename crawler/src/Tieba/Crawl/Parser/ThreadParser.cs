@@ -31,7 +31,12 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             return testRequestFlag();
         }
 
-        protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) => inPosts.Select(Convert);
+        protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) =>
+            inPosts.Select(el =>
+            {
+                outUsers.Add(el.Author);
+                return Convert(el);
+            });
 
         protected override ThreadPost Convert(Thread el)
         {
@@ -44,7 +49,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 p.IsGood = (ushort?)el.IsGood.NullIfZero();
                 p.TopicType = el.LivePostType.NullIfWhiteSpace();
                 p.Title = el.Title;
-                p.AuthorUid = el.AuthorId;
+                p.AuthorUid = el.Author.Uid;
                 // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseHook()
                 p.PostTime = (uint)el.CreateTime;
                 p.LatestReplyTime = (uint)el.LastTimeInt;
