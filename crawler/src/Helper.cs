@@ -15,7 +15,10 @@ namespace tbm.Crawler
         public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty(Func<IMessage> wrapperFactory) =>
             SerializedProtoBufOrNullIfEmpty(wrapperFactory());
 
-        private static readonly JsonSerializerOptions UnescapedSerializeOptions = new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};
-        public static string UnescapedJsonSerialize<TValue>(TValue value) => JsonSerializer.Serialize(value, UnescapedSerializeOptions);
+        private static readonly JsonSerializerOptions UnescapedSerializeOptions =
+            new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};
+
+        public static string UnescapedJsonSerialize<TValue>(TValue value) =>
+            JsonSerializer.Serialize(value, UnescapedSerializeOptions);
     }
 }

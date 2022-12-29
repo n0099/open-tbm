@@ -19,7 +19,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 var author = inPost.Author;
                 // values of tid and pid will be write back in SubReplyCrawlFacade.PostParseHook()
                 o.Spid = inPost.Spid;
-                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {inPost.Content}});
+                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                    () => new PostContentWrapper {Value = {inPost.Content}});
                 o.AuthorUid = author.Uid;
                 o.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 o.AuthorExpGrade = (ushort)author.LevelId;

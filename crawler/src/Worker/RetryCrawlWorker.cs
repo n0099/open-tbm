@@ -39,7 +39,7 @@ namespace tbm.Crawler.Worker
                         foreach (var tidGroupByFid in failed.Keys.GroupBy(i => i.Fid, i => i.Tid))
                         {
                             var fid = tidGroupByFid.Key;
-                            FailureCount FailureCountSelector(Tid tid) => failed[new (fid, tid)].First().Value; // it should always contains only one page which is 1
+                            FailureCount FailureCountSelector(Tid tid) => failed[new (fid, tid)].Single().Value; // it should always contains only one page which is 1
                             var failureCountsKeyByTid = tidGroupByFid.Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
                             _logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",
                                 fid, Helper.UnescapedJsonSerialize(tidGroupByFid));
@@ -59,7 +59,7 @@ namespace tbm.Crawler.Worker
                         if (lockType == "thread")
                         {
                             var fid = lockId.Fid;
-                            var forumName = (from f in db.Forum where f.Fid == fid select f.Name).FirstOrDefault();
+                            var forumName = (from f in db.Forum where f.Fid == fid select f.Name).SingleOrDefault();
                             if (forumName == null) return;
                             _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid={}, forumName={}",
                                 failureCountsKeyByPage.Count, fid, forumName);

@@ -65,8 +65,11 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             }
             ValidateOtherErrorCode(response);
             var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba.");
-            if (response.Data.Forum.Id != _fid) // response.Data.Forum.Id will be the default value 0 when reply list is empty
-                throw new TiebaException(false, $"Parent forum id within thread response: {response.Data.Forum.Id} is not match with the param value of crawler ctor: {_fid}, this thread might be multi forum or livepost.");
+            var fid = response.Data.Forum.Id;
+            if (fid != _fid) // fid will be the protoBuf default value 0 when reply list is empty, so we EnsureNonEmptyPostList() by first
+                throw new TiebaException(false,
+                    $"Parent forum id within thread response: {fid} is not match with the param value of crawler ctor: {_fid}"
+                    + ", this thread might be multi forum or \"livepost\" thread.");
             return ret;
         }
     }

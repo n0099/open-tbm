@@ -41,6 +41,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             try
             {
                 o.Tid = (Tid)inPost.Tid;
+                o.FirstReplyExcerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                    () => new ThreadAbstractWrapper {Value = {inPost.Abstract}});
                 o.ThreadType = (ulong)inPost.ThreadTypes;
                 o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
                 o.IsGood = (ushort?)inPost.IsGood.NullIfZero();

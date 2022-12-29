@@ -17,16 +17,18 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.Pid = inPost.Pid;
                 o.Floor = inPost.Floor;
                 inPost.Content.Where(c => c.Type == 3).ForEach(c =>
-                { // set with protoBuf default value to remove these image related fields that has similar value by reference
+                { // set with protoBuf default values to remove these image related fields that has similar value by reference
                     c.BigCdnSrc = "";
                     c.CdnSrc = "";
                     c.CdnSrcActive = "";
                     c.ShowOriginalBtn = 0;
                     c.IsLongPic = 0;
                     // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
-                    if (ImgUrlExtractingRegex.Match(c.OriginSrc).Groups["hash"] is {Success: true} hash) c.OriginSrc = hash.Value;
+                    if (ImgUrlExtractingRegex.Match(c.OriginSrc)
+                            .Groups["hash"] is {Success: true} hash) c.OriginSrc = hash.Value;
                 });
-                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {inPost.Content}});
+                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                    () => new PostContentWrapper {Value = {inPost.Content}});
                 o.AuthorUid = inPost.AuthorId;
                 // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
                 o.SubReplyCount = inPost.SubPostNumber.NullIfZero();

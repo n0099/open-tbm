@@ -53,7 +53,13 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
-            if (flag == CrawlRequestFlag.None) ParseLatestRepliers(response.Data);
+            if (flag == CrawlRequestFlag.None)
+            {
+                var data = response.Data;
+                ParseLatestRepliers(data);
+                data.ThreadList.Where(t => t.Fid != Fid) // thread with mismatch parent fid might be multi forum or livepost
+                    .ForEach(t => ParsedPosts.TryRemove((Tid)t.Tid, out _));
+            }
         }
     }
 }

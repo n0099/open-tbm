@@ -96,7 +96,8 @@ namespace tbm.Crawler.Tieba.Crawl
             await using var transaction = await db.Database.BeginTransactionAsync();
 
             db.AttachRange(threads.OfType<ThreadPost>());
-            db.ChangeTracker.Entries<ThreadPost>().ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
+            db.ChangeTracker.Entries<ThreadPost>()
+                .ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
 
             _ = await db.SaveChangesAsync(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
             await transaction.CommitAsync();

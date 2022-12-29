@@ -29,7 +29,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             { // update parent thread of reply with new title that extracted from the first floor reply in first page
                 var db = _dbContextFactory(Fid);
                 using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-                var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).FirstOrDefault();
+                var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).SingleOrDefault();
                 if (parentThreadTitle == "")
                 { // thread title will be empty string as a fallback when the thread author haven't write title for this thread
                     var newTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;

@@ -61,7 +61,8 @@ namespace tbm.Crawler.Tieba.Crawl
                     u.PortraitUpdateTime = portraitUpdateTime;
                     u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
-                    u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new UserIconWrapper {Value = {el.Iconinfo}});
+                    u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                        () => new UserIconWrapper {Value = {el.Iconinfo}});
                     u.IpGeolocation = el.IpAddress.NullIfWhiteSpace();
                     return u;
                 }
