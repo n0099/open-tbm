@@ -141,9 +141,8 @@ namespace tbm.Crawler.Worker
                     }
                     else
                     {
-                        var entry = db.Update(newEntity);
-                        if (newEntity.Pid == null) entry.Property(e => e.Pid).IsModified = false;
-                        if (newEntity.Excerpt == null) entry.Property(e => e.Excerpt).IsModified = false;
+                        if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
+                        if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
                     }
                     _ = db.SaveChanges();
                     transaction.Commit();

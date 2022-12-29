@@ -61,9 +61,10 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                     // silent exception and do not retry when error_no=4 and the response is request with is_fold_comment_req=1
                     throw new TiebaException(false, true);
                 case 4 or 350008:
-                    throw new TiebaException(false, "Thread already deleted when crawling reply.");
+                    throw new EmptyPostListException("Thread already deleted when crawling reply.");
             }
             ValidateOtherErrorCode(response);
+
             var ret = EnsureNonEmptyPostList(response, "Reply list is empty, posts might already deleted from tieba.");
             var fid = response.Data.Forum.Id;
             if (fid != _fid) // fid will be the protoBuf default value 0 when reply list is empty, so we EnsureNonEmptyPostList() by first

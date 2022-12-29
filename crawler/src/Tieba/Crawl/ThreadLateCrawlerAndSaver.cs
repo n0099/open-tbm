@@ -44,12 +44,33 @@ namespace tbm.Crawler.Tieba.Crawl
                     });
                     try
                     {
-                        switch (json.GetStrProp("error_code"))
+                        var errorCodeProp = json.GetProperty("error_code");
+                        Func<(int ErrorCode, bool IsErrorCodeParsed)> tryGetErrorCode = errorCodeProp.ValueKind switch
+                        { // https://github.com/MoeNetwork/Tieba-Cloud-Sign/pull/220#issuecomment-1367570540
+                            JsonValueKind.Number => () =>
+                            { // https://stackoverflow.com/questions/62100000/why-doesnt-system-text-json-jsonelement-have-trygetstring-or-trygetboolean/62100246#62100246
+                                var r = errorCodeProp.TryGetInt32(out var p);
+                                return (p, r);
+                            },
+                            JsonValueKind.String => () =>
+                            {
+                                var r = int.TryParse(errorCodeProp.GetString(), out var p);
+                                return (p, r);
+                            },
+                            _ => () => (0, false)
+                        };
+                        var (errorCode, isErrorCodeParsed) = tryGetErrorCode();
+                        if (!isErrorCodeParsed)
+                            throw new TiebaException("Cannot get field \"error_code\" or parse its value from tieba json api response.")
+                                {Data = {{"raw", json}, {"rawErrorCode", errorCodeProp.GetRawText()}}};
+
+                        switch (errorCode)
                         {
-                            case "4" or "350008": throw new TiebaException(false, "Thread already deleted while thread late crawl.");
-                            case not "0":
+                            case 4 or 350008: throw new TiebaException(false, "Thread already deleted while thread late crawl.");
+                            case not 0:
                                 throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
                         }
+
                         var thread = json.GetProperty("thread");
                         if (thread.GetProperty("thread_info").TryGetProperty("phone_type", out var phoneType))
                         {
