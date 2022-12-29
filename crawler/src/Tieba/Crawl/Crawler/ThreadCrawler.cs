@@ -23,7 +23,7 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 
         protected const string EndPointUrl = "c/f/frs/page?cmd=301001";
 
-        protected ThreadRequest.Types.Data RequestData602Factory(Page page) =>
+        protected ThreadRequest.Types.Data GetRequestDataForClientVersion602(Page page) =>
             new()
             {
                 Kw = _forumName,
@@ -33,7 +33,7 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 
         protected override Task<IEnumerable<Request>> RequestsFactory(Page page)
         {
-            var data602 = RequestData602Factory(page);
+            var data602 = GetRequestDataForClientVersion602(page);
             var data = new ThreadRequest.Types.Data
             {
                 Kw = _forumName,
@@ -48,8 +48,42 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                 new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
                     new ThreadRequest {Data = data}), page),
                 new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
-                    new ThreadRequest {Data = data602}), page, CrawlRequestFlag.Thread602ClientVersion)
+                    new ThreadRequest {Data = data602}), page, CrawlRequestFlag.ThreadClientVersion602),
+                new Request(RequestJsonForFirstPid(page), page, CrawlRequestFlag.ThreadClientVersion8888)
             }.AsEnumerable());
+        }
+
+        private async Task<ThreadResponse> RequestJsonForFirstPid(Page page)
+        {
+            var json = await Requester.RequestJson("c/f/frs/page", "8.8.8.8", new()
+            {
+                {"kw", _forumName},
+                {"pn", page.ToString()},
+                {"rn", "30"}
+            });
+            try
+            {
+                return new()
+                {
+                    Error = new() {Errorno = 0},
+                    Data = new()
+                    {
+                        ThreadList =
+                        {
+                            json.GetProperty("thread_list").EnumerateArray().Select(el => new Thread
+                            {
+                                Tid = el.GetProperty("id").GetInt64(),
+                                FirstPostId = el.GetProperty("first_post_id").GetInt64()
+                            })
+                        }
+                    }
+                };
+            }
+            catch (Exception e) when (e is not TiebaException)
+            {
+                e.Data["raw"] = json;
+                throw;
+            }
         }
 
         public override IList<Thread> GetValidPosts(ThreadResponse response, CrawlRequestFlag flag)

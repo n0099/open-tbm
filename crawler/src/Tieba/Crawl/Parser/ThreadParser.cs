@@ -6,15 +6,29 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
 
         protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<PostId, ThreadPost> outPosts)
         {
-            if (requestFlag != CrawlRequestFlag.Thread602ClientVersion) return false;
-            var posts = outPosts.Values;
+            var outThreads = outPosts.Values;
             Thread? GetInPostsByTid(IPost t) => inPosts.FirstOrDefault(t2 => (Tid)t2.Tid == t.Tid);
-            posts.Where(t => t.LatestReplierUid == null)
-                // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
-                .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
-            posts.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
-                .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
-            return true;
+            Func<bool> testRequestFlag = requestFlag switch
+            {
+                CrawlRequestFlag.None => () => false,
+                CrawlRequestFlag.ThreadClientVersion602 => () =>
+                {
+                    outThreads.Where(t => t.LatestReplierUid == null)
+                        // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
+                        .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
+                    outThreads.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
+                        .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
+                    return true;
+                },
+                CrawlRequestFlag.ThreadClientVersion8888 => () =>
+                {
+                    outThreads.Where(t => t.FirstReplyPid == null)
+                        .ForEach(t => t.FirstReplyPid = (Pid?)GetInPostsByTid(t)?.FirstPostId);
+                    return true;
+                },
+                _ => throw new ArgumentOutOfRangeException(nameof(requestFlag), requestFlag, "Unexpected CrawlRequestFlag.")
+            };
+            return testRequestFlag();
         }
 
         protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) => inPosts.Select(Convert);

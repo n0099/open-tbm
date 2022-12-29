@@ -12,7 +12,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
             // the second response with flag is as same as the first one so just skip it
-            if (flag == CrawlRequestFlag.Thread602ClientVersion) return;
+            if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
             var data = response.Data;
             // parsed author uid will be 0 when request with client version 6.0.2
             ParsedPosts.Values.ForEach(t => t.AuthorUid = data.ThreadList.First(t2 => (Tid)t2.Tid == t.Tid).Author.Uid);

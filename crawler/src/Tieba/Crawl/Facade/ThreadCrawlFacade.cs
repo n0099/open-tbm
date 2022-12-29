@@ -43,11 +43,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
             var data = response.Data;
-            if (flag == CrawlRequestFlag.Thread602ClientVersion)
-            {
-                ParseLatestRepliers(data);
-                return;
-            }
+            if (flag == CrawlRequestFlag.ThreadClientVersion602) ParseLatestRepliers(data);
+            if (flag != CrawlRequestFlag.None) return;
+
             var users = data.UserList;
             if (!users.Any()) return;
             Users.ParseUsers(users);
