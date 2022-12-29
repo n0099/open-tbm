@@ -5,7 +5,7 @@ namespace tbm.Crawler.Db.Post
     {
         public object Clone() => MemberwiseClone();
         [Key] public ulong Tid { get; set; }
-        public ulong FirstPid { get; set; }
+        [NotMapped] public ulong FirstPid { get; set; }
         public ulong ThreadType { get; set; }
         public string? StickyType { get; set; }
         public string? TopicType { get; set; }

@@ -25,7 +25,6 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             try
             {
                 p.Tid = (Tid)el.Tid;
-                p.FirstPid = (Pid)el.FirstPostId;
                 p.ThreadType = (ulong)el.ThreadTypes;
                 p.StickyType = el.IsMembertop == 1 ? "membertop" : el.IsTop == 0 ? null : "top";
                 p.IsGood = (ushort?)el.IsGood.NullIfZero();

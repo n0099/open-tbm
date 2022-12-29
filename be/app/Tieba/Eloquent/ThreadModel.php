@@ -17,7 +17,6 @@ class ThreadModel extends PostModel
 
     protected static array $fields = [
         'tid',
-        'firstPid',
         'threadType',
         'stickyType',
         'topicType',

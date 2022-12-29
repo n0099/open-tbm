@@ -5,9 +5,6 @@
         <template #tid="{ record: { tid } }">
             <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
         </template>
-        <template #firstPid="{ record: { firstPid } }">
-            <RouterLink :to="{ name: 'post/pid', params: { pid: firstPid } }">{{ firstPid }}</RouterLink>
-        </template>
         <template #titleWithTag="{ record }">
             <ThreadTag :thread="record" />
             <span>{{ record.title }}</span>
@@ -109,7 +106,6 @@ export default defineComponent({
                 { title: '最后回复时间', dataIndex: 'latestReplyTime' },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
-                { title: '1楼pid', dataIndex: 'firstPid', slots: { customRender: 'firstPid' } },
                 { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
                 { title: '分享量', dataIndex: 'shareCount' },
                 { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct

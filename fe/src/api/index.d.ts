@@ -63,7 +63,6 @@ type LaravelEloquentRecordsCommonTimestampFields = { [P in 'created_at' | 'updat
 export type AuthorManagerType = 'assist' | 'manager' | 'picadmin' | 'voiceadmin';
 export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampFields {
     tid: Tid,
-    firstPid: Pid,
     threadType: UInt | number | 1024 | 1040,
     stickyType: 'membertop' | 'top',
     isGood: BoolInt,
