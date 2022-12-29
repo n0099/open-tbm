@@ -45,7 +45,8 @@ namespace tbm.Crawler
                         builder.RegisterType<ClientRequester>();
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
                         RegisteredCrawlerLocks.ForEach(type =>
-                            builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(type).SingleInstance().WithParameter("lockType", type));
+                            builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(type)
+                                .SingleInstance().WithParameter("lockType", type));
                         builder.RegisterType<UserParserAndSaver>();
                         builder.RegisterType<ThreadLateCrawlerAndSaver>();
                         builder.RegisterType<ThreadArchiveCrawler>();
@@ -56,8 +57,9 @@ namespace tbm.Crawler
                             typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
                             typeof(BaseParser<,>), typeof(BaseSaver<>)
                         };
-                        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly()).Where(t =>
-                            baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t))).AsSelf();
+                        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                            .Where(t => baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t)))
+                            .AsSelf();
                     })
                     .Build();
                 await host.RunAsync();

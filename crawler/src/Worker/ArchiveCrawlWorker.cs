@@ -156,7 +156,8 @@ namespace tbm.Crawler.Worker
                 // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
                 // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:
                 // SELECT COUNT(*) FROM tbm_f{fid}_replies AS A INNER JOIN tbm_f{fid}_subReplies AS B ON A.pid = B.pid AND A.subReplyCount IS NULL
-                replies.AllAfter.Where(r => r.SubReplyCount != null).ForEach(r => shouldCrawl.Add((tid, r.Pid)));
+                replies.AllAfter.Where(r => r.SubReplyCount != null)
+                    .ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;
             });
             var savedSubReplyCount = 0;
@@ -164,7 +165,8 @@ namespace tbm.Crawler.Worker
             {
                 var (tid, pid) = tidAndPid;
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveCrawled();
+                var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
+                    .CrawlPageRange(1)).SaveCrawled();
                 if (saved == null) return;
                 _ = Interlocked.Add(ref savedSubReplyCount, saved.AllAfter.Count);
             }));

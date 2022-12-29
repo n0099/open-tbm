@@ -74,7 +74,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     e = e.ExtractInnerExceptionsData();
 
                     if (e is TiebaException)
-                        _logger.LogWarning("TiebaException: {} {}", string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)), Helper.UnescapedJsonSerialize(e.Data));
+                        _logger.LogWarning("TiebaException: {} {}",
+                            string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
+                            Helper.UnescapedJsonSerialize(e.Data));
                     else
                         _logger.LogError(e, "Exception");
                     if (e is not TiebaException {ShouldRetry: false})

@@ -23,7 +23,8 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             (TbClient.Page?)ResponsePageProp.GetValue(ResponseDataProp.GetValue(res) as IMessage);
 
         public async Task<Response[]> CrawlSinglePage(Page page) =>
-            await Task.WhenAll((await RequestsFactory(page)).Select(async i => new Response(await i.Response, i.Flag)));
+            await Task.WhenAll((await RequestsFactory(page))
+                .Select(async i => new Response(await i.Response, i.Flag)));
 
         protected void ValidateOtherErrorCode(TResponse response)
         {

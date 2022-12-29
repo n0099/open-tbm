@@ -34,7 +34,8 @@ namespace tbm.Crawler.Worker
                 float GetElapsedMs() => (float)stopWatch.ElapsedTicks / Stopwatch.Frequency * 1000;
 
                 if (postContent == null) return GetElapsedMs();
-                var content = PostContentWrapper.Parser.ParseFrom(postContent).Value.Where(c => c.Type != 2) // filter out emoticons alt text
+                var content = PostContentWrapper.Parser.ParseFrom(postContent).Value
+                    .Where(c => c.Type != 2) // filter out emoticons alt text
                     .Aggregate("", (acc, content) => $"{acc} {content.Text}").Trim();
                 if (content == "") return GetElapsedMs();
                 content = content.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\""); // https://github.com/spikensbror-dotnet/nsonic/pull/10
@@ -80,7 +81,8 @@ namespace tbm.Crawler.Worker
                 string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
                     $"SELECT {fid} AS Fid,"
                     + $"IFNULL((SELECT id FROM tbm_f{fid}_replies ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
-                    + $"IFNULL((SELECT id FROM tbm_f{fid}_subReplies ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))).ToList();
+                    + $"IFNULL((SELECT id FROM tbm_f{fid}_subReplies ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
+                ).ToList();
             var forumCount = forumAndPostCountList.Count * 2; // reply and sub reply
             var totalPostCount = forumAndPostCountList.Sum(i => i.ReplyCount) + forumAndPostCountList.Sum(i => i.SubReplyCount);
             var pushedPostCount = 0;

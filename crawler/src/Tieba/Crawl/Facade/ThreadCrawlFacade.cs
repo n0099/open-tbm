@@ -14,9 +14,14 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
             // so only users that not exists in parsed users is being inserted
             // note this will bypass user revision detection since its not invoking CommonInSavers.SavePostsOrUsers()
-            var existingUsersId = (from u in db.Users where _latestRepliers.Keys.Any(uid => uid == u.Uid) select u.Uid).ToHashSet();
-            existingUsersId.UnionWith(db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid)); // users not exists in db but have already been added and tracking
-            var newLatestRepliers = _latestRepliers.ExceptBy(existingUsersId, i => i.Key).Select(i => i.Value).ToList();
+            var existingUsersId = (from u in db.Users
+                where _latestRepliers.Keys.Any(uid => uid == u.Uid)
+                select u.Uid).ToHashSet();
+            existingUsersId.UnionWith( // users not exists in db but have already been added and tracking
+                db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid));
+            var newLatestRepliers = _latestRepliers
+                .ExceptBy(existingUsersId, i => i.Key)
+                .Select(i => i.Value).ToList();
 
             if (!newLatestRepliers.Any()) return;
             db.AddRange(newLatestRepliers.IntersectBy(
@@ -28,9 +33,11 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             new() {Uid = uid, Name = name, DisplayName = displayName};
 
         protected void ParseLatestRepliers(ThreadResponse.Types.Data data) =>
-            // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
-            data.ThreadList.Select(t => t.LastReplyer).Where(u => u.Uid != 0).Select(u =>
-                LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
+            data.ThreadList
+                .Select(t => t.LastReplyer)
+                .Where(u => u.Uid != 0) // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
+                .Select(u =>
+                    LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
                 .ForEach(u => _latestRepliers[u.Uid] = u);
 
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
@@ -45,8 +52,10 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             if (!users.Any()) return;
             Users.ParseUsers(users);
 
-            ParsedPosts.Values.IntersectBy(data.ThreadList.Select(t => (Tid)t.Tid), t => t.Tid) // only mutate posts which occurs in current response
-                .Where(t => t.StickyType == null).ForEach(t =>
+            ParsedPosts.Values
+                .IntersectBy(data.ThreadList.Select(t => (Tid)t.Tid), t => t.Tid) // only mutate posts which occurs in current response
+                .Where(t => t.StickyType == null)
+                .ForEach(t =>
                     // fill the values of author manager type from the external user list
                     t.AuthorManagerType = users.First(u => u.Uid == t.AuthorUid).BawuType.NullIfWhiteSpace());
         }

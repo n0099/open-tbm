@@ -33,7 +33,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     var newTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
                     if (newTitle != null)
                     {
-                        db.Attach(new ThreadPost {Tid = _tid, Title = newTitle}).Property(t => t.Title).IsModified = true;
+                        db.Attach(new ThreadPost {Tid = _tid, Title = newTitle})
+                            .Property(t => t.Title).IsModified = true;
                         if (db.SaveChanges() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
                             throw new DbUpdateException($"Parent thread title \"{newTitle}\" completion for tid {_tid} has failed.");
                         transaction.Commit();

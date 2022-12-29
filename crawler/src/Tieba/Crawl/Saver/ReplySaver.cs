@@ -52,27 +52,32 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
             // because of Posts.Values.* is not the same instances as changeSet.Existing.*.After
             // so Posts.Values.* won't sync with new instances queried from db
-            var signatures = changeSet.AllAfter.Where(r => r.SignatureId != null && r.Signature != null)
-                .DistinctBy(r => r.SignatureId).Select(r => new ReplySignature
-            {
-                UserId = r.AuthorUid,
-                SignatureId = (uint)r.SignatureId!,
-                SignatureMd5 = MD5.HashData(r.Signature!),
-                Signature = r.Signature!,
-                // we have to generate the value of two field below in here, since its value will be set by TbmDbContext.SaveChanges() which is invoked after current method had returned
-                FirstSeen = r.CreatedAt != 0 ? r.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(), // CreatedAt will be the default 0 value when the post is newly added
-                LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
-            }).ToList();
+            var signatures = changeSet.AllAfter
+                .Where(r => r.SignatureId != null && r.Signature != null)
+                .DistinctBy(r => r.SignatureId)
+                .Select(r => new ReplySignature
+                {
+                    UserId = r.AuthorUid,
+                    SignatureId = (uint)r.SignatureId!,
+                    SignatureMd5 = MD5.HashData(r.Signature!),
+                    Signature = r.Signature!,
+                    // we have to generate the value of two field below in here, since its value will be set by TbmDbContext.SaveChanges() which is invoked after current method had returned
+                    FirstSeen = r.CreatedAt != 0 ? r.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(), // CreatedAt will be the default 0 value when the post is newly added
+                    LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
+                }).ToList();
             if (signatures.Any())
             {
-                var uniqueSignatures = signatures.Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
+                var uniqueSignatures = signatures
+                    .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
                 var existingSignatures = (from s in db.ReplySignatures
                     where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
-                          && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5) select s).ToList();
+                          && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
+                    select s).ToList();
                 existingSignatures.ForEach(s => s.LastSeen = signatures.First(s2 => s2.SignatureId == s.SignatureId).LastSeen);
                 lock (SignaturesLock)
                 {
-                    var newSignaturesExceptLocked = signatures.ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
+                    var newSignaturesExceptLocked = signatures
+                        .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
                         .ExceptBy(SignaturesLock, s => new(s.SignatureId, s.SignatureMd5)).ToList();
                     if (newSignaturesExceptLocked.Any())
                     {

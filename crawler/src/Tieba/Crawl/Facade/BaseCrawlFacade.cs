@@ -89,13 +89,17 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
 
-                var maxPage = startPageResponse.Select(i => _crawler.GetPageFromResponse(i.Result)).Max(i => (Page?)i?.TotalPage);
+                var maxPage = startPageResponse
+                    .Select(i => _crawler.GetPageFromResponse(i.Result))
+                    .Max(i => (Page?)i?.TotalPage);
                 endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
             }, startPage, 0);
 
             if (!isStartPageCrawlFailed)
             {
-                var pagesAfterStart = Enumerable.Range((int)(startPage + 1), (int)(endPage - startPage)).ToList();
+                var pagesAfterStart = Enumerable.Range(
+                    (int)(startPage + 1),
+                    (int)(endPage - startPage)).ToList();
                 if (pagesAfterStart.Any()) await CrawlPages(pagesAfterStart.Select(i => (Page)i));
             }
             return this;
@@ -107,8 +111,10 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             var acquiredLocks = _locks.AcquireRange(_lockId, pagesList).ToList();
             if (!acquiredLocks.Any())
             {
-                var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1]).Select(i => (Page)i).SequenceEqual(pagesList)
-                    ? $"within the range [{pagesList[0]}-{pagesList[^1]}]" : JsonSerializer.Serialize(pagesList);
+                var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1])
+                    .Select(i => (Page)i).SequenceEqual(pagesList)
+                        ? $"within the range [{pagesList[0]}-{pagesList[^1]}]"
+                        : JsonSerializer.Serialize(pagesList);
                 _logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
                     pagesText, _locks.LockType, _lockId);
             }
@@ -142,9 +148,10 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
                 if (e is TiebaException te)
                 {
-                    var innerExceptionsMessage = string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message));
                     if (!te.ShouldSilent)
-                        _logger.LogWarning("TiebaException: {} {}", innerExceptionsMessage, Helper.UnescapedJsonSerialize(e.Data));
+                        _logger.LogWarning("TiebaException: {} {}",
+                            string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
+                            Helper.UnescapedJsonSerialize(e.Data));
                 }
                 else _logger.LogError(e, "Exception");
 
