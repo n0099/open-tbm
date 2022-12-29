@@ -45,8 +45,8 @@
         ],
         "psr-4": {
             "App\\": "app/",
-            "TbClient\\": "../tbclient.protobuf/tbm_min_php/TbClient/",
-            "GPBMetadata\\": "../tbclient.protobuf/tbm_min_php/GPBMetadata/"
+            "TbClient\\": "../tbclient.protobuf/tbm_php/TbClient/",
+            "GPBMetadata\\": "../tbclient.protobuf/tbm_php/GPBMetadata/"
         }
     },
     "autoload-dev": {
