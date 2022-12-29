@@ -32,42 +32,42 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
         }
 
         protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) =>
-            inPosts.Select(el =>
+            inPosts.Select(t =>
             {
-                outUsers.Add(el.Author);
-                return Convert(el);
+                outUsers.Add(t.Author);
+                return Convert(t);
             });
 
-        protected override ThreadPost Convert(Thread el)
+        protected override ThreadPost Convert(Thread inPost)
         {
-            var p = new ThreadPost();
+            var o = new ThreadPost();
             try
             {
-                p.Tid = (Tid)el.Tid;
-                p.ThreadType = (ulong)el.ThreadTypes;
-                p.StickyType = el.IsMembertop == 1 ? "membertop" : el.IsTop == 0 ? null : "top";
-                p.IsGood = (ushort?)el.IsGood.NullIfZero();
-                p.TopicType = el.LivePostType.NullIfWhiteSpace();
-                p.Title = el.Title;
-                p.AuthorUid = el.Author.Uid;
+                o.Tid = (Tid)inPost.Tid;
+                o.ThreadType = (ulong)inPost.ThreadTypes;
+                o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
+                o.IsGood = (ushort?)inPost.IsGood.NullIfZero();
+                o.TopicType = inPost.LivePostType.NullIfWhiteSpace();
+                o.Title = inPost.Title;
+                o.AuthorUid = inPost.Author.Uid;
                 // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseHook()
-                p.PostTime = (uint)el.CreateTime;
-                p.LatestReplyTime = (uint)el.LastTimeInt;
+                o.PostTime = (uint)inPost.CreateTime;
+                o.LatestReplyTime = (uint)inPost.LastTimeInt;
                 // value of LatestReplierUid will be write back from the response of client version 6.0.2 by TrySkipParse()
-                p.ReplyCount = (uint?)el.ReplyNum.NullIfZero();
-                p.ViewCount = (uint?)el.ViewNum.NullIfZero();
-                p.ShareCount = (uint?)el.ShareNum.NullIfZero();
+                o.ReplyCount = (uint?)inPost.ReplyNum.NullIfZero();
+                o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
+                o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();
                 // when the thread is livepost, the agree field will not exists
-                p.AgreeCount = (int?)el.Agree?.AgreeNum.NullIfZero() ?? el.AgreeNum;
-                p.DisagreeCount = (int?)el.Agree?.DisagreeNum.NullIfZero();
-                p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el.Location);
-                p.Zan = Helper.SerializedProtoBufOrNullIfEmpty(el.Zan);
-                return p;
+                o.AgreeCount = (int?)inPost.Agree?.AgreeNum.NullIfZero() ?? inPost.AgreeNum;
+                o.DisagreeCount = (int?)inPost.Agree?.DisagreeNum.NullIfZero();
+                o.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(inPost.Location);
+                o.Zan = Helper.SerializedProtoBufOrNullIfEmpty(inPost.Zan);
+                return o;
             }
             catch (Exception e)
             {
-                e.Data["parsed"] = p;
-                e.Data["raw"] = el;
+                e.Data["parsed"] = o;
+                e.Data["raw"] = inPost;
                 throw new("Thread parse error.", e);
             }
         }

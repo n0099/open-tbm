@@ -5,33 +5,33 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
         protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
 
         protected override IEnumerable<SubReplyPost> ParsePostsInternal(IEnumerable<SubReply> inPosts, List<User> outUsers) =>
-            inPosts.Select(el =>
+            inPosts.Select(sr =>
             {
-                outUsers.Add(el.Author);
-                return Convert(el);
+                outUsers.Add(sr.Author);
+                return Convert(sr);
             });
 
-        protected override SubReplyPost Convert(SubReply el)
+        protected override SubReplyPost Convert(SubReply inPost)
         {
-            var p = new SubReplyPost();
+            var o = new SubReplyPost();
             try
             {
-                var author = el.Author;
+                var author = inPost.Author;
                 // values of tid and pid will be write back in SubReplyCrawlFacade.PostParseHook()
-                p.Spid = el.Spid;
-                p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
-                p.AuthorUid = author.Uid;
-                p.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
-                p.AuthorExpGrade = (ushort)author.LevelId;
-                p.PostTime = el.Time;
-                p.AgreeCount = (int?)el.Agree.AgreeNum.NullIfZero();
-                p.DisagreeCount = (int?)el.Agree.DisagreeNum.NullIfZero();
-                return p;
+                o.Spid = inPost.Spid;
+                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {inPost.Content}});
+                o.AuthorUid = author.Uid;
+                o.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
+                o.AuthorExpGrade = (ushort)author.LevelId;
+                o.PostTime = inPost.Time;
+                o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();
+                o.DisagreeCount = (int?)inPost.Agree.DisagreeNum.NullIfZero();
+                return o;
             }
             catch (Exception e)
             {
-                e.Data["parsed"] = p;
-                e.Data["raw"] = el;
+                e.Data["parsed"] = o;
+                e.Data["raw"] = inPost;
                 throw new("Sub reply parse error.", e);
             }
         }

@@ -9,14 +9,14 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
 
         protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) => inPosts.Select(Convert);
 
-        protected override ReplyPost Convert(Reply el)
+        protected override ReplyPost Convert(Reply inPost)
         {
-            var p = new ReplyPost();
+            var o = new ReplyPost();
             try
             {
-                p.Pid = el.Pid;
-                p.Floor = el.Floor;
-                el.Content.Where(c => c.Type == 3).ForEach(c =>
+                o.Pid = inPost.Pid;
+                o.Floor = inPost.Floor;
+                inPost.Content.Where(c => c.Type == 3).ForEach(c =>
                 { // set with protoBuf default value to remove these image related fields that has similar value by reference
                     c.BigCdnSrc = "";
                     c.CdnSrc = "";
@@ -26,23 +26,23 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                     // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
                     if (ImgUrlExtractingRegex.Match(c.OriginSrc).Groups["hash"] is {Success: true} hash) c.OriginSrc = hash.Value;
                 });
-                p.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {el.Content}});
-                p.AuthorUid = el.AuthorId;
+                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(() => new PostContentWrapper {Value = {inPost.Content}});
+                o.AuthorUid = inPost.AuthorId;
                 // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
-                p.SubReplyCount = el.SubPostNumber.NullIfZero();
-                p.PostTime = el.Time;
-                p.IsFold = (ushort?)el.IsFold.NullIfZero();
-                p.AgreeCount = (int?)el.Agree.AgreeNum.NullIfZero();
-                p.DisagreeCount = (int?)el.Agree.DisagreeNum.NullIfZero();
-                p.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(el.LbsInfo);
-                p.SignatureId = (uint?)el.Signature?.SignatureId;
-                p.Signature = Helper.SerializedProtoBufOrNullIfEmpty(el.Signature);
-                return p;
+                o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
+                o.PostTime = inPost.Time;
+                o.IsFold = (ushort?)inPost.IsFold.NullIfZero();
+                o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();
+                o.DisagreeCount = (int?)inPost.Agree.DisagreeNum.NullIfZero();
+                o.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(inPost.LbsInfo);
+                o.SignatureId = (uint?)inPost.Signature?.SignatureId;
+                o.Signature = Helper.SerializedProtoBufOrNullIfEmpty(inPost.Signature);
+                return o;
             }
             catch (Exception e)
             {
-                e.Data["parsed"] = p;
-                e.Data["raw"] = el;
+                e.Data["parsed"] = o;
+                e.Data["raw"] = inPost;
                 throw new("Reply parse error.", e);
             }
         }

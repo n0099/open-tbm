@@ -28,7 +28,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                         // its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.PostParseHook()
                         case nameof(ThreadPost.Title) when newValue is ""
                             // prevent repeatedly update with different title due to the thread is a multi forum topic thread thus its title can be vary within the forum and within the thread
-                                                           || (newValue is not "" && oldValue is not ""):
+                            || (newValue is not "" && oldValue is not ""):
                         // possible randomly response with 0.NullIfZero()
                         case nameof(ThreadPost.DisagreeCount) when newValue is null && oldValue is not null:
                         // when the latest reply post is deleted and there's no new reply after delete, this field but not LatestReplyTime will be null
