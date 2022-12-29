@@ -12,20 +12,20 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         protected override void BeforeCommitSaveHook(TbmDbContext db)
         { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
-            // so only users that not exists in parsed users is being inserted
-            // note this will bypass user revision detection since its not invoking CommonInSavers.SavePostsOrUsers()
+            // so only latest repliers that not exists in parsed users is being inserted
+            // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
             var existingUsersId = (from u in db.Users
                 where _latestRepliers.Keys.Any(uid => uid == u.Uid)
                 select u.Uid).ToHashSet();
             existingUsersId.UnionWith( // users not exists in db but have already been added and tracking
                 db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid));
+
             var newLatestRepliers = _latestRepliers
                 .ExceptBy(existingUsersId, i => i.Key)
                 .Select(i => i.Value).ToList();
-
             if (!newLatestRepliers.Any()) return;
             db.AddRange(newLatestRepliers.IntersectBy(
-                Users.AcquireUidLock(newLatestRepliers.Select(u => u.Uid)),
+                Users.AcquireUidLockForSave(newLatestRepliers.Select(u => u.Uid)),
                 u => u.Uid));
         }
 
@@ -47,9 +47,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             if (flag != CrawlRequestFlag.None) return;
 
             var users = data.UserList;
-            if (!users.Any()) return;
+            if (!users.Any() && !ParsedPosts.IsEmpty)
+                throw new TiebaException($"User list in response of thread list for fid {Fid} is empty.");
             Users.ParseUsers(users);
-
             ParsedPosts.Values
                 .IntersectBy(data.ThreadList.Select(t => (Tid)t.Tid), t => t.Tid) // only mutate posts which occurs in current response
                 .Where(t => t.StickyType == null)

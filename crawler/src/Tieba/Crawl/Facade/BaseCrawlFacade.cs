@@ -170,9 +170,10 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             var posts = _crawler.GetValidPosts(response, flag);
             try
             {
-                _parser.ParsePosts(flag, posts, ParsedPosts, out var usersStoreUnderPost);
+                _parser.ParsePosts(flag, posts, ParsedPosts, out var postEmbedUsers);
                 // currently only sub reply parser will return with users under every sub reply
-                if (usersStoreUnderPost.Any()) Users.ParseUsers(usersStoreUnderPost);
+                if (postEmbedUsers.Any()) Users.ParseUsers(postEmbedUsers);
+                if (!postEmbedUsers.Any() && posts.Any()) ThrowIfEmptyUserEmbedInPosts();
             }
             finally
             {
@@ -181,5 +182,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         }
 
         protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
+
+        protected virtual void ThrowIfEmptyUserEmbedInPosts() {}
     }
 }

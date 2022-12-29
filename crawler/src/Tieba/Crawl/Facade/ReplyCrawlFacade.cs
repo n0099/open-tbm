@@ -22,6 +22,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag)
         {
+            ParsedPosts.Values.ForEach(r => r.Tid = _tid);
+
             var data = response.Data;
             if (data.Page.CurrentPage == 1)
             { // update parent thread of reply with new title that extracted from the first floor reply in first page
@@ -43,15 +45,14 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             }
 
             var users = data.UserList;
-            if (!users.Any()) return;
+            if (!users.Any() && !ParsedPosts.IsEmpty)
+                throw new TiebaException($"User list in response of reply list for fid {Fid}, tid {_tid} is empty.");
             Users.ParseUsers(users);
-
             ParsedPosts.Values.IntersectBy(data.PostList.Select(r => r.Pid), r => r.Pid).ForEach(r => // only mutate posts which occurs in current response
             { // fill the values for some field of reply from user list which is out of post list
                 var author = users.First(u => u.Uid == r.AuthorUid);
                 r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                 r.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
-                r.Tid = _tid;
             });
         }
 

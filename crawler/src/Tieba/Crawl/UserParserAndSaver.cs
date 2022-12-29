@@ -81,7 +81,9 @@ namespace tbm.Crawler.Tieba.Crawl
                 if (!usersExceptLocked.Any()) return;
                 _savedUsersId.AddRange(usersExceptLocked.Keys);
                 UsersIdLock.UnionWith(_savedUsersId);
-                var existingUsersKeyByUid = (from user in db.Users where usersExceptLocked.Keys.Contains(user.Uid) select user).ToDictionary(u => u.Uid);
+                var existingUsersKeyByUid = (from user in db.Users
+                    where usersExceptLocked.Keys.Contains(user.Uid)
+                    select user).ToDictionary(u => u.Uid);
 
                 SavePostsOrUsers(postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
                     u => new UserRevision {Time = u.UpdatedAt ?? u.CreatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
@@ -90,13 +92,13 @@ namespace tbm.Crawler.Tieba.Crawl
             }
         }
 
-        public IEnumerable<Uid> AcquireUidLock(IEnumerable<long> usersId)
+        public IEnumerable<Uid> AcquireUidLockForSave(IEnumerable<Uid> usersId)
         {
             lock (UsersIdLock)
             {
                 var exceptLocked = usersId.Except(UsersIdLock).ToList();
                 if (!exceptLocked.Any()) return exceptLocked;
-                _savedUsersId.AddRange(exceptLocked);
+                _savedUsersId.AddRange(exceptLocked); // assume all given users are saved
                 UsersIdLock.UnionWith(exceptLocked);
                 return exceptLocked;
             }
