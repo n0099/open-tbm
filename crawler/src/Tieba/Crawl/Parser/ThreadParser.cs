@@ -13,9 +13,6 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 CrawlRequestFlag.None => () => false,
                 CrawlRequestFlag.ThreadClientVersion602 => () =>
                 {
-                    outThreads.Where(t => t.LatestReplierUid == null)
-                        // when the thread is livepost, the last replier field will not exists in the response of tieba client 6.0.2
-                        .ForEach(t => t.LatestReplierUid = GetInPostsByTid(t)?.LastReplyer?.Uid);
                     outThreads.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
                         .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
                     return true;
@@ -53,7 +50,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseHook()
                 o.PostTime = (uint)inPost.CreateTime;
                 o.LatestReplyTime = (uint)inPost.LastTimeInt;
-                // value of LatestReplierUid will be write back from the response of client version 6.0.2 by TrySkipParse()
+                o.LatestReplierUid = inPost.LastReplyer.Uid;
                 o.ReplyCount = (uint?)inPost.ReplyNum.NullIfZero();
                 o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
                 o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();

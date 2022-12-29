@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Tieba.Crawl.Facade
+namespace tbm.Crawler.Tieba.Crawl
 {
     public class ThreadLateCrawlerAndSaver
     {

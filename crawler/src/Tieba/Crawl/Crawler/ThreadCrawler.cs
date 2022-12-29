@@ -59,7 +59,8 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             {
                 {"kw", _forumName},
                 {"pn", page.ToString()},
-                {"rn", "30"}
+                {"rn", "30"},
+                {"sort_type", "5"}
             });
             try
             {

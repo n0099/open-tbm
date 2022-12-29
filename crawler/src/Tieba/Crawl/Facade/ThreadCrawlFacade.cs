@@ -3,6 +3,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
     public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, ThreadResponse, Thread, ThreadCrawler>
     {
         private readonly Dictionary<long, TiebaUser> _latestRepliers = new();
+
         public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
         public ThreadCrawlFacade(ILogger<ThreadCrawlFacade> logger, TbmDbContext.New dbContextFactory,
@@ -52,7 +53,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
-            if (flag == CrawlRequestFlag.ThreadClientVersion602) ParseLatestRepliers(response.Data);
+            if (flag == CrawlRequestFlag.None) ParseLatestRepliers(response.Data);
         }
     }
 }
