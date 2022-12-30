@@ -7,7 +7,12 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
         private static readonly Regex ImgUrlExtractingRegex = new(@"^https?://(tiebapic|imgsrc)\.baidu\.com/forum/pic/item/(?<hash>.*?)\.jpg(\?.*)*$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
-        protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) => inPosts.Select(Convert);
+        protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) =>
+            inPosts.Select(r =>
+            {
+                outUsers.Add(r.Author);
+                return Convert(r);
+            });
 
         protected override ReplyPost Convert(Reply inPost)
         {

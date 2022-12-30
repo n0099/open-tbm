@@ -20,6 +20,19 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _tid = tid;
         }
 
+        protected override void ThrowIfEmptyUsersEmbedInPosts() =>
+            throw new TiebaException($"User list in the response of reply request for fid {Fid}, tid {_tid} is empty.");
+
+        protected override void ParsePostsEmbeddedUsers(List<User> usersEmbedInPosts, IList<Reply> postsInCurrentResponse) =>
+            ParsedPosts.Values // only mutate posts which occurs in current response
+                .IntersectBy(postsInCurrentResponse.Select(r => r.Pid), r => r.Pid)
+                .ForEach(r =>
+                { // fill the values for some field of reply from user list which is out of post list
+                    var author = usersEmbedInPosts.First(u => u.Uid == r.AuthorUid);
+                    r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
+                    r.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
+                });
+
         protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag)
         {
             ParsedPosts.Values.ForEach(r => r.Tid = _tid);
@@ -43,17 +56,6 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     }
                 }
             }
-
-            var users = data.UserList;
-            if (!users.Any() && !ParsedPosts.IsEmpty)
-                throw new TiebaException($"User list in response of reply list for fid {Fid}, tid {_tid} is empty.");
-            Users.ParseUsers(users);
-            ParsedPosts.Values.IntersectBy(data.PostList.Select(r => r.Pid), r => r.Pid).ForEach(r => // only mutate posts which occurs in current response
-            { // fill the values for some field of reply from user list which is out of post list
-                var author = users.First(u => u.Uid == r.AuthorUid);
-                r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
-                r.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
-            });
         }
 
         protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts) =>

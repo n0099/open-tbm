@@ -43,7 +43,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 .ForEach(u => _latestRepliers[u.Uid] = u);
 
         protected override void ThrowIfEmptyUsersEmbedInPosts() =>
-            throw new TiebaException($"User list in response of thread list for fid {Fid} is empty.");
+            throw new TiebaException($"User list in the response of thread request for fid {Fid} is empty.");
 
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
