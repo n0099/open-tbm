@@ -49,10 +49,10 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.TopicType = inPost.LivePostType.NullIfWhiteSpace();
                 o.Title = inPost.Title;
                 o.AuthorUid = inPost.Author.Uid;
-                // value of AuthorManagerType will be write back in ThreadCrawlFacade.PostParseHook()
+                o.AuthorManagerType = inPost.Author.BawuType.NullIfWhiteSpace();
                 o.PostTime = (uint)inPost.CreateTime;
                 o.LatestReplyTime = (uint)inPost.LastTimeInt;
-                o.LatestReplierUid = inPost.LastReplyer.Uid;
+                o.LatestReplierUid = inPost.LastReplyer?.Uid; // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
                 o.ReplyCount = (uint?)inPost.ReplyNum.NullIfZero();
                 o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
                 o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();

@@ -61,7 +61,7 @@ namespace tbm.Crawler.Tieba.Crawl
                         };
                         var (errorCode, isErrorCodeParsed) = tryGetErrorCode();
                         if (!isErrorCodeParsed)
-                            throw new TiebaException("Cannot get field \"error_code\" or parse its value from tieba json api response.")
+                            throw new TiebaException("Cannot get field \"error_code\" or parse its value from the response of tieba json api.")
                                 {Data = {{"raw", json}, {"rawErrorCode", errorCodeProp.GetRawText()}}};
 
                         switch (errorCode)
@@ -72,15 +72,15 @@ namespace tbm.Crawler.Tieba.Crawl
                         }
 
                         var thread = json.GetProperty("thread");
-                        if (thread.GetProperty("thread_info").TryGetProperty("phone_type", out var phoneType))
-                        {
-                            return new ThreadPost
-                            {
-                                Tid = Tid.Parse(thread.GetStrProp("id")),
-                                AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
-                            };
-                        }
-                        else throw new TiebaException(false, "Field phone_type is missing in response.thread.thread_info, it might be a historical thread.");
+                        return thread.TryGetProperty("thread_info", out var threadInfo)
+                            ? threadInfo.TryGetProperty("phone_type", out var phoneType)
+                                ? new ThreadPost
+                                {
+                                    Tid = Tid.Parse(thread.GetStrProp("id")),
+                                    AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
+                                }
+                                : throw new TiebaException(false, "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
+                            : throw new TiebaException("Field thread_info is missing in response json.thread.");
                     }
                     catch (Exception e) when (e is not TiebaException)
                     {
@@ -89,7 +89,7 @@ namespace tbm.Crawler.Tieba.Crawl
                     }
                 }
                 catch (Exception e)
-                { // below is similar with BaseCrawlFacade.CatchCrawlException()
+                { // below is similar with BaseCrawlFacade.SilenceException()
                     e.Data["fid"] = _fid;
                     e.Data["tid"] = tid;
                     e = e.ExtractInnerExceptionsData();
@@ -116,7 +116,7 @@ namespace tbm.Crawler.Tieba.Crawl
             var db = _dbContextFactory(_fid);
             await using var transaction = await db.Database.BeginTransactionAsync();
 
-            db.AttachRange(threads.OfType<ThreadPost>());
+            db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception
             db.ChangeTracker.Entries<ThreadPost>()
                 .ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
 

@@ -166,8 +166,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 {
                     _exceptionHandler(e);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Exception");
                     return true;
                 }
                 return true;
