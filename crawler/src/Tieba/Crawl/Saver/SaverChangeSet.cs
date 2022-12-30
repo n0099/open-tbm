@@ -13,7 +13,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             var existingAfter = existingAfterAndNewly
                 .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)
                 .OrderBy(postIdSelector).ToList();
-            if (existingAfter.Count != existingBefore.Count) throw new("Length of existingAfter is not match with existingBefore.");
+            if (existingAfter.Count != existingBefore.Count) throw new(
+                "Length of existingAfter is not match with existingBefore.");
             Existing = new(existingBefore
                 .OrderBy(postIdSelector)
                 .Zip(existingAfter, (before, after) => (before, after)).ToList());

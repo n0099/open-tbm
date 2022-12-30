@@ -20,7 +20,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         }
 
         protected override void ThrowIfEmptyUsersEmbedInPosts() =>
-            throw new TiebaException($"User list in the response of sub reply request for fid {Fid}, tid {_tid}, pid {_pid} is empty.");
+            throw new TiebaException(
+                $"User list in the response of sub reply request for fid {Fid}, tid {_tid}, pid {_pid} is empty.");
 
         protected override void PostParseHook(SubReplyResponse response, CrawlRequestFlag flag) =>
             ParsedPosts.Values.ForEach(sr =>

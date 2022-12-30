@@ -61,12 +61,14 @@ namespace tbm.Crawler.Tieba.Crawl
                         };
                         var (errorCode, isErrorCodeParsed) = tryGetErrorCode();
                         if (!isErrorCodeParsed)
-                            throw new TiebaException("Cannot get field \"error_code\" or parse its value from the response of tieba json api.")
+                            throw new TiebaException(
+                                "Cannot get field \"error_code\" or parse its value from the response of tieba json api.")
                                 {Data = {{"raw", json}, {"rawErrorCode", errorCodeProp.GetRawText()}}};
 
                         switch (errorCode)
                         {
-                            case 4 or 350008: throw new TiebaException(false, "Thread already deleted while thread late crawl.");
+                            case 4 or 350008:
+                                throw new TiebaException(false, "Thread already deleted while thread late crawl.");
                             case not 0:
                                 throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
                         }
@@ -79,8 +81,10 @@ namespace tbm.Crawler.Tieba.Crawl
                                     Tid = Tid.Parse(thread.GetStrProp("id")),
                                     AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
                                 }
-                                : throw new TiebaException(false, "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
-                            : throw new TiebaException("Field thread_info is missing in response json.thread.");
+                                : throw new TiebaException(false,
+                                    "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
+                            : throw new TiebaException(
+                                "Field thread_info is missing in response json.thread.");
                     }
                     catch (Exception e) when (e is not TiebaException)
                     {

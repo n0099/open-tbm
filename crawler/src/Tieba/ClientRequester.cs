@@ -38,7 +38,8 @@ namespace tbm.Crawler.Tieba
                     _ = stream.Seek(0, SeekOrigin.Begin);
                     var stream2 = new MemoryStream((int)stream.Length);
                     stream.CopyTo(stream2);
-                    throw new TiebaException($"Malformed protoBuf response from tieba. {Encoding.UTF8.GetString(stream2.ToArray())}", e);
+                    throw new TiebaException(
+                        $"Malformed protoBuf response from tieba. {Encoding.UTF8.GetString(stream2.ToArray())}", e);
                 }
             });
 
@@ -56,7 +57,8 @@ namespace tbm.Crawler.Tieba
             }
             catch (HttpRequestException e)
             {
-                if (e.StatusCode == null) throw new TiebaException("Network error from tieba.", e);
+                if (e.StatusCode == null)
+                    throw new TiebaException("Network error from tieba.", e);
                 throw new TiebaException($"HTTP {(int)e.StatusCode} from tieba.");
             }
         }

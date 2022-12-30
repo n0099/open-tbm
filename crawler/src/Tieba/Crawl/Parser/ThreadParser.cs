@@ -14,7 +14,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 CrawlRequestFlag.ThreadClientVersion602 => () =>
                 {
                     outThreads.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
-                        .ForEach(t => t.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
+                        .ForEach(t => t.Geolocation =
+                            Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
                     return true;
                 },
                 CrawlRequestFlag.ThreadClientVersion8888 => () =>
@@ -23,7 +24,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                         .ForEach(t => t.FirstReplyPid = (Pid?)GetInPostsByTid(t)?.FirstPostId);
                     return true;
                 },
-                _ => throw new ArgumentOutOfRangeException(nameof(requestFlag), requestFlag, "Unexpected CrawlRequestFlag.")
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(requestFlag), requestFlag, "Unexpected CrawlRequestFlag.")
             };
             return testRequestFlag();
         }
