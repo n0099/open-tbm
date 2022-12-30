@@ -34,7 +34,9 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 });
                 o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
                     () => new PostContentWrapper {Value = {inPost.Content}});
-                o.AuthorUid = inPost.AuthorId;
+                // AuthorId will be protoBuf default value 0 when the response doesn't embed the author user in replies
+                // see ReplyCrawlFacade.ThrowIfEmptyUsersEmbedInPosts()
+                o.AuthorUid = inPost.Author?.Uid ?? inPost.AuthorId;
                 // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
                 o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
                 o.PostTime = inPost.Time;

@@ -20,10 +20,19 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _tid = tid;
         }
 
-        protected override void ThrowIfEmptyUsersEmbedInPosts() =>
-            throw new TiebaException($"User list in the response of reply request for fid {Fid}, tid {_tid} is empty.");
+        protected override void ThrowIfEmptyUsersEmbedInPosts(ReplyResponse response)
+        {
+            var users = response.Data.UserList;
+            if (users.Any())
+            {
+                Users.ParseUsers(users);
+                ParsePostsEmbeddedUsers(users, response.Data.PostList);
+            }
+            else throw new TiebaException(
+                $"User list in the response of reply request for fid {Fid}, tid {_tid} is empty.");
+        }
 
-        protected override void ParsePostsEmbeddedUsers(List<User> usersEmbedInPosts, IList<Reply> postsInCurrentResponse) =>
+        protected override void ParsePostsEmbeddedUsers(IEnumerable<User> usersEmbedInPosts, IList<Reply> postsInCurrentResponse) =>
             ParsedPosts.Values // only mutate posts which occurs in current response
                 .IntersectBy(postsInCurrentResponse.Select(r => r.Pid), r => r.Pid)
                 .ForEach(r =>

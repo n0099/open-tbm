@@ -19,7 +19,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _pid = pid;
         }
 
-        protected override void ThrowIfEmptyUsersEmbedInPosts() =>
+        protected override void ThrowIfEmptyUsersEmbedInPosts(SubReplyResponse response) =>
             throw new TiebaException(
                 $"User list in the response of sub reply request for fid {Fid}, tid {_tid}, pid {_pid} is empty.");
 
