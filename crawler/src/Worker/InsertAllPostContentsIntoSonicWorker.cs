@@ -80,8 +80,8 @@ namespace tbm.Crawler.Worker
             var forumAndPostCountList = db.Database.GetDbConnection().Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
                 string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
                     $"SELECT {fid} AS Fid,"
-                    + $"IFNULL((SELECT id FROM tbm_f{fid}_replies ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
-                    + $"IFNULL((SELECT id FROM tbm_f{fid}_subReplies ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
+                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_reply ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
+                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
                 ).ToList();
             var forumCount = forumAndPostCountList.Count * 2; // reply and sub reply
             var totalPostCount = forumAndPostCountList.Sum(i => i.ReplyCount) + forumAndPostCountList.Sum(i => i.SubReplyCount);

@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db
 {
-    public class ThreadsMissingFirstReply
+    public class ThreadMissingFirstReply
     {
         [Key] public ulong Tid { get; set; }
         public ulong? Pid { get; set; }

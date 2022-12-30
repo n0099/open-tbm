@@ -135,7 +135,7 @@ namespace tbm.Crawler.Worker
             // some rare thread will have replyNum=0, but contains reply and can be revealed by requesting
             // we choose TO crawl these rare thread's replies for archive since most thread will have replies
             // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
-            // SELECT COUNT(*) FROM tbm_f{fid}_threads AS A INNER JOIN tbm_f{fid}_replies AS B ON A.tid = B.tid AND A.replyNum IS NULL
+            // SELECT COUNT(*) FROM tbmc_f{fid}_thread AS T INNER JOIN tbmc_f{fid}_reply AS R ON T.tid = R.tid AND T.replyNum IS NULL
             savedThreads.AllAfter.ForEach(t => shouldCrawlReplyTid.Add(t.Tid));
 
             await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
@@ -155,7 +155,7 @@ namespace tbm.Crawler.Worker
                 // some rare reply will have SubReplyCount=0, but contains sub reply and can be revealed by requesting
                 // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
                 // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:
-                // SELECT COUNT(*) FROM tbm_f{fid}_replies AS A INNER JOIN tbm_f{fid}_subReplies AS B ON A.pid = B.pid AND A.subReplyCount IS NULL
+                // SELECT COUNT(*) FROM tbmc_f{fid}_reply AS R INNER JOIN tbmc_f{fid}_subReply AS SR ON R.pid = SR.pid AND R.subReplyCount IS NULL
                 replies.AllAfter.Where(r => r.SubReplyCount != null)
                     .ForEach(r => shouldCrawl.Add((tid, r.Pid)));
                 return shouldCrawl;

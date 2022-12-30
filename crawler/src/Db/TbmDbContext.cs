@@ -11,7 +11,7 @@ namespace tbm.Crawler.Db
         public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
         public DbSet<AuthorManagerTypeRevision> AuthorManagerTypeRevisions => Set<AuthorManagerTypeRevision>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
-        public DbSet<ThreadsMissingFirstReply> ThreadsMissingFirstReplies => Set<ThreadsMissingFirstReply>();
+        public DbSet<ThreadMissingFirstReply> ThreadMissingFirstReplies => Set<ThreadMissingFirstReply>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
         public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
         public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
@@ -31,21 +31,21 @@ namespace tbm.Crawler.Db
 #pragma warning disable IDE0058 // Expression value is never used
         protected override void OnModelCreating(ModelBuilder b)
         {
-            b.Entity<TiebaUser>().ToTable("tbm_tieba_users");
-            b.Entity<ThreadPost>().ToTable($"tbm_f{Fid}_threads");
-            b.Entity<ThreadsMissingFirstReply>().ToTable("tbm_threads_missingFirstReply");
-            b.Entity<ReplyPost>().ToTable($"tbm_f{Fid}_replies");
-            b.Entity<ReplySignature>().ToTable("tbm_reply_signatures").HasKey(e => new {e.SignatureId, e.SignatureMd5});
-            b.Entity<ReplyContent>().ToTable($"tbm_f{Fid}_replies_content");
-            b.Entity<SubReplyPost>().ToTable($"tbm_f{Fid}_subReplies");
-            b.Entity<SubReplyContent>().ToTable($"tbm_f{Fid}_subReplies_content");
-            b.Entity<ThreadRevision>().ToTable("tbm_revision_threads").HasKey(e => new {e.Tid, e.Time});
-            b.Entity<ReplyRevision>().ToTable("tbm_revision_replies").HasKey(e => new {e.Pid, e.Time});
-            b.Entity<SubReplyRevision>().ToTable("tbm_revision_subReplies").HasKey(e => new {e.Spid, e.Time});
-            b.Entity<UserRevision>().ToTable("tbm_revision_users").HasKey(e => new {e.Uid, e.Time});
-            b.Entity<AuthorExpGradeRevision>().ToTable("tbm_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.Time});
-            b.Entity<AuthorManagerTypeRevision>().ToTable("tbm_revision_authorManagerType").HasKey(e => new {e.Fid, e.Uid, e.Time});
-            b.Entity<Forum>().ToTable("tbm_forums");
+            b.Entity<TiebaUser>().ToTable("tbmc_user");
+            b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
+            b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
+            b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
+            b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.SignatureMd5});
+            b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
+            b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
+            b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
+            b.Entity<ThreadRevision>().ToTable("tbmc_revision_thread").HasKey(e => new {e.Tid, e.Time});
+            b.Entity<ReplyRevision>().ToTable("tbmc_revision_reply").HasKey(e => new {e.Pid, e.Time});
+            b.Entity<SubReplyRevision>().ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.Time});
+            b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.Time});
+            b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.Time});
+            b.Entity<AuthorManagerTypeRevision>().ToTable("tbmc_revision_authorManagerType").HasKey(e => new {e.Fid, e.Uid, e.Time});
+            b.Entity<Forum>().ToTable("tbm_forum");
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)

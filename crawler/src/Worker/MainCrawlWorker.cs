@@ -129,8 +129,8 @@ namespace tbm.Crawler.Worker
 
                     var db = scope1.Resolve<TbmDbContext.New>()(fid);
                     using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-                    var existingEntity = db.ThreadsMissingFirstReplies.SingleOrDefault(e => e.Tid == tid);
-                    var newEntity = new ThreadsMissingFirstReply {
+                    var existingEntity = db.ThreadMissingFirstReplies.SingleOrDefault(e => e.Tid == tid);
+                    var newEntity = new ThreadMissingFirstReply {
                         Tid = tid,
                         Pid = parentThread.FirstReplyPid,
                         Excerpt = parentThread.FirstReplyExcerpt
