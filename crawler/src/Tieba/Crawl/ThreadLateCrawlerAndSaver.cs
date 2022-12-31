@@ -83,7 +83,7 @@ namespace tbm.Crawler.Tieba.Crawl
                                 }
                                 : throw new TiebaException(false,
                                     "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
-                            : throw new TiebaException(
+                            : throw new TiebaException(false,
                                 "Field thread_info is missing in response json.thread.");
                     }
                     catch (Exception e) when (e is not TiebaException)

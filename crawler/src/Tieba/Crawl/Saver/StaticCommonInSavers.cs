@@ -12,8 +12,28 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         protected static readonly FieldChangeIgnoranceCallbackRecord FieldChangeIgnorance = new(
             Update: (whichPostType, propName, oldValue, newValue) =>
             {
-                if (whichPostType == typeof(TiebaUser) // possible randomly response with null
-                    && propName == nameof(TiebaUser.IpGeolocation) && newValue is null) return true;
+                if (whichPostType == typeof(TiebaUser))
+                {
+                    switch (propName)
+                    {
+                        // possible randomly response with null
+                        case nameof(TiebaUser.IpGeolocation) when newValue is null:
+                        // possible clock drift across multiple response from tieba api, they should sync their servers with NTP
+                        /* following sql can track these drift
+                        SELECT portraitUpdateTimeDiff, COUNT(*), MAX(uid), MIN(uid), MAX(portraitUpdateTime), MIN(portraitUpdateTime)
+                        FROM (
+                            SELECT uid, portraitUpdateTime, CAST(portraitUpdateTime AS SIGNED)
+                                    - LEAD(CAST(portraitUpdateTime AS SIGNED)) OVER (PARTITION BY uid ORDER BY time DESC) AS portraitUpdateTimeDiff
+                                FROM tbmc_revision_user WHERE portraitUpdateTime IS NOT NULL
+                        ) AS T
+                        WHERE portraitUpdateTimeDiff > -100 AND portraitUpdateTimeDiff < 100
+                        GROUP BY portraitUpdateTimeDiff ORDER BY portraitUpdateTimeDiff;
+                        */
+                        case nameof(TiebaUser.PortraitUpdateTime)
+                            when Math.Abs((newValue as int? ?? 0) - (oldValue as int? ?? 0)) <= 10:
+                            return true;
+                    }
+                }
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propName)

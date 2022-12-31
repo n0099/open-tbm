@@ -12,7 +12,7 @@ namespace tbm.Crawler.Tieba.Crawl
             {nameof(TiebaUser.PortraitUpdateTime), 1 << 2},
             {nameof(TiebaUser.Gender),             1 << 3},
             {nameof(TiebaUser.FansNickname),       1 << 4},
-            {nameof(TiebaUser.Icon),           1 << 5},
+            {nameof(TiebaUser.Icon),               1 << 5},
             {nameof(TiebaUser.IpGeolocation),      1 << 6}
         };
         private static readonly Dictionary<Type, string> TriggeredByPostSaverMap = new()

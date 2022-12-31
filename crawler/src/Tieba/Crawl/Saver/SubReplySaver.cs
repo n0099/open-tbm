@@ -9,6 +9,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 nameof(TiebaUser.Icon) => true,
                 // fans nick name within sub reply response will always be null
                 nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,
+                // DisplayName in users embedded in sub replies from response will be the legacy nick name
+                nameof(TiebaUser.DisplayName) => true,
                 _ => false
             }, (_, _, _, _) => false);
 
