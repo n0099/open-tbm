@@ -48,7 +48,7 @@ class IndexQuery extends BaseQuery
             $fids = ForumModel::get('fid')->pluck('fid')->toArray();
             $counts = collect($fids)
                 ->map(static fn (int $fid) =>
-                    DB::table("tbm_f{$fid}_" . (Helper::POST_ID_TO_TYPE_PLURAL[$postIDName]))
+                    DB::table("tbmc_f{$fid}_" . (Helper::POST_ID_TO_TYPE[$postIDName]))
                         ->selectRaw("$fid AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
                 ->reduce(static fn (?BuilderContract $acc, Builder|\Illuminate\Database\Query\Builder $cur): BuilderContract =>

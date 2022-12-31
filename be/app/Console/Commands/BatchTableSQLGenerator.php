@@ -26,9 +26,9 @@ class BatchTableSQLGenerator extends Command
             {t_subReply} => 楼中楼表');
         $placeholders = [
             '{fid}' => '{fid}',
-            '{t_thread}' => 'tbm_f{fid}_threads',
-            '{t_reply}' => 'tbm_f{fid}_replies',
-            '{t_subReply}' => 'tbm_f{fid}_subReplies'
+            '{t_thread}' => 'tbmc_f{fid}_thread',
+            '{t_reply}' => 'tbmc_f{fid}_reply',
+            '{t_subReply}' => 'tbmc_f{fid}_subReply'
         ];
         $outputSQLs = [];
         foreach (ForumModel::select('fid')->get() as $forum) {

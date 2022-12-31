@@ -20,7 +20,7 @@ abstract class PostModel extends ModelWithHiddenFields
      * @var string Default table name
      * @throw SQL:NoSuchTableException
      */
-    protected $table = 'tbm_f0';
+    protected $table = 'tbmc_f0';
 
     protected int $fid = 0;
 
@@ -30,12 +30,12 @@ abstract class PostModel extends ModelWithHiddenFields
         'lastSeen'
     ];
 
-    public const POST_CLASS_TO_PLURAL_NAME = [
-        ThreadModel::class => 'threads',
-        ReplyModel::class => 'replies',
-        ReplyContentModel::class => 'replies_content',
-        SubReplyModel::class => 'subReplies',
-        SubReplyContentModel::class => 'subReplies_content'
+    private const MODEL_CLASS_TO_TABLE_NAME_SUFFIX = [
+        ThreadModel::class => 'thread',
+        ReplyModel::class => 'reply',
+        ReplyContentModel::class => 'reply_content',
+        SubReplyModel::class => 'subReply',
+        SubReplyContentModel::class => 'subReply_content'
     ];
 
     /**
@@ -44,7 +44,7 @@ abstract class PostModel extends ModelWithHiddenFields
     public function setFid(int $fid): static
     {
         $this->fid = $fid;
-        $this->setTable("tbm_f{$fid}_" . self::POST_CLASS_TO_PLURAL_NAME[$this::class]);
+        $this->setTable("tbmc_f{$fid}_" . self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class]);
 
         return $this;
     }
@@ -54,7 +54,7 @@ abstract class PostModel extends ModelWithHiddenFields
         // only fetch current post ID and its parent posts ID when we can fetch all fields
         // since BaseQuery::fillWithParentPost() will query detailed value of other fields
         return $query->addSelect(array_values(\array_slice(Helper::POST_TYPE_TO_ID, 0,
-            array_search(self::POST_CLASS_TO_PLURAL_NAME[$this::class], Helper::POST_TYPES_PLURAL) + 1)));
+            array_search(self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class], Helper::POST_TYPES) + 1)));
     }
 
     public function scopeTid(Builder $query, Collection|array|int $tid): Builder

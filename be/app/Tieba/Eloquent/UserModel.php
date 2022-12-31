@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 class UserModel extends ModelWithHiddenFields
 {
-    protected $table = 'tbm_tieba_users';
+    protected $table = 'tbmc_user';
 
     protected $guarded = [];
 

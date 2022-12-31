@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 class ForumModel extends ModelWithHiddenFields
 {
-    protected $table = 'tbm_forums';
+    protected $table = 'tbm_forum';
 
     protected $guarded = [];
 
