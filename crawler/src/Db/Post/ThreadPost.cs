@@ -14,6 +14,7 @@ namespace tbm.Crawler.Db.Post
         public string Title { get; set; } = "";
         public long AuthorUid { get; set; }
         [NotMapped] public string? AuthorManagerType { get; set; }
+        public string? AuthorPhoneType { get; set; }
         public uint PostTime { get; set; }
         public uint LatestReplyTime { get; set; }
         public long? LatestReplierUid { get; set; }
@@ -24,7 +25,6 @@ namespace tbm.Crawler.Db.Post
         public int? DisagreeCount { get; set; }
         public byte[]? Zan { get; set; }
         public byte[]? Geolocation { get; set; }
-        public string? AuthorPhoneType { get; set; }
         public uint CreatedAt { get; set; }
         public uint? UpdatedAt { get; set; }
         public uint? LastSeen { get; set; }

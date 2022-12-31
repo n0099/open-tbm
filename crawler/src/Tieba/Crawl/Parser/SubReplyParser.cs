@@ -22,7 +22,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
                     () => new PostContentWrapper {Value = {inPost.Content}});
                 o.AuthorUid = author.Uid;
-                o.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
+                o.AuthorManagerType = author.BawuType.NullIfWhiteSpace();
                 o.AuthorExpGrade = (ushort)author.LevelId;
                 o.PostTime = inPost.Time;
                 o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();

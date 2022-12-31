@@ -84,7 +84,8 @@ namespace tbm.Crawler.Worker
                     + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
                 ).ToList();
             var forumCount = forumAndPostCountList.Count * 2; // reply and sub reply
-            var totalPostCount = forumAndPostCountList.Sum(i => i.ReplyCount) + forumAndPostCountList.Sum(i => i.SubReplyCount);
+            var totalPostCount = forumAndPostCountList.Sum(i => i.ReplyCount)
+                                 + forumAndPostCountList.Sum(i => i.SubReplyCount);
             var pushedPostCount = 0;
             foreach (var ((fid, replyCount, subReplyCount), index) in forumAndPostCountList.WithIndex())
             {

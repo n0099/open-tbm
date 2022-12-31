@@ -21,7 +21,8 @@ namespace tbm.Crawler.Tieba.Crawl
             {typeof(ReplySaver), "reply"},
             {typeof(SubReplySaver), "subReply"}
         };
-        private static readonly Regex PortraitExtractingRegex = new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        private static readonly Regex PortraitExtractingRegex =
+            new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly HashSet<Uid> UsersIdLock = new();
         private readonly List<Uid> _savedUsersId = new();
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
@@ -87,7 +88,12 @@ namespace tbm.Crawler.Tieba.Crawl
                     select user).ToDictionary(u => u.Uid);
 
                 SavePostsOrUsers(postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
-                    u => new UserRevision {Time = u.UpdatedAt ?? u.CreatedAt, Uid = u.Uid, TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]},
+                    u => new UserRevision
+                    {
+                        Time = u.UpdatedAt ?? u.CreatedAt,
+                        Uid = u.Uid,
+                        TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]
+                    },
                     u => existingUsersKeyByUid.ContainsKey(u.Uid),
                     u => existingUsersKeyByUid[u.Uid]);
             }

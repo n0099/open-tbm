@@ -43,18 +43,20 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             try
             {
                 o.Tid = (Tid)inPost.Tid;
+                // FirstReplyPid will be write back in this.ShouldSkipParse()
                 o.FirstReplyExcerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
                     () => new ThreadAbstractWrapper {Value = {inPost.Abstract}});
                 o.ThreadType = (ulong)inPost.ThreadTypes;
                 o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
                 o.IsGood = (ushort?)inPost.IsGood.NullIfZero();
                 o.TopicType = inPost.LivePostType.NullIfWhiteSpace();
-                o.Title = inPost.Title;
+                o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.PostParseHook()
                 o.AuthorUid = inPost.Author.Uid;
                 o.AuthorManagerType = inPost.Author.BawuType.NullIfWhiteSpace();
                 o.PostTime = (uint)inPost.CreateTime;
                 o.LatestReplyTime = (uint)inPost.LastTimeInt;
-                o.LatestReplierUid = inPost.LastReplyer?.Uid; // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
+                // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
+                o.LatestReplierUid = inPost.LastReplyer?.Uid;
                 o.ReplyCount = (uint?)inPost.ReplyNum.NullIfZero();
                 o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
                 o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();

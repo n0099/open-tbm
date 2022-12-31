@@ -4,7 +4,10 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
 {
     public class ReplyParser : BaseParser<ReplyPost, Reply>
     {
-        private static readonly Regex ImgUrlExtractingRegex = new(@"^https?://(tiebapic|imgsrc)\.baidu\.com/forum/pic/item/(?<hash>.*?)\.jpg(\?.*)*$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        private static readonly Regex ImgUrlExtractingRegex =
+            new(@"^https?://(tiebapic|imgsrc)\.baidu\.com/forum/pic/item/(?<hash>.*?)\.jpg(\?.*)*$",
+                RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
         protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
         protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) =>
@@ -22,7 +25,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.Pid = inPost.Pid;
                 o.Floor = inPost.Floor;
                 inPost.Content.Where(c => c.Type == 3).ForEach(c =>
-                { // set with protoBuf default values to remove these image related fields that has similar value by reference
+                { // set with protoBuf default values to remove these image related fields through reference that has similar value
                     c.BigCdnSrc = "";
                     c.CdnSrc = "";
                     c.CdnSrcActive = "";
@@ -37,7 +40,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 // AuthorId will be protoBuf default value 0 when the response doesn't embed the author user in replies
                 // see ReplyCrawlFacade.ThrowIfEmptyUsersEmbedInPosts()
                 o.AuthorUid = inPost.Author?.Uid ?? inPost.AuthorId;
-                // values of tid, AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
+                // values of AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
                 o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
                 o.PostTime = inPost.Time;
                 o.IsFold = (ushort?)inPost.IsFold.NullIfZero();

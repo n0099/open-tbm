@@ -67,7 +67,9 @@ namespace tbm.Crawler.Worker
                 // get the largest value of field latestReplyTime in all stored threads of this forum
                 // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
                 // https://stackoverflow.com/questions/341264/max-or-default
-                maxLatestReplyTimeInPreviousCrawl = scope1.Resolve<TbmDbContext.New>()(fid).Threads.Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
+                maxLatestReplyTimeInPreviousCrawl =
+                    scope1.Resolve<TbmDbContext.New>()(fid).Threads
+                        .Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
             do
             {
                 crawlingPage++;

@@ -64,8 +64,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     SignatureId = (uint)r.SignatureId!,
                     SignatureMd5 = MD5.HashData(r.Signature!),
                     Signature = r.Signature!,
-                    // we have to generate the value of two field below in here, since its value will be set by TbmDbContext.SaveChanges() which is invoked after current method had returned
-                    FirstSeen = r.CreatedAt != 0 ? r.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(), // CreatedAt will be the default 0 value when the post is newly added
+                    // we have to generate the value of two field below in here
+                    // since its value will be set by TbmDbContext.SaveChanges() which is invoked after current method had returned
+                    // CreatedAt will be the default 0 value when the post is newly added
+                    FirstSeen = r.CreatedAt != 0 ? r.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(),
                     LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
                 }).ToList();
             if (signatures.Any())
