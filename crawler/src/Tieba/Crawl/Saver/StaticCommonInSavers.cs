@@ -60,10 +60,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 if (whichPostType == typeof(ReplyPost)
                     && propName == nameof(ReplyPost.SignatureId)
                     && newValue is null && oldValue is not null) return true;
-                // possible randomly response with 0 and in the latter responses it will back to normal
-                if ((whichPostType == typeof(ReplyPost) || whichPostType == typeof(SubReplyPost))
-                    && propName is nameof(ReplyPost.AuthorUid) or nameof(SubReplyPost.AuthorUid)
-                    && newValue is 0L && oldValue is not 0L) return true;
                 return false;
             },
             Revision: (whichPostType, propName, oldValue, _) =>

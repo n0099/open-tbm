@@ -4,15 +4,21 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propName, oldValue, newValue) => propName switch
-            { // the value of user gender in thread response might be 0 but in reply response it won't be 0
-                nameof(TiebaUser.Gender) when (ushort?)newValue is 0 && (ushort?)oldValue is not 0 => true,
+            {
                 // Icon.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
                 // note this will cause we can't record when did a user update its iconinfo to null since these null values have been ignored in reply and sub reply saver
                 nameof(TiebaUser.Icon) => true,
                 // DisplayName in users embedded in threads from response will be the legacy nick name
                 nameof(TiebaUser.DisplayName) => true,
                 _ => false
-            }, (_, _, _, _) => false);
+            },
+            Revision: (_, propName, oldValue, newValue) => propName switch
+            {
+                // author gender in reply response will be 0 when users is embed in reply
+                // but in thread or sub reply responses it won't be 0 even their users are also embedded
+                nameof(TiebaUser.Gender) when (ushort?)oldValue is 0 && (ushort?)newValue is not 0 => true,
+                _ => false
+            });
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
