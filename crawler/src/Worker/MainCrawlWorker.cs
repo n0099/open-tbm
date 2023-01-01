@@ -131,11 +131,15 @@ namespace tbm.Crawler.Worker
 
                     var db = scope1.Resolve<TbmDbContext.New>()(fid);
                     using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+                    var firstReply = from r in db.Replies where r.Pid == parentThread.FirstReplyPid select r.Pid;
+                    if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
+
                     var existingEntity = db.ThreadMissingFirstReplies.SingleOrDefault(e => e.Tid == tid);
                     var newEntity = new ThreadMissingFirstReply {
                         Tid = tid,
                         Pid = parentThread.FirstReplyPid,
-                        Excerpt = parentThread.FirstReplyExcerpt
+                        Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                            () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}})
                     };
                     if (existingEntity == null)
                     {

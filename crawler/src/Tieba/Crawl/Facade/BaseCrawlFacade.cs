@@ -85,7 +85,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 startPage, endPage, _locks.LockType, _lockId);
             _lockingPages.UnionWith(acquiredLocks);
 
-            var isStartPageCrawlFailed = await SilenceException(async () =>
+            var isStartPageCrawlFailed = await LogException(async () =>
             {
                 var startPageResponse = await _crawler.CrawlSinglePage(startPage);
                 startPageResponse.ForEach(ValidateThenParse);
@@ -122,7 +122,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _lockingPages.UnionWith(acquiredLocks);
 
             return Task.WhenAll(acquiredLocks.Shuffle()
-                .Select(page => SilenceException(
+                .Select(page => LogException(
                     async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse),
                     page, previousFailureCountSelector?.Invoke(page) ?? 0)));
         }
@@ -134,11 +134,11 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             return SaveCrawled();
         }
 
-        private async Task<bool> SilenceException(Func<Task> callback, Page page, FailureCount previousFailureCount)
+        private async Task<bool> LogException(Func<Task> payload, Page page, FailureCount previousFailureCount)
         {
             try
             {
-                await callback();
+                await payload();
                 return false;
             }
             catch (Exception e)

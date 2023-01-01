@@ -13,8 +13,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 CrawlRequestFlag.None => () => false,
                 CrawlRequestFlag.ThreadClientVersion602 => () =>
                 {
-                    outThreads.Where(t => t.Geolocation != null) // replace with more detailed location.name in the 6.0.2 response
-                        .ForEach(t => t.Geolocation =
+                    outThreads.Where(t => t.Geolocation != null)
+                        .ForEach(t => t.Geolocation = // replace with more detailed location.name in the 6.0.2 response
                             Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
                     return true;
                 },
@@ -44,8 +44,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             {
                 o.Tid = (Tid)inPost.Tid;
                 // FirstReplyPid will be write back in this.ShouldSkipParse()
-                o.FirstReplyExcerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
-                    () => new ThreadAbstractWrapper {Value = {inPost.Abstract}});
+                o.FirstReplyExcerpt = inPost.Abstract;
                 o.ThreadType = (ulong)inPost.ThreadTypes;
                 o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
                 o.IsGood = (ushort?)inPost.IsGood.NullIfZero();

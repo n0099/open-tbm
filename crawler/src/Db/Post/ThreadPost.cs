@@ -1,4 +1,8 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+
+using Google.Protobuf.Collections;
+using TbClient.Post.Common;
+
 namespace tbm.Crawler.Db.Post
 {
     public class ThreadPost : IPost
@@ -6,7 +10,7 @@ namespace tbm.Crawler.Db.Post
         public object Clone() => MemberwiseClone();
         [Key] public ulong Tid { get; set; }
         [NotMapped] public ulong? FirstReplyPid { get; set; }
-        [NotMapped] public byte[]? FirstReplyExcerpt { get; set; }
+        [NotMapped] public RepeatedField<Abstract>? FirstReplyExcerpt { get; set; }
         public ulong ThreadType { get; set; }
         public string? StickyType { get; set; }
         public string? TopicType { get; set; }
