@@ -10,6 +10,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 // author gender in reply response will be 0 when users is embed in reply
                 // but in thread or sub reply responses it won't be 0 even their users are also embedded
                 nameof(TiebaUser.Gender) when (ushort?)oldValue is not 0 && (ushort?)newValue is 0 => true,
+                // FansNickname in reply response will always be null
+                nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,
                 _ => false
             }, (_, _, _, _) => false);
 

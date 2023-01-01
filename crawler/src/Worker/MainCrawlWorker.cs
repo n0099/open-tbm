@@ -129,26 +129,27 @@ namespace tbm.Crawler.Worker
                         .SelectMany(c => c.AllAfter.Where(t => t.Tid == tid)).FirstOrDefault();
                     if (parentThread == null) return;
 
+                    var newEntity = new ThreadMissingFirstReply {
+                        Tid = tid,
+                        Pid = parentThread.FirstReplyPid,
+                        Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
+                            () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
+                        DiscoveredAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
+                    };
+                    if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
+
                     var db = scope1.Resolve<TbmDbContext.New>()(fid);
                     using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
                     var firstReply = from r in db.Replies where r.Pid == parentThread.FirstReplyPid select r.Pid;
                     if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
 
                     var existingEntity = db.ThreadMissingFirstReplies.SingleOrDefault(e => e.Tid == tid);
-                    var newEntity = new ThreadMissingFirstReply {
-                        Tid = tid,
-                        Pid = parentThread.FirstReplyPid,
-                        Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
-                            () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}})
-                    };
-                    if (existingEntity == null)
-                    {
-                        _ = db.Add(newEntity);
-                    }
+                    if (existingEntity == null) _ = db.Add(newEntity);
                     else
                     {
                         if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
                         if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
+                        existingEntity.DiscoveredAt = newEntity.DiscoveredAt;
                     }
                     _ = db.SaveChanges();
                     transaction.Commit();
