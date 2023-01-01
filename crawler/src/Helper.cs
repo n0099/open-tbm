@@ -1,19 +1,19 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Google.Protobuf.Collections;
 
 namespace tbm.Crawler
 {
     public abstract class Helper
     {
-        public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf)
-        {
-            if (protoBuf == null) return null;
-            var serialized = protoBuf.ToByteArray();
-            return serialized.Length == 0 ? null : serialized;
-        }
+        public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf) =>
+            protoBuf == null || protoBuf.CalculateSize() == 0 ? null : protoBuf.ToByteArray();
 
-        public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty(Func<IMessage> wrapperFactory) =>
-            SerializedProtoBufOrNullIfEmpty(wrapperFactory());
+        public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty
+            <T>(RepeatedField<T>? valuesToWrap, Func<IMessage> wrapperFactory) where T : IMessage =>
+            valuesToWrap?.Select(i => i.CalculateSize()).Sum() is 0 or null
+                ? null
+                : SerializedProtoBufOrNullIfEmpty(wrapperFactory());
 
         private static readonly JsonSerializerOptions UnescapedSerializeOptions =
             new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};

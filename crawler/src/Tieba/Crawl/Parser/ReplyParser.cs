@@ -35,7 +35,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                     if (ImgUrlExtractingRegex.Match(c.OriginSrc)
                             .Groups["hash"] is {Success: true} hash) c.OriginSrc = hash.Value;
                 });
-                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                     () => new PostContentWrapper {Value = {inPost.Content}});
                 // AuthorId will be protoBuf default value 0 when the response doesn't embed the author user in replies
                 // see ReplyCrawlFacade.ThrowIfEmptyUsersEmbedInPosts()

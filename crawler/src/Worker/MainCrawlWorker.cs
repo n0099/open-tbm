@@ -138,7 +138,7 @@ namespace tbm.Crawler.Worker
                     var newEntity = new ThreadMissingFirstReply {
                         Tid = tid,
                         Pid = parentThread.FirstReplyPid,
-                        Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(
+                        Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
                             () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}})
                     };
                     if (existingEntity == null)
