@@ -2,13 +2,6 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 {
     public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     {
-        protected override PropertyInfo ParamDataProp => typeof(ThreadRequest).GetProperty(nameof(ThreadRequest.Data))!;
-        protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(ThreadRequest.Data.Common))!;
-        protected override PropertyInfo ResponseDataProp => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Data))!;
-        protected override PropertyInfo ResponsePostListProp => ResponseDataProp.PropertyType.GetProperty(nameof(ThreadResponse.Data.ThreadList))!;
-        protected override PropertyInfo ResponsePageProp => ResponseDataProp.PropertyType.GetProperty(nameof(ThreadResponse.Data.Page))!;
-        protected override PropertyInfo ResponseErrorProp => typeof(ThreadResponse).GetProperty(nameof(ThreadResponse.Error))!;
-
         private readonly string _forumName;
 
         public delegate ThreadCrawler New(string forumName);
@@ -20,6 +13,10 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             e.Data["forumName"] = _forumName;
             return e;
         }
+
+        protected override RepeatedField<Thread> GetResponsePostList(ThreadResponse response) => response.Data.ThreadList;
+        protected override int GetResponseErrorCode(ThreadResponse response) => response.Error.Errorno;
+        public override TbClient.Page GetResponsePage(ThreadResponse response) => response.Data.Page;
 
         protected const string EndPointUrl = "c/f/frs/page?cmd=301001";
 
@@ -45,10 +42,14 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             };
             return Task.FromResult(new[]
             {
-                new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
-                    new ThreadRequest {Data = data}), page),
-                new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2", ParamDataProp, ParamCommonProp, () => new ThreadResponse(),
-                    new ThreadRequest {Data = data602}), page, CrawlRequestFlag.ThreadClientVersion602),
+                new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0",
+                    new ThreadRequest {Data = data},
+                    (req, common) => req.Data.Common = common,
+                    () => new ThreadResponse()), page),
+                new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
+                    new ThreadRequest {Data = data602},
+                    (req, common) => req.Data.Common = common,
+                    () => new ThreadResponse()), page, CrawlRequestFlag.ThreadClientVersion602),
                 new Request(RequestJsonForFirstPid(page), page, CrawlRequestFlag.ThreadClientVersion8888)
             }.AsEnumerable());
         }

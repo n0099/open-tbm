@@ -24,10 +24,11 @@ namespace tbm.Crawler.Tieba
                 return doc.RootElement.Clone();
             });
 
-        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>
-            (string url, string clientVersion, PropertyInfo paramDataProp, PropertyInfo paramCommonProp, Func<TResponse> responseFactory, TRequest param)
+        public Task<TResponse> RequestProtoBuf
+            <TRequest, TResponse>(string url, string clientVersion, TRequest requestParam,
+                Action<TRequest, Common> setCommonParamOnRequest, Func<TResponse> responseFactory)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
-            Request(() => PostProtoBuf(url, clientVersion, param, paramDataProp, paramCommonProp), stream =>
+            Request(() => PostProtoBuf(url, clientVersion, requestParam, setCommonParamOnRequest), stream =>
             {
                 try
                 {
@@ -63,14 +64,14 @@ namespace tbm.Crawler.Tieba
             }
         }
 
-        private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> data, string clientVersion)
+        private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> param, string clientVersion)
         {
             var postData = new Dictionary<string, string>
             {
                 {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
                 {"_client_type", "2"},
                 {"_client_version", clientVersion}
-            }.Concat(data).ToList();
+            }.Concat(param).ToList();
             var sign = postData.Aggregate("", (acc, i) =>
             {
                 acc += i.Key + '=' + i.Value;
@@ -80,15 +81,18 @@ namespace tbm.Crawler.Tieba
             postData.Add(KeyValuePair.Create("sign", signMd5));
 
             return Post(() => _http.PostAsync(url, new FormUrlEncodedContent(postData)),
-                () => _logger.LogTrace("POST {} {}", url, data));
+                () => _logger.LogTrace("POST {} {}", url, param));
         }
 
-        private Task<HttpResponseMessage> PostProtoBuf(string url, string clientVersion, IMessage paramProtoBuf, PropertyInfo dataProp, PropertyInfo commonProp)
+        private Task<HttpResponseMessage> PostProtoBuf
+            <TRequest>(string url, string clientVersion, TRequest requestParam,
+                Action<TRequest, Common> setCommonParamOnRequest)
+            where TRequest : IMessage<TRequest>
         {
-            commonProp.SetValue(dataProp.GetValue(paramProtoBuf), new Common {ClientVersion = clientVersion});
+            setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion});
 
             // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
-            var protoBufFile = new ByteArrayContent(paramProtoBuf.ToByteArray());
+            var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
             protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
             var content = new MultipartFormDataContent {protoBufFile};
             // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
@@ -102,7 +106,7 @@ namespace tbm.Crawler.Tieba
             request.Headers.Connection.Add("keep-alive");
 
             return Post(() => _http.SendAsync(request),
-                () => _logger.LogTrace("POST {} {}", url, paramProtoBuf));
+                () => _logger.LogTrace("POST {} {}", url, requestParam));
         }
 
         private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)

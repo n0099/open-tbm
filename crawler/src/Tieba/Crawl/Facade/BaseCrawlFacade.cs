@@ -91,7 +91,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 startPageResponse.ForEach(ValidateThenParse);
 
                 var maxPage = startPageResponse
-                    .Select(i => _crawler.GetPageFromResponse(i.Result))
+                    .Select(i => _crawler.GetResponsePage(i.Result))
                     .Max(i => (Page?)i?.TotalPage);
                 endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
             }, startPage, 0);

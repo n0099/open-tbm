@@ -2,13 +2,6 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 {
     public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
     {
-        protected override PropertyInfo ParamDataProp => typeof(ReplyRequest).GetProperty(nameof(ReplyRequest.Data))!;
-        protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(ReplyRequest.Data.Common))!;
-        protected override PropertyInfo ResponseDataProp => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Data))!;
-        protected override PropertyInfo ResponsePostListProp => ResponseDataProp.PropertyType.GetProperty(nameof(ReplyResponse.Data.PostList))!;
-        protected override PropertyInfo ResponsePageProp => ResponseDataProp.PropertyType.GetProperty(nameof(ReplyResponse.Data.Page))!;
-        protected override PropertyInfo ResponseErrorProp => typeof(ReplyResponse).GetProperty(nameof(ReplyResponse.Error))!;
-
         private readonly Fid _fid;
         private readonly Tid _tid;
 
@@ -26,6 +19,10 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             return e;
         }
 
+        protected override RepeatedField<Reply> GetResponsePostList(ReplyResponse response) => response.Data.PostList;
+        protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
+        public override TbClient.Page GetResponsePage(ReplyResponse response) => response.Data.Page;
+
         protected override async Task<IEnumerable<Request>> RequestsFactory(Page page)
         {
             const string url = "c/f/pb/page?cmd=302001";
@@ -37,8 +34,10 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                 Rn = 30,
                 QType = 2
             };
-            var response = await Requester.RequestProtoBuf(url, clientVersion, ParamDataProp, ParamCommonProp,
-                () => new ReplyResponse(), new ReplyRequest {Data = data});
+            var response = await Requester.RequestProtoBuf(url, clientVersion,
+                new ReplyRequest {Data = data},
+                (req, common) => req.Data.Common = common,
+                () => new ReplyResponse());
             var ret = new List<Request>(2) {new(Task.FromResult(response), page)};
             // as of client version 12.12.1.0 (not including), folded replies won't be include in response:
             // https://github.com/n0099/TiebaMonitor/commit/b8e7d2645e456271f52457f56500aaedaf28a010#diff-cf67f7f9e82d44aa5be8f85cd24946e5bb7829ca7940c9d056bb1e3849b8f981R32
@@ -47,8 +46,12 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             {
                 var dataShowOnlyFolded = data.Clone();
                 dataShowOnlyFolded.IsFoldCommentReq = 1;
-                ret.Add(new(Requester.RequestProtoBuf(url, clientVersion, ParamDataProp, ParamCommonProp,
-                    () => new ReplyResponse(), new ReplyRequest {Data = dataShowOnlyFolded}), page, CrawlRequestFlag.ReplyShowOnlyFolded));
+                ret.Add(new(
+                    Requester.RequestProtoBuf(url, clientVersion,
+                        new ReplyRequest {Data = dataShowOnlyFolded},
+                        (req, common) => req.Data.Common = common,
+                        () => new ReplyResponse()),
+                    page, CrawlRequestFlag.ReplyShowOnlyFolded));
             }
             return ret;
         }

@@ -2,13 +2,6 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 {
     public class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
     {
-        protected override PropertyInfo ParamDataProp => typeof(SubReplyRequest).GetProperty(nameof(SubReplyRequest.Data))!;
-        protected override PropertyInfo ParamCommonProp => ParamDataProp.PropertyType.GetProperty(nameof(SubReplyRequest.Data.Common))!;
-        protected override PropertyInfo ResponseDataProp => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Data))!;
-        protected override PropertyInfo ResponsePostListProp => ResponseDataProp.PropertyType.GetProperty(nameof(SubReplyResponse.Data.SubpostList))!;
-        protected override PropertyInfo ResponsePageProp => ResponseDataProp.PropertyType.GetProperty(nameof(SubReplyResponse.Data.Page))!;
-        protected override PropertyInfo ResponseErrorProp => typeof(SubReplyResponse).GetProperty(nameof(SubReplyResponse.Error))!;
-
         private readonly Tid _tid;
         private readonly Pid _pid;
 
@@ -27,11 +20,15 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             return e;
         }
 
+        protected override RepeatedField<SubReply> GetResponsePostList(SubReplyResponse response) => response.Data.SubpostList;
+        protected override int GetResponseErrorCode(SubReplyResponse response) => response.Error.Errorno;
+        public override TbClient.Page GetResponsePage(SubReplyResponse response) => response.Data.Page;
+
         protected override Task<IEnumerable<Request>> RequestsFactory(Page page) =>
             Task.FromResult(new[]
             {
                 new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
-                    ParamDataProp, ParamCommonProp, () => new SubReplyResponse(), new SubReplyRequest
+                    new SubReplyRequest
                     {
                         Data = new()
                         {
@@ -39,7 +36,9 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                             Pid = (long)_pid,
                             Pn = (int)page
                         }
-                    }), page)
+                    },
+                    (req, common) => req.Data.Common = common,
+                    () => new SubReplyResponse()), page)
             }.AsEnumerable());
 
         public override IList<SubReply> GetValidPosts(SubReplyResponse response, CrawlRequestFlag flag)

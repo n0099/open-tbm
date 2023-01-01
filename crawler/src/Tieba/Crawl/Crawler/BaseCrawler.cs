@@ -5,22 +5,17 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
     {
         public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
         protected record Request(Task<TResponse> Response, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
-        protected ClientRequester Requester { get; }
-        protected abstract PropertyInfo ParamDataProp { get; }
-        protected abstract PropertyInfo ParamCommonProp { get; }
-        protected abstract PropertyInfo ResponseDataProp { get; }
-        protected abstract PropertyInfo ResponsePostListProp { get; }
-        protected abstract PropertyInfo ResponsePageProp { get; }
-        protected abstract PropertyInfo ResponseErrorProp { get; }
 
-        public abstract Exception FillExceptionData(Exception e);
-        protected abstract Task<IEnumerable<Request>> RequestsFactory(Page page);
-        public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
+        protected ClientRequester Requester { get; }
 
         protected BaseCrawler(ClientRequester requester) => Requester = requester;
 
-        public TbClient.Page? GetPageFromResponse(TResponse res) =>
-            (TbClient.Page?)ResponsePageProp.GetValue(ResponseDataProp.GetValue(res) as IMessage);
+        public abstract Exception FillExceptionData(Exception e);
+        protected abstract RepeatedField<TPostProtoBuf> GetResponsePostList(TResponse response);
+        protected abstract int GetResponseErrorCode(TResponse response);
+        public abstract TbClient.Page GetResponsePage(TResponse response);
+        protected abstract Task<IEnumerable<Request>> RequestsFactory(Page page);
+        public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
 
         public async Task<Response[]> CrawlSinglePage(Page page) =>
             await Task.WhenAll((await RequestsFactory(page))
@@ -28,12 +23,14 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 
         protected void ValidateOtherErrorCode(TResponse response)
         {
-            if ((ResponseErrorProp.GetValue(response) as Error)?.Errorno != 0)
+            if (GetResponseErrorCode(response) != 0)
                 throw new TiebaException("Error from tieba client.") {Data = {{"raw", response}}};
         }
 
-        protected IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage) =>
-            ResponsePostListProp.GetValue(ResponseDataProp.GetValue(response)) is IList<TPostProtoBuf> posts
-            && posts.Any() ? posts : throw new EmptyPostListException(exceptionMessage);
+        protected IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage)
+        {
+            var posts = GetResponsePostList(response);
+            return posts.Any() ? posts : throw new EmptyPostListException(exceptionMessage);
+        }
     }
 }

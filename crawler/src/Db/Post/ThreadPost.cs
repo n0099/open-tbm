@@ -1,6 +1,4 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-
-using Google.Protobuf.Collections;
 using TbClient.Post.Common;
 
 namespace tbm.Crawler.Db.Post

@@ -2,6 +2,7 @@ global using Autofac;
 global using Autofac.Extensions.DependencyInjection;
 global using Autofac.Features.Indexed;
 global using Google.Protobuf;
+global using Google.Protobuf.Collections;
 global using LinqKit;
 global using NLog;
 global using NLog.Extensions.Logging;
