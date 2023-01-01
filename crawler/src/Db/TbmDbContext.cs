@@ -87,26 +87,8 @@ namespace tbm.Crawler.Db
                     };
                 }
 
-                // prevent overwrite existing future timestamp, this will happens when a record is updated >=3 times within a second
-                if (updatedAtProp.CurrentValue > now) return;
-
                 if (originalEntityState == EntityState.Modified && createdAtProp.CurrentValue != now)
                     updatedAtProp.CurrentValue = now;
-
-                if (originalEntityState != EntityState.Modified || updatedAtProp.IsModified) return;
-                var changedPropsValueDiff = e.Properties.Where(p => p.IsModified) // not using lazy eval to prevent including the updatedAt field itself
-                    .Select(p => new {p.Metadata.Name, New = p.CurrentValue, Old = p.OriginalValue}).ToList();
-                updatedAtProp.CurrentValue ??= now;
-                do
-                {
-                    updatedAtProp.CurrentValue += 1;
-                } while (updatedAtProp.CurrentValue == (updatedAtProp.OriginalValue ?? createdAtProp.CurrentValue));
-                _logger.LogWarning("Detected unchanged updatedAt timestamp for updating record with following fields changed={}, new record={}, old record={}. " +
-                                   "This means the record is updated more than one time within one second, " +
-                                   "which usually caused by a different response of the same resource from tieba. " +
-                                   "In order to prevent any possible duplicate keys conflicts from other revision tables update in the future, " +
-                                   "we've increased the value of updatedAt field back to the future.",
-                    Helper.UnescapedJsonSerialize(changedPropsValueDiff), Helper.UnescapedJsonSerialize(e.CurrentValues.ToObject()), Helper.UnescapedJsonSerialize(e.OriginalValues.ToObject()));
             });
             return base.SaveChanges();
         }

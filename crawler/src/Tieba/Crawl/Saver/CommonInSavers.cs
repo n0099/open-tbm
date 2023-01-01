@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class CommonInSavers<TSaver> : StaticCommonInSavers where TSaver : CommonInSavers<TSaver>
@@ -9,19 +11,23 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => null!;
 
         protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
-            FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance,
-            IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             TbmDbContext db,
+            IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
+            FieldChangeIgnoranceCallbackRecord userFieldChangeIgnorance,
             Func<TPostOrUser, TRevision> revisionFactory,
             Func<TPostOrUser, bool> isExistPredicate,
-            Func<TPostOrUser, TPostOrUser> existedSelector)
-            where TPostOrUser : class where TRevision : BaseRevision
+            Func<TPostOrUser, TPostOrUser> existingSelector,
+            Func<TRevision, long> revisionPostOrUserIdSelector,
+            Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
+            Expression<Func<TRevision, TRevision>> revisionKeySelector)
+            where TPostOrUser : class where TRevision : BaseRevision, new()
         {
-            var existedOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.Set<TPostOrUser>().AddRange(existedOrNew[false]); // newly added
-            db.AddRange(existedOrNew[true].Select(newPostOrUser =>
+            var existingOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
+            db.Set<TPostOrUser>().AddRange(existingOrNew[false]); // newly added
+
+            var newRevisions = existingOrNew[true].Select(newPostOrUser =>
             {
-                var postOrUserInTracking = existedSelector(newPostOrUser);
+                var postOrUserInTracking = existingSelector(newPostOrUser);
                 var entry = db.Entry(postOrUserInTracking);
                 entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
 
@@ -41,13 +47,13 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                             or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
 
                     if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
-                        || (entryIsUser && tiebaUserFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
+                        || (entryIsUser && userFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                     {
                         p.IsModified = false;
                         continue; // skip following revision check
                     }
                     if (FieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
-                        || (entryIsUser && tiebaUserFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
+                        || (entryIsUser && userFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
 
                     // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
                     // they will soon be updated by (sub) reply crawler after it find out the latest reply
@@ -67,8 +73,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     if (revisionProp == null)
                     {
                         object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
-                        _logger.LogWarning("Updating field {} is not existed in revision table, " +
-                                          "newValue={}, oldValue={}, newObject={}, oldObject={}",
+                        _logger.LogWarning("Updating field {} is not existing in revision table, " +
+                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
                             pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
                             Helper.UnescapedJsonSerialize(newPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
                     }
@@ -85,7 +91,18 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 }
                 if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask;
                 return revision;
-            }).OfType<TRevision>());
+            }).OfType<TRevision>().ToList();
+
+            if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
+            var existingRevisions = db.Set<TRevision>()
+                .Where(existing => newRevisions.Select(r => r.Time).Contains(existing.Time))
+                .Where(existingRevisionPredicate(newRevisions))
+                .Select(revisionKeySelector)
+                .ToList();
+            db.AddRange(newRevisions
+                .Where(revision => !existingRevisions.Any(existing =>
+                    existing.Time == revision.Time
+                    && revisionPostOrUserIdSelector(existing) == revisionPostOrUserIdSelector(revision))));
         }
     }
 }

@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost
@@ -11,22 +13,26 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts) : base(logger) => Posts = posts;
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
-            Func<TPost, PostId> postIdSelector,
-            ExpressionStarter<TPost> postsPredicate,
-            Func<TPost, TRevision> revisionFactory)
-            where TRevision : BaseRevision
+            Func<TPost, ulong> postIdSelector,
+            Func<TRevision, long> revisionPostIdSelector,
+            Func<TPost, TRevision> revisionFactory,
+            ExpressionStarter<TPost> existingPostPredicate,
+            Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
+            Expression<Func<TRevision, TRevision>> revisionKeySelector)
+            where TRevision : BaseRevision, new()
         {
             var dbSet = db.Set<TPost>();
             if (dbSet == null) throw new ArgumentException(
                 $"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
 
-            var existingPostsKeyById = dbSet.Where(postsPredicate).ToDictionary(postIdSelector);
+            var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
             // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
             var postsBeforeSave = existingPostsKeyById.Select(i => (TPost)i.Value.Clone()).ToList();
 
-            SavePostsOrUsers(TiebaUserFieldChangeIgnorance, Posts, db, revisionFactory,
+            SavePostsOrUsers(db, Posts, TiebaUserFieldChangeIgnorance, revisionFactory,
                 p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
-                p => existingPostsKeyById[postIdSelector(p)]);
+                p => existingPostsKeyById[postIdSelector(p)],
+                revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
 
             return new(postsBeforeSave, Posts.Values, postIdSelector);
         }

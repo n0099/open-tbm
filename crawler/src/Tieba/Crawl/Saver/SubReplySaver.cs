@@ -7,7 +7,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             { // always ignore updates on iconinfo due to some rare user will show some extra icons
                 // compare to reply response in the response of sub reply
                 nameof(TiebaUser.Icon) => true,
-                // fans nick name within sub reply response will always be null
+                // FansNickname in sub reply response will always be null
                 nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,
                 // DisplayName in users embedded in sub replies from response will be the legacy nick name
                 nameof(TiebaUser.DisplayName) => true,
@@ -34,9 +34,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
         {
-            var changeSet = SavePosts(db, sr => sr.Spid,
+            var changeSet = SavePosts(db, sr => sr.Spid, r => (long)r.Spid,
+                sr => new SubReplyRevision {Time = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
                 PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)),
-                sr => new SubReplyRevision {Time = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid});
+                newRevisions => existing => newRevisions.Select(r => r.Spid).Contains(existing.Spid),
+                r => new() {Time = r.Time, Spid = r.Spid});
 
             db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => new SubReplyContent {Spid = sr.Spid, Content = sr.Content}));
             return changeSet;

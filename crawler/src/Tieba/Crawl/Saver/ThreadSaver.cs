@@ -8,6 +8,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 // Icon.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
                 // note this will cause we can't record when did a user update its iconinfo to null since these null values have been ignored in reply and sub reply saver
                 nameof(TiebaUser.Icon) => true,
+                // FansNickname in thread response will always be null
+                nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,
                 // DisplayName in users embedded in threads from response will be the legacy nick name
                 nameof(TiebaUser.DisplayName) => true,
                 _ => false
@@ -39,8 +41,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public ThreadSaver(ILogger<ThreadSaver> logger, ConcurrentDictionary<Tid, ThreadPost> posts) : base(logger, posts) { }
 
-        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, t => t.Tid,
+        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
+            t => t.Tid, r => (long)r.Tid,
+            t => new ThreadRevision {Time = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid},
             PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)),
-            t => new ThreadRevision {Time = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid});
+            newRevisions => existing => newRevisions.Select(r => r.Tid).Contains(existing.Tid),
+            r => new() {Time = r.Time, Tid = r.Tid});
     }
 }

@@ -45,9 +45,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
         {
-            var changeSet = SavePosts(db, r => r.Pid,
+            var changeSet = SavePosts(db, r => r.Pid, r => (long)r.Pid,
+                r => new ReplyRevision {Time = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
                 PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)),
-                r => new ReplyRevision {Time = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid});
+                newRevisions => existing => newRevisions.Select(r => r.Pid).Contains(existing.Pid),
+                r => new() {Time = r.Time, Pid = r.Pid});
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
 

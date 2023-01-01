@@ -83,11 +83,11 @@ namespace tbm.Crawler.Tieba.Crawl
                 if (!usersExceptLocked.Any()) return;
                 _savedUsersId.AddRange(usersExceptLocked.Keys);
                 UsersIdLock.UnionWith(_savedUsersId);
+
                 var existingUsersKeyByUid = (from user in db.Users
                     where usersExceptLocked.Keys.Contains(user.Uid)
                     select user).ToDictionary(u => u.Uid);
-
-                SavePostsOrUsers(postSaver.TiebaUserFieldChangeIgnorance, usersExceptLocked, db,
+                SavePostsOrUsers(db, usersExceptLocked, postSaver.TiebaUserFieldChangeIgnorance,
                     u => new UserRevision
                     {
                         Time = u.UpdatedAt ?? u.CreatedAt,
@@ -95,7 +95,10 @@ namespace tbm.Crawler.Tieba.Crawl
                         TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]
                     },
                     u => existingUsersKeyByUid.ContainsKey(u.Uid),
-                    u => existingUsersKeyByUid[u.Uid]);
+                    u => existingUsersKeyByUid[u.Uid],
+                    r => r.Uid,
+                    newRevisions => existing => newRevisions.Select(r => r.Uid).Contains(existing.Uid),
+                    r => new() {Time = r.Time, Uid = r.Uid});
             }
         }
 
