@@ -48,25 +48,25 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             ParsedPosts.Values.ForEach(r => r.Tid = _tid);
 
             var data = response.Data;
-            if (data.Page.CurrentPage == 1)
-            { // update parent thread of reply with new title that extracted from the first floor reply in first page
-                var db = _dbContextFactory(Fid);
-                using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-                var parentThreadTitle = (from t in db.Threads where t.Tid == _tid select t.Title).SingleOrDefault();
-                if (parentThreadTitle == "")
-                { // thread title will be empty string as a fallback when the thread author haven't write title for this thread
-                    var newTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
-                    if (newTitle != null)
-                    {
-                        db.Attach(new ThreadPost {Tid = _tid, Title = newTitle})
-                            .Property(t => t.Title).IsModified = true;
-                        if (db.SaveChanges() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
-                            throw new DbUpdateException(
-                                $"Parent thread title \"{newTitle}\" completion for tid {_tid} has failed.");
-                        transaction.Commit();
-                    }
-                }
-            }
+            // update parent thread of reply with new title that extracted from the first floor reply in first page
+            if (data.Page.CurrentPage != 1) return;
+
+            var db = _dbContextFactory(Fid);
+            using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+
+            var parentThreadTitle = (from t in db.Threads.AsNoTracking()
+                where t.Tid == _tid select t.Title).SingleOrDefault();
+            // thread title will be empty string as a fallback when the thread author haven't write title for this thread
+            if (parentThreadTitle != "") return;
+            var newTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
+            if (newTitle == null) return;
+
+            db.Attach(new ThreadPost {Tid = _tid, Title = newTitle})
+                .Property(t => t.Title).IsModified = true;
+            if (db.SaveChanges() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
+                throw new DbUpdateException(
+                    $"Parent thread title \"{newTitle}\" completion for tid {_tid} has failed.");
+            transaction.Commit();
         }
 
         protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts) =>

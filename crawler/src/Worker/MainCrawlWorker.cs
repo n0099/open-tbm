@@ -35,7 +35,8 @@ namespace tbm.Crawler.Worker
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<TbmDbContext.New>()(0);
-            var forums = (from f in db.Forum where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
+            var forums = (from f in db.Forum.AsNoTracking()
+                where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
             var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
             foreach (var fidAndName in forums)
             {
@@ -140,10 +141,11 @@ namespace tbm.Crawler.Worker
 
                     var db = scope1.Resolve<TbmDbContext.New>()(fid);
                     using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-                    var firstReply = from r in db.Replies where r.Pid == parentThread.FirstReplyPid select r.Pid;
+                    var firstReply = from r in db.Replies.AsNoTracking()
+                        where r.Pid == parentThread.FirstReplyPid select r.Pid;
                     if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
 
-                    var existingEntity = db.ThreadMissingFirstReplies.SingleOrDefault(e => e.Tid == tid);
+                    var existingEntity = db.ThreadMissingFirstReplies.AsTracking().SingleOrDefault(e => e.Tid == tid);
                     if (existingEntity == null) _ = db.Add(newEntity);
                     else
                     {

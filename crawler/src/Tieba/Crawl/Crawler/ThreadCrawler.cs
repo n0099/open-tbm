@@ -16,7 +16,8 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
 
         protected override RepeatedField<Thread> GetResponsePostList(ThreadResponse response) => response.Data.ThreadList;
         protected override int GetResponseErrorCode(ThreadResponse response) => response.Error.Errorno;
-        public override TbClient.Page GetResponsePage(ThreadResponse response) => response.Data.Page;
+        public override TbClient.Page? GetResponsePage(ThreadResponse response) =>
+            response.Data?.Page; // response.Data.Page will be null when it's requested with CrawlRequestFlag.ThreadClientVersion8888
 
         protected const string EndPointUrl = "c/f/frs/page?cmd=301001";
 

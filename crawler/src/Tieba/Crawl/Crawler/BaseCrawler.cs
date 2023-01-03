@@ -13,7 +13,7 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
         public abstract Exception FillExceptionData(Exception e);
         protected abstract RepeatedField<TPostProtoBuf> GetResponsePostList(TResponse response);
         protected abstract int GetResponseErrorCode(TResponse response);
-        public abstract TbClient.Page GetResponsePage(TResponse response);
+        public abstract TbClient.Page? GetResponsePage(TResponse response);
         protected abstract Task<IEnumerable<Request>> RequestsFactory(Page page);
         public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
 
