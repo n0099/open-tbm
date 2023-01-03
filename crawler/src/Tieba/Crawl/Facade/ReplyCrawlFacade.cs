@@ -32,12 +32,13 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 $"User list in the response of reply request for fid {Fid}, tid {_tid} is empty.");
         }
 
-        protected override void ParsePostsEmbeddedUsers(IEnumerable<User> usersEmbedInPosts, IList<Reply> postsInCurrentResponse) =>
+        protected override void ParsePostsEmbeddedUsers(IEnumerable<User> usersEmbedInPosts, IEnumerable<Reply> postsInCurrentResponse) =>
             ParsedPosts.Values // only mutate posts which occurs in current response
                 .IntersectBy(postsInCurrentResponse.Select(r => r.Pid), r => r.Pid)
-                .ForEach(r =>
+                .Join(usersEmbedInPosts, r => r.AuthorUid, u => u.Uid, (r, a) => (r, a))
+                .ForEach(tuple =>
                 { // fill the values for some field of reply from user list which is out of post list
-                    var author = usersEmbedInPosts.First(u => u.Uid == r.AuthorUid);
+                    var (r, author) = tuple;
                     r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                     r.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
                 });

@@ -205,7 +205,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         protected virtual void ThrowIfEmptyUsersEmbedInPosts(TResponse response) {}
 
-        protected virtual void ParsePostsEmbeddedUsers(IEnumerable<User> usersEmbedInPosts, IList<TPostProtoBuf> postsInCurrentResponse) {}
+        protected virtual void ParsePostsEmbeddedUsers
+            (IEnumerable<User> usersEmbedInPosts, IEnumerable<TPostProtoBuf> postsInCurrentResponse) {}
 
         protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
     }

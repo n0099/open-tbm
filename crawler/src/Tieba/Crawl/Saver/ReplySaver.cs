@@ -82,7 +82,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
                           && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
                     select s).ToList();
-                existingSignatures.ForEach(s => s.LastSeen = signatures.First(s2 => s2.SignatureId == s.SignatureId).LastSeen);
+                existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
+                        (existing, newInReply) => (existing, newInReply))
+                    .ForEach(tuple => tuple.existing.LastSeen = tuple.newInReply.LastSeen);
                 lock (SignaturesLock)
                 {
                     var newSignaturesExceptLocked = signatures

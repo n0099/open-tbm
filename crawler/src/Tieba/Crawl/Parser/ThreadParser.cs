@@ -6,22 +6,22 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
 
         protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<PostId, ThreadPost> outPosts)
         {
-            var outThreads = outPosts.Values;
-            Thread? GetInPostsByTid(IPost t) => inPosts.FirstOrDefault(t2 => (Tid)t2.Tid == t.Tid);
+            var joinedPosts = inPosts.Join(outPosts.Values,
+                i => (Tid)i.Tid, i => i.Tid, (In, Out) => (In, Out));
             Func<bool> testRequestFlag = requestFlag switch
             {
                 CrawlRequestFlag.None => () => false,
                 CrawlRequestFlag.ThreadClientVersion602 => () =>
                 {
-                    outThreads.Where(t => t.Geolocation != null)
-                        .ForEach(t => t.Geolocation = // replace with more detailed location.name in the 6.0.2 response
-                            Helper.SerializedProtoBufOrNullIfEmpty(GetInPostsByTid(t)?.Location));
+                    joinedPosts // replace with more detailed location.name in the 6.0.2 response
+                        .Where(tuple => tuple.In.Location != null)
+                        .ForEach(tuple => tuple.Out.Geolocation =
+                            Helper.SerializedProtoBufOrNullIfEmpty(tuple.In.Location));
                     return true;
                 },
                 CrawlRequestFlag.ThreadClientVersion8888 => () =>
                 {
-                    outThreads.Where(t => t.FirstReplyPid == null)
-                        .ForEach(t => t.FirstReplyPid = (Pid?)GetInPostsByTid(t)?.FirstPostId);
+                    joinedPosts.ForEach(tuple => tuple.Out.FirstReplyPid = (Pid)tuple.In.FirstPostId);
                     return true;
                 },
                 _ => throw new ArgumentOutOfRangeException(
