@@ -24,8 +24,8 @@ namespace tbm.Crawler.Tieba
                 return doc.RootElement.Clone();
             });
 
-        public Task<TResponse> RequestProtoBuf
-            <TRequest, TResponse>(string url, string clientVersion, TRequest requestParam,
+        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>
+            (string url, string clientVersion, TRequest requestParam,
                 Action<TRequest, Common> setCommonParamOnRequest, Func<TResponse> responseFactory)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
             Request(() => PostProtoBuf(url, clientVersion, requestParam, setCommonParamOnRequest), stream =>
@@ -39,8 +39,11 @@ namespace tbm.Crawler.Tieba
                     _ = stream.Seek(0, SeekOrigin.Begin);
                     var stream2 = new MemoryStream((int)stream.Length);
                     stream.CopyTo(stream2);
+                    var responseBody = Encoding.UTF8.GetString(stream2.ToArray());
+                    if (responseBody.Contains("为了保护您的账号安全和最佳的浏览体验，当前业务已经不支持IE8以下浏览器"))
+                        throw new TiebaException(true, true);
                     throw new TiebaException(
-                        $"Malformed protoBuf response from tieba. {Encoding.UTF8.GetString(stream2.ToArray())}", e);
+                        $"Malformed protoBuf response from tieba. {responseBody}", e);
                 }
             });
 
@@ -84,9 +87,8 @@ namespace tbm.Crawler.Tieba
                 () => _logger.LogTrace("POST {} {}", url, param));
         }
 
-        private Task<HttpResponseMessage> PostProtoBuf
-            <TRequest>(string url, string clientVersion, TRequest requestParam,
-                Action<TRequest, Common> setCommonParamOnRequest)
+        private Task<HttpResponseMessage> PostProtoBuf<TRequest>(
+            string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
             where TRequest : IMessage<TRequest>
         {
             setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion});

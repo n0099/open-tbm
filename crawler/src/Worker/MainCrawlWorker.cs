@@ -122,7 +122,7 @@ namespace tbm.Crawler.Worker
             {
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.SetExceptionHandler(ex =>
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.AddExceptionHandler(ex =>
                 {
                     if (ex is not EmptyPostListException) return;
                     var parentThread = savedThreads

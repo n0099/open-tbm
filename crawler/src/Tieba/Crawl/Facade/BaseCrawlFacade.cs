@@ -13,7 +13,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly CrawlerLocks.LockId _lockId;
-        private Action<Exception> _exceptionHandler = _ => { };
+        private ExceptionHandler _exceptionHandler = _ => {};
+        public delegate void ExceptionHandler(Exception ex);
 
         protected readonly Fid Fid;
         protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
@@ -175,9 +176,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             }
         }
 
-        public BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> SetExceptionHandler(Action<Exception> handler)
+        public BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> AddExceptionHandler(ExceptionHandler handler)
         {
-            _exceptionHandler = handler;
+            _exceptionHandler += handler;
             return this;
         }
 

@@ -8,8 +8,8 @@ namespace tbm.Crawler
         public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf) =>
             protoBuf == null || protoBuf.CalculateSize() == 0 ? null : protoBuf.ToByteArray();
 
-        public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty
-            <T>(RepeatedField<T>? valuesToWrap, Func<IMessage> wrapperFactory) where T : IMessage =>
+        public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty<T>
+            (IEnumerable<T> valuesToWrap, Func<IMessage> wrapperFactory) where T : IMessage =>
             valuesToWrap?.Select(i => i.CalculateSize()).Sum() is 0 or null
                 ? null
                 : SerializedProtoBufOrNullIfEmpty(wrapperFactory());

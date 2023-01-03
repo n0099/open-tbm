@@ -69,8 +69,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                         if (user.Equals(latestReplier)) return null;
                     }
 
-                    var revisionProp = RevisionPropertiesCache[typeof(TRevision)].FirstOrDefault(p2 => p2.Name == pName);
-                    if (revisionProp == null)
+                    if (!RevisionPropertiesCache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                     {
                         object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
                         _logger.LogWarning("Updating field {} is not existing in revision table, " +

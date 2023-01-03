@@ -12,7 +12,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
         public void ParsePosts(CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
             in ConcurrentDictionary<PostId, TPost> outPosts, out List<User> outUsers)
         {
-            outUsers = new List<User>(30);
+            outUsers = new(30);
             var outNullableUsers = new List<User?>();
             if (ShouldSkipParse(requestFlag, inPosts, outPosts)) return;
             foreach (var p in ParsePostsInternal(inPosts, outNullableUsers))
