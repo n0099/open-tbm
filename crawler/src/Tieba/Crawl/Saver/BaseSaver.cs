@@ -1,18 +1,23 @@
 using System.Linq.Expressions;
-using LinqToDB;
-using LinqToDB.EntityFrameworkCore;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost
     {
         protected readonly ConcurrentDictionary<PostId, TPost> Posts;
+        protected readonly AuthorRevisionSaver AuthorRevisionSaver;
         public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
 
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
         public virtual void PostSaveHook() {}
 
-        protected BaseSaver(ILogger<BaseSaver<TPost>> logger, ConcurrentDictionary<PostId, TPost> posts) : base(logger) => Posts = posts;
+        protected BaseSaver(ILogger<BaseSaver<TPost>> logger,
+            ConcurrentDictionary<PostId, TPost> posts,
+            AuthorRevisionSaver authorRevisionSaver) : base(logger)
+        {
+            Posts = posts;
+            AuthorRevisionSaver = authorRevisionSaver;
+        }
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
             Func<TPost, ulong> postIdSelector,
@@ -35,64 +40,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
                 p => existingPostsKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
-
-            // prepare and reuse this timestamp for consistency in current saving
-            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db.Fid, db,
-                db.AuthorManagerTypeRevisions,
-                p => p.AuthorManagerType,
-                (a, b) => a != b,
-                r => new()
-                {
-                    Uid = r.Uid,
-                    Value = r.AuthorManagerType,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
-                },
-                tuple => new()
-                {
-                    Time = now,
-                    Fid = db.Fid,
-                    Uid = tuple.Uid,
-                    AuthorManagerType = tuple.Value
-                });
+            AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, Posts.Values);
 
             return new(postsBeforeSave, Posts.Values, postIdSelector);
         }
 
-        protected class LatestAuthorRevisionProjection<TValue>
-        {
-            public long Uid { get; init; }
-            public TValue? Value { get; init; }
-            public long Rank { get; init; }
-        }
-
-        protected void SaveAuthorRevisions<TRevision, TValue>(Fid fid,
-            TbmDbContext db,
-            IQueryable<TRevision> dbSet,
-            Func<TPost, TValue?> postAuthorFieldValueSelector,
-            Func<TValue?, TValue?, bool> isValueChangedPredicate,
-            Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-            Func<(long Uid, TValue? Value), TRevision> revisionFactory)
-            where TRevision : AuthorRevision
-        {
-            var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
-                .Where(e => e.Fid == fid && Posts.Values.Select(p => p.AuthorUid).Contains(e.Uid))
-                .Select(latestRevisionProjectionFactory)
-                .Where(e => e.Rank == 1)
-                .ToLinqToDB().ToList()
-                .Join(Posts.Values, e => e.Uid, p => p.AuthorUid,
-                    (e, p) => (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p)))
-                .ToList();
-            var newRevisionOfNewUsers = Posts.Values
-                // only required by IPost.AuthorManagerType since its nullable
-                // since we shouldn't store so many nulls for users that mostly have no AuthorManagerType
-                .Where(p => postAuthorFieldValueSelector(p) != null)
-                .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
-                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p)));
-            var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
-                .Where(tuple => isValueChangedPredicate(tuple.existing, tuple.newInPost))
-                .Select(tuple => (tuple.Uid, Value: tuple.newInPost));
-            db.AddRange(newRevisionOfNewUsers.Concat(newRevisionOfExistingUsers).Select(revisionFactory));
-        }
     }
 }

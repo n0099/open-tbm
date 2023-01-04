@@ -1,7 +1,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace tbm.Crawler.Db.Post
 {
-    public class SubReplyPost : IPost
+    public class SubReplyPost : IPost, IPostWithAuthorExpGrade
     {
         public object Clone() => MemberwiseClone();
         public ulong Tid { get; set; }

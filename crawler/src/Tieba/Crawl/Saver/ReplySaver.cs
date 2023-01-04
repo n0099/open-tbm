@@ -1,5 +1,3 @@
-using LinqToDB;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class ReplySaver : BaseSaver<ReplyPost>
@@ -45,7 +43,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-        public ReplySaver(ILogger<ReplySaver> logger, ConcurrentDictionary<PostId, ReplyPost> posts) : base(logger, posts) { }
+        public ReplySaver(ILogger<ReplySaver> logger,
+            ConcurrentDictionary<PostId, ReplyPost> posts,
+            AuthorRevisionSaver authorRevisionSaver
+        ) : base(logger, posts, authorRevisionSaver) { }
 
         public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
         {
@@ -56,6 +57,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 r => new() {Time = r.Time, Pid = r.Pid});
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
+            AuthorRevisionSaver.SaveAuthorExpGrade(db, Posts.Values);
 
             // we have to get the value of field p.CreatedAt from existing posts that is fetched from db
             // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
@@ -100,27 +102,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     }
                 }
             }
-
-            // prepare and reuse this timestamp for consistency in current saving
-            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db.Fid, db,
-                db.AuthorExpGradeRevisions,
-                p => p.AuthorExpGrade,
-                (a, b) => a != b,
-                r => new()
-                {
-                    Uid = r.Uid,
-                    Value = r.AuthorExpGrade,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
-                },
-                tuple => new()
-                {
-                    Time = now,
-                    Fid = db.Fid,
-                    Uid = tuple.Uid,
-                    AuthorExpGrade = tuple.Value
-                });
-
             return changeSet;
         }
 

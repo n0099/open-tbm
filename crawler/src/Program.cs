@@ -47,6 +47,7 @@ namespace tbm.Crawler
                         RegisteredCrawlerLocks.ForEach(type =>
                             builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(type)
                                 .SingleInstance().WithParameter("lockType", type));
+                        builder.RegisterType<AuthorRevisionSaver>();
                         builder.RegisterType<UserParserAndSaver>();
                         builder.RegisterType<ThreadLateCrawlerAndSaver>();
                         builder.RegisterType<ThreadArchiveCrawler>();

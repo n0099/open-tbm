@@ -1,5 +1,3 @@
-using LinqToDB;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class SubReplySaver : BaseSaver<SubReplyPost>
@@ -32,7 +30,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-        public SubReplySaver(ILogger<SubReplySaver> logger, ConcurrentDictionary<PostId, SubReplyPost> posts) : base(logger, posts) { }
+        public SubReplySaver(ILogger<SubReplySaver> logger,
+            ConcurrentDictionary<PostId, SubReplyPost> posts,
+            AuthorRevisionSaver authorRevisionSaver
+        ) : base(logger, posts, authorRevisionSaver) { }
 
         public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
         {
@@ -43,26 +44,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 r => new() {Time = r.Time, Spid = r.Spid});
 
             db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => new SubReplyContent {Spid = sr.Spid, Content = sr.Content}));
-
-            // prepare and reuse this timestamp for consistency in current saving
-            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db.Fid, db,
-                db.AuthorExpGradeRevisions,
-                p => p.AuthorExpGrade,
-                (a, b) => a != b,
-                r => new()
-                {
-                    Uid = r.Uid,
-                    Value = r.AuthorExpGrade,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
-                },
-                tuple => new()
-                {
-                    Time = now,
-                    Fid = db.Fid,
-                    Uid = tuple.Uid,
-                    AuthorExpGrade = tuple.Value
-                });
+            AuthorRevisionSaver.SaveAuthorExpGrade(db, Posts.Values);
 
             return changeSet;
         }
