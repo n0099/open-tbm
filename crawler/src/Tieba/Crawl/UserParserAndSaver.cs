@@ -23,7 +23,7 @@ namespace tbm.Crawler.Tieba.Crawl
         };
         private static readonly Regex PortraitExtractingRegex =
             new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
-        private static readonly HashSet<Uid> UsersIdLock = new();
+        private static readonly HashSet<Uid> UserIdLocks = new();
         private readonly List<Uid> _savedUsersId = new();
         private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
 
@@ -77,12 +77,12 @@ namespace tbm.Crawler.Tieba.Crawl
         public void SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
         {
             if (_users.IsEmpty) return;
-            lock (UsersIdLock)
+            lock (UserIdLocks)
             {
-                var usersExceptLocked = _users.ExceptBy(UsersIdLock, i => i.Key).ToDictionary(i => i.Key, i => i.Value);
+                var usersExceptLocked = _users.ExceptBy(UserIdLocks, i => i.Key).ToDictionary(i => i.Key, i => i.Value);
                 if (!usersExceptLocked.Any()) return;
                 _savedUsersId.AddRange(usersExceptLocked.Keys);
-                UsersIdLock.UnionWith(_savedUsersId);
+                UserIdLocks.UnionWith(_savedUsersId);
 
                 var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                     where usersExceptLocked.Keys.Contains(user.Uid)
@@ -102,21 +102,21 @@ namespace tbm.Crawler.Tieba.Crawl
             }
         }
 
-        public IEnumerable<Uid> AcquireUidLockForSave(IEnumerable<Uid> usersId)
+        public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId)
         {
-            lock (UsersIdLock)
+            lock (UserIdLocks)
             {
-                var exceptLocked = usersId.Except(UsersIdLock).ToList();
+                var exceptLocked = usersId.Except(UserIdLocks).ToList();
                 if (!exceptLocked.Any()) return exceptLocked;
                 _savedUsersId.AddRange(exceptLocked); // assume all given users are saved
-                UsersIdLock.UnionWith(exceptLocked);
+                UserIdLocks.UnionWith(exceptLocked);
                 return exceptLocked;
             }
         }
 
         public void PostSaveHook()
         {
-            lock (UsersIdLock) if (_savedUsersId.Any()) UsersIdLock.ExceptWith(_savedUsersId);
+            lock (UserIdLocks) if (_savedUsersId.Any()) UserIdLocks.ExceptWith(_savedUsersId);
         }
     }
 }

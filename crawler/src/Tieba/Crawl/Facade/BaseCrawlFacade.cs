@@ -9,15 +9,15 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
         private readonly BaseParser<TPost, TPostProtoBuf> _parser;
         private readonly BaseSaver<TPost> _saver;
-        protected readonly UserParserAndSaver Users;
+        protected UserParserAndSaver Users { get; }
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly CrawlerLocks.LockId _lockId;
-        private ExceptionHandler _exceptionHandler = _ => {};
+        private ExceptionHandler _exceptionHandler = _ => { };
         public delegate void ExceptionHandler(Exception ex);
 
-        protected readonly Fid Fid;
-        protected readonly ConcurrentDictionary<PostId, TPost> ParsedPosts = new();
+        protected uint Fid { get; }
+        protected ConcurrentDictionary<ulong, TPost> ParsedPosts { get; } = new();
         private readonly HashSet<Page> _lockingPages = new();
 
         protected BaseCrawlFacade(

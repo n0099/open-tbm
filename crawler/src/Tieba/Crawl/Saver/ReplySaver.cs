@@ -38,8 +38,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 return hash.ToHashCode();
             }
         }
-        private static readonly HashSet<UniqueSignature> SignaturesLock = new();
-        private IEnumerable<UniqueSignature>? _savedSignatures;
+        private static readonly HashSet<UniqueSignature> SignatureLocks = new();
+        private readonly List<UniqueSignature> _savedSignatures = new();
 
         public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
@@ -89,15 +89,16 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
                         (existing, newInReply) => (existing, newInReply))
                     .ForEach(tuple => tuple.existing.LastSeen = tuple.newInReply.LastSeen);
-                lock (SignaturesLock)
+                lock (SignatureLocks)
                 {
                     var newSignaturesExceptLocked = signatures
                         .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                        .ExceptBy(SignaturesLock, s => new(s.SignatureId, s.SignatureMd5)).ToList();
+                        .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureMd5)).ToList();
                     if (newSignaturesExceptLocked.Any())
                     {
-                        _savedSignatures = newSignaturesExceptLocked.Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5));
-                        SignaturesLock.UnionWith(_savedSignatures);
+                        _savedSignatures.AddRange(newSignaturesExceptLocked
+                            .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)));
+                        SignatureLocks.UnionWith(_savedSignatures);
                         db.ReplySignatures.AddRange(newSignaturesExceptLocked);
                     }
                 }
@@ -107,7 +108,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public override void PostSaveHook()
         {
-            if (_savedSignatures != null) lock (SignaturesLock) SignaturesLock.ExceptWith(_savedSignatures);
+            lock (SignatureLocks) if (_savedSignatures.Any()) SignatureLocks.ExceptWith(_savedSignatures);
         }
     }
 }

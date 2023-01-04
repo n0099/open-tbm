@@ -4,8 +4,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost
     {
-        protected readonly ConcurrentDictionary<PostId, TPost> Posts;
-        protected readonly AuthorRevisionSaver AuthorRevisionSaver;
+        protected ConcurrentDictionary<ulong, TPost> Posts { get; }
+        protected AuthorRevisionSaver AuthorRevisionSaver { get; }
         public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
 
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
@@ -44,6 +44,5 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
             return new(postsBeforeSave, Posts.Values, postIdSelector);
         }
-
     }
 }

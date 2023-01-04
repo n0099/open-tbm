@@ -24,8 +24,8 @@ namespace tbm.Crawler.Tieba
                 return doc.RootElement.Clone();
             });
 
-        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>
-            (string url, string clientVersion, TRequest requestParam,
+        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
+            string url, string clientVersion, TRequest requestParam,
                 Action<TRequest, Common> setCommonParamOnRequest, Func<TResponse> responseFactory)
             where TRequest : IMessage<TRequest> where TResponse : IMessage<TResponse> =>
             Request(() => PostProtoBuf(url, clientVersion, requestParam, setCommonParamOnRequest), stream =>
@@ -87,8 +87,8 @@ namespace tbm.Crawler.Tieba
                 () => _logger.LogTrace("POST {} {}", url, param));
         }
 
-        private Task<HttpResponseMessage> PostProtoBuf<TRequest>(
-            string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
+        private Task<HttpResponseMessage> PostProtoBuf<TRequest>
+            (string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
             where TRequest : IMessage<TRequest>
         {
             setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion});

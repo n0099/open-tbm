@@ -3,7 +3,7 @@ namespace tbm.Crawler.Worker
     public abstract class CyclicCrawlWorker : BackgroundService
     {
         private readonly IConfiguration _config;
-        protected readonly Timer Timer = new() {Enabled = true};
+        protected Timer Timer { get; } = new() {Enabled = true};
 
         protected CyclicCrawlWorker(IConfiguration config) => _config = config;
 
