@@ -4,9 +4,8 @@ namespace tbm.Crawler.Db
 {
     public class TbmDbContext : DbContext
     {
-        private readonly ILogger<TbmDbContext> _logger;
         private readonly IConfiguration _config;
-        private Fid Fid { get; }
+        public Fid Fid { get; }
         public DbSet<TiebaUser> Users => Set<TiebaUser>();
         public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
         public DbSet<AuthorManagerTypeRevision> AuthorManagerTypeRevisions => Set<AuthorManagerTypeRevision>();
@@ -21,9 +20,8 @@ namespace tbm.Crawler.Db
 
         public delegate TbmDbContext New(Fid fid);
 
-        public TbmDbContext(ILogger<TbmDbContext> logger, IConfiguration config, Fid fid)
+        public TbmDbContext(IConfiguration config, Fid fid)
         {
-            _logger = logger;
             _config = config;
             Fid = fid;
         }

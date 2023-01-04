@@ -1,4 +1,6 @@
 using System.Linq.Expressions;
+using LinqToDB;
+using LinqToDB.EntityFrameworkCore;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
@@ -33,8 +35,41 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
                 p => existingPostsKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
+            SaveAuthorManagerTypeRevisions(db);
 
             return new(postsBeforeSave, Posts.Values, postIdSelector);
+        }
+
+        private void SaveAuthorManagerTypeRevisions(TbmDbContext db)
+        {
+            var existingRevisionOfExistingUsers = (from e in db.AuthorManagerTypeRevisions.AsNoTracking()
+                    where e.Fid == db.Fid && Posts.Values.Select(t => t.AuthorUid).Contains(e.Uid)
+                    select new
+                    {
+                        e.Uid,
+                        e.AuthorManagerType,
+                        Rank = Sql.Ext.Rank().Over().PartitionBy(e.Uid).OrderByDesc(e.Time).ToValue()
+                    })
+                .Where(e => e.Rank == 1)
+                .ToLinqToDB().ToList()
+                .Join(Posts.Values, e => e.Uid, t => t.AuthorUid,
+                    (e, t) => (e.Uid, existing: e.AuthorManagerType, newInPost: t.AuthorManagerType))
+                .ToList();
+            var newRevisionOfNewUsers = Posts.Values
+                .Where(t => t.AuthorManagerType != null)
+                .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), t => t.AuthorUid)
+                .Select(t => (Uid: t.AuthorUid, t.AuthorManagerType));
+            var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
+                .Where(t => t.existing != t.newInPost)
+                .Select(tuple => (tuple.Uid, AuthorManagerType: tuple.newInPost));
+            db.AddRange(newRevisionOfNewUsers.Concat(newRevisionOfExistingUsers)
+                .Select(tuple => new AuthorManagerTypeRevision
+                {
+                    Time = (Time)DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    Fid = db.Fid,
+                    Uid = tuple.Uid,
+                    AuthorManagerType = tuple.AuthorManagerType
+                }));
         }
     }
 }
