@@ -6,6 +6,12 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class AuthorRevisionSaver
     {
+        // locks only using fid and uid field values from AuthorRevision
+        // this prevents inserting multiple entities with similar time and other fields with the same values
+        private static readonly HashSet<(Fid Fid, long Uid)> AuthorManagerTypeLocks = new();
+        private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = new();
+        private readonly List<(Fid Fid, long Uid)> _savedRevisions = new();
+
         private class LatestAuthorRevisionProjection<TValue>
         {
             public long Uid { get; init; }
@@ -13,12 +19,12 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             public long Rank { get; init; }
         }
 
-        public void SaveAuthorManagerTypeRevisions<TPost>
+        public Action SaveAuthorManagerTypeRevisions<TPost>
             (TbmDbContext db, ICollection<TPost> posts) where TPost : IPost
         {
             // prepare and reuse this timestamp for consistency in current saving
             var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db, posts,
+            SaveAuthorRevisions(db, posts, AuthorManagerTypeLocks,
                 db.AuthorManagerTypeRevisions,
                 p => p.AuthorManagerType,
                 (a, b) => a != b,
@@ -35,15 +41,16 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     Uid = tuple.Uid,
                     AuthorManagerType = tuple.Value
                 });
+            return () => ReleaseAllLocks(AuthorManagerTypeLocks);
         }
 
-        public void SaveAuthorExpGrade<TPostWithAuthorExpGrade>
+        public Action SaveAuthorExpGrade<TPostWithAuthorExpGrade>
             (TbmDbContext db, ICollection<TPostWithAuthorExpGrade> posts)
             where TPostWithAuthorExpGrade : IPost, IPostWithAuthorExpGrade
         {
             // prepare and reuse this timestamp for consistency in current saving
             var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db, posts,
+            SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
                 db.AuthorExpGradeRevisions,
                 p => p.AuthorExpGrade,
                 (a, b) => a != b,
@@ -60,10 +67,12 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     Uid = tuple.Uid,
                     AuthorExpGrade = tuple.Value
                 });
+            return () => ReleaseAllLocks(AuthorExpGradeLocks);
         }
 
-        private static void SaveAuthorRevisions<TPost, TRevision, TValue>(TbmDbContext db,
+        private void SaveAuthorRevisions<TPost, TRevision, TValue>(TbmDbContext db,
             ICollection<TPost> posts,
+            HashSet<(Fid Fid, long Uid)> locks,
             IQueryable<TRevision> dbSet,
             Func<TPost, TValue?> postAuthorFieldValueSelector,
             Func<TValue?, TValue?, bool> isValueChangedPredicate,
@@ -76,8 +85,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 .Select(latestRevisionProjectionFactory)
                 .Where(e => e.Rank == 1)
                 .ToLinqToDB().ToList()
-                .Join(posts, e => e.Uid, p => p.AuthorUid,
-                    (e, p) => (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p)))
+                .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
+                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p)))
                 .ToList();
             var newRevisionOfNewUsers = posts
                 // only required by IPost.AuthorManagerType since its nullable
@@ -88,7 +97,23 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
                 .Where(tuple => isValueChangedPredicate(tuple.existing, tuple.newInPost))
                 .Select(tuple => (tuple.Uid, Value: tuple.newInPost));
-            db.AddRange(newRevisionOfNewUsers.Concat(newRevisionOfExistingUsers).Select(revisionFactory));
+            lock (locks)
+            {
+                var newRevisionsExceptLocked = newRevisionOfNewUsers
+                    .Concat(newRevisionOfExistingUsers)
+                    .Select(revisionFactory)
+                    .ExceptBy(locks, r => (r.Fid, r.Uid))
+                    .ToList();
+                if (!newRevisionsExceptLocked.Any()) return; // quick exit
+                _savedRevisions.AddRange(newRevisionsExceptLocked.Select(r => (r.Fid, r.Uid)));
+                locks.UnionWith(_savedRevisions);
+                db.AddRange(newRevisionsExceptLocked);
+            }
+        }
+
+        private void ReleaseAllLocks(HashSet<(Fid Fid, long Uid)> locks)
+        {
+            lock (locks) locks.ExceptWith(_savedRevisions);
         }
     }
 }

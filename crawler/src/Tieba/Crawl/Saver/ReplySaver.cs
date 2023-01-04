@@ -57,7 +57,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 r => new() {Time = r.Time, Pid = r.Pid});
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
-            AuthorRevisionSaver.SaveAuthorExpGrade(db, Posts.Values);
+            PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGrade(db, Posts.Values).Invoke;
 
             // we have to get the value of field p.CreatedAt from existing posts that is fetched from db
             // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
@@ -106,7 +106,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             return changeSet;
         }
 
-        public override void PostSaveHook()
+        protected override void PostSaveEventHandlerInternal()
         {
             lock (SignatureLocks) if (_savedSignatures.Any()) SignatureLocks.ExceptWith(_savedSignatures);
         }

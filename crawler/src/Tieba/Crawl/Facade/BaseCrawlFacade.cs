@@ -69,7 +69,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             }
             finally
             {
-                _saver.PostSaveHook();
+                _saver.OnPostSaveEvent();
                 Users.PostSaveHook();
             }
             return savedPosts;

@@ -6,15 +6,20 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
     {
         protected ConcurrentDictionary<ulong, TPost> Posts { get; }
         protected AuthorRevisionSaver AuthorRevisionSaver { get; }
-        public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
 
+        public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
-        public virtual void PostSaveHook() {}
+
+        protected virtual void PostSaveEventHandlerInternal() { }
+        protected event PostSaveEventHandler PostSaveEvent = () => {};
+        public void OnPostSaveEvent() => PostSaveEvent();
+        protected delegate void PostSaveEventHandler();
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger,
             ConcurrentDictionary<PostId, TPost> posts,
             AuthorRevisionSaver authorRevisionSaver) : base(logger)
         {
+            PostSaveEvent += PostSaveEventHandlerInternal;
             Posts = posts;
             AuthorRevisionSaver = authorRevisionSaver;
         }
@@ -40,7 +45,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
                 p => existingPostsKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
-            AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, Posts.Values);
+            PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, Posts.Values).Invoke;
 
             return new(postsBeforeSave, Posts.Values, postIdSelector);
         }
