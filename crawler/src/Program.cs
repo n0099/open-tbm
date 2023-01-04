@@ -6,7 +6,7 @@ namespace tbm.Crawler
 {
     internal class Program
     {
-        public static readonly List<string> RegisteredCrawlerLocks = new() {"thread", "threadLate", "reply", "subReply"};
+        public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
 
         private static async Task Main()
         {

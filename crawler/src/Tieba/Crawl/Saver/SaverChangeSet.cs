@@ -4,9 +4,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class SaverChangeSet<T> where T : class, IPost
     {
-        public readonly ReadOnlyCollection<(T Before, T After)> Existing;
-        public readonly ReadOnlyCollection<T> NewlyAdded;
-        public readonly ReadOnlyCollection<T> AllAfter;
+        public ReadOnlyCollection<(T Before, T After)> Existing { get; }
+        public ReadOnlyCollection<T> NewlyAdded { get; }
+        public ReadOnlyCollection<T> AllAfter { get; }
 
         public SaverChangeSet(ICollection<T> existingBefore, ICollection<T> existingAfterAndNewly, Func<T, PostId> postIdSelector)
         {

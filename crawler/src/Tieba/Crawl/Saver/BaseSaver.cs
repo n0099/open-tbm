@@ -35,6 +35,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
                 p => existingPostsKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
+
+            // prepare and reuse this timestamp for consistency in current saving
+            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
             SaveAuthorRevisions(db.Fid, db,
                 db.AuthorManagerTypeRevisions,
                 p => p.AuthorManagerType,
@@ -47,7 +50,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 },
                 tuple => new()
                 {
-                    Time = (Time)DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    Time = now,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
                     AuthorManagerType = tuple.Value
@@ -81,6 +84,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     (e, p) => (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p)))
                 .ToList();
             var newRevisionOfNewUsers = Posts.Values
+                // only required by IPost.AuthorManagerType since its nullable
+                // since we shouldn't store so many nulls for users that mostly have no AuthorManagerType
                 .Where(p => postAuthorFieldValueSelector(p) != null)
                 .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
                 .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p)));

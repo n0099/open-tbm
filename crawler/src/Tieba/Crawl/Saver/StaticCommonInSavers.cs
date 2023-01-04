@@ -2,14 +2,14 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class StaticCommonInSavers
     { // static field in this non generic class will be shared across all reified generic derived classes
+        protected static Dictionary<Type, Dictionary<string, PropertyInfo>> RevisionPropertiesCache { get; } = GetPropsKeyByType(
+            new() {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
         private static Dictionary<Type, Dictionary<string, PropertyInfo>> GetPropsKeyByType(List<Type> types) =>
             types.ToDictionary(t => t, t => t.GetProperties().ToDictionary(p => p.Name));
-        protected static readonly Dictionary<Type, Dictionary<string, PropertyInfo>> RevisionPropertiesCache = GetPropsKeyByType(new()
-            {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
 
         public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propName, object? oldValue, object? newValue);
         public record FieldChangeIgnoranceCallbackRecord(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);
-        protected static readonly FieldChangeIgnoranceCallbackRecord FieldChangeIgnorance = new(
+        protected static FieldChangeIgnoranceCallbackRecord FieldChangeIgnorance { get; } = new(
             Update: (whichPostType, propName, oldValue, newValue) =>
             {
                 if (whichPostType == typeof(TiebaUser))

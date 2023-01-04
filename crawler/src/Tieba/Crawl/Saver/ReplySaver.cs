@@ -1,3 +1,5 @@
+using LinqToDB;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class ReplySaver : BaseSaver<ReplyPost>
@@ -98,6 +100,26 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     }
                 }
             }
+
+            // prepare and reuse this timestamp for consistency in current saving
+            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+            SaveAuthorRevisions(db.Fid, db,
+                db.AuthorExpGradeRevisions,
+                p => p.AuthorExpGrade,
+                (a, b) => a != b,
+                r => new()
+                {
+                    Uid = r.Uid,
+                    Value = r.AuthorExpGrade,
+                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
+                },
+                tuple => new()
+                {
+                    Time = now,
+                    Fid = db.Fid,
+                    Uid = tuple.Uid,
+                    AuthorExpGrade = tuple.Value
+                });
 
             return changeSet;
         }
