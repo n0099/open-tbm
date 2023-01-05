@@ -57,13 +57,15 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 r => new() {Time = r.Time, Pid = r.Pid});
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
-            PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGrade(db, Posts.Values).Invoke;
+            PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
+            SaveReplySignatures(db, changeSet.AllAfter);
 
-            // we have to get the value of field p.CreatedAt from existing posts that is fetched from db
-            // since the value from Posts.Values.*.CreatedAt is 0 even after base.SavePosts() is invoked
-            // because of Posts.Values.* is not the same instances as changeSet.Existing.*.After
-            // so Posts.Values.* won't sync with new instances queried from db
-            var signatures = changeSet.AllAfter
+            return changeSet;
+        }
+
+        private void SaveReplySignatures(TbmDbContext db, IEnumerable<ReplyPost> repliesAfterTimestamping)
+        {
+            var signatures = repliesAfterTimestamping
                 .Where(r => r.SignatureId != null && r.Signature != null)
                 .DistinctBy(r => r.SignatureId)
                 .Select(r => new ReplySignature
@@ -72,38 +74,33 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     SignatureId = (uint)r.SignatureId!,
                     SignatureMd5 = MD5.HashData(r.Signature!),
                     Signature = r.Signature!,
-                    // we have to generate the value of two field below at here
-                    // since its value will be set by TbmDbContext.TimestampingEntities() which is invoked after current method had returned
-                    // CreatedAt will be the default 0 value when the post is newly added
-                    FirstSeen = r.CreatedAt != 0 ? r.CreatedAt : (Time)DateTimeOffset.Now.ToUnixTimeSeconds(),
+                    FirstSeen = r.CreatedAt,
                     LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
                 }).ToList();
-            if (signatures.Any())
+            if (!signatures.Any()) return;
+
+            var uniqueSignatures = signatures
+                .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
+            var existingSignatures = (from s in db.ReplySignatures.AsTracking()
+                where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
+                      && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
+                select s).ToList();
+            existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
+                    (existing, newInReply) => (existing, newInReply))
+                .ForEach(tuple => tuple.existing.LastSeen = tuple.newInReply.LastSeen);
+
+            lock (SignatureLocks)
             {
-                var uniqueSignatures = signatures
-                    .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
-                var existingSignatures = (from s in db.ReplySignatures.AsTracking()
-                    where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
-                          && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
-                    select s).ToList();
-                existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
-                        (existing, newInReply) => (existing, newInReply))
-                    .ForEach(tuple => tuple.existing.LastSeen = tuple.newInReply.LastSeen);
-                lock (SignatureLocks)
-                {
-                    var newSignaturesExceptLocked = signatures
-                        .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                        .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureMd5)).ToList();
-                    if (newSignaturesExceptLocked.Any())
-                    {
-                        _savedSignatures.AddRange(newSignaturesExceptLocked
-                            .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)));
-                        SignatureLocks.UnionWith(_savedSignatures);
-                        db.ReplySignatures.AddRange(newSignaturesExceptLocked);
-                    }
-                }
+                var newSignaturesExceptLocked = signatures
+                    .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
+                    .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureMd5)).ToList();
+                if (!newSignaturesExceptLocked.Any()) return;
+
+                _savedSignatures.AddRange(newSignaturesExceptLocked
+                    .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)));
+                SignatureLocks.UnionWith(_savedSignatures);
+                db.ReplySignatures.AddRange(newSignaturesExceptLocked);
             }
-            return changeSet;
         }
 
         protected override void PostSaveEventHandlerInternal()

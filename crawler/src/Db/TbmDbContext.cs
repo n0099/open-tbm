@@ -63,9 +63,12 @@ namespace tbm.Crawler.Db
         }
 #pragma warning restore IDE0058 // Expression value is never used
 
-        public void TimestampingEntities() =>
+        public void TimestampingEntities(IEnumerable<ITimestampingEntity>? entities = null) =>
             // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-            ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
+            (entities == null
+                ? ChangeTracker.Entries<ITimestampingEntity>() // will trigger ChangeTracker.DetectChanges()
+                : entities.Select(Entry)) // will not trigger ChangeTracker.DetectChanges()
+            .ForEach(e =>
             {
                 var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
@@ -73,10 +76,18 @@ namespace tbm.Crawler.Db
                 var updatedAtProp = e.Property(ie => ie.UpdatedAt);
                 var lastSeenProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeen) : null;
 
-                // mutates Entry.CurrentValue will always update Entry.IsModified
-                // while mutating Entry.Entity.Field requires invoking ChangeTracker.DetectChanges()
-                if (originalEntityState == EntityState.Added) createdAtProp.CurrentValue = now;
-
+                switch (originalEntityState)
+                {
+                    // mutates Entry.CurrentValue will always update Entry.IsModified
+                    // and value of corresponding field in entity class instance that ChangeTracker references to(aka Entry.Entity)
+                    // while mutating Entry.Entity.Field requires (im|ex)plicitly invoking DetectChanges() to update Entry.CurrentValue and IsModified
+                    case EntityState.Added:
+                        createdAtProp.CurrentValue = now;
+                        break;
+                    case EntityState.Modified when createdAtProp.CurrentValue != now:
+                        updatedAtProp.CurrentValue = now;
+                        break;
+                }
                 if (lastSeenProp != null)
                 {
                     lastSeenProp.CurrentValue = originalEntityState switch
@@ -86,9 +97,6 @@ namespace tbm.Crawler.Db
                         _ => lastSeenProp.CurrentValue
                     };
                 }
-
-                if (originalEntityState == EntityState.Modified && createdAtProp.CurrentValue != now)
-                    updatedAtProp.CurrentValue = now;
             });
 
         private class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory

@@ -49,9 +49,13 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
                 p => existingPostsKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
-            PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, Posts.Values).Invoke;
 
-            return new(postsBeforeSave, Posts.Values, postIdSelector);
+            // tracking entities in existingPostsKeyById will have fields updated by TbmDbContext.TimestampingEntities()
+            // this guarantee is currently required by ReplySaver.SaveReplySignatures() and AuthorRevisionSaver.SaveAuthorRevisions()
+            var existingPostsAfterTimestampingUnionNewlyAdded = existingPostsKeyById
+                .UnionBy(Posts, i => i.Key).Select(i => i.Value).ToList();
+            PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, existingPostsAfterTimestampingUnionNewlyAdded).Invoke;
+            return new(postsBeforeSave, existingPostsAfterTimestampingUnionNewlyAdded, postIdSelector);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 r => new() {Time = r.Time, Spid = r.Spid});
 
             db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => new SubReplyContent {Spid = sr.Spid, Content = sr.Content}));
-            PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGrade(db, Posts.Values).Invoke;
+            PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
 
             return changeSet;
         }

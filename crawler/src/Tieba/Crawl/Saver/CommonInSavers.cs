@@ -90,6 +90,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask;
                 return revision;
             }).OfType<TRevision>().ToList();
+            db.TimestampingEntities();
 
             if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
             var existingRevisions = db.Set<TRevision>()

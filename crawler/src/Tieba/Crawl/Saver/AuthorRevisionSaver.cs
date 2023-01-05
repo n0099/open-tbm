@@ -25,11 +25,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         }
 
         public Action SaveAuthorManagerTypeRevisions<TPost>
-            (TbmDbContext db, ICollection<TPost> posts) where TPost : IPost
+            (TbmDbContext db, ICollection<TPost> postsAfterTimestamping) where TPost : IPost
         {
-            // prepare and reuse this timestamp for consistency in current saving
-            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db, posts, AuthorManagerTypeLocks,
+            SaveAuthorRevisions(db, postsAfterTimestamping, AuthorManagerTypeLocks,
                 db.AuthorManagerTypeRevisions,
                 p => p.AuthorManagerType,
                 (a, b) => a != b,
@@ -41,7 +39,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 },
                 tuple => new()
                 {
-                    Time = now,
+                    Time = tuple.PostUpdatedAt,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
                     TriggeredBy = _triggeredByPostType,
@@ -50,13 +48,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             return () => ReleaseAllLocks(AuthorManagerTypeLocks);
         }
 
-        public Action SaveAuthorExpGrade<TPostWithAuthorExpGrade>
-            (TbmDbContext db, ICollection<TPostWithAuthorExpGrade> posts)
+        public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
+            (TbmDbContext db, ICollection<TPostWithAuthorExpGrade> postsAfterTimestamping)
             where TPostWithAuthorExpGrade : IPost, IPostWithAuthorExpGrade
         {
-            // prepare and reuse this timestamp for consistency in current saving
-            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
-            SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
+            SaveAuthorRevisions(db, postsAfterTimestamping, AuthorExpGradeLocks,
                 db.AuthorExpGradeRevisions,
                 p => p.AuthorExpGrade,
                 (a, b) => a != b,
@@ -68,7 +64,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 },
                 tuple => new()
                 {
-                    Time = now,
+                    Time = tuple.PostUpdatedAt,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
                     TriggeredBy = _triggeredByPostType,
@@ -84,7 +80,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Func<TPost, TValue?> postAuthorFieldValueSelector,
             Func<TValue?, TValue?, bool> isValueChangedPredicate,
             Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-            Func<(long Uid, TValue? Value), TRevision> revisionFactory)
+            Func<(long Uid, TValue? Value, Time PostUpdatedAt), TRevision> revisionFactory)
             where TRevision : AuthorRevision where TPost : IPost
         {
             var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
@@ -93,17 +89,17 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 .Where(e => e.Rank == 1)
                 .ToLinqToDB().ToList()
                 .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
-                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p)))
+                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p), PostUpdatedAt: p.UpdatedAt ?? p.CreatedAt))
                 .ToList();
             var newRevisionOfNewUsers = posts
                 // only required by IPost.AuthorManagerType since its nullable
                 // since we shouldn't store so many nulls for users that mostly have no AuthorManagerType
                 .Where(p => postAuthorFieldValueSelector(p) != null)
                 .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
-                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p)));
+                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), PostUpdatedAt: p.UpdatedAt ?? p.CreatedAt));
             var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
                 .Where(tuple => isValueChangedPredicate(tuple.existing, tuple.newInPost))
-                .Select(tuple => (tuple.Uid, Value: tuple.newInPost));
+                .Select(tuple => (tuple.Uid, Value: tuple.newInPost, tuple.PostUpdatedAt));
             lock (locks)
             {
                 var newRevisionsExceptLocked = newRevisionOfNewUsers

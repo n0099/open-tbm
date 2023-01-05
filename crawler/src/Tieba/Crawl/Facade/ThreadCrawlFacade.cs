@@ -26,8 +26,12 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 .Select(i => i.Value).ToList();
             if (!newLatestRepliers.Any()) return;
 
-            db.Users.AddRange(newLatestRepliers.IntersectBy(
-                Users.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid)), u => u.Uid));
+            var newLatestRepliersExceptLocked = newLatestRepliers
+                .IntersectBy(Users.AcquireUidLocksForSave(
+                    newLatestRepliers.Select(u => u.Uid)), u => u.Uid)
+                .ToList();
+            db.Users.AddRange(newLatestRepliersExceptLocked);
+            db.TimestampingEntities(newLatestRepliersExceptLocked);
         }
 
         public static TiebaUser LatestReplierFactory(long uid, string? name, string? displayName) =>
