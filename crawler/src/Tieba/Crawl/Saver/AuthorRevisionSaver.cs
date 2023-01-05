@@ -25,9 +25,36 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         }
 
         public Action SaveAuthorManagerTypeRevisions<TPost>
-            (TbmDbContext db, ICollection<TPost> postsAfterTimestamping) where TPost : IPost
+            (TbmDbContext db, List<TPost> posts) where TPost : IPost
         {
-            SaveAuthorRevisions(db, postsAfterTimestamping, AuthorManagerTypeLocks,
+            var existingRevisions = db.AuthorManagerTypeRevisions.AsNoTracking()
+                .Where(r =>  r.Fid == db.Fid && posts.Select(i => i.AuthorUid).Contains(r.Uid))
+                .Select(r => new
+                {
+                    r.Uid,
+                    r.TriggeredBy,
+                    r.AuthorManagerType,
+                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
+                })
+                .Where(e => e.Rank <= 2)
+                .ToLinqToDB().ToLookup(e => e.Uid);
+            // prevent store so many nulls for mostly users that haven't AuthorManagerType, .ToList() did a shallow copy
+            var filteredPosts = posts.Where(p => p.AuthorManagerType != null).ToList();
+            if (typeof(TPost) == typeof(ThreadPost)) // the AuthorManagerType of sticky thread will always be null
+                _ = (filteredPosts as List<ThreadPost>)?.RemoveAll(p => p.StickyType != null);
+            _ = filteredPosts.RemoveAll(p =>
+            {
+                if (!existingRevisions.Contains(p.AuthorUid) || existingRevisions[p.AuthorUid].Count() == 1) return false;
+                var first = existingRevisions[p.AuthorUid].First();
+                var last = existingRevisions[p.AuthorUid].Last();
+                var isFirstSame = p.AuthorManagerType == first.AuthorManagerType;
+                var isLastSame = p.AuthorManagerType == last.AuthorManagerType;
+                var isFirstNotSame = p.AuthorManagerType != first.AuthorManagerType;
+                var isLastNotSame = p.AuthorManagerType != last.AuthorManagerType;
+                // filter out posts that had encountered into a repeating pattern
+                return (isFirstSame && isLastNotSame) || (isLastSame && isFirstNotSame);
+            });
+            SaveAuthorRevisions(db, filteredPosts, AuthorManagerTypeLocks,
                 db.AuthorManagerTypeRevisions,
                 p => p.AuthorManagerType,
                 (a, b) => a != b,
@@ -39,7 +66,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 },
                 tuple => new()
                 {
-                    Time = tuple.PostUpdatedAt,
+                    Time = tuple.Time,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
                     TriggeredBy = _triggeredByPostType,
@@ -49,13 +76,17 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         }
 
         public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
-            (TbmDbContext db, ICollection<TPostWithAuthorExpGrade> postsAfterTimestamping)
+            (TbmDbContext db, ICollection<TPostWithAuthorExpGrade> posts)
             where TPostWithAuthorExpGrade : IPost, IPostWithAuthorExpGrade
         {
-            SaveAuthorRevisions(db, postsAfterTimestamping, AuthorExpGradeLocks,
+            SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
                 db.AuthorExpGradeRevisions,
                 p => p.AuthorExpGrade,
-                (a, b) => a != b,
+                (old, @new) =>
+                { // randomly protoBuf default value 0 in reply and sub reply response
+                    if (_triggeredByPostType is "reply" or "subReply" && @new == 0) return false;
+                    return old != @new;
+                },
                 r => new()
                 {
                     Uid = r.Uid,
@@ -64,7 +95,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 },
                 tuple => new()
                 {
-                    Time = tuple.PostUpdatedAt,
+                    Time = tuple.Time,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
                     TriggeredBy = _triggeredByPostType,
@@ -80,26 +111,24 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Func<TPost, TValue?> postAuthorFieldValueSelector,
             Func<TValue?, TValue?, bool> isValueChangedPredicate,
             Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-            Func<(long Uid, TValue? Value, Time PostUpdatedAt), TRevision> revisionFactory)
+            Func<(long Uid, TValue? Value, Time Time), TRevision> revisionFactory)
             where TRevision : AuthorRevision where TPost : IPost
         {
+            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
             var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
-                .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Contains(e.Uid))
+                .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
                 .Select(latestRevisionProjectionFactory)
                 .Where(e => e.Rank == 1)
                 .ToLinqToDB().ToList()
                 .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
-                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p), PostUpdatedAt: p.UpdatedAt ?? p.CreatedAt))
+                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p), Time: now))
                 .ToList();
             var newRevisionOfNewUsers = posts
-                // only required by IPost.AuthorManagerType since its nullable
-                // since we shouldn't store so many nulls for users that mostly have no AuthorManagerType
-                .Where(p => postAuthorFieldValueSelector(p) != null)
                 .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
-                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), PostUpdatedAt: p.UpdatedAt ?? p.CreatedAt));
+                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), Time: now));
             var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
                 .Where(tuple => isValueChangedPredicate(tuple.existing, tuple.newInPost))
-                .Select(tuple => (tuple.Uid, Value: tuple.newInPost, tuple.PostUpdatedAt));
+                .Select(tuple => (tuple.Uid, Value: tuple.newInPost, tuple.Time));
             lock (locks)
             {
                 var newRevisionsExceptLocked = newRevisionOfNewUsers

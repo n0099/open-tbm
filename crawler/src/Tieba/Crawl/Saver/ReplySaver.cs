@@ -62,9 +62,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             return changeSet;
         }
 
-        private void SaveReplySignatures(TbmDbContext db, IEnumerable<ReplyPost> repliesAfterTimestamping)
+        private void SaveReplySignatures(TbmDbContext db, IEnumerable<ReplyPost> replies)
         {
-            var signatures = repliesAfterTimestamping
+            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+            var signatures = replies
                 .Where(r => r.SignatureId != null && r.Signature != null)
                 .DistinctBy(r => r.SignatureId)
                 .Select(r => new ReplySignature
@@ -73,8 +74,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     SignatureId = (uint)r.SignatureId!,
                     SignatureMd5 = MD5.HashData(r.Signature!),
                     Signature = r.Signature!,
-                    FirstSeen = r.CreatedAt,
-                    LastSeen = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
+                    FirstSeen = now,
+                    LastSeen = now
                 }).ToList();
             if (!signatures.Any()) return;
 
