@@ -10,8 +10,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         ) : base(logger, dbContextFactory, crawler.Invoke, parser, saver, users, requesterTcs, locks, fid, forumName) { }
 
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
-        {
-            // the second response with flag is as same as the first one so just skip it
+        { // the second response with flag is as same as the first one so just skip it
             if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
             var data = response.Data;
 

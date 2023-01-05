@@ -59,8 +59,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     // so we should ignore its revision update for all fields
                     // ignore entire record is not possible via FieldChangeIgnorance.Revision() since it can only determine one field at the time
                     if (entryIsUser && pName == nameof(TiebaUser.Portrait) && p.OriginalValue is "")
-                    {
-                        // invokes OriginalValues.ToObject() to get a new instance since postOrUserInTracking is reference to the changed one
+                    { // invokes OriginalValues.ToObject() to get a new instance since postOrUserInTracking is reference to the changed one
                         var user = (TiebaUser)entry.OriginalValues.ToObject();
                         // create another user instance with only fields of latest replier filled
                         var latestReplier = ThreadCrawlFacade.LatestReplierFactory(user.Uid, user.Name, user.DisplayName);

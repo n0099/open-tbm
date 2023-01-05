@@ -4,8 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propName, oldValue, newValue) => propName switch
-            {
-                // Icon in response of reply might be null even if the user haven't change his icon info
+            { // Icon in response of reply might be null even if the user haven't change his icon info
                 nameof(TiebaUser.Icon) when newValue is null => true,
                 // author gender in reply response will be 0 when users is embed in reply
                 // but in thread or sub reply responses it won't be 0 even their users are also embedded

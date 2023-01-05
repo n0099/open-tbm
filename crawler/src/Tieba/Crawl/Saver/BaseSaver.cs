@@ -41,21 +41,21 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             if (dbSet == null) throw new ArgumentException(
                 $"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
 
-            var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
+            var existingKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
             // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
-            var postsBeforeSave = existingPostsKeyById.Select(i => (TPost)i.Value.Clone()).ToList();
+            var existingBeforeMerge = existingKeyById.Select(i => (TPost)i.Value.Clone()).ToList();
 
             SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,
-                Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
-                p => existingPostsKeyById[postIdSelector(p)],
+                Posts.Values.ToLookup(p => existingKeyById.ContainsKey(postIdSelector(p))),
+                p => existingKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
 
             // tracking entities in existingPostsKeyById will have fields updated by TbmDbContext.TimestampingEntities()
             // this guarantee is currently required by ReplySaver.SaveReplySignatures() and AuthorRevisionSaver.SaveAuthorRevisions()
-            var existingPostsAfterTimestampingUnionNewlyAdded = existingPostsKeyById
+            var existingAfterTimestampingUnionNewlyAdded = existingKeyById
                 .UnionBy(Posts, i => i.Key).Select(i => i.Value).ToList();
-            PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, existingPostsAfterTimestampingUnionNewlyAdded).Invoke;
-            return new(postsBeforeSave, existingPostsAfterTimestampingUnionNewlyAdded, postIdSelector);
+            PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, existingAfterTimestampingUnionNewlyAdded).Invoke;
+            return new(existingBeforeMerge, existingAfterTimestampingUnionNewlyAdded, postIdSelector);
         }
     }
 }

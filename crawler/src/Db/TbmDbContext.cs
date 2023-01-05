@@ -77,8 +77,7 @@ namespace tbm.Crawler.Db
                 var lastSeenProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeen) : null;
 
                 switch (originalEntityState)
-                {
-                    // mutates Entry.CurrentValue will always update Entry.IsModified
+                { // mutates Entry.CurrentValue will always update Entry.IsModified
                     // and value of corresponding field in entity class instance that ChangeTracker references to(aka Entry.Entity)
                     // while mutating Entry.Entity.Field requires (im|ex)plicitly invoking DetectChanges() to update Entry.CurrentValue and IsModified
                     case EntityState.Added:

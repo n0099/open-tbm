@@ -15,8 +15,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 if (whichPostType == typeof(TiebaUser))
                 {
                     switch (propName)
-                    {
-                        // possible randomly response with null
+                    { // possible randomly response with null
                         case nameof(TiebaUser.IpGeolocation) when newValue is null:
                         // possible clock drift across multiple response from tieba api, they should sync their servers with NTP
                         /* following sql can track these drift
@@ -37,8 +36,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propName)
-                    {
-                        // will be update by ThreadLateCrawlerAndSaver
+                    { // will be update by ThreadLateCrawlerAndSaver
                         case nameof(ThreadPost.AuthorPhoneType):
                         // prevent overwrite existing values of field liker_id which is saved by legacy crawler, and Zan itself is deprecated by tieba so it shouldn't get updated
                         case nameof(ThreadPost.Zan):
@@ -63,15 +61,13 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 return false;
             },
             Revision: (whichPostType, propName, oldValue, _) =>
-            {
-                // ignore revision that figures update existing old users that don't have ip geolocation
+            { // ignore revision that figures update existing old users that don't have ip geolocation
                 if (whichPostType == typeof(TiebaUser)
                     && propName == nameof(TiebaUser.IpGeolocation) && oldValue is null) return true;
                 if (whichPostType == typeof(ThreadPost))
                 {
                     switch (propName)
-                    {
-                        // empty string from response has been updated by ReplyCrawlFacade.PostParseHook()
+                    { // empty string from response has been updated by ReplyCrawlFacade.PostParseHook()
                         case nameof(ThreadPost.Title) when oldValue is "":
                         // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
                         case nameof(ThreadPost.LatestReplierUid) when oldValue is null:

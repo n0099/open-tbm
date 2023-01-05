@@ -14,8 +14,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 _ => false
             },
             Revision: (_, propName, oldValue, newValue) => propName switch
-            {
-                // author gender in reply response will be 0 when users is embed in reply
+            { // author gender in reply response will be 0 when users is embed in reply
                 // but in thread or sub reply responses it won't be 0 even their users are also embedded
                 nameof(TiebaUser.Gender) when (ushort?)oldValue is 0 && (ushort?)newValue is not 0 => true,
                 _ => false
