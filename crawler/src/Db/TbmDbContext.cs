@@ -49,13 +49,15 @@ namespace tbm.Crawler.Db
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             var connectionStr = _config.GetConnectionString("Main");
-            options.UseMySql(connectionStr, ServerVersion.AutoDetect(connectionStr))
+            options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr))
                 .ReplaceService<IModelCacheKeyFactory, ModelWithFidCacheKeyFactory>()
                 .UseCamelCaseNamingConvention();
 
             var dbSettings = _config.GetSection("DbSettings");
-            options.UseLoggerFactory(LoggerFactory.Create(builder => builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})
-                .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(dbSettings.GetValue("LogLevel", "Trace")).Ordinal)));
+            options.UseLoggerFactory(LoggerFactory.Create(builder =>
+                builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})
+                    .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(
+                        dbSettings.GetValue("LogLevel", "Trace")).Ordinal)));
             if (dbSettings.GetValue("EnableDetailedErrors", false)) options.EnableDetailedErrors();
             if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
         }

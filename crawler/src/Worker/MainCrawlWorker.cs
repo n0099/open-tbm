@@ -108,9 +108,9 @@ namespace tbm.Crawler.Worker
             var shouldCrawlReplyTid = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
                 threads.NewlyAdded.ForEach(t => shouldCrawl.Add(t.Tid));
-                threads.Existing.ForEach(beforeAndAfter =>
+                threads.Existing.ForEach(tuple =>
                 {
-                    var (before, after) = beforeAndAfter;
+                    var (before, after) = tuple;
                     if (before.ReplyCount != after.ReplyCount
                         || before.LatestReplyTime != after.LatestReplyTime
                         || before.LatestReplierUid != after.LatestReplierUid)
@@ -146,7 +146,7 @@ namespace tbm.Crawler.Worker
                     if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
 
                     var existingEntity = db.ThreadMissingFirstReplies.AsTracking().SingleOrDefault(e => e.Tid == tid);
-                    if (existingEntity == null) _ = db.Add(newEntity);
+                    if (existingEntity == null) _ = db.ThreadMissingFirstReplies.Add(newEntity);
                     else
                     {
                         if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
@@ -164,23 +164,23 @@ namespace tbm.Crawler.Worker
 
         public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope)
         {
-            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
+            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
-                var (tid, replies) = tidAndReplies;
+                var (tid, replies) = pair;
                 replies.NewlyAdded.ForEach(r =>
                 {
                     if (r.SubReplyCount != null) _ = shouldCrawl.Add((tid, r.Pid));
                 });
-                replies.Existing.ForEach(beforeAndAfter =>
+                replies.Existing.ForEach(tuple =>
                 {
-                    var (before, after) = beforeAndAfter;
+                    var (before, after) = tuple;
                     if (after.SubReplyCount != null && before.SubReplyCount != after.SubReplyCount) _ = shouldCrawl.Add((tid, before.Pid));
                 });
                 return shouldCrawl;
             });
-            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>
+            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tuple =>
             {
-                var (tid, pid) = tidAndPid;
+                var (tid, pid) = tuple;
                 await using var scope1 = scope.BeginLifetimeScope();
                 _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveCrawled();
             }));

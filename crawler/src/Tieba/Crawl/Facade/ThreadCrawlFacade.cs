@@ -26,7 +26,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 .Select(i => i.Value).ToList();
             if (!newLatestRepliers.Any()) return;
 
-            db.AddRange(newLatestRepliers.IntersectBy(
+            db.Users.AddRange(newLatestRepliers.IntersectBy(
                 Users.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid)), u => u.Uid));
         }
 

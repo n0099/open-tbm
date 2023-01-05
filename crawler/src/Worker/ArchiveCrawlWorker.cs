@@ -149,9 +149,9 @@ namespace tbm.Crawler.Worker
 
         private async Task<int> CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid)
         {
-            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, tidAndReplies) =>
+            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
-                var (tid, replies) = tidAndReplies;
+                var (tid, replies) = pair;
                 // some rare reply will have SubReplyCount=0, but contains sub reply and can be revealed by requesting
                 // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
                 // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:
@@ -161,9 +161,9 @@ namespace tbm.Crawler.Worker
                 return shouldCrawl;
             });
             var savedSubReplyCount = 0;
-            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tidAndPid =>
+            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tuple =>
             {
-                var (tid, pid) = tidAndPid;
+                var (tid, pid) = tuple;
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
                     .CrawlPageRange(1)).SaveCrawled();

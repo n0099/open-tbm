@@ -114,7 +114,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 if (!newRevisionsExceptLocked.Any()) return; // quick exit
                 _savedRevisions.AddRange(newRevisionsExceptLocked.Select(r => (r.Fid, r.Uid)));
                 locks.UnionWith(_savedRevisions);
-                db.AddRange(newRevisionsExceptLocked);
+                db.Set<TRevision>().AddRange(newRevisionsExceptLocked);
             }
         }
 

@@ -53,13 +53,13 @@ namespace tbm.Crawler
                         builder.RegisterType<ThreadArchiveCrawler>();
                         builder.RegisterType<InsertAllPostContentsIntoSonicWorker.SonicPusher>();
 
-                        var baseClassOfClassesToBeRegister = new List<Type>
+                        var baseClassOfClassesToBeRegistered = new List<Type>
                         {
                             typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
                             typeof(BaseParser<,>), typeof(BaseSaver<>)
                         };
                         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                            .Where(t => baseClassOfClassesToBeRegister.Any(c => c.IsSubTypeOfRawGeneric(t)))
+                            .Where(t => baseClassOfClassesToBeRegistered.Any(c => c.IsSubTypeOfRawGeneric(t)))
                             .AsSelf();
                     })
                     .Build();

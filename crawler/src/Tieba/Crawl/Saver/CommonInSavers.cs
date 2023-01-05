@@ -8,7 +8,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected CommonInSavers(ILogger<CommonInSavers<TSaver>> logger) => _logger = logger;
 
-        protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => null!;
+        protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => throw new NotImplementedException();
 
         protected void SavePostsOrUsers<TPostOrUser, TRevision>(
             TbmDbContext db,
@@ -26,8 +26,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             {
                 var postOrUserInTracking = existingSelector(newPostOrUser);
                 var entry = db.Entry(postOrUserInTracking);
-                entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
 
+                entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
                 // rollback changes on the fields of ITimestampingEntity with the default value 0 or null
                 // this will also affects the entity instance which postOrUserInTracking references to it
                 entry.Properties.Where(p => p.Metadata.Name
@@ -97,7 +97,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 .Where(existingRevisionPredicate(newRevisions))
                 .Select(revisionKeySelector)
                 .ToList();
-            db.AddRange(newRevisions
+            db.Set<TRevision>().AddRange(newRevisions
                 .Where(revision => !existingRevisions.Any(existing =>
                     existing.Time == revision.Time
                     && revisionPostOrUserIdSelector(existing) == revisionPostOrUserIdSelector(revision))));
