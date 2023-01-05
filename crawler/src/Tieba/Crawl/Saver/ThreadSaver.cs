@@ -39,8 +39,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public ThreadSaver(ILogger<ThreadSaver> logger,
             ConcurrentDictionary<Tid, ThreadPost> posts,
-            AuthorRevisionSaver authorRevisionSaver
-        ) : base(logger, posts, authorRevisionSaver) { }
+            AuthorRevisionSaver.New authorRevisionSaverFactory
+        ) : base(logger, posts, authorRevisionSaverFactory, "thread") { }
 
         public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
             t => t.Tid, r => (long)r.Tid,

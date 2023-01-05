@@ -45,8 +45,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public ReplySaver(ILogger<ReplySaver> logger,
             ConcurrentDictionary<PostId, ReplyPost> posts,
-            AuthorRevisionSaver authorRevisionSaver
-        ) : base(logger, posts, authorRevisionSaver) { }
+            AuthorRevisionSaver.New authorRevisionSaverFactory
+        ) : base(logger, posts, authorRevisionSaverFactory, "reply") { }
 
         public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
         {

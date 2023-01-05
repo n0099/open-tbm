@@ -59,7 +59,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
-            Users.SaveUsers(db, _saver);
+            Users.SaveUsers(db, _saver.PostType, _saver.TiebaUserFieldChangeIgnorance);
             BeforeCommitSaveHook(db);
             try
             {

@@ -15,12 +15,6 @@ namespace tbm.Crawler.Tieba.Crawl
             {nameof(TiebaUser.Icon),               1 << 5},
             {nameof(TiebaUser.IpGeolocation),      1 << 6}
         };
-        private static readonly Dictionary<Type, string> TriggeredByPostSaverMap = new()
-        {
-            {typeof(ThreadSaver), "thread"},
-            {typeof(ReplySaver), "reply"},
-            {typeof(SubReplySaver), "subReply"}
-        };
         private static readonly Regex PortraitExtractingRegex =
             new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly HashSet<Uid> UserIdLocks = new();
@@ -74,7 +68,8 @@ namespace tbm.Crawler.Tieba.Crawl
                 }
             }).OfType<TiebaUser>().ForEach(u => _users[u.Uid] = u);
 
-        public void SaveUsers<TPost>(TbmDbContext db, BaseSaver<TPost> postSaver) where TPost : class, IPost
+        public void SaveUsers(TbmDbContext db, string postType,
+            FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance)
         {
             if (_users.IsEmpty) return;
             lock (UserIdLocks)
@@ -87,12 +82,12 @@ namespace tbm.Crawler.Tieba.Crawl
                 var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                     where usersExceptLocked.Keys.Contains(user.Uid)
                     select user).ToDictionary(u => u.Uid);
-                SavePostsOrUsers(db, usersExceptLocked, postSaver.TiebaUserFieldChangeIgnorance,
+                SavePostsOrUsers(db, usersExceptLocked, tiebaUserFieldChangeIgnorance,
                     u => new UserRevision
                     {
                         Time = u.UpdatedAt ?? u.CreatedAt,
                         Uid = u.Uid,
-                        TriggeredBy = TriggeredByPostSaverMap[postSaver.GetType()]
+                        TriggeredBy = postType
                     },
                     u => existingUsersKeyByUid.ContainsKey(u.Uid),
                     u => existingUsersKeyByUid[u.Uid],

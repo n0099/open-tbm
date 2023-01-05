@@ -11,6 +11,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         private static readonly HashSet<(Fid Fid, long Uid)> AuthorManagerTypeLocks = new();
         private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = new();
         private readonly List<(Fid Fid, long Uid)> _savedRevisions = new();
+        private readonly string _triggeredByPostType;
+
+        public delegate AuthorRevisionSaver New(string triggeredByPostType);
+
+        public AuthorRevisionSaver(string triggeredByPostType) => _triggeredByPostType = triggeredByPostType;
 
         private class LatestAuthorRevisionProjection<TValue>
         {
@@ -39,6 +44,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     Time = now,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
+                    TriggeredBy = _triggeredByPostType,
                     AuthorManagerType = tuple.Value
                 });
             return () => ReleaseAllLocks(AuthorManagerTypeLocks);
@@ -65,6 +71,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     Time = now,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
+                    TriggeredBy = _triggeredByPostType,
                     AuthorExpGrade = tuple.Value
                 });
             return () => ReleaseAllLocks(AuthorExpGradeLocks);

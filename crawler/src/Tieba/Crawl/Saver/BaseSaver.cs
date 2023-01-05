@@ -4,10 +4,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>> where TPost : class, IPost
     {
+        public string PostType { get; }
         protected ConcurrentDictionary<ulong, TPost> Posts { get; }
         protected AuthorRevisionSaver AuthorRevisionSaver { get; }
+        public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => throw new NotImplementedException();
 
-        public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => null!;
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
 
         protected virtual void PostSaveEventHandlerInternal() { }
@@ -17,11 +18,14 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger,
             ConcurrentDictionary<PostId, TPost> posts,
-            AuthorRevisionSaver authorRevisionSaver) : base(logger)
+            AuthorRevisionSaver.New authorRevisionSaverFactory,
+            string postType
+        ) : base(logger)
         {
-            PostSaveEvent += PostSaveEventHandlerInternal;
             Posts = posts;
-            AuthorRevisionSaver = authorRevisionSaver;
+            AuthorRevisionSaver = authorRevisionSaverFactory(postType);
+            PostType = postType;
+            PostSaveEvent += PostSaveEventHandlerInternal;
         }
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
