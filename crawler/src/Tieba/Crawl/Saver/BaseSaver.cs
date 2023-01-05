@@ -45,8 +45,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
             var postsBeforeSave = existingPostsKeyById.Select(i => (TPost)i.Value.Clone()).ToList();
 
-            SavePostsOrUsers(db, Posts, TiebaUserFieldChangeIgnorance, revisionFactory,
-                p => existingPostsKeyById.ContainsKey(postIdSelector(p)),
+            SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,
+                Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
                 p => existingPostsKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
             PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, Posts.Values).Invoke;

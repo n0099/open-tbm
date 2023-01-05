@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db
 {
-    public class TiebaUser : IEntityWithTimestampFields, IEquatable<TiebaUser>
+    public class TiebaUser : ITimestampingEntity, IEquatable<TiebaUser>
     {
         [Key] public long Uid { get; set; }
         public string? Name { get; set; }

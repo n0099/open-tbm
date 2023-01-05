@@ -10,30 +10,29 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => null!;
 
-        protected void SavePostsOrUsers<TPostIdOrUid, TPostOrUser, TRevision>(
+        protected void SavePostsOrUsers<TPostOrUser, TRevision>(
             TbmDbContext db,
-            IDictionary<TPostIdOrUid, TPostOrUser> postsOrUsers,
             FieldChangeIgnoranceCallbackRecord userFieldChangeIgnorance,
             Func<TPostOrUser, TRevision> revisionFactory,
-            Func<TPostOrUser, bool> isExistPredicate,
+            ILookup<bool, TPostOrUser> existingOrNewLookup,
             Func<TPostOrUser, TPostOrUser> existingSelector,
             Func<TRevision, long> revisionPostOrUserIdSelector,
             Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
             Expression<Func<TRevision, TRevision>> revisionKeySelector)
             where TPostOrUser : class where TRevision : BaseRevision, new()
         {
-            var existingOrNew = postsOrUsers.Values.ToLookup(isExistPredicate);
-            db.Set<TPostOrUser>().AddRange(existingOrNew[false]); // newly added
-
-            var newRevisions = existingOrNew[true].Select(newPostOrUser =>
+            db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
+            var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
             {
                 var postOrUserInTracking = existingSelector(newPostOrUser);
                 var entry = db.Entry(postOrUserInTracking);
                 entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
 
-                // rollback writes on the fields of IEntityWithTimestampFields with the default value 0, this will also affects postOrUserInTracking
-                entry.Properties.Where(p => p.Metadata.Name is nameof(IEntityWithTimestampFields.CreatedAt)
-                    or nameof(IEntityWithTimestampFields.UpdatedAt)).ForEach(p => p.IsModified = false);
+                // rollback changes on the fields of ITimestampingEntity with the default value 0 or null
+                // this will also affects the entity instance which postOrUserInTracking references to it
+                entry.Properties.Where(p => p.Metadata.Name
+                        is nameof(ITimestampingEntity.CreatedAt) or nameof(ITimestampingEntity.UpdatedAt))
+                    .Where(p => p.IsModified).ForEach(p => p.IsModified = false);
 
                 var revision = default(TRevision);
                 int? revisionNullFieldsBitMask = null;
@@ -43,8 +42,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 {
                     var pName = p.Metadata.Name;
                     if (!p.IsModified || pName is nameof(IPost.LastSeen)
-                            or nameof(IEntityWithTimestampFields.CreatedAt)
-                            or nameof(IEntityWithTimestampFields.UpdatedAt)) continue;
+                            or nameof(ITimestampingEntity.CreatedAt)
+                            or nameof(ITimestampingEntity.UpdatedAt)) continue;
 
                     if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
                         || (entryIsUser && userFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))

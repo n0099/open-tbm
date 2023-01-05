@@ -63,7 +63,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             BeforeCommitSaveHook(db);
             try
             {
-                _ = db.SaveChangesWithTimestamp();
+                db.TimestampingEntities();
+                _ = db.SaveChanges();
                 transaction.Commit();
                 if (savedPosts != null) PostCommitSaveHook(savedPosts);
             }

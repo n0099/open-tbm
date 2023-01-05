@@ -61,9 +61,9 @@ namespace tbm.Crawler.Db
         }
 #pragma warning restore IDE0058 // Expression value is never used
 
-        public int SaveChangesWithTimestamp()
-        { // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-            ChangeTracker.Entries<IEntityWithTimestampFields>().ForEach(e =>
+        public void TimestampingEntities() =>
+            // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
+            ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
             {
                 var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
@@ -88,8 +88,6 @@ namespace tbm.Crawler.Db
                 if (originalEntityState == EntityState.Modified && createdAtProp.CurrentValue != now)
                     updatedAtProp.CurrentValue = now;
             });
-            return base.SaveChanges();
-        }
 
         private class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
         { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590

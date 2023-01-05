@@ -82,14 +82,14 @@ namespace tbm.Crawler.Tieba.Crawl
                 var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                     where usersExceptLocked.Keys.Contains(user.Uid)
                     select user).ToDictionary(u => u.Uid);
-                SavePostsOrUsers(db, usersExceptLocked, tiebaUserFieldChangeIgnorance,
+                SavePostsOrUsers(db, tiebaUserFieldChangeIgnorance,
                     u => new UserRevision
                     {
                         Time = u.UpdatedAt ?? u.CreatedAt,
                         Uid = u.Uid,
                         TriggeredBy = postType
                     },
-                    u => existingUsersKeyByUid.ContainsKey(u.Uid),
+                    usersExceptLocked.Values.ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
                     u => existingUsersKeyByUid[u.Uid],
                     r => r.Uid,
                     newRevisions => existing => newRevisions.Select(r => r.Uid).Contains(existing.Uid),
