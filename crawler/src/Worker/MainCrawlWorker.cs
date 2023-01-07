@@ -11,22 +11,15 @@ namespace tbm.Crawler.Worker
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
 
         public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
-            ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks) : base(config)
+            ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks) : base(logger, config)
         {
             _logger = logger;
             _scope0 = scope0;
-            _ = SyncCrawlIntervalWithConfig();
             // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
             _ = locks["thread"];
             _ = locks["threadLate"];
             _ = locks["reply"];
             _ = locks["subReply"];
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            Timer.Elapsed += async (_, _) => await CrawlThenSave();
-            await CrawlThenSave();
         }
 
         private record FidAndName(Fid Fid, string Name);
@@ -45,17 +38,10 @@ namespace tbm.Crawler.Worker
             }
         }
 
-        private async Task CrawlThenSave()
+        protected override async Task DoWork(CancellationToken stoppingToken)
         {
-            try
-            {
-                await foreach (var (fid, forumName) in ForumGenerator())
-                    await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid), fid), fid);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Exception");
-            }
+            await foreach (var (fid, forumName) in ForumGenerator())
+                await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid), fid), fid);
         }
 
         private async Task<SavedThreadsList> CrawlThreads(string forumName, Fid fid)
