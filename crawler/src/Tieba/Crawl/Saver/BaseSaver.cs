@@ -54,7 +54,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             // this guarantee is currently required by nowhere
             var existingAfterTimestampingUnionNewlyAdded = existingKeyById
                 .UnionBy(Posts, i => i.Key).Select(i => i.Value).ToList();
-            PostSaveEvent += AuthorRevisionSaver.SaveAuthorManagerTypeRevisions(db, existingAfterTimestampingUnionNewlyAdded).Invoke;
             return new(existingBeforeMerge, existingAfterTimestampingUnionNewlyAdded, postIdSelector);
         }
     }

@@ -8,7 +8,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
     {
         // locks only using fid and uid field values from AuthorRevision
         // this prevents inserting multiple entities with similar time and other fields with the same values
-        private static readonly HashSet<(Fid Fid, long Uid)> AuthorManagerTypeLocks = new();
         private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = new();
         private readonly List<(Fid Fid, long Uid)> _savedRevisions = new();
         private readonly string _triggeredByPostType;
@@ -22,57 +21,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             public long Uid { get; init; }
             public TValue? Value { get; init; }
             public long Rank { get; init; }
-        }
-
-        public Action SaveAuthorManagerTypeRevisions<TPost>
-            (TbmDbContext db, List<TPost> posts) where TPost : IPost
-        {
-            var existingRevisions = db.AuthorManagerTypeRevisions.AsNoTracking()
-                .Where(r =>  r.Fid == db.Fid && posts.Select(i => i.AuthorUid).Contains(r.Uid))
-                .Select(r => new
-                {
-                    r.Uid,
-                    r.TriggeredBy,
-                    r.AuthorManagerType,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
-                })
-                .Where(e => e.Rank <= 2)
-                .ToLinqToDB().ToLookup(e => e.Uid);
-            // prevent store so many nulls for mostly users that haven't AuthorManagerType, .ToList() did a shallow copy
-            var filteredPosts = posts.Where(p => p.AuthorManagerType != null).ToList();
-            if (typeof(TPost) == typeof(ThreadPost)) // the AuthorManagerType of sticky thread will always be null
-                _ = (filteredPosts as List<ThreadPost>)?.RemoveAll(p => p.StickyType != null);
-            _ = filteredPosts.RemoveAll(p =>
-            {
-                if (!existingRevisions.Contains(p.AuthorUid) || existingRevisions[p.AuthorUid].Count() == 1) return false;
-                var first = existingRevisions[p.AuthorUid].First();
-                var last = existingRevisions[p.AuthorUid].Last();
-                var isFirstSame = p.AuthorManagerType == first.AuthorManagerType;
-                var isLastSame = p.AuthorManagerType == last.AuthorManagerType;
-                var isFirstNotSame = p.AuthorManagerType != first.AuthorManagerType;
-                var isLastNotSame = p.AuthorManagerType != last.AuthorManagerType;
-                // filter out posts that had encountered into a repeating pattern
-                return (isFirstSame && isLastNotSame) || (isLastSame && isFirstNotSame);
-            });
-            SaveAuthorRevisions(db, filteredPosts, AuthorManagerTypeLocks,
-                db.AuthorManagerTypeRevisions,
-                p => p.AuthorManagerType,
-                (a, b) => a != b,
-                r => new()
-                {
-                    Uid = r.Uid,
-                    Value = r.AuthorManagerType,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
-                },
-                tuple => new()
-                {
-                    Time = tuple.Time,
-                    Fid = db.Fid,
-                    Uid = tuple.Uid,
-                    TriggeredBy = _triggeredByPostType,
-                    AuthorManagerType = tuple.Value
-                });
-            return () => ReleaseAllLocks(AuthorManagerTypeLocks);
         }
 
         public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>

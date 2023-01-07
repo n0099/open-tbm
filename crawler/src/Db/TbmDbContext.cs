@@ -8,7 +8,7 @@ namespace tbm.Crawler.Db
         public Fid Fid { get; }
         public DbSet<TiebaUser> Users => Set<TiebaUser>();
         public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
-        public DbSet<AuthorManagerTypeRevision> AuthorManagerTypeRevisions => Set<AuthorManagerTypeRevision>();
+        public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();
         public DbSet<ThreadPost> Threads => Set<ThreadPost>();
         public DbSet<ThreadMissingFirstReply> ThreadMissingFirstReplies => Set<ThreadMissingFirstReply>();
         public DbSet<ReplyPost> Replies => Set<ReplyPost>();
@@ -42,7 +42,7 @@ namespace tbm.Crawler.Db
             b.Entity<SubReplyRevision>().ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.Time});
             b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.Time});
             b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.Time});
-            b.Entity<AuthorManagerTypeRevision>().ToTable("tbmc_revision_authorManagerType").HasKey(e => new {e.Fid, e.Uid, e.Time});
+            b.Entity<ForumModeratorRevision>().ToTable("tbmc_revision_forumModerator").HasKey(e => new {e.Fid, e.Uid, e.Time});
             b.Entity<Forum>().ToTable("tbm_forum");
         }
 
