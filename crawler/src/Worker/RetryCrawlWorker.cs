@@ -35,7 +35,6 @@ namespace tbm.Crawler.Worker
                     if (lockType == "threadLate")
                     {
                         await using var scope1 = _scope0.BeginLifetimeScope();
-                        var db = scope1.Resolve<TbmDbContext.New>()(0);
                         foreach (var tidGroupByFid in failed.Keys.GroupBy(i => i.Fid, i => i.Tid))
                         {
                             var fid = tidGroupByFid.Key;

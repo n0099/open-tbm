@@ -5,7 +5,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
     {
         protected abstract PostId PostIdSelector(TPost post);
         protected abstract TPost Convert(TPostProtoBuf inPost);
-        protected abstract IEnumerable<TPost> ParsePostsInternal(IEnumerable<TPostProtoBuf> inPosts, List<User?> outUsers);
+        protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<User?> outUsers);
         protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag,
             IEnumerable<TPostProtoBuf> inPosts, ConcurrentDictionary<PostId, TPost> outPosts) => false;
 

@@ -4,12 +4,11 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
     {
         protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
 
-        protected override IEnumerable<SubReplyPost> ParsePostsInternal(IEnumerable<SubReply> inPosts, List<User> outUsers) =>
-            inPosts.Select(sr =>
-            {
-                outUsers.Add(sr.Author);
-                return Convert(sr);
-            });
+        protected override IEnumerable<SubReplyPost> ParsePostsInternal(IList<SubReply> inPosts, List<User?> outUsers)
+        {
+            outUsers.AddRange(inPosts.Select(sr => sr.Author));
+            return inPosts.Select(Convert);
+        }
 
         protected override SubReplyPost Convert(SubReply inPost)
         {

@@ -129,16 +129,13 @@ namespace tbm.Crawler.Worker
 
         private async Task<SavedRepliesKeyByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid)
         {
-            var shouldCrawlReplyTid = new HashSet<Tid>();
             var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
             if (savedThreads == null) return savedRepliesKeyByTid;
             // some rare thread will have replyNum=0, but contains reply and can be revealed by requesting
             // we choose TO crawl these rare thread's replies for archive since most thread will have replies
             // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
             // SELECT COUNT(*) FROM tbmc_f{fid}_thread AS T INNER JOIN tbmc_f{fid}_reply AS R ON T.tid = R.tid AND T.replyNum IS NULL
-            savedThreads.AllAfter.ForEach(t => shouldCrawlReplyTid.Add(t.Tid));
-
-            await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
+            await Task.WhenAll(savedThreads.AllAfter.Select(t => t.Tid).Distinct().Select(async tid =>
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
@@ -149,19 +146,19 @@ namespace tbm.Crawler.Worker
 
         private async Task<int> CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid)
         {
-            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
+            var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
                 var (tid, replies) = pair;
                 // some rare reply will have SubReplyCount=0, but contains sub reply and can be revealed by requesting
                 // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
                 // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:
                 // SELECT COUNT(*) FROM tbmc_f{fid}_reply AS R INNER JOIN tbmc_f{fid}_subReply AS SR ON R.pid = SR.pid AND R.subReplyCount IS NULL
-                replies.AllAfter.Where(r => r.SubReplyCount != null)
-                    .ForEach(r => shouldCrawl.Add((tid, r.Pid)));
+                shouldCrawl.UnionWith(replies.AllAfter
+                    .Where(r => r.SubReplyCount != null).Select(r => (tid, r.Pid)));
                 return shouldCrawl;
             });
             var savedSubReplyCount = 0;
-            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tuple =>
+            await Task.WhenAll(shouldCrawlParentPosts.Select(async tuple =>
             {
                 var (tid, pid) = tuple;
                 await using var scope1 = _scope0.BeginLifetimeScope();

@@ -30,12 +30,11 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             return testRequestFlag();
         }
 
-        protected override IEnumerable<ThreadPost> ParsePostsInternal(IEnumerable<Thread> inPosts, List<User> outUsers) =>
-            inPosts.Select(t =>
-            {
-                outUsers.Add(t.Author);
-                return Convert(t);
-            });
+        protected override IEnumerable<ThreadPost> ParsePostsInternal(IList<Thread> inPosts, List<User?> outUsers)
+        {
+            outUsers.AddRange(inPosts.Select(t => t.Author));
+            return inPosts.Select(Convert);
+        }
 
         protected override ThreadPost Convert(Thread inPost)
         {

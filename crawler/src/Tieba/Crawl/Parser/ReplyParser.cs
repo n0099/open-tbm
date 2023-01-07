@@ -10,12 +10,11 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
 
         protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
-        protected override IEnumerable<ReplyPost> ParsePostsInternal(IEnumerable<Reply> inPosts, List<User> outUsers) =>
-            inPosts.Select(r =>
-            {
-                outUsers.Add(r.Author);
-                return Convert(r);
-            });
+        protected override IEnumerable<ReplyPost> ParsePostsInternal(IList<Reply> inPosts, List<User?> outUsers)
+        {
+            outUsers.AddRange(inPosts.Select(r => r.Author));
+            return inPosts.Select(Convert);
+        }
 
         protected override ReplyPost Convert(Reply inPost)
         {

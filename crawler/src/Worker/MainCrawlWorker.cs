@@ -105,84 +105,78 @@ namespace tbm.Crawler.Worker
 
         public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope)
         {
-            var shouldCrawlReplyTid = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
+            var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
-                threads.NewlyAdded.ForEach(t => shouldCrawl.Add(t.Tid));
-                threads.Existing.ForEach(tuple =>
+                shouldCrawl.UnionWith(threads.NewlyAdded.Select(t => t.Tid));
+                shouldCrawl.UnionWith(threads.Existing.Where(tuple =>
                 {
                     var (before, after) = tuple;
-                    if (before.ReplyCount != after.ReplyCount
-                        || before.LatestReplyTime != after.LatestReplyTime
-                        || before.LatestReplierUid != after.LatestReplierUid)
-                        _ = shouldCrawl.Add(before.Tid);
-                });
+                    return before.ReplyCount != after.ReplyCount
+                           || before.LatestReplyTime != after.LatestReplyTime
+                           || before.LatestReplierUid != after.LatestReplierUid;
+                }).Select(tuple => tuple.Before.Tid));
                 return shouldCrawl;
             });
             var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
-            await Task.WhenAll(shouldCrawlReplyTid.Select(async tid =>
+            await Task.WhenAll(shouldCrawlParentPosts.Select(async tid =>
             {
                 await using var scope1 = scope.BeginLifetimeScope();
-                var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.AddExceptionHandler(ex =>
-                {
-                    if (ex is not EmptyPostListException) return;
-                    var parentThread = savedThreads
-                        .SelectMany(c => c.AllAfter.Where(t => t.Tid == tid)).FirstOrDefault();
-                    if (parentThread == null) return;
-
-                    var newEntity = new ThreadMissingFirstReply {
-                        Tid = tid,
-                        Pid = parentThread.FirstReplyPid,
-                        Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
-                            () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
-                        DiscoveredAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
-                    };
-                    if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
-
-                    var db = scope1.Resolve<TbmDbContext.New>()(fid);
-                    using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-                    var firstReply = from r in db.Replies.AsNoTracking()
-                        where r.Pid == parentThread.FirstReplyPid select r.Pid;
-                    if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
-
-                    var existingEntity = db.ThreadMissingFirstReplies.AsTracking().SingleOrDefault(e => e.Tid == tid);
-                    if (existingEntity == null) _ = db.ThreadMissingFirstReplies.Add(newEntity);
-                    else
-                    {
-                        if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
-                        if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
-                        existingEntity.DiscoveredAt = newEntity.DiscoveredAt;
-                    }
-                    _ = db.SaveChanges();
-                    transaction.Commit();
-                }).CrawlPageRange(1)).SaveCrawled());
+                var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid)
+                    .AddExceptionHandler(SaveThreadMissingFirstReply(scope1, fid, tid, savedThreads).Invoke);
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveCrawled());
             }));
             return savedRepliesKeyByTid;
         }
+
+        private static Action<Exception> SaveThreadMissingFirstReply(ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
+        {
+            if (ex is not EmptyPostListException) return;
+            var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(t => t.Tid == tid)).FirstOrDefault();
+            if (parentThread == null) return;
+
+            var newEntity = new ThreadMissingFirstReply {Tid = tid, Pid = parentThread.FirstReplyPid, Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt, () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}), DiscoveredAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()};
+            if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
+
+            var db = scope.Resolve<TbmDbContext.New>()(fid);
+            using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+            var firstReply = from r in db.Replies.AsNoTracking() where r.Pid == parentThread.FirstReplyPid select r.Pid;
+            if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
+
+            var existingEntity = db.ThreadMissingFirstReplies.AsTracking().SingleOrDefault(e => e.Tid == tid);
+            if (existingEntity == null) _ = db.ThreadMissingFirstReplies.Add(newEntity);
+            else
+            {
+                if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
+                if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
+                existingEntity.DiscoveredAt = newEntity.DiscoveredAt;
+            }
+
+            _ = db.SaveChanges();
+            transaction.Commit();
+        };
 
         private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid) => CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0);
 
         public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope)
         {
-            var shouldCrawlSubReplyPid = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
+            var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
                 var (tid, replies) = pair;
-                replies.NewlyAdded.ForEach(r =>
-                {
-                    if (r.SubReplyCount != null) _ = shouldCrawl.Add((tid, r.Pid));
-                });
-                replies.Existing.ForEach(tuple =>
+                shouldCrawl.UnionWith(replies.NewlyAdded
+                    .Where(r => r.SubReplyCount != null).Select(r => (tid, r.Pid)));
+                shouldCrawl.UnionWith(replies.Existing.Where(tuple =>
                 {
                     var (before, after) = tuple;
-                    if (after.SubReplyCount != null && before.SubReplyCount != after.SubReplyCount) _ = shouldCrawl.Add((tid, before.Pid));
-                });
+                    return after.SubReplyCount != null && before.SubReplyCount != after.SubReplyCount;
+                }).Select(tuple => (tid, tuple.Before.Pid)));
                 return shouldCrawl;
             });
-            await Task.WhenAll(shouldCrawlSubReplyPid.Select(async tuple =>
+            await Task.WhenAll(shouldCrawlParentPosts.Select(async tuple =>
             {
                 var (tid, pid) = tuple;
                 await using var scope1 = scope.BeginLifetimeScope();
-                _ = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid).CrawlPageRange(1)).SaveCrawled();
+                var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid);
+                _ = (await crawler.CrawlPageRange(1)).SaveCrawled();
             }));
         }
     }
