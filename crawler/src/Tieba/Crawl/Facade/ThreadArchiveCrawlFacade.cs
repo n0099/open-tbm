@@ -4,7 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
     {
         public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 
-        public ThreadArchiveCrawlFacade(ILogger<ThreadCrawlFacade> logger, TbmDbContext.New dbContextFactory,
+        public ThreadArchiveCrawlFacade(ILogger<ThreadArchiveCrawlFacade> logger, TbmDbContext.New dbContextFactory,
             ThreadArchiveCrawler.New crawler, ThreadParser parser, ThreadSaver.New saver, UserParserAndSaver users,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, string forumName
         ) : base(logger, dbContextFactory, crawler.Invoke, parser, saver, users, requesterTcs, locks, fid, forumName) { }

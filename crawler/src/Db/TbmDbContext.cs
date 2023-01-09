@@ -42,7 +42,7 @@ namespace tbm.Crawler.Db
             b.Entity<SubReplyRevision>().ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.Time});
             b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.Time});
             b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.Time});
-            b.Entity<ForumModeratorRevision>().ToTable("tbmc_revision_forumModerator").HasKey(e => new {e.Fid, e.Uid, e.Time});
+            b.Entity<ForumModeratorRevision>().ToTable("tbmc_revision_forumModerator");
             b.Entity<Forum>().ToTable("tbm_forum");
         }
 

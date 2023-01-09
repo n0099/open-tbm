@@ -28,6 +28,7 @@ namespace tbm.Crawler
                     {
                         service.AddHostedService<MainCrawlWorker>();
                         service.AddHostedService<RetryCrawlWorker>();
+                        service.AddHostedService<ForumModeratorRevisionCrawlWorker>();
                         var httpConfig = context.Configuration.GetSection("ClientRequester");
                         service.AddHttpClient("tbClient", client =>
                             {
