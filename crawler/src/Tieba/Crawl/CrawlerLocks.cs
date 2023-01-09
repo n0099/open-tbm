@@ -57,7 +57,7 @@ namespace tbm.Crawler.Tieba.Crawl
                         var lockTimeout = _config.GetValue<Time>("LockTimeoutSec", 300); // 5 minutes;
                         if (pagesLock[page] < now - lockTimeout)
                             pagesLock[page] = now;
-                        else lockFreePages.Remove(page);
+                        else _ = lockFreePages.Remove(page);
                     }
                 });
             }
@@ -78,7 +78,7 @@ namespace tbm.Crawler.Tieba.Crawl
                 lock (pagesLock)
                 {
                     pages.ForEach(i => pagesLock.TryRemove(i, out _));
-                    if (pagesLock.IsEmpty) _crawling.TryRemove(lockId, out _);
+                    if (pagesLock.IsEmpty) _ = _crawling.TryRemove(lockId, out _);
                 }
             }
         }
@@ -102,7 +102,7 @@ namespace tbm.Crawler.Tieba.Crawl
                 else
                 {
                     var newPage = new ConcurrentDictionary<Page, FailureCount> { [page] = failureCount };
-                    _failed.TryAdd(lockId, newPage);
+                    _ = _failed.TryAdd(lockId, newPage);
                 }
             }
         }

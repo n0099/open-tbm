@@ -7,23 +7,25 @@ namespace tbm.Crawler
         public ISonicIngestConnection Ingest { get; }
         public string CollectionPrefix { get; }
         private readonly ILogger<SonicPusher> _logger;
+        private readonly IConfigurationSection _config;
 
         public SonicPusher(ILogger<SonicPusher> logger, IConfiguration config)
         {
             _logger = logger;
-            config = config.GetSection("Sonic");
+            _config = config.GetSection("Sonic");
             Ingest = NSonicFactory.Ingest(
-                config.GetValue("Hostname", "localhost"),
-                config.GetValue("Port", 1491),
-                config.GetValue("Secret", "SecretPassword")
+                _config.GetValue("Hostname", "localhost"),
+                _config.GetValue("Port", 1491),
+                _config.GetValue("Secret", "SecretPassword")
             );
-            CollectionPrefix = config.GetValue<string>("CollectionPrefix") ?? "tbm_";
+            CollectionPrefix = _config.GetValue<string>("CollectionPrefix") ?? "tbm_";
         }
 
         public void Dispose() => Ingest.Dispose();
 
         public float PushPost(Fid fid, string postType, PostId postId, byte[]? postContent)
         {
+            if (!_config.GetValue("Enabled", false)) return 0;
             var stopWatch = new Stopwatch();
             stopWatch.Start();
             float GetElapsedMs() => (float)stopWatch.ElapsedTicks / Stopwatch.Frequency * 1000;
