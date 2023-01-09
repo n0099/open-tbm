@@ -17,9 +17,15 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
         protected abstract Task<IEnumerable<Request>> RequestsFactory(Page page);
         public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
 
-        public async Task<Response[]> CrawlSinglePage(Page page) =>
-            await Task.WhenAll((await RequestsFactory(page))
+        public async Task<Response[]> CrawlSinglePage(Page page, CancellationToken stoppingToken = default) =>
+            await Task.WhenAll((await RequestsFactoryWithCancellationToken(page, stoppingToken))
                 .Select(async i => new Response(await i.Response, i.Flag)));
+
+        private Task<IEnumerable<Request>> RequestsFactoryWithCancellationToken(Page page, CancellationToken stoppingToken)
+        {
+            stoppingToken.ThrowIfCancellationRequested();
+            return RequestsFactory(page);
+        }
 
         protected void ValidateOtherErrorCode(TResponse response)
         {

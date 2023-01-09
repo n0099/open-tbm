@@ -61,7 +61,8 @@ namespace tbm.Crawler.Worker
                 crawlingPage++;
                 await using var scope2 = scope1.BeginLifetimeScope();
                 var crawler = scope2.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-                var currentPageChangeSet = (await crawler.CrawlPageRange(crawlingPage, crawlingPage)).SaveCrawled();
+                var currentPageChangeSet = (await crawler.CrawlPageRange(
+                    crawlingPage, crawlingPage, stoppingToken)).SaveCrawled();
                 if (currentPageChangeSet != null)
                 {
                     savedThreads.Add(currentPageChangeSet);
@@ -86,7 +87,8 @@ namespace tbm.Crawler.Worker
             return savedThreads;
         }
 
-        private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) => CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
+        private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
+            CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
 
         public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope, CancellationToken stoppingToken = default)
         {
@@ -109,7 +111,8 @@ namespace tbm.Crawler.Worker
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid)
                     .AddExceptionHandler(SaveThreadMissingFirstReply(scope1, fid, tid, savedThreads).Invoke);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveCrawled());
+                savedRepliesKeyByTid.SetIfNotNull(tid,
+                    (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled());
             }));
             return savedRepliesKeyByTid;
         }
@@ -150,11 +153,12 @@ namespace tbm.Crawler.Worker
             transaction.Commit();
         };
 
-        private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) => CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
+        private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
+            CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
 
         public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope, CancellationToken stoppingToken = default)
         {
-            if (stoppingToken.IsCancellationRequested) return;
+            stoppingToken.ThrowIfCancellationRequested();
             var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
                 var (tid, replies) = pair;
@@ -172,7 +176,7 @@ namespace tbm.Crawler.Worker
                 var (tid, pid) = tuple;
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid);
-                _ = (await crawler.CrawlPageRange(1)).SaveCrawled();
+                _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled();
             }));
         }
     }

@@ -76,7 +76,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         }
 
         public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
-            CrawlPageRange(Page startPage, Page endPage = Page.MaxValue)
+            CrawlPageRange(Page startPage, Page endPage = Page.MaxValue, CancellationToken stoppingToken = default)
         { // cancel when startPage is already locked
             if (_lockingPages.Any()) throw new InvalidOperationException(
                 "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
@@ -88,26 +88,28 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
             var isStartPageCrawlFailed = await LogException(async () =>
             {
-                var startPageResponse = await _crawler.CrawlSinglePage(startPage);
+                var startPageResponse = await _crawler.CrawlSinglePage(startPage, stoppingToken);
                 startPageResponse.ForEach(ValidateThenParse);
 
                 var maxPage = startPageResponse
                     .Select(r => _crawler.GetResponsePage(r.Result))
                     .Max(p => (Page?)p?.TotalPage);
                 endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
-            }, startPage, 0);
+            }, startPage, 0, stoppingToken);
 
             if (!isStartPageCrawlFailed)
             {
                 var pagesAfterStart = Enumerable.Range(
                     (int)(startPage + 1),
                     (int)(endPage - startPage)).ToList();
-                if (pagesAfterStart.Any()) await CrawlPages(pagesAfterStart.Select(i => (Page)i));
+                if (pagesAfterStart.Any())
+                    await CrawlPages(pagesAfterStart.Select(i => (Page)i), stoppingToken: stoppingToken);
             }
             return this;
         }
 
-        private Task CrawlPages(IEnumerable<Page> pages, Func<Page, FailureCount>? previousFailureCountSelector = null)
+        private Task CrawlPages(IEnumerable<Page> pages,
+            Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
         {
             var pagesList = pages.ToList();
             var acquiredLocks = _locks.AcquireRange(_lockId, pagesList).ToList();
@@ -124,23 +126,30 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
             return Task.WhenAll(acquiredLocks.Shuffle()
                 .Select(page => LogException(
-                    async () => (await _crawler.CrawlSinglePage(page)).ForEach(ValidateThenParse),
-                    page, previousFailureCountSelector?.Invoke(page) ?? 0)));
+                    async () => (await _crawler.CrawlSinglePage(page, stoppingToken)).ForEach(ValidateThenParse),
+                    page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));
         }
 
-        public async Task<SaverChangeSet<TPost>?> RetryThenSave(IEnumerable<Page> pages, Func<Page, FailureCount> failureCountSelector)
+        public async Task<SaverChangeSet<TPost>?> RetryThenSave(IEnumerable<Page> pages,
+            Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
         {
-            if (_lockingPages.Any()) throw new InvalidOperationException("RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
-            await CrawlPages(pages, failureCountSelector);
+            if (_lockingPages.Any()) throw new InvalidOperationException(
+                "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+            await CrawlPages(pages, failureCountSelector, stoppingToken);
             return SaveCrawled();
         }
 
-        private async Task<bool> LogException(Func<Task> payload, Page page, FailureCount previousFailureCount)
+        private async Task<bool> LogException(Func<Task> payload, Page page,
+            FailureCount previousFailureCount, CancellationToken stoppingToken)
         {
             try
             {
                 await payload();
                 return false;
+            }
+            catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
+            {
+                throw;
             }
             catch (Exception e)
             {

@@ -42,7 +42,7 @@ namespace tbm.Crawler.Worker
                 var stopWatchPageInterval = new Stopwatch();
                 stopWatchPageInterval.Start();
 
-                var totalPage = Math.Min(MaxCrawlablePage, await GetTotalPageForForum());
+                var totalPage = Math.Min(MaxCrawlablePage, await GetTotalPageForForum(stoppingToken));
                 foreach (var pages in Enumerable.Range(1, totalPage).Chunk(Environment.ProcessorCount))
                 {
                     await Parallel.ForEachAsync(pages, stoppingToken, async (page, cancellationToken) =>
@@ -59,7 +59,7 @@ namespace tbm.Crawler.Worker
                         }
 
                         if (cancellationToken.IsCancellationRequested) return;
-                        var savedThreads = await CrawlThreads((Page)page, _forumName, _fid);
+                        var savedThreads = await CrawlThreads((Page)page, _forumName, _fid, cancellationToken);
                         if (savedThreads == null) return;
                         var savedThreadCount = savedThreads.AllAfter.Count;
                         _logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
@@ -67,14 +67,14 @@ namespace tbm.Crawler.Worker
                         _ = Interlocked.Add(ref totalSavedThreadCount, savedThreadCount);
 
                         if (cancellationToken.IsCancellationRequested) return;
-                        var savedReplies = await CrawlReplies(savedThreads, _fid);
+                        var savedReplies = await CrawlReplies(savedThreads, _fid, cancellationToken);
                         var savedReplyCount = savedReplies.Select(i => i.Value.AllAfter.Count).Sum();
                         _logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                             savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
                         _ = Interlocked.Add(ref totalSavedReplyCount, savedReplyCount);
 
                         if (cancellationToken.IsCancellationRequested) return;
-                        var savedSubReplyCount = await CrawlSubReplies(savedReplies, _fid);
+                        var savedSubReplyCount = await CrawlSubReplies(savedReplies, _fid, cancellationToken);
                         _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                             savedSubReplyCount, savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
                         _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
@@ -107,18 +107,18 @@ namespace tbm.Crawler.Worker
             }
         }
 
-        private async Task<int> GetTotalPageForForum()
+        private async Task<int> GetTotalPageForForum(CancellationToken stoppingToken = default)
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
-            return (await scope1.Resolve<ThreadArchiveCrawler.New>()(_forumName).CrawlSinglePage(1))
+            return (await scope1.Resolve<ThreadArchiveCrawler.New>()(_forumName).CrawlSinglePage(1, stoppingToken))
                 .Select(response => response.Result.Data.Page.TotalPage).Max();
         }
 
-        private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid)
+        private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var crawler = scope1.Resolve<ThreadArchiveCrawlFacade.New>()(fid, forumName);
-            var savedThreads = (await crawler.CrawlPageRange(page, page)).SaveCrawled();
+            var savedThreads = (await crawler.CrawlPageRange(page, page, stoppingToken)).SaveCrawled();
             if (savedThreads != null)
             {
                 await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
@@ -127,7 +127,7 @@ namespace tbm.Crawler.Worker
             return savedThreads;
         }
 
-        private async Task<SavedRepliesKeyByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid)
+        private async Task<SavedRepliesKeyByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid, CancellationToken stoppingToken = default)
         {
             var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
             if (savedThreads == null) return savedRepliesKeyByTid;
@@ -139,12 +139,12 @@ namespace tbm.Crawler.Worker
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1)).SaveCrawled());
+                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled());
             }));
             return savedRepliesKeyByTid;
         }
 
-        private async Task<int> CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid)
+        private async Task<int> CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default)
         {
             var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
@@ -163,7 +163,7 @@ namespace tbm.Crawler.Worker
                 var (tid, pid) = tuple;
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
-                    .CrawlPageRange(1)).SaveCrawled();
+                    .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled();
                 if (saved == null) return;
                 _ = Interlocked.Add(ref savedSubReplyCount, saved.AllAfter.Count);
             }));
