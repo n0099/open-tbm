@@ -2,15 +2,14 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 {
     public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, SubReplyResponse, SubReply, SubReplyCrawler>
     {
-        private readonly InsertAllPostContentsIntoSonicWorker.SonicPusher _pusher;
+        private readonly SonicPusher _pusher;
         private readonly Tid _tid;
         private readonly Pid _pid;
 
         public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 
         public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, TbmDbContext.New dbContextFactory,
-            SubReplyCrawler.New crawler, SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users,
-            InsertAllPostContentsIntoSonicWorker.SonicPusher pusher,
+            SubReplyCrawler.New crawler, SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users, SonicPusher pusher,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, Tid tid, Pid pid
         ) : base(logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"], new (fid, tid, pid)), fid)
         {

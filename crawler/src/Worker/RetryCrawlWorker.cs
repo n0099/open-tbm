@@ -20,6 +20,7 @@ namespace tbm.Crawler.Worker
         {
             foreach (var lockType in Program.RegisteredCrawlerLocks)
             {
+                if (stoppingToken.IsCancellationRequested) return;
                 var failed = _registeredLocksFactory[lockType].RetryAllFailed();
                 if (!failed.Any()) continue; // skip current lock type if there's nothing needs to retry
                 if (lockType == "threadLate")
@@ -39,15 +40,15 @@ namespace tbm.Crawler.Worker
 
                 await Task.WhenAll(failed.Select(async pair =>
                 {
+                    if (stoppingToken.IsCancellationRequested) return;
                     await using var scope1 = _scope0.BeginLifetimeScope();
                     var db = scope1.Resolve<TbmDbContext.New>()(0);
-                    var (lockId, failureCountsKeyByPage) = pair;
+                    var ((fid, tid, pid), failureCountsKeyByPage) = pair;
                     var pages = failureCountsKeyByPage.Keys;
                     FailureCount FailureCountSelector(Page p) => failureCountsKeyByPage[p];
 
                     if (lockType == "thread")
                     {
-                        var fid = lockId.Fid;
                         var forumName = (from f in db.Forum.AsNoTracking()
                             where f.Fid == fid select f.Name).SingleOrDefault();
                         if (forumName == null) return;
@@ -56,22 +57,23 @@ namespace tbm.Crawler.Worker
                         var crawler = scope1.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                         var savedThreads = await crawler.RetryThenSave(pages, FailureCountSelector);
                         if (savedThreads == null) return;
-                        await CrawlSubReplies(await CrawlReplies(new() {savedThreads}, fid, scope1), fid, scope1);
+                        await CrawlSubReplies(await CrawlReplies(new() {savedThreads}, fid, scope1, stoppingToken), fid, scope1, stoppingToken);
                     }
-                    else if (lockType == "reply" && lockId.Tid != null)
+                    else if (lockType == "reply" && tid != null)
                     {
                         _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid={}, tid={}",
-                            failureCountsKeyByPage.Count, lockId.Fid, lockId.Tid);
-                        var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(lockId.Fid, lockId.Tid.Value);
+                            failureCountsKeyByPage.Count, fid, tid);
+                        var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid.Value);
                         var savedReplies = await crawler.RetryThenSave(pages, FailureCountSelector);
                         if (savedReplies == null) return;
-                        await CrawlSubReplies(new Dictionary<PostId, SaverChangeSet<ReplyPost>> {{lockId.Tid.Value, savedReplies}}, lockId.Fid, scope1);
+                        var savedRepliesKeyByTid = new Dictionary<PostId, SaverChangeSet<ReplyPost>> {{tid.Value, savedReplies}};
+                        await CrawlSubReplies(savedRepliesKeyByTid, fid, scope1, stoppingToken);
                     }
-                    else if (lockType == "subReply" && lockId.Tid != null && lockId.Pid != null)
+                    else if (lockType == "subReply" && tid != null && pid != null)
                     {
                         _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid={}, tid={}, pid={}",
-                            failureCountsKeyByPage.Count, lockId.Fid, lockId.Tid, lockId.Pid);
-                        var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(lockId.Fid, lockId.Tid.Value, lockId.Pid.Value);
+                            failureCountsKeyByPage.Count, fid, tid, pid);
+                        var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid.Value, pid.Value);
                         _ = await crawler.RetryThenSave(pages, FailureCountSelector);
                     }
                 }));

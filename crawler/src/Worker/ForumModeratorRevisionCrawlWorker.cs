@@ -22,7 +22,8 @@ namespace tbm.Crawler.Worker
             var browsing = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
             foreach (var forum in from f in db.Forum where f.IsCrawling select new {f.Fid, f.Name})
             {
-                var doc = await browsing.OpenAsync($"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forum.Name}");
+                if (stoppingToken.IsCancellationRequested) return;
+                var doc = await browsing.OpenAsync($"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forum.Name}", stoppingToken);
                 var moderators = doc.QuerySelectorAll("div.bawu_single_type").Select(typeEl =>
                 {
                     var type = typeEl.QuerySelector("div.title")?.Children

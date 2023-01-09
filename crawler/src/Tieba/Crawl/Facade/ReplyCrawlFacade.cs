@@ -3,15 +3,14 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
     public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, ReplyResponse, Reply, ReplyCrawler>
     {
         private readonly TbmDbContext.New _dbContextFactory;
-        private readonly InsertAllPostContentsIntoSonicWorker.SonicPusher _pusher;
+        private readonly SonicPusher _pusher;
         private readonly Tid _tid;
 
         public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
         public ReplyCrawlFacade(ILogger<ReplyCrawlFacade> logger,
             TbmDbContext.New parentDbContextFactory, TbmDbContext.New dbContextFactory,
-            ReplyCrawler.New crawler, ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users,
-            InsertAllPostContentsIntoSonicWorker.SonicPusher pusher,
+            ReplyCrawler.New crawler, ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users, SonicPusher pusher,
             ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, Tid tid
         ) : base(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"], new (fid, tid)), fid)
         {

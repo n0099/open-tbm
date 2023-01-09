@@ -5,7 +5,6 @@ namespace tbm.Crawler.Worker
 
     public class MainCrawlWorker : CyclicCrawlWorker
     {
-        private readonly ILogger<MainCrawlWorker> _logger;
         private readonly ILifetimeScope _scope0;
         // store the max latestReplyTime of threads appeared in the previous crawl worker, key by fid
         private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
@@ -13,7 +12,6 @@ namespace tbm.Crawler.Worker
         public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
             ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks) : base(logger, config)
         {
-            _logger = logger;
             _scope0 = scope0;
             // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
             _ = locks["thread"];
@@ -40,12 +38,13 @@ namespace tbm.Crawler.Worker
 
         protected override async Task DoWork(CancellationToken stoppingToken)
         {
-            await foreach (var (fid, forumName) in ForumGenerator())
-                await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid), fid), fid);
+            await foreach (var (fid, forumName) in ForumGenerator().WithCancellation(stoppingToken))
+                await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid, stoppingToken), fid, stoppingToken), fid, stoppingToken);
         }
 
-        private async Task<SavedThreadsList> CrawlThreads(string forumName, Fid fid)
+        private async Task<SavedThreadsList> CrawlThreads(string forumName, Fid fid, CancellationToken stoppingToken = default)
         {
+            stoppingToken.ThrowIfCancellationRequested();
             var savedThreads = new SavedThreadsList();
             Time minLatestReplyTime;
             Page crawlingPage = 0;
@@ -87,10 +86,11 @@ namespace tbm.Crawler.Worker
             return savedThreads;
         }
 
-        private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid) => CrawlReplies(savedThreads, fid, _scope0);
+        private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) => CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
 
-        public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope)
+        public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope, CancellationToken stoppingToken = default)
         {
+            stoppingToken.ThrowIfCancellationRequested();
             var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
                 shouldCrawl.UnionWith(threads.NewlyAdded.Select(t => t.Tid));
@@ -120,15 +120,24 @@ namespace tbm.Crawler.Worker
             var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(t => t.Tid == tid)).FirstOrDefault();
             if (parentThread == null) return;
 
-            var newEntity = new ThreadMissingFirstReply {Tid = tid, Pid = parentThread.FirstReplyPid, Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt, () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}), DiscoveredAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()};
+            var newEntity = new ThreadMissingFirstReply
+            {
+                Tid = tid,
+                Pid = parentThread.FirstReplyPid,
+                Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
+                    () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
+                DiscoveredAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
+            };
             if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
 
             var db = scope.Resolve<TbmDbContext.New>()(fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-            var firstReply = from r in db.Replies.AsNoTracking() where r.Pid == parentThread.FirstReplyPid select r.Pid;
+            var firstReply = from r in db.Replies.AsNoTracking()
+                where r.Pid == parentThread.FirstReplyPid select r.Pid;
             if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
 
-            var existingEntity = db.ThreadMissingFirstReplies.AsTracking().SingleOrDefault(e => e.Tid == tid);
+            var existingEntity = db.ThreadMissingFirstReplies.AsTracking()
+                .SingleOrDefault(e => e.Tid == tid);
             if (existingEntity == null) _ = db.ThreadMissingFirstReplies.Add(newEntity);
             else
             {
@@ -141,10 +150,11 @@ namespace tbm.Crawler.Worker
             transaction.Commit();
         };
 
-        private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid) => CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0);
+        private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) => CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
 
-        public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope)
+        public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope, CancellationToken stoppingToken = default)
         {
+            if (stoppingToken.IsCancellationRequested) return;
             var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
             {
                 var (tid, replies) = pair;
