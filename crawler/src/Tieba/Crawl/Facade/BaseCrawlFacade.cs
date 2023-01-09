@@ -51,9 +51,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         }
 
         protected virtual void BeforeCommitSaveHook(TbmDbContext db) { }
-        protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts) { }
+        protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
 
-        public SaverChangeSet<TPost>? SaveCrawled()
+        public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
         {
             var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -65,7 +65,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             {
                 _ = db.SaveChanges();
                 transaction.Commit();
-                if (savedPosts != null) PostCommitSaveHook(savedPosts);
+                if (savedPosts != null) PostCommitSaveHook(savedPosts, stoppingToken);
             }
             finally
             {
@@ -136,7 +136,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             if (_lockingPages.Any()) throw new InvalidOperationException(
                 "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
             await CrawlPages(pages, failureCountSelector, stoppingToken);
-            return SaveCrawled();
+            return SaveCrawled(stoppingToken);
         }
 
         private async Task<bool> LogException(Func<Task> payload, Page page,

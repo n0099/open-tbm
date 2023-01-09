@@ -60,7 +60,11 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             transaction.Commit();
         }
 
-        protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts) =>
-            savedPosts.NewlyAdded.ForEach(r => _pusher.PushPost(Fid, "replies", r.Pid, r.Content));
+        protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
+            savedPosts.NewlyAdded.ForEach(r =>
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                _ = _pusher.PushPost(Fid, "replies", r.Pid, r.Content);
+            });
     }
 }

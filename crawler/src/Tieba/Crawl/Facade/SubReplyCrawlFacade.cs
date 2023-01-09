@@ -29,7 +29,11 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 sr.Pid = _pid;
             });
 
-        protected override void PostCommitSaveHook(SaverChangeSet<SubReplyPost> savedPosts) =>
-            savedPosts.NewlyAdded.ForEach(sr => _pusher.PushPost(Fid, "subReplies", sr.Spid, sr.Content));
+        protected override void PostCommitSaveHook(SaverChangeSet<SubReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
+            savedPosts.NewlyAdded.ForEach(sr =>
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                _ = _pusher.PushPost(Fid, "subReplies", sr.Spid, sr.Content);
+            });
     }
 }

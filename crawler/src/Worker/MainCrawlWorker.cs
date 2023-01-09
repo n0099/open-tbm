@@ -62,7 +62,7 @@ namespace tbm.Crawler.Worker
                 await using var scope2 = scope1.BeginLifetimeScope();
                 var crawler = scope2.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
                 var currentPageChangeSet = (await crawler.CrawlPageRange(
-                    crawlingPage, crawlingPage, stoppingToken)).SaveCrawled();
+                    crawlingPage, crawlingPage, stoppingToken)).SaveCrawled(stoppingToken);
                 if (currentPageChangeSet != null)
                 {
                     savedThreads.Add(currentPageChangeSet);
@@ -79,6 +79,7 @@ namespace tbm.Crawler.Worker
 
             await Task.WhenAll(savedThreads.Select(async threads =>
             {
+                if (stoppingToken.IsCancellationRequested) return;
                 await using var scope3 = _scope0.BeginLifetimeScope();
                 await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
                     .Crawl(threads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailureCount)0));
@@ -108,11 +109,12 @@ namespace tbm.Crawler.Worker
             var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
             await Task.WhenAll(shouldCrawlParentPosts.Select(async tid =>
             {
+                if (stoppingToken.IsCancellationRequested) return;
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid)
                     .AddExceptionHandler(SaveThreadMissingFirstReply(scope1, fid, tid, savedThreads).Invoke);
                 savedRepliesKeyByTid.SetIfNotNull(tid,
-                    (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled());
+                    (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
             }));
             return savedRepliesKeyByTid;
         }
@@ -173,10 +175,11 @@ namespace tbm.Crawler.Worker
             });
             await Task.WhenAll(shouldCrawlParentPosts.Select(async tuple =>
             {
+                if (stoppingToken.IsCancellationRequested) return;
                 var (tid, pid) = tuple;
                 await using var scope1 = scope.BeginLifetimeScope();
                 var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid);
-                _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled();
+                _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
             }));
         }
     }

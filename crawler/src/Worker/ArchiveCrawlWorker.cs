@@ -118,7 +118,8 @@ namespace tbm.Crawler.Worker
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var crawler = scope1.Resolve<ThreadArchiveCrawlFacade.New>()(fid, forumName);
-            var savedThreads = (await crawler.CrawlPageRange(page, page, stoppingToken)).SaveCrawled();
+            var savedThreads = (await crawler.CrawlPageRange(
+                page, page, stoppingToken)).SaveCrawled(stoppingToken);
             if (savedThreads != null)
             {
                 await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
@@ -137,9 +138,11 @@ namespace tbm.Crawler.Worker
             // SELECT COUNT(*) FROM tbmc_f{fid}_thread AS T INNER JOIN tbmc_f{fid}_reply AS R ON T.tid = R.tid AND T.replyNum IS NULL
             await Task.WhenAll(savedThreads.AllAfter.Select(t => t.Tid).Distinct().Select(async tid =>
             {
+                if (stoppingToken.IsCancellationRequested) return;
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
-                savedRepliesKeyByTid.SetIfNotNull(tid, (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled());
+                savedRepliesKeyByTid.SetIfNotNull(tid,
+                    (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
             }));
             return savedRepliesKeyByTid;
         }
@@ -160,10 +163,11 @@ namespace tbm.Crawler.Worker
             var savedSubReplyCount = 0;
             await Task.WhenAll(shouldCrawlParentPosts.Select(async tuple =>
             {
+                if (stoppingToken.IsCancellationRequested) return;
                 var (tid, pid) = tuple;
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
-                    .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled();
+                    .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
                 if (saved == null) return;
                 _ = Interlocked.Add(ref savedSubReplyCount, saved.AllAfter.Count);
             }));
