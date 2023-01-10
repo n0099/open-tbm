@@ -50,6 +50,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             if (flag != CrawlRequestFlag.None) return;
             var data = response.Data;
             Users.ParseUsers(data.UserList);
+            Users.ResetUsersIcon();
             ParseLatestRepliers(data.ThreadList);
             // remove livepost threads since their real parent forum may not match with current crawling fid
             data.ThreadList.Where(t => t.LivePostType != "")

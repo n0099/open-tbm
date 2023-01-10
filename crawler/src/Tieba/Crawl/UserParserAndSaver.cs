@@ -68,6 +68,8 @@ namespace tbm.Crawler.Tieba.Crawl
                 }
             }).OfType<TiebaUser>().ForEach(u => _users[u.Uid] = u);
 
+        public void ResetUsersIcon() => _users.Values.ForEach(u => u.Icon = null);
+
         public void SaveUsers(TbmDbContext db, string postType,
             FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance)
         {

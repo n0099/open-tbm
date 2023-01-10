@@ -12,13 +12,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 // DisplayName in users embedded in sub replies from response will be the legacy nick name
                 nameof(TiebaUser.DisplayName) => true,
                 _ => false
-            },
-            Revision: (_, propName, oldValue, newValue) => propName switch
-            { // author gender in reply response will be 0 when users is embed in reply
-                // but in thread or sub reply responses it won't be 0 even their users are also embedded
-                nameof(TiebaUser.Gender) when (ushort?)oldValue is 0 && (ushort?)newValue is not 0 => true,
-                _ => false
-            });
+            }, (_, _, _, _) => false);
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
