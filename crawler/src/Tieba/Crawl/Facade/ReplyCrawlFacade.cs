@@ -19,29 +19,29 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _tid = tid;
         }
 
-        protected override void ThrowIfEmptyUsersEmbedInPosts() =>
-            throw new TiebaException(
-                $"User list in the response of reply request for fid {Fid}, tid {_tid} is empty.");
+        protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag)
+        {
+            ParsedPosts.Values.ForEach(r => r.Tid = _tid);
+            var data = response.Data;
+            Users.ParseUsers(data.UserList);
+            FillAuthorInfoBackToReply(data.UserList, data.PostList);
+            if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
+        }
 
-        protected override void ParsePostsEmbeddedUsers(IEnumerable<User> usersEmbedInPosts, IEnumerable<Reply> postsInCurrentResponse) =>
+        private void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<Reply> replies) =>
             ParsedPosts.Values // only mutate posts which occurs in current response
-                .IntersectBy(postsInCurrentResponse.Select(r => r.Pid), r => r.Pid)
-                .Join(usersEmbedInPosts, r => r.AuthorUid, u => u.Uid, (r, a) => (r, a))
+                .IntersectBy(replies.Select(r => r.Pid), r => r.Pid)
+                .Join(users, r => r.AuthorUid, u => u.Uid, (r, a) => (r, a))
                 .ForEach(tuple =>
                 { // fill the values for some field of reply from user list which is out of post list
                     var (r, author) = tuple;
                     r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
-                    r.AuthorExpGrade = (ushort)author.LevelId; // will be null when author is a historical anonymous user
+                    r.AuthorExpGrade = (ushort)author.LevelId;
                 });
 
-        protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag)
+        private void SaveParentThreadTitle(IEnumerable<Reply> replies)
         {
-            ParsedPosts.Values.ForEach(r => r.Tid = _tid);
-
-            var data = response.Data;
-            // update parent thread of reply with new title that extracted from the first floor reply in first page
-            if (data.Page.CurrentPage != 1) return;
-
+            // update the parent thread of reply with the new title extracted from the first-floor reply in the first page
             var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
@@ -49,7 +49,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 where t.Tid == _tid select t.Title).SingleOrDefault();
             // thread title will be empty string as a fallback when the thread author haven't write title for this thread
             if (parentThreadTitle != "") return;
-            var newTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
+            var newTitle = replies.FirstOrDefault(r => r.Floor == 1)?.Title;
             if (newTitle == null) return;
 
             db.Attach(new ThreadPost {Tid = _tid, Title = newTitle})

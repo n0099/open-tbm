@@ -17,7 +17,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             if (ShouldSkipParse(requestFlag, inPosts, outPosts)) return;
             foreach (var p in ParsePostsInternal(inPosts, outNullableUsers))
                 outPosts[PostIdSelector(p)] = p;
-            outUsers.AddRange(outNullableUsers.OfType<User>());
+            outUsers.AddRange(outNullableUsers.OfType<User>()
+                .Where(u => u.CalculateSize() != 0)); // remove empty users
         }
     }
 }

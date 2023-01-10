@@ -91,7 +91,9 @@ namespace tbm.Crawler.Tieba
             (string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
             where TRequest : IMessage<TRequest>
         {
-            setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion});
+            // https://github.com/Starry-OvO/aiotieba/issues/67#issuecomment-1376006123
+            // https://github.com/MoeNetwork/wmzz_post/blob/80aba25de46f5b2cb1a15aa2a69b527a7374ffa9/wmzz_post_setting.php#L64
+            setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
 
             // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
             var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());

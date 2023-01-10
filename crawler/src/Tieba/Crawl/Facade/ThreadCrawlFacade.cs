@@ -37,24 +37,20 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         public static TiebaUser LatestReplierFactory(long uid, string? name, string? displayName) =>
             new() {Uid = uid, Name = name, DisplayName = displayName};
 
-        protected void ParseLatestRepliers(ThreadResponse.Types.Data data) =>
-            data.ThreadList
-                .Select(t => t.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
+        protected void ParseLatestRepliers(IEnumerable<Thread> threads) =>
+            threads.Select(t => t.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
                 .OfType<User>() // filter out nulls
                 .Where(u => u.Uid != 0) // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
                 .Select(u =>
                     LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
                 .ForEach(u => _latestRepliers[u.Uid] = u);
 
-        protected override void ThrowIfEmptyUsersEmbedInPosts() =>
-            throw new TiebaException(
-                $"User list in the response of thread request for fid {Fid} is empty.");
-
         protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
         {
             if (flag != CrawlRequestFlag.None) return;
             var data = response.Data;
-            ParseLatestRepliers(data);
+            Users.ParseUsers(data.UserList);
+            ParseLatestRepliers(data.ThreadList);
             // remove livepost threads since their real parent forum may not match with current crawling fid
             data.ThreadList.Where(t => t.LivePostType != "")
                 .ForEach(t => ParsedPosts.TryRemove((Tid)t.Tid, out _));

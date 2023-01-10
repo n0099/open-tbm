@@ -13,14 +13,13 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         { // the second response with flag is as same as the first one so just skip it
             if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
             var data = response.Data;
+            Users.ParseUsers(data.ThreadList.Select(t => t.Author));
+            ParseLatestRepliers(data.ThreadList);
 
             ParsedPosts.Values // parsed author uid will be 0 when request with client version 6.0.2
                 .Join(data.ThreadList, t => t.Tid, t => (Tid)t.Tid,
                     (parsed, newInResponse) => (parsed, newInResponse))
                 .ForEach(tuple => tuple.parsed.AuthorUid = tuple.newInResponse.Author.Uid);
-
-            Users.ParseUsers(data.ThreadList.Select(t => t.Author));
-            ParseLatestRepliers(data);
         }
     }
 }

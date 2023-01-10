@@ -30,11 +30,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
             return testRequestFlag();
         }
 
-        protected override IEnumerable<ThreadPost> ParsePostsInternal(IList<Thread> inPosts, List<User?> outUsers)
-        {
-            outUsers.AddRange(inPosts.Select(t => t.Author));
-            return inPosts.Select(Convert);
-        }
+        protected override IEnumerable<ThreadPost> ParsePostsInternal(IList<Thread> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
 
         protected override ThreadPost Convert(Thread inPost)
         {
@@ -48,8 +44,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
                 o.IsGood = (ushort?)inPost.IsGood.NullIfZero();
                 o.TopicType = inPost.LivePostType.NullIfWhiteSpace();
-                o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.PostParseHook()
-                o.AuthorUid = inPost.Author.Uid;
+                o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.SaveParentThreadTitle()
+                o.AuthorUid = inPost.AuthorId;
                 o.AuthorManagerType = inPost.Author.BawuType.NullIfWhiteSpace();
                 o.PostTime = (uint)inPost.CreateTime;
                 o.LatestReplyTime = (uint)inPost.LastTimeInt;

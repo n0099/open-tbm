@@ -10,11 +10,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
 
         protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
-        protected override IEnumerable<ReplyPost> ParsePostsInternal(IList<Reply> inPosts, List<User?> outUsers)
-        {
-            outUsers.AddRange(inPosts.Select(r => r.Author));
-            return inPosts.Select(Convert);
-        }
+        protected override IEnumerable<ReplyPost> ParsePostsInternal(IList<Reply> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
 
         protected override ReplyPost Convert(Reply inPost)
         {
@@ -36,10 +32,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 });
                 o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                     () => new PostContentWrapper {Value = {inPost.Content}});
-                // AuthorId will be protoBuf default value 0 when the response doesn't embed the author user in replies
-                // see ReplyCrawlFacade.ThrowIfEmptyUsersEmbedInPosts()
-                o.AuthorUid = inPost.Author?.Uid ?? inPost.AuthorId;
-                // values of AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.PostParseHook()
+                o.AuthorUid = inPost.AuthorId;
+                // values of AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
                 o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
                 o.PostTime = inPost.Time;
                 o.IsFold = (ushort?)inPost.IsFold.NullIfZero();

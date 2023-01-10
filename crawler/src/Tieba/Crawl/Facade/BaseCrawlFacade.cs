@@ -200,9 +200,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 _parser.ParsePosts(flag, posts, ParsedPosts, out var postsEmbeddedUsers);
                 if (flag != CrawlRequestFlag.None) return;
                 if (!postsEmbeddedUsers.Any() && posts.Any()) ThrowIfEmptyUsersEmbedInPosts();
-                if (!postsEmbeddedUsers.Any()) return;
-                Users.ParseUsers(postsEmbeddedUsers);
-                ParsePostsEmbeddedUsers(postsEmbeddedUsers, posts);
+                if (postsEmbeddedUsers.Any()) Users.ParseUsers(postsEmbeddedUsers);
             }
             finally
             {
@@ -211,9 +209,6 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         }
 
         protected virtual void ThrowIfEmptyUsersEmbedInPosts() { }
-
-        protected virtual void ParsePostsEmbeddedUsers
-            (IEnumerable<User> usersEmbedInPosts, IEnumerable<TPostProtoBuf> postsInCurrentResponse) { }
 
         protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
     }
