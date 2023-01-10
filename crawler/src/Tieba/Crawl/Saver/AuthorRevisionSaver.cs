@@ -84,7 +84,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     .Select(revisionFactory)
                     .ExceptBy(locks, r => (r.Fid, r.Uid))
                     .ToList();
-                if (!newRevisionsExceptLocked.Any()) return; // quick exit
+                if (!newRevisionsExceptLocked.Any()) return;
+
                 _savedRevisions.AddRange(newRevisionsExceptLocked.Select(r => (r.Fid, r.Uid)));
                 locks.UnionWith(_savedRevisions);
                 db.Set<TRevision>().AddRange(newRevisionsExceptLocked);

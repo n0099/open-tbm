@@ -11,10 +11,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
 
-        protected virtual void PostSaveEventHandlerInternal() { }
+        protected delegate void PostSaveEventHandler();
         protected event PostSaveEventHandler PostSaveEvent = () => { };
         public void OnPostSaveEvent() => PostSaveEvent();
-        protected delegate void PostSaveEventHandler();
 
         protected BaseSaver(ILogger<BaseSaver<TPost>> logger,
             ConcurrentDictionary<PostId, TPost> posts,
@@ -25,7 +24,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Posts = posts;
             AuthorRevisionSaver = authorRevisionSaverFactory(postType);
             PostType = postType;
-            PostSaveEvent += PostSaveEventHandlerInternal;
         }
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,

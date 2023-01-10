@@ -60,9 +60,11 @@ namespace tbm.Crawler.Worker
                 db1.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
                     existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorType)),
                     r => (r.Portrait, r.ModeratorType)));
-                db1.ForumModeratorRevisions.AddRange(existingLatestRevisions.ExceptBy(
-                    revisions.Select(r => (r.Portrait, r.ModeratorType)),
-                    e => (e.Portrait, e.ModeratorType))
+                db1.ForumModeratorRevisions.AddRange(existingLatestRevisions
+                    .Where(e => e.ModeratorType != null) // filter out revisions that recorded someone who resigned from moderators
+                    .ExceptBy(
+                        revisions.Select(r => (r.Portrait, r.ModeratorType)),
+                        e => (e.Portrait, e.ModeratorType))
                     .Select(e => new ForumModeratorRevision
                     {
                         Time = now,
