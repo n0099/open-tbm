@@ -35,7 +35,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Expression<Func<TRevision, TRevision>> revisionKeySelector)
             where TRevision : BaseRevision, new()
         {
-            var dbSet = db.Set<TPost>();
+            var dbSet = db.Set<TPost>().TagWith("ForUpdate");
             if (dbSet == null) throw new ArgumentException(
                 $"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
 

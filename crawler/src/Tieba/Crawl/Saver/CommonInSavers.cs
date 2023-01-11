@@ -98,9 +98,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 .Select(revisionKeySelector)
                 .ToList();
             db.Set<TRevision>().AddRange(newRevisions
-                .Where(revision => !existingRevisions.Any(existing =>
-                    existing.Time == revision.Time
-                    && revisionPostOrUserIdSelector(existing) == revisionPostOrUserIdSelector(revision))));
+                .ExceptBy(existingRevisions.Select(e => (e.Time, revisionPostOrUserIdSelector(e))),
+                    r => (r.Time, revisionPostOrUserIdSelector(r))));
         }
     }
 }

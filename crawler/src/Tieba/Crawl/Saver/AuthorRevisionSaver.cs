@@ -59,6 +59,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             where TRevision : AuthorRevision where TPost : IPost
         {
             var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+            _ = dbSet.AsNoTracking().TagWith("ForUpdate") // https://github.com/linq2db/linq2db/issues/3905
+                .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid)).ToList();
             var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
                 .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
                 .Select(latestRevisionProjectionFactory)

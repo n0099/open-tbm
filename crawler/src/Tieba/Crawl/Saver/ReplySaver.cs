@@ -81,7 +81,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
             var uniqueSignatures = signatures
                 .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
-            var existingSignatures = (from s in db.ReplySignatures.AsTracking()
+            var existingSignatures = (from s in db.ReplySignatures.AsTracking().TagWith("ForUpdate")
                 where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
                       && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
                 select s).ToList();

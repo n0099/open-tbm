@@ -81,7 +81,7 @@ namespace tbm.Crawler.Tieba.Crawl
                 _savedUsersId.AddRange(usersExceptLocked.Keys);
                 UserIdLocks.UnionWith(_savedUsersId);
 
-                var existingUsersKeyByUid = (from user in db.Users.AsTracking()
+                var existingUsersKeyByUid = (from user in db.Users.AsTracking().TagWith("ForUpdate")
                     where usersExceptLocked.Keys.Contains(user.Uid)
                     select user).ToDictionary(u => u.Uid);
                 SavePostsOrUsers(db, tiebaUserFieldChangeIgnorance,

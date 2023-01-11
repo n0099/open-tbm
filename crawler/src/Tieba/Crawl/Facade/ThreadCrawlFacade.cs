@@ -18,7 +18,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             var existingUsersId = (from u in db.Users.AsNoTracking()
                 where _latestRepliers.Keys.Any(uid => uid == u.Uid)
                 select u.Uid).ToHashSet();
-            existingUsersId.UnionWith( // users not exists in db but have already been added and tracking
+            existingUsersId.UnionWith( // users not exists in db but has already been added into DbContext and tracking
                 db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid));
 
             var newLatestRepliers = _latestRepliers
