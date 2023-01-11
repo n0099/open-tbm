@@ -47,12 +47,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 Posts.Values.ToLookup(p => existingKeyById.ContainsKey(postIdSelector(p))),
                 p => existingKeyById[postIdSelector(p)],
                 revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
-
-            // tracking entities in existingPostsKeyById will have fields updated by TbmDbContext.TimestampingEntities()
-            // this guarantee is currently required by nowhere
-            var existingAfterTimestampingUnionNewlyAdded = existingKeyById
-                .UnionBy(Posts, i => i.Key).Select(i => i.Value).ToList();
-            return new(existingBeforeMerge, existingAfterTimestampingUnionNewlyAdded, postIdSelector);
+            return new(existingBeforeMerge, Posts.Values, postIdSelector);
         }
     }
 }

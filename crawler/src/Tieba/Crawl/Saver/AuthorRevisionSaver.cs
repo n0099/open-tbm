@@ -30,11 +30,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
                 db.AuthorExpGradeRevisions,
                 p => p.AuthorExpGrade,
-                (old, @new) =>
-                { // randomly protoBuf default value 0 in reply and sub reply response
-                    if (_triggeredByPostType is "reply" or "subReply" && @new == 0) return false;
-                    return old != @new;
-                },
+                (a, b) => a != b,
                 r => new()
                 {
                     Uid = r.Uid,

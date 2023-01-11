@@ -8,9 +8,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         public ReadOnlyCollection<T> NewlyAdded { get; }
         public ReadOnlyCollection<T> AllAfter { get; }
 
-        public SaverChangeSet(ICollection<T> existingBefore, ICollection<T> existingAfterTimestampingAndNewlyAdded, Func<T, PostId> postIdSelector)
+        public SaverChangeSet(ICollection<T> existingBefore, ICollection<T> existingAfterAndNewlyAdded, Func<T, PostId> postIdSelector)
         {
-            var existingAfter = existingAfterTimestampingAndNewlyAdded
+            var existingAfter = existingAfterAndNewlyAdded
                 .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)
                 .OrderBy(postIdSelector).ToList();
             if (existingAfter.Count != existingBefore.Count) throw new(
@@ -18,9 +18,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Existing = new(existingBefore
                 .OrderBy(postIdSelector)
                 .Zip(existingAfter, (before, after) => (before, after)).ToList());
-            NewlyAdded = new(existingAfterTimestampingAndNewlyAdded
+            NewlyAdded = new(existingAfterAndNewlyAdded
                 .ExceptBy(existingBefore.Select(postIdSelector), postIdSelector).ToList());
-            AllAfter = new(existingAfterTimestampingAndNewlyAdded.ToList());
+            AllAfter = new(existingAfterAndNewlyAdded.ToList());
         }
     }
 }
