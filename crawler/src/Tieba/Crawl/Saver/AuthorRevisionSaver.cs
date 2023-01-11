@@ -35,11 +35,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 {
                     Uid = r.Uid,
                     Value = r.AuthorExpGrade,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.Time).ToValue()
+                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.DiscoveredAt).ToValue()
                 },
                 tuple => new()
                 {
-                    Time = tuple.Time,
+                    DiscoveredAt = tuple.DiscoveredAt,
                     Fid = db.Fid,
                     Uid = tuple.Uid,
                     TriggeredBy = _triggeredByPostType,
@@ -55,7 +55,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Func<TPost, TValue?> postAuthorFieldValueSelector,
             Func<TValue?, TValue?, bool> isValueChangedPredicate,
             Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-            Func<(long Uid, TValue? Value, Time Time), TRevision> revisionFactory)
+            Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
             where TRevision : AuthorRevision where TPost : IPost
         {
             var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -67,14 +67,14 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 .Where(e => e.Rank == 1)
                 .ToLinqToDB().ToList()
                 .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
-                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p), Time: now))
+                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p), DiscoveredAt: now))
                 .ToList();
             var newRevisionOfNewUsers = posts
                 .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
-                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), Time: now));
+                .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
             var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
                 .Where(tuple => isValueChangedPredicate(tuple.existing, tuple.newInPost))
-                .Select(tuple => (tuple.Uid, Value: tuple.newInPost, tuple.Time));
+                .Select(tuple => (tuple.Uid, Value: tuple.newInPost, tuple.DiscoveredAt));
             lock (locks)
             {
                 var newRevisionsExceptLocked = newRevisionOfNewUsers

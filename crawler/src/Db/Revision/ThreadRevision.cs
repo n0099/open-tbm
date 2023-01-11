@@ -9,7 +9,7 @@ namespace tbm.Crawler.Db.Revision
         public string? TopicType { get; set; }
         public ushort? IsGood { get; set; }
         public string? AuthorManagerType { get; set; }
-        public uint? LatestReplyTime { get; set; }
+        public uint? LatestReplyPostedAt { get; set; }
         public long? LatestReplierUid { get; set; }
         public uint? ReplyCount { get; set; }
         public uint? ViewCount { get; set; }

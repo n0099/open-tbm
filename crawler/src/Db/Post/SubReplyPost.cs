@@ -11,7 +11,7 @@ namespace tbm.Crawler.Db.Post
         public long AuthorUid { get; set; }
         [NotMapped] public string? AuthorManagerType { get; set; }
         [NotMapped] public ushort AuthorExpGrade { get; set; }
-        public uint PostTime { get; set; }
+        public uint PostedAt { get; set; }
         public int? AgreeCount { get; set; }
         public int? DisagreeCount { get; set; }
         public uint CreatedAt { get; set; }

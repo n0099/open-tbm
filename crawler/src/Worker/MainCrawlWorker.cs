@@ -6,8 +6,8 @@ namespace tbm.Crawler.Worker
     public class MainCrawlWorker : CyclicCrawlWorker
     {
         private readonly ILifetimeScope _scope0;
-        // store the max latestReplyTime of threads appeared in the previous crawl worker, key by fid
-        private readonly Dictionary<Fid, Time> _latestReplyTimeCheckpointCache = new();
+        // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
+        private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
 
         public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
             ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks) : base(logger, config)
@@ -46,16 +46,16 @@ namespace tbm.Crawler.Worker
         {
             stoppingToken.ThrowIfCancellationRequested();
             var savedThreads = new SavedThreadsList();
-            Time minLatestReplyTime;
+            Time minLatestReplyPostedAt;
             Page crawlingPage = 0;
             await using var scope1 = _scope0.BeginLifetimeScope();
-            if (!_latestReplyTimeCheckpointCache.TryGetValue(fid, out var maxLatestReplyTimeInPreviousCrawl))
-                // get the largest value of field latestReplyTime in all stored threads of this forum
+            if (!_latestReplyPostedAtCheckpointCache.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
+                // get the largest value of field latestReplyPostedAt in all stored threads of this forum
                 // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
                 // https://stackoverflow.com/questions/341264/max-or-default
-                maxLatestReplyTimeInPreviousCrawl =
+                maxLatestReplyPostedAtOccurInPreviousCrawl =
                     scope1.Resolve<TbmDbContext.New>()(fid).Threads
-                        .Max(t => (Time?)t.LatestReplyTime) ?? Time.MaxValue;
+                        .Max(t => (Time?)t.LatestReplyPostedAt) ?? Time.MaxValue;
             do
             {
                 crawlingPage++;
@@ -66,16 +66,16 @@ namespace tbm.Crawler.Worker
                 if (currentPageChangeSet != null)
                 {
                     savedThreads.Add(currentPageChangeSet);
-                    var latestReplyTimes = currentPageChangeSet.AllAfter.Select(t => t.LatestReplyTime).ToList();
-                    minLatestReplyTime = latestReplyTimes.Min();
-                    if (crawlingPage == 1) _latestReplyTimeCheckpointCache[fid] = latestReplyTimes.Max();
+                    var threadsLatestReplyPostedAt = currentPageChangeSet.AllAfter.Select(t => t.LatestReplyPostedAt).ToList();
+                    minLatestReplyPostedAt = threadsLatestReplyPostedAt.Min();
+                    if (crawlingPage == 1) _latestReplyPostedAtCheckpointCache[fid] = threadsLatestReplyPostedAt.Max();
                 }
                 else
                 { // retry this page
                     crawlingPage--;
-                    minLatestReplyTime = Time.MaxValue;
+                    minLatestReplyPostedAt = Time.MaxValue;
                 }
-            } while (minLatestReplyTime > maxLatestReplyTimeInPreviousCrawl);
+            } while (minLatestReplyPostedAt > maxLatestReplyPostedAtOccurInPreviousCrawl);
 
             await Task.WhenAll(savedThreads.Select(async threads =>
             {
@@ -101,7 +101,7 @@ namespace tbm.Crawler.Worker
                 {
                     var (before, after) = tuple;
                     return before.ReplyCount != after.ReplyCount
-                           || before.LatestReplyTime != after.LatestReplyTime
+                           || before.LatestReplyPostedAt != after.LatestReplyPostedAt
                            || before.LatestReplierUid != after.LatestReplierUid;
                 }).Select(tuple => tuple.Before.Tid));
                 return shouldCrawl;

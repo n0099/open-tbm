@@ -42,7 +42,7 @@ namespace tbm.Crawler.Worker
                 await using var transaction = await db1.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
                 var revisions = moderators.SelectMany(i => i).Select(tuple => new ForumModeratorRevision
                 {
-                    Time = now,
+                    DiscoveredAt = now,
                     Fid = fid,
                     Portrait = tuple.portrait,
                     ModeratorType = tuple.type
@@ -51,10 +51,9 @@ namespace tbm.Crawler.Worker
                     where r.Fid == fid
                     select new
                     {
-                        r.Time,
                         r.Portrait,
                         r.ModeratorType,
-                        Rank = Sql.Ext.Rank().Over().PartitionBy(r.Portrait).OrderByDesc(r.Time).ToValue()
+                        Rank = Sql.Ext.Rank().Over().PartitionBy(r.Portrait).OrderByDesc(r.DiscoveredAt).ToValue()
                     }).Where(e => e.Rank == 1).ToLinqToDB().ToList();
 
                 db1.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
@@ -67,7 +66,7 @@ namespace tbm.Crawler.Worker
                         e => (e.Portrait, e.ModeratorType))
                     .Select(e => new ForumModeratorRevision
                     {
-                        Time = now,
+                        DiscoveredAt = now,
                         Fid = fid,
                         Portrait = e.Portrait,
                         ModeratorType = null // moderator only exists in db means he is no longer a moderator

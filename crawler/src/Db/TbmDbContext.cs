@@ -40,11 +40,11 @@ namespace tbm.Crawler.Db
             b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
             b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
             b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
-            b.Entity<ThreadRevision>().ToTable("tbmc_revision_thread").HasKey(e => new {e.Tid, e.Time});
-            b.Entity<ReplyRevision>().ToTable("tbmc_revision_reply").HasKey(e => new {e.Pid, e.Time});
-            b.Entity<SubReplyRevision>().ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.Time});
-            b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.Time});
-            b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.Time});
+            b.Entity<ThreadRevision>().ToTable("tbmc_revision_thread").HasKey(e => new {e.Tid, e.TakenAt});
+            b.Entity<ReplyRevision>().ToTable("tbmc_revision_reply").HasKey(e => new {e.Pid, e.TakenAt});
+            b.Entity<SubReplyRevision>().ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.TakenAt});
+            b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.TakenAt});
+            b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
             b.Entity<ForumModeratorRevision>().ToTable("tbmc_revision_forumModerator");
             b.Entity<Forum>().ToTable("tbm_forum");
         }

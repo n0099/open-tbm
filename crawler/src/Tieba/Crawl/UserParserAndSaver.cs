@@ -9,7 +9,7 @@ namespace tbm.Crawler.Tieba.Crawl
         {
             {nameof(TiebaUser.Name),               1},
             {nameof(TiebaUser.DisplayName),        1 << 1},
-            {nameof(TiebaUser.PortraitUpdateTime), 1 << 2},
+            {nameof(TiebaUser.PortraitUpdatedAt),  1 << 2},
             {nameof(TiebaUser.Gender),             1 << 3},
             {nameof(TiebaUser.FansNickname),       1 << 4},
             {nameof(TiebaUser.Icon),               1 << 5},
@@ -32,7 +32,7 @@ namespace tbm.Crawler.Tieba.Crawl
 
                 var uid = el.Uid;
                 if (uid == 0) return null; // in client version 12.x the last user in list will be a empty user with uid 0
-                var (portrait, portraitUpdateTime) = ExtractPortrait(el.Portrait);
+                var (portrait, portraitUpdatedAt) = ExtractPortrait(el.Portrait);
                 if (uid < 0) // historical anonymous user
                 {
                     return new()
@@ -40,7 +40,7 @@ namespace tbm.Crawler.Tieba.Crawl
                         Uid = uid,
                         Name = el.NameShow,
                         Portrait = portrait,
-                        PortraitUpdateTime = portraitUpdateTime
+                        PortraitUpdatedAt = portraitUpdatedAt
                     };
                 }
 
@@ -53,7 +53,7 @@ namespace tbm.Crawler.Tieba.Crawl
                     u.Name = name;
                     u.DisplayName = name == nameShow ? null : nameShow;
                     u.Portrait = portrait;
-                    u.PortraitUpdateTime = portraitUpdateTime;
+                    u.PortraitUpdatedAt = portraitUpdatedAt;
                     u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
                     u.FansNickname = el.FansNickname.NullIfWhiteSpace();
                     u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(el.Iconinfo,
@@ -87,7 +87,7 @@ namespace tbm.Crawler.Tieba.Crawl
                 SavePostsOrUsers(db, tiebaUserFieldChangeIgnorance,
                     u => new UserRevision
                     {
-                        Time = u.UpdatedAt ?? u.CreatedAt,
+                        TakenAt = u.UpdatedAt ?? u.CreatedAt,
                         Uid = u.Uid,
                         TriggeredBy = postType
                     },
@@ -95,7 +95,7 @@ namespace tbm.Crawler.Tieba.Crawl
                     u => existingUsersKeyByUid[u.Uid],
                     r => r.Uid,
                     newRevisions => existing => newRevisions.Select(r => r.Uid).Contains(existing.Uid),
-                    r => new() {Time = r.Time, Uid = r.Uid});
+                    r => new() {TakenAt = r.TakenAt, Uid = r.Uid});
             }
         }
 

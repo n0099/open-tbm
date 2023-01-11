@@ -19,16 +19,16 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                         case nameof(TiebaUser.IpGeolocation) when newValue is null:
                         // possible clock drift across multiple response from tieba api, they should sync their servers with NTP
                         /* following sql can track these drift
-                        SELECT portraitUpdateTimeDiff, COUNT(*), MAX(uid), MIN(uid), MAX(portraitUpdateTime), MIN(portraitUpdateTime)
+                        SELECT portraitUpdatedAtDiff, COUNT(*), MAX(uid), MIN(uid), MAX(portraitUpdatedAt), MIN(portraitUpdatedAt)
                         FROM (
-                            SELECT uid, portraitUpdateTime, CAST(portraitUpdateTime AS SIGNED)
-                                    - LEAD(CAST(portraitUpdateTime AS SIGNED)) OVER (PARTITION BY uid ORDER BY time DESC) AS portraitUpdateTimeDiff
-                                FROM tbmc_revision_user WHERE portraitUpdateTime IS NOT NULL
+                            SELECT uid, portraitUpdatedAt, CAST(portraitUpdatedAt AS SIGNED)
+                                    - LEAD(CAST(portraitUpdatedAt AS SIGNED)) OVER (PARTITION BY uid ORDER BY time DESC) AS portraitUpdatedAtDiff
+                                FROM tbmc_revision_user WHERE portraitUpdatedAt IS NOT NULL
                         ) AS T
-                        WHERE portraitUpdateTimeDiff > -100 AND portraitUpdateTimeDiff < 100
-                        GROUP BY portraitUpdateTimeDiff ORDER BY portraitUpdateTimeDiff;
+                        WHERE portraitUpdatedAtDiff > -100 AND portraitUpdatedAtDiff < 100
+                        GROUP BY portraitUpdatedAtDiff ORDER BY portraitUpdatedAtDiff;
                         */
-                        case nameof(TiebaUser.PortraitUpdateTime)
+                        case nameof(TiebaUser.PortraitUpdatedAt)
                             when Math.Abs((newValue as int? ?? 0) - (oldValue as int? ?? 0)) <= 10:
                             return true;
                     }
@@ -49,7 +49,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                             || (newValue is not "" && oldValue is not ""):
                         // possible randomly response with 0.NullIfZero()
                         case nameof(ThreadPost.DisagreeCount) when newValue is null && oldValue is not null:
-                        // when the latest reply post is deleted and there's no new reply after delete, this field but not LatestReplyTime will be null
+                        // when the latest reply post is deleted and there's no new reply after delete, this field but not LatestReplyPostedAt will be null
                         case nameof(ThreadPost.LatestReplierUid) when newValue is null:
                             return true;
                     }

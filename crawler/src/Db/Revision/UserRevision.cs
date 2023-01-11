@@ -9,7 +9,7 @@ namespace tbm.Crawler.Db.Revision
         public string? Name { get; set; }
         public string? DisplayName { get; set; }
         public string? Portrait { get; set; }
-        public uint? PortraitUpdateTime { get; set; }
+        public uint? PortraitUpdatedAt { get; set; }
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
         public byte[]? Icon { get; set; }

@@ -12,7 +12,7 @@ namespace tbm.Crawler.Db.Post
         [NotMapped] public string? AuthorManagerType { get; set; }
         [NotMapped] public ushort AuthorExpGrade { get; set; }
         public uint? SubReplyCount { get; set; }
-        public uint PostTime { get; set; }
+        public uint PostedAt { get; set; }
         public ushort? IsFold { get; set; }
         public int? AgreeCount { get; set; }
         public int? DisagreeCount { get; set; }

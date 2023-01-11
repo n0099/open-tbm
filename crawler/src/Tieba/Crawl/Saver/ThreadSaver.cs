@@ -35,9 +35,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
             t => t.Tid, r => (long)r.Tid,
-            t => new ThreadRevision {Time = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid},
+            t => new ThreadRevision {TakenAt = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid},
             PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)),
             newRevisions => existing => newRevisions.Select(r => r.Tid).Contains(existing.Tid),
-            r => new() {Time = r.Time, Tid = r.Tid});
+            r => new() {TakenAt = r.TakenAt, Tid = r.Tid});
     }
 }

@@ -6,7 +6,7 @@ namespace tbm.Crawler.Db
         public string? Name { get; set; }
         public string? DisplayName { get; set; }
         public string Portrait { get; set; } = "";
-        public uint? PortraitUpdateTime { get; set; }
+        public uint? PortraitUpdatedAt { get; set; }
         public ushort? Gender { get; set; }
         public string? FansNickname { get; set; }
         public byte[]? Icon { get; set; }
@@ -22,7 +22,7 @@ namespace tbm.Crawler.Db
                    && Name == other.Name
                    && DisplayName == other.DisplayName
                    && Portrait == other.Portrait
-                   && PortraitUpdateTime == other.PortraitUpdateTime
+                   && PortraitUpdatedAt == other.PortraitUpdatedAt
                    && Gender == other.Gender
                    && FansNickname == other.FansNickname
                    && (Icon == other.Icon
@@ -45,7 +45,7 @@ namespace tbm.Crawler.Db
             hashCode.Add(Name);
             hashCode.Add(DisplayName);
             hashCode.Add(Portrait);
-            hashCode.Add(PortraitUpdateTime);
+            hashCode.Add(PortraitUpdatedAt);
             hashCode.Add(Gender);
             hashCode.Add(FansNickname);
             hashCode.AddBytes(Icon);

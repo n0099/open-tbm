@@ -17,8 +17,8 @@ namespace tbm.Crawler.Db.Post
         public long AuthorUid { get; set; }
         [NotMapped] public string? AuthorManagerType { get; set; }
         public string? AuthorPhoneType { get; set; }
-        public uint PostTime { get; set; }
-        public uint LatestReplyTime { get; set; }
+        public uint PostedAt { get; set; }
+        public uint LatestReplyPostedAt { get; set; }
         public long? LatestReplierUid { get; set; }
         public uint? ReplyCount { get; set; }
         public uint? ViewCount { get; set; }

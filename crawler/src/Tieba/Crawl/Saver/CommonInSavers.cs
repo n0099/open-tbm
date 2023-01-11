@@ -93,13 +93,13 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
             if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
             var existingRevisions = db.Set<TRevision>()
-                .Where(existing => newRevisions.Select(r => r.Time).Contains(existing.Time))
+                .Where(existing => newRevisions.Select(r => r.TakenAt).Contains(existing.TakenAt))
                 .Where(existingRevisionPredicate(newRevisions))
                 .Select(revisionKeySelector)
                 .ToList();
             db.Set<TRevision>().AddRange(newRevisions
-                .ExceptBy(existingRevisions.Select(e => (e.Time, revisionPostOrUserIdSelector(e))),
-                    r => (r.Time, revisionPostOrUserIdSelector(r))));
+                .ExceptBy(existingRevisions.Select(e => (e.TakenAt, revisionPostOrUserIdSelector(e))),
+                    r => (r.TakenAt, revisionPostOrUserIdSelector(r))));
         }
     }
 }

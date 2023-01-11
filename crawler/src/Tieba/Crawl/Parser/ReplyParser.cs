@@ -35,7 +35,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.AuthorUid = inPost.AuthorId;
                 // values of AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
                 o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
-                o.PostTime = inPost.Time;
+                o.PostedAt = inPost.Time;
                 o.IsFold = (ushort?)inPost.IsFold.NullIfZero();
                 o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();
                 o.DisagreeCount = (int?)inPost.Agree.DisagreeNum.NullIfZero();

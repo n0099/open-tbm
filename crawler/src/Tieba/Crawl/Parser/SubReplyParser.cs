@@ -23,7 +23,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.AuthorUid = author.Uid;
                 o.AuthorManagerType = author.BawuType.NullIfWhiteSpace();
                 o.AuthorExpGrade = (ushort)author.LevelId;
-                o.PostTime = inPost.Time;
+                o.PostedAt = inPost.Time;
                 o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();
                 o.DisagreeCount = (int?)inPost.Agree.DisagreeNum.NullIfZero();
                 return o;
