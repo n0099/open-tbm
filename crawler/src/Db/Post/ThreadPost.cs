@@ -29,6 +29,6 @@ namespace tbm.Crawler.Db.Post
         public byte[]? Geolocation { get; set; }
         public uint CreatedAt { get; set; }
         public uint? UpdatedAt { get; set; }
-        public uint? LastSeen { get; set; }
+        public uint? LastSeenAt { get; set; }
     }
 }

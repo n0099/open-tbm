@@ -41,7 +41,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 foreach (var p in entry.Properties)
                 {
                     var pName = p.Metadata.Name;
-                    if (!p.IsModified || pName is nameof(IPost.LastSeen)
+                    if (!p.IsModified || pName is nameof(IPost.LastSeenAt)
                             or nameof(ITimestampingEntity.CreatedAt)
                             or nameof(ITimestampingEntity.UpdatedAt)) continue;
 

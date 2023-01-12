@@ -78,7 +78,7 @@ namespace tbm.Crawler.Db
                 var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
                 var createdAtProp = e.Property(ie => ie.CreatedAt);
                 var updatedAtProp = e.Property(ie => ie.UpdatedAt);
-                var lastSeenProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeen) : null;
+                var lastSeenAtProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeenAt) : null;
 
                 switch (originalEntityState)
                 { // mutates Entry.CurrentValue will always update Entry.IsModified
@@ -91,13 +91,13 @@ namespace tbm.Crawler.Db
                         updatedAtProp.CurrentValue = now;
                         break;
                 }
-                if (lastSeenProp != null)
+                if (lastSeenAtProp != null)
                 {
-                    lastSeenProp.CurrentValue = originalEntityState switch
+                    lastSeenAtProp.CurrentValue = originalEntityState switch
                     {
                         EntityState.Unchanged => now, // updatedAt won't change when entity is unchanged
                         EntityState.Modified => null, // null means it's same with updatedAt
-                        _ => lastSeenProp.CurrentValue
+                        _ => lastSeenAtProp.CurrentValue
                     };
                 }
             });

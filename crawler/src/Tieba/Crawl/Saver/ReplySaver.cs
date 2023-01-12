@@ -74,8 +74,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     SignatureId = (uint)r.SignatureId!,
                     SignatureMd5 = MD5.HashData(r.Signature!),
                     Signature = r.Signature!,
-                    FirstSeen = now,
-                    LastSeen = now
+                    FirstSeenAt = now,
+                    LastSeenAt = now
                 }).ToList();
             if (!signatures.Any()) return () => { };
 
@@ -87,7 +87,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 select s).ToList();
             existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
                     (existing, newInReply) => (existing, newInReply))
-                .ForEach(tuple => tuple.existing.LastSeen = tuple.newInReply.LastSeen);
+                .ForEach(tuple => tuple.existing.LastSeenAt = tuple.newInReply.LastSeenAt);
 
             lock (SignatureLocks)
             {

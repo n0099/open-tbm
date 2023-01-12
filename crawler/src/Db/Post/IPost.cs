@@ -6,6 +6,6 @@ namespace tbm.Crawler.Db.Post
         public ulong Tid { get; set; }
         public long AuthorUid { get; set; }
         [NotMapped] public string? AuthorManagerType { get; set; }
-        public uint? LastSeen { get; set; }
+        public uint? LastSeenAt { get; set; }
     }
 }
