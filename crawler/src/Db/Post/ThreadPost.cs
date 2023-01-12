@@ -15,7 +15,6 @@ namespace tbm.Crawler.Db.Post
         public ushort? IsGood { get; set; }
         public string Title { get; set; } = "";
         public long AuthorUid { get; set; }
-        [NotMapped] public string? AuthorManagerType { get; set; }
         public string? AuthorPhoneType { get; set; }
         public uint PostedAt { get; set; }
         public uint LatestReplyPostedAt { get; set; }

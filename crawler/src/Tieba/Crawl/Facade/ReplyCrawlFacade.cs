@@ -35,7 +35,6 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                 .ForEach(tuple =>
                 { // fill the values for some field of reply from user list which is out of post list
                     var (r, author) = tuple;
-                    r.AuthorManagerType = author.BawuType.NullIfWhiteSpace(); // will be null if he's not a moderator
                     r.AuthorExpGrade = (ushort)author.LevelId;
                 });
 

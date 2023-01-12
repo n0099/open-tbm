@@ -14,10 +14,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 _ => false
             }, (_, _, _, _) => false);
 
-        protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
-        {
-            {nameof(SubReplyPost.AuthorManagerType), 1}
-        };
+        protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new();
 
         public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 

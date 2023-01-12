@@ -16,7 +16,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             {nameof(ThreadPost.StickyType),        1},
             {nameof(ThreadPost.TopicType),         1 << 1},
             {nameof(ThreadPost.IsGood),            1 << 2},
-            {nameof(ThreadPost.AuthorManagerType), 1 << 3},
             {nameof(ThreadPost.LatestReplierUid),  1 << 4},
             {nameof(ThreadPost.ReplyCount),        1 << 5},
             {nameof(ThreadPost.ShareCount),        1 << 7},

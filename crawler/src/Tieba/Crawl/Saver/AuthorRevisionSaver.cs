@@ -18,6 +18,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         private class LatestAuthorRevisionProjection<TValue>
         {
+            public Time DiscoveredAt { get; init; }
             public long Uid { get; init; }
             public TValue? Value { get; init; }
             public long Rank { get; init; }
@@ -33,6 +34,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 (a, b) => a != b,
                 r => new()
                 {
+                    DiscoveredAt = r.DiscoveredAt,
                     Uid = r.Uid,
                     Value = r.AuthorExpGrade,
                     Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.DiscoveredAt).ToValue()
@@ -67,14 +69,21 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 .Where(e => e.Rank == 1)
                 .ToLinqToDB().ToList()
                 .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
-                    (e.Uid, existing: e.Value, newInPost: postAuthorFieldValueSelector(p), DiscoveredAt: now))
+                (
+                    e.Uid,
+                    Existing: (e.DiscoveredAt, e.Value),
+                    NewInPost: (DiscoveredAt: now, Value: postAuthorFieldValueSelector(p))
+                ))
                 .ToList();
             var newRevisionOfNewUsers = posts
                 .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
                 .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
             var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
-                .Where(tuple => isValueChangedPredicate(tuple.existing, tuple.newInPost))
-                .Select(tuple => (tuple.Uid, Value: tuple.newInPost, tuple.DiscoveredAt));
+                // filter out revisions with the same DiscoveredAt to prevent duplicate keys
+                // when some fields get updated more than one time in a second
+                .Where(tuple => tuple.Existing.DiscoveredAt != tuple.NewInPost.DiscoveredAt
+                                && isValueChangedPredicate(tuple.Existing.Value, tuple.NewInPost.Value))
+                .Select(tuple => (tuple.Uid, tuple.NewInPost.Value, tuple.NewInPost.DiscoveredAt));
             lock (locks)
             {
                 var newRevisionsExceptLocked = newRevisionOfNewUsers

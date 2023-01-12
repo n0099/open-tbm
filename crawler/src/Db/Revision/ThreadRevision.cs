@@ -8,7 +8,6 @@ namespace tbm.Crawler.Db.Revision
         public string? StickyType { get; set; }
         public string? TopicType { get; set; }
         public ushort? IsGood { get; set; }
-        public string? AuthorManagerType { get; set; }
         public uint? LatestReplyPostedAt { get; set; }
         public long? LatestReplierUid { get; set; }
         public uint? ReplyCount { get; set; }

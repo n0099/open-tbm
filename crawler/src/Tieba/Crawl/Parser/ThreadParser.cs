@@ -46,7 +46,6 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.TopicType = inPost.LivePostType.NullIfWhiteSpace();
                 o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.SaveParentThreadTitle()
                 o.AuthorUid = inPost.AuthorId;
-                o.AuthorManagerType = inPost.Author.BawuType.NullIfWhiteSpace();
                 o.PostedAt = (uint)inPost.CreateTime;
                 o.LatestReplyPostedAt = (uint)inPost.LastTimeInt;
                 // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
