@@ -33,7 +33,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             ExpressionStarter<TPost> existingPostPredicate,
             Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
             Expression<Func<TRevision, TRevision>> revisionKeySelector)
-            where TRevision : BaseRevision, new()
+            where TRevision : class, IRevision, new()
         {
             var dbSet = db.Set<TPost>().TagWith("ForUpdate");
             if (dbSet == null) throw new ArgumentException(

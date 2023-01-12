@@ -19,9 +19,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Func<TRevision, long> revisionPostOrUserIdSelector,
             Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
             Expression<Func<TRevision, TRevision>> revisionKeySelector)
-            where TPostOrUser : class where TRevision : BaseRevision, new()
+            where TPostOrUser : class where TRevision : class, IRevision, new()
         {
             db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
+            db.TimestampingEntities();
             var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
             {
                 var postOrUserInTracking = existingSelector(newPostOrUser);
@@ -101,7 +102,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask;
                 return revision;
             }).OfType<TRevision>().ToList();
-            db.TimestampingEntities();
+
+            db.AddRange(newRevisions.OfType<ThreadRevision>().Select(r => r.GetSplitEntities()));
+            db.AddRange(newRevisions.OfType<ReplyRevision>().Select(r => r.GetSplitEntities()));
+            db.AddRange(newRevisions.OfType<SubReplyRevision>().Select(r => r.GetSplitEntities()));
+            db.AddRange(newRevisions.OfType<UserRevision>().Select(r => r.GetSplitEntities()));
 
             if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
             var existingRevisions = db.Set<TRevision>()
