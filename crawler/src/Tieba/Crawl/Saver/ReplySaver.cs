@@ -17,9 +17,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
             {nameof(ReplyPost.AuthorManagerType), 1},
-            {nameof(ReplyPost.SubReplyCount),     1 << 1},
             {nameof(ReplyPost.IsFold),            1 << 2},
-            {nameof(ReplyPost.AgreeCount),        1 << 3},
             {nameof(ReplyPost.DisagreeCount),     1 << 4},
             {nameof(ReplyPost.Geolocation),       1 << 5}
         };

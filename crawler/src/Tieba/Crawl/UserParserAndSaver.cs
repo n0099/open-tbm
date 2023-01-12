@@ -8,12 +8,8 @@ namespace tbm.Crawler.Tieba.Crawl
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
             {nameof(TiebaUser.Name),               1},
-            {nameof(TiebaUser.DisplayName),        1 << 1},
-            {nameof(TiebaUser.PortraitUpdatedAt),  1 << 2},
             {nameof(TiebaUser.Gender),             1 << 3},
-            {nameof(TiebaUser.FansNickname),       1 << 4},
-            {nameof(TiebaUser.Icon),               1 << 5},
-            {nameof(TiebaUser.IpGeolocation),      1 << 6}
+            {nameof(TiebaUser.Icon),               1 << 5}
         };
         private static readonly Regex PortraitExtractingRegex =
             new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));

@@ -40,10 +40,35 @@ namespace tbm.Crawler.Db
             b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
             b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
             b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
-            b.Entity<ThreadRevision>().ToTable("tbmc_revision_thread").HasKey(e => new {e.Tid, e.TakenAt});
-            b.Entity<ReplyRevision>().ToTable("tbmc_revision_reply").HasKey(e => new {e.Pid, e.TakenAt});
-            b.Entity<SubReplyRevision>().ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.TakenAt});
-            b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.TakenAt});
+            b.Entity<ThreadRevision>()
+                .SplitToTable("tbmc_revision_thread_viewCount", tb => tb.Property(e => e.ViewCount))
+                .ToTable("tbmc_revision_thread").HasKey(e => new {e.Tid, e.TakenAt});
+            b.Entity<ReplyRevision>()
+                .SplitToTable("tbmc_revision_reply_agreeCount", tb => tb.Property(e => e.AgreeCount))
+                .SplitToTable("tbmc_revision_reply_subReplyCount", tb => tb.Property(e => e.SubReplyCount))
+                .SplitToTable("tbmc_revision_reply_floor", tb => tb.Property(e => e.Floor))
+                .ToTable("tbmc_revision_reply").HasKey(e => new {e.Pid, e.TakenAt});
+            b.Entity<SubReplyRevision>()
+                .SplitToTable("tbmc_revision_subReply_agreeCount", tb => tb.Property(e => e.AgreeCount))
+                .SplitToTable("tbmc_revision_subReply_disagreeCount", tb => tb.Property(e => e.DisagreeCount))
+                .ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.TakenAt});
+            b.Entity<UserRevision>()
+                .SplitToTable("tbmc_revision_user_ipGeolocation", tb =>
+                {
+                    tb.Property(e => e.TriggeredBy);
+                    tb.Property(e => e.IpGeolocation);
+                })
+                .SplitToTable("tbmc_revision_user_portraitUpdatedAt", tb =>
+                {
+                    tb.Property(e => e.TriggeredBy);
+                    tb.Property(e => e.PortraitUpdatedAt);
+                })
+                .SplitToTable("tbmc_revision_user_displayName", tb =>
+                {
+                    tb.Property(e => e.TriggeredBy);
+                    tb.Property(e => e.DisplayName);
+                })
+                .ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.TakenAt});
             b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
             b.Entity<ForumModeratorRevision>().ToTable("tbmc_revision_forumModerator");
             b.Entity<Forum>().ToTable("tbm_forum");

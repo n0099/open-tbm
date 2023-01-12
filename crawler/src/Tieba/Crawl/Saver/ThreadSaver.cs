@@ -19,7 +19,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             {nameof(ThreadPost.AuthorManagerType), 1 << 3},
             {nameof(ThreadPost.LatestReplierUid),  1 << 4},
             {nameof(ThreadPost.ReplyCount),        1 << 5},
-            {nameof(ThreadPost.ViewCount),         1 << 6},
             {nameof(ThreadPost.ShareCount),        1 << 7},
             {nameof(ThreadPost.AgreeCount),        1 << 8},
             {nameof(ThreadPost.DisagreeCount),     1 << 9},

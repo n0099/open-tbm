@@ -16,9 +16,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
-            {nameof(SubReplyPost.AuthorManagerType), 1},
-            {nameof(SubReplyPost.AgreeCount),        1 << 1},
-            {nameof(SubReplyPost.DisagreeCount),     1 << 2}
+            {nameof(SubReplyPost.AuthorManagerType), 1}
         };
 
         public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);

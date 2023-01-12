@@ -11,7 +11,6 @@ namespace tbm.Crawler.Db.Revision
         public string? Portrait { get; set; }
         public uint? PortraitUpdatedAt { get; set; }
         public ushort? Gender { get; set; }
-        public string? FansNickname { get; set; }
         public byte[]? Icon { get; set; }
         public string? IpGeolocation { get; set; }
     }

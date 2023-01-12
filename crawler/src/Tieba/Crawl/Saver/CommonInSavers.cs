@@ -78,6 +78,15 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     else
                     {
                         revision ??= revisionFactory(postOrUserInTracking);
+                        // quote from MSDN https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
+                        // If the property type of this PropertyInfo object is a value type and value is null
+                        // the property will be set to the default value for that type.
+                        // https://stackoverflow.com/questions/3049477/propertyinfo-setvalue-and-nulls
+                        // this is a desired behavior to convert null values produced by ExtensionMethods.NullIfZero()
+                        // back to zeros for some revision fields that had been entity splitting
+                        // these split tables will only contain two Superkeys: the Candidate/Primary Key and the field gets split out
+                        // so it's no longer necessary to use NullFieldsBitMasks to identify between
+                        // the real null values and unchanged fields that have null as a placeholder
                         revisionProp.SetValue(revision, p.OriginalValue);
 
                         if (p.OriginalValue != null) continue;
