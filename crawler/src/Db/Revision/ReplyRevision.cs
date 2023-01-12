@@ -29,6 +29,9 @@ namespace tbm.Crawler.Db.Revision
         public int? DisagreeCount { get; set; }
         public byte[]? Geolocation { get; set; }
 
+        public override bool IsAllFieldsIsNullExceptSplit() =>
+            NullFieldsBitMask == null && IsFold == null && DisagreeCount == null && Geolocation == null;
+
         public class SplitFloor : BaseReplyRevision
         {
             public uint Floor { get; set; }

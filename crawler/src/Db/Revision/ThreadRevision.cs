@@ -25,6 +25,20 @@ namespace tbm.Crawler.Db.Revision
         public int? DisagreeCount { get; set; }
         public byte[]? Geolocation { get; set; }
 
+        public override bool IsAllFieldsIsNullExceptSplit() =>
+            NullFieldsBitMask == null
+            && ThreadType == null
+            && StickyType == null
+            && TopicType == null
+            && IsGood == null
+            && LatestReplyPostedAt == null
+            && LatestReplierUid == null
+            && ReplyCount == null
+            && ShareCount == null
+            && AgreeCount == null
+            && DisagreeCount == null
+            && Geolocation == null;
+
         public class SplitViewCount : BaseThreadRevision
         {
             public uint ViewCount { get; set; }

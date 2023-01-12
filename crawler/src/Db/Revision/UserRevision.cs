@@ -32,6 +32,13 @@ namespace tbm.Crawler.Db.Revision
                 () => new() {TakenAt = TakenAt, Uid = Uid, TriggeredBy = TriggeredBy, IpGeolocation = value});
         }
 
+        public override bool IsAllFieldsIsNullExceptSplit() =>
+            NullFieldsBitMask == null
+            && Name == null
+            && Portrait == null
+            && Gender == null
+            && Icon == null;
+
         public class SplitDisplayName : BaseUserRevision
         {
             public string? DisplayName { get; set; }

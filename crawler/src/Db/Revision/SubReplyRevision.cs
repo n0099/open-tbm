@@ -20,6 +20,8 @@ namespace tbm.Crawler.Db.Revision
                 () => new() {TakenAt = TakenAt, Spid = Spid, DisagreeCount = value});
         }
 
+        public override bool IsAllFieldsIsNullExceptSplit() => true;
+
         public class SplitAgreeCount : BaseSubReplyRevision
         {
             public int AgreeCount { get; set; }

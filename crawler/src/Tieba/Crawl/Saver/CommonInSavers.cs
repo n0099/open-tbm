@@ -36,7 +36,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                     .Where(p => p.IsModified).ForEach(p => p.IsModified = false);
 
                 var revision = default(TRevision);
-                int? revisionNullFieldsBitMask = null;
+                var revisionNullFieldsBitMask = 0;
                 var whichPostType = typeof(TPostOrUser);
                 var entryIsUser = whichPostType == typeof(TiebaUser);
                 foreach (var p in entry.Properties)
@@ -91,7 +91,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                         revisionProp.SetValue(revision, p.OriginalValue);
 
                         if (p.OriginalValue != null) continue;
-                        revisionNullFieldsBitMask ??= 0;
                         // fields that have already split out will not exist in RevisionNullFieldsBitMasks
                         if (RevisionNullFieldsBitMasks.TryGetValue(pName, out var whichBitToMask))
                         { // mask the corresponding field bit with 1
@@ -99,22 +98,24 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                         }
                     }
                 }
-                if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask;
+                if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask.NullIfZero();
                 return revision;
             }).OfType<TRevision>().ToList();
-
-            db.AddRange(newRevisions.OfType<ThreadRevision>().Select(r => r.GetSplitEntities()));
-            db.AddRange(newRevisions.OfType<ReplyRevision>().Select(r => r.GetSplitEntities()));
-            db.AddRange(newRevisions.OfType<SubReplyRevision>().Select(r => r.GetSplitEntities()));
-            db.AddRange(newRevisions.OfType<UserRevision>().Select(r => r.GetSplitEntities()));
-
             if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
+
+            void AddSplitRevisions<T>() => newRevisions!.OfType<RevisionWithSplitting<T>>()
+                .SelectMany(r => r.GetSplitEntities()).ForEach(e => db.Add(e!));
+            AddSplitRevisions<BaseThreadRevision>();
+            AddSplitRevisions<BaseReplyRevision>();
+            AddSplitRevisions<BaseSubReplyRevision>();
+            AddSplitRevisions<BaseUserRevision>();
+
             var existingRevisions = db.Set<TRevision>()
                 .Where(existing => newRevisions.Select(r => r.TakenAt).Contains(existing.TakenAt))
                 .Where(existingRevisionPredicate(newRevisions))
                 .Select(revisionKeySelector)
                 .ToList();
-            db.Set<TRevision>().AddRange(newRevisions
+            db.Set<TRevision>().AddRange(newRevisions.Where(r => !r.IsAllFieldsIsNullExceptSplit())
                 .ExceptBy(existingRevisions.Select(e => (e.TakenAt, revisionPostOrUserIdSelector(e))),
                     r => (r.TakenAt, revisionPostOrUserIdSelector(r))));
         }
