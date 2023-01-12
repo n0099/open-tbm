@@ -13,12 +13,12 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         protected override void BeforeCommitSaveHook(TbmDbContext db)
         { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
-            // so only latest repliers that not exists in parsed users is being inserted
+            // so only latest repliers that not exists in parsed users are being inserted
             // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
             var existingUsersId = (from u in db.Users.AsNoTracking()
                 where _latestRepliers.Keys.Any(uid => uid == u.Uid)
                 select u.Uid).ToHashSet();
-            existingUsersId.UnionWith( // users not exists in db but has already been added into DbContext and tracking
+            existingUsersId.UnionWith( // users not exists in DB but has already been added into DbContext and tracking
                 db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid));
 
             var newLatestRepliers = _latestRepliers

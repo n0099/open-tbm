@@ -91,8 +91,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
                         if (p.OriginalValue != null) continue;
                         revisionNullFieldsBitMask ??= 0;
-                        // mask the corresponding field bit with 1
-                        revisionNullFieldsBitMask |= RevisionNullFieldsBitMasks[pName];
+                        // fields that have already split out will not exist in RevisionNullFieldsBitMasks
+                        if (RevisionNullFieldsBitMasks.TryGetValue(pName, out var whichBitToMask))
+                        { // mask the corresponding field bit with 1
+                            revisionNullFieldsBitMask |= whichBitToMask;
+                        }
                     }
                 }
                 if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask;

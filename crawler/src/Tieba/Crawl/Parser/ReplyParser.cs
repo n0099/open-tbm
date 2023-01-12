@@ -33,7 +33,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                     () => new PostContentWrapper {Value = {inPost.Content}});
                 o.AuthorUid = inPost.AuthorId;
-                // values of AuthorManagerType and AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
+                // values of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
                 o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
                 o.PostedAt = inPost.Time;
                 o.IsFold = (ushort?)inPost.IsFold.NullIfZero();

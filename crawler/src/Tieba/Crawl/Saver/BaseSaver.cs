@@ -37,7 +37,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         {
             var dbSet = db.Set<TPost>().TagWith("ForUpdate");
             if (dbSet == null) throw new ArgumentException(
-                $"DbSet<{typeof(TPost).Name}> is not exists in DbContext.");
+                $"DbSet<{typeof(TPost).Name}> is not exist in DbContext.");
 
             var existingKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
             // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()

@@ -69,7 +69,7 @@ namespace tbm.Crawler.Worker
                         DiscoveredAt = now,
                         Fid = fid,
                         Portrait = e.Portrait,
-                        ModeratorType = null // moderator only exists in db means he is no longer a moderator
+                        ModeratorType = null // moderator only exists in DB means he is no longer a moderator
                     }));
                 _ = await db1.SaveChangesAsync(stoppingToken);
                 await transaction.CommitAsync(stoppingToken);
