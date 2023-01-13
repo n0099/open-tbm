@@ -16,9 +16,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
-            {nameof(ReplyPost.IsFold),            1 << 2},
-            {nameof(ReplyPost.DisagreeCount),     1 << 4},
-            {nameof(ReplyPost.Geolocation),       1 << 5}
+            {nameof(ReplyPost.IsFold),        1 << 2},
+            {nameof(ReplyPost.DisagreeCount), 1 << 4},
+            {nameof(ReplyPost.Geolocation),   1 << 5}
         };
 
         protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseReplyRevision>>>
@@ -66,11 +66,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
         {
-            var changeSet = SavePosts(db, r => r.Pid, r => (long)r.Pid,
+            var changeSet = SavePosts(db, r => r.Pid,
                 r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
-                PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)),
-                newRevisions => existing => newRevisions.Select(r => r.Pid).Contains(existing.Pid),
-                r => new() {TakenAt = r.TakenAt, Pid = r.Pid});
+                PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
             db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
             PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;

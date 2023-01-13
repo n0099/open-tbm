@@ -15,15 +15,15 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
-            {nameof(ThreadPost.StickyType),        1},
-            {nameof(ThreadPost.TopicType),         1 << 1},
-            {nameof(ThreadPost.IsGood),            1 << 2},
-            {nameof(ThreadPost.LatestReplierUid),  1 << 4},
-            {nameof(ThreadPost.ReplyCount),        1 << 5},
-            {nameof(ThreadPost.ShareCount),        1 << 7},
-            {nameof(ThreadPost.AgreeCount),        1 << 8},
-            {nameof(ThreadPost.DisagreeCount),     1 << 9},
-            {nameof(ThreadPost.Geolocation),       1 << 10}
+            {nameof(ThreadPost.StickyType),       1},
+            {nameof(ThreadPost.TopicType),        1 << 1},
+            {nameof(ThreadPost.IsGood),           1 << 2},
+            {nameof(ThreadPost.LatestReplierUid), 1 << 4},
+            {nameof(ThreadPost.ReplyCount),       1 << 5},
+            {nameof(ThreadPost.ShareCount),       1 << 7},
+            {nameof(ThreadPost.AgreeCount),       1 << 8},
+            {nameof(ThreadPost.DisagreeCount),    1 << 9},
+            {nameof(ThreadPost.Geolocation),      1 << 10}
         };
 
         protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseThreadRevision>>>
@@ -43,11 +43,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             AuthorRevisionSaver.New authorRevisionSaverFactory
         ) : base(logger, posts, authorRevisionSaverFactory, "thread") { }
 
-        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db,
-            t => t.Tid, r => (long)r.Tid,
+        public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, t => t.Tid,
             t => new ThreadRevision {TakenAt = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid},
-            PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)),
-            newRevisions => existing => newRevisions.Select(r => r.Tid).Contains(existing.Tid),
-            r => new() {TakenAt = r.TakenAt, Tid = r.Tid});
+            PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)));
     }
 }

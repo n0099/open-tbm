@@ -7,9 +7,9 @@ namespace tbm.Crawler.Tieba.Crawl
     {
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
-            {nameof(TiebaUser.Name),               1},
-            {nameof(TiebaUser.Gender),             1 << 3},
-            {nameof(TiebaUser.Icon),               1 << 5}
+            {nameof(TiebaUser.Name),   1},
+            {nameof(TiebaUser.Gender), 1 << 3},
+            {nameof(TiebaUser.Icon),   1 << 5}
         };
 
         protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseUserRevision>>>
@@ -109,10 +109,7 @@ namespace tbm.Crawler.Tieba.Crawl
                         TriggeredBy = postType
                     },
                     usersExceptLocked.Values.ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
-                    u => existingUsersKeyByUid[u.Uid],
-                    r => r.Uid,
-                    newRevisions => existing => newRevisions.Select(r => r.Uid).Contains(existing.Uid),
-                    r => new() {TakenAt = r.TakenAt, Uid = r.Uid});
+                    u => existingUsersKeyByUid[u.Uid]);
             }
         }
 

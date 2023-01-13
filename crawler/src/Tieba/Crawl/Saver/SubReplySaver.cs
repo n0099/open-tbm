@@ -40,11 +40,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
         {
-            var changeSet = SavePosts(db, sr => sr.Spid, r => (long)r.Spid,
+            var changeSet = SavePosts(db, sr => sr.Spid,
                 sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
-                PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)),
-                newRevisions => existing => newRevisions.Select(r => r.Spid).Contains(existing.Spid),
-                r => new() {TakenAt = r.TakenAt, Spid = r.Spid});
+                PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
 
             db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => new SubReplyContent {Spid = sr.Spid, Content = sr.Content}));
             PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;

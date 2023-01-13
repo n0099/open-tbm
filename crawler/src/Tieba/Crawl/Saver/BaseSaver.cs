@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevision>
@@ -30,12 +28,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
             Func<TPost, ulong> postIdSelector,
-            Func<TRevision, long> revisionPostIdSelector,
             Func<TPost, TRevision> revisionFactory,
-            ExpressionStarter<TPost> existingPostPredicate,
-            Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
-            Expression<Func<TRevision, TRevision>> revisionKeySelector)
-            where TRevision : class, IRevision, new()
+            ExpressionStarter<TPost> existingPostPredicate)
+            where TRevision : class, IRevision
         {
             var dbSet = db.Set<TPost>().TagWith("ForUpdate");
             if (dbSet == null) throw new ArgumentException(
@@ -47,8 +42,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
             SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,
                 Posts.Values.ToLookup(p => existingKeyById.ContainsKey(postIdSelector(p))),
-                p => existingKeyById[postIdSelector(p)],
-                revisionPostIdSelector, existingRevisionPredicate, revisionKeySelector);
+                p => existingKeyById[postIdSelector(p)]);
             return new(existingBeforeMerge, Posts.Values, postIdSelector);
         }
     }

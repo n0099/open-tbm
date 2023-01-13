@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using FlexLabs.EntityFrameworkCore.Upsert;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver
@@ -19,11 +18,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             FieldChangeIgnoranceCallbackRecord userFieldChangeIgnorance,
             Func<TPostOrUser, TRevision> revisionFactory,
             ILookup<bool, TPostOrUser> existingOrNewLookup,
-            Func<TPostOrUser, TPostOrUser> existingSelector,
-            Func<TRevision, long> revisionPostOrUserIdSelector,
-            Func<IEnumerable<TRevision>, Expression<Func<TRevision, bool>>> existingRevisionPredicate,
-            Expression<Func<TRevision, TRevision>> revisionKeySelector)
-            where TPostOrUser : class where TRevision : class, IRevision, new()
+            Func<TPostOrUser, TPostOrUser> existingSelector)
+            where TPostOrUser : class where TRevision : class, IRevision
         {
             db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
             db.TimestampingEntities();
