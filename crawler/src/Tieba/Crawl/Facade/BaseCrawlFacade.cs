@@ -1,8 +1,10 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade
 {
     public abstract class BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> : IDisposable
-        where TPost : class, IPost where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
-        where TResponse : IMessage<TResponse> where TPostProtoBuf : IMessage<TPostProtoBuf>
+        where TPost : class, IPost
+        where TResponse : IMessage<TResponse>
+        where TPostProtoBuf : IMessage<TPostProtoBuf>
+        where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
     {
         private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
         private readonly TbmDbContext.New _dbContextFactory;

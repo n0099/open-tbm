@@ -2,6 +2,8 @@ namespace tbm.Crawler.Tieba.Crawl
 {
     public class CrawlerLocks : WithLogTrace
     {
+        public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
+
         public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
         {
             public override string ToString() => $"f{Fid}" + (Tid == null ? "" : $" t{Tid}") + (Pid == null ? "" : $" p{Pid}");
@@ -94,9 +96,8 @@ namespace tbm.Crawler.Tieba.Crawl
             }
             lock (_failed)
             {
-                if (_failed.ContainsKey(lockId))
+                if (_failed.TryGetValue(lockId, out var pagesLock))
                 {
-                    var pagesLock = _failed[lockId];
                     lock (pagesLock) if (!pagesLock.TryAdd(page, failureCount)) pagesLock[page] = failureCount;
                 }
                 else

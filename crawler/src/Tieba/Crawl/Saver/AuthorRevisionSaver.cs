@@ -58,7 +58,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             Func<TValue?, TValue?, bool> isValueChangedPredicate,
             Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
             Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
-            where TRevision : AuthorRevision where TPost : IPost
+            where TPost : IPost
+            where TRevision : AuthorRevision
         {
             var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
             _ = dbSet.AsNoTracking().TagWith("ForUpdate") // https://github.com/linq2db/linq2db/issues/3905

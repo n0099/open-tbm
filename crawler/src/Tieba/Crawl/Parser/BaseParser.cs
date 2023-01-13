@@ -1,7 +1,8 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser
 {
     public abstract class BaseParser<TPost, TPostProtoBuf>
-        where TPost: class, IPost where TPostProtoBuf : IMessage<TPostProtoBuf>
+        where TPost: class, IPost
+        where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         protected abstract PostId PostIdSelector(TPost post);
         protected abstract TPost Convert(TPostProtoBuf inPost);

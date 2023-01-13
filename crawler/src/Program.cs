@@ -6,8 +6,6 @@ namespace tbm.Crawler
 {
     internal class Program
     {
-        public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
-
         private static async Task Main()
         {
             var logger = LogManager.GetCurrentClassLogger();
@@ -45,7 +43,7 @@ namespace tbm.Crawler
                         builder.RegisterType<TbmDbContext>();
                         builder.RegisterType<ClientRequester>();
                         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
-                        RegisteredCrawlerLocks.ForEach(type =>
+                        CrawlerLocks.RegisteredCrawlerLocks.ForEach(type =>
                             builder.RegisterType<CrawlerLocks>().Keyed<CrawlerLocks>(type)
                                 .SingleInstance().WithParameter("lockType", type));
                         builder.RegisterType<AuthorRevisionSaver>();

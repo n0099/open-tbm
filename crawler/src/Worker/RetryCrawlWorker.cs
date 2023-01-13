@@ -18,7 +18,7 @@ namespace tbm.Crawler.Worker
 
         protected override async Task DoWork(CancellationToken stoppingToken)
         {
-            foreach (var lockType in Program.RegisteredCrawlerLocks)
+            foreach (var lockType in CrawlerLocks.RegisteredCrawlerLocks)
             {
                 if (stoppingToken.IsCancellationRequested) return;
                 var failed = _registeredLocksFactory[lockType].RetryAllFailed();

@@ -1,7 +1,8 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler
 {
     public abstract class BaseCrawler<TResponse, TPostProtoBuf>
-        where TResponse : IMessage<TResponse> where TPostProtoBuf : IMessage<TPostProtoBuf>
+        where TResponse : IMessage<TResponse>
+        where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
         protected record Request(Task<TResponse> Response, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
