@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
-    public class ReplySaver : BaseSaver<ReplyPost>
+    public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propName, oldValue, newValue) => propName switch
@@ -19,6 +19,26 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             {nameof(ReplyPost.IsFold),            1 << 2},
             {nameof(ReplyPost.DisagreeCount),     1 << 4},
             {nameof(ReplyPost.Geolocation),       1 << 5}
+        };
+
+        protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseReplyRevision>>>
+            RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        {
+            {
+                typeof(ReplyRevision.SplitFloor), (db, revisions) =>
+                    db.Set<ReplyRevision.SplitFloor>()
+                        .UpsertRange(revisions.OfType<ReplyRevision.SplitFloor>()).NoUpdate().Run()
+            },
+            {
+                typeof(ReplyRevision.SplitSubReplyCount), (db, revisions) =>
+                    db.Set<ReplyRevision.SplitSubReplyCount>()
+                        .UpsertRange(revisions.OfType<ReplyRevision.SplitSubReplyCount>()).NoUpdate().Run()
+            },
+            {
+                typeof(ReplyRevision.SplitAgreeCount), (db, revisions) =>
+                    db.Set<ReplyRevision.SplitAgreeCount>()
+                        .UpsertRange(revisions.OfType<ReplyRevision.SplitAgreeCount>()).NoUpdate().Run()
+            }
         };
 
         private record UniqueSignature(uint Id, byte[] Md5)

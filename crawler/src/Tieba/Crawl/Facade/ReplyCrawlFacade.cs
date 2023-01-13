@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade
 {
-    public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, ReplyResponse, Reply, ReplyCrawler>
+    public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply, ReplyCrawler>
     {
         private readonly TbmDbContext.New _dbContextFactory;
         private readonly SonicPusher _pusher;

@@ -1,14 +1,18 @@
 using System.Linq.Expressions;
+using FlexLabs.EntityFrameworkCore.Upsert;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
-    public abstract class CommonInSavers<TSaver> : StaticCommonInSavers where TSaver : CommonInSavers<TSaver>
+    public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
+        where TBaseRevision : class, IRevision
     {
-        private readonly ILogger<CommonInSavers<TSaver>> _logger;
+        private readonly ILogger<CommonInSavers<TBaseRevision>> _logger;
 
-        protected CommonInSavers(ILogger<CommonInSavers<TSaver>> logger) => _logger = logger;
+        protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
 
         protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => throw new NotImplementedException();
+        protected virtual Dictionary<Type, Action<TbmDbContext, IEnumerable<TBaseRevision>>>
+            RevisionSplitEntitiesUpsertPayloads => throw new NotImplementedException();
 
         protected void SavePostsOrUsers<TPostOrUser, TRevision>(
             TbmDbContext db,
@@ -103,21 +107,11 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             }).OfType<TRevision>().ToList();
             if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
 
-            void AddSplitRevisions<T>() => newRevisions!.OfType<RevisionWithSplitting<T>>()
-                .SelectMany(r => r.GetSplitEntities()).ForEach(e => db.Add(e!));
-            AddSplitRevisions<BaseThreadRevision>();
-            AddSplitRevisions<BaseReplyRevision>();
-            AddSplitRevisions<BaseSubReplyRevision>();
-            AddSplitRevisions<BaseUserRevision>();
-
-            var existingRevisions = db.Set<TRevision>()
-                .Where(existing => newRevisions.Select(r => r.TakenAt).Contains(existing.TakenAt))
-                .Where(existingRevisionPredicate(newRevisions))
-                .Select(revisionKeySelector)
-                .ToList();
-            db.Set<TRevision>().AddRange(newRevisions.Where(r => !r.IsAllFieldsIsNullExceptSplit())
-                .ExceptBy(existingRevisions.Select(e => (e.TakenAt, revisionPostOrUserIdSelector(e))),
-                    r => (r.TakenAt, revisionPostOrUserIdSelector(r))));
+            _ = db.Set<TRevision>().UpsertRange(newRevisions.Where(r => !r.IsAllFieldsIsNullExceptSplit())).NoUpdate().Run();
+            newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
+                .SelectMany(r => r.SplitEntities)
+                .GroupBy(p => p.Key, p => p.Value)
+                .ForEach(g => RevisionSplitEntitiesUpsertPayloads[g.Key](db, g));
         }
     }
 }

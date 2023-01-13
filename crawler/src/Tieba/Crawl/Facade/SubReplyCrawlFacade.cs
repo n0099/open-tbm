@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade
 {
-    public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, SubReplyResponse, SubReply, SubReplyCrawler>
+    public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply, SubReplyCrawler>
     {
         private readonly SonicPusher _pusher;
         private readonly Tid _tid;

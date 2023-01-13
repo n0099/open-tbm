@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade
 {
-    public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, ThreadResponse, Thread, ThreadCrawler>
+    public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread, ThreadCrawler>
     {
         private readonly Dictionary<long, TiebaUser> _latestRepliers = new();
 
@@ -15,11 +15,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
             // so only latest repliers that not exists in parsed users are being inserted
             // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
-            var existingUsersId = (from u in db.Users.AsNoTracking()
-                where _latestRepliers.Keys.Any(uid => uid == u.Uid)
-                select u.Uid).ToHashSet();
-            existingUsersId.UnionWith( // users not exists in DB but has already been added into DbContext and tracking
-                db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid));
+
+            // users has already been added into DbContext and tracking
+            var existingUsersId = db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid);
 
             var newLatestRepliers = _latestRepliers
                 .ExceptBy(existingUsersId, i => i.Key)
@@ -29,9 +27,12 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             var newLatestRepliersExceptLocked = newLatestRepliers
                 .IntersectBy(Users.AcquireUidLocksForSave(
                     newLatestRepliers.Select(u => u.Uid)), u => u.Uid)
-                .ToList();
-            db.Users.AddRange(newLatestRepliersExceptLocked);
-            db.TimestampingEntities(newLatestRepliersExceptLocked);
+                .Select(u =>
+                {
+                    u.CreatedAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                    return u;
+                });
+            _ = db.Users.UpsertRange(newLatestRepliersExceptLocked).NoUpdate().Run();
         }
 
         public static TiebaUser LatestReplierFactory(long uid, string? name, string? displayName) =>

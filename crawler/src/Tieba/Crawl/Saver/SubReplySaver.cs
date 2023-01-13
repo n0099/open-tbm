@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
-    public class SubReplySaver : BaseSaver<SubReplyPost>
+    public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propName, oldValue, newValue) => propName switch
@@ -15,6 +15,21 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             }, (_, _, _, _) => false);
 
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new();
+
+        protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseSubReplyRevision>>>
+            RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        {
+            {
+                typeof(SubReplyRevision.SplitAgreeCount), (db, revisions) =>
+                    db.Set<SubReplyRevision.SplitAgreeCount>()
+                        .UpsertRange(revisions.OfType<SubReplyRevision.SplitAgreeCount>()).NoUpdate().Run()
+            },
+            {
+                typeof(SubReplyRevision.SplitDisagreeCount), (db, revisions) =>
+                    db.Set<SubReplyRevision.SplitDisagreeCount>()
+                        .UpsertRange(revisions.OfType<SubReplyRevision.SplitDisagreeCount>()).NoUpdate().Run()
+            }
+        };
 
         public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 

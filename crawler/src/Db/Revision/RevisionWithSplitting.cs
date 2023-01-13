@@ -7,8 +7,7 @@ namespace tbm.Crawler.Db.Revision
         public ushort? NullFieldsBitMask { get; set; }
         public virtual bool IsAllFieldsIsNullExceptSplit() => throw new NotImplementedException();
 
-        private Dictionary<Type, TSplitEntities> SplitEntities { get; } = new();
-        public IEnumerable<TSplitEntities> GetSplitEntities() => SplitEntities.Values;
+        public Dictionary<Type, TSplitEntities> SplitEntities { get; } = new();
 
         protected TValue? GetSplitEntityValue<TSplitEntity, TValue>(Func<TSplitEntity, TValue?> valueSelector)
             where TSplitEntity : class, TSplitEntities =>

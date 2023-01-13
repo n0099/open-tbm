@@ -3,7 +3,7 @@ using Uid = System.Int64;
 
 namespace tbm.Crawler.Tieba.Crawl
 {
-    public class UserParserAndSaver : CommonInSavers<UserParserAndSaver>
+    public class UserParserAndSaver : CommonInSavers<BaseUserRevision>
     {
         protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
         {
@@ -11,6 +11,27 @@ namespace tbm.Crawler.Tieba.Crawl
             {nameof(TiebaUser.Gender),             1 << 3},
             {nameof(TiebaUser.Icon),               1 << 5}
         };
+
+        protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseUserRevision>>>
+            RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        {
+            {
+                typeof(UserRevision.SplitDisplayName), (db, revisions) =>
+                    db.Set<UserRevision.SplitDisplayName>()
+                        .UpsertRange(revisions.OfType<UserRevision.SplitDisplayName>()).NoUpdate().Run()
+            },
+            {
+                typeof(UserRevision.SplitPortraitUpdatedAt), (db, revisions) =>
+                    db.Set<UserRevision.SplitPortraitUpdatedAt>()
+                        .UpsertRange(revisions.OfType<UserRevision.SplitPortraitUpdatedAt>()).NoUpdate().Run()
+            },
+            {
+                typeof(UserRevision.SplitIpGeolocation), (db, revisions) =>
+                    db.Set<UserRevision.SplitIpGeolocation>()
+                        .UpsertRange(revisions.OfType<UserRevision.SplitIpGeolocation>()).NoUpdate().Run()
+            }
+        };
+
         private static readonly Regex PortraitExtractingRegex =
             new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly HashSet<Uid> UserIdLocks = new();

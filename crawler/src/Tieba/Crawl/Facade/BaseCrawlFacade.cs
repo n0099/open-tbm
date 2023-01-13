@@ -1,16 +1,17 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade
 {
-    public abstract class BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> : IDisposable
+    public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler> : IDisposable
         where TPost : class, IPost
+        where TBaseRevision : class, IRevision
         where TResponse : IMessage<TResponse>
         where TPostProtoBuf : IMessage<TPostProtoBuf>
         where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
     {
-        private readonly ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> _logger;
+        private readonly ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> _logger;
         private readonly TbmDbContext.New _dbContextFactory;
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
         private readonly BaseParser<TPost, TPostProtoBuf> _parser;
-        private readonly BaseSaver<TPost> _saver;
+        private readonly BaseSaver<TPost, TBaseRevision> _saver;
         protected UserParserAndSaver Users { get; }
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
@@ -23,11 +24,11 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         private readonly HashSet<Page> _lockingPages = new();
 
         protected BaseCrawlFacade(
-            ILogger<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>> logger,
+            ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> logger,
             TbmDbContext.New dbContextFactory,
             BaseCrawler<TResponse, TPostProtoBuf> crawler,
             BaseParser<TPost, TPostProtoBuf> parser,
-            Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost>> saverFactory,
+            Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
             UserParserAndSaver users,
             ClientRequesterTcs requesterTcs,
             (CrawlerLocks, CrawlerLocks.LockId) lockAndId,
@@ -77,7 +78,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             return savedPosts;
         }
 
-        public async Task<BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler>>
+        public async Task<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>>
             CrawlPageRange(Page startPage, Page endPage = Page.MaxValue, CancellationToken stoppingToken = default)
         { // cancel when startPage is already locked
             if (_lockingPages.Any()) throw new InvalidOperationException(
@@ -187,7 +188,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             }
         }
 
-        public BaseCrawlFacade<TPost, TResponse, TPostProtoBuf, TCrawler> AddExceptionHandler(ExceptionHandler handler)
+        public BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>
+            AddExceptionHandler(ExceptionHandler handler)
         {
             _exceptionHandler += handler;
             return this;

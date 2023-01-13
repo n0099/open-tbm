@@ -54,8 +54,8 @@ namespace tbm.Crawler
 
                         var baseClassOfClassesToBeRegistered = new List<Type>
                         {
-                            typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
-                            typeof(BaseParser<,>), typeof(BaseSaver<>)
+                            typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,,>),
+                            typeof(BaseParser<,>), typeof(BaseSaver<,>)
                         };
                         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
                             .Where(t => baseClassOfClassesToBeRegistered.Any(c => c.IsSubTypeOfRawGeneric(t)))

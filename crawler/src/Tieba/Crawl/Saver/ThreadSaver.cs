@@ -1,6 +1,8 @@
+using FlexLabs.EntityFrameworkCore.Upsert;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
-    public class ThreadSaver : BaseSaver<ThreadPost>
+    public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
     {
         public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
             Update: (_, propName, _, _) => propName switch
@@ -22,6 +24,16 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             {nameof(ThreadPost.AgreeCount),        1 << 8},
             {nameof(ThreadPost.DisagreeCount),     1 << 9},
             {nameof(ThreadPost.Geolocation),       1 << 10}
+        };
+
+        protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseThreadRevision>>>
+            RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        {
+            {
+                typeof(ThreadRevision.SplitViewCount), (db, revisions) =>
+                    db.Set<ThreadRevision.SplitViewCount>()
+                        .UpsertRange(revisions.OfType<ThreadRevision.SplitViewCount>()).NoUpdate().Run()
+            }
         };
 
         public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);

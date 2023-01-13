@@ -2,8 +2,9 @@ using System.Linq.Expressions;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
-    public abstract class BaseSaver<TPost> : CommonInSavers<BaseSaver<TPost>>
+    public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevision>
         where TPost : class, IPost
+        where TBaseRevision : class, IRevision
     {
         public string PostType { get; }
         protected ConcurrentDictionary<ulong, TPost> Posts { get; }
@@ -16,7 +17,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
         protected event PostSaveEventHandler PostSaveEvent = () => { };
         public void OnPostSaveEvent() => PostSaveEvent();
 
-        protected BaseSaver(ILogger<BaseSaver<TPost>> logger,
+        protected BaseSaver(ILogger<BaseSaver<TPost, TBaseRevision>> logger,
             ConcurrentDictionary<PostId, TPost> posts,
             AuthorRevisionSaver.New authorRevisionSaverFactory,
             string postType
