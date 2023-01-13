@@ -1,5 +1,3 @@
-using FlexLabs.EntityFrameworkCore.Upsert;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
@@ -22,17 +20,18 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
             where TPostOrUser : class where TRevision : class, IRevision
         {
             db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
-            db.TimestampingEntities();
             var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
             {
                 var postOrUserInTracking = existingSelector(newPostOrUser);
                 var entry = db.Entry(postOrUserInTracking);
-
                 entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
-                // rollback changes on the fields of ITimestampingEntity with the default value 0 or null
-                // this will also affects the entity instance which postOrUserInTracking references to it
-                entry.Properties.Where(p => p.Metadata.Name
-                        is nameof(ITimestampingEntity.CreatedAt) or nameof(ITimestampingEntity.UpdatedAt))
+
+                bool IsTimestampingFieldName(string name) => name is nameof(IPost.LastSeenAt)
+                    or nameof(ITimestampingEntity.CreatedAt) or nameof(ITimestampingEntity.UpdatedAt);
+                // rollback changes that overwrite original values with the default value 0 or null
+                // for all fields of ITimestampingEntity and IPost.LastSeenAt
+                // this will also affect the entity instance which postOrUserInTracking references to it
+                entry.Properties.Where(p => IsTimestampingFieldName(p.Metadata.Name))
                     .Where(p => p.IsModified).ForEach(p => p.IsModified = false);
 
                 var revision = default(TRevision);
@@ -42,9 +41,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                 foreach (var p in entry.Properties)
                 {
                     var pName = p.Metadata.Name;
-                    if (!p.IsModified || pName is nameof(IPost.LastSeenAt)
-                            or nameof(ITimestampingEntity.CreatedAt)
-                            or nameof(ITimestampingEntity.UpdatedAt)) continue;
+                    if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
 
                     if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
                         || (entryIsUser && userFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))

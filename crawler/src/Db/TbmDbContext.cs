@@ -86,12 +86,9 @@ namespace tbm.Crawler.Db
         }
 #pragma warning restore IDE0058 // Expression value is never used
 
-        public void TimestampingEntities(IEnumerable<ITimestampingEntity>? entities = null) =>
+        public void TimestampingEntities() =>
             // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-            (entities == null
-                ? ChangeTracker.Entries<ITimestampingEntity>() // will trigger ChangeTracker.DetectChanges()
-                : entities.Select(Entry)) // will not trigger ChangeTracker.DetectChanges()
-            .ForEach(e =>
+            ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
             {
                 var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
                 var originalEntityState = e.State; // copy e.State since it might change after any prop value updated

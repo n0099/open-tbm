@@ -1,5 +1,3 @@
-using FlexLabs.EntityFrameworkCore.Upsert;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver
 {
     public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
