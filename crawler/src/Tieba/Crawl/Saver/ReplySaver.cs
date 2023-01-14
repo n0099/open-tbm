@@ -79,7 +79,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
 
         private Action SaveReplySignatures(TbmDbContext db, IEnumerable<ReplyPost> replies)
         {
-            var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+            Helper.GetNowTimestamp(out var now);
             var signatures = replies
                 .Where(r => r.SignatureId != null && r.Signature != null)
                 .DistinctBy(r => r.SignatureId)

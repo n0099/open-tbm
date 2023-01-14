@@ -37,7 +37,7 @@ namespace tbm.Crawler.Worker
                 });
 
                 var fid = forum.Fid;
-                var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                Helper.GetNowTimestamp(out var now);
                 await using var db1 = scope1.Resolve<TbmDbContext.New>()(0);
                 await using var transaction = await db1.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
                 var revisions = moderators.SelectMany(i => i).Select(tuple => new ForumModeratorRevision

@@ -19,5 +19,8 @@ namespace tbm.Crawler
 
         public static string UnescapedJsonSerialize<TValue>(TValue value) =>
             JsonSerializer.Serialize(value, UnescapedSerializeOptions);
+
+        public static void GetNowTimestamp(out Time now) => now = GetNowTimestamp();
+        public static Time GetNowTimestamp() => (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
     }
 }

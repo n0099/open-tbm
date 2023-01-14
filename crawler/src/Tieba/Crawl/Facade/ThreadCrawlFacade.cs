@@ -29,7 +29,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     newLatestRepliers.Select(u => u.Uid)), u => u.Uid)
                 .Select(u =>
                 {
-                    u.CreatedAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                    u.CreatedAt = Helper.GetNowTimestamp();
                     return u;
                 });
             _ = db.Users.UpsertRange(newLatestRepliersExceptLocked).NoUpdate().Run();

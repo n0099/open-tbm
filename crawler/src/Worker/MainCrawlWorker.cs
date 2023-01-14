@@ -131,7 +131,7 @@ namespace tbm.Crawler.Worker
                 Pid = parentThread.FirstReplyPid,
                 Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
                     () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
-                DiscoveredAt = (Time)DateTimeOffset.Now.ToUnixTimeSeconds()
+                DiscoveredAt = Helper.GetNowTimestamp()
             };
             if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
 

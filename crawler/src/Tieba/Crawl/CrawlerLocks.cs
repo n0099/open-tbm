@@ -42,7 +42,7 @@ namespace tbm.Crawler.Tieba.Crawl
             var lockFreePages = pages.ToHashSet();
             lock (_crawling)
             { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
-                var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                Helper.GetNowTimestamp(out var now);
                 if (!_crawling.ContainsKey(lockId))
                 { // if no one is locking any page in lockId, just insert pages then return it as is
                     var pageTimeDict = lockFreePages.Select(i => KeyValuePair.Create(i, now));

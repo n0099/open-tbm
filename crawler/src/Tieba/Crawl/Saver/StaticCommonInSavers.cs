@@ -23,7 +23,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver
                         FROM (
                             SELECT uid, portraitUpdatedAt, CAST(portraitUpdatedAt AS SIGNED)
                                     - LEAD(CAST(portraitUpdatedAt AS SIGNED)) OVER (PARTITION BY uid ORDER BY time DESC) AS portraitUpdatedAtDiff
-                                FROM tbmc_revision_user WHERE portraitUpdatedAt IS NOT NULL
+                                FROM tbmcr_user WHERE portraitUpdatedAt IS NOT NULL
                         ) AS T
                         WHERE portraitUpdatedAtDiff > -100 AND portraitUpdatedAtDiff < 100
                         GROUP BY portraitUpdatedAtDiff ORDER BY portraitUpdatedAtDiff;

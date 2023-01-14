@@ -40,31 +40,31 @@ namespace tbm.Crawler.Db
             b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
             b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
             b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
-            b.Entity<ThreadRevision>().ToTable("tbmc_revision_thread").HasKey(e => new {e.Tid, e.TakenAt});
+            b.Entity<ThreadRevision>().ToTable("tbmcr_thread").HasKey(e => new {e.Tid, e.TakenAt});
             b.Entity<ThreadRevision.SplitViewCount>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_thread_viewCount").HasKey(e => new {e.Tid, e.TakenAt});
-            b.Entity<ReplyRevision>().ToTable("tbmc_revision_reply").HasKey(e => new {e.Pid, e.TakenAt});
+                .ToTable("tbmcr_thread_viewCount").HasKey(e => new {e.Tid, e.TakenAt});
+            b.Entity<ReplyRevision>().ToTable("tbmcr_reply").HasKey(e => new {e.Pid, e.TakenAt});
             b.Entity<ReplyRevision.SplitAgreeCount>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_reply_agreeCount").HasKey(e => new {e.Pid, e.TakenAt});
+                .ToTable("tbmcr_reply_agreeCount").HasKey(e => new {e.Pid, e.TakenAt});
             b.Entity<ReplyRevision.SplitSubReplyCount>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_reply_subReplyCount").HasKey(e => new {e.Pid, e.TakenAt});
+                .ToTable("tbmcr_reply_subReplyCount").HasKey(e => new {e.Pid, e.TakenAt});
             b.Entity<ReplyRevision.SplitFloor>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_reply_floor").HasKey(e => new {e.Pid, e.TakenAt});
+                .ToTable("tbmcr_reply_floor").HasKey(e => new {e.Pid, e.TakenAt});
             b.Entity<SubReplyRevision>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_subReply").HasKey(e => new {e.Spid, e.TakenAt});
+                .ToTable("tbmcr_subReply").HasKey(e => new {e.Spid, e.TakenAt});
             b.Entity<SubReplyRevision.SplitAgreeCount>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_subReply_agreeCount").HasKey(e => new {e.Spid, e.TakenAt});
+                .ToTable("tbmcr_subReply_agreeCount").HasKey(e => new {e.Spid, e.TakenAt});
             b.Entity<SubReplyRevision.SplitDisagreeCount>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_subReply_disagreeCount").HasKey(e => new {e.Spid, e.TakenAt});
-            b.Entity<UserRevision>().ToTable("tbmc_revision_user").HasKey(e => new {e.Uid, e.TakenAt});
+                .ToTable("tbmcr_subReply_disagreeCount").HasKey(e => new {e.Spid, e.TakenAt});
+            b.Entity<UserRevision>().ToTable("tbmcr_user").HasKey(e => new {e.Uid, e.TakenAt});
             b.Entity<UserRevision.SplitIpGeolocation>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_user_ipGeolocation").HasKey(e => new {e.Uid, e.TakenAt});
+                .ToTable("tbmcr_user_ipGeolocation").HasKey(e => new {e.Uid, e.TakenAt});
             b.Entity<UserRevision.SplitPortraitUpdatedAt>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_user_portraitUpdatedAt").HasKey(e => new {e.Uid, e.TakenAt});
+                .ToTable("tbmcr_user_portraitUpdatedAt").HasKey(e => new {e.Uid, e.TakenAt});
             b.Entity<UserRevision.SplitDisplayName>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable("tbmc_revision_user_displayName").HasKey(e => new {e.Uid, e.TakenAt});
-            b.Entity<AuthorExpGradeRevision>().ToTable("tbmc_revision_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
-            b.Entity<ForumModeratorRevision>().ToTable("tbmc_revision_forumModerator");
+                .ToTable("tbmcr_user_displayName").HasKey(e => new {e.Uid, e.TakenAt});
+            b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
+            b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator");
             b.Entity<Forum>().ToTable("tbm_forum");
         }
 
@@ -90,7 +90,7 @@ namespace tbm.Crawler.Db
             // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
             ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
             {
-                var now = (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+                Helper.GetNowTimestamp(out var now);
                 var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
                 var createdAtProp = e.Property(ie => ie.CreatedAt);
                 var updatedAtProp = e.Property(ie => ie.UpdatedAt);
