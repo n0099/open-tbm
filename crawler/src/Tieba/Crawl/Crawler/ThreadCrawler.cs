@@ -50,43 +50,8 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                 new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
                     new ThreadRequest {Data = data602},
                     (req, common) => req.Data.Common = common,
-                    () => new ThreadResponse()), page, CrawlRequestFlag.ThreadClientVersion602),
-                new Request(RequestJsonForFirstPid(page), page, CrawlRequestFlag.ThreadClientVersion8888)
+                    () => new ThreadResponse()), page, CrawlRequestFlag.ThreadClientVersion602)
             }.AsEnumerable());
-        }
-
-        private async Task<ThreadResponse> RequestJsonForFirstPid(Page page)
-        {
-            var json = await Requester.RequestJson("c/f/frs/page", "8.8.8.8", new()
-            {
-                {"kw", _forumName},
-                {"pn", page.ToString()},
-                {"rn", "30"},
-                {"sort_type", "5"}
-            });
-            try
-            {
-                return new()
-                {
-                    Error = new() {Errorno = 0},
-                    Data = new()
-                    {
-                        ThreadList =
-                        {
-                            json.GetProperty("thread_list").EnumerateArray().Select(el => new Thread
-                            {
-                                Tid = el.GetProperty("id").GetInt64(),
-                                FirstPostId = el.GetProperty("first_post_id").GetInt64()
-                            })
-                        }
-                    }
-                };
-            }
-            catch (Exception e) when (e is not TiebaException)
-            {
-                e.Data["raw"] = json;
-                throw;
-            }
         }
 
         public override IList<Thread> GetValidPosts(ThreadResponse response, CrawlRequestFlag flag)

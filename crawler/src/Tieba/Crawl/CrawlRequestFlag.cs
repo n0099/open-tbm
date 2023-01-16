@@ -4,7 +4,6 @@ namespace tbm.Crawler.Tieba.Crawl
     {
         None = 0,
         ThreadClientVersion602 = 1,
-        ThreadClientVersion8888 = 2,
-        ReplyShowOnlyFolded = 3
+        ReplyShowOnlyFolded = 2
     }
 }

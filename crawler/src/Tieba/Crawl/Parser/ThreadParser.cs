@@ -19,11 +19,6 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                             Helper.SerializedProtoBufOrNullIfEmpty(tuple.In.Location));
                     return true;
                 },
-                CrawlRequestFlag.ThreadClientVersion8888 => () =>
-                {
-                    joinedPosts.ForEach(tuple => tuple.Out.FirstReplyPid = (Pid)tuple.In.FirstPostId);
-                    return true;
-                },
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(requestFlag), requestFlag, "Unexpected CrawlRequestFlag.")
             };
@@ -53,8 +48,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
                 o.ReplyCount = (uint?)inPost.ReplyNum.NullIfZero();
                 o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
                 o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();
-                // when the thread is livepost, the agree field will not exists
-                o.AgreeCount = (int?)inPost.Agree?.AgreeNum.NullIfZero() ?? inPost.AgreeNum;
+                // when the thread is livepost or Thread.AgreeNum == 0, the agree field will not exists
+                o.AgreeCount = (int?)inPost.Agree?.AgreeNum.NullIfZero() ?? inPost.AgreeNum.NullIfZero();
                 o.DisagreeCount = (int?)inPost.Agree?.DisagreeNum.NullIfZero();
                 o.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(inPost.Location);
                 o.Zan = Helper.SerializedProtoBufOrNullIfEmpty(inPost.Zan);
