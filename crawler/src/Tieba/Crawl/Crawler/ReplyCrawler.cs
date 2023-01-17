@@ -38,7 +38,7 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                 new ReplyRequest {Data = data},
                 (req, common) => req.Data.Common = common,
                 () => new ReplyResponse());
-            var ret = new List<Request>(2) {new(Task.FromResult(response), page)};
+            var ret = new List<Request>(2) {new(Task.FromResult(response))};
             // as of client version 12.12.1.0 (not including), folded replies won't be include in response:
             // https://github.com/n0099/TiebaMonitor/commit/b8e7d2645e456271f52457f56500aaedaf28a010#diff-cf67f7f9e82d44aa5be8f85cd24946e5bb7829ca7940c9d056bb1e3849b8f981R32
             // so we have to manually requesting the folded replies by appending the returned request tasks
@@ -46,12 +46,10 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
             {
                 var dataShowOnlyFolded = data.Clone();
                 dataShowOnlyFolded.IsFoldCommentReq = 1;
-                ret.Add(new(
-                    Requester.RequestProtoBuf(url, clientVersion,
-                        new ReplyRequest {Data = dataShowOnlyFolded},
-                        (req, common) => req.Data.Common = common,
-                        () => new ReplyResponse()),
-                    page, CrawlRequestFlag.ReplyShowOnlyFolded));
+                ret.Add(new(Requester.RequestProtoBuf(url, clientVersion,
+                    new ReplyRequest {Data = dataShowOnlyFolded},
+                    (req, common) => req.Data.Common = common,
+                    () => new ReplyResponse()), CrawlRequestFlag.ReplyShowOnlyFolded));
             }
             return ret;
         }

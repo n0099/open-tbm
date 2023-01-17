@@ -38,7 +38,7 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                         }
                     },
                     (req, common) => req.Data.Common = common,
-                    () => new SubReplyResponse()), page)
+                    () => new SubReplyResponse()))
             }.AsEnumerable());
 
         public override IList<SubReply> GetValidPosts(SubReplyResponse response, CrawlRequestFlag flag)

@@ -46,11 +46,11 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                 new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0",
                     new ThreadRequest {Data = data},
                     (req, common) => req.Data.Common = common,
-                    () => new ThreadResponse()), page),
+                    () => new ThreadResponse())),
                 new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
                     new ThreadRequest {Data = data602},
                     (req, common) => req.Data.Common = common,
-                    () => new ThreadResponse()), page, CrawlRequestFlag.ThreadClientVersion602)
+                    () => new ThreadResponse()), CrawlRequestFlag.ThreadClientVersion602)
             }.AsEnumerable());
         }
 

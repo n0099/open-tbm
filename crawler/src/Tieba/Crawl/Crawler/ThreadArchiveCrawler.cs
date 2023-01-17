@@ -14,8 +14,8 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
                 () => new ThreadResponse());
             return new[]
             { // passing CrawlRequestFlag.ThreadClientVersion602 in the second one in order to invokes ThreadParser.ShouldSkipParse()
-                new Request(Task.FromResult(response), page),
-                new Request(Task.FromResult(response), page, CrawlRequestFlag.ThreadClientVersion602)
+                new Request(Task.FromResult(response)),
+                new Request(Task.FromResult(response), CrawlRequestFlag.ThreadClientVersion602)
             }.AsEnumerable();
         }
     }

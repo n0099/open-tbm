@@ -5,7 +5,7 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler
         where TPostProtoBuf : IMessage<TPostProtoBuf>
     {
         public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
-        protected record Request(Task<TResponse> Response, Page Page, CrawlRequestFlag Flag = CrawlRequestFlag.None);
+        protected record Request(Task<TResponse> Response, CrawlRequestFlag Flag = CrawlRequestFlag.None);
 
         protected ClientRequester Requester { get; }
 

@@ -12,16 +12,16 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
         private readonly BaseParser<TPost, TPostProtoBuf> _parser;
         private readonly BaseSaver<TPost, TBaseRevision> _saver;
-        protected UserParserAndSaver Users { get; }
         private readonly ClientRequesterTcs _requesterTcs;
         private readonly CrawlerLocks _locks; // singleton for every derived class
         private readonly CrawlerLocks.LockId _lockId;
+        private readonly HashSet<Page> _lockingPages = new();
         private ExceptionHandler _exceptionHandler = _ => { };
         public delegate void ExceptionHandler(Exception ex);
 
         protected uint Fid { get; }
         protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
-        private readonly HashSet<Page> _lockingPages = new();
+        protected UserParserAndSaver Users { get; }
 
         protected BaseCrawlFacade(
             ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> logger,
@@ -58,6 +58,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
 
         public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
         {
+            Posts.Values.Where(p => p.AuthorUid == 0).ForEach(p => _logger.LogError(
+                "AuthorUid of post {} is the default value 0", Helper.UnescapedJsonSerialize(p)));
             var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
