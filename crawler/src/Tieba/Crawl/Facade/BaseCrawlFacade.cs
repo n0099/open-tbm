@@ -20,7 +20,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         public delegate void ExceptionHandler(Exception ex);
 
         protected uint Fid { get; }
-        protected ConcurrentDictionary<ulong, TPost> ParsedPosts { get; } = new();
+        protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
         private readonly HashSet<Page> _lockingPages = new();
 
         protected BaseCrawlFacade(
@@ -38,7 +38,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _dbContextFactory = dbContextFactory;
             _crawler = crawler;
             _parser = parser;
-            _saver = saverFactory(ParsedPosts);
+            _saver = saverFactory(Posts);
             Users = users;
             _requesterTcs = requesterTcs;
             (_locks, _lockId) = lockAndId;
@@ -61,7 +61,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             var db = _dbContextFactory(Fid);
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
-            var savedPosts = ParsedPosts.IsEmpty ? null : _saver.SavePosts(db);
+            var savedPosts = Posts.IsEmpty ? null : _saver.SavePosts(db);
             Users.SaveUsers(db, _saver.PostType, _saver.TiebaUserFieldChangeIgnorance);
             BeforeCommitSaveHook(db);
             try
@@ -199,22 +199,19 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
         private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
         {
             var (response, flag) = responseTuple;
-            var posts = _crawler.GetValidPosts(response, flag);
-            try
+            var postsInResponse = _crawler.GetValidPosts(response, flag);
+            _parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
+            parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
+            if (flag == CrawlRequestFlag.None)
             {
-                _parser.ParsePosts(flag, posts, ParsedPosts, out var postsEmbeddedUsers);
-                if (flag != CrawlRequestFlag.None) return;
-                if (!postsEmbeddedUsers.Any() && posts.Any()) ThrowIfEmptyUsersEmbedInPosts();
+                if (!postsEmbeddedUsers.Any() && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
                 if (postsEmbeddedUsers.Any()) Users.ParseUsers(postsEmbeddedUsers);
             }
-            finally
-            {
-                PostParseHook(response, flag);
-            }
+            PostParseHook(response, flag, parsedPostsInResponse);
         }
 
         protected virtual void ThrowIfEmptyUsersEmbedInPosts() { }
 
-        protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag) { }
+        protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag, Dictionary<PostId, TPost> parsedPostsInResponse) { }
     }
 }

@@ -46,16 +46,25 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
                     LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
                 .ForEach(u => _latestRepliers[u.Uid] = u);
 
-        protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag)
+        protected void FillDetailedGeolocation(IEnumerable<Thread> threads) =>
+            threads // replace with more detailed location.name in the 6.0.2 response
+                .Where(t => t.Location != null)
+                .Join(Posts.Values, i => (Tid)i.Tid, i => i.Tid,
+                    (inResponse, parsed) => (inResponse, parsed))
+                .ForEach(tuple => tuple.parsed.Geolocation =
+                    Helper.SerializedProtoBufOrNullIfEmpty(tuple.inResponse.Location));
+
+        protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
         {
-            if (flag != CrawlRequestFlag.None) return;
             var data = response.Data;
+            if (flag == CrawlRequestFlag.ThreadClientVersion602) FillDetailedGeolocation(data.ThreadList);
+            if (flag != CrawlRequestFlag.None) return;
             Users.ParseUsers(data.UserList);
             Users.ResetUsersIcon();
             ParseLatestRepliers(data.ThreadList);
             // remove livepost threads since their real parent forum may not match with current crawling fid
             data.ThreadList.Where(t => t.LivePostType != "")
-                .ForEach(t => ParsedPosts.TryRemove((Tid)t.Tid, out _));
+                .ForEach(t => Posts.TryRemove((Tid)t.Tid, out _));
         }
     }
 }

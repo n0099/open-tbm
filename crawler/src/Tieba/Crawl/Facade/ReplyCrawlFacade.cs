@@ -19,19 +19,17 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             _tid = tid;
         }
 
-        protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag)
+        protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, ReplyPost> parsedPostsInResponse)
         {
-            ParsedPosts.Values.ForEach(r => r.Tid = _tid);
+            parsedPostsInResponse.Values.ForEach(r => r.Tid = _tid);
             var data = response.Data;
             Users.ParseUsers(data.UserList);
-            FillAuthorInfoBackToReply(data.UserList, data.PostList);
+            FillAuthorInfoBackToReply(data.UserList, parsedPostsInResponse.Values);
             if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
         }
 
-        private void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<Reply> replies) =>
-            ParsedPosts.Values // only mutate posts which occurs in current response
-                .IntersectBy(replies.Select(r => r.Pid), r => r.Pid)
-                .Join(users, r => r.AuthorUid, u => u.Uid, (r, a) => (r, a))
+        private static void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<ReplyPost> parsedReplies) =>
+            parsedReplies.Join(users, r => r.AuthorUid, u => u.Uid, (r, a) => (r, a))
                 .ForEach(tuple =>
                 { // fill the values for some field of reply from user list which is out of post list
                     var (r, author) = tuple;

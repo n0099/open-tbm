@@ -22,9 +22,9 @@ namespace tbm.Crawler.Tieba.Crawl.Facade
             throw new TiebaException(
                 $"User list in the response of sub reply request for fid {Fid}, tid {_tid}, pid {_pid} is empty.");
 
-        protected override void PostParseHook(SubReplyResponse response, CrawlRequestFlag flag)
+        protected override void PostParseHook(SubReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, SubReplyPost> parsedPostsInResponse)
         {
-            ParsedPosts.Values.ForEach(sr =>
+            parsedPostsInResponse.Values.ForEach(sr =>
             {
                 sr.Tid = _tid;
                 sr.Pid = _pid;

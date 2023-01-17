@@ -4,26 +4,8 @@ namespace tbm.Crawler.Tieba.Crawl.Parser
     {
         protected override PostId PostIdSelector(ThreadPost post) => post.Tid;
 
-        protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag, IEnumerable<Thread> inPosts, ConcurrentDictionary<PostId, ThreadPost> outPosts)
-        {
-            var joinedPosts = inPosts.Join(outPosts.Values,
-                i => (Tid)i.Tid, i => i.Tid, (In, Out) => (In, Out));
-            Func<bool> testRequestFlag = requestFlag switch
-            {
-                CrawlRequestFlag.None => () => false,
-                CrawlRequestFlag.ThreadClientVersion602 => () =>
-                {
-                    joinedPosts // replace with more detailed location.name in the 6.0.2 response
-                        .Where(tuple => tuple.In.Location != null)
-                        .ForEach(tuple => tuple.Out.Geolocation =
-                            Helper.SerializedProtoBufOrNullIfEmpty(tuple.In.Location));
-                    return true;
-                },
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(requestFlag), requestFlag, "Unexpected CrawlRequestFlag.")
-            };
-            return testRequestFlag();
-        }
+        protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag) =>
+            requestFlag == CrawlRequestFlag.ThreadClientVersion602;
 
         protected override IEnumerable<ThreadPost> ParsePostsInternal(IList<Thread> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
 
