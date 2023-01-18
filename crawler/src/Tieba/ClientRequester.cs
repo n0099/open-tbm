@@ -1,130 +1,129 @@
-namespace tbm.Crawler.Tieba
+namespace tbm.Crawler.Tieba;
+
+public class ClientRequester
 {
-    public class ClientRequester
+    private readonly ILogger<ClientRequester> _logger;
+    private readonly IConfigurationSection _config;
+    private readonly ClientRequesterTcs _requesterTcs;
+    private static HttpClient _http = null!;
+    private static readonly Random Rand = new();
+
+    public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
+        IHttpClientFactory httpFactory, ClientRequesterTcs requesterTcs)
     {
-        private readonly ILogger<ClientRequester> _logger;
-        private readonly IConfigurationSection _config;
-        private readonly ClientRequesterTcs _requesterTcs;
-        private static HttpClient _http = null!;
-        private static readonly Random Rand = new();
+        _logger = logger;
+        _config = config.GetSection("ClientRequester");
+        _http = httpFactory.CreateClient("tbClient");
+        _requesterTcs = requesterTcs;
+    }
 
-        public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
-            IHttpClientFactory httpFactory, ClientRequesterTcs requesterTcs)
+    public Task<JsonElement> RequestJson(string url, string clientVersion, Dictionary<string, string> param) =>
+        Request(() => PostJson(url, param, clientVersion), stream =>
         {
-            _logger = logger;
-            _config = config.GetSection("ClientRequester");
-            _http = httpFactory.CreateClient("tbClient");
-            _requesterTcs = requesterTcs;
-        }
+            using var doc = JsonDocument.Parse(stream);
+            return doc.RootElement.Clone();
+        });
 
-        public Task<JsonElement> RequestJson(string url, string clientVersion, Dictionary<string, string> param) =>
-            Request(() => PostJson(url, param, clientVersion), stream =>
-            {
-                using var doc = JsonDocument.Parse(stream);
-                return doc.RootElement.Clone();
-            });
-
-        public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
-            string url, string clientVersion, TRequest requestParam,
-                Action<TRequest, Common> setCommonParamOnRequest, Func<TResponse> responseFactory)
-            where TRequest : IMessage<TRequest>
-            where TResponse : IMessage<TResponse> =>
-            Request(() => PostProtoBuf(url, clientVersion, requestParam, setCommonParamOnRequest), stream =>
-            {
-                try
-                {
-                    return new MessageParser<TResponse>(responseFactory).ParseFrom(stream);
-                }
-                catch (InvalidProtocolBufferException e)
-                {
-                    _ = stream.Seek(0, SeekOrigin.Begin);
-                    var stream2 = new MemoryStream((int)stream.Length);
-                    stream.CopyTo(stream2);
-                    // the invalid protoBuf bytes usually is just a plain html string
-                    var responseBody = Encoding.UTF8.GetString(stream2.ToArray());
-                    if (responseBody.Contains("为了保护您的账号安全和最佳的浏览体验，当前业务已经不支持IE8以下浏览器"))
-                        throw new TiebaException(true, true);
-                    throw new TiebaException($"Malformed protoBuf response from tieba. {responseBody}", e);
-                }
-            });
-
-        private static async Task<T> Request<T>(Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)
+    public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
+        string url, string clientVersion, TRequest requestParam,
+        Action<TRequest, Common> setCommonParamOnRequest, Func<TResponse> responseFactory)
+        where TRequest : IMessage<TRequest>
+        where TResponse : IMessage<TResponse> =>
+        Request(() => PostProtoBuf(url, clientVersion, requestParam, setCommonParamOnRequest), stream =>
         {
             try
             {
-                using var response = await requester();
-                var stream = await response.EnsureSuccessStatusCode().Content.ReadAsStreamAsync();
-                return responseConsumer(stream);
+                return new MessageParser<TResponse>(responseFactory).ParseFrom(stream);
             }
-            catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
+            catch (InvalidProtocolBufferException e)
             {
-                throw new TiebaException("Tieba client request timeout.");
+                _ = stream.Seek(0, SeekOrigin.Begin);
+                var stream2 = new MemoryStream((int)stream.Length);
+                stream.CopyTo(stream2);
+                // the invalid protoBuf bytes usually is just a plain html string
+                var responseBody = Encoding.UTF8.GetString(stream2.ToArray());
+                if (responseBody.Contains("为了保护您的账号安全和最佳的浏览体验，当前业务已经不支持IE8以下浏览器"))
+                    throw new TiebaException(true, true);
+                throw new TiebaException($"Malformed protoBuf response from tieba. {responseBody}", e);
             }
-            catch (HttpRequestException e)
-            {
-                if (e.StatusCode == null)
-                    throw new TiebaException("Network error from tieba.", e);
-                throw new TiebaException($"HTTP {(int)e.StatusCode} from tieba.");
-            }
-        }
+        });
 
-        private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> param, string clientVersion)
+    private static async Task<T> Request<T>(Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)
+    {
+        try
         {
-            var postData = new Dictionary<string, string>
-            {
-                {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
-                {"_client_type", "2"},
-                {"_client_version", clientVersion}
-            }.Concat(param).ToList();
-            var sign = postData.Aggregate("", (acc, i) =>
-            {
-                acc += i.Key + '=' + i.Value;
-                return acc;
-            }) + "tiebaclient!!!";
-            var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
-            postData.Add(KeyValuePair.Create("sign", signMd5));
-
-            return Post(() => _http.PostAsync(url, new FormUrlEncodedContent(postData)),
-                () => _logger.LogTrace("POST {} {}", url, param));
+            using var response = await requester();
+            var stream = await response.EnsureSuccessStatusCode().Content.ReadAsStreamAsync();
+            return responseConsumer(stream);
         }
-
-        private Task<HttpResponseMessage> PostProtoBuf<TRequest>
-            (string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
-            where TRequest : IMessage<TRequest>
+        catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
         {
-            // https://github.com/Starry-OvO/aiotieba/issues/67#issuecomment-1376006123
-            // https://github.com/MoeNetwork/wmzz_post/blob/80aba25de46f5b2cb1a15aa2a69b527a7374ffa9/wmzz_post_setting.php#L64
-            setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
-
-            // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
-            var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
-            protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
-            var content = new MultipartFormDataContent {protoBufFile};
-            // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
-            var boundary = content.Headers.ContentType?.Parameters.First(i => i.Name == "boundary");
-            if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
-
-            var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
-            _ = request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
-            request.Headers.Add("x_bd_data_type", "protobuf");
-            request.Headers.Accept.ParseAdd("*/*");
-            request.Headers.Connection.Add("keep-alive");
-
-            return Post(() => _http.SendAsync(request),
-                () => _logger.LogTrace("POST {} {}", url, requestParam));
+            throw new TiebaException("Tieba client request timeout.");
         }
-
-        private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)
+        catch (HttpRequestException e)
         {
-            _requesterTcs.Wait();
-            if (_config.GetValue("LogTrace", false)) logTraceCallback();
-            var ret = responseTaskFactory();
-            _ = ret.ContinueWith(i =>
-            {
-                if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
-                else _requesterTcs.Decrease();
-            }, TaskContinuationOptions.ExecuteSynchronously);
-            return ret;
+            if (e.StatusCode == null)
+                throw new TiebaException("Network error from tieba.", e);
+            throw new TiebaException($"HTTP {(int)e.StatusCode} from tieba.");
         }
+    }
+
+    private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> param, string clientVersion)
+    {
+        var postData = new Dictionary<string, string>
+        {
+            {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
+            {"_client_type", "2"},
+            {"_client_version", clientVersion}
+        }.Concat(param).ToList();
+        var sign = postData.Aggregate("", (acc, i) =>
+        {
+            acc += i.Key + '=' + i.Value;
+            return acc;
+        }) + "tiebaclient!!!";
+        var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
+        postData.Add(KeyValuePair.Create("sign", signMd5));
+
+        return Post(() => _http.PostAsync(url, new FormUrlEncodedContent(postData)),
+            () => _logger.LogTrace("POST {} {}", url, param));
+    }
+
+    private Task<HttpResponseMessage> PostProtoBuf<TRequest>
+        (string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
+        where TRequest : IMessage<TRequest>
+    {
+        // https://github.com/Starry-OvO/aiotieba/issues/67#issuecomment-1376006123
+        // https://github.com/MoeNetwork/wmzz_post/blob/80aba25de46f5b2cb1a15aa2a69b527a7374ffa9/wmzz_post_setting.php#L64
+        setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
+
+        // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
+        var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
+        protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
+        var content = new MultipartFormDataContent {protoBufFile};
+        // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
+        var boundary = content.Headers.ContentType?.Parameters.First(i => i.Name == "boundary");
+        if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
+
+        var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
+        _ = request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
+        request.Headers.Add("x_bd_data_type", "protobuf");
+        request.Headers.Accept.ParseAdd("*/*");
+        request.Headers.Connection.Add("keep-alive");
+
+        return Post(() => _http.SendAsync(request),
+            () => _logger.LogTrace("POST {} {}", url, requestParam));
+    }
+
+    private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)
+    {
+        _requesterTcs.Wait();
+        if (_config.GetValue("LogTrace", false)) logTraceCallback();
+        var ret = responseTaskFactory();
+        _ = ret.ContinueWith(i =>
+        {
+            if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
+            else _requesterTcs.Decrease();
+        }, TaskContinuationOptions.ExecuteSynchronously);
+        return ret;
     }
 }

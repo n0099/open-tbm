@@ -1,131 +1,130 @@
-namespace tbm.Crawler.Tieba.Crawl
+namespace tbm.Crawler.Tieba.Crawl;
+
+public class ThreadLateCrawlerAndSaver
 {
-    public class ThreadLateCrawlerAndSaver
+    private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
+    private readonly TbmDbContext.New _dbContextFactory;
+    private readonly ClientRequester _requester;
+    private readonly Fid _fid;
+    private readonly ClientRequesterTcs _requesterTcs;
+    private readonly CrawlerLocks _locks; // singleton
+
+    public delegate ThreadLateCrawlerAndSaver New(Fid fid);
+
+    public ThreadLateCrawlerAndSaver(
+        ILogger<ThreadLateCrawlerAndSaver> logger,
+        TbmDbContext.New dbContextFactory,
+        ClientRequester requester,
+        ClientRequesterTcs requesterTcs,
+        IIndex<string, CrawlerLocks> locks,
+        Fid fid)
     {
-        private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
-        private readonly TbmDbContext.New _dbContextFactory;
-        private readonly ClientRequester _requester;
-        private readonly Fid _fid;
-        private readonly ClientRequesterTcs _requesterTcs;
-        private readonly CrawlerLocks _locks; // singleton
+        _logger = logger;
+        _dbContextFactory = dbContextFactory;
+        _requester = requester;
+        _fid = fid;
+        _requesterTcs = requesterTcs;
+        _locks = locks["threadLate"];
+    }
 
-        public delegate ThreadLateCrawlerAndSaver New(Fid fid);
-
-        public ThreadLateCrawlerAndSaver(
-            ILogger<ThreadLateCrawlerAndSaver> logger,
-            TbmDbContext.New dbContextFactory,
-            ClientRequester requester,
-            ClientRequesterTcs requesterTcs,
-            IIndex<string, CrawlerLocks> locks,
-            Fid fid)
+    public async Task Crawl(Dictionary<Tid, FailureCount> failureCountsKeyByTid)
+    {
+        var threads = await Task.WhenAll(failureCountsKeyByTid.Select(async pair =>
         {
-            _logger = logger;
-            _dbContextFactory = dbContextFactory;
-            _requester = requester;
-            _fid = fid;
-            _requesterTcs = requesterTcs;
-            _locks = locks["threadLate"];
-        }
-
-        public async Task Crawl(Dictionary<Tid, FailureCount> failureCountsKeyByTid)
-        {
-            var threads = await Task.WhenAll(failureCountsKeyByTid.Select(async pair =>
+            var (tid, failureCount) = pair;
+            var crawlerLockId = new CrawlerLocks.LockId(_fid, tid);
+            if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
+            try
             {
-                var (tid, failureCount) = pair;
-                var crawlerLockId = new CrawlerLocks.LockId(_fid, tid);
-                if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
+                var json = await _requester.RequestJson("c/f/pb/page", "8.8.8.8", new()
+                {
+                    {"kz", tid.ToString()},
+                    {"pn", "1"},
+                    {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
+                });
                 try
                 {
-                    var json = await _requester.RequestJson("c/f/pb/page", "8.8.8.8", new()
-                    {
-                        {"kz", tid.ToString()},
-                        {"pn", "1"},
-                        {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
-                    });
-                    try
-                    {
-                        var errorCodeProp = json.GetProperty("error_code");
-                        Func<(int ErrorCode, bool IsErrorCodeParsed)> tryGetErrorCode = errorCodeProp.ValueKind switch
-                        { // https://github.com/MoeNetwork/Tieba-Cloud-Sign/pull/220#issuecomment-1367570540
-                            JsonValueKind.Number => () =>
-                            { // https://stackoverflow.com/questions/62100000/why-doesnt-system-text-json-jsonelement-have-trygetstring-or-trygetboolean/62100246#62100246
-                                var r = errorCodeProp.TryGetInt32(out var p);
-                                return (p, r);
-                            },
-                            JsonValueKind.String => () =>
-                            {
-                                var r = int.TryParse(errorCodeProp.GetString(), out var p);
-                                return (p, r);
-                            },
-                            _ => () => (0, false)
-                        };
-                        var (errorCode, isErrorCodeParsed) = tryGetErrorCode();
-                        if (!isErrorCodeParsed)
-                            throw new TiebaException(
-                                "Cannot get field \"error_code\" or parse its value from the response of tieba json api.")
-                                {Data = {{"raw", json}, {"rawErrorCode", errorCodeProp.GetRawText()}}};
-
-                        switch (errorCode)
+                    var errorCodeProp = json.GetProperty("error_code");
+                    Func<(int ErrorCode, bool IsErrorCodeParsed)> tryGetErrorCode = errorCodeProp.ValueKind switch
+                    { // https://github.com/MoeNetwork/Tieba-Cloud-Sign/pull/220#issuecomment-1367570540
+                        JsonValueKind.Number => () =>
+                        { // https://stackoverflow.com/questions/62100000/why-doesnt-system-text-json-jsonelement-have-trygetstring-or-trygetboolean/62100246#62100246
+                            var r = errorCodeProp.TryGetInt32(out var p);
+                            return (p, r);
+                        },
+                        JsonValueKind.String => () =>
                         {
-                            case 4 or 350008:
-                                throw new TiebaException(false, "Thread already deleted while thread late crawl.");
-                            case not 0:
-                                throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
-                        }
+                            var r = int.TryParse(errorCodeProp.GetString(), out var p);
+                            return (p, r);
+                        },
+                        _ => () => (0, false)
+                    };
+                    var (errorCode, isErrorCodeParsed) = tryGetErrorCode();
+                    if (!isErrorCodeParsed)
+                        throw new TiebaException(
+                                "Cannot get field \"error_code\" or parse its value from the response of tieba json api.")
+                            {Data = {{"raw", json}, {"rawErrorCode", errorCodeProp.GetRawText()}}};
 
-                        var thread = json.GetProperty("thread");
-                        return thread.TryGetProperty("thread_info", out var threadInfo)
-                            ? threadInfo.TryGetProperty("phone_type", out var phoneType)
-                                ? new ThreadPost
-                                {
-                                    Tid = Tid.Parse(thread.GetStrProp("id")),
-                                    AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
-                                }
-                                : throw new TiebaException(false,
-                                    "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
-                            : null; // silent fail without any retry since the field `json.thread.thread_info`
-                                    // might not exists in current and upcoming responses
-                    }
-                    catch (Exception e) when (e is not TiebaException)
+                    switch (errorCode)
                     {
-                        e.Data["raw"] = json;
-                        throw;
+                        case 4 or 350008:
+                            throw new TiebaException(false, "Thread already deleted while thread late crawl.");
+                        case not 0:
+                            throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
                     }
-                }
-                catch (Exception e)
-                { // below is similar with BaseCrawlFacade.SilenceException()
-                    e.Data["fid"] = _fid;
-                    e.Data["tid"] = tid;
-                    e = e.ExtractInnerExceptionsData();
 
-                    if (e is TiebaException)
-                        _logger.LogWarning("TiebaException: {} {}",
-                            string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
-                            Helper.UnescapedJsonSerialize(e.Data));
-                    else
-                        _logger.LogError(e, "Exception");
-                    if (e is not TiebaException {ShouldRetry: false})
-                    {
-                        _locks.AcquireFailed(crawlerLockId, 1, failureCount);
-                        _requesterTcs.Decrease();
-                    }
-                    return null;
+                    var thread = json.GetProperty("thread");
+                    return thread.TryGetProperty("thread_info", out var threadInfo)
+                        ? threadInfo.TryGetProperty("phone_type", out var phoneType)
+                            ? new ThreadPost
+                            {
+                                Tid = Tid.Parse(thread.GetStrProp("id")),
+                                AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
+                            }
+                            : throw new TiebaException(false,
+                                "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
+                        : null; // silent fail without any retry since the field `json.thread.thread_info`
+                    // might not exists in current and upcoming responses
                 }
-                finally
+                catch (Exception e) when (e is not TiebaException)
                 {
-                    _locks.ReleaseRange(crawlerLockId, new Page[] {1});
+                    e.Data["raw"] = json;
+                    throw;
                 }
-            }));
+            }
+            catch (Exception e)
+            { // below is similar with BaseCrawlFacade.SilenceException()
+                e.Data["fid"] = _fid;
+                e.Data["tid"] = tid;
+                e = e.ExtractInnerExceptionsData();
 
-            var db = _dbContextFactory(_fid);
-            await using var transaction = await db.Database.BeginTransactionAsync();
+                if (e is TiebaException)
+                    _logger.LogWarning("TiebaException: {} {}",
+                        string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
+                        Helper.UnescapedJsonSerialize(e.Data));
+                else
+                    _logger.LogError(e, "Exception");
+                if (e is not TiebaException {ShouldRetry: false})
+                {
+                    _locks.AcquireFailed(crawlerLockId, 1, failureCount);
+                    _requesterTcs.Decrease();
+                }
+                return null;
+            }
+            finally
+            {
+                _locks.ReleaseRange(crawlerLockId, new Page[] {1});
+            }
+        }));
 
-            db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception
-            db.ChangeTracker.Entries<ThreadPost>()
-                .ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
+        var db = _dbContextFactory(_fid);
+        await using var transaction = await db.Database.BeginTransactionAsync();
 
-            _ = await db.SaveChangesAsync(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
-            await transaction.CommitAsync();
-        }
+        db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception
+        db.ChangeTracker.Entries<ThreadPost>()
+            .ForEach(e => e.Property(t => t.AuthorPhoneType).IsModified = true);
+
+        _ = await db.SaveChangesAsync(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
+        await transaction.CommitAsync();
     }
 }

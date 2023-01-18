@@ -1,7 +1,6 @@
-namespace tbm.Crawler.Tieba
+namespace tbm.Crawler.Tieba;
+
+public class EmptyPostListException : TiebaException
 {
-    public class EmptyPostListException : TiebaException
-    {
-        public EmptyPostListException(string message) : base(false, message) { }
-    }
+    public EmptyPostListException(string message) : base(false, message) { }
 }

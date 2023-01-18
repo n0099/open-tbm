@@ -1,110 +1,109 @@
-namespace tbm.Crawler.Tieba.Crawl.Saver
+namespace tbm.Crawler.Tieba.Crawl.Saver;
+
+public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
+    where TBaseRevision : class, IRevision
 {
-    public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
-        where TBaseRevision : class, IRevision
+    private readonly ILogger<CommonInSavers<TBaseRevision>> _logger;
+
+    protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
+
+    protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => throw new NotImplementedException();
+    protected virtual Dictionary<Type, Action<TbmDbContext, IEnumerable<TBaseRevision>>>
+        RevisionSplitEntitiesUpsertPayloads => throw new NotImplementedException();
+
+    protected void SavePostsOrUsers<TPostOrUser, TRevision>(
+        TbmDbContext db,
+        FieldChangeIgnoranceCallbackRecord userFieldChangeIgnorance,
+        Func<TPostOrUser, TRevision> revisionFactory,
+        ILookup<bool, TPostOrUser> existingOrNewLookup,
+        Func<TPostOrUser, TPostOrUser> existingSelector)
+        where TPostOrUser : class where TRevision : class, IRevision
     {
-        private readonly ILogger<CommonInSavers<TBaseRevision>> _logger;
-
-        protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
-
-        protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => throw new NotImplementedException();
-        protected virtual Dictionary<Type, Action<TbmDbContext, IEnumerable<TBaseRevision>>>
-            RevisionSplitEntitiesUpsertPayloads => throw new NotImplementedException();
-
-        protected void SavePostsOrUsers<TPostOrUser, TRevision>(
-            TbmDbContext db,
-            FieldChangeIgnoranceCallbackRecord userFieldChangeIgnorance,
-            Func<TPostOrUser, TRevision> revisionFactory,
-            ILookup<bool, TPostOrUser> existingOrNewLookup,
-            Func<TPostOrUser, TPostOrUser> existingSelector)
-            where TPostOrUser : class where TRevision : class, IRevision
+        db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
+        var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
         {
-            db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
-            var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
+            var postOrUserInTracking = existingSelector(newPostOrUser);
+            var entry = db.Entry(postOrUserInTracking);
+            entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
+
+            bool IsTimestampingFieldName(string name) => name is nameof(IPost.LastSeenAt)
+                or nameof(ITimestampingEntity.CreatedAt) or nameof(ITimestampingEntity.UpdatedAt);
+            // rollback changes that overwrite original values with the default value 0 or null
+            // for all fields of ITimestampingEntity and IPost.LastSeenAt
+            // this will also affect the entity instance which postOrUserInTracking references to it
+            entry.Properties.Where(p => IsTimestampingFieldName(p.Metadata.Name))
+                .Where(p => p.IsModified).ForEach(p => p.IsModified = false);
+
+            var revision = default(TRevision);
+            var revisionNullFieldsBitMask = 0;
+            var whichPostType = typeof(TPostOrUser);
+            var entryIsUser = whichPostType == typeof(TiebaUser);
+            foreach (var p in entry.Properties)
             {
-                var postOrUserInTracking = existingSelector(newPostOrUser);
-                var entry = db.Entry(postOrUserInTracking);
-                entry.CurrentValues.SetValues(newPostOrUser); // this will mutate postOrUserInTracking which is referenced by entry
+                var pName = p.Metadata.Name;
+                if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
 
-                bool IsTimestampingFieldName(string name) => name is nameof(IPost.LastSeenAt)
-                    or nameof(ITimestampingEntity.CreatedAt) or nameof(ITimestampingEntity.UpdatedAt);
-                // rollback changes that overwrite original values with the default value 0 or null
-                // for all fields of ITimestampingEntity and IPost.LastSeenAt
-                // this will also affect the entity instance which postOrUserInTracking references to it
-                entry.Properties.Where(p => IsTimestampingFieldName(p.Metadata.Name))
-                    .Where(p => p.IsModified).ForEach(p => p.IsModified = false);
-
-                var revision = default(TRevision);
-                var revisionNullFieldsBitMask = 0;
-                var whichPostType = typeof(TPostOrUser);
-                var entryIsUser = whichPostType == typeof(TiebaUser);
-                foreach (var p in entry.Properties)
+                if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                    || (entryIsUser && userFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                 {
-                    var pName = p.Metadata.Name;
-                    if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
+                    p.IsModified = false;
+                    continue; // skip following revision check
+                }
+                if (FieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                    || (entryIsUser && userFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
 
-                    if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
-                        || (entryIsUser && userFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
-                    {
-                        p.IsModified = false;
-                        continue; // skip following revision check
-                    }
-                    if (FieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
-                        || (entryIsUser && userFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
+                // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
+                // they will soon be updated by (sub) reply crawler after it find out the latest reply
+                // so we should ignore its revision update for all fields
+                // ignore entire record is not possible via FieldChangeIgnorance.Revision() since it can only determine one field at the time
+                if (entryIsUser && pName == nameof(TiebaUser.Portrait) && p.OriginalValue is "")
+                { // invokes OriginalValues.ToObject() to get a new instance since postOrUserInTracking is reference to the changed one
+                    var user = (TiebaUser)entry.OriginalValues.ToObject();
+                    // create another user instance with only fields of latest replier filled
+                    var latestReplier = ThreadCrawlFacade.LatestReplierFactory(user.Uid, user.Name, user.DisplayName);
+                    // if they are same by fields values, the original one is a latest replier that previously generated by ParseLatestRepliers()
+                    if (user.Equals(latestReplier)) return null;
+                }
 
-                    // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
-                    // they will soon be updated by (sub) reply crawler after it find out the latest reply
-                    // so we should ignore its revision update for all fields
-                    // ignore entire record is not possible via FieldChangeIgnorance.Revision() since it can only determine one field at the time
-                    if (entryIsUser && pName == nameof(TiebaUser.Portrait) && p.OriginalValue is "")
-                    { // invokes OriginalValues.ToObject() to get a new instance since postOrUserInTracking is reference to the changed one
-                        var user = (TiebaUser)entry.OriginalValues.ToObject();
-                        // create another user instance with only fields of latest replier filled
-                        var latestReplier = ThreadCrawlFacade.LatestReplierFactory(user.Uid, user.Name, user.DisplayName);
-                        // if they are same by fields values, the original one is a latest replier that previously generated by ParseLatestRepliers()
-                        if (user.Equals(latestReplier)) return null;
-                    }
+                if (!RevisionPropertiesCache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
+                {
+                    object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
+                    _logger.LogWarning("Updating field {} is not existing in revision table, " +
+                                       "newValue={}, oldValue={}, newObject={}, oldObject={}",
+                        pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
+                        Helper.UnescapedJsonSerialize(newPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
+                }
+                else
+                {
+                    revision ??= revisionFactory(postOrUserInTracking);
+                    // quote from MSDN https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
+                    // If the property type of this PropertyInfo object is a value type and value is null
+                    // the property will be set to the default value for that type.
+                    // https://stackoverflow.com/questions/3049477/propertyinfo-setvalue-and-nulls
+                    // this is a desired behavior to convert null values produced by ExtensionMethods.NullIfZero()
+                    // back to zeros for some revision fields that had been entity splitting
+                    // these split tables will only contain two Superkeys: the Candidate/Primary Key and the field gets split out
+                    // so it's no longer necessary to use NullFieldsBitMasks to identify between
+                    // the real null values and unchanged fields that have null as a placeholder
+                    revisionProp.SetValue(revision, p.OriginalValue);
 
-                    if (!RevisionPropertiesCache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
-                    {
-                        object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
-                        _logger.LogWarning("Updating field {} is not existing in revision table, " +
-                                           "newValue={}, oldValue={}, newObject={}, oldObject={}",
-                            pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
-                            Helper.UnescapedJsonSerialize(newPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
-                    }
-                    else
-                    {
-                        revision ??= revisionFactory(postOrUserInTracking);
-                        // quote from MSDN https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
-                        // If the property type of this PropertyInfo object is a value type and value is null
-                        // the property will be set to the default value for that type.
-                        // https://stackoverflow.com/questions/3049477/propertyinfo-setvalue-and-nulls
-                        // this is a desired behavior to convert null values produced by ExtensionMethods.NullIfZero()
-                        // back to zeros for some revision fields that had been entity splitting
-                        // these split tables will only contain two Superkeys: the Candidate/Primary Key and the field gets split out
-                        // so it's no longer necessary to use NullFieldsBitMasks to identify between
-                        // the real null values and unchanged fields that have null as a placeholder
-                        revisionProp.SetValue(revision, p.OriginalValue);
-
-                        if (p.OriginalValue != null) continue;
-                        // fields that have already split out will not exist in RevisionNullFieldsBitMasks
-                        if (RevisionNullFieldsBitMasks.TryGetValue(pName, out var whichBitToMask))
-                        { // mask the corresponding field bit with 1
-                            revisionNullFieldsBitMask |= whichBitToMask;
-                        }
+                    if (p.OriginalValue != null) continue;
+                    // fields that have already split out will not exist in RevisionNullFieldsBitMasks
+                    if (RevisionNullFieldsBitMasks.TryGetValue(pName, out var whichBitToMask))
+                    { // mask the corresponding field bit with 1
+                        revisionNullFieldsBitMask |= whichBitToMask;
                     }
                 }
-                if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask.NullIfZero();
-                return revision;
-            }).OfType<TRevision>().ToList();
-            if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
+            }
+            if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask.NullIfZero();
+            return revision;
+        }).OfType<TRevision>().ToList();
+        if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
 
-            _ = db.Set<TRevision>().UpsertRange(newRevisions.Where(r => !r.IsAllFieldsIsNullExceptSplit())).NoUpdate().Run();
-            newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
-                .SelectMany(r => r.SplitEntities)
-                .GroupBy(p => p.Key, p => p.Value)
-                .ForEach(g => RevisionSplitEntitiesUpsertPayloads[g.Key](db, g));
-        }
+        _ = db.Set<TRevision>().UpsertRange(newRevisions.Where(r => !r.IsAllFieldsIsNullExceptSplit())).NoUpdate().Run();
+        newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
+            .SelectMany(r => r.SplitEntities)
+            .GroupBy(p => p.Key, p => p.Value)
+            .ForEach(g => RevisionSplitEntitiesUpsertPayloads[g.Key](db, g));
     }
 }

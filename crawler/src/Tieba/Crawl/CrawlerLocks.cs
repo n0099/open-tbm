@@ -1,124 +1,123 @@
-namespace tbm.Crawler.Tieba.Crawl
+namespace tbm.Crawler.Tieba.Crawl;
+
+public class CrawlerLocks : WithLogTrace
 {
-    public class CrawlerLocks : WithLogTrace
+    public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
+
+    public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
     {
-        public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
+        public override string ToString() => $"f{Fid}" + (Tid == null ? "" : $" t{Tid}") + (Pid == null ? "" : $" p{Pid}");
+    };
+    private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
+    // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
+    private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
+    private readonly ILogger<CrawlerLocks> _logger;
+    private readonly IConfigurationSection _config;
+    public string LockType { get; }
 
-        public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
-        {
-            public override string ToString() => $"f{Fid}" + (Tid == null ? "" : $" t{Tid}") + (Pid == null ? "" : $" p{Pid}");
-        };
-        private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
-        // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
-        private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
-        private readonly ILogger<CrawlerLocks> _logger;
-        private readonly IConfigurationSection _config;
-        public string LockType { get; }
+    public CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
+    {
+        _logger = logger;
+        _config = config.GetSection($"CrawlerLocks:{lockType}");
+        LockType = lockType;
+        InitLogTrace(_config);
+    }
 
-        public CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
+    protected override void LogTrace()
+    {
+        if (!ShouldLogTrace()) return;
+        lock (_crawling)
+        lock (_failed)
         {
-            _logger = logger;
-            _config = config.GetSection($"CrawlerLocks:{lockType}");
-            LockType = lockType;
-            InitLogTrace(_config);
+            _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
+                _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
+                Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key.ToString(), i => i.Value.Count)),
+                _failed.Count, _failed.Values.Select(d => d.Count).Sum(),
+                Helper.UnescapedJsonSerialize(_failed.ToDictionary(i => i.Key.ToString(), i => i.Value)));
         }
+    }
 
-        protected override void LogTrace()
-        {
-            if (!ShouldLogTrace()) return;
-            lock (_crawling)
-            lock (_failed)
-            {
-                _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
-                    _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
-                    Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key.ToString(), i => i.Value.Count)),
-                    _failed.Count, _failed.Values.Select(d => d.Count).Sum(),
-                    Helper.UnescapedJsonSerialize(_failed.ToDictionary(i => i.Key.ToString(), i => i.Value)));
+    public IEnumerable<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
+    {
+        var lockFreePages = pages.ToHashSet();
+        lock (_crawling)
+        { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
+            Helper.GetNowTimestamp(out var now);
+            if (!_crawling.ContainsKey(lockId))
+            { // if no one is locking any page in lockId, just insert pages then return it as is
+                var pageTimeDict = lockFreePages.Select(i => KeyValuePair.Create(i, now));
+                var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
+                if (_crawling.TryAdd(lockId, newPage)) return lockFreePages;
             }
-        }
-
-        public IEnumerable<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
-        {
-            var lockFreePages = pages.ToHashSet();
-            lock (_crawling)
-            { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
-                Helper.GetNowTimestamp(out var now);
-                if (!_crawling.ContainsKey(lockId))
-                { // if no one is locking any page in lockId, just insert pages then return it as is
-                    var pageTimeDict = lockFreePages.Select(i => KeyValuePair.Create(i, now));
-                    var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
-                    if (_crawling.TryAdd(lockId, newPage)) return lockFreePages;
-                }
-                lockFreePages.ToList().ForEach(page => // iterate on copy in order to mutate the original lockFreePages
-                {
-                    var pagesLock = _crawling[lockId];
-                    lock (pagesLock)
-                    {
-                        if (pagesLock.TryAdd(page, now)) return;
-                        // when page is locking:
-                        var lockTimeout = _config.GetValue<Time>("LockTimeoutSec", 300); // 5 minutes;
-                        if (pagesLock[page] < now - lockTimeout)
-                            pagesLock[page] = now;
-                        else _ = lockFreePages.Remove(page);
-                    }
-                });
-            }
-
-            return lockFreePages;
-        }
-
-        public void ReleaseRange(LockId lockId, IEnumerable<Page> pages)
-        {
-            lock (_crawling)
+            lockFreePages.ToList().ForEach(page => // iterate on copy in order to mutate the original lockFreePages
             {
-                if (!_crawling.TryGetValue(lockId, out var pagesLock))
-                {
-                    _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once",
-                        pages, LockType, lockId);
-                    return;
-                }
+                var pagesLock = _crawling[lockId];
                 lock (pagesLock)
                 {
-                    pages.ForEach(i => pagesLock.TryRemove(i, out _));
-                    if (pagesLock.IsEmpty) _ = _crawling.TryRemove(lockId, out _);
+                    if (pagesLock.TryAdd(page, now)) return;
+                    // when page is locking:
+                    var lockTimeout = _config.GetValue<Time>("LockTimeoutSec", 300); // 5 minutes;
+                    if (pagesLock[page] < now - lockTimeout)
+                        pagesLock[page] = now;
+                    else _ = lockFreePages.Remove(page);
                 }
-            }
+            });
         }
 
-        public void AcquireFailed(LockId lockId, Page page, FailureCount failureCount)
+        return lockFreePages;
+    }
+
+    public void ReleaseRange(LockId lockId, IEnumerable<Page> pages)
+    {
+        lock (_crawling)
         {
-            var maxRetry = _config.GetValue<FailureCount>("MaxRetryTimes", 5);
-            if (failureCount >= maxRetry)
+            if (!_crawling.TryGetValue(lockId, out var pagesLock))
             {
-                _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}",
-                    page, LockType, lockId, maxRetry);
+                _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once",
+                    pages, LockType, lockId);
                 return;
             }
-            lock (_failed)
+            lock (pagesLock)
             {
-                if (_failed.TryGetValue(lockId, out var pagesLock))
-                {
-                    lock (pagesLock) if (!pagesLock.TryAdd(page, failureCount)) pagesLock[page] = failureCount;
-                }
-                else
-                {
-                    var newPage = new ConcurrentDictionary<Page, FailureCount> { [page] = failureCount };
-                    _ = _failed.TryAdd(lockId, newPage);
-                }
+                pages.ForEach(i => pagesLock.TryRemove(i, out _));
+                if (pagesLock.IsEmpty) _ = _crawling.TryRemove(lockId, out _);
             }
         }
+    }
 
-        public Dictionary<LockId, Dictionary<Page, FailureCount>> RetryAllFailed()
+    public void AcquireFailed(LockId lockId, Page page, FailureCount failureCount)
+    {
+        var maxRetry = _config.GetValue<FailureCount>("MaxRetryTimes", 5);
+        if (failureCount >= maxRetry)
         {
-            lock (_failed)
+            _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}",
+                page, LockType, lockId, maxRetry);
+            return;
+        }
+        lock (_failed)
+        {
+            if (_failed.TryGetValue(lockId, out var pagesLock))
             {
-                var deepCloneOfFailed = _failed.ToDictionary(i => i.Key, i =>
-                {
-                    lock (i.Value) return new Dictionary<Page, FailureCount>(i.Value);
-                });
-                _failed.Clear();
-                return deepCloneOfFailed;
+                lock (pagesLock) if (!pagesLock.TryAdd(page, failureCount)) pagesLock[page] = failureCount;
             }
+            else
+            {
+                var newPage = new ConcurrentDictionary<Page, FailureCount> { [page] = failureCount };
+                _ = _failed.TryAdd(lockId, newPage);
+            }
+        }
+    }
+
+    public Dictionary<LockId, Dictionary<Page, FailureCount>> RetryAllFailed()
+    {
+        lock (_failed)
+        {
+            var deepCloneOfFailed = _failed.ToDictionary(i => i.Key, i =>
+            {
+                lock (i.Value) return new Dictionary<Page, FailureCount>(i.Value);
+            });
+            _failed.Clear();
+            return deepCloneOfFailed;
         }
     }
 }

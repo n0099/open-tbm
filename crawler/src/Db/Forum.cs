@@ -1,11 +1,10 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
-namespace tbm.Crawler.Db
+namespace tbm.Crawler.Db;
+
+public class Forum
 {
-    public class Forum
-    {
-        [Key] public Fid Fid { get; set; }
-        public string Name { get; set; } = "";
-        public bool IsCrawling { get; set; }
-    }
+    [Key] public Fid Fid { get; set; }
+    public string Name { get; set; } = "";
+    public bool IsCrawling { get; set; }
 }

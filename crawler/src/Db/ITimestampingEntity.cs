@@ -1,8 +1,7 @@
-namespace tbm.Crawler.Db
+namespace tbm.Crawler.Db;
+
+public interface ITimestampingEntity
 {
-    public interface ITimestampingEntity
-    {
-        public uint CreatedAt { get; set; }
-        public uint? UpdatedAt { get; set; }
-    }
+    public uint CreatedAt { get; set; }
+    public uint? UpdatedAt { get; set; }
 }

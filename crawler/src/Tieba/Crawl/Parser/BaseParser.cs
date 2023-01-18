@@ -1,29 +1,28 @@
-namespace tbm.Crawler.Tieba.Crawl.Parser
-{
-    public abstract class BaseParser<TPost, TPostProtoBuf>
-        where TPost: class, IPost
-        where TPostProtoBuf : IMessage<TPostProtoBuf>
-    {
-        protected abstract PostId PostIdSelector(TPost post);
-        protected abstract TPost Convert(TPostProtoBuf inPost);
-        protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<User?> outUsers);
-        protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
+namespace tbm.Crawler.Tieba.Crawl.Parser;
 
-        public void ParsePosts(CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
-            out Dictionary<PostId, TPost> outPosts, out List<User> outUsers)
+public abstract class BaseParser<TPost, TPostProtoBuf>
+    where TPost: class, IPost
+    where TPostProtoBuf : IMessage<TPostProtoBuf>
+{
+    protected abstract PostId PostIdSelector(TPost post);
+    protected abstract TPost Convert(TPostProtoBuf inPost);
+    protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<User?> outUsers);
+    protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
+
+    public void ParsePosts(CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
+        out Dictionary<PostId, TPost> outPosts, out List<User> outUsers)
+    {
+        outUsers = new(30);
+        if (ShouldSkipParse(requestFlag))
         {
-            outUsers = new(30);
-            if (ShouldSkipParse(requestFlag))
-            {
-                outPosts = new();
-                return;
-            }
-            var outNullableUsers = new List<User?>();
-            outPosts = ParsePostsInternal(inPosts, outNullableUsers)
-                .Select(p => new KeyValuePair<PostId, TPost>(PostIdSelector(p), p))
-                .ToDictionary(p => p.Key, p => p.Value);
-            outUsers.AddRange(outNullableUsers.OfType<User>()
-                .Where(u => u.CalculateSize() != 0)); // remove empty users
+            outPosts = new();
+            return;
         }
+        var outNullableUsers = new List<User?>();
+        outPosts = ParsePostsInternal(inPosts, outNullableUsers)
+            .Select(p => new KeyValuePair<PostId, TPost>(PostIdSelector(p), p))
+            .ToDictionary(p => p.Key, p => p.Value);
+        outUsers.AddRange(outNullableUsers.OfType<User>()
+            .Where(u => u.CalculateSize() != 0)); // remove empty users
     }
 }

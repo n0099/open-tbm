@@ -1,9 +1,8 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
-namespace tbm.Crawler.Db.Post
+namespace tbm.Crawler.Db.Post;
+
+public class ReplyContent
 {
-    public class ReplyContent
-    {
-        [Key] public ulong Pid { get; set; }
-        public byte[]? Content { get; set; }
-    }
+    [Key] public ulong Pid { get; set; }
+    public byte[]? Content { get; set; }
 }
