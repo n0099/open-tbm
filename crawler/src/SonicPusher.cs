@@ -6,6 +6,7 @@ public sealed class SonicPusher : IDisposable
 {
     public ISonicIngestConnection Ingest { get; }
     public string CollectionPrefix { get; }
+    private static readonly ReaderWriterLockSlim SuspendPushingFileLock = new();
     private readonly ILogger<SonicPusher> _logger;
     private readonly IConfigurationSection _config;
 
@@ -50,8 +51,38 @@ public sealed class SonicPusher : IDisposable
 
         var ret = GetElapsedMs();
         if (ret > 1000)
-            _logger.LogWarning("Pushing a single post content with length {} into sonic for {} in fid {} spending {:F0}ms, content={}",
+            _logger.LogWarning("Pushing a single post content with {} UTF-16 chars into sonic for {} in fid {} spending {:F0}ms, content={}",
                 content.Length, postType, fid, ret, content);
         return ret;
+    }
+
+    public void PushPostWithCancellationToken<T>(ICollection<T> posts, Fid fid, string postType,
+        Func<T, PostId> postIdSelector, Func<T, byte[]?> postContentSelector,
+        CancellationToken stoppingToken = default)
+    {
+        try
+        {
+            SuspendPushingFileLock.EnterWriteLock();
+            posts.ForEach(p =>
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                _ = PushPost(fid, postType, postIdSelector(p), postContentSelector(p));
+            });
+        }
+        catch (OperationCanceledException e)
+        {
+            if (e.CancellationToken == stoppingToken)
+            {
+                string GetBase64EncodedPostContent(T p) =>
+                    Convert.ToBase64String(postContentSelector(p) ?? ReadOnlySpan<byte>.Empty);
+                File.AppendAllLines(ResumeSuspendPostContentsPushingWorker.GetFilePath(postType),
+                    posts.Select(p => $"{fid},{postIdSelector(p)},{GetBase64EncodedPostContent(p)}"));
+            }
+            throw;
+        }
+        finally
+        {
+            SuspendPushingFileLock.ExitWriteLock();
+        }
     }
 }

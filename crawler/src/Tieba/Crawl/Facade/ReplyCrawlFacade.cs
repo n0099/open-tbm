@@ -58,9 +58,6 @@ public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, Re
     }
 
     protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
-        savedPosts.NewlyAdded.ForEach(r =>
-        {
-            stoppingToken.ThrowIfCancellationRequested();
-            _ = _pusher.PushPost(Fid, "replies", r.Pid, r.Content);
-        });
+        _pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
+            p => p.Pid, p => p.Content, stoppingToken);
 }

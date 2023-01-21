@@ -5,14 +5,14 @@ using NSonic;
 
 namespace tbm.Crawler.Worker;
 
-public class InsertAllPostContentsIntoSonicWorker : BackgroundService
+public class PushAllPostContentsIntoSonicWorker : BackgroundService
 {
-    private readonly ILogger<InsertAllPostContentsIntoSonicWorker> _logger;
+    private readonly ILogger<PushAllPostContentsIntoSonicWorker> _logger;
     private readonly IConfiguration _config;
     private readonly ILifetimeScope _scope0;
     private readonly SonicPusher _pusher;
 
-    public InsertAllPostContentsIntoSonicWorker(ILogger<InsertAllPostContentsIntoSonicWorker> logger,
+    public PushAllPostContentsIntoSonicWorker(ILogger<PushAllPostContentsIntoSonicWorker> logger,
         IConfiguration config, ILifetimeScope scope0, SonicPusher pusher)
     {
         _logger = logger;

@@ -24,6 +24,7 @@ internal class Program
                 })
                 .ConfigureServices((context, service) =>
                 {
+                    service.AddHostedService<ResumeSuspendPostContentsPushingWorker>();
                     service.AddHostedService<MainCrawlWorker>();
                     service.AddHostedService<RetryCrawlWorker>();
                     service.AddHostedService<ForumModeratorRevisionCrawlWorker>();

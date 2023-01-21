@@ -33,9 +33,6 @@ public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, BaseSubReplyRev
     }
 
     protected override void PostCommitSaveHook(SaverChangeSet<SubReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
-        savedPosts.NewlyAdded.ForEach(sr =>
-        {
-            stoppingToken.ThrowIfCancellationRequested();
-            _ = _pusher.PushPost(Fid, "subReplies", sr.Spid, sr.Content);
-        });
+        _pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "subReplies",
+            p => p.Spid, p => p.Content, stoppingToken);
 }
