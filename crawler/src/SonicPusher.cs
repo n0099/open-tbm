@@ -1,4 +1,5 @@
 using NSonic;
+using TbClient.Post.Common;
 
 namespace tbm.Crawler;
 
@@ -24,40 +25,40 @@ public sealed class SonicPusher : IDisposable
 
     public void Dispose() => Ingest.Dispose();
 
-    public float PushPost(Fid fid, string postType, PostId postId, byte[]? postContent)
+    public float PushPost(Fid fid, string type, PostId id, RepeatedField<Content>? content)
     {
         if (!_config.GetValue("Enabled", false)) return 0;
         var stopWatch = new Stopwatch();
         stopWatch.Start();
         float GetElapsedMs() => (float)stopWatch.ElapsedTicks / Stopwatch.Frequency * 1000;
 
-        if (postContent == null) return GetElapsedMs();
-        var content = PostContentWrapper.Parser.ParseFrom(postContent).Value
+        if (content == null) return GetElapsedMs();
+        var contentTexts = content
             .Where(c => c.Type != 2) // filter out emoticons alt text
-            .Aggregate("", (acc, content) => $"{acc} {content.Text}").Trim();
-        if (content == "") return GetElapsedMs();
-        content = content.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\""); // https://github.com/spikensbror-dotnet/nsonic/pull/10
+            .Aggregate("", (acc, cur) => $"{acc} {cur.Text}").Trim()
+            .Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\""); // https://github.com/spikensbror-dotnet/nsonic/pull/10
+        if (contentTexts == "") return GetElapsedMs();
 
         try
         {
-            foreach (var text in content.Chunk(30000)) // https://github.com/spikensbror-dotnet/nsonic/issues/11
-                Ingest.Push($"{CollectionPrefix}{postType}_content", $"f{fid}", postId.ToString(), text.ToString(), "cmn");
+            foreach (var text in contentTexts.Chunk(30000)) // https://github.com/spikensbror-dotnet/nsonic/issues/11
+                Ingest.Push($"{CollectionPrefix}{type}_content", $"f{fid}", id.ToString(), text.ToString(), "cmn");
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error while pushing the content of post id {} for {} in fid {} into sonic, content={}",
-                postId, postType, fid, content);
+                id, type, fid, contentTexts);
         }
 
         var ret = GetElapsedMs();
         if (ret > 1000)
             _logger.LogWarning("Pushing a single post content with {} UTF-16 chars into sonic for {} in fid {} spending {:F0}ms, content={}",
-                content.Length, postType, fid, ret, content);
+                contentTexts.Length, type, fid, ret, contentTexts);
         return ret;
     }
 
     public void PushPostWithCancellationToken<T>(ICollection<T> posts, Fid fid, string postType,
-        Func<T, PostId> postIdSelector, Func<T, byte[]?> postContentSelector,
+        Func<T, PostId> postIdSelector, Func<T, RepeatedField<Content>?> postContentSelector,
         CancellationToken stoppingToken = default)
     {
         try
@@ -74,7 +75,8 @@ public sealed class SonicPusher : IDisposable
             if (e.CancellationToken == stoppingToken)
             {
                 string GetBase64EncodedPostContent(T p) =>
-                    Convert.ToBase64String(postContentSelector(p) ?? ReadOnlySpan<byte>.Empty);
+                    Convert.ToBase64String(Helper.WrapPostContent(postContentSelector(p))
+                        ?.ToByteArray() ?? ReadOnlySpan<byte>.Empty);
                 File.AppendAllLines(ResumeSuspendPostContentsPushingWorker.GetFilePath(postType),
                     posts.Select(p => $"{fid},{postIdSelector(p)},{GetBase64EncodedPostContent(p)}"));
             }

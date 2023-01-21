@@ -41,7 +41,7 @@ public class ResumeSuspendPostContentsPushingWorker : IHostedService
             {
                 var (fid, posts) = pair;
                 _pusher.PushPostWithCancellationToken(posts, fid, postType, t => t.Id,
-                    t => Convert.FromBase64String(t.Content), cancellationToken);
+                    t => Helper.ParseThenUnwrapPostContent(Convert.FromBase64String(t.Content)), cancellationToken);
             });
             _logger.LogInformation("resume for {} suspend {} contents push into sonic finished",
                 postIdKeyByFid.Sum(pair => pair.Value.Count), postType);

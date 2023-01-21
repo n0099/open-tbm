@@ -20,23 +20,22 @@ public class ReplyParser : BaseParser<ReplyPost, Reply>
             inPost.Content.Where(c => c.Type == 3).ForEach(c =>
             { // set with protoBuf default values to remove these image related fields through reference that has similar value
                 if (!Uri.TryCreate(c.OriginSrc, UriKind.Absolute, out var uri)) return;
-                if (uri.Host is not ("tiebapic.baidu.com" or "imgsrc.baidu.com"))
-                {
-                    _logger.LogInformation("Detected an image in reply content references to {}"
-                                           + " instead of common domains of tieba image hosting service in pid {}, content={}",
-                        o.Pid, c.OriginSrc, Helper.UnescapedJsonSerialize(c));
-                    return;
-                }
-                // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
-                c.OriginSrc = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
                 c.BigCdnSrc = "";
                 c.CdnSrc = "";
                 c.CdnSrcActive = "";
                 c.ShowOriginalBtn = 0;
                 c.IsLongPic = 0;
+                // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
+                if (uri.Host is ("tiebapic.baidu.com" or "imgsrc.baidu.com"))
+                    c.OriginSrc = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
+                else if (uri.Host is not "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
+                    _logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
+                                           + " instead of common domains of tieba image hosting service, content={}",
+                        o.Pid, c.OriginSrc, Helper.UnescapedJsonSerialize(c));
             });
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
-                () => new PostContentWrapper {Value = {inPost.Content}});
+                () => Helper.WrapPostContent(inPost.Content));
+            o.OriginalContents = inPost.Content;
             o.AuthorUid = inPost.AuthorId;
             // values of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
             o.SubReplyCount = inPost.SubPostNumber.NullIfZero();

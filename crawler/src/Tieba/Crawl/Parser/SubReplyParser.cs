@@ -19,7 +19,8 @@ public class SubReplyParser : BaseParser<SubReplyPost, SubReply>
             // values of tid and pid will be write back in SubReplyCrawlFacade.PostParseHook()
             o.Spid = inPost.Spid;
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
-                () => new PostContentWrapper {Value = {inPost.Content}});
+                () => Helper.WrapPostContent(inPost.Content));
+            o.OriginalContents = inPost.Content;
             o.AuthorUid = author.Uid;
             o.AuthorExpGrade = (ushort)author.LevelId;
             o.PostedAt = inPost.Time;

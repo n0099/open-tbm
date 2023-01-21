@@ -1,4 +1,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+
+using TbClient.Post.Common;
+
 namespace tbm.Crawler.Db.Post;
 
 public class ReplyPost : IPost, IPostWithAuthorExpGrade
@@ -8,6 +11,7 @@ public class ReplyPost : IPost, IPostWithAuthorExpGrade
     [Key] public ulong Pid { get; set; }
     public uint Floor { get; set; }
     [NotMapped] public byte[]? Content { get; set; }
+    [NotMapped] public RepeatedField<Content>? OriginalContents { get; set; }
     public long AuthorUid { get; set; }
     [NotMapped] public ushort AuthorExpGrade { get; set; }
     public uint? SubReplyCount { get; set; }

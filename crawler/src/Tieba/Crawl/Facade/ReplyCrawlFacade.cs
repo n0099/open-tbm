@@ -59,5 +59,5 @@ public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, Re
 
     protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
         _pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
-            p => p.Pid, p => p.Content, stoppingToken);
+            p => p.Pid, p => p.OriginalContents, stoppingToken);
 }

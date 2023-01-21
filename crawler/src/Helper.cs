@@ -1,5 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using TbClient.Post.Common;
 
 namespace tbm.Crawler;
 
@@ -9,10 +10,16 @@ public abstract class Helper
         protoBuf == null || protoBuf.CalculateSize() == 0 ? null : protoBuf.ToByteArray();
 
     public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty<T>
-        (IEnumerable<T>? valuesToWrap, Func<IMessage> wrapperFactory) where T : IMessage =>
+        (IEnumerable<T>? valuesToWrap, Func<IMessage?> wrapperFactory) where T : IMessage =>
         valuesToWrap?.Select(i => i.CalculateSize()).Sum() is 0 or null
             ? null
             : SerializedProtoBufOrNullIfEmpty(wrapperFactory());
+
+    public static RepeatedField<Content>? ParseThenUnwrapPostContent(byte[]? serializedProtoBuf) =>
+        serializedProtoBuf == null ? null : PostContentWrapper.Parser.ParseFrom(serializedProtoBuf).Value;
+
+    public static PostContentWrapper? WrapPostContent(RepeatedField<Content>? contents) =>
+        contents == null ? null : new() { Value = { contents } };
 
     private static readonly JsonSerializerOptions UnescapedSerializeOptions =
         new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};
