@@ -1,8 +1,9 @@
 using Humanizer;
 using Humanizer.Localisation;
-using SavedRepliesKeyByTid = System.Collections.Concurrent.ConcurrentDictionary<ulong, tbm.Crawler.Tieba.Crawl.Saver.SaverChangeSet<tbm.Crawler.Db.Post.ReplyPost>>;
 
 namespace tbm.Crawler.Worker;
+
+using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPost>>;
 
 public class ArchiveCrawlWorker : BackgroundService
 {

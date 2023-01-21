@@ -33,7 +33,7 @@ public class UserParserAndSaver : CommonInSavers<BaseUserRevision>
     };
 
     private static readonly Regex PortraitExtractingRegex =
-        new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        new(@"^(.*?)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
     private static readonly HashSet<Uid> UserIdLocks = new();
     private readonly List<Uid> _savedUsersId = new();
     private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();

@@ -1,12 +1,10 @@
-using System.Text.RegularExpressions;
-
 namespace tbm.Crawler.Tieba.Crawl.Parser;
 
 public class ReplyParser : BaseParser<ReplyPost, Reply>
 {
-    private static readonly Regex ImgUrlExtractingRegex =
-        new(@"^https?://(tiebapic|imgsrc)\.baidu\.com/forum/pic/item/(?<hash>.*?)\.jpg(\?.*)*$",
-            RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+    private readonly ILogger<ReplyParser> _logger;
+
+    public ReplyParser(ILogger<ReplyParser> logger) => _logger = logger;
 
     protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
@@ -21,14 +19,21 @@ public class ReplyParser : BaseParser<ReplyPost, Reply>
             o.Floor = inPost.Floor;
             inPost.Content.Where(c => c.Type == 3).ForEach(c =>
             { // set with protoBuf default values to remove these image related fields through reference that has similar value
+                if (!Uri.TryCreate(c.OriginSrc, UriKind.Absolute, out var uri)) return;
+                if (uri.Host is not ("tiebapic.baidu.com" or "imgsrc.baidu.com"))
+                {
+                    _logger.LogInformation("Detected an image in reply content references to {}"
+                                           + " instead of common domains of tieba image hosting service in pid {}, content={}",
+                        o.Pid, c.OriginSrc, Helper.UnescapedJsonSerialize(c));
+                    return;
+                }
+                // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
+                c.OriginSrc = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
                 c.BigCdnSrc = "";
                 c.CdnSrc = "";
                 c.CdnSrcActive = "";
                 c.ShowOriginalBtn = 0;
                 c.IsLongPic = 0;
-                // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
-                if (ImgUrlExtractingRegex.Match(c.OriginSrc)
-                        .Groups["hash"] is {Success: true} hash) c.OriginSrc = hash.Value;
             });
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => new PostContentWrapper {Value = {inPost.Content}});
