@@ -1,5 +1,6 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
+using System.Text.Json.Serialization;
 using TbClient.Post.Common;
 
 namespace tbm.Crawler.Db.Post;
@@ -11,7 +12,10 @@ public class SubReplyPost : IPost, IPostWithAuthorExpGrade
     public ulong Pid { get; set; }
     [Key] public ulong Spid { get; set; }
     [NotMapped] public byte[]? Content { get; set; }
-    [NotMapped] public RepeatedField<Content> OriginalContents { get; set; } = null!;
+
+    [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Content>))]
+    [NotMapped]
+    public RepeatedField<Content> OriginalContents { get; set; } = null!;
     public long AuthorUid { get; set; }
     [NotMapped] public ushort AuthorExpGrade { get; set; }
     public uint PostedAt { get; set; }

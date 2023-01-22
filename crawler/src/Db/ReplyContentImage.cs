@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Db.Post;
+namespace tbm.Crawler.Db;
 
 public class ReplyContentImage
 {

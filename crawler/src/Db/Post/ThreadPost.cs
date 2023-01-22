@@ -1,4 +1,6 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+
+using System.Text.Json.Serialization;
 using TbClient.Post.Common;
 
 namespace tbm.Crawler.Db.Post;
@@ -8,7 +10,10 @@ public class ThreadPost : IPost
     public object Clone() => MemberwiseClone();
     [Key] public ulong Tid { get; set; }
     [NotMapped] public ulong? FirstReplyPid { get; set; }
-    [NotMapped] public RepeatedField<Abstract>? FirstReplyExcerpt { get; set; }
+
+    [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Abstract>))]
+    [NotMapped]
+    public RepeatedField<Abstract>? FirstReplyExcerpt { get; set; }
     public ulong ThreadType { get; set; }
     public string? StickyType { get; set; }
     public string? TopicType { get; set; }
