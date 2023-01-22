@@ -11,7 +11,7 @@ public class ReplyPost : IPost, IPostWithAuthorExpGrade
     [Key] public ulong Pid { get; set; }
     public uint Floor { get; set; }
     [NotMapped] public byte[]? Content { get; set; }
-    [NotMapped] public RepeatedField<Content>? OriginalContents { get; set; }
+    [NotMapped] public RepeatedField<Content> OriginalContents { get; set; } = null!;
     public long AuthorUid { get; set; }
     [NotMapped] public ushort AuthorExpGrade { get; set; }
     public uint? SubReplyCount { get; set; }

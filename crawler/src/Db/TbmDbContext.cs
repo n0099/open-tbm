@@ -17,6 +17,7 @@ public class TbmDbContext : DbContext
     public DbSet<ReplyPost> Replies => Set<ReplyPost>();
     public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
     public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
+    public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
     public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
     public DbSet<Forum> Forum => Set<Forum>();
@@ -38,6 +39,7 @@ public class TbmDbContext : DbContext
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.SignatureMd5});
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
+        b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image");
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
         b.Entity<ThreadRevision>().ToTable("tbmcr_thread").HasKey(e => new {e.Tid, e.TakenAt});

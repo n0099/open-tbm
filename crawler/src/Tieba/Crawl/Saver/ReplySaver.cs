@@ -70,7 +70,11 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
             PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
-        db.ReplyContents.AddRange(changeSet.NewlyAdded.Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
+        db.ReplyContents.AddRange(changeSet.NewlyAdded
+            .Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
+        db.ReplyContentImages.AddRange(changeSet.NewlyAdded.SelectMany(r =>
+            r.OriginalContents.Where(c => c.Type == 3)
+                .Select(c => new ReplyContentImage {Pid = r.Pid, UrlFilename = c.OriginSrc})));
         PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
         PostSaveEvent += SaveReplySignatures(db, changeSet.AllAfter).Invoke;
 
