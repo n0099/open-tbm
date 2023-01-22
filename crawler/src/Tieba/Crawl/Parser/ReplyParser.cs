@@ -18,14 +18,14 @@ public class ReplyParser : BaseParser<ReplyPost, Reply>
             o.Pid = inPost.Pid;
             o.Floor = inPost.Floor;
             inPost.Content.Where(c => c.Type == 3).ForEach(c =>
-            { // set with protoBuf default values to remove these image related fields through reference that has similar value
+            { // reset with the protoBuf default values to remove these image related fields that have similar values
                 if (!Uri.TryCreate(c.OriginSrc, UriKind.Absolute, out var uri)) return;
                 c.BigCdnSrc = "";
                 c.CdnSrc = "";
                 c.CdnSrcActive = "";
                 c.ShowOriginalBtn = 0;
                 c.IsLongPic = 0;
-                // only remains the image unique identity at the end of url as "filename", dropping domain, path and extension from url
+                // only remains the image unique identity at the end of url as "filename", drops domain, path and file extension from url
                 if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com")
                     c.OriginSrc = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
                 else if (uri.Host is not "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif

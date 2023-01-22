@@ -60,7 +60,7 @@ public abstract class StaticCommonInSavers
                 && newValue is null && oldValue is not null) return true;
             // possible rarely response with the protoBuf default value 0
             if (propName == nameof(IPost.AuthorUid)
-                && newValue is 0 && oldValue is not null) return true;
+                && newValue is (long)0 && oldValue is not null) return true;
             return false;
         },
         Revision: (whichPostType, propName, oldValue, _) =>

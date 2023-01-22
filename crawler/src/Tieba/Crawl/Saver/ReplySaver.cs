@@ -72,9 +72,10 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
         db.ReplyContents.AddRange(changeSet.NewlyAdded
             .Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
-        db.ReplyContentImages.AddRange(changeSet.NewlyAdded.SelectMany(r =>
-            r.OriginalContents.Where(c => c.Type == 3)
-                .Select(c => new ReplyContentImage {Pid = r.Pid, UrlFilename = c.OriginSrc})));
+        db.ReplyContentImages.AddRange(changeSet.NewlyAdded.SelectMany(r => r.OriginalContents
+            // only save image filename without extension that extracted from url by ReplyParser.Convert()
+            .Where(c => c.Type == 3 && c.OriginSrc.Length == 40)
+            .Select(c => new ReplyContentImage {Pid = r.Pid, UrlFilename = c.OriginSrc})));
         PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
         PostSaveEvent += SaveReplySignatures(db, changeSet.AllAfter).Invoke;
 
