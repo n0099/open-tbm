@@ -65,15 +65,14 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                 existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorType)),
                 r => (r.Portrait, r.ModeratorType)));
             db1.ForumModeratorRevisions.AddRange(existingLatestRevisions
-                .Where(e => e.ModeratorType != null) // filter out revisions that recorded someone who resigned from moderators
-                .ExceptBy(revisions.Select(r => (r.Portrait, r.ModeratorType)),
-                    e => (e.Portrait, e.ModeratorType))
+                .Where(e => e.ModeratorType != "") // filter out revisions that recorded someone who resigned from moderators
+                .ExceptBy(revisions.Select(r => r.Portrait), e => e.Portrait)
                 .Select(e => new ForumModeratorRevision
                 {
                     DiscoveredAt = now,
                     Fid = fid,
                     Portrait = e.Portrait,
-                    ModeratorType = null // moderator only exists in DB means he is no longer a moderator
+                    ModeratorType = "" // moderator only exists in DB means he is no longer a moderator
                 }));
             _ = await db1.SaveChangesAsync(stoppingToken);
             await transaction.CommitAsync(stoppingToken);
