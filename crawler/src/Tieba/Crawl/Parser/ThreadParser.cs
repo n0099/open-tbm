@@ -15,7 +15,6 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
         try
         {
             o.Tid = (Tid)inPost.Tid;
-            // FirstReplyPid will be write back in this.ShouldSkipParse()
             o.FirstReplyExcerpt = inPost.Abstract;
             o.ThreadType = (ulong)inPost.ThreadTypes;
             o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";

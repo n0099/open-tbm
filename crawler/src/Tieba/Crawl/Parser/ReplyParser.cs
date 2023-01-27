@@ -43,8 +43,8 @@ public class ReplyParser : BaseParser<ReplyPost, Reply>
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => Helper.WrapPostContent(inPost.Content));
             o.OriginalContents = inPost.Content;
-            o.AuthorUid = inPost.AuthorId;
-            // values of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
+            o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author.Uid; // AuthorId rarely response with 0
+            // value of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
             o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
             o.PostedAt = inPost.Time;
             o.IsFold = (ushort?)inPost.IsFold.NullIfZero();

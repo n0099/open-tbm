@@ -40,13 +40,18 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
             Helper.GetNowTimestamp(out var now);
             await using var db1 = scope1.Resolve<TbmDbContext.New>()(0);
             await using var transaction = await db1.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
-            var revisions = moderators.SelectMany(i => i).Select(tuple => new ForumModeratorRevision
-            {
-                DiscoveredAt = now,
-                Fid = fid,
-                Portrait = tuple.portrait,
-                ModeratorType = tuple.type
-            }).ToList();
+            var revisions = moderators
+                .SelectMany(i => i)
+                .GroupBy(tuple => tuple.portrait)
+                .Select(g => new ForumModeratorRevision
+                {
+                    DiscoveredAt = now,
+                    Fid = fid,
+                    Portrait = g.Key,
+                    // user can serve as multiple moderators, so join these types with commas
+                    // the https://en.wikipedia.org/wiki/Order_of_precedence is same with div.bawu_single_type in the response HTML
+                    ModeratorType = string.Join(',', g.Select(tuple => tuple.type))
+                }).ToList();
             var existingLatestRevisions = (from r in db1.ForumModeratorRevisions.AsNoTracking()
                 where r.Fid == fid
                 select new

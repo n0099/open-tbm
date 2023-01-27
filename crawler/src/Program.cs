@@ -59,7 +59,7 @@ internal class Program
                         typeof(BaseParser<,>), typeof(BaseSaver<,>)
                     };
                     builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                        .Where(t => baseClassOfClassesToBeRegistered.Any(c => c.IsSubTypeOfRawGeneric(t)))
+                        .Where(type => baseClassOfClassesToBeRegistered.Any(baseType => baseType.IsSubTypeOfRawGeneric(type)))
                         .AsSelf();
                 })
                 .Build();

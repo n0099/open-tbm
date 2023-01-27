@@ -66,7 +66,7 @@ public class TbmDbContext : DbContext
         b.Entity<UserRevision.SplitDisplayName>().Ignore(e => e.NullFieldsBitMask)
             .ToTable("tbmcr_user_displayName").HasKey(e => new {e.Uid, e.TakenAt});
         b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
-        b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator");
+        b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator").HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorType});
         b.Entity<Forum>().ToTable("tbm_forum");
     }
 

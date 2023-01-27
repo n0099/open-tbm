@@ -39,12 +39,12 @@ public class ResumeSuspendPostContentsPushingWorker : IHostedService
                 _logger.LogWarning("Malformed line {} when resume suspend post contents push into sonic", line);
                 return null;
             }).OfType<(Fid Fid, PostId Id, string Content)>().ToList();
-            postTuples.GroupBy(t => t.Fid).ForEach(g =>
+            postTuples.GroupBy(tuple => tuple.Fid).ForEach(g =>
             {
-                _pusher.PushPostWithCancellationToken(g.ToList(), g.Key, postType, t => t.Id,
+                _pusher.PushPostWithCancellationToken(g.ToList(), g.Key, postType, tuple => tuple.Id,
                     t => Helper.ParseThenUnwrapPostContent(Convert.FromBase64String(t.Content)), cancellationToken);
             });
-            _logger.LogInformation("resume for {} suspend {} contents push into sonic finished", postTuples.Count, postType);
+            _logger.LogInformation("Resume for {} suspend {} contents push into sonic finished", postTuples.Count, postType);
             File.Delete(path);
         }
         return Task.CompletedTask;
