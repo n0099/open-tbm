@@ -6,7 +6,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
         <PathMap>$(MSBuildProjectDirectory)=/</PathMap>
     </PropertyGroup>
 
