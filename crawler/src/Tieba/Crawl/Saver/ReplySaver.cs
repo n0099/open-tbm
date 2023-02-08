@@ -72,12 +72,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
         db.ReplyContents.AddRange(changeSet.NewlyAdded
             .Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
-        db.ReplyContentImages.AddRange(changeSet.NewlyAdded
-            .SelectMany(r => r.OriginalContents
-                // only save image filename without extension that extracted from url by ReplyParser.Convert()
-                .Where(c => c.Type == 3 && ReplyParser.ValidateContentImageFilenameRegex.IsMatch(c.OriginSrc))
-                .Select(c => new ReplyContentImage {Pid = r.Pid, UrlFilename = c.OriginSrc}))
-            .DistinctBy(i => (i.Pid, i.UrlFilename)));
+        SaveReplyContentImages(db, changeSet.NewlyAdded);
         PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
         PostSaveEvent += SaveReplySignatures(db, changeSet.AllAfter).Invoke;
 
@@ -128,5 +123,39 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             lock (SignatureLocks)
                 if (_savedSignatures.Any()) SignatureLocks.ExceptWith(_savedSignatures);
         };
+    }
+
+    public static void SaveReplyContentImages(TbmDbContext db, IEnumerable<ReplyPost> replies)
+    {
+        var pidAndImageList = replies.SelectMany(r => r.OriginalContents
+                // only save image filename without extension that extracted from url by ReplyParser.Convert()
+                .Where(c => c.Type == 3 && ReplyParser.ValidateContentImageFilenameRegex.IsMatch(c.OriginSrc))
+                .Select(c => (r.Pid, Image: new TiebaImage
+                {
+                    UrlFilename = c.OriginSrc,
+                    ByteSize = c.OriginSize
+                })))
+            .DistinctBy(t => new {t.Pid, t.Image.UrlFilename})
+            .ToList();
+        if (!pidAndImageList.Any()) return;
+
+        var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
+            .DistinctBy(i => i.UrlFilename).ToDictionary(i => i.UrlFilename);
+        var existingImages = (from e in db.Images
+            where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
+            select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
+        existingImages.Values.Where(e => e.ByteSize == 0)
+            .Join(imagesKeyByUrlFilename.Values, e => e.UrlFilename, i => i.UrlFilename,
+                (existing, newInContent) => (existing, newInContent))
+            .ForEach(t => t.existing.ByteSize = t.newInContent.ByteSize); // randomly response with 0
+        db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
+        {
+            Pid = t.Pid,
+            // no need to manually invoke DbContent.AddRange(images) since EF Core will do these chore
+            // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
+            // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key
+            // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
+            Image = existingImages.TryGetValue(t.Image.UrlFilename, out var e) ? e : imagesKeyByUrlFilename[t.Image.UrlFilename]
+        }));
     }
 }

@@ -10,6 +10,7 @@ public class TbmDbContext : DbContext
     private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
     public Fid Fid { get; }
     public DbSet<TiebaUser> Users => Set<TiebaUser>();
+    public DbSet<TiebaImage> Images => Set<TiebaImage>();
     public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
     public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();
     public DbSet<ThreadPost> Threads => Set<ThreadPost>();
@@ -34,12 +35,14 @@ public class TbmDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<TiebaUser>().ToTable("tbmc_user");
+        b.Entity<TiebaImage>().ToTable("tbmc_image");
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.SignatureMd5});
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
-        b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image").HasKey(e => new {e.Pid, e.UrlFilename});
+        b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image").HasKey(e => new {e.Pid, e.ImageId});
+        b.Entity<ReplyContentImage>().HasOne(e => e.Image).WithOne();
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
         b.Entity<ThreadRevision>().ToTable("tbmcr_thread").HasKey(e => new {e.Tid, e.TakenAt});

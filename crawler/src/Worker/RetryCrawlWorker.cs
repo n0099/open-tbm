@@ -55,7 +55,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
                     _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid={}, forumName={}",
                         failureCountsKeyByPage.Count, fid, forumName);
                     var crawler = scope1.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
-                    var savedThreads = await crawler.RetryThenSave(pages, FailureCountSelector);
+                    var savedThreads = await crawler.RetryThenSave(pages, FailureCountSelector, stoppingToken);
                     if (savedThreads == null) return;
                     await CrawlSubReplies(await CrawlReplies(new() {savedThreads}, fid, scope1, stoppingToken), fid, scope1, stoppingToken);
                 }
@@ -64,7 +64,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
                     _logger.LogTrace("Retrying previous failed {} pages reply crawl for fid={}, tid={}",
                         failureCountsKeyByPage.Count, fid, tid);
                     var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid.Value);
-                    var savedReplies = await crawler.RetryThenSave(pages, FailureCountSelector);
+                    var savedReplies = await crawler.RetryThenSave(pages, FailureCountSelector, stoppingToken);
                     if (savedReplies == null) return;
                     var savedRepliesKeyByTid = new Dictionary<PostId, SaverChangeSet<ReplyPost>> {{tid.Value, savedReplies}};
                     await CrawlSubReplies(savedRepliesKeyByTid, fid, scope1, stoppingToken);
@@ -74,7 +74,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
                     _logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid={}, tid={}, pid={}",
                         failureCountsKeyByPage.Count, fid, tid, pid);
                     var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid.Value, pid.Value);
-                    _ = await crawler.RetryThenSave(pages, FailureCountSelector);
+                    _ = await crawler.RetryThenSave(pages, FailureCountSelector, stoppingToken);
                 }
             }));
         }
