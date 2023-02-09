@@ -3,7 +3,7 @@ using Uid = System.Int64;
 
 namespace tbm.Crawler.Tieba.Crawl;
 
-public class UserParserAndSaver : CommonInSavers<BaseUserRevision>
+public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
 {
     protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
     {
@@ -32,8 +32,9 @@ public class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         }
     };
 
-    private static readonly Regex PortraitExtractingRegex =
-        new(@"^(.+)\?t=(\d+)$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+    [GeneratedRegex("^(.+)\\?t=(\\d+)$", RegexOptions.Compiled, 100)]
+    private static partial Regex PortraitExtractingGeneratedRegex();
+    private static readonly Regex PortraitExtractingRegex = PortraitExtractingGeneratedRegex();
     private static readonly HashSet<Uid> UserIdLocks = new();
     private readonly List<Uid> _savedUsersId = new();
     private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();

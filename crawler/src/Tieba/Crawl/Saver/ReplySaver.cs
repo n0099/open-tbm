@@ -135,7 +135,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
                     UrlFilename = c.OriginSrc,
                     ByteSize = c.OriginSize
                 })))
-            .DistinctBy(t => new {t.Pid, t.Image.UrlFilename})
+            .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
             .ToList();
         if (!pidAndImageList.Any()) return;
 

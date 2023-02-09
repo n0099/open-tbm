@@ -42,7 +42,7 @@ public class TbmDbContext : DbContext
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.SignatureMd5});
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
         b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image").HasKey(e => new {e.Pid, e.ImageId});
-        b.Entity<ReplyContentImage>().HasOne(e => e.Image).WithOne();
+        b.Entity<ReplyContentImage>().HasOne(e => e.Image).WithMany();
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
         b.Entity<ThreadRevision>().ToTable("tbmcr_thread").HasKey(e => new {e.Tid, e.TakenAt});
