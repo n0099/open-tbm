@@ -28,14 +28,21 @@ internal class Program
                     service.AddHostedService<MainCrawlWorker>();
                     service.AddHostedService<RetryCrawlWorker>();
                     service.AddHostedService<ForumModeratorRevisionCrawlWorker>();
-                    var httpConfig = context.Configuration.GetSection("ClientRequester");
+                    var clientRequesterConfig = context.Configuration.GetSection("ClientRequester");
                     service.AddHttpClient("tbClient", client =>
                         {
                             client.BaseAddress = new("http://c.tieba.baidu.com");
-                            client.Timeout = TimeSpan.FromMilliseconds(httpConfig.GetValue("TimeoutMs", 3000));
+                            client.Timeout = TimeSpan.FromMilliseconds(clientRequesterConfig.GetValue("TimeoutMs", 3000));
                         })
-                        .SetHandlerLifetime(TimeSpan.FromSeconds(httpConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
+                        .SetHandlerLifetime(TimeSpan.FromSeconds(clientRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
                         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
+                    var imageOcrPipelineConfig = context.Configuration.GetSection("ImageOcrPipeline");
+                    service.AddHttpClient("tbImage", client =>
+                        {
+                            client.BaseAddress = new("https://imgsrc.baidu.com/forum/pic/item/");
+                            client.Timeout = TimeSpan.FromMilliseconds(imageOcrPipelineConfig.GetValue("TimeoutMs", 3000));
+                        })
+                        .SetHandlerLifetime(TimeSpan.FromSeconds(imageOcrPipelineConfig.GetValue("HandlerLifetimeSec", 600))); // 10 mins
                     service.RemoveAll<IHttpMessageHandlerBuilderFilter>(); // https://stackoverflow.com/questions/52889827/remove-http-client-logging-handler-in-asp-net-core/52970073#52970073
                 })
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
