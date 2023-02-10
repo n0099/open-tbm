@@ -7,7 +7,8 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
     public string PostType { get; }
     protected ConcurrentDictionary<ulong, TPost> Posts { get; }
     protected AuthorRevisionSaver AuthorRevisionSaver { get; }
-    public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance => throw new NotImplementedException();
+    public virtual FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance =>
+        throw new NotImplementedException();
 
     public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
 

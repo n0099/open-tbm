@@ -9,7 +9,8 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
 
     protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
 
-    protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks => throw new NotImplementedException();
+    protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks =>
+        throw new NotImplementedException();
     protected virtual Dictionary<Type, Action<TbmDbContext, IEnumerable<TBaseRevision>>>
         RevisionSplitEntitiesUpsertPayloads => throw new NotImplementedException();
 
