@@ -26,7 +26,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
             o.LatestReplyPostedAt = (uint)inPost.LastTimeInt;
             // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
             o.LatestReplierUid = inPost.LastReplyer?.Uid;
-            o.ReplyCount = (uint?)inPost.ReplyNum.NullIfZero();
+            o.ReplyCount = inPost.ReplyNum < 0 ? 0 : (uint?)inPost.ReplyNum.NullIfZero(); // rarely respond with -1
             o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
             o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();
             // when the thread is livepost or Thread.AgreeNum == 0, the agree field will not exists

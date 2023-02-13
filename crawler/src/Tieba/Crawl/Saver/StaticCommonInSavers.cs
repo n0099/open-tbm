@@ -15,7 +15,7 @@ public abstract class StaticCommonInSavers
             if (whichPostType == typeof(TiebaUser))
             {
                 switch (propName)
-                { // possible randomly response with null
+                { // possible randomly respond with null
                     case nameof(TiebaUser.IpGeolocation) when newValue is null:
                     // possible clock drift across multiple response from tieba api, they should sync their servers with NTP
                     /* following sql can track these drift
@@ -41,7 +41,7 @@ public abstract class StaticCommonInSavers
                     // prevent overwrite existing value of field liker_id which is saved by legacy crawler
                     // and Zan itself is deprecated by tieba so it shouldn't get updated
                     case nameof(ThreadPost.Zan):
-                    // possible randomly response with null
+                    // possible randomly respond with null
                     case nameof(ThreadPost.Geolocation) when newValue is null:
                     // empty string means the author had not write a title
                     // its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.SaveParentThreadTitle()
@@ -50,7 +50,7 @@ public abstract class StaticCommonInSavers
                              // prevent repeatedly update with different title due to the thread is a multi forum topic thread
                              // thus its title can be vary within the forum and within the thread
                              || (newValue is not "" && oldValue is not ""):
-                    // possible randomly response with 0.NullIfZero()
+                    // possible randomly respond with 0.NullIfZero()
                     case nameof(ThreadPost.DisagreeCount) when newValue is null && oldValue is not null:
                     // when the latest reply post is deleted and there's no new reply after delete
                     // this field but not LatestReplyPostedAt will be null
@@ -58,11 +58,11 @@ public abstract class StaticCommonInSavers
                         return true;
                 }
             }
-            // possible randomly response with null
+            // possible randomly respond with null
             if (whichPostType == typeof(ReplyPost)
                 && propName == nameof(ReplyPost.SignatureId)
                 && newValue is null && oldValue is not null) return true;
-            // possible rarely response with the protoBuf default value 0
+            // possible rarely respond with the protoBuf default value 0
             if (propName == nameof(IPost.AuthorUid)
                 && newValue is (long)0 && oldValue is not null) return true;
             return false;

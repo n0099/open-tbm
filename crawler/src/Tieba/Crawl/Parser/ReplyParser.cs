@@ -46,7 +46,7 @@ public partial class ReplyParser : BaseParser<ReplyPost, Reply>
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => Helper.WrapPostContent(inPost.Content));
             o.OriginalContents = inPost.Content;
-            // AuthorId rarely response with 0, Author should always be null but we can guarantee
+            // AuthorId rarely respond with 0, Author should always be null but we can guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
             // value of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
             o.SubReplyCount = inPost.SubPostNumber.NullIfZero();

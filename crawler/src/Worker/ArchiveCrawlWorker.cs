@@ -8,7 +8,7 @@ using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPos
 public class ArchiveCrawlWorker : BackgroundService
 {
     // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
-    // any request with page offset that larger than 10k threads will be response with results from the first page
+    // any request with page offset that larger than 10k threads will be respond with results from the first page
     private const int MaxCrawlablePage = 334; // 10k threads / 30 per request (from Rn param) = 333.3...
     private readonly ILogger<ArchiveCrawlWorker> _logger;
     private readonly ILifetimeScope _scope0;
