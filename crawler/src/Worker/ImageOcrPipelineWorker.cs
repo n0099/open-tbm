@@ -1,7 +1,9 @@
+using System.Drawing;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
 
 namespace tbm.Crawler.Worker;
 
@@ -27,12 +29,8 @@ public class ImageOcrPipelineWorker : BackgroundService
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.filename, t => t.bytes);
-        Task<ImageAndProcessedTextBoxes> ProcessTextBoxesWithStoppingToken(PaddleOcrDetectionResult i) => ProcessTextBoxes(i, stoppingToken);
-        var processedTextBoxes = await Task.WhenAll(
-            (await RequestPaddleOcrForDetection(imagesKeyByUrlFilename, stoppingToken))
-            .Select(ProcessTextBoxesWithStoppingToken));
-
-        var redetectedTextBoxesWithRotationDegrees = await Task.WhenAll(
+        var processedTextBoxes = (await RequestPaddleOcrForDetection(imagesKeyByUrlFilename, stoppingToken)).Select(ProcessTextBoxes);
+        var redetectedTextBoxes = await Task.WhenAll(
             processedTextBoxes.Select(i =>
             {
                 var textBoxesKeyByIdAndBoundary = i.ProcessedTextBoxes
@@ -40,9 +38,8 @@ public class ImageOcrPipelineWorker : BackgroundService
                     .ToDictionary(b => $"{i.ImageId} {b.TextBoxBoundary}", b => b.ProcessedImageBytes);
                 return RequestPaddleOcrForDetection(textBoxesKeyByIdAndBoundary, stoppingToken);
             }));
-        foreach (var i in redetectedTextBoxesWithRotationDegrees)
+        foreach (var d in redetectedTextBoxes.Select(i => i.Select(ProcessTextBoxes)))
         {
-            var d = await Task.WhenAll(i.Select(ProcessTextBoxesWithStoppingToken));
             d.ForEach(d2 => d2.ProcessedTextBoxes.ForEach(b =>
                 File.WriteAllBytes($"{b.TextBoxBoundary}.png", b.ProcessedImageBytes)));
         }
@@ -50,28 +47,25 @@ public class ImageOcrPipelineWorker : BackgroundService
 
     private record ProcessedTextBox(string TextBoxBoundary, byte[] ProcessedImageBytes, float RotationDegrees);
 
-    private record ImageAndProcessedTextBoxes(string ImageId, IEnumerable<ProcessedTextBox> ProcessedTextBoxes);
+    private record ImageAndProcessedTextBoxes(string ImageId, List<ProcessedTextBox> ProcessedTextBoxes);
 
-    private static async Task<ImageAndProcessedTextBoxes>
-        ProcessTextBoxes(PaddleOcrDetectionResult detectionResult, CancellationToken stoppingToken = default)
+    private static ImageAndProcessedTextBoxes ProcessTextBoxes(PaddleOcrDetectionResult detectionResult)
     {
-        using var image = Image.Load(detectionResult.ImageBytes);
-        return new(detectionResult.ImageId, await Task.WhenAll(detectionResult.TextBoxes
+        using var imageMat = new Mat();
+        CvInvoke.Imdecode(detectionResult.ImageBytes, ImreadModes.Unchanged, imageMat);
+        return new(detectionResult.ImageId, detectionResult.TextBoxes
             .Where(textBoxAndDegrees => textBoxAndDegrees.RotationDegrees != 0)
-            .Select(async textBoxAndDegrees =>
+            .Select(textBoxAndDegrees =>
             {
                 var (textBox, degrees) = textBoxAndDegrees;
                 var circumscribed = textBox.ToCircumscribedRectangle();
-                var processedImageStream = new MemoryStream();
-                await image.Clone(context =>
-                    {
-                        var cropped = context.Crop(circumscribed);
-                        if (degrees != 0) _ = cropped.Rotate(degrees);
-                    })
-                    .SaveAsPngAsync(processedImageStream, stoppingToken);
+                using var croppedMat = new Mat(imageMat, circumscribed);
+                using var processedMat = degrees == 0 ? croppedMat : croppedMat.Rotate(degrees);
+                var processedBytes = CvInvoke.Imencode(".png", processedMat);
                 var rectangleBoundary = $"{circumscribed.Width}x{circumscribed.Height}@{circumscribed.X},{circumscribed.Y}";
-                return new ProcessedTextBox(rectangleBoundary, processedImageStream.ToArray(), degrees);
-            })));
+                return new ProcessedTextBox(rectangleBoundary, processedBytes, degrees);
+            })
+            .ToList()); // opt-out lazy eval of IEnumerable since imageMat is already disposed after return
     }
 
     private record TextBoxAndDegrees(PaddleOcrDetectionResponse.TextBox TextBox, float RotationDegrees);
@@ -192,5 +186,45 @@ public class ImageOcrPipelineWorker : BackgroundService
             public override void Write(Utf8JsonWriter writer, TextBox value, JsonSerializerOptions options) =>
                 throw new NotImplementedException();
         }
+    }
+}
+
+public static class MatExtension
+{
+    /// <summary>
+    /// <see>https://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c/75451191#75451191</see>
+    /// </summary>
+    public static Mat Rotate(this Mat src, float degrees)
+    {
+        degrees = -degrees; // counter-clockwise to clockwise
+        var center = new PointF((src.Width - 1) / 2f, (src.Height - 1) / 2f);
+        using var rotationMat = new Mat();
+        CvInvoke.GetRotationMatrix2D(center, degrees, 1, rotationMat);
+        var boundingRect = new RotatedRect(new(), src.Size, degrees).MinAreaRect();
+        rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
+        rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
+        var rotatedSrc = new Mat();
+        CvInvoke.WarpAffine(src, rotatedSrc, rotationMat, boundingRect.Size);
+        return rotatedSrc;
+    }
+
+    /// <summary>
+    /// <see>https://stackoverflow.com/questions/32255440/how-can-i-get-and-set-pixel-values-of-an-emgucv-mat-image/69537504#69537504</see>
+    /// </summary>
+    public static unsafe void Set<T>(this Mat mat, int row, int col, T value) =>
+        _ = new Span<T>(mat.DataPointer.ToPointer(), mat.Rows * mat.Cols * mat.ElementSize)
+        {
+            [(row * mat.Cols) + col] = value
+        };
+
+    public static unsafe T Get<T>(this Mat mat, int row, int col) =>
+        new ReadOnlySpan<T>(mat.DataPointer.ToPointer(), mat.Rows * mat.Cols * mat.ElementSize)
+            [(row * mat.Cols) + col];
+
+    public static unsafe ReadOnlySpan<T> Get<T>(this Mat mat, int row, System.Range cols)
+    {
+        var span = new ReadOnlySpan<T>(mat.DataPointer.ToPointer(), mat.Rows * mat.Cols * mat.ElementSize);
+        var (offset, length) = cols.GetOffsetAndLength(span.Length);
+        return span.Slice((row * mat.Cols) + offset, length);
     }
 }
