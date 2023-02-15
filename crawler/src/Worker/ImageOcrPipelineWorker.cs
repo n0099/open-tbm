@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
 
 namespace tbm.Crawler.Worker;
 
@@ -29,23 +30,47 @@ public class ImageOcrPipelineWorker : BackgroundService
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.filename, t => t.bytes);
-        var processedTextBoxes = (await RequestPaddleOcrForDetection(imagesKeyByUrlFilename, stoppingToken)).Select(ProcessTextBoxes);
-        var redetectedTextBoxes = await Task.WhenAll(
-            processedTextBoxes.Select(i =>
+        var processedImagesTextBoxes = (await RequestPaddleOcrForDetection(imagesKeyByUrlFilename, stoppingToken))
+            .Select(ProcessTextBoxes).ToList();
+        var reprocessedImagesTextBoxes = (await Task.WhenAll(
+            processedImagesTextBoxes.Select(i =>
             {
                 var textBoxesKeyByIdAndBoundary = i.ProcessedTextBoxes
-                    .Where(b => b.RotationDegrees != 0)
-                    .ToDictionary(b => $"{i.ImageId} {b.TextBoxBoundary}", b => b.ProcessedImageBytes);
+                    .Where(b => b.RotationDegrees != 0) // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
+                    .ToDictionary(b => $"{i.ImageId} {b.TextBoxBoundary}",
+                        b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat));
                 return RequestPaddleOcrForDetection(textBoxesKeyByIdAndBoundary, stoppingToken);
-            }));
-        foreach (var d in redetectedTextBoxes.Select(i => i.Select(ProcessTextBoxes)))
+            }))).Select(imageDetectionResults => imageDetectionResults.Select(ProcessTextBoxes));
+        var mergedTextBoxesPerImage = processedImagesTextBoxes
+            .Zip(reprocessedImagesTextBoxes)
+            .Select(t => (t.First.ImageId,
+                TextBoxes: t.First.ProcessedTextBoxes
+                    .Where(b => b.RotationDegrees == 0)
+                    .Concat(t.Second.SelectMany(i => i.ProcessedTextBoxes))));
+        foreach (var b in mergedTextBoxesPerImage.SelectMany(t => t.TextBoxes))
         {
-            d.ForEach(d2 => d2.ProcessedTextBoxes.ForEach(b =>
-                File.WriteAllBytes($"{b.TextBoxBoundary}.png", b.ProcessedImageBytes)));
+            using var mat = new Mat();
+            CvInvoke.CvtColor(b.ProcessedTextBoxMat, mat, ColorConversion.Bgr2Gray);
+            // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
+            // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
+            CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
+            // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
+            // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
+
+            using var histogram = new Mat();
+            using var threshedMatVector = new VectorOfMat(mat);
+            CvInvoke.CalcHist(threshedMatVector, new[] {0}, null, histogram, new[] {256}, new[] {0f, 256}, false);
+            // we don't need k-means clustering like https://stackoverflow.com/questions/50899692/most-dominant-color-in-rgb-image-opencv-numpy-python
+            // since mat only composed of pure black and whites(aka 1bpp) after thresholding
+            var dominantColor = histogram.Get<float>(0, 0) > histogram.Get<float>(255, 0) ? 0 : 255;
+            // https://github.com/tesseract-ocr/tesseract/issues/427
+            CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
+
+            File.WriteAllBytes($"{b.TextBoxBoundary}.png", CvInvoke.Imencode(".png", mat));
         }
     }
 
-    private record ProcessedTextBox(string TextBoxBoundary, byte[] ProcessedImageBytes, float RotationDegrees);
+    private record ProcessedTextBox(string TextBoxBoundary, Mat ProcessedTextBoxMat, float RotationDegrees);
 
     private record ImageAndProcessedTextBoxes(string ImageId, List<ProcessedTextBox> ProcessedTextBoxes);
 
@@ -54,16 +79,14 @@ public class ImageOcrPipelineWorker : BackgroundService
         using var imageMat = new Mat();
         CvInvoke.Imdecode(detectionResult.ImageBytes, ImreadModes.Unchanged, imageMat);
         return new(detectionResult.ImageId, detectionResult.TextBoxes
-            .Where(textBoxAndDegrees => textBoxAndDegrees.RotationDegrees != 0)
             .Select(textBoxAndDegrees =>
             {
                 var (textBox, degrees) = textBoxAndDegrees;
                 var circumscribed = textBox.ToCircumscribedRectangle();
-                using var croppedMat = new Mat(imageMat, circumscribed);
-                using var processedMat = degrees == 0 ? croppedMat : croppedMat.Rotate(degrees);
-                var processedBytes = CvInvoke.Imencode(".png", processedMat);
+                var processedMat = new Mat(imageMat, circumscribed); // crop by circumscribed rectangle
+                if (degrees != 0) processedMat.Rotate(degrees);
                 var rectangleBoundary = $"{circumscribed.Width}x{circumscribed.Height}@{circumscribed.X},{circumscribed.Y}";
-                return new ProcessedTextBox(rectangleBoundary, processedBytes, degrees);
+                return new ProcessedTextBox(rectangleBoundary, processedMat, degrees);
             })
             .ToList()); // opt-out lazy eval of IEnumerable since imageMat is already disposed after return
     }
@@ -75,6 +98,7 @@ public class ImageOcrPipelineWorker : BackgroundService
     private async Task<IEnumerable<PaddleOcrDetectionResult>>
         RequestPaddleOcrForDetection(Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default)
     {
+        if (!imagesKeyById.Values.Any()) return Array.Empty<PaddleOcrDetectionResult>();
         var requestPayload = new PaddleOcrRequestPayload(imagesKeyById.Values.Select(Convert.ToBase64String));
         var response = await _http.PostAsJsonAsync(_paddleOcrDetectionEndpoint, requestPayload, stoppingToken);
         var detectionResponse = await response.Content.ReadFromJsonAsync<PaddleOcrDetectionResponse>
@@ -194,7 +218,7 @@ public static class MatExtension
     /// <summary>
     /// <see>https://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c/75451191#75451191</see>
     /// </summary>
-    public static Mat Rotate(this Mat src, float degrees)
+    public static void Rotate(this Mat src, float degrees)
     {
         degrees = -degrees; // counter-clockwise to clockwise
         var center = new PointF((src.Width - 1) / 2f, (src.Height - 1) / 2f);
@@ -203,9 +227,7 @@ public static class MatExtension
         var boundingRect = new RotatedRect(new(), src.Size, degrees).MinAreaRect();
         rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
         rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
-        var rotatedSrc = new Mat();
-        CvInvoke.WarpAffine(src, rotatedSrc, rotationMat, boundingRect.Size);
-        return rotatedSrc;
+        CvInvoke.WarpAffine(src, src, rotationMat, boundingRect.Size);
     }
 
     /// <summary>
