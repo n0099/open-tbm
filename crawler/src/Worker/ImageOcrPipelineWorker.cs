@@ -15,8 +15,9 @@ public class ImageOcrPipelineWorker : BackgroundService
     private readonly IConfigurationSection _config;
     private static HttpClient _http = null!;
     private readonly string _paddleOcrDetectionEndpoint;
-    private readonly (Dictionary<string, Tesseract> Horizontal, Dictionary<string, Tesseract> Vertical) _tesseractInstancesKeyByScript;
+    private readonly Dictionary<string, Tesseract> _tesseractInstancesKeyByScript;
     private readonly float _tesseractConfidenceThreshold;
+    private readonly float _aspectRatioThresholdToUseTesseract;
 
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config, IHttpClientFactory httpFactory)
     {
@@ -25,30 +26,19 @@ public class ImageOcrPipelineWorker : BackgroundService
         _http = httpFactory.CreateClient("tbImage");
         _paddleOcrDetectionEndpoint = (_config.GetValue("PaddleOcrEndpoint", "") ?? "") + "/predict/ocr_det";
         var tesseractDataPath = _config.GetValue("TesseractDataPath", "") ?? "";
-        Tesseract CreateTesseract(string scripts)
-        {
-            var ret = new Tesseract(tesseractDataPath, scripts, OcrEngineMode.LstmOnly);
-            // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-            ret.PageSegMode = scripts.Contains("_vert") ? PageSegMode.SingleBlockVertText : PageSegMode.SingleBlock;
-            return ret;
-        }
-        _logger.LogInformation(Tesseract.VersionString);
-        _logger.LogInformation(Tesseract.DefaultTesseractDirectory);
-        _tesseractInstancesKeyByScript.Horizontal = new()
-        {
-            {"zh-Hans", CreateTesseract("best/chi_sim+best/eng")},
-            {"zh-Hant", CreateTesseract("best/chi_tra+best/eng")},
-            {"ja", CreateTesseract("best/jpn")}, // literal latin letters in japanese is replaced by katakana
-            {"en", CreateTesseract("best/eng")}
-
-        };
-        _tesseractInstancesKeyByScript.Vertical = new()
+        Tesseract CreateTesseract(string scripts) =>
+            new(tesseractDataPath, scripts, OcrEngineMode.LstmOnly)
+            { // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
+                PageSegMode = PageSegMode.SingleBlockVertText
+            };
+        _tesseractInstancesKeyByScript = new()
         {
             {"zh-Hans_vert", CreateTesseract("best/chi_sim_vert")},
             {"zh-Hant_vert", CreateTesseract("best/chi_tra_vert")},
             {"ja_vert", CreateTesseract("best/jpn_vert")}
         };
-        _tesseractConfidenceThreshold = _config.GetValue("TesseractConfidenceThreshold", 50f);
+        _tesseractConfidenceThreshold = _config.GetValue("TesseractConfidenceThreshold", 20f);
+        _aspectRatioThresholdToUseTesseract = _config.GetValue("AspectRatioThresholdToUseTesseract", 0.8f);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -75,44 +65,42 @@ public class ImageOcrPipelineWorker : BackgroundService
                 TextBoxes: t.First.ProcessedTextBoxes
                     .Where(b => b.RotationDegrees == 0)
                     .Concat(t.Second.SelectMany(i => i.ProcessedTextBoxes))));
-        foreach (var b in mergedTextBoxesPerImage.SelectMany(t => t.TextBoxes))
+        _logger.LogInformation("{}", JsonSerializer.Serialize(mergedTextBoxesPerImage.Select(t =>
         {
-            using var mat = new Mat();
-            CvInvoke.CvtColor(b.ProcessedTextBoxMat, mat, ColorConversion.Bgr2Gray);
-            b.ProcessedTextBoxMat.Dispose();
-            // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
-            // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
-            CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
-            // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
-            // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
+            var boxesUsingTesseractToRecognize = t.TextBoxes.Where(b =>
+                (float)b.ProcessedTextBoxMat.Width / b.ProcessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract);
+            return boxesUsingTesseractToRecognize.Select(b => RecognizeTextViaTesseract(b.ProcessedTextBoxMat));
+        })));
+    }
 
-            using var histogram = new Mat();
-            using var threshedMatVector = new VectorOfMat(mat);
-            CvInvoke.CalcHist(threshedMatVector, new[] {0}, null, histogram, new[] {256}, new[] {0f, 256}, false);
-            // we don't need k-means clustering like https://stackoverflow.com/questions/50899692/most-dominant-color-in-rgb-image-opencv-numpy-python
-            // since mat only composed of pure black and whites(aka 1bpp) after thresholding
-            var dominantColor = histogram.Get<float>(0, 0) > histogram.Get<float>(255, 0) ? 0 : 255;
-            // https://github.com/tesseract-ocr/tesseract/issues/427
-            CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
+    private Dictionary<string, string> RecognizeTextViaTesseract(Mat processedTextBoxMat)
+    {
+        using var mat = processedTextBoxMat;
+        CvInvoke.CvtColor(mat, mat, ColorConversion.Bgr2Gray);
+        // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
+        // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
+        CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
+        // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
+        // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
 
-            File.WriteAllBytes($"{b.TextBoxBoundary}.png", CvInvoke.Imencode(".png", mat));
+        using var histogram = new Mat();
+        using var threshedMatVector = new VectorOfMat(mat);
+        CvInvoke.CalcHist(threshedMatVector, new[] {0}, null, histogram, new[] {256}, new[] {0f, 256}, false);
+        // we don't need k-means clustering like https://stackoverflow.com/questions/50899692/most-dominant-color-in-rgb-image-opencv-numpy-python
+        // since mat only composed of pure black and whites(aka 1bpp) after thresholding
+        var dominantColor = histogram.Get<float>(0, 0) > histogram.Get<float>(255, 0) ? 0 : 255;
+        // https://github.com/tesseract-ocr/tesseract/issues/427
+        CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
 
-            foreach (var pair in (float)mat.Width / mat.Height > 1 ? _tesseractInstancesKeyByScript.Horizontal : _tesseractInstancesKeyByScript.Vertical)
-            {
-                var (script, tesseract) = pair;
-                tesseract.SetImage(mat);
-                if (tesseract.Recognize() != 0) continue;
-                var texts = "";
-                tesseract.GetCharacters().Where(c => c.Cost > _tesseractConfidenceThreshold).ForEach(c =>
-                {
-                    // https://unicode.org/reports/tr15/
-                    var text = c.Text.Normalize(NormalizationForm.FormKC); // .Replace(" ", "").ReplaceLineEndings("");
-                    texts += text;
-                    // _logger.LogInformation("{} {} {} {} {}", b.TextBoxBoundary, script, c.Region, c.Cost, text);
-                });
-                _logger.LogInformation("{} {} {}", b.TextBoxBoundary, script, texts);
-            }
-        }
+        return _tesseractInstancesKeyByScript.ToDictionary(pair => pair.Key, pair =>
+        {
+            var tesseract = pair.Value;
+            tesseract.SetImage(mat);
+            if (tesseract.Recognize() != 0) return "";
+            return tesseract.GetCharacters()
+                .Where(c => c.Cost > _tesseractConfidenceThreshold)
+                .Aggregate("", (acc, c) => acc + c.Text.Normalize(NormalizationForm.FormKC)); // https://unicode.org/reports/tr15/
+        });
     }
 
     private record ProcessedTextBox(string TextBoxBoundary, Mat ProcessedTextBoxMat, float RotationDegrees);
