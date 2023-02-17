@@ -49,7 +49,7 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
         .SetHandlerLifetime(TimeSpan.FromSeconds(clientRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
 
-    var imageOcrPipelineConfig = context.Configuration.GetSection("ImageOcrPipeline");
+    var imageOcrPipelineConfig = context.Configuration.GetSection("ImageOcrPipeline").GetSection("HttpClient");
     service.AddHttpClient("tbImage", client =>
         {
             client.BaseAddress = new("https://imgsrc.baidu.com/forum/pic/item/");

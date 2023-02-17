@@ -32,7 +32,7 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         }
     };
 
-    [GeneratedRegex("^(.+)\\?t=(\\d+)$", RegexOptions.Compiled, 100)]
+    [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, 100)]
     private static partial Regex PortraitExtractingGeneratedRegex();
     private static readonly Regex PortraitExtractingRegex = PortraitExtractingGeneratedRegex();
     private static readonly HashSet<Uid> UserIdLocks = new();

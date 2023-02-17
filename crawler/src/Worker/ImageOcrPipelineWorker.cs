@@ -15,6 +15,7 @@ public class ImageOcrPipelineWorker : BackgroundService
     private readonly IConfigurationSection _config;
     private static HttpClient _http = null!;
     private readonly string _paddleOcrDetectionEndpoint;
+    private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
     private readonly Dictionary<string, Tesseract> _tesseractInstancesKeyByScript;
     private readonly float _tesseractConfidenceThreshold;
     private readonly float _aspectRatioThresholdToUseTesseract;
@@ -24,7 +25,17 @@ public class ImageOcrPipelineWorker : BackgroundService
         _logger = logger;
         _config = config.GetSection("ImageOcrPipeline");
         _http = httpFactory.CreateClient("tbImage");
-        _paddleOcrDetectionEndpoint = (_config.GetValue("PaddleOcrEndpoint", "") ?? "") + "/predict/ocr_det";
+
+        var paddleOcrServingEndpoint = _config.GetValue("PaddleOcrServingEndpoint", "") ?? "";
+        _paddleOcrDetectionEndpoint = paddleOcrServingEndpoint + "/predict/ocr_det";
+        _paddleOcrRecognitionEndpointsKeyByScript = new()
+        {
+            {"zh-Hans", paddleOcrServingEndpoint + "/predict/ocr_rec"},
+            {"zh-Hant", paddleOcrServingEndpoint + "/predict/ocr_rec_zh-Hant"},
+            {"ja", paddleOcrServingEndpoint + "/predict/ocr_rec_ja"},
+            {"en", paddleOcrServingEndpoint + "/predict/ocr_rec_en"},
+        };
+
         var tesseractDataPath = _config.GetValue("TesseractDataPath", "") ?? "";
         Tesseract CreateTesseract(string scripts) =>
             new(tesseractDataPath, scripts, OcrEngineMode.LstmOnly)
@@ -51,14 +62,11 @@ public class ImageOcrPipelineWorker : BackgroundService
         var processedImagesTextBoxes = (await RequestPaddleOcrForDetection(imagesKeyByUrlFilename, stoppingToken))
             .Select(ProcessTextBoxes).ToList();
         var reprocessedImagesTextBoxes = (await Task.WhenAll(
-            processedImagesTextBoxes.Select(i =>
-            {
-                var textBoxesKeyByIdAndBoundary = i.ProcessedTextBoxes
-                    .Where(b => b.RotationDegrees != 0) // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
-                    .ToDictionary(b => $"{i.ImageId} {b.TextBoxBoundary}",
-                        b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat));
-                return RequestPaddleOcrForDetection(textBoxesKeyByIdAndBoundary, stoppingToken);
-            }))).Select(imageDetectionResults => imageDetectionResults.Select(ProcessTextBoxes));
+                processedImagesTextBoxes.Select(i =>
+                    RequestPaddleOcrForDetection(i.ProcessedTextBoxes
+                        .Where(b => b.RotationDegrees != 0) // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
+                        .ToDictionary(b => b.TextBoxBoundary, b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat)), stoppingToken))))
+            .Select(imageDetectionResults => imageDetectionResults.Select(ProcessTextBoxes));
         var mergedTextBoxesPerImage = processedImagesTextBoxes
             .Zip(reprocessedImagesTextBoxes)
             .Select(t => (t.First.ImageId,
@@ -121,7 +129,7 @@ public class ImageOcrPipelineWorker : BackgroundService
                 var rectangleBoundary = $"{circumscribed.Width}x{circumscribed.Height}@{circumscribed.X},{circumscribed.Y}";
                 return new ProcessedTextBox(rectangleBoundary, processedMat, degrees);
             })
-            .ToList()); // opt-out lazy eval of IEnumerable since imageMat is already disposed after return
+            .ToList()); // eager eval since imageMat is already disposed after return
     }
 
     private record TextBoxAndDegrees(PaddleOcrDetectionResponse.TextBox TextBox, float RotationDegrees);

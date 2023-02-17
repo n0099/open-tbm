@@ -20,8 +20,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
         }
         var outNullableUsers = new List<User?>();
         outPosts = ParsePostsInternal(inPosts, outNullableUsers)
-            .Select(post => (Id: PostIdSelector(post), post))
-            .ToDictionary(t => t.Id, t => t.post);
+            .ToDictionary(PostIdSelector, post => post);
         outUsers.AddRange(outNullableUsers.OfType<User>()
             .Where(u => u.CalculateSize() != 0)); // remove empty users
     }
