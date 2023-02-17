@@ -125,7 +125,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         };
     }
 
-    public static void SaveReplyContentImages(TbmDbContext db, IEnumerable<ReplyPost> replies)
+    private static void SaveReplyContentImages(TbmDbContext db, IEnumerable<ReplyPost> replies)
     {
         var pidAndImageList = replies.SelectMany(r => r.OriginalContents
                 // only save image filename without extension that extracted from url by ReplyParser.Convert()

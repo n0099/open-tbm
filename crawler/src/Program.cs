@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 using tbm.Crawler;
+using tbm.Crawler.ImagePipeline.Ocr;
 
 #pragma warning disable IDE0058 // Expression value is never used
 
@@ -74,6 +75,8 @@ static void ConfigureContainer(ContainerBuilder builder)
     builder.RegisterType<ThreadLateCrawlerAndSaver>();
     builder.RegisterType<ThreadArchiveCrawler>();
     builder.RegisterType<SonicPusher>();
+    builder.RegisterType<PaddleOcrRequester>();
+    builder.RegisterType<TextRecognizer>();
 
     var baseClassOfClassesToBeRegistered = new List<Type>
     {

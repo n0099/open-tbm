@@ -16,8 +16,8 @@ public static class MatExtension
         using var rotationMat = new Mat();
         CvInvoke.GetRotationMatrix2D(center, degrees, 1, rotationMat);
         var boundingRect = new RotatedRect(new(), src.Size, degrees).MinAreaRect();
-        rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + boundingRect.Width / 2f - src.Width / 2f);
-        rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + boundingRect.Height / 2f - src.Height / 2f);
+        rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
+        rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
         CvInvoke.WarpAffine(src, src, rotationMat, boundingRect.Size);
     }
 
@@ -27,17 +27,17 @@ public static class MatExtension
     public static unsafe void Set<T>(this Mat mat, int row, int col, T value) =>
         _ = new Span<T>(mat.DataPointer.ToPointer(), mat.Rows * mat.Cols * mat.ElementSize)
         {
-            [row * mat.Cols + col] = value
+            [(row * mat.Cols) + col] = value
         };
 
     public static unsafe T Get<T>(this Mat mat, int row, int col) =>
         new ReadOnlySpan<T>(mat.DataPointer.ToPointer(), mat.Rows * mat.Cols * mat.ElementSize)
-            [row * mat.Cols + col];
+            [(row * mat.Cols) + col];
 
     public static unsafe ReadOnlySpan<T> Get<T>(this Mat mat, int row, System.Range cols)
     {
         var span = new ReadOnlySpan<T>(mat.DataPointer.ToPointer(), mat.Rows * mat.Cols * mat.ElementSize);
         var (offset, length) = cols.GetOffsetAndLength(span.Length);
-        return span.Slice(row * mat.Cols + offset, length);
+        return span.Slice((row * mat.Cols) + offset, length);
     }
 }

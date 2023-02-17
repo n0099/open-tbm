@@ -1,11 +1,43 @@
 using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using Emgu.CV;
+using Emgu.CV.OCR;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
 public class TextRecognizer
 {
+    private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
+    private readonly Dictionary<string, Tesseract> _tesseractInstancesKeyByScript;
+    private readonly float _tesseractConfidenceThreshold;
+
+    public TextRecognizer(IConfiguration config)
+    {
+        var configSection = config.GetSection("ImageOcrPipeline");
+        var paddleOcrServingEndpoint = configSection.GetValue("PaddleOcrServingEndpoint", "") ?? "";
+        _paddleOcrRecognitionEndpointsKeyByScript = new()
+        {
+            {"zh-Hans", paddleOcrServingEndpoint + "/predict/ocr_rec"},
+            {"zh-Hant", paddleOcrServingEndpoint + "/predict/ocr_rec_zh-Hant"},
+            {"ja", paddleOcrServingEndpoint + "/predict/ocr_rec_ja"},
+            {"en", paddleOcrServingEndpoint + "/predict/ocr_rec_en"},
+        };
+
+        var tesseractDataPath = configSection.GetValue("TesseractDataPath", "") ?? "";
+        Tesseract CreateTesseract(string scripts) =>
+            new(tesseractDataPath, scripts, OcrEngineMode.LstmOnly)
+            { // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
+                PageSegMode = PageSegMode.SingleBlockVertText
+            };
+        _tesseractInstancesKeyByScript = new()
+        {
+            {"zh-Hans_vert", CreateTesseract("best/chi_sim_vert")},
+            {"zh-Hant_vert", CreateTesseract("best/chi_tra_vert")},
+            {"ja_vert", CreateTesseract("best/jpn_vert")}
+        };
+        _tesseractConfidenceThreshold = configSection.GetValue("TesseractConfidenceThreshold", 20f);
+    }
+
     public record RecognizedResult(string TextBoxBoundary, string Script, string Text);
 
     public Task<IEnumerable<RecognizedResult>[]> RecognizeViaPaddleOcr
@@ -17,7 +49,7 @@ public class TextRecognizer
             return CvInvoke.Imencode(".png", mat);
         });
         return Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(async pair =>
-            (await RequestPaddleOcrForRecognition(pair.Value, boxesKeyByBoundary, stoppingToken))
+            (await PaddleOcrRequester.RequestForRecognition(pair.Value, boxesKeyByBoundary, stoppingToken))
             .SelectMany(results => results.Select(result =>
                 new RecognizedResult(result.ImageId, pair.Key, result.Text)))));
     }

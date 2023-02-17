@@ -7,18 +7,10 @@ public record PaddleOcrRequestPayload(IEnumerable<string> Images);
 
 public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Result[][]? Results)
 {
-    private class ResultsConverter : JsonConverter<Result[][]>
-    {
-        public override Result[][]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-            reader.TokenType == JsonTokenType.StartArray ? JsonSerializer.Deserialize<Result[][]>(ref reader, options) : null;
-
-        public override void Write(Utf8JsonWriter writer, Result[][] value, JsonSerializerOptions options) => throw new NotImplementedException();
-    }
+    public static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     [JsonConverter(typeof(ResultsConverter))]
     public Result[][]? Results { get; } = Results;
-
-    public static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public record Result(TextBox? TextBox, string? Text, float? Confidence)
     {
@@ -52,7 +44,16 @@ public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Res
 
     public record Coordinate(int X, int Y);
 
-    public class TextBoxJsonConverter : JsonConverter<TextBox>
+    private class ResultsConverter : JsonConverter<Result[][]>
+    {
+        public override Result[][]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+            reader.TokenType == JsonTokenType.StartArray ? JsonSerializer.Deserialize<Result[][]>(ref reader, options) : null;
+
+        public override void Write(Utf8JsonWriter writer, Result[][] value, JsonSerializerOptions options) =>
+            throw new NotImplementedException();
+    }
+
+    private class TextBoxJsonConverter : JsonConverter<TextBox>
     {
         private static Coordinate ReadCoordinate(ref Utf8JsonReader reader)
         {
