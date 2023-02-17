@@ -73,21 +73,41 @@ public class ImageOcrPipelineWorker : BackgroundService
                 TextBoxes: t.First.ProcessedTextBoxes
                     .Where(b => b.RotationDegrees == 0)
                     .Concat(t.Second.SelectMany(i => i.ProcessedTextBoxes))));
-        _logger.LogInformation("{}", JsonSerializer.Serialize(mergedTextBoxesPerImage.Select(t =>
+        _logger.LogInformation("{}", JsonSerializer.Serialize(await Task.WhenAll(mergedTextBoxesPerImage.Select(async t =>
         {
             var boxesUsingTesseractToRecognize = t.TextBoxes.Where(b =>
-                (float)b.ProcessedTextBoxMat.Width / b.ProcessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract);
-            return boxesUsingTesseractToRecognize.Select(b => RecognizeTextViaTesseract(b.ProcessedTextBoxMat));
-        })));
+                (float)b.ProcessedTextBoxMat.Width / b.ProcessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract).ToList();
+            var boxesUsingPaddleOcrToRecognize = t.TextBoxes
+                .ExceptBy(boxesUsingTesseractToRecognize.Select(b => b.TextBoxBoundary), b => b.TextBoxBoundary);
+            return (t.ImageId, Texts: boxesUsingTesseractToRecognize
+                .Select(RecognizeTextViaTesseract)
+                .Concat(await RecognizeTextViaPaddleOcr(boxesUsingPaddleOcrToRecognize, stoppingToken)));
+        }))));
     }
 
-    private Dictionary<string, string> RecognizeTextViaTesseract(Mat processedTextBoxMat)
+    private record RecognizedResult(string TextBoxBoundary, string Script, string Text);
+
+    private Task<IEnumerable<RecognizedResult>[]> RecognizeTextViaPaddleOcr
+        (IEnumerable<ProcessedTextBox> textBoxes, CancellationToken stoppingToken = default)
     {
-        using var mat = processedTextBoxMat;
+        var boxesKeyByBoundary = textBoxes.ToDictionary(b => b.TextBoxBoundary, b =>
+        {
+            using var mat = b.ProcessedTextBoxMat;
+            return CvInvoke.Imencode(".png", mat);
+        });
+        return Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(async pair =>
+            (await RequestPaddleOcrForRecognition(pair.Value, boxesKeyByBoundary, stoppingToken))
+            .SelectMany(results => results.Select(result =>
+                new RecognizedResult(result.ImageId, pair.Key, result.Text)))));
+    }
+
+    private IEnumerable<RecognizedResult> RecognizeTextViaTesseract(ProcessedTextBox textBox)
+    {
+        using var mat = textBox.ProcessedTextBoxMat;
         CvInvoke.CvtColor(mat, mat, ColorConversion.Bgr2Gray);
         // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
         // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
-        CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
+        _ = CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
         // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
         // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
 
@@ -100,15 +120,16 @@ public class ImageOcrPipelineWorker : BackgroundService
         // https://github.com/tesseract-ocr/tesseract/issues/427
         CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
 
-        return _tesseractInstancesKeyByScript.ToDictionary(pair => pair.Key, pair =>
+        return _tesseractInstancesKeyByScript.Select(pair =>
         {
-            var tesseract = pair.Value;
+            var (script, tesseract) = pair;
             tesseract.SetImage(mat);
-            if (tesseract.Recognize() != 0) return "";
-            return tesseract.GetCharacters()
+            if (tesseract.Recognize() != 0) return new(textBox.TextBoxBoundary, script, "");
+            var text = tesseract.GetCharacters()
                 .Where(c => c.Cost > _tesseractConfidenceThreshold)
                 .Aggregate("", (acc, c) => acc + c.Text.Normalize(NormalizationForm.FormKC)); // https://unicode.org/reports/tr15/
-        });
+            return new RecognizedResult(textBox.TextBoxBoundary, script, text);
+        }).ToList(); // eager eval since mat is already disposed after return
     }
 
     private record ProcessedTextBox(string TextBoxBoundary, Mat ProcessedTextBoxMat, float RotationDegrees);
@@ -132,39 +153,52 @@ public class ImageOcrPipelineWorker : BackgroundService
             .ToList()); // eager eval since imageMat is already disposed after return
     }
 
-    private record TextBoxAndDegrees(PaddleOcrDetectionResponse.TextBox TextBox, float RotationDegrees);
+    private record TextBoxAndDegrees(PaddleOcrResponse.TextBox TextBox, float RotationDegrees);
 
     private record PaddleOcrDetectionResult(string ImageId, byte[] ImageBytes, IEnumerable<TextBoxAndDegrees> TextBoxes);
 
-    private async Task<IEnumerable<PaddleOcrDetectionResult>>
-        RequestPaddleOcrForDetection(Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default)
+    private Task<IEnumerable<PaddleOcrDetectionResult>> RequestPaddleOcrForDetection
+        (Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
+        RequestPaddleOcr(_paddleOcrDetectionEndpoint, imagesKeyById, t =>
+            new PaddleOcrDetectionResult(t.ImageId, t.ImageBytes, t.Results
+                .Select(i => new TextBoxAndDegrees(i.TextBox!, i.TextBox!.GetRotationDegrees()))), stoppingToken);
+
+    private record PaddleOcrRecognitionResult(string ImageId, string Text, float Confidence);
+
+    private Task<IEnumerable<IEnumerable<PaddleOcrRecognitionResult>>> RequestPaddleOcrForRecognition
+        (string paddleOcrEndpoint, Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
+        RequestPaddleOcr(paddleOcrEndpoint, imagesKeyById,
+            t => t.Results.Select(result =>
+                new PaddleOcrRecognitionResult(t.ImageId, result.Text!, result.Confidence!.Value)),
+            stoppingToken);
+
+    private static async Task<IEnumerable<T>>
+        RequestPaddleOcr<T>(string paddleOcrEndpoint, Dictionary<string, byte[]> imagesKeyById,
+            Func<(string ImageId, byte[] ImageBytes, PaddleOcrResponse.Result[] Results), T> paddleOcrResponseTransformer,
+            CancellationToken stoppingToken = default) where T : class
     {
-        if (!imagesKeyById.Values.Any()) return Array.Empty<PaddleOcrDetectionResult>();
+        if (!imagesKeyById.Values.Any()) return Array.Empty<T>();
         var requestPayload = new PaddleOcrRequestPayload(imagesKeyById.Values.Select(Convert.ToBase64String));
-        var response = await _http.PostAsJsonAsync(_paddleOcrDetectionEndpoint, requestPayload, stoppingToken);
-        var detectionResponse = await response.Content.ReadFromJsonAsync<PaddleOcrDetectionResponse>
-            (PaddleOcrDetectionResponse.JsonSerializerOptions, stoppingToken);
-        if (!response.IsSuccessStatusCode
-            || detectionResponse?.Results == null
-            || detectionResponse.Msg != ""
-            || detectionResponse.Status != "000")
-            throw new("PaddleOcrEndpoint/predict/ocr_det responded with non zero status or empty msg"
-                      + $"raw={await response.Content.ReadAsStringAsync(stoppingToken)}");
-        return imagesKeyById.Zip(detectionResponse.Results)
-            .Select(t => new PaddleOcrDetectionResult(t.First.Key, t.First.Value,
-                t.Second.Select(i => new TextBoxAndDegrees(i.TextBox, i.TextBox.GetRotationDegrees()))));
+        var httpResponse = await _http.PostAsJsonAsync(paddleOcrEndpoint, requestPayload, stoppingToken);
+        var response = await httpResponse.Content.ReadFromJsonAsync<PaddleOcrResponse>
+            (PaddleOcrResponse.JsonSerializerOptions, stoppingToken);
+        if (!httpResponse.IsSuccessStatusCode
+            || response?.Results == null
+            || response.Msg != ""
+            || response.Status != "000")
+            throw new($"{paddleOcrEndpoint} responded with non zero status or empty msg"
+                      + $"raw={await httpResponse.Content.ReadAsStringAsync(stoppingToken)}");
+        return imagesKeyById.Zip(response.Results, (pair, results) => (pair.Key, pair.Value, results)).Select(paddleOcrResponseTransformer);
     }
 
     private record PaddleOcrRequestPayload(IEnumerable<string> Images);
 
-    private record PaddleOcrDetectionResponse(string Msg, PaddleOcrDetectionResponse.Result[][] Results, string Status)
+    private record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Result[][]? Results)
     {
         private class ResultsConverter : JsonConverter<Result[][]>
         {
             public override Result[][]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-                reader.TokenType == JsonTokenType.String && reader.GetString() == ""
-                    ? null
-                    : JsonSerializer.Deserialize<Result[][]>(ref reader, options);
+                reader.TokenType == JsonTokenType.StartArray ? JsonSerializer.Deserialize<Result[][]>(ref reader, options) : null;
 
             public override void Write(Utf8JsonWriter writer, Result[][] value, JsonSerializerOptions options) => throw new NotImplementedException();
         }
@@ -174,10 +208,10 @@ public class ImageOcrPipelineWorker : BackgroundService
 
         public static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase};
 
-        public record Result(TextBox TextBox)
+        public record Result(TextBox? TextBox, string? Text, float? Confidence)
         {
             [JsonPropertyName("text_region")]
-            public TextBox TextBox { get; } = TextBox;
+            public TextBox? TextBox { get; } = TextBox;
         }
 
         [JsonConverter(typeof(TextBoxJsonConverter))]
