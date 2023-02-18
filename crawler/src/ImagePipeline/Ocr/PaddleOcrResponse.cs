@@ -5,12 +5,13 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 
 public record PaddleOcrRequestPayload(IEnumerable<string> Images);
 
-public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Result[][]? Results)
+public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Result[][]? NestedResults)
 {
     public static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     [JsonConverter(typeof(ResultsConverter))]
-    public Result[][]? Results { get; } = Results;
+    [JsonPropertyName("results")]
+    public Result[][]? NestedResults { get; } = NestedResults;
 
     public record Result(TextBox? TextBox, string? Text, float? Confidence)
     {

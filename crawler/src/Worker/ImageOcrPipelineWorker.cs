@@ -49,9 +49,15 @@ public class ImageOcrPipelineWorker : BackgroundService
                 (float)b.ProcessedTextBoxMat.Width / b.ProcessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract).ToList();
             var boxesUsingPaddleOcrToRecognize = t.TextBoxes
                 .ExceptBy(boxesUsingTesseractToRecognize.Select(b => b.TextBoxBoundary), b => b.TextBoxBoundary);
-            return (t.ImageId, Texts: boxesUsingTesseractToRecognize
-                .Select(_recognizer.RecognizeViaTesseract)
-                .Concat(await _recognizer.RecognizeViaPaddleOcr(boxesUsingPaddleOcrToRecognize, stoppingToken)));
+            return new
+            {
+                t.ImageId,
+                Texts = boxesUsingTesseractToRecognize
+                    .SelectMany(_recognizer.RecognizeViaTesseract)
+                    .Concat((await _recognizer.RecognizeViaPaddleOcr(boxesUsingPaddleOcrToRecognize, stoppingToken))
+                        .SelectMany(i => i))
+            };
         }))));
+        Environment.Exit(0);
     }
 }

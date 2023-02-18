@@ -50,8 +50,7 @@ public class TextRecognizer
         });
         return Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(async pair =>
             (await PaddleOcrRequester.RequestForRecognition(pair.Value, boxesKeyByBoundary, stoppingToken))
-            .SelectMany(results => results.Select(result =>
-                new RecognizedResult(result.ImageId, pair.Key, result.Text)))));
+            .Select(result => new RecognizedResult(result.ImageId, pair.Key, result.Text))));
     }
 
     public IEnumerable<RecognizedResult> RecognizeViaTesseract(TextBoxPreprocessor.ProcessedTextBox textBox)
