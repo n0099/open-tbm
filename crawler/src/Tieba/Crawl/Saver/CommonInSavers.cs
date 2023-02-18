@@ -34,8 +34,9 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
             // rollback changes that overwrite original values with the default value 0 or null
             // for all fields of ITimestampingEntity and IPost.LastSeenAt
             // this will also affect the entity instance which postOrUserInTracking references to it
-            entry.Properties.Where(p => IsTimestampingFieldName(p.Metadata.Name))
-                .Where(p => p.IsModified).ForEach(p => p.IsModified = false);
+            entry.Properties
+                .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
+                .ForEach(prop => prop.IsModified = false);
 
             var revision = default(TRevision);
             var revisionNullFieldsBitMask = 0;
@@ -92,10 +93,12 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
         }).OfType<TRevision>().ToList();
         if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
 
-        _ = db.Set<TRevision>().UpsertRange(newRevisions.Where(r => !r.IsAllFieldsIsNullExceptSplit())).NoUpdate().Run();
+        _ = db.Set<TRevision>().UpsertRange(
+                newRevisions.Where(rev => !rev.IsAllFieldsIsNullExceptSplit()))
+            .NoUpdate().Run();
         newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
-            .SelectMany(r => r.SplitEntities)
-            .GroupBy(p => p.Key, p => p.Value)
+            .SelectMany(rev => rev.SplitEntities)
+            .GroupBy(pair => pair.Key, pair => pair.Value)
             .ForEach(g => RevisionSplitEntitiesUpsertPayloads[g.Key](db, g));
     }
 

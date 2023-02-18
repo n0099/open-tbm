@@ -52,21 +52,22 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                     // the https://en.wikipedia.org/wiki/Order_of_precedence is same with div.bawu_single_type in the response HTML
                     ModeratorType = string.Join(',', g.Select(t => t.type))
                 }).ToList();
-            var existingLatestRevisions = (from r in db1.ForumModeratorRevisions.AsNoTracking()
-                where r.Fid == fid
+            var existingLatestRevisions = (
+                from rev in db1.ForumModeratorRevisions.AsNoTracking()
+                where rev.Fid == fid
                 select new
                 {
-                    r.Portrait,
-                    r.ModeratorType,
-                    Rank = Sql.Ext.Rank().Over().PartitionBy(r.Portrait).OrderByDesc(r.DiscoveredAt).ToValue()
+                    rev.Portrait,
+                    rev.ModeratorType,
+                    Rank = Sql.Ext.Rank().Over().PartitionBy(rev.Portrait).OrderByDesc(rev.DiscoveredAt).ToValue()
                 }).Where(e => e.Rank == 1).ToLinqToDB().ToList();
 
             db1.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
                 existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorType)),
-                r => (r.Portrait, r.ModeratorType)));
+                rev => (rev.Portrait, rev.ModeratorType)));
             db1.ForumModeratorRevisions.AddRange(existingLatestRevisions
                 .Where(e => e.ModeratorType != "") // filter out revisions that recorded someone who resigned from moderators
-                .ExceptBy(revisions.Select(r => r.Portrait), e => e.Portrait)
+                .ExceptBy(revisions.Select(rev => rev.Portrait), e => e.Portrait)
                 .Select(e => new ForumModeratorRevision
                 {
                     DiscoveredAt = now,

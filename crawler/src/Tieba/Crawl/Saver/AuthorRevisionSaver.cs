@@ -32,12 +32,12 @@ public class AuthorRevisionSaver
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
-            r => new()
+            rev => new()
             {
-                DiscoveredAt = r.DiscoveredAt,
-                Uid = r.Uid,
-                Value = r.AuthorExpGrade,
-                Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.DiscoveredAt).ToValue()
+                DiscoveredAt = rev.DiscoveredAt,
+                Uid = rev.Uid,
+                Value = rev.AuthorExpGrade,
+                Rank = Sql.Ext.Rank().Over().PartitionBy(rev.Uid).OrderByDesc(rev.DiscoveredAt).ToValue()
             },
             t => new()
             {
@@ -90,11 +90,11 @@ public class AuthorRevisionSaver
             var newRevisionsExceptLocked = newRevisionOfNewUsers
                 .Concat(newRevisionOfExistingUsers)
                 .Select(revisionFactory)
-                .ExceptBy(locks, r => (r.Fid, r.Uid))
+                .ExceptBy(locks, rev => (rev.Fid, rev.Uid))
                 .ToList();
             if (!newRevisionsExceptLocked.Any()) return;
 
-            _savedRevisions.AddRange(newRevisionsExceptLocked.Select(r => (r.Fid, r.Uid)));
+            _savedRevisions.AddRange(newRevisionsExceptLocked.Select(rev => (rev.Fid, rev.Uid)));
             locks.UnionWith(_savedRevisions);
             db.Set<TRevision>().AddRange(newRevisionsExceptLocked);
         }

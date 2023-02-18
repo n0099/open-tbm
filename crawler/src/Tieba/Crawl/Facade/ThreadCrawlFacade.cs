@@ -17,8 +17,7 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
         // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
 
         // users has already been added into DbContext and tracking
-        var existingUsersId = db.ChangeTracker.Entries<TiebaUser>().Select(e => e.Entity.Uid);
-
+        var existingUsersId = db.ChangeTracker.Entries<TiebaUser>().Select(ee => ee.Entity.Uid);
         var newLatestRepliers = _latestRepliers
             .ExceptBy(existingUsersId, i => i.Key)
             .Select(i => i.Value).ToList();

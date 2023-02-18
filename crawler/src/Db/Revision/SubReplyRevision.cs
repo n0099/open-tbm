@@ -9,14 +9,14 @@ public class SubReplyRevision : BaseSubReplyRevision
 {
     [NotMapped] public int AgreeCount
     {
-        get => GetSplitEntityValue<SplitAgreeCount, int>(r => r.AgreeCount);
-        set => SetSplitEntityValue<SplitAgreeCount, int>(value, (r, v) => r.AgreeCount = v,
+        get => GetSplitEntityValue<SplitAgreeCount, int>(s => s.AgreeCount);
+        set => SetSplitEntityValue<SplitAgreeCount, int>(value, (s, v) => s.AgreeCount = v,
             () => new() {TakenAt = TakenAt, Spid = Spid, AgreeCount = value});
     }
     [NotMapped] public int DisagreeCount
     {
-        get => GetSplitEntityValue<SplitDisagreeCount, int>(r => r.DisagreeCount);
-        set => SetSplitEntityValue<SplitDisagreeCount, int>(value, (r, v) => r.DisagreeCount = v,
+        get => GetSplitEntityValue<SplitDisagreeCount, int>(s => s.DisagreeCount);
+        set => SetSplitEntityValue<SplitDisagreeCount, int>(value, (s, v) => s.DisagreeCount = v,
             () => new() {TakenAt = TakenAt, Spid = Spid, DisagreeCount = value});
     }
 

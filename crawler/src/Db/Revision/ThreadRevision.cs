@@ -16,8 +16,8 @@ public class ThreadRevision : BaseThreadRevision
     public uint? ReplyCount { get; set; }
     [NotMapped] public uint ViewCount
     {
-        get => GetSplitEntityValue<SplitViewCount, uint>(r => r.ViewCount);
-        set => SetSplitEntityValue<SplitViewCount, uint>(value, (r, v) => r.ViewCount = v,
+        get => GetSplitEntityValue<SplitViewCount, uint>(s => s.ViewCount);
+        set => SetSplitEntityValue<SplitViewCount, uint>(value, (s, v) => s.ViewCount = v,
             () => new() {TakenAt = TakenAt, Tid = Tid, ViewCount = value});
     }
     public uint? ShareCount { get; set; }

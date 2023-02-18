@@ -12,23 +12,23 @@ public class UserRevision : BaseUserRevision
     public string? Name { get; set; }
     [NotMapped] public string? DisplayName
     {
-        get => GetSplitEntityValue<SplitDisplayName, string?>(r => r.DisplayName);
-        set => SetSplitEntityValue<SplitDisplayName, string?>(value, (r, v) => r.DisplayName = v,
+        get => GetSplitEntityValue<SplitDisplayName, string?>(s => s.DisplayName);
+        set => SetSplitEntityValue<SplitDisplayName, string?>(value, (s, v) => s.DisplayName = v,
             () => new() {TakenAt = TakenAt, Uid = Uid, TriggeredBy = TriggeredBy, DisplayName = value});
     }
     public string? Portrait { get; set; }
     [NotMapped] public uint? PortraitUpdatedAt
     {
-        get => GetSplitEntityValue<SplitPortraitUpdatedAt, uint?>(r => r.PortraitUpdatedAt);
-        set => SetSplitEntityValue<SplitPortraitUpdatedAt, uint?>(value, (r, v) => r.PortraitUpdatedAt = v,
+        get => GetSplitEntityValue<SplitPortraitUpdatedAt, uint?>(s => s.PortraitUpdatedAt);
+        set => SetSplitEntityValue<SplitPortraitUpdatedAt, uint?>(value, (s, v) => s.PortraitUpdatedAt = v,
             () => new() {TakenAt = TakenAt, Uid = Uid, TriggeredBy = TriggeredBy, PortraitUpdatedAt = value});
     }
     public ushort? Gender { get; set; }
     public byte[]? Icon { get; set; }
     [NotMapped] public string? IpGeolocation
     {
-        get => GetSplitEntityValue<SplitIpGeolocation, string?>(r => r.IpGeolocation);
-        set => SetSplitEntityValue<SplitIpGeolocation, string?>(value, (r, v) => r.IpGeolocation = v,
+        get => GetSplitEntityValue<SplitIpGeolocation, string?>(s => s.IpGeolocation);
+        set => SetSplitEntityValue<SplitIpGeolocation, string?>(value, (s, v) => s.IpGeolocation = v,
             () => new() {TakenAt = TakenAt, Uid = Uid, TriggeredBy = TriggeredBy, IpGeolocation = value});
     }
 

@@ -7,7 +7,7 @@ public abstract class StaticCommonInSavers
     protected static Dictionary<Type, Dictionary<string, PropertyInfo>> RevisionPropertiesCache { get; } = GetPropsKeyByType(
         new() {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
     private static Dictionary<Type, Dictionary<string, PropertyInfo>> GetPropsKeyByType(List<Type> types) =>
-        types.ToDictionary(type => type, type => type.GetProperties().ToDictionary(p => p.Name));
+        types.ToDictionary(type => type, type => type.GetProperties().ToDictionary(prop => prop.Name));
 
     public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propName, object? oldValue, object? newValue);
     public record FieldChangeIgnoranceCallbackRecord(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);

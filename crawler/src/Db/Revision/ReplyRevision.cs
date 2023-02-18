@@ -9,21 +9,21 @@ public class ReplyRevision : BaseReplyRevision
 {
     [NotMapped] public uint Floor
     {
-        get => GetSplitEntityValue<SplitFloor, uint>(r => r.Floor);
-        set => SetSplitEntityValue<SplitFloor, uint>(value, (r, v) => r.Floor = v,
+        get => GetSplitEntityValue<SplitFloor, uint>(s => s.Floor);
+        set => SetSplitEntityValue<SplitFloor, uint>(value, (s, v) => s.Floor = v,
             () => new() {TakenAt = TakenAt, Pid = Pid, Floor = value});
     }
     [NotMapped] public uint SubReplyCount
     {
-        get => GetSplitEntityValue<SplitSubReplyCount, uint>(r => r.SubReplyCount);
-        set => SetSplitEntityValue<SplitSubReplyCount, uint>(value, (r, v) => r.SubReplyCount = v,
+        get => GetSplitEntityValue<SplitSubReplyCount, uint>(s => s.SubReplyCount);
+        set => SetSplitEntityValue<SplitSubReplyCount, uint>(value, (s, v) => s.SubReplyCount = v,
             () => new() {TakenAt = TakenAt, Pid = Pid, SubReplyCount = value});
     }
     public ushort? IsFold { get; set; }
     [NotMapped] public int AgreeCount
     {
-        get => GetSplitEntityValue<SplitAgreeCount, int>(r => r.AgreeCount);
-        set => SetSplitEntityValue<SplitAgreeCount, int>(value, (r, v) => r.AgreeCount = v,
+        get => GetSplitEntityValue<SplitAgreeCount, int>(s => s.AgreeCount);
+        set => SetSplitEntityValue<SplitAgreeCount, int>(value, (s, v) => s.AgreeCount = v,
             () => new() {TakenAt = TakenAt, Pid = Pid, AgreeCount = value});
     }
     public int? DisagreeCount { get; set; }
