@@ -30,9 +30,9 @@ public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, Re
 
     private static void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<ReplyPost> parsedReplies) =>
         parsedReplies.Join(users, r => r.AuthorUid, u => u.Uid, (r, a) => (r, a))
-            .ForEach(tuple =>
+            .ForEach(t =>
             { // fill the values for some field of reply from user list which is out of post list
-                var (r, author) = tuple;
+                var (r, author) = t;
                 r.AuthorExpGrade = (ushort)author.LevelId;
             });
 
@@ -50,7 +50,7 @@ public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, Re
         if (newTitle == null) return;
 
         db.Attach(new ThreadPost {Tid = _tid, Title = newTitle})
-            .Property(t => t.Title).IsModified = true;
+            .Property(th => th.Title).IsModified = true;
         if (db.SaveChanges() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
             throw new DbUpdateException(
                 $"Parent thread title \"{newTitle}\" completion for tid {_tid} has failed.");

@@ -41,7 +41,7 @@ public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "thread") { }
 
-    public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, t => t.Tid,
-        t => new ThreadRevision {TakenAt = t.UpdatedAt ?? t.CreatedAt, Tid = t.Tid},
-        PredicateBuilder.New<ThreadPost>(t => Posts.Keys.Contains(t.Tid)));
+    public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, th => th.Tid,
+        th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
+        PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 }

@@ -39,7 +39,7 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
         new() {Uid = uid, Name = name, DisplayName = displayName};
 
     protected void ParseLatestRepliers(IEnumerable<Thread> threads) =>
-        threads.Select(t => t.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
+        threads.Select(th => th.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
             .OfType<User>() // filter out nulls
             .Where(u => u.Uid != 0) // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
             .Select(u =>
@@ -48,11 +48,10 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
 
     protected void FillDetailedGeolocation(IEnumerable<Thread> threads) =>
         threads // replace with more detailed location.name in the 6.0.2 response
-            .Where(t => t.Location != null)
-            .Join(Posts.Values, i => (Tid)i.Tid, i => i.Tid,
+            .Where(th => th.Location != null)
+            .Join(Posts.Values, th => (Tid)th.Tid, th => th.Tid,
                 (inResponse, parsed) => (inResponse, parsed))
-            .ForEach(tuple => tuple.parsed.Geolocation =
-                Helper.SerializedProtoBufOrNullIfEmpty(tuple.inResponse.Location));
+            .ForEach(t => t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location));
 
     protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
     {
@@ -63,7 +62,7 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
         Users.ResetUsersIcon();
         ParseLatestRepliers(data.ThreadList);
         // remove livepost threads since their real parent forum may not match with current crawling fid
-        data.ThreadList.Where(t => t.LivePostType != "")
-            .ForEach(t => Posts.TryRemove((Tid)t.Tid, out _));
+        data.ThreadList.Where(th => th.LivePostType != "")
+            .ForEach(th => Posts.TryRemove((Tid)th.Tid, out _));
     }
 }

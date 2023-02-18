@@ -39,13 +39,13 @@ public class AuthorRevisionSaver
                 Value = r.AuthorExpGrade,
                 Rank = Sql.Ext.Rank().Over().PartitionBy(r.Uid).OrderByDesc(r.DiscoveredAt).ToValue()
             },
-            tuple => new()
+            t => new()
             {
-                DiscoveredAt = tuple.DiscoveredAt,
+                DiscoveredAt = t.DiscoveredAt,
                 Fid = db.Fid,
-                Uid = tuple.Uid,
+                Uid = t.Uid,
                 TriggeredBy = _triggeredByPostType,
-                AuthorExpGrade = tuple.Value
+                AuthorExpGrade = t.Value
             });
         return () => ReleaseAllLocks(AuthorExpGradeLocks);
     }
@@ -77,14 +77,14 @@ public class AuthorRevisionSaver
             ))
             .ToList();
         var newRevisionOfNewUsers = posts
-            .ExceptBy(existingRevisionOfExistingUsers.Select(tuple => tuple.Uid), p => p.AuthorUid)
+            .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
             .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
         var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
             // filter out revisions with the same DiscoveredAt to prevent duplicate keys
             // when some fields get updated more than one time in a second
-            .Where(tuple => tuple.Existing.DiscoveredAt != tuple.NewInPost.DiscoveredAt
-                            && isValueChangedPredicate(tuple.Existing.Value, tuple.NewInPost.Value))
-            .Select(tuple => (tuple.Uid, tuple.NewInPost.Value, tuple.NewInPost.DiscoveredAt));
+            .Where(t => t.Existing.DiscoveredAt != t.NewInPost.DiscoveredAt
+                            && isValueChangedPredicate(t.Existing.Value, t.NewInPost.Value))
+            .Select(t => (t.Uid, t.NewInPost.Value, t.NewInPost.DiscoveredAt));
         lock (locks)
         {
             var newRevisionsExceptLocked = newRevisionOfNewUsers

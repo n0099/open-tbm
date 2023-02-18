@@ -42,7 +42,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
             await using var transaction = await db1.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
             var revisions = moderators
                 .SelectMany(i => i)
-                .GroupBy(tuple => tuple.portrait)
+                .GroupBy(t => t.portrait)
                 .Select(g => new ForumModeratorRevision
                 {
                     DiscoveredAt = now,
@@ -50,7 +50,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                     Portrait = g.Key,
                     // user can serve as multiple moderators, so join these types with commas
                     // the https://en.wikipedia.org/wiki/Order_of_precedence is same with div.bawu_single_type in the response HTML
-                    ModeratorType = string.Join(',', g.Select(tuple => tuple.type))
+                    ModeratorType = string.Join(',', g.Select(t => t.type))
                 }).ToList();
             var existingLatestRevisions = (from r in db1.ForumModeratorRevisions.AsNoTracking()
                 where r.Fid == fid

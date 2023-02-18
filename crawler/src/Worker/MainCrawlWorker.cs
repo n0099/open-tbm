@@ -55,7 +55,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
             // https://stackoverflow.com/questions/341264/max-or-default
             maxLatestReplyPostedAtOccurInPreviousCrawl =
                 scope1.Resolve<TbmDbContext.New>()(fid).Threads
-                    .Max(t => (Time?)t.LatestReplyPostedAt) ?? Time.MaxValue;
+                    .Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
         do
         {
             crawlingPage++;
@@ -66,7 +66,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
             if (currentPageChangeSet != null)
             {
                 savedThreads.Add(currentPageChangeSet);
-                var threadsLatestReplyPostedAt = currentPageChangeSet.AllAfter.Select(t => t.LatestReplyPostedAt).ToList();
+                var threadsLatestReplyPostedAt = currentPageChangeSet.AllAfter
+                    .Select(th => th.LatestReplyPostedAt).ToList();
                 minLatestReplyPostedAt = threadsLatestReplyPostedAt.Min();
                 if (crawlingPage == 1) _latestReplyPostedAtCheckpointCache[fid] = threadsLatestReplyPostedAt.Max();
             }
@@ -82,7 +83,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
             if (stoppingToken.IsCancellationRequested) return;
             await using var scope3 = _scope0.BeginLifetimeScope();
             await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                .Crawl(threads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailureCount)0));
+                .Crawl(threads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0));
         }));
 
         return savedThreads;
@@ -96,14 +97,14 @@ public class MainCrawlWorker : CyclicCrawlWorker
         stoppingToken.ThrowIfCancellationRequested();
         var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
         {
-            shouldCrawl.UnionWith(threads.NewlyAdded.Select(t => t.Tid));
-            shouldCrawl.UnionWith(threads.Existing.Where(tuple =>
+            shouldCrawl.UnionWith(threads.NewlyAdded.Select(th => th.Tid));
+            shouldCrawl.UnionWith(threads.Existing.Where(t =>
             {
-                var (before, after) = tuple;
+                var (before, after) = t;
                 return before.ReplyCount != after.ReplyCount
                        || before.LatestReplyPostedAt != after.LatestReplyPostedAt
                        || before.LatestReplierUid != after.LatestReplierUid;
-            }).Select(tuple => tuple.Before.Tid));
+            }).Select(t => t.Before.Tid));
             return shouldCrawl;
         });
         var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
@@ -122,7 +123,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
     private static Action<Exception> SaveThreadMissingFirstReply(ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
     {
         if (ex is not EmptyPostListException) return;
-        var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(t => t.Tid == tid)).FirstOrDefault();
+        var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(th => th.Tid == tid)).FirstOrDefault();
         if (parentThread == null) return;
 
         var newEntity = new ThreadMissingFirstReply
@@ -166,17 +167,17 @@ public class MainCrawlWorker : CyclicCrawlWorker
             var (tid, replies) = pair;
             shouldCrawl.UnionWith(replies.NewlyAdded
                 .Where(r => r.SubReplyCount != null).Select(r => (tid, r.Pid)));
-            shouldCrawl.UnionWith(replies.Existing.Where(tuple =>
+            shouldCrawl.UnionWith(replies.Existing.Where(t =>
             {
-                var (before, after) = tuple;
+                var (before, after) = t;
                 return after.SubReplyCount != null && before.SubReplyCount != after.SubReplyCount;
-            }).Select(tuple => (tid, tuple.Before.Pid)));
+            }).Select(t => (tid, t.Before.Pid)));
             return shouldCrawl;
         });
-        await Task.WhenAll(shouldCrawlParentPosts.Select(async tuple =>
+        await Task.WhenAll(shouldCrawlParentPosts.Select(async t =>
         {
             if (stoppingToken.IsCancellationRequested) return;
-            var (tid, pid) = tuple;
+            var (tid, pid) = t;
             await using var scope1 = scope.BeginLifetimeScope();
             var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid);
             _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);

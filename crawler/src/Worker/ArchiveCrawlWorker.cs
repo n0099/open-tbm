@@ -123,7 +123,7 @@ public class ArchiveCrawlWorker : BackgroundService
         if (savedThreads != null)
         {
             await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                .Crawl(savedThreads.NewlyAdded.ToDictionary(t => t.Tid, _ => (FailureCount)0));
+                .Crawl(savedThreads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0));
         }
         return savedThreads;
     }
@@ -136,7 +136,7 @@ public class ArchiveCrawlWorker : BackgroundService
         // we choose TO crawl these rare thread's replies for archive since most thread will have replies
         // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
         // SELECT COUNT(*) FROM tbmc_f{fid}_thread AS T INNER JOIN tbmc_f{fid}_reply AS R ON T.tid = R.tid AND T.replyNum IS NULL
-        await Task.WhenAll(savedThreads.AllAfter.Select(t => t.Tid).Distinct().Select(async tid =>
+        await Task.WhenAll(savedThreads.AllAfter.Select(th => th.Tid).Distinct().Select(async tid =>
         {
             if (stoppingToken.IsCancellationRequested) return;
             await using var scope1 = _scope0.BeginLifetimeScope();
@@ -161,10 +161,10 @@ public class ArchiveCrawlWorker : BackgroundService
             return shouldCrawl;
         });
         var savedSubReplyCount = 0;
-        await Task.WhenAll(shouldCrawlParentPosts.Select(async tuple =>
+        await Task.WhenAll(shouldCrawlParentPosts.Select(async t =>
         {
             if (stoppingToken.IsCancellationRequested) return;
-            var (tid, pid) = tuple;
+            var (tid, pid) = t;
             await using var scope1 = _scope0.BeginLifetimeScope();
             var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
                 .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);

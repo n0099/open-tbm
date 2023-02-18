@@ -104,7 +104,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             select s).ToList();
         existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
                 (existing, newInReply) => (existing, newInReply))
-            .ForEach(tuple => tuple.existing.LastSeenAt = tuple.newInReply.LastSeenAt);
+            .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
 
         lock (SignatureLocks)
         {
