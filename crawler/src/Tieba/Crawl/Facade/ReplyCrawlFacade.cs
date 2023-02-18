@@ -29,12 +29,11 @@ public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, Re
     }
 
     private static void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<ReplyPost> parsedReplies) =>
-        parsedReplies.Join(users, r => r.AuthorUid, u => u.Uid, (r, u) => (r, u))
-            .ForEach(t =>
-            { // fill the values for some field of reply from user list which is out of post list
-                var (r, author) = t;
-                r.AuthorExpGrade = (ushort)author.LevelId;
-            });
+        (from reply in parsedReplies
+            join user in users on reply.AuthorUid equals user.Uid
+            select (reply, user))
+        // fill the values for some field of reply from user list which is out of post list
+        .ForEach(t => t.reply.AuthorExpGrade = (ushort)t.user.LevelId);
 
     private void SaveParentThreadTitle(IEnumerable<Reply> replies)
     {

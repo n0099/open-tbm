@@ -17,9 +17,10 @@ public class ThreadArchiveCrawlFacade : ThreadCrawlFacade
         ParseLatestRepliers(data.ThreadList);
         FillDetailedGeolocation(data.ThreadList);
 
-        parsedPostsInResponse.Values // parsed author uid will be 0 when request with client version 6.0.2
-            .Join(data.ThreadList, th => th.Tid, th => (Tid)th.Tid,
-                (parsed, newInResponse) => (parsed, newInResponse))
+        // parsed author uid will be 0 when request with client version 6.0.2
+        (from parsed in parsedPostsInResponse.Values
+                join newInResponse in data.ThreadList on parsed.Tid equals (Tid)newInResponse.Tid
+                select (parsed, newInResponse))
             .ForEach(t => t.parsed.AuthorUid = t.newInResponse.Author.Uid);
     }
 }

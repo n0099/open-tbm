@@ -68,7 +68,7 @@ public class AuthorRevisionSaver
             .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
             .Where(e => e.Rank == 1)
-            .ToLinqToDB().ToList()
+            .ToLinqToDB().AsEnumerable()
             .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
             (
                 e.Uid,

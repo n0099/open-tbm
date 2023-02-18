@@ -29,25 +29,31 @@ public class ImageOcrPipelineWorker : BackgroundService
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.filename, t => t.bytes);
-        var processedImagesTextBoxes = (await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken))
+        var processedImagesTextBoxes =
+            (await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken))
             .Select(TextBoxPreprocessor.ProcessTextBoxes).ToList();
         var reprocessedImagesTextBoxes = (await Task.WhenAll(
-                processedImagesTextBoxes.Select(imageAndProcessedTextBoxes =>
-                    _requester.RequestForDetection(imageAndProcessedTextBoxes.ProcessedTextBoxes
-                        .Where(b => b.RotationDegrees != 0) // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
-                        .ToDictionary(b => b.TextBoxBoundary, b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat)), stoppingToken))))
-            .Select(imageDetectionResults => imageDetectionResults.Select(TextBoxPreprocessor.ProcessTextBoxes));
-        var mergedTextBoxesPerImage = processedImagesTextBoxes
-            .Zip(reprocessedImagesTextBoxes)
-            .Select(t => (t.First.ImageId,
-                TextBoxes: t.First.ProcessedTextBoxes
-                    .Where(b => b.RotationDegrees == 0)
-                    .Concat(t.Second.SelectMany(imageAndProcessedTextBoxes => imageAndProcessedTextBoxes.ProcessedTextBoxes))));
+                from imageAndProcessedTextBoxes in processedImagesTextBoxes
+                let boxImagesBytesKeyByBoundary =
+                    imageAndProcessedTextBoxes.ProcessedTextBoxes
+                        // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
+                        .Where(b => b.RotationDegrees != 0)
+                        .ToDictionary(b => b.TextBoxBoundary,
+                            b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat))
+                let requestTask = _requester.RequestForDetection(boxImagesBytesKeyByBoundary, stoppingToken)
+                select requestTask))
+            .Select(results => results.Select(TextBoxPreprocessor.ProcessTextBoxes));
+        var mergedTextBoxesPerImage = from t in
+                processedImagesTextBoxes.Zip(reprocessedImagesTextBoxes)
+            let textBoxes = t.First.ProcessedTextBoxes
+                .Where(b => b.RotationDegrees == 0)
+                .Concat(t.Second.SelectMany(imageAndProcessedTextBoxes => imageAndProcessedTextBoxes.ProcessedTextBoxes))
+            select (t.First.ImageId, textBoxes);
         _logger.LogInformation("{}", JsonSerializer.Serialize(await Task.WhenAll(mergedTextBoxesPerImage.Select(async t =>
         {
-            var boxesUsingTesseractToRecognize = t.TextBoxes.Where(b =>
+            var boxesUsingTesseractToRecognize = t.textBoxes.Where(b =>
                 (float)b.ProcessedTextBoxMat.Width / b.ProcessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract).ToList();
-            var boxesUsingPaddleOcrToRecognize = t.TextBoxes
+            var boxesUsingPaddleOcrToRecognize = t.textBoxes
                 .ExceptBy(boxesUsingTesseractToRecognize.Select(b => b.TextBoxBoundary), b => b.TextBoxBoundary);
             return new
             {

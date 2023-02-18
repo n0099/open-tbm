@@ -92,7 +92,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
     private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
         CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
 
-    public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, ILifetimeScope scope, CancellationToken stoppingToken = default)
+    public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid,
+        ILifetimeScope scope, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
         var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
@@ -159,7 +160,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
     private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
         CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
 
-    public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid, ILifetimeScope scope, CancellationToken stoppingToken = default)
+    public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid,
+        ILifetimeScope scope, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
         var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>

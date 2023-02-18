@@ -102,8 +102,9 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
                   && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
             select s).ToList();
-        existingSignatures.Join(signatures, s => s.SignatureId, s => s.SignatureId,
-                (existing, newInReply) => (existing, newInReply))
+        (from existing in existingSignatures
+                join newInReply in signatures on existing.SignatureId equals newInReply.SignatureId
+                select (existing, newInReply))
             .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
 
         lock (SignatureLocks)
@@ -128,14 +129,17 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
     private static void SaveReplyContentImages(TbmDbContext db, IEnumerable<ReplyPost> replies)
     {
-        var pidAndImageList = replies.SelectMany(r => r.OriginalContents
+        var pidAndImageList = (
+                from r in replies
+                from c in r.OriginalContents
+                where c.Type == 3
                 // only save image filename without extension that extracted from url by ReplyParser.Convert()
-                .Where(c => c.Type == 3 && ReplyParser.ValidateContentImageFilenameRegex.IsMatch(c.OriginSrc))
-                .Select(c => (r.Pid, Image: new TiebaImage
+                where ReplyParser.ValidateContentImageFilenameRegex.IsMatch(c.OriginSrc)
+                select (r.Pid, Image: new TiebaImage
                 {
                     UrlFilename = c.OriginSrc,
                     ByteSize = c.OriginSize
-                })))
+                }))
             .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
             .ToList();
         if (!pidAndImageList.Any()) return;
@@ -145,10 +149,11 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         var existingImages = (from e in db.Images
             where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
             select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
-        existingImages.Values.Where(e => e.ByteSize == 0)
-            .Join(imagesKeyByUrlFilename.Values, e => e.UrlFilename, image => image.UrlFilename,
-                (existing, newInContent) => (existing, newInContent))
-            .ForEach(t => t.existing.ByteSize = t.newInContent.ByteSize); // randomly respond with 0
+        (from existing in existingImages.Values
+                where existing.ByteSize == 0 // randomly respond with 0
+                join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
+                select (existing, newInContent))
+            .ForEach(t => t.existing.ByteSize = t.newInContent.ByteSize);
         db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
         {
             Pid = t.Pid,

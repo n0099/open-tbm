@@ -22,10 +22,12 @@ public class PaddleOcrRequester
     public Task<IEnumerable<DetectionResult>> RequestForDetection
         (Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
         Request(_paddleOcrDetectionEndpoint, imagesKeyById,
-            nestedResults => imagesKeyById
-                .Zip(nestedResults, (pair, results) => (ImageId: pair.Key, ImageBytes: pair.Value, results))
-                .Select(t => new DetectionResult(t.ImageId, t.ImageBytes, t.results
-                    .Select(result => new TextBoxAndDegrees(result.TextBox!, result.TextBox!.GetRotationDegrees())))),
+            nestedResults =>
+                from t in imagesKeyById
+                    .Zip(nestedResults, (pair, results) => (ImageId: pair.Key, ImageBytes: pair.Value, results))
+                let boxes = t.results
+                    .Select(result => new TextBoxAndDegrees(result.TextBox!, result.TextBox!.GetRotationDegrees()))
+                select new DetectionResult(t.ImageId, t.ImageBytes, boxes),
             stoppingToken);
 
     public record RecognitionResult(string ImageId, string Text, float Confidence);

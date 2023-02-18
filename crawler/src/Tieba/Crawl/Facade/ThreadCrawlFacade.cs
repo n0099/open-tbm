@@ -41,16 +41,17 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
         threads.Select(th => th.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
             .OfType<User>() // filter out nulls
             .Where(u => u.Uid != 0) // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
-            .Select(u =>
-                LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(), u.Name == u.NameShow ? null : u.NameShow))
+            .Select(u => LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(),
+                u.Name == u.NameShow ? null : u.NameShow))
             .ForEach(u => _latestRepliers[u.Uid] = u);
 
     protected void FillDetailedGeolocation(IEnumerable<Thread> threads) =>
-        threads // replace with more detailed location.name in the 6.0.2 response
-            .Where(th => th.Location != null)
-            .Join(Posts.Values, th => (Tid)th.Tid, th => th.Tid,
-                (inResponse, parsed) => (inResponse, parsed))
-            .ForEach(t => t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location));
+        (from inResponse in threads
+            where inResponse.Location != null
+            join parsed in Posts.Values on (Tid)inResponse.Tid equals parsed.Tid
+            select (inResponse, parsed))
+        // replace with more detailed location.name in the 6.0.2 response
+        .ForEach(t => t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location));
 
     protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
     {
