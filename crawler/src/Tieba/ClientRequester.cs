@@ -101,7 +101,7 @@ public class ClientRequester
         protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
         var content = new MultipartFormDataContent {protoBufFile};
         // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
-        var boundary = content.Headers.ContentType?.Parameters.First(i => i.Name == "boundary");
+        var boundary = content.Headers.ContentType?.Parameters.First(header => header.Name == "boundary");
         if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
 
         var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
@@ -119,9 +119,9 @@ public class ClientRequester
         _requesterTcs.Wait();
         if (_config.GetValue("LogTrace", false)) logTraceCallback();
         var ret = responseTaskFactory();
-        _ = ret.ContinueWith(i =>
+        _ = ret.ContinueWith(task =>
         {
-            if (i.IsCompletedSuccessfully && i.Result.IsSuccessStatusCode) _requesterTcs.Increase();
+            if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) _requesterTcs.Increase();
             else _requesterTcs.Decrease();
         }, TaskContinuationOptions.ExecuteSynchronously);
         return ret;

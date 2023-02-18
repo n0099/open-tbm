@@ -25,7 +25,7 @@ public class PaddleOcrRequester
             nestedResults => imagesKeyById
                 .Zip(nestedResults, (pair, results) => (ImageId: pair.Key, ImageBytes: pair.Value, results))
                 .Select(t => new DetectionResult(t.ImageId, t.ImageBytes, t.results
-                    .Select(i => new TextBoxAndDegrees(i.TextBox!, i.TextBox!.GetRotationDegrees())))),
+                    .Select(result => new TextBoxAndDegrees(result.TextBox!, result.TextBox!.GetRotationDegrees())))),
             stoppingToken);
 
     public record RecognitionResult(string ImageId, string Text, float Confidence);

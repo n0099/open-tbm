@@ -19,8 +19,8 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
         // users has already been added into DbContext and tracking
         var existingUsersId = db.ChangeTracker.Entries<TiebaUser>().Select(ee => ee.Entity.Uid);
         var newLatestRepliers = _latestRepliers
-            .ExceptBy(existingUsersId, i => i.Key)
-            .Select(i => i.Value).ToList();
+            .ExceptBy(existingUsersId, pair => pair.Key)
+            .Select(pair => pair.Value).ToList();
         if (!newLatestRepliers.Any()) return;
 
         var newLatestRepliersExceptLocked = newLatestRepliers

@@ -10,7 +10,7 @@ public abstract class Helper
 
     public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty<T>
         (IEnumerable<T>? valuesToWrap, Func<IMessage?> wrapperFactory) where T : IMessage =>
-        valuesToWrap?.Select(i => i.CalculateSize()).Sum() is 0 or null
+        valuesToWrap?.Select(message => message.CalculateSize()).Sum() is 0 or null
             ? null
             : SerializedProtoBufOrNullIfEmpty(wrapperFactory());
 

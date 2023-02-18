@@ -79,7 +79,7 @@ public static class ExtensionMethods
 
     /// <see>https://stackoverflow.com/questions/4963160/how-to-determine-if-a-type-implements-an-interface-with-c-sharp-reflection/4963190#4963190</see>
     private static bool IsImplementerOfRawGeneric(this Type generic, Type toCheck) =>
-        toCheck.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == generic);
+        toCheck.GetInterfaces().Any(type => type.IsGenericType && type.GetGenericTypeDefinition() == generic);
 
     /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/25937893#25937893</see>
     public static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>

@@ -98,8 +98,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             startPageResponse.ForEach(ValidateThenParse);
 
             var maxPage = startPageResponse
-                .Select(r => _crawler.GetResponsePage(r.Result))
-                .Max(p => (Page?)p?.TotalPage);
+                .Select(response => _crawler.GetResponsePage(response.Result))
+                .Max(page => (Page?)page?.TotalPage);
             endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
         }, startPage, 0, stoppingToken);
 
@@ -109,7 +109,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 (int)(startPage + 1),
                 (int)(endPage - startPage)).ToList();
             if (pagesAfterStart.Any())
-                await CrawlPages(pagesAfterStart.Select(i => (Page)i), stoppingToken: stoppingToken);
+                await CrawlPages(pagesAfterStart.Select(page => (Page)page), stoppingToken: stoppingToken);
         }
         return this;
     }
@@ -122,7 +122,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         if (!acquiredLocks.Any())
         {
             var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1])
-                .Select(i => (Page)i).SequenceEqual(pagesList)
+                .Select(page => (Page)page).SequenceEqual(pagesList)
                 ? $"within the range [{pagesList[0]}-{pagesList[^1]}]"
                 : JsonSerializer.Serialize(pagesList);
             _logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",

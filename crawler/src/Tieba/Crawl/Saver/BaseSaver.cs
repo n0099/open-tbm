@@ -39,7 +39,7 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
 
         var existingKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
         // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
-        var existingBeforeMerge = existingKeyById.Select(i => (TPost)i.Value.Clone()).ToList();
+        var existingBeforeMerge = existingKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
         SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,
             Posts.Values.ToLookup(p => existingKeyById.ContainsKey(postIdSelector(p))),

@@ -20,7 +20,7 @@ public abstract class BaseCrawler<TResponse, TPostProtoBuf>
 
     public async Task<Response[]> CrawlSinglePage(Page page, CancellationToken stoppingToken = default) =>
         await Task.WhenAll((await RequestsFactoryWithCancellationToken(page, stoppingToken))
-            .Select(async i => new Response(await i.Response, i.Flag)));
+            .Select(async request => new Response(await request.Response, request.Flag)));
 
     private Task<IEnumerable<Request>> RequestsFactoryWithCancellationToken(Page page, CancellationToken stoppingToken)
     {

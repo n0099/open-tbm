@@ -26,7 +26,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
             if (lockType == "threadLate")
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                foreach (var tidGroupByFid in failed.Keys.GroupBy(i => i.Fid, i => i.Tid))
+                foreach (var tidGroupByFid in failed.Keys.GroupBy(lockId => lockId.Fid, lockId => lockId.Tid))
                 {
                     var fid = tidGroupByFid.Key;
                     FailureCount FailureCountSelector(Tid tid) => failed[new (fid, tid)].Single().Value; // it should always contains only one page which is 1

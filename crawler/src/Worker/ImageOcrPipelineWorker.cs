@@ -32,8 +32,8 @@ public class ImageOcrPipelineWorker : BackgroundService
         var processedImagesTextBoxes = (await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken))
             .Select(TextBoxPreprocessor.ProcessTextBoxes).ToList();
         var reprocessedImagesTextBoxes = (await Task.WhenAll(
-                processedImagesTextBoxes.Select(i =>
-                    _requester.RequestForDetection(i.ProcessedTextBoxes
+                processedImagesTextBoxes.Select(imageAndProcessedTextBoxes =>
+                    _requester.RequestForDetection(imageAndProcessedTextBoxes.ProcessedTextBoxes
                         .Where(b => b.RotationDegrees != 0) // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
                         .ToDictionary(b => b.TextBoxBoundary, b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat)), stoppingToken))))
             .Select(imageDetectionResults => imageDetectionResults.Select(TextBoxPreprocessor.ProcessTextBoxes));
@@ -42,7 +42,7 @@ public class ImageOcrPipelineWorker : BackgroundService
             .Select(t => (t.First.ImageId,
                 TextBoxes: t.First.ProcessedTextBoxes
                     .Where(b => b.RotationDegrees == 0)
-                    .Concat(t.Second.SelectMany(i => i.ProcessedTextBoxes))));
+                    .Concat(t.Second.SelectMany(imageAndProcessedTextBoxes => imageAndProcessedTextBoxes.ProcessedTextBoxes))));
         _logger.LogInformation("{}", JsonSerializer.Serialize(await Task.WhenAll(mergedTextBoxesPerImage.Select(async t =>
         {
             var boxesUsingTesseractToRecognize = t.TextBoxes.Where(b =>

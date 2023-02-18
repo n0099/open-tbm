@@ -31,9 +31,9 @@ public class CrawlerLocks : WithLogTrace
         {
             _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
                 _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
-                Helper.UnescapedJsonSerialize(_crawling.ToDictionary(i => i.Key.ToString(), i => i.Value.Count)),
+                Helper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
                 _failed.Count, _failed.Values.Select(d => d.Count).Sum(),
-                Helper.UnescapedJsonSerialize(_failed.ToDictionary(i => i.Key.ToString(), i => i.Value)));
+                Helper.UnescapedJsonSerialize(_failed.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value)));
         }
     }
 
@@ -45,7 +45,7 @@ public class CrawlerLocks : WithLogTrace
             Helper.GetNowTimestamp(out var now);
             if (!_crawling.ContainsKey(lockId))
             { // if no one is locking any page in lockId, just insert pages then return it as is
-                var pageTimeDict = lockFreePages.Select(i => KeyValuePair.Create(i, now));
+                var pageTimeDict = lockFreePages.Select(page => KeyValuePair.Create(page, now));
                 var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
                 if (_crawling.TryAdd(lockId, newPage)) return lockFreePages;
             }
@@ -79,7 +79,7 @@ public class CrawlerLocks : WithLogTrace
             }
             lock (pagesLock)
             {
-                pages.ForEach(i => pagesLock.TryRemove(i, out _));
+                pages.ForEach(page => pagesLock.TryRemove(page, out _));
                 if (pagesLock.IsEmpty) _ = _crawling.TryRemove(lockId, out _);
             }
         }
@@ -112,9 +112,9 @@ public class CrawlerLocks : WithLogTrace
     {
         lock (_failed)
         {
-            var deepCloneOfFailed = _failed.ToDictionary(i => i.Key, i =>
+            var deepCloneOfFailed = _failed.ToDictionary(pair => pair.Key, pair =>
             {
-                lock (i.Value) return new Dictionary<Page, FailureCount>(i.Value);
+                lock (pair.Value) return new Dictionary<Page, FailureCount>(pair.Value);
             });
             _failed.Clear();
             return deepCloneOfFailed;

@@ -32,8 +32,8 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
                 + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
         ).ToList();
         var forumCount = forumPostCountsTuples.Count * 2; // reply and sub reply
-        var totalPostCount = forumPostCountsTuples.Sum(i => i.ReplyCount)
-                             + forumPostCountsTuples.Sum(i => i.SubReplyCount);
+        var totalPostCount = forumPostCountsTuples.Sum(t => t.ReplyCount)
+                             + forumPostCountsTuples.Sum(t => t.SubReplyCount);
         var pushedPostCount = 0;
         foreach (var ((fid, replyCount, subReplyCount), index) in forumPostCountsTuples.WithIndex())
         {
