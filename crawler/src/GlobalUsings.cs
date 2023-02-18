@@ -1,16 +1,10 @@
 global using Autofac;
-global using Autofac.Extensions.DependencyInjection;
 global using Autofac.Features.Indexed;
 global using Google.Protobuf;
 global using Google.Protobuf.Collections;
 global using LinqKit;
-global using NLog;
-global using NLog.Extensions.Logging;
-
 global using Microsoft.EntityFrameworkCore;
-global using Microsoft.EntityFrameworkCore.Infrastructure;
 global using Microsoft.Extensions.Configuration;
-global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 
@@ -18,7 +12,6 @@ global using System.Collections.Concurrent;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Diagnostics;
-global using System.Reflection;
 global using System.Security.Cryptography;
 global using System.Text.Json;
 global using System.Text;
@@ -41,6 +34,7 @@ global using TbClient.Wrapper;
 global using TbClient.Api.Request;
 global using TbClient.Api.Response;
 global using TbClient.Post;
+global using TbClient.Post.Common;
 global using Thread = TbClient.Post.Thread;
 
 global using Fid = System.UInt32;

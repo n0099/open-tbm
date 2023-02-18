@@ -1,7 +1,6 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 using System.Text.Json.Serialization;
-using TbClient.Post.Common;
 
 namespace tbm.Crawler.Db.Post;
 

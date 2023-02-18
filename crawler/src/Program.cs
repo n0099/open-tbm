@@ -1,6 +1,11 @@
 using System.Net;
+using System.Reflection;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
+using NLog;
+using NLog.Extensions.Logging;
 using tbm.Crawler;
 using tbm.Crawler.ImagePipeline.Ocr;
 
