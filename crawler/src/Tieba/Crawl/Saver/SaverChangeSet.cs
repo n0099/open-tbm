@@ -17,9 +17,11 @@ public class SaverChangeSet<T> where T : class, IPost
             "Length of existingAfter is not match with existingBefore.");
         Existing = new(existingBefore
             .OrderBy(postIdSelector)
-            .Zip(existingAfter, (before, after) => (before, after)).ToList());
+            .Zip(existingAfter, (before, after) => (before, after))
+            .ToList());
         NewlyAdded = new(existingAfterAndNewlyAdded
-            .ExceptBy(existingBefore.Select(postIdSelector), postIdSelector).ToList());
+            .ExceptBy(existingBefore.Select(postIdSelector), postIdSelector)
+            .ToList());
         AllAfter = new(existingAfterAndNewlyAdded.ToList());
     }
 }

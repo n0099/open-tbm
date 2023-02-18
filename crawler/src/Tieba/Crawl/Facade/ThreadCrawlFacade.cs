@@ -23,9 +23,9 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
             .Select(pair => pair.Value).ToList();
         if (!newLatestRepliers.Any()) return;
 
+        var newlyLockedLatestRepliers = Users.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid));
         var newLatestRepliersExceptLocked = newLatestRepliers
-            .IntersectBy(Users.AcquireUidLocksForSave(
-                newLatestRepliers.Select(u => u.Uid)), u => u.Uid)
+            .IntersectBy(newlyLockedLatestRepliers, u => u.Uid)
             .Select(u =>
             {
                 u.CreatedAt = Helper.GetNowTimestamp();

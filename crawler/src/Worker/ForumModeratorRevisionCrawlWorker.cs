@@ -60,7 +60,8 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                     rev.Portrait,
                     rev.ModeratorType,
                     Rank = Sql.Ext.Rank().Over().PartitionBy(rev.Portrait).OrderByDesc(rev.DiscoveredAt).ToValue()
-                }).Where(e => e.Rank == 1).ToLinqToDB().ToList();
+                }).Where(e => e.Rank == 1)
+                .ToLinqToDB().ToList();
 
             db1.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
                 existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorType)),

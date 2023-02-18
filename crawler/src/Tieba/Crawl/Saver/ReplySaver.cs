@@ -110,7 +110,8 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         {
             var newSignaturesExceptLocked = signatures
                 .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureMd5)).ToList();
+                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureMd5))
+                .ToList();
             if (!newSignaturesExceptLocked.Any()) return () => { };
 
             _savedSignatures.AddRange(newSignaturesExceptLocked

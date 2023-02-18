@@ -71,10 +71,11 @@ static void ConfigureContainer(ContainerBuilder builder)
     builder.RegisterType<TbmDbContext>();
     builder.RegisterType<ClientRequester>();
     builder.RegisterType<ClientRequesterTcs>().SingleInstance();
-    CrawlerLocks.RegisteredCrawlerLocks.ForEach(type => builder.RegisterType<CrawlerLocks>()
-        .Keyed<CrawlerLocks>(type)
-        .SingleInstance()
-        .WithParameter("lockType", type));
+    CrawlerLocks.RegisteredCrawlerLocks.ForEach(type =>
+        builder.RegisterType<CrawlerLocks>()
+            .Keyed<CrawlerLocks>(type)
+            .SingleInstance()
+            .WithParameter("lockType", type));
     builder.RegisterType<AuthorRevisionSaver>();
     builder.RegisterType<UserParserAndSaver>();
     builder.RegisterType<ThreadLateCrawlerAndSaver>();

@@ -25,12 +25,13 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<TbmDbContext.New>()(0);
-        var forumPostCountsTuples = db.Database.GetDbConnection().Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
-            string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
-                $"SELECT {fid} AS Fid,"
-                + $"IFNULL((SELECT id FROM tbmc_f{fid}_reply ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
-                + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
-        ).ToList();
+        var forumPostCountsTuples = db.Database.GetDbConnection()
+            .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
+                string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
+                    $"SELECT {fid} AS Fid,"
+                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_reply ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
+                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
+            ).ToList();
         var forumCount = forumPostCountsTuples.Count * 2; // reply and sub reply
         var totalPostCount = forumPostCountsTuples.Sum(t => t.ReplyCount)
                              + forumPostCountsTuples.Sum(t => t.SubReplyCount);

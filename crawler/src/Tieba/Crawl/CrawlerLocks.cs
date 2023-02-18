@@ -39,32 +39,32 @@ public class CrawlerLocks : WithLogTrace
 
     public IEnumerable<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {
-        var lockFreePages = pages.ToHashSet();
+        var acquiredPages = pages.ToHashSet();
         lock (_crawling)
         { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
             Helper.GetNowTimestamp(out var now);
             if (!_crawling.ContainsKey(lockId))
             { // if no one is locking any page in lockId, just insert pages then return it as is
-                var pageTimeDict = lockFreePages.Select(page => KeyValuePair.Create(page, now));
+                var pageTimeDict = acquiredPages.Select(page => KeyValuePair.Create(page, now));
                 var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
-                if (_crawling.TryAdd(lockId, newPage)) return lockFreePages;
+                if (_crawling.TryAdd(lockId, newPage)) return acquiredPages;
             }
-            lockFreePages.ToList().ForEach(page => // iterate on copy in order to mutate the original lockFreePages
+            var pagesLock = _crawling[lockId];
+            lock (pagesLock)
             {
-                var pagesLock = _crawling[lockId];
-                lock (pagesLock)
+                foreach (var page in acquiredPages.ToList()) // iterate on copy in order to mutate the original lockFreePages
                 {
-                    if (pagesLock.TryAdd(page, now)) return;
-                    // when page is locking:
+                    if (pagesLock.TryAdd(page, now)) continue;
+                    // when page is locking
                     var lockTimeout = _config.GetValue<Time>("LockTimeoutSec", 300); // 5 minutes;
                     if (pagesLock[page] < now - lockTimeout)
                         pagesLock[page] = now;
-                    else _ = lockFreePages.Remove(page);
+                    else _ = acquiredPages.Remove(page);
                 }
-            });
+            }
         }
 
-        return lockFreePages;
+        return acquiredPages;
     }
 
     public void ReleaseRange(LockId lockId, IEnumerable<Page> pages)
