@@ -24,11 +24,11 @@ public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, BaseSubReplyRev
 
     protected override void PostParseHook(SubReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, SubReplyPost> parsedPostsInResponse)
     {
-        parsedPostsInResponse.Values.ForEach(sr =>
+        foreach (var sr in parsedPostsInResponse.Values)
         {
             sr.Tid = _tid;
             sr.Pid = _pid;
-        });
+        }
         Users.ResetUsersIcon();
     }
 

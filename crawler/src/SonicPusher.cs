@@ -63,11 +63,11 @@ public sealed class SonicPusher : IDisposable
         try
         {
             SuspendPushingFileLock.EnterWriteLock();
-            posts.ForEach(p =>
+            foreach (var p in posts)
             {
                 stoppingToken.ThrowIfCancellationRequested();
                 _ = PushPost(fid, postType, postIdSelector(p), postContentSelector(p));
-            });
+            }
         }
         catch (OperationCanceledException e)
         {

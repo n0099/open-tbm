@@ -109,22 +109,23 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 (int)(startPage + 1),
                 (int)(endPage - startPage)).ToList();
             if (pagesAfterStart.Any())
-                await CrawlPages(pagesAfterStart.Select(page => (Page)page), stoppingToken: stoppingToken);
+                await CrawlPages(pagesAfterStart.Select(page => (Page)page).ToList(), stoppingToken: stoppingToken);
         }
         return this;
     }
 
-    private Task CrawlPages(IEnumerable<Page> pages,
+    private Task CrawlPages(IList<Page> pages,
         Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
     {
-        var pagesList = pages.ToList();
-        var acquiredLocks = _locks.AcquireRange(_lockId, pagesList).ToList();
+        var acquiredLocks = _locks.AcquireRange(_lockId, pages).ToList();
         if (!acquiredLocks.Any())
         {
-            var pagesText = Enumerable.Range((int)pagesList[0], (int)pagesList[^1])
-                .Select(page => (Page)page).SequenceEqual(pagesList)
-                ? $"within the range [{pagesList[0]}-{pagesList[^1]}]"
-                : JsonSerializer.Serialize(pagesList);
+            var pagesText = Enumerable
+                .Range((int)pages[0], (int)pages[^1])
+                .Select(page => (Page)page)
+                .SequenceEqual(pages)
+                ? $"within the range [{pages[0]}-{pages[^1]}]"
+                : JsonSerializer.Serialize(pages);
             _logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
                 pagesText, _locks.LockType, _lockId);
         }
@@ -136,7 +137,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));
     }
 
-    public async Task<SaverChangeSet<TPost>?> RetryThenSave(IEnumerable<Page> pages,
+    public async Task<SaverChangeSet<TPost>?> RetryThenSave(IList<Page> pages,
         Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
     {
         if (_lockingPages.Any()) throw new InvalidOperationException(

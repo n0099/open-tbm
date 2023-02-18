@@ -44,7 +44,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
                 await using var scope1 = _scope0.BeginLifetimeScope();
                 var db = scope1.Resolve<TbmDbContext.New>()(0);
                 var ((fid, tid, pid), failureCountsKeyByPage) = pair;
-                var pages = failureCountsKeyByPage.Keys;
+                var pages = failureCountsKeyByPage.Keys.ToList();
                 FailureCount FailureCountSelector(Page p) => failureCountsKeyByPage[p];
 
                 if (lockType == "thread")
