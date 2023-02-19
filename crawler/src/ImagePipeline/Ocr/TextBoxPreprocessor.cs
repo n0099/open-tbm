@@ -9,7 +9,12 @@ public class TextBoxPreprocessor
 
     public record ImageAndProcessedTextBoxes(string ImageId, List<ProcessedTextBox> ProcessedTextBoxes);
 
-    public static ImageAndProcessedTextBoxes ProcessTextBoxes(PaddleOcrRequester.DetectionResult detectionResult)
+    public static Func<PaddleOcrRequester.DetectionResult, ImageAndProcessedTextBoxes>
+        GetTextBoxesProcessor(bool useImageIdAsBoundaryOfAllTextBoxes = false) =>
+            detectionResult => ProcessTextBoxes(detectionResult, useImageIdAsBoundaryOfAllTextBoxes);
+
+    private static ImageAndProcessedTextBoxes ProcessTextBoxes
+        (PaddleOcrRequester.DetectionResult detectionResult, bool useImageIdAsBoundaryOfAllTextBoxes = false)
     {
         using var imageMat = new Mat();
         CvInvoke.Imdecode(detectionResult.ImageBytes, ImreadModes.Unchanged, imageMat);
@@ -20,6 +25,8 @@ public class TextBoxPreprocessor
                 var circumscribed = textBox.ToCircumscribedRectangle();
                 var processedMat = new Mat(imageMat, circumscribed); // crop by circumscribed rectangle
                 if (degrees != 0) processedMat.Rotate(degrees);
+                if (useImageIdAsBoundaryOfAllTextBoxes)
+                    return new(detectionResult.ImageId, processedMat, degrees);
                 var rectangleBoundary = $"{circumscribed.Width}x{circumscribed.Height}@{circumscribed.X},{circumscribed.Y}";
                 return new ProcessedTextBox(rectangleBoundary, processedMat, degrees);
             })

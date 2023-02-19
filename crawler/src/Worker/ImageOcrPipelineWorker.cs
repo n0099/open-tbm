@@ -31,7 +31,7 @@ public class ImageOcrPipelineWorker : BackgroundService
             .ToDictionary(t => t.filename, t => t.bytes);
         var processedImagesTextBoxes =
             (await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken))
-            .Select(TextBoxPreprocessor.ProcessTextBoxes).ToList();
+            .Select(TextBoxPreprocessor.GetTextBoxesProcessor()).ToList();
         var reprocessedImagesTextBoxes = (await Task.WhenAll(
                 from imageAndProcessedTextBoxes in processedImagesTextBoxes
                 let boxImagesBytesKeyByBoundary =
@@ -42,7 +42,7 @@ public class ImageOcrPipelineWorker : BackgroundService
                             b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat))
                 let requestTask = _requester.RequestForDetection(boxImagesBytesKeyByBoundary, stoppingToken)
                 select requestTask))
-            .Select(results => results.Select(TextBoxPreprocessor.ProcessTextBoxes));
+            .Select(results => results.Select(TextBoxPreprocessor.GetTextBoxesProcessor(true)));
         var mergedTextBoxesPerImage = from t in
                 processedImagesTextBoxes.Zip(reprocessedImagesTextBoxes)
             let textBoxes = t.First.ProcessedTextBoxes

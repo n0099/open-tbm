@@ -46,13 +46,13 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
                 "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
 
             _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}replies_content", $"f{fid}");
-            pushedPostCount += PushPostContentsTimingWrapper(fid, forumIndex - 1, forumCount, "replies",
+            pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",
                 replyCount, totalPostCount, pushedPostCount, dbWithFid.ReplyContents.AsNoTracking(),
                 r => _pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.Content)), stoppingToken);
             TriggerConsolidate();
 
             _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}subReplies_content", $"f{fid}");
-            pushedPostCount += PushPostContentsTimingWrapper(fid, forumIndex, forumCount, "sub replies",
+            pushedPostCount += PushPostContentsWithTiming(fid, forumIndex, forumCount, "sub replies",
                 subReplyCount, totalPostCount, pushedPostCount, dbWithFid.SubReplyContents.AsNoTracking(),
                 sr => _pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.Content)), stoppingToken);
             TriggerConsolidate();
@@ -65,7 +65,7 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
         }
     }
 
-    private int PushPostContentsTimingWrapper<T>(Fid fid,
+    private int PushPostContentsWithTiming<T>(Fid fid,
         int currentForumIndex,
         int forumCount,
         string postTypeInLog,
