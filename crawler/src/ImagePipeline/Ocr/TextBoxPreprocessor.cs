@@ -16,14 +16,14 @@ public class TextBoxPreprocessor
     private static ImageAndProcessedTextBoxes ProcessTextBoxes
         (PaddleOcrRequester.DetectionResult detectionResult, bool useImageIdAsBoundaryOfAllTextBoxes = false)
     {
-        using var imageMat = new Mat();
-        CvInvoke.Imdecode(detectionResult.ImageBytes, ImreadModes.Unchanged, imageMat);
+        using var mat = new Mat();
+        CvInvoke.Imdecode(detectionResult.ImageBytes, ImreadModes.Unchanged, mat);
         return new(detectionResult.ImageId, detectionResult.TextBoxes
             .Select(textBoxAndDegrees =>
             {
                 var (textBox, degrees) = textBoxAndDegrees;
                 var circumscribed = textBox.ToCircumscribedRectangle();
-                var processedMat = new Mat(imageMat, circumscribed); // crop by circumscribed rectangle
+                var processedMat = new Mat(mat, circumscribed); // crop by circumscribed rectangle
                 if (degrees != 0) processedMat.Rotate(degrees);
                 if (useImageIdAsBoundaryOfAllTextBoxes)
                     return new(detectionResult.ImageId, processedMat, degrees);

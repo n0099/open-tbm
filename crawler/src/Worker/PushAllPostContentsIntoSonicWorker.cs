@@ -88,7 +88,7 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
             var ca = ArchiveCrawlWorker.CalcCumulativeAverage(elapsedMs, acc.DurationCa, pushedCount);
             if (pushedCount % 1000 == 0)
             {
-                static float CalcPercentage(float current, float total, int digits = 2) => (float)Math.Round(current / total * 100, digits);
+                static double CalcPercentage(float current, float total, int digits = 2) => Math.Round(current / total * 100, digits);
                 var currentForumEta = ArchiveCrawlWorker.CalcEta(postApproxCount, pushedCount, ca);
                 var totalForumEta = ArchiveCrawlWorker.CalcEta(forumsPostTotalApproxCount, totalPushedCount, ca);
                 _logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"

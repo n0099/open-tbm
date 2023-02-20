@@ -32,10 +32,12 @@ public sealed class SonicPusher : IDisposable
         float GetElapsedMs() => (float)stopWatch.ElapsedTicks / Stopwatch.Frequency * 1000;
 
         if (content == null) return GetElapsedMs();
-        var contentTexts = content
-            .Where(c => c.Type != 2) // filter out emoticons alt text
-            .Aggregate("", (acc, cur) => $"{acc} {cur.Text}").Trim()
-            .Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\""); // https://github.com/spikensbror-dotnet/nsonic/pull/10
+        var contentTexts = string.Join(" ", content
+                .Where(c => c.Type != 2) // filter out alt text of emoticons
+                .Select(c => c.Text))
+            .Trim()
+            // https://github.com/spikensbror-dotnet/nsonic/pull/10
+            .Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\"");
         if (contentTexts == "") return GetElapsedMs();
 
         try

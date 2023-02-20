@@ -79,8 +79,8 @@ public class TextRecognizer
             if (tesseract.Recognize() != 0) return new(textBox.TextBoxBoundary, script, "");
             var text = tesseract.GetCharacters()
                 .Where(c => c.Cost > _tesseractConfidenceThreshold)
-                .Aggregate("", (acc, c) => acc + c.Text.Normalize(NormalizationForm.FormKC)); // https://unicode.org/reports/tr15/
-            return new RecognizedResult(textBox.TextBoxBoundary, script, text);
+                .Select(c => c.Text);
+            return new RecognizedResult(textBox.TextBoxBoundary, script, string.Join("", text));
         }).ToList(); // eager eval since mat is already disposed after return
     }
 }
