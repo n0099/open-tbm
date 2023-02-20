@@ -15,9 +15,8 @@ public class PaddleOcrRequester
         _paddleOcrDetectionEndpoint = paddleOcrServingEndpoint + "/predict/ocr_det";
     }
 
-    public record TextBoxAndDegrees(PaddleOcrResponse.TextBox TextBox, float RotationDegrees);
-
-    public record DetectionResult(string ImageId, byte[] ImageBytes, IEnumerable<TextBoxAndDegrees> TextBoxes);
+    public record DetectionResult(string ImageId, byte[] ImageBytes,
+        IEnumerable<(PaddleOcrResponse.TextBox TextBox, float RotationDegrees)> TextBoxes);
 
     public Task<IEnumerable<DetectionResult>> RequestForDetection
         (Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
@@ -26,7 +25,7 @@ public class PaddleOcrRequester
                 from t in imagesKeyById
                     .Zip(nestedResults, (pair, results) => (ImageId: pair.Key, ImageBytes: pair.Value, results))
                 let boxes = t.results
-                    .Select(result => new TextBoxAndDegrees(result.TextBox!, result.TextBox!.GetRotationDegrees()))
+                    .Select(result => (result.TextBox!, result.TextBox!.GetRotationDegrees()))
                 select new DetectionResult(t.ImageId, t.ImageBytes, boxes),
             stoppingToken);
 

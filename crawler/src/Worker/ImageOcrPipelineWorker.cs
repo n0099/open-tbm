@@ -29,6 +29,18 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
     }
 
+    private static (uint X, uint Y) GetTopLeftPointFromTextBoxBoundaryString(string boundary)
+    {
+        var match = ExtractTextBoxBoundaryRegex.Match(boundary);
+        if (!match.Success) throw new($"Failed to parse TextBoxBoundary with value {boundary}");
+        var topLeftPoint = match.Groups.Values.Skip(1)
+            .Select(g => uint.TryParse(g.ValueSpan, out var parsed)
+                ? parsed
+                : throw new($"Failed to parse TextBoxBoundary with value {boundary}"))
+            .ToList();
+        return (topLeftPoint[0], topLeftPoint[1]);
+    }
+
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         var imagesUrlFilename = new List<string> {""};
@@ -38,7 +50,7 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
             .ToDictionary(t => t.filename, t => t.bytes);
         var processedImagesTextBoxes =
             (await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken))
-            .Select(TextBoxPreprocessor.GetTextBoxesProcessor()).ToList();
+            .Select(TextBoxPreprocessor.ProcessTextBoxes).ToList();
         var reprocessedImagesTextBoxes = (await Task.WhenAll(
                 from imageAndProcessedTextBoxes in processedImagesTextBoxes
                 let boxImagesBytesKeyByBoundary =
@@ -49,12 +61,27 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                             b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat))
                 let requestTask = _requester.RequestForDetection(boxImagesBytesKeyByBoundary, stoppingToken)
                 select requestTask))
-            .Select(results => results.Select(TextBoxPreprocessor.GetTextBoxesProcessor(true)));
+            .Select(results => results.Select(result =>
+            {
+                var processed = TextBoxPreprocessor.ProcessTextBoxes(result);
+                if (processed.ProcessedTextBoxes.Count != 1)
+                {
+                    var (parentX, parentY) = GetTopLeftPointFromTextBoxBoundaryString(result.ImageId);
+                    processed.ProcessedTextBoxes = processed.ProcessedTextBoxes.Select(i =>
+                    {
+                        var (x, y) = GetTopLeftPointFromTextBoxBoundaryString(i.TextBoxBoundary);
+                        var newBoundary = i.TextBoxBoundary[..i.TextBoxBoundary.IndexOf("@", StringComparison.Ordinal)]
+                                          + $"@{parentX + x},{parentY + y}";
+                        return i with {TextBoxBoundary = newBoundary};
+                    }).ToList();
+                }
+                return processed;
+            }));
         var mergedTextBoxesPerImage = from t in
                 processedImagesTextBoxes.Zip(reprocessedImagesTextBoxes)
             let textBoxes = t.First.ProcessedTextBoxes
                 .Where(b => b.RotationDegrees == 0)
-                .Concat(t.Second.SelectMany(imageAndProcessedTextBoxes => imageAndProcessedTextBoxes.ProcessedTextBoxes))
+                .Concat(t.Second.SelectMany(t2 => t2.ProcessedTextBoxes))
             select (t.First.ImageId, textBoxes);
         var recognizedImages = await Task.WhenAll(mergedTextBoxesPerImage.Select(async t =>
         {
@@ -80,21 +107,14 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                 })
                 .SelectMany(scripts => scripts.Select(result =>
                         {
-                            var match = ExtractTextBoxBoundaryRegex.Match(result.TextBoxBoundary);
-                            var exceptionMessage = $"Failed to parse TextBoxBoundary with value {result.TextBoxBoundary}";
-                            if (!match.Success) throw new(exceptionMessage);
-                            var topLeftPoint = match.Groups.Values.Skip(1)
-                                .Select(g => int.TryParse(g.ValueSpan, out var parsed)
-                                    ? parsed
-                                    : throw new(exceptionMessage))
-                                .ToList();
+                            var (x, y) = GetTopLeftPointFromTextBoxBoundaryString(result.TextBoxBoundary);
                             // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                             // which have similar but different values of y coordinates get rearranged in a wrong order
-                            var alignedY = (int)Math.Round((double)topLeftPoint[1] / _gridSizeToMergeBoxesIntoSingleLine);
-                            return (result, X: topLeftPoint[0], Y: alignedY);
+                            var alignedY = (int)Math.Round((double)y / _gridSizeToMergeBoxesIntoSingleLine);
+                            return (result, x, alignedY);
                         })
-                        .OrderBy(t => t.Y).ThenBy(t => t.X)
-                        .GroupBy(t => t.Y, t => t.result),
+                        .OrderBy(t => t.alignedY).ThenBy(t => t.x)
+                        .GroupBy(t => t.alignedY, t => t.result),
                     (scripts, lines) => (script: scripts.Key, lines))
                 .GroupBy(t => t.script, t => t.lines)
                 .ForEach(groupByScript =>
