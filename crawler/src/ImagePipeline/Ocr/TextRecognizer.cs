@@ -1,3 +1,4 @@
+using System.Drawing;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using Emgu.CV;
@@ -38,7 +39,7 @@ public class TextRecognizer
         _tesseractConfidenceThreshold = configSection.GetValue("TesseractConfidenceThreshold", 20f);
     }
 
-    public record RecognizedResult(string TextBoxBoundary, string Script, string Text);
+    public record RecognizedResult(Rectangle TextBoxBoundary, string Script, string Text);
 
     public Task<IEnumerable<RecognizedResult>[]> RecognizeViaPaddleOcr
         (IEnumerable<TextBoxPreprocessor.ProcessedTextBox> textBoxes, CancellationToken stoppingToken = default)
@@ -50,7 +51,7 @@ public class TextRecognizer
         });
         return Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(async pair =>
             (await PaddleOcrRequester.RequestForRecognition(pair.Value, boxesKeyByBoundary, stoppingToken))
-            .Select(result => new RecognizedResult(result.ImageId, pair.Key, result.Text))));
+            .Select(result => new RecognizedResult(result.TextBoxBoundary, pair.Key, result.Text))));
     }
 
     public IEnumerable<RecognizedResult> RecognizeViaTesseract(TextBoxPreprocessor.ProcessedTextBox textBox)

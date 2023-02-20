@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Net.Http.Json;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
@@ -29,10 +30,10 @@ public class PaddleOcrRequester
                 select new DetectionResult(t.ImageId, t.ImageBytes, boxes),
             stoppingToken);
 
-    public record RecognitionResult(string ImageId, string Text, float Confidence);
+    public record RecognitionResult(Rectangle TextBoxBoundary, string Text, float Confidence);
 
     public static Task<IEnumerable<RecognitionResult>> RequestForRecognition
-        (string endpoint, Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
+        (string endpoint, Dictionary<Rectangle, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
         Request(endpoint, imagesKeyById,
             nestedResults => imagesKeyById
                 // nested results array in the recognition response should contain only one element which includes all results for each image
@@ -40,13 +41,13 @@ public class PaddleOcrRequester
                 .Select(t => new RecognitionResult(t.ImageId, t.result.Text!, t.result.Confidence!.Value)),
             stoppingToken);
 
-    private static async Task<IEnumerable<T>> Request<T>(string endpoint,
-        Dictionary<string, byte[]> imagesKeyById,
-        Func<PaddleOcrResponse.Result[][], IEnumerable<T>> returnValueFactory,
+    private static async Task<IEnumerable<TReturn>> Request<TReturn, TImageKey>(string endpoint,
+        Dictionary<TImageKey, byte[]> imagesKeyById,
+        Func<PaddleOcrResponse.Result[][], IEnumerable<TReturn>> returnValueFactory,
         CancellationToken stoppingToken = default)
-        where T : class
+        where TReturn : class where TImageKey : notnull
     {
-        if (!imagesKeyById.Values.Any()) return Array.Empty<T>();
+        if (!imagesKeyById.Values.Any()) return Array.Empty<TReturn>();
         var requestPayload = new PaddleOcrRequestPayload(imagesKeyById.Values.Select(Convert.ToBase64String));
         var httpResponse = await _http.PostAsJsonAsync(endpoint, requestPayload, stoppingToken);
         var response = await httpResponse.Content.ReadFromJsonAsync

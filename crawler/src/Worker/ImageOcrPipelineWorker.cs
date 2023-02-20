@@ -57,7 +57,11 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                     imageAndProcessedTextBoxes.ProcessedTextBoxes
                         // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
                         .Where(b => b.RotationDegrees != 0)
-                        .ToDictionary(b => b.TextBoxBoundary,
+                        .ToDictionary(b =>
+                            {
+                                var rect = b.TextBoxBoundary;
+                                return $"{rect.Width}x{rect.Height}@{rect.X},{rect.Y}";
+                            },
                             b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat))
                 let requestTask = _requester.RequestForDetection(boxImagesBytesKeyByBoundary, stoppingToken)
                 select requestTask))
@@ -67,12 +71,12 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                 if (processed.ProcessedTextBoxes.Count != 1)
                 {
                     var (parentX, parentY) = GetTopLeftPointFromTextBoxBoundaryString(result.ImageId);
-                    processed.ProcessedTextBoxes = processed.ProcessedTextBoxes.Select(i =>
+                    processed.ProcessedTextBoxes = processed.ProcessedTextBoxes.Select(b =>
                     {
-                        var (x, y) = GetTopLeftPointFromTextBoxBoundaryString(i.TextBoxBoundary);
-                        var newBoundary = i.TextBoxBoundary[..i.TextBoxBoundary.IndexOf("@", StringComparison.Ordinal)]
-                                          + $"@{parentX + x},{parentY + y}";
-                        return i with {TextBoxBoundary = newBoundary};
+                        var rectangle = b.TextBoxBoundary;
+                        rectangle.X += (int)parentX;
+                        rectangle.Y += (int)parentY;
+                        return b with {TextBoxBoundary = rectangle};
                     }).ToList();
                 }
                 return processed;
@@ -107,11 +111,10 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                 })
                 .SelectMany(scripts => scripts.Select(result =>
                         {
-                            var (x, y) = GetTopLeftPointFromTextBoxBoundaryString(result.TextBoxBoundary);
                             // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                             // which have similar but different values of y coordinates get rearranged in a wrong order
-                            var alignedY = (int)Math.Round((double)y / _gridSizeToMergeBoxesIntoSingleLine);
-                            return (result, x, alignedY);
+                            var alignedY = (int)Math.Round((double)result.TextBoxBoundary.Y / _gridSizeToMergeBoxesIntoSingleLine);
+                            return (result, x: result.TextBoxBoundary.X, alignedY);
                         })
                         .OrderBy(t => t.alignedY).ThenBy(t => t.x)
                         .GroupBy(t => t.alignedY, t => t.result),
