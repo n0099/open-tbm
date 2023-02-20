@@ -89,7 +89,7 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
     public void ResetUsersIcon() => _users.Values.ForEach(u => u.Icon = null);
 
     public void SaveUsers(TbmDbContext db, string postType,
-        FieldChangeIgnoranceCallbackRecord tiebaUserFieldChangeIgnorance)
+        FieldChangeIgnoranceCallbacks tiebaUserFieldChangeIgnorance)
     {
         if (_users.IsEmpty) return;
         lock (UserIdLocks)

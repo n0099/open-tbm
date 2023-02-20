@@ -16,7 +16,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
 
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
         TbmDbContext db,
-        FieldChangeIgnoranceCallbackRecord userFieldChangeIgnorance,
+        FieldChangeIgnoranceCallbacks userFieldChangeIgnorance,
         Func<TPostOrUser, TRevision> revisionFactory,
         ILookup<bool, TPostOrUser> existingOrNewLookup,
         Func<TPostOrUser, TPostOrUser> existingSelector)
@@ -47,13 +47,13 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
                 var pName = p.Metadata.Name;
                 if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
 
-                if (FieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                if (GlobalFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
                     || (entryIsUser && userFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                 {
                     p.IsModified = false;
                     continue; // skip following revision check
                 }
-                if (FieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                if (GlobalFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
                     || (entryIsUser && userFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue))) continue;
 
                 if (IsLatestReplierUser(pName, p, entry)) return null;
@@ -107,7 +107,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
         // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
         // they will soon be updated by (sub) reply crawler after it find out the latest reply
         // so we should ignore its revision update for all fields
-        // ignore entire record is not possible via FieldChangeIgnorance.Revision() since it can only determine one field at the time
+        // ignore entire record is not possible via GlobalFieldChangeIgnorance.Revision() since it can only determine one field at the time
         if (pName != nameof(TiebaUser.Portrait) || p.OriginalValue is not "") return false;
         // invokes OriginalValues.ToObject() to get a new instance since postOrUserInTracking is reference to the changed one
         var user = (TiebaUser)entry.OriginalValues.ToObject();

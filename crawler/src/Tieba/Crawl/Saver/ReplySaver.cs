@@ -2,7 +2,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 {
-    public override FieldChangeIgnoranceCallbackRecord TiebaUserFieldChangeIgnorance { get; } = new(
+    public override FieldChangeIgnoranceCallbacks TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // FansNickname in reply response will always be null
             nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,

@@ -10,8 +10,8 @@ public abstract class StaticCommonInSavers
         types.ToDictionary(type => type, type => type.GetProperties().ToDictionary(prop => prop.Name));
 
     public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propName, object? oldValue, object? newValue);
-    public record FieldChangeIgnoranceCallbackRecord(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);
-    protected static FieldChangeIgnoranceCallbackRecord FieldChangeIgnorance { get; } = new(
+    public record FieldChangeIgnoranceCallbacks(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);
+    protected static FieldChangeIgnoranceCallbacks GlobalFieldChangeIgnorance { get; } = new(
         Update: (whichPostType, propName, oldValue, newValue) =>
         {
             if (whichPostType == typeof(TiebaUser))
