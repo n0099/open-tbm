@@ -5,7 +5,7 @@ using NSonic;
 
 namespace tbm.Crawler.Worker;
 
-public class PushAllPostContentsIntoSonicWorker : BackgroundService
+public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
 {
     private readonly ILogger<PushAllPostContentsIntoSonicWorker> _logger;
     private readonly IConfiguration _config;
@@ -13,7 +13,7 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
     private readonly SonicPusher _pusher;
 
     public PushAllPostContentsIntoSonicWorker(ILogger<PushAllPostContentsIntoSonicWorker> logger,
-        IConfiguration config, ILifetimeScope scope0, SonicPusher pusher)
+        IConfiguration config, ILifetimeScope scope0, SonicPusher pusher) : base(logger)
     {
         _logger = logger;
         _config = config.GetSection("Sonic");
@@ -21,7 +21,7 @@ public class PushAllPostContentsIntoSonicWorker : BackgroundService
         _pusher = pusher;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<TbmDbContext.New>()(0);

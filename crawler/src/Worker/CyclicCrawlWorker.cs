@@ -1,15 +1,14 @@
 namespace tbm.Crawler.Worker;
 
-public abstract class CyclicCrawlWorker : BackgroundService
+public abstract class CyclicCrawlWorker : ErrorableWorker
 {
-    private readonly ILogger<CyclicCrawlWorker> _logger;
     private readonly IConfiguration _config;
     private int _interval; // in seconds
     private readonly bool _shouldRunAtFirst;
 
-    protected CyclicCrawlWorker(ILogger<CyclicCrawlWorker> logger, IConfiguration config, bool shouldRunAtFirst = true)
+    protected CyclicCrawlWorker(ILogger<CyclicCrawlWorker> logger, IConfiguration config,
+        bool shouldRunAtFirst = true) : base(logger)
     {
-        _logger = logger;
         _config = config;
         _shouldRunAtFirst = shouldRunAtFirst;
         _ = SyncCrawlIntervalWithConfig();
@@ -24,30 +23,15 @@ public abstract class CyclicCrawlWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (_shouldRunAtFirst)
-            await LogException(DoWork(stoppingToken), stoppingToken);
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await Task.Delay(_interval * 1000, stoppingToken);
-            await LogException(DoWork(stoppingToken), stoppingToken);
-        }
-    }
-
-    private async Task LogException(Task payload, CancellationToken stoppingToken)
-    {
-        try
         {
             _ = SyncCrawlIntervalWithConfig();
-            await payload;
+            await DoWorkWithExceptionLogging(stoppingToken);
         }
-        catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
-        {
-            _logger.LogInformation($"OperationCanceledException at {e.Source}");
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Exception");
+        while (!stoppingToken.IsCancellationRequested)
+        { // https://stackoverflow.com/questions/51667000/ihostedservice-backgroundservice-to-run-on-a-schedule-as-opposed-to-task-delay
+            await Task.Delay(_interval * 1000, stoppingToken);
+            _ = SyncCrawlIntervalWithConfig();
+            await DoWorkWithExceptionLogging(stoppingToken);
         }
     }
-
-    protected abstract Task DoWork(CancellationToken stoppingToken);
 }

@@ -4,7 +4,7 @@ using tbm.Crawler.ImagePipeline.Ocr;
 
 namespace tbm.Crawler.Worker;
 
-public partial class ImageOcrPipelineWorker : BackgroundService
+public partial class ImageOcrPipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
     private static HttpClient _http = null!;
@@ -18,7 +18,7 @@ public partial class ImageOcrPipelineWorker : BackgroundService
     private static readonly Regex ExtractTextBoxBoundaryRegex = ExtractTextBoxBoundaryGeneratedRegex();
 
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config,
-        IHttpClientFactory httpFactory, PaddleOcrRequester requester, TextRecognizer recognizer)
+        IHttpClientFactory httpFactory, PaddleOcrRequester requester, TextRecognizer recognizer) : base(logger)
     {
         _logger = logger;
         _http = httpFactory.CreateClient("tbImage");
@@ -29,7 +29,7 @@ public partial class ImageOcrPipelineWorker : BackgroundService
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task DoWork(CancellationToken stoppingToken)
     {
         var imagesUrlFilename = new List<string> {""};
         var imagesKeyByUrlFilename = (await Task.WhenAll(
