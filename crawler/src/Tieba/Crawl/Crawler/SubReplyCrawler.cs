@@ -24,7 +24,7 @@ public class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
     protected override int GetResponseErrorCode(SubReplyResponse response) => response.Error.Errorno;
     public override TbClient.Page GetResponsePage(SubReplyResponse response) => response.Data.Page;
 
-    protected override Task<IEnumerable<Request>> RequestsFactory(Page page) =>
+    protected override Task<IEnumerable<Request>> GetRequestsForPage(Page page) =>
         Task.FromResult(new[]
         {
             new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",

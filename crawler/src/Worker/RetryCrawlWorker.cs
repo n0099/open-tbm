@@ -6,14 +6,14 @@ public class RetryCrawlWorker : CyclicCrawlWorker
 {
     private readonly ILogger<RetryCrawlWorker> _logger;
     private readonly ILifetimeScope _scope0;
-    private readonly IIndex<string, CrawlerLocks> _registeredLocksFactory;
+    private readonly IIndex<string, CrawlerLocks> _registeredLocksLookup;
 
     public RetryCrawlWorker(ILogger<RetryCrawlWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, IIndex<string, CrawlerLocks> registeredLocksFactory) : base(logger, config)
+        ILifetimeScope scope0, IIndex<string, CrawlerLocks> registeredLocksLookup) : base(logger, config)
     {
         _logger = logger;
         _scope0 = scope0;
-        _registeredLocksFactory = registeredLocksFactory;
+        _registeredLocksLookup = registeredLocksLookup;
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -21,7 +21,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
         foreach (var lockType in CrawlerLocks.RegisteredCrawlerLocks)
         {
             if (stoppingToken.IsCancellationRequested) return;
-            var failed = _registeredLocksFactory[lockType].RetryAllFailed();
+            var failed = _registeredLocksLookup[lockType].RetryAllFailed();
             if (!failed.Any()) continue; // skip current lock type if there's nothing needs to retry
             if (lockType == "threadLate")
             {

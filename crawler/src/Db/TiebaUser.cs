@@ -13,4 +13,7 @@ public class TiebaUser : ITimestampingEntity
     public string? IpGeolocation { get; set; }
     public uint CreatedAt { get; set; }
     public uint? UpdatedAt { get; set; }
+
+    public static TiebaUser CreateLatestReplier(long uid, string? name, string? displayName) =>
+        new() {Uid = uid, Name = name, DisplayName = displayName};
 }

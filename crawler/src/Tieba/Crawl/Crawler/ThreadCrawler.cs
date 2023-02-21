@@ -29,7 +29,7 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
             Rn = 30
         };
 
-    protected override Task<IEnumerable<Request>> RequestsFactory(Page page)
+    protected override Task<IEnumerable<Request>> GetRequestsForPage(Page page)
     {
         var data602 = GetRequestDataForClientVersion602(page);
         var data = new ThreadRequest.Types.Data

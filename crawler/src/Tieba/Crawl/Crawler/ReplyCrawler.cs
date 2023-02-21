@@ -23,7 +23,7 @@ public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
     protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
     public override TbClient.Page GetResponsePage(ReplyResponse response) => response.Data.Page;
 
-    protected override async Task<IEnumerable<Request>> RequestsFactory(Page page)
+    protected override async Task<IEnumerable<Request>> GetRequestsForPage(Page page)
     {
         const string url = "c/f/pb/page?cmd=302001";
         const string clientVersion = "12.26.1.0";

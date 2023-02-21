@@ -34,14 +34,11 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
         _ = db.Users.UpsertRange(newLatestRepliersExceptLocked).NoUpdate().Run();
     }
 
-    public static TiebaUser LatestReplierFactory(long uid, string? name, string? displayName) =>
-        new() {Uid = uid, Name = name, DisplayName = displayName};
-
     protected void ParseLatestRepliers(IEnumerable<Thread> threads) =>
         threads.Select(th => th.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
             .OfType<User>() // filter out nulls
             .Where(u => u.Uid != 0) // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
-            .Select(u => LatestReplierFactory(u.Uid, u.Name.NullIfWhiteSpace(),
+            .Select(u => TiebaUser.CreateLatestReplier(u.Uid, u.Name.NullIfWhiteSpace(),
                 u.Name == u.NameShow ? null : u.NameShow))
             .ForEach(u => _latestRepliers[u.Uid] = u);
 

@@ -85,23 +85,23 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
             var elapsedMs = pushCallback(post);
             var pushedCount = acc.Count + 1;
             var totalPushedCount = previousPushedPostCount + pushedCount;
-            var ca = ArchiveCrawlWorker.CalcCumulativeAverage(elapsedMs, acc.DurationCa, pushedCount);
+            var ca = ArchiveCrawlWorker.GetCumulativeAverage(elapsedMs, acc.DurationCa, pushedCount);
             if (pushedCount % 1000 == 0)
             {
-                static double CalcPercentage(float current, float total, int digits = 2) => Math.Round(current / total * 100, digits);
-                var currentForumEta = ArchiveCrawlWorker.CalcEta(postApproxCount, pushedCount, ca);
-                var totalForumEta = ArchiveCrawlWorker.CalcEta(forumsPostTotalApproxCount, totalPushedCount, ca);
+                static double GetPercentage(float current, float total, int digits = 2) => Math.Round(current / total * 100, digits);
+                var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
+                var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);
                 _logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
                                        + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
                     postTypeInLog, fid,
-                    pushedCount, postApproxCount, CalcPercentage(pushedCount, postApproxCount),
+                    pushedCount, postApproxCount, GetPercentage(pushedCount, postApproxCount),
                     ca, currentForumEta.Relative, currentForumEta.At, currentForumIndex, forumCount,
-                    totalPushedCount, forumsPostTotalApproxCount, CalcPercentage(totalPushedCount, forumsPostTotalApproxCount),
+                    totalPushedCount, forumsPostTotalApproxCount, GetPercentage(totalPushedCount, forumsPostTotalApproxCount),
                     totalForumEta.Relative, totalForumEta.At);
                 Console.Title = $"Pushing progress for {postTypeInLog} in fid {fid}"
-                                + $": {pushedCount}/~{postApproxCount} ({CalcPercentage(pushedCount, postApproxCount)}%)"
+                                + $": {pushedCount}/~{postApproxCount} ({GetPercentage(pushedCount, postApproxCount)}%)"
                                 + $", Total forums progress: {currentForumIndex}/{forumCount} posts:"
-                                + $" {totalPushedCount}/~{forumsPostTotalApproxCount} ({CalcPercentage(totalPushedCount, forumsPostTotalApproxCount)}%)"
+                                + $" {totalPushedCount}/~{forumsPostTotalApproxCount} ({GetPercentage(totalPushedCount, forumsPostTotalApproxCount)}%)"
                                 + $" ETA {totalForumEta.Relative} @ {totalForumEta.At}";
             }
             return (pushedCount, ca);

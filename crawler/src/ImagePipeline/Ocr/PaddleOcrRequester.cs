@@ -37,13 +37,13 @@ public class PaddleOcrRequester
         Request(endpoint, imagesKeyById,
             nestedResults => imagesKeyById
                 // nested results array in the recognition response should contain only one element which includes all results for each image
-                .Zip(nestedResults[0], (pair, result) => (ImageId: pair.Key, ImageBytes: pair.Value, result))
+                .Zip(nestedResults[0], (pair, result) => (ImageId: pair.Key, result))
                 .Select(t => new RecognitionResult(t.ImageId, t.result.Text!, t.result.Confidence!.Value)),
             stoppingToken);
 
     private static async Task<IEnumerable<TReturn>> Request<TReturn, TImageKey>(string endpoint,
         Dictionary<TImageKey, byte[]> imagesKeyById,
-        Func<PaddleOcrResponse.Result[][], IEnumerable<TReturn>> returnValueFactory,
+        Func<PaddleOcrResponse.Result[][], IEnumerable<TReturn>> resultSelector,
         CancellationToken stoppingToken = default)
         where TReturn : class where TImageKey : notnull
     {
@@ -58,6 +58,6 @@ public class PaddleOcrRequester
             || response.Status != "000")
             throw new($"{endpoint} responded with non zero status or empty msg"
                       + $"raw={await httpResponse.Content.ReadAsStringAsync(stoppingToken)}");
-        return returnValueFactory(response.NestedResults);
+        return resultSelector(response.NestedResults);
     }
 }

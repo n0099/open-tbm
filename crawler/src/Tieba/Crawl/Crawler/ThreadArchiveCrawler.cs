@@ -6,7 +6,7 @@ public class ThreadArchiveCrawler : ThreadCrawler
 
     public ThreadArchiveCrawler(ClientRequester requester, string forumName) : base(requester, forumName) { }
 
-    protected override async Task<IEnumerable<Request>> RequestsFactory(Page page)
+    protected override async Task<IEnumerable<Request>> GetRequestsForPage(Page page)
     {
         var response = await Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
             new ThreadRequest {Data = GetRequestDataForClientVersion602(page)},
