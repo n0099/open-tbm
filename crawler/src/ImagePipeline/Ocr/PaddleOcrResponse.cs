@@ -13,10 +13,10 @@ public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Res
     [JsonPropertyName("results")]
     public Result[][]? NestedResults { get; } = NestedResults;
 
-    public record Result(TextBox? TextBox, string? Text, float? Confidence)
+    public record Result(TextBox TextBox, string Text, float Confidence)
     {
         [JsonPropertyName("text_region")]
-        public TextBox? TextBox { get; } = TextBox;
+        public TextBox TextBox { get; } = TextBox;
     }
 
     [JsonConverter(typeof(TextBoxJsonConverter))]

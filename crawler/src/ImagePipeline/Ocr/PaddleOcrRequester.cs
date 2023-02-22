@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Net.Http.Json;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
@@ -6,46 +5,42 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 public class PaddleOcrRequester
 {
     private static HttpClient _http = null!;
-    private readonly string _paddleOcrDetectionEndpoint;
+    private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
+    private readonly float _paddleOcrConfidenceThreshold;
 
     public PaddleOcrRequester(IConfiguration config, IHttpClientFactory httpFactory)
     {
         _http = httpFactory.CreateClient("tbImage");
         var configSection = config.GetSection("ImageOcrPipeline");
         var paddleOcrServingEndpoint = configSection.GetValue("PaddleOcrServingEndpoint", "") ?? "";
-        _paddleOcrDetectionEndpoint = paddleOcrServingEndpoint + "/predict/ocr_det";
+        _paddleOcrRecognitionEndpointsKeyByScript = new()
+        {
+            {"zh-Hans", paddleOcrServingEndpoint + "/predict/ocr_system"},
+            {"zh-Hant", paddleOcrServingEndpoint + "/predict/ocr_system_zh-Hant"},
+            {"ja", paddleOcrServingEndpoint + "/predict/ocr_system_ja"},
+            {"en", paddleOcrServingEndpoint + "/predict/ocr_system_en"}
+        };
+        _paddleOcrConfidenceThreshold = configSection.GetValue("PaddleOcrConfidenceThreshold", 80f);
     }
 
-    public record DetectionResult(string ImageId, byte[] ImageBytes,
-        IEnumerable<(PaddleOcrResponse.TextBox TextBox, float RotationDegrees)> TextBoxes);
+    public record RecognitionResult(string ImageId, string Script, PaddleOcrResponse.TextBox TextBox, string Text, float Confidence);
 
-    public Task<IEnumerable<DetectionResult>> RequestForDetection
-        (Dictionary<string, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
-        Request(_paddleOcrDetectionEndpoint, imagesKeyById,
-            nestedResults =>
-                from t in imagesKeyById
-                    .Zip(nestedResults, (pair, results) => (ImageId: pair.Key, ImageBytes: pair.Value, results))
-                let boxes = t.results
-                    .Select(result => (result.TextBox!, result.TextBox!.GetRotationDegrees()))
-                select new DetectionResult(t.ImageId, t.ImageBytes, boxes),
-            stoppingToken);
-
-    public record RecognitionResult(Rectangle TextBoxBoundary, string Text, float Confidence);
-
-    public static Task<IEnumerable<RecognitionResult>> RequestForRecognition
-        (string endpoint, Dictionary<Rectangle, byte[]> imagesKeyById, CancellationToken stoppingToken = default) =>
-        Request(endpoint, imagesKeyById,
-            nestedResults => imagesKeyById
-                // nested results array in the recognition response should contain only one element which includes all results for each image
-                .Zip(nestedResults[0], (pair, result) => (ImageId: pair.Key, result))
-                .Select(t => new RecognitionResult(t.ImageId, t.result.Text!, t.result.Confidence!.Value)),
-            stoppingToken);
+    public Task<IEnumerable<RecognitionResult>[]> RequestForRecognition
+        (Dictionary<string, byte[]> imagesBytesKeyById, CancellationToken stoppingToken = default) =>
+        Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(pair =>
+            Request(pair.Value, imagesBytesKeyById,
+                nestedResults => imagesBytesKeyById
+                    .Zip(nestedResults, (images, results) => (imageId: images.Key, results))
+                    .SelectMany(t => t.results
+                        .Where(result => result.Confidence > _paddleOcrConfidenceThreshold / 100)
+                        .Select(result => new RecognitionResult(t.imageId, pair.Key, result.TextBox, result.Text, result.Confidence))),
+                stoppingToken)));
 
     private static async Task<IEnumerable<TReturn>> Request<TReturn, TImageKey>(string endpoint,
         Dictionary<TImageKey, byte[]> imagesKeyById,
         Func<PaddleOcrResponse.Result[][], IEnumerable<TReturn>> resultSelector,
         CancellationToken stoppingToken = default)
-        where TReturn : class where TImageKey : notnull
+        where TImageKey : notnull
     {
         if (!imagesKeyById.Values.Any()) return Array.Empty<TReturn>();
         var requestPayload = new PaddleOcrRequestPayload(imagesKeyById.Values.Select(Convert.ToBase64String));

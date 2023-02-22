@@ -1,42 +1,22 @@
-using System.Text.RegularExpressions;
-using Emgu.CV;
 using tbm.Crawler.ImagePipeline.Ocr;
 
 namespace tbm.Crawler.Worker;
 
-public partial class ImageOcrPipelineWorker : ErrorableWorker
+public class ImageOcrPipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
     private static HttpClient _http = null!;
     private readonly PaddleOcrRequester _requester;
-    private readonly TextRecognizer _recognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
 
-    [GeneratedRegex(".*@([0-9]+),([0-9]+)$", RegexOptions.Compiled, 100)]
-    private static partial Regex ExtractTextBoxBoundaryGeneratedRegex();
-    private static readonly Regex ExtractTextBoxBoundaryRegex = ExtractTextBoxBoundaryGeneratedRegex();
-
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config,
-        IHttpClientFactory httpFactory, PaddleOcrRequester requester, TextRecognizer recognizer) : base(logger)
+        IHttpClientFactory httpFactory, PaddleOcrRequester requester) : base(logger)
     {
         _logger = logger;
         _http = httpFactory.CreateClient("tbImage");
         _requester = requester;
-        _recognizer = recognizer;
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
-    }
-
-    private static (uint X, uint Y) GetTopLeftPointFromTextBoxBoundaryString(string boundary)
-    {
-        var match = ExtractTextBoxBoundaryRegex.Match(boundary);
-        if (!match.Success) throw new($"Failed to parse TextBoxBoundary with value {boundary}");
-        var topLeftPoint = match.Groups.Values.Skip(1)
-            .Select(g => uint.TryParse(g.ValueSpan, out var parsed)
-                ? parsed
-                : throw new($"Failed to parse TextBoxBoundary with value {boundary}"))
-            .ToList();
-        return (topLeftPoint[0], topLeftPoint[1]);
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -46,60 +26,18 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.filename, t => t.bytes);
-        var processedImagesTextBoxes =
-            (await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken))
-            .Select(TextBoxPreprocessor.ProcessTextBoxes).ToList();
-        var reprocessedImagesTextBoxes = (await Task.WhenAll(
-                from imageAndProcessedTextBoxes in processedImagesTextBoxes
-                let boxImagesBytesKeyByBoundary =
-                    imageAndProcessedTextBoxes.ProcessedTextBoxes
-                        // rerun detect and process for cropped images of text boxes with non-zero rotation degrees
-                        .Where(b => b.RotationDegrees != 0)
-                        .ToDictionary(b =>
-                            {
-                                var rect = b.TextBoxBoundary;
-                                return $"{rect.Width}x{rect.Height}@{rect.X},{rect.Y}";
-                            },
-                            b => CvInvoke.Imencode(".png", b.ProcessedTextBoxMat))
-                let requestTask = _requester.RequestForDetection(boxImagesBytesKeyByBoundary, stoppingToken)
-                select requestTask))
-            .Select(results => results.Select(result =>
-            {
-                var processed = TextBoxPreprocessor.ProcessTextBoxes(result);
-                var (parentX, parentY) = GetTopLeftPointFromTextBoxBoundaryString(result.ImageId);
-                processed.ProcessedTextBoxes = processed.ProcessedTextBoxes.Select(b =>
-                {
-                    var rectangle = b.TextBoxBoundary;
-                    rectangle.X += (int)parentX;
-                    rectangle.Y += (int)parentY;
-                    return b with {TextBoxBoundary = rectangle};
-                }).ToList();
-                return processed;
-            }));
-        var mergedTextBoxesPerImage = from t in
-                processedImagesTextBoxes.Zip(reprocessedImagesTextBoxes)
-            let textBoxes = t.First.ProcessedTextBoxes
-                .Where(b => b.RotationDegrees == 0)
-                .Concat(t.Second.SelectMany(t2 => t2.ProcessedTextBoxes))
-            select (t.First.ImageId, textBoxes);
-        var recognizedImages = await Task.WhenAll(mergedTextBoxesPerImage.Select(async t => new
+        var recognizedImages = await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken);
+        foreach (var groupByImageId in recognizedImages.SelectMany(i => i).GroupBy(result => result.ImageId))
         {
-            t.ImageId,
-            Texts = (await _recognizer.RecognizeViaPaddleOcr(t.textBoxes, stoppingToken)).SelectMany(i => i)
-        }));
-        foreach (var imageIdAndTexts in recognizedImages)
-        {
-            imageIdAndTexts.Texts.GroupBy(box =>
-                {
-                    var vertSuffixIndex = box.Script.IndexOf("_vert", StringComparison.Ordinal);
-                    return vertSuffixIndex == -1 ? box.Script : box.Script[..vertSuffixIndex];
-                })
+            groupByImageId
+                .GroupBy(result => result.Script)
                 .SelectMany(scripts => scripts.Select(result =>
                         {
+                            var rect = result.TextBox.ToCircumscribedRectangle();
                             // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                             // which have similar but different values of y coordinates get rearranged in a wrong order
-                            var alignedY = (int)Math.Round((double)result.TextBoxBoundary.Y / _gridSizeToMergeBoxesIntoSingleLine);
-                            return (result, x: result.TextBoxBoundary.X, alignedY);
+                            var alignedY = (int)Math.Round((double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine);
+                            return (result, x: rect.X, alignedY);
                         })
                         .OrderBy(t => t.alignedY).ThenBy(t => t.x)
                         .GroupBy(t => t.alignedY, t => t.result),
@@ -107,7 +45,7 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                 .GroupBy(t => t.script, t => t.lines)
                 .ForEach(groupByScript =>
                 {
-                    _logger.LogInformation("{} {}", imageIdAndTexts.ImageId, groupByScript.Key);
+                    _logger.LogInformation("{} {}", groupByImageId.Key, groupByScript.Key);
                     var texts = string.Join("\n", groupByScript.Select(groupByLine =>
                             string.Join(" ", groupByLine.Select(i => i.TextBoxBoundary + " " + i.Text.Trim()))
                             .Trim()))
@@ -116,7 +54,6 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                     _logger.LogInformation("\n{}", texts);
                 });
         }
-        _logger.LogInformation("{}", JsonSerializer.Serialize(recognizedImages));
         Environment.Exit(0);
     }
 }
