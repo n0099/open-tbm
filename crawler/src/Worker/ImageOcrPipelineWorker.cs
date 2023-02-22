@@ -10,7 +10,6 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
     private static HttpClient _http = null!;
     private readonly PaddleOcrRequester _requester;
     private readonly TextRecognizer _recognizer;
-    private readonly float _aspectRatioThresholdToUseTesseract;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
 
     [GeneratedRegex(".*@([0-9]+),([0-9]+)$", RegexOptions.Compiled, 100)]
@@ -25,7 +24,6 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
         _requester = requester;
         _recognizer = recognizer;
         var configSection = config.GetSection("ImageOcrPipeline");
-        _aspectRatioThresholdToUseTesseract = configSection.GetValue("AspectRatioThresholdToUseTesseract", 0.8f);
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
     }
 
@@ -84,20 +82,10 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
                 .Where(b => b.RotationDegrees == 0)
                 .Concat(t.Second.SelectMany(t2 => t2.ProcessedTextBoxes))
             select (t.First.ImageId, textBoxes);
-        var recognizedImages = await Task.WhenAll(mergedTextBoxesPerImage.Select(async t =>
+        var recognizedImages = await Task.WhenAll(mergedTextBoxesPerImage.Select(async t => new
         {
-            var boxesUsingTesseractToRecognize = t.textBoxes.Where(b =>
-                (float)b.ProcessedTextBoxMat.Width / b.ProcessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract).ToList();
-            var boxesUsingPaddleOcrToRecognize = t.textBoxes
-                .ExceptBy(boxesUsingTesseractToRecognize.Select(b => b.TextBoxBoundary), b => b.TextBoxBoundary);
-            return new
-            {
-                t.ImageId,
-                Texts = boxesUsingTesseractToRecognize
-                    .SelectMany(_recognizer.RecognizeViaTesseract)
-                    .Concat((await _recognizer.RecognizeViaPaddleOcr(boxesUsingPaddleOcrToRecognize, stoppingToken))
-                        .SelectMany(i => i))
-            };
+            t.ImageId,
+            Texts = (await _recognizer.RecognizeViaPaddleOcr(t.textBoxes, stoppingToken)).SelectMany(i => i)
         }));
         foreach (var imageIdAndTexts in recognizedImages)
         {
