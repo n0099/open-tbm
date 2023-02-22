@@ -13,7 +13,7 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
     private readonly float _aspectRatioThresholdToUseTesseract;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
 
-    [GeneratedRegex("^[0-9]+x[0-9]+@([0-9]+),([0-9]+)$", RegexOptions.Compiled, 100)]
+    [GeneratedRegex(".*@([0-9]+),([0-9]+)$", RegexOptions.Compiled, 100)]
     private static partial Regex ExtractTextBoxBoundaryGeneratedRegex();
     private static readonly Regex ExtractTextBoxBoundaryRegex = ExtractTextBoxBoundaryGeneratedRegex();
 
@@ -68,17 +68,14 @@ public partial class ImageOcrPipelineWorker : ErrorableWorker
             .Select(results => results.Select(result =>
             {
                 var processed = TextBoxPreprocessor.ProcessTextBoxes(result);
-                if (processed.ProcessedTextBoxes.Count != 1)
+                var (parentX, parentY) = GetTopLeftPointFromTextBoxBoundaryString(result.ImageId);
+                processed.ProcessedTextBoxes = processed.ProcessedTextBoxes.Select(b =>
                 {
-                    var (parentX, parentY) = GetTopLeftPointFromTextBoxBoundaryString(result.ImageId);
-                    processed.ProcessedTextBoxes = processed.ProcessedTextBoxes.Select(b =>
-                    {
-                        var rectangle = b.TextBoxBoundary;
-                        rectangle.X += (int)parentX;
-                        rectangle.Y += (int)parentY;
-                        return b with {TextBoxBoundary = rectangle};
-                    }).ToList();
-                }
+                    var rectangle = b.TextBoxBoundary;
+                    rectangle.X += (int)parentX;
+                    rectangle.Y += (int)parentY;
+                    return b with {TextBoxBoundary = rectangle};
+                }).ToList();
                 return processed;
             }));
         var mergedTextBoxesPerImage = from t in

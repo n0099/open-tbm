@@ -22,6 +22,6 @@ public class TextBoxPreprocessor
                 if (degrees != 0) processedMat.Rotate(degrees);
                 return new ProcessedTextBox(circumscribed, processedMat, degrees);
             })
-            .ToList()); // eager eval since imageMat is already disposed after return
+            .ToList()); // eager eval since mat is already disposed after return
     }
 }

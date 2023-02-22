@@ -11,6 +11,7 @@ public class TextRecognizer
     private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
     private readonly Dictionary<string, Tesseract> _tesseractInstancesKeyByScript;
     private readonly float _tesseractConfidenceThreshold;
+    private readonly float _paddleOcrConfidenceThreshold;
 
     public TextRecognizer(IConfiguration config)
     {
@@ -37,6 +38,7 @@ public class TextRecognizer
             {"ja_vert", CreateTesseract("best/jpn_vert")}
         };
         _tesseractConfidenceThreshold = configSection.GetValue("TesseractConfidenceThreshold", 20f);
+        _paddleOcrConfidenceThreshold = configSection.GetValue("PaddleOcrConfidenceThreshold", 80f);
     }
 
     public record RecognizedResult(Rectangle TextBoxBoundary, string Script, string Text);
@@ -51,6 +53,7 @@ public class TextRecognizer
         });
         return Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(async pair =>
             (await PaddleOcrRequester.RequestForRecognition(pair.Value, boxesKeyByBoundary, stoppingToken))
+            .Where(result => result.Confidence > _paddleOcrConfidenceThreshold / 100)
             .Select(result => new RecognizedResult(result.TextBoxBoundary, pair.Key, result.Text))));
     }
 
