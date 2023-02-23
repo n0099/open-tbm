@@ -102,7 +102,7 @@ public class CrawlerLocks : WithLogTrace
             }
             else
             {
-                var newPage = new ConcurrentDictionary<Page, FailureCount> { [page] = failureCount };
+                var newPage = new ConcurrentDictionary<Page, FailureCount> {[page] = failureCount};
                 _ = _failed.TryAdd(lockId, newPage);
             }
         }

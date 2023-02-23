@@ -36,13 +36,15 @@ public class PaddleOcrRequester
                         .Select(result => new RecognitionResult(t.imageId, pair.Key, result.TextBox, result.Text, result.Confidence))),
                 stoppingToken)));
 
-    private static async Task<IEnumerable<TReturn>> Request<TReturn, TImageKey>(string endpoint,
+    private record PaddleOcrRequestPayload(IEnumerable<string> Images);
+
+    private static async Task<IEnumerable<TResult>> Request<TResult, TImageKey>(string endpoint,
         Dictionary<TImageKey, byte[]> imagesKeyById,
-        Func<PaddleOcrResponse.Result[][], IEnumerable<TReturn>> resultSelector,
+        Func<PaddleOcrResponse.Result[][], IEnumerable<TResult>> resultSelector,
         CancellationToken stoppingToken = default)
         where TImageKey : notnull
     {
-        if (!imagesKeyById.Values.Any()) return Array.Empty<TReturn>();
+        if (!imagesKeyById.Values.Any()) return Array.Empty<TResult>();
         var requestPayload = new PaddleOcrRequestPayload(imagesKeyById.Values.Select(Convert.ToBase64String));
         var httpResponse = await _http.PostAsJsonAsync(endpoint, requestPayload, stoppingToken);
         var response = await httpResponse.Content.ReadFromJsonAsync

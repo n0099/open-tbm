@@ -3,11 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
-public record PaddleOcrRequestPayload(IEnumerable<string> Images);
-
 public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Result[][]? NestedResults)
 {
-    public static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    public static readonly JsonSerializerOptions JsonSerializerOptions = new() {PropertyNamingPolicy = JsonNamingPolicy.CamelCase};
 
     [JsonConverter(typeof(ResultsConverter))]
     [JsonPropertyName("results")]

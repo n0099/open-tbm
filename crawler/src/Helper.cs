@@ -18,7 +18,7 @@ public abstract class Helper
         serializedProtoBuf == null ? null : PostContentWrapper.Parser.ParseFrom(serializedProtoBuf).Value;
 
     public static PostContentWrapper? WrapPostContent(RepeatedField<Content>? contents) =>
-        contents == null ? null : new() { Value = { contents } };
+        contents == null ? null : new() {Value = {contents}};
 
     private static readonly JsonSerializerOptions UnescapedSerializeOptions =
         new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};
