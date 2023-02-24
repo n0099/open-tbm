@@ -7,16 +7,20 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
     private static HttpClient _http = null!;
     private readonly PaddleOcrRequester _requester;
+    private readonly TesseractRecognizer _recognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
+    private readonly float _paddleOcrConfidenceThreshold;
 
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config,
-        IHttpClientFactory httpFactory, PaddleOcrRequester requester) : base(logger)
+        IHttpClientFactory httpFactory, PaddleOcrRequester requester, TesseractRecognizer recognizer) : base(logger)
     {
         _logger = logger;
         _http = httpFactory.CreateClient("tbImage");
         _requester = requester;
+        _recognizer = recognizer;
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
+        _paddleOcrConfidenceThreshold = configSection.GetValue("PaddleOcrConfidenceThreshold", 80f);
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -26,8 +30,25 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.filename, t => t.bytes);
-        var recognizedImages = await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken);
-        foreach (var groupByImageId in recognizedImages.SelectMany(i => i).GroupBy(result => result.ImageId))
+        var recognizedResultsByPaddleOcr = (await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken))
+            .SelectMany(i => i).ToList();
+        var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
+            .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
+            .GroupBy(result => (result.ImageId, result.Script))
+            .Select(g => TesseractRecognizer.PreprocessTextBoxes(
+                g.Key.ImageId, imagesKeyByUrlFilename[g.Key.ImageId], g.Key.Script, g.Select(result => result.TextBox)))
+            .SelectMany(textBoxes =>
+                textBoxes.SelectMany(_recognizer.RecognizePreprocessedTextBox))
+            .Select(result =>
+            {
+                var (imageId, script, _, textBox, text, confidence) = result;
+                return new PaddleOcrRequester.RecognitionResult(imageId, script, textBox, text, confidence);
+            })
+            .ToList();
+        foreach (var groupByImageId in recognizedResultsByPaddleOcr
+                     .Where(result => result.Confidence >= _paddleOcrConfidenceThreshold)
+                     .Concat(recognizedResultsByTesseract)
+                     .GroupBy(result => result.ImageId))
         {
             groupByImageId
                 .GroupBy(result => result.Script)

@@ -82,6 +82,7 @@ static void ConfigureContainer(ContainerBuilder builder)
     builder.RegisterType<ThreadArchiveCrawler>();
     builder.RegisterType<SonicPusher>();
     builder.RegisterType<PaddleOcrRequester>();
+    builder.RegisterType<TesseractRecognizer>();
 
     var baseClassOfClassesToBeRegistered = new List<Type>
     {

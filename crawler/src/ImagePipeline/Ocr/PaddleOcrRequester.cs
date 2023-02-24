@@ -6,7 +6,6 @@ public class PaddleOcrRequester
 {
     private static HttpClient _http = null!;
     private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
-    private readonly float _paddleOcrConfidenceThreshold;
 
     public PaddleOcrRequester(IConfiguration config, IHttpClientFactory httpFactory)
     {
@@ -20,7 +19,6 @@ public class PaddleOcrRequester
             {"ja", paddleOcrServingEndpoint + "/predict/ocr_system_ja"},
             {"en", paddleOcrServingEndpoint + "/predict/ocr_system_en"}
         };
-        _paddleOcrConfidenceThreshold = configSection.GetValue("PaddleOcrConfidenceThreshold", 80f);
     }
 
     public record RecognitionResult(string ImageId, string Script, PaddleOcrResponse.TextBox TextBox, string Text, float Confidence);
@@ -32,7 +30,6 @@ public class PaddleOcrRequester
                 nestedResults => imagesBytesKeyById
                     .Zip(nestedResults, (images, results) => (imageId: images.Key, results))
                     .SelectMany(t => t.results
-                        .Where(result => result.Confidence > _paddleOcrConfidenceThreshold / 100)
                         .Select(result => new RecognitionResult(t.imageId, pair.Key, result.TextBox, result.Text, result.Confidence))),
                 stoppingToken)));
 
