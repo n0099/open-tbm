@@ -11,15 +11,15 @@ public class PaddleOcrRequester
     public PaddleOcrRequester(IConfiguration config, IHttpClientFactory httpFactory)
     {
         _http = httpFactory.CreateClient("tbImage");
-        var configSection = config.GetSection("ImageOcrPipeline");
-        var paddleOcrServingEndpoint = configSection.GetValue("PaddleOcrServingEndpoint", "") ?? "";
-        _paddleOcrDetectionEndpoint = paddleOcrServingEndpoint + "/predict/ocr_det";
+        var configSection = config.GetSection("ImageOcrPipeline").GetSection("PaddleOcr");
+        var servingEndpoint = configSection.GetValue("ServingEndpoint", "") ?? "";
+        _paddleOcrDetectionEndpoint = servingEndpoint + "/predict/ocr_det";
         _paddleOcrRecognitionEndpointsKeyByScript = new()
         {
-            {"zh-Hans", paddleOcrServingEndpoint + "/predict/ocr_system"},
-            {"zh-Hant", paddleOcrServingEndpoint + "/predict/ocr_system_zh-Hant"},
-            {"ja", paddleOcrServingEndpoint + "/predict/ocr_system_ja"},
-            {"en", paddleOcrServingEndpoint + "/predict/ocr_system_en"}
+            {"zh-Hans", servingEndpoint + "/predict/ocr_system"},
+            {"zh-Hant", servingEndpoint + "/predict/ocr_system_zh-Hant"},
+            {"ja", servingEndpoint + "/predict/ocr_system_ja"},
+            {"en", servingEndpoint + "/predict/ocr_system_en"}
         };
     }
 

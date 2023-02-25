@@ -7,15 +7,15 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 public class TesseractRecognizer
 {
     private readonly (Dictionary<string, Tesseract> Horizontal, Dictionary<string, Tesseract> Vertical) _tesseractInstancesKeyByScript;
-    private readonly float _tesseractConfidenceThreshold;
+    private readonly int _confidenceThreshold;
     private readonly float _aspectRatioThresholdToUseTesseract;
 
     public TesseractRecognizer(IConfiguration config)
     {
-        var configSection = config.GetSection("ImageOcrPipeline");
-        var tesseractDataPath = configSection.GetValue("TesseractDataPath", "") ?? "";
+        var configSection = config.GetSection("ImageOcrPipeline").GetSection("Tesseract");
+        var dataPath = configSection.GetValue("DataPath", "") ?? "";
         Tesseract CreateTesseract(string scripts) =>
-            new(tesseractDataPath, scripts, OcrEngineMode.LstmOnly)
+            new(dataPath, scripts, OcrEngineMode.LstmOnly)
             { // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
                 PageSegMode = PageSegMode.SingleBlockVertText
             };
@@ -32,7 +32,7 @@ public class TesseractRecognizer
             {"zh-Hant", CreateTesseract("best/chi_tra_vert")},
             {"ja", CreateTesseract("best/jpn_vert")}
         };
-        _tesseractConfidenceThreshold = configSection.GetValue("TesseractConfidenceThreshold", 20f);
+        _confidenceThreshold = configSection.GetValue("ConfidenceThreshold", 20);
         _aspectRatioThresholdToUseTesseract = configSection.GetValue("AspectRatioThresholdToUseTesseract", 0.8f);
     }
 
@@ -79,7 +79,7 @@ public class TesseractRecognizer
                 if (tesseract.Recognize() != 0) return null;
                 var chars = tesseract.GetCharacters();
                 var text = string.Join("", chars
-                    .Where(c => c.Cost > _tesseractConfidenceThreshold)
+                    .Where(c => c.Cost > _confidenceThreshold)
                     .Select(c => c.Text)).Trim();
                 if (!chars.Any() || text == "") return null;
                 var averageConfidence = chars.Select(c => c.Cost).Average().RoundToUshort();

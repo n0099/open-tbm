@@ -13,7 +13,9 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private readonly PaddleOcrRequester _requester;
     private readonly TesseractRecognizer _recognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
-    private readonly float _paddleOcrConfidenceThreshold;
+    private readonly int _paddleOcrConfidenceThreshold;
+    private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox;
+    private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox;
 
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config,
         IHttpClientFactory httpFactory, PaddleOcrRequester requester, TesseractRecognizer recognizer) : base(logger)
@@ -24,7 +26,12 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         _recognizer = recognizer;
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
-        _paddleOcrConfidenceThreshold = configSection.GetValue("PaddleOcrConfidenceThreshold", 80f);
+        _paddleOcrConfidenceThreshold = configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
+        var tesseractConfigSection = configSection.GetSection("Tesseract");
+        _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox =
+            tesseractConfigSection.GetValue("PercentageThresholdOfIntersectionAreaToConsiderAsSameTextBox", 90);
+        _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox =
+            tesseractConfigSection.GetValue("PercentageThresholdOfIntersectionAreaToConsiderAsNewTextBox", 10);
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -107,20 +114,20 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             select new CorrelatedTextBoxPair(detectionResult.ImageId, percentageOfIntersection, detectionResult.TextBox, recognitionResult.TextBox)
         ).ToList();
 
-        ILookup<string, CorrelatedTextBoxPair> FilterCorrelatedTextBoxes
-            (Func<CorrelatedTextBoxPair, bool> predicate, Func<IEnumerable<CorrelatedTextBoxPair?>, CorrelatedTextBoxPair?> delimiter) => (
+        var recognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.RecognizedTextBox into g
-            select delimiter(g.Where(predicate).DefaultIfEmpty()) into pair
+            select g.Where(pair => pair.PercentageOfIntersection > _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox)
+                .DefaultIfEmpty().MaxBy(pair => pair?.PercentageOfIntersection) into pair
             where pair != default
             select pair
         ).ToLookup(pair => pair.ImageId);
-        var recognizedDetectedTextBoxes = FilterCorrelatedTextBoxes(
-            pair => pair.PercentageOfIntersection > 90,
-            pairs => pairs.MaxBy(pair => pair?.PercentageOfIntersection));
-        var unrecognizedDetectedTextBoxes = FilterCorrelatedTextBoxes(
-            pair => pair.PercentageOfIntersection < 10,
-            pairs => pairs.MinBy(pair => pair?.PercentageOfIntersection));
+        var unrecognizedDetectedTextBoxes = (
+            from pair in correlatedTextBoxPairs
+            group pair by pair.DetectedTextBox into g
+            where g.All(pair => pair.PercentageOfIntersection < _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox)
+            select g.MinBy(pair => pair.PercentageOfIntersection)
+        ).ToLookup(pair => pair.ImageId);
 
         return recognizedResultsByPaddleOcr
             .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
