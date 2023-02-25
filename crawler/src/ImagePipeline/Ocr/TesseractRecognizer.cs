@@ -1,7 +1,6 @@
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.OCR;
-using Emgu.CV.Util;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
@@ -54,19 +53,11 @@ public class TesseractRecognizer
                 // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
                 // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
                 _ = CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
-                // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
-                // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
 
                 if (degrees != 0) mat.Rotate(degrees);
 
-                using var histogram = new Mat();
-                using var threshedMatVector = new VectorOfMat(mat);
-                CvInvoke.CalcHist(threshedMatVector, new[] {0}, null, histogram, new[] {256}, new[] {0f, 256}, false);
-                // we don't need k-means clustering like https://stackoverflow.com/questions/50899692/most-dominant-color-in-rgb-image-opencv-numpy-python
-                // since mat only composed of pure black and whites(aka 1bpp) after thresholding
-                var dominantColor = histogram.Get<float>(0, 0) > histogram.Get<float>(255, 0) ? 0 : 255;
                 // https://github.com/tesseract-ocr/tesseract/issues/427
-                CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
+                CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(0, 0, 0));
 
                 return new PreprocessedTextBox(imageId, script, textBox, mat);
             })
@@ -78,7 +69,7 @@ public class TesseractRecognizer
     public IEnumerable<RecognitionResult> RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
     {
         using var mat = textBox.PreprocessedTextBoxMat;
-        var isVertical = (float)textBox.PreprocessedTextBoxMat.Width / textBox.PreprocessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract;
+        var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToUseTesseract;
         return (isVertical ? _tesseractInstancesKeyByScript.Vertical : _tesseractInstancesKeyByScript.Horizontal)
             .Where(pair => pair.Key == textBox.Script)
             .Select(pair =>
@@ -91,7 +82,7 @@ public class TesseractRecognizer
                     .Where(c => c.Cost > _tesseractConfidenceThreshold)
                     .Select(c => c.Text)).Trim();
                 if (!chars.Any() || text == "") return null;
-                var averageConfidence = (ushort)Math.Round(chars.Select(c => c.Cost).Average(), 0);
+                var averageConfidence = chars.Select(c => c.Cost).Average().RoundToUshort();
                 return new RecognitionResult(textBox.ImageId, script, isVertical, textBox.TextBox, text, averageConfidence);
             })
             .OfType<RecognitionResult>().ToList(); // eager eval since mat is already disposed after return
