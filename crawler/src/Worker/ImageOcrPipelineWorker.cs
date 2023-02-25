@@ -44,10 +44,13 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         var recognizedResultsByPaddleOcr =
             (await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken))
             .SelectMany(i => i).ToList();
+        var detectedResultsBy = await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken);
+        var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
+            .GroupBy(result => result.Script).Select(g =>
+                GetRecognizedResultsByTesseract(g, detectedResultsBy, imagesKeyByUrlFilename));
         foreach (var groupByImageId in recognizedResultsByPaddleOcr
                      .Where(result => result.Confidence >= _paddleOcrConfidenceThreshold)
-                     .Concat(await GetRecognizedResultsByTesseract(
-                         recognizedResultsByPaddleOcr, imagesKeyByUrlFilename, stoppingToken))
+                     .Concat(recognizedResultsByTesseract.SelectMany(i => i))
                      .GroupBy(result => result.ImageId))
         {
             groupByImageId
@@ -82,10 +85,10 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private record CorrelatedTextBoxPair(string ImageId, ushort PercentageOfIntersection,
         PaddleOcrResponse.TextBox DetectedTextBox, PaddleOcrResponse.TextBox RecognizedTextBox);
 
-    private async Task<IEnumerable<PaddleOcrRequester.RecognitionResult>> GetRecognizedResultsByTesseract(
-        IReadOnlyCollection<PaddleOcrRequester.RecognitionResult> recognizedResultsByPaddleOcr,
-        Dictionary<string, byte[]> imagesKeyByUrlFilename,
-        CancellationToken stoppingToken)
+    private IEnumerable<PaddleOcrRequester.RecognitionResult> GetRecognizedResultsByTesseract(
+        IGrouping<string, PaddleOcrRequester.RecognitionResult> recognizedResultsByPaddleOcrGroupByScript,
+        IEnumerable<PaddleOcrRequester.DetectionResult> detectionResults,
+        IReadOnlyDictionary<string, byte[]> imagesKeyByUrlFilename)
     {
         ushort GetPercentageOfIntersectionArea(PaddleOcrResponse.TextBox subject, PaddleOcrResponse.TextBox clip)
         {
@@ -104,11 +107,11 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             var areas = new[] {intersectionArea / GetContourArea(subjectPaths), intersectionArea / GetContourArea(clipPaths)};
             return (areas.Average() * 100).RoundToUshort();
         }
-        var uniqueRecognizedResults = recognizedResultsByPaddleOcr
+        var uniqueRecognizedResults = recognizedResultsByPaddleOcrGroupByScript
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
             .GroupBy(result => result.ImageId).SelectMany(g => g.DistinctBy(result => result.TextBox));
         var correlatedTextBoxPairs = (
-            from detectionResult in await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken)
+            from detectionResult in detectionResults
             join recognitionResult in uniqueRecognizedResults on detectionResult.ImageId equals recognitionResult.ImageId
             let percentageOfIntersection = GetPercentageOfIntersectionArea(detectionResult.TextBox, recognitionResult.TextBox)
             select new CorrelatedTextBoxPair(detectionResult.ImageId, percentageOfIntersection, detectionResult.TextBox, recognitionResult.TextBox)
@@ -129,21 +132,20 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             select g.MinBy(pair => pair.PercentageOfIntersection)
         ).ToLookup(pair => pair.ImageId);
 
-        return recognizedResultsByPaddleOcr
+        return recognizedResultsByPaddleOcrGroupByScript
             .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
-            .GroupBy(result => (result.ImageId, result.Script))
+            .GroupBy(result => result.ImageId)
             .Select(g =>
             {
-                var imageId = g.Key.ImageId;
+                var imageId = g.Key;
                 var boxes = g.Select(result => recognizedDetectedTextBoxes[imageId]
                         .FirstOrDefault(pair => pair.RecognizedTextBox == result.TextBox)?.DetectedTextBox)
                     .OfType<PaddleOcrResponse.TextBox>()
-                    .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox))
-                    .Distinct();
-                return TesseractRecognizer.PreprocessTextBoxes(imageId, imagesKeyByUrlFilename[imageId], g.Key.Script, boxes);
+                    .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox));
+                return TesseractRecognizer.PreprocessTextBoxes(imageId, imagesKeyByUrlFilename[imageId], boxes);
             })
-            .SelectMany(textBoxes =>
-                textBoxes.SelectMany(_recognizer.RecognizePreprocessedTextBox))
+            .SelectMany(textBoxes => textBoxes.SelectMany(b =>
+                _recognizer.RecognizePreprocessedTextBox(recognizedResultsByPaddleOcrGroupByScript.Key, b)))
             .Select(result =>
             {
                 var (imageId, script, _, textBox, text, confidence) = result;

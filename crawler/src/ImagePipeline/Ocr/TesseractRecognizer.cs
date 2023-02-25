@@ -36,10 +36,10 @@ public class TesseractRecognizer
         _aspectRatioThresholdToUseTesseract = configSection.GetValue("AspectRatioThresholdToUseTesseract", 0.8f);
     }
 
-    public record PreprocessedTextBox(string ImageId, string Script, PaddleOcrResponse.TextBox TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(string ImageId, PaddleOcrResponse.TextBox TextBox, Mat PreprocessedTextBoxMat);
 
     public static List<PreprocessedTextBox> PreprocessTextBoxes
-        (string imageId, byte[] imageBytes, string script, IEnumerable<PaddleOcrResponse.TextBox> textBoxes)
+        (string imageId, byte[] imageBytes, IEnumerable<PaddleOcrResponse.TextBox> textBoxes)
     {
         using var originalImageMat = new Mat();
         CvInvoke.Imdecode(imageBytes, ImreadModes.Unchanged, originalImageMat);
@@ -59,22 +59,22 @@ public class TesseractRecognizer
                 // https://github.com/tesseract-ocr/tesseract/issues/427
                 CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(0, 0, 0));
 
-                return new PreprocessedTextBox(imageId, script, textBox, mat);
+                return new PreprocessedTextBox(imageId, textBox, mat);
             })
             .ToList(); // eager eval since mat is already disposed after return
     }
 
     public record RecognitionResult(string ImageId, string Script, bool IsVertical, PaddleOcrResponse.TextBox TextBox, string Text, ushort Confidence);
 
-    public IEnumerable<RecognitionResult> RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
+    public IEnumerable<RecognitionResult> RecognizePreprocessedTextBox(string script, PreprocessedTextBox textBox)
     {
         using var mat = textBox.PreprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToUseTesseract;
         return (isVertical ? _tesseractInstancesKeyByScript.Vertical : _tesseractInstancesKeyByScript.Horizontal)
-            .Where(pair => pair.Key == textBox.Script)
+            .Where(pair => pair.Key == script)
             .Select(pair =>
             {
-                var (script, tesseract) = pair;
+                var tesseract = pair.Value;
                 tesseract.SetImage(mat);
                 if (tesseract.Recognize() != 0) return null;
                 var chars = tesseract.GetCharacters();
