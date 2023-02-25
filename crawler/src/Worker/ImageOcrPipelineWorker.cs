@@ -49,7 +49,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             .GroupBy(result => result.Script).Select(g =>
                 GetRecognizedResultsByTesseract(g, detectedResultsBy, imagesKeyByUrlFilename));
         foreach (var groupByImageId in recognizedResultsByPaddleOcr
-                     .Where(result => result.Confidence >= _paddleOcrConfidenceThreshold)
+                     .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
                      .Concat(recognizedResultsByTesseract.SelectMany(i => i))
                      .GroupBy(result => result.ImageId))
         {
@@ -72,7 +72,13 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                     _logger.LogInformation("{} {}", groupByImageId.Key, groupByScript.Key);
                     var texts = string.Join("\n", groupByScript.Select(groupByLine =>
                             string.Join("\n", groupByLine.Select(result =>
-                                    $"{result.TextBox.ToCircumscribedRectangle()} {result.Confidence} {result.Text.Trim()}"))
+                                {
+                                    var tesseractExtraInfos = result is TesseractRecognitionResult r
+                                        ? $" vert={r.IsVertical} unrecognized={r.IsUnrecognized} "
+                                        : "";
+                                    var circumscribedRectangle = result.TextBox.ToCircumscribedRectangle();
+                                    return $"{circumscribedRectangle} {result.Confidence} {result.Text.Trim()} {tesseractExtraInfos}";
+                                }))
                             .Trim()))
                         .Trim()
                         .Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
@@ -85,8 +91,8 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private record CorrelatedTextBoxPair(string ImageId, ushort PercentageOfIntersection,
         PaddleOcrResponse.TextBox DetectedTextBox, PaddleOcrResponse.TextBox RecognizedTextBox);
 
-    private IEnumerable<PaddleOcrRequester.RecognitionResult> GetRecognizedResultsByTesseract(
-        IGrouping<string, PaddleOcrRequester.RecognitionResult> recognizedResultsByPaddleOcrGroupByScript,
+    private IEnumerable<TesseractRecognitionResult> GetRecognizedResultsByTesseract(
+        IGrouping<string, PaddleOcrRecognitionResult> recognizedResultsByPaddleOcrGroupByScript,
         IEnumerable<PaddleOcrRequester.DetectionResult> detectionResults,
         IReadOnlyDictionary<string, byte[]> imagesKeyByUrlFilename)
     {
@@ -141,15 +147,11 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 var boxes = g.Select(result => recognizedDetectedTextBoxes[imageId]
                         .FirstOrDefault(pair => pair.RecognizedTextBox == result.TextBox)?.DetectedTextBox)
                     .OfType<PaddleOcrResponse.TextBox>()
-                    .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox));
+                    .Select(b => (false, b))
+                    .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox).Select(b => (true, b)));
                 return TesseractRecognizer.PreprocessTextBoxes(imageId, imagesKeyByUrlFilename[imageId], boxes);
             })
             .SelectMany(textBoxes => textBoxes.SelectMany(b =>
-                _recognizer.RecognizePreprocessedTextBox(recognizedResultsByPaddleOcrGroupByScript.Key, b)))
-            .Select(result =>
-            {
-                var (imageId, script, _, textBox, text, confidence) = result;
-                return new PaddleOcrRequester.RecognitionResult(imageId, script, textBox, text, confidence);
-            });
+                _recognizer.RecognizePreprocessedTextBox(recognizedResultsByPaddleOcrGroupByScript.Key, b)));
     }
 }

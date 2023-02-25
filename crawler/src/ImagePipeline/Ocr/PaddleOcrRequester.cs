@@ -5,16 +5,16 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 public class PaddleOcrRequester
 {
     private static HttpClient _http = null!;
-    private readonly string _paddleOcrDetectionEndpoint;
-    private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
+    private readonly string _detectionEndpoint;
+    private readonly Dictionary<string, string> _recognitionEndpointsKeyByScript;
 
     public PaddleOcrRequester(IConfiguration config, IHttpClientFactory httpFactory)
     {
         _http = httpFactory.CreateClient("tbImage");
         var configSection = config.GetSection("ImageOcrPipeline").GetSection("PaddleOcr");
         var servingEndpoint = configSection.GetValue("ServingEndpoint", "") ?? "";
-        _paddleOcrDetectionEndpoint = servingEndpoint + "/predict/ocr_det";
-        _paddleOcrRecognitionEndpointsKeyByScript = new()
+        _detectionEndpoint = servingEndpoint + "/predict/ocr_det";
+        _recognitionEndpointsKeyByScript = new()
         {
             {"zh-Hans", servingEndpoint + "/predict/ocr_system"},
             {"zh-Hant", servingEndpoint + "/predict/ocr_system_zh-Hant"},
@@ -27,18 +27,16 @@ public class PaddleOcrRequester
 
     public Task<IEnumerable<DetectionResult>> RequestForDetection
         (Dictionary<string, byte[]> imagesBytesKeyById, CancellationToken stoppingToken = default) =>
-        Request(_paddleOcrDetectionEndpoint, imagesBytesKeyById,
+        Request(_detectionEndpoint, imagesBytesKeyById,
             nestedResults => imagesBytesKeyById
                 .Zip(nestedResults, (images, results) => (imageId: images.Key, results))
                 .SelectMany(t => t.results
                     .Select(result => new DetectionResult(t.imageId, result.TextBox))),
             stoppingToken);
 
-    public record RecognitionResult(string ImageId, string Script, PaddleOcrResponse.TextBox TextBox, string Text, ushort Confidence);
-
-    public Task<IEnumerable<RecognitionResult>[]> RequestForRecognition
+    public Task<IEnumerable<PaddleOcrRecognitionResult>[]> RequestForRecognition
         (Dictionary<string, byte[]> imagesBytesKeyById, CancellationToken stoppingToken = default) =>
-        Task.WhenAll(_paddleOcrRecognitionEndpointsKeyByScript.Select(pair =>
+        Task.WhenAll(_recognitionEndpointsKeyByScript.Select(pair =>
             Request(pair.Value, imagesBytesKeyById,
                 nestedResults => imagesBytesKeyById
                     .Zip(nestedResults, (images, results) => (imageId: images.Key, results))
@@ -47,7 +45,7 @@ public class PaddleOcrRequester
                         {
                             var (textBox, text, confidence) = result;
                             var confidencePercentage = (confidence * 100).RoundToUshort();
-                            return new RecognitionResult(t.imageId, pair.Key, textBox, text, confidencePercentage);
+                            return new PaddleOcrRecognitionResult(t.imageId, pair.Key, textBox, text, confidencePercentage);
                         })),
                 stoppingToken)));
 

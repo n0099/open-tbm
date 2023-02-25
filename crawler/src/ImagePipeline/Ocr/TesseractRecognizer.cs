@@ -36,16 +36,17 @@ public class TesseractRecognizer
         _aspectRatioThresholdToUseTesseract = configSection.GetValue("AspectRatioThresholdToUseTesseract", 0.8f);
     }
 
-    public record PreprocessedTextBox(string ImageId, PaddleOcrResponse.TextBox TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(string ImageId, bool IsUnrecognized, PaddleOcrResponse.TextBox TextBox, Mat PreprocessedTextBoxMat);
 
     public static List<PreprocessedTextBox> PreprocessTextBoxes
-        (string imageId, byte[] imageBytes, IEnumerable<PaddleOcrResponse.TextBox> textBoxes)
+        (string imageId, byte[] imageBytes, IEnumerable<(bool IsUnrecognized, PaddleOcrResponse.TextBox)> textBoxes)
     {
         using var originalImageMat = new Mat();
         CvInvoke.Imdecode(imageBytes, ImreadModes.Unchanged, originalImageMat);
         return textBoxes
-            .Select(textBox =>
+            .Select(t =>
             {
+                var (isUnrecognized, textBox) = t;
                 var degrees = textBox.GetRotationDegrees();
                 var mat = new Mat(originalImageMat, textBox.ToCircumscribedRectangle()); // crop by circumscribed rectangle
 
@@ -59,16 +60,15 @@ public class TesseractRecognizer
                 // https://github.com/tesseract-ocr/tesseract/issues/427
                 CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(0, 0, 0));
 
-                return new PreprocessedTextBox(imageId, textBox, mat);
+                return new PreprocessedTextBox(imageId, isUnrecognized, textBox, mat);
             })
             .ToList(); // eager eval since mat is already disposed after return
     }
 
-    public record RecognitionResult(string ImageId, string Script, bool IsVertical, PaddleOcrResponse.TextBox TextBox, string Text, ushort Confidence);
-
-    public IEnumerable<RecognitionResult> RecognizePreprocessedTextBox(string script, PreprocessedTextBox textBox)
+    public IEnumerable<TesseractRecognitionResult> RecognizePreprocessedTextBox(string script, PreprocessedTextBox textBox)
     {
-        using var mat = textBox.PreprocessedTextBoxMat;
+        var (imageId, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
+        using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToUseTesseract;
         return (isVertical ? _tesseractInstancesKeyByScript.Vertical : _tesseractInstancesKeyByScript.Horizontal)
             .Where(pair => pair.Key == script)
@@ -83,8 +83,8 @@ public class TesseractRecognizer
                     .Select(c => c.Text)).Trim();
                 if (!chars.Any() || text == "") return null;
                 var averageConfidence = chars.Select(c => c.Cost).Average().RoundToUshort();
-                return new RecognitionResult(textBox.ImageId, script, isVertical, textBox.TextBox, text, averageConfidence);
+                return new TesseractRecognitionResult(imageId, script, isVertical, isUnrecognized, box, text, averageConfidence);
             })
-            .OfType<RecognitionResult>().ToList(); // eager eval since mat is already disposed after return
+            .OfType<TesseractRecognitionResult>().ToList(); // eager eval since mat is already disposed after return
     }
 }
