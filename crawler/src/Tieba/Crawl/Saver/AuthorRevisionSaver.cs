@@ -26,7 +26,7 @@ public class AuthorRevisionSaver
     }
 
     public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
-        (TbmDbContext db, ICollection<TPostWithAuthorExpGrade> posts)
+        (TbmDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
         where TPostWithAuthorExpGrade : IPost, IPostWithAuthorExpGrade
     {
         SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
@@ -52,7 +52,7 @@ public class AuthorRevisionSaver
     }
 
     private void SaveAuthorRevisions<TPost, TRevision, TValue>(TbmDbContext db,
-        ICollection<TPost> posts,
+        IReadOnlyCollection<TPost> posts,
         HashSet<(Fid Fid, long Uid)> locks,
         IQueryable<TRevision> dbSet,
         Func<TPost, TValue?> postAuthorFieldValueSelector,

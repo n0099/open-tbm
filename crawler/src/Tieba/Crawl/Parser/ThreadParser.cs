@@ -7,7 +7,8 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
     protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag) =>
         requestFlag == CrawlRequestFlag.ThreadClientVersion602;
 
-    protected override IEnumerable<ThreadPost> ParsePostsInternal(IList<Thread> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
+    protected override IEnumerable<ThreadPost> ParsePostsInternal
+        (IList<Thread> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
 
     protected override ThreadPost Convert(Thread inPost)
     {

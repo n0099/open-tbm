@@ -30,8 +30,8 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
                 string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
                     $"SELECT {fid} AS Fid,"
                     + $"IFNULL((SELECT id FROM tbmc_f{fid}_reply ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
-                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount"))
-            ).ToList();
+                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount")))
+            .ToList();
         var forumCount = forumPostCountsTuples.Count * 2; // reply and sub reply
         var totalPostCount = forumPostCountsTuples.Sum(t => t.ReplyCount)
                              + forumPostCountsTuples.Sum(t => t.SubReplyCount);

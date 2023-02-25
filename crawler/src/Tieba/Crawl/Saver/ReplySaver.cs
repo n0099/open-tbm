@@ -98,10 +98,12 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
         var uniqueSignatures = signatures
             .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
-        var existingSignatures = (from s in db.ReplySignatures.AsTracking().TagWith("ForUpdate")
+        var existingSignatures = (
+            from s in db.ReplySignatures.AsTracking().TagWith("ForUpdate")
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
                   && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
-            select s).ToList();
+            select s
+        ).ToList();
         (from existing in existingSignatures
                 join newInReply in signatures on existing.SignatureId equals newInReply.SignatureId
                 select (existing, newInReply))

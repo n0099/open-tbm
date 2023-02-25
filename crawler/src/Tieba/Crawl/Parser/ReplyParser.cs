@@ -10,12 +10,13 @@ public partial class ReplyParser : BaseParser<ReplyPost, Reply>
 
     protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
+    protected override IEnumerable<ReplyPost> ParsePostsInternal
+        (IList<Reply> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
+
     // length with 24 char is only appeared in legacy replies
     [GeneratedRegex("^(?:[0-9a-f]{40}|[0-9a-f]{24})$", RegexOptions.Compiled, 100)]
     private static partial Regex ValidateContentImageFilenameGeneratedRegex();
     public static readonly Regex ValidateContentImageFilenameRegex = ValidateContentImageFilenameGeneratedRegex();
-
-    protected override IEnumerable<ReplyPost> ParsePostsInternal(IList<Reply> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
 
     protected override ReplyPost Convert(Reply inPost)
     {
