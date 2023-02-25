@@ -1,3 +1,7 @@
+using System.Drawing;
+using Clipper2Lib;
+using Emgu.CV;
+using Emgu.CV.Util;
 using tbm.Crawler.ImagePipeline.Ocr;
 
 namespace tbm.Crawler.Worker;
@@ -30,13 +34,64 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.filename, t => t.bytes);
-        var recognizedResultsByPaddleOcr = (await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken))
+        var recognizedResultsByPaddleOcr =
+            (await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken))
             .SelectMany(i => i).ToList();
+        ushort GetPercentageOfIntersectionArea(PaddleOcrResponse.TextBox subject, PaddleOcrResponse.TextBox clip)
+        {
+            Paths64 ConvertTextBoxToPath(PaddleOcrResponse.TextBox b) =>
+                new() {Clipper.MakePath(new[] {b.TopLeft.X, b.TopLeft.Y, b.TopRight.X, b.TopRight.Y,
+                    b.BottomRight.X, b.BottomRight.Y, b.BottomLeft.X, b.BottomLeft.Y, b.TopLeft.X, b.TopLeft.Y})};
+            double GetContourArea(Paths64 paths) => paths.Any()
+                ? CvInvoke.ContourArea(new VectorOfPoint(paths
+                    .SelectMany(path => path.Select(point => new Point((int)point.X, (int)point.Y))).ToArray()))
+                : 0;
+            var subjectPaths = ConvertTextBoxToPath(subject);
+            var clipPaths = ConvertTextBoxToPath(clip);
+            // slower OpenCV approach without Clipper: https://stackoverflow.com/questions/17810681/intersection-area-of-2-polygons-in-opencv
+            var intersectionArea = GetContourArea(Clipper.Intersect(subjectPaths, clipPaths, FillRule.NonZero));
+            var areas = new[] {intersectionArea / GetContourArea(subjectPaths), intersectionArea / GetContourArea(clipPaths)};
+            return (ushort)Math.Round(areas.Average() * 100, 0);
+        }
+        var uniqueRecognizedResults = recognizedResultsByPaddleOcr
+            // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
+            .GroupBy(result => result.ImageId).SelectMany(g => g.DistinctBy(result => result.TextBox));
+        var detectedTextBoxes = (
+            from detectionResult in await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken)
+            join recognitionResult in uniqueRecognizedResults on detectionResult.ImageId equals recognitionResult.ImageId
+            let percentageOfIntersection = GetPercentageOfIntersectionArea(detectionResult.TextBox, recognitionResult.TextBox)
+            select (detectionResult.ImageId, detectionBox: detectionResult.TextBox, recognitionBox: recognitionResult.TextBox, percentageOfIntersection)
+            ).ToList();
+        var recognizedDetectedTextBoxes = (
+            from t in detectedTextBoxes
+            group t by t.recognitionBox into g
+            select g.Where(t => t.percentageOfIntersection > 90)
+                .DefaultIfEmpty().MaxBy(t => t.percentageOfIntersection) into t
+            where t != default
+            select t
+            ).ToLookup(t => t.ImageId);
+        var unrecognizedDetectedTextBoxes = (
+            from t in detectedTextBoxes
+            group t by t.recognitionBox into g
+            select g.Where(t => t.percentageOfIntersection < 10)
+                .DefaultIfEmpty().MinBy(t => t.percentageOfIntersection) into t
+            where t != default
+            select t
+            ).ToLookup(t => t.ImageId);
         var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
             .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
             .GroupBy(result => (result.ImageId, result.Script))
-            .Select(g => TesseractRecognizer.PreprocessTextBoxes(
-                g.Key.ImageId, imagesKeyByUrlFilename[g.Key.ImageId], g.Key.Script, g.Select(result => result.TextBox)))
+            .Select(g =>
+            {
+                var imageId = g.Key.ImageId;
+                var boxes = g.Select(result =>
+                        recognizedDetectedTextBoxes[imageId].FirstOrDefault(t => t.recognitionBox == result.TextBox).detectionBox)
+                    // ReSharper disable once RedundantEnumerableCastCall
+                    .OfType<PaddleOcrResponse.TextBox>()
+                    .Concat(unrecognizedDetectedTextBoxes[imageId].Select(t => t.detectionBox))
+                    .Distinct();
+                return TesseractRecognizer.PreprocessTextBoxes(imageId, imagesKeyByUrlFilename[imageId], g.Key.Script, boxes);
+            })
             .SelectMany(textBoxes =>
                 textBoxes.SelectMany(_recognizer.RecognizePreprocessedTextBox))
             .Select(result =>

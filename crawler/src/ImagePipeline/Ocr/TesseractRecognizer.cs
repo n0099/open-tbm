@@ -42,15 +42,33 @@ public class TesseractRecognizer
     public static List<PreprocessedTextBox> PreprocessTextBoxes
         (string imageId, byte[] imageBytes, string script, IEnumerable<PaddleOcrResponse.TextBox> textBoxes)
     {
-        using var mat = new Mat();
-        CvInvoke.Imdecode(imageBytes, ImreadModes.Unchanged, mat);
+        using var originalImageMat = new Mat();
+        CvInvoke.Imdecode(imageBytes, ImreadModes.Unchanged, originalImageMat);
         return textBoxes
             .Select(textBox =>
             {
                 var degrees = textBox.GetRotationDegrees();
-                var preprocessedMat = new Mat(mat, textBox.ToCircumscribedRectangle()); // crop by circumscribed rectangle
-                if (degrees != 0) preprocessedMat.Rotate(degrees);
-                return new PreprocessedTextBox(imageId, script, textBox, preprocessedMat);
+                var mat = new Mat(originalImageMat, textBox.ToCircumscribedRectangle()); // crop by circumscribed rectangle
+
+                CvInvoke.CvtColor(mat, mat, ColorConversion.Bgr2Gray);
+                // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
+                // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
+                _ = CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
+                // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
+                // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
+
+                if (degrees != 0) mat.Rotate(degrees);
+
+                using var histogram = new Mat();
+                using var threshedMatVector = new VectorOfMat(mat);
+                CvInvoke.CalcHist(threshedMatVector, new[] {0}, null, histogram, new[] {256}, new[] {0f, 256}, false);
+                // we don't need k-means clustering like https://stackoverflow.com/questions/50899692/most-dominant-color-in-rgb-image-opencv-numpy-python
+                // since mat only composed of pure black and whites(aka 1bpp) after thresholding
+                var dominantColor = histogram.Get<float>(0, 0) > histogram.Get<float>(255, 0) ? 0 : 255;
+                // https://github.com/tesseract-ocr/tesseract/issues/427
+                CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
+
+                return new PreprocessedTextBox(imageId, script, textBox, mat);
             })
             .ToList(); // eager eval since mat is already disposed after return
     }
@@ -60,22 +78,6 @@ public class TesseractRecognizer
     public IEnumerable<RecognitionResult> RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
     {
         using var mat = textBox.PreprocessedTextBoxMat;
-        CvInvoke.CvtColor(mat, mat, ColorConversion.Bgr2Gray);
-        // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
-        // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
-        _ = CvInvoke.Threshold(mat, mat, 0, 255, ThresholdType.Binary | ThresholdType.Otsu);
-        // CvInvoke.AdaptiveThreshold(threshedMat, threshedMat, 255, AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 11, 3);
-        // CvInvoke.MedianBlur(threshedMat, threshedMat, 1); // https://en.wikipedia.org/wiki/Salt-and-pepper_noise
-
-        using var histogram = new Mat();
-        using var threshedMatVector = new VectorOfMat(mat);
-        CvInvoke.CalcHist(threshedMatVector, new[] {0}, null, histogram, new[] {256}, new[] {0f, 256}, false);
-        // we don't need k-means clustering like https://stackoverflow.com/questions/50899692/most-dominant-color-in-rgb-image-opencv-numpy-python
-        // since mat only composed of pure black and whites(aka 1bpp) after thresholding
-        var dominantColor = histogram.Get<float>(0, 0) > histogram.Get<float>(255, 0) ? 0 : 255;
-        // https://github.com/tesseract-ocr/tesseract/issues/427
-        CvInvoke.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderType.Constant, new(dominantColor, dominantColor, dominantColor));
-
         var isVertical = (float)textBox.PreprocessedTextBoxMat.Width / textBox.PreprocessedTextBoxMat.Height < _aspectRatioThresholdToUseTesseract;
         return (isVertical ? _tesseractInstancesKeyByScript.Vertical : _tesseractInstancesKeyByScript.Horizontal)
             .Where(pair => pair.Key == textBox.Script)
