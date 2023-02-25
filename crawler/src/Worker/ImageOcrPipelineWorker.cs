@@ -51,7 +51,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             // slower OpenCV approach without Clipper: https://stackoverflow.com/questions/17810681/intersection-area-of-2-polygons-in-opencv
             var intersectionArea = GetContourArea(Clipper.Intersect(subjectPaths, clipPaths, FillRule.NonZero));
             var areas = new[] {intersectionArea / GetContourArea(subjectPaths), intersectionArea / GetContourArea(clipPaths)};
-            return (ushort)Math.Round(areas.Average() * 100, 0);
+            return (areas.Average() * 100).RoundToUshort();
         }
         var uniqueRecognizedResults = recognizedResultsByPaddleOcr
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
@@ -112,7 +112,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                             var rect = result.TextBox.ToCircumscribedRectangle();
                             // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                             // which have similar but different values of y coordinates get rearranged in a wrong order
-                            var alignedY = (int)Math.Round((double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine);
+                            var alignedY = ((double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine).RoundToUshort();
                             return (result, x: rect.X, alignedY);
                         })
                         .OrderBy(t => t.alignedY).ThenBy(t => t.x)

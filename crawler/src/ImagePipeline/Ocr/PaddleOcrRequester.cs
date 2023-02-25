@@ -46,7 +46,8 @@ public class PaddleOcrRequester
                         .Select(result =>
                         {
                             var (textBox, text, confidence) = result;
-                            return new RecognitionResult(t.imageId, pair.Key, textBox, text, (ushort)Math.Round(confidence * 100, 0));
+                            var confidencePercentage = (confidence * 100).RoundToUshort();
+                            return new RecognitionResult(t.imageId, pair.Key, textBox, text, confidencePercentage);
                         })),
                 stoppingToken)));
 

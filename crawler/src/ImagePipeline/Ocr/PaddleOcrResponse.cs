@@ -37,7 +37,7 @@ public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Res
             var yAxisDiff = BottomLeft.Y - TopLeft.Y;
             // https://stackoverflow.com/questions/13002979/how-to-calculate-rotation-angle-from-rectangle-points
             // https://www.calculator.net/triangle-calculator.html?vc=&vx=4&vy=&va=90&vz=1&vb=&angleunits=d&x=53&y=29
-            return (float)Math.Atan2(xAxisDiff, yAxisDiff) * (float)(180 / Math.PI); // radians to degrees
+            return (float)(Math.Atan2(xAxisDiff, yAxisDiff) * 180 / Math.PI); // radians to degrees
         }
     }
 

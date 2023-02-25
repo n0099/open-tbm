@@ -124,4 +124,7 @@ public static class ExtensionMethods
     /// <see>https://stackoverflow.com/questions/43021/how-do-you-get-the-index-of-the-current-iteration-of-a-foreach-loop/39997157#39997157</see>
     public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> self) =>
         self.Select((item, index) => (item, index));
+
+    public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number, 0);
+    public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number, 0);
 }

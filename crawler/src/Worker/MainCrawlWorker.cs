@@ -32,7 +32,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
         foreach (var fidAndName in forums)
         {
             yield return fidAndName;
-            await Task.Delay((int)(yieldInterval * 1000));
+            await Task.Delay((yieldInterval * 1000).RoundToUshort());
         }
     }
 
