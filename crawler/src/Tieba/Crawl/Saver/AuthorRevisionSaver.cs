@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.EntityFrameworkCore;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
@@ -62,12 +63,11 @@ public class AuthorRevisionSaver
         where TRevision : AuthorRevision
     {
         Helper.GetNowTimestamp(out var now);
-        _ = dbSet.AsNoTracking().TagWith("ForUpdate") // https://github.com/linq2db/linq2db/issues/3905
-            .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid)).ToList();
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
             .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
             .Where(e => e.Rank == 1)
+            .AsMySql().ForUpdateHint()
             .ToLinqToDB().AsEnumerable()
             .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
             (

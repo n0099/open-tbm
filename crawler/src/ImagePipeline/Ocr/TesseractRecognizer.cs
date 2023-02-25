@@ -55,7 +55,7 @@ public class TesseractRecognizer
             .ToList(); // eager eval since mat is already disposed after return
     }
 
-    public record RecognitionResult(string ImageId, string Script, bool IsVertical, PaddleOcrResponse.TextBox TextBox, string Text, float Confidence);
+    public record RecognitionResult(string ImageId, string Script, bool IsVertical, PaddleOcrResponse.TextBox TextBox, string Text, ushort Confidence);
 
     public IEnumerable<RecognitionResult> RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
     {
@@ -89,8 +89,9 @@ public class TesseractRecognizer
                     .Where(c => c.Cost > _tesseractConfidenceThreshold)
                     .Select(c => c.Text)).Trim();
                 if (!chars.Any() || text == "") return null;
-                var averageConfidence = chars.Select(c => c.Cost).Average();
+                var averageConfidence = (ushort)Math.Round(chars.Select(c => c.Cost).Average(), 0);
                 return new RecognitionResult(textBox.ImageId, script, isVertical, textBox.TextBox, text, averageConfidence);
-            }).OfType<RecognitionResult>().ToList(); // eager eval since mat is already disposed after return
+            })
+            .OfType<RecognitionResult>().ToList(); // eager eval since mat is already disposed after return
     }
 }

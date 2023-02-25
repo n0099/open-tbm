@@ -5,6 +5,7 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 public class PaddleOcrRequester
 {
     private static HttpClient _http = null!;
+    private readonly string _paddleOcrDetectionEndpoint;
     private readonly Dictionary<string, string> _paddleOcrRecognitionEndpointsKeyByScript;
 
     public PaddleOcrRequester(IConfiguration config, IHttpClientFactory httpFactory)
@@ -12,6 +13,7 @@ public class PaddleOcrRequester
         _http = httpFactory.CreateClient("tbImage");
         var configSection = config.GetSection("ImageOcrPipeline");
         var paddleOcrServingEndpoint = configSection.GetValue("PaddleOcrServingEndpoint", "") ?? "";
+        _paddleOcrDetectionEndpoint = paddleOcrServingEndpoint + "/predict/ocr_det";
         _paddleOcrRecognitionEndpointsKeyByScript = new()
         {
             {"zh-Hans", paddleOcrServingEndpoint + "/predict/ocr_system"},
@@ -21,7 +23,18 @@ public class PaddleOcrRequester
         };
     }
 
-    public record RecognitionResult(string ImageId, string Script, PaddleOcrResponse.TextBox TextBox, string Text, float Confidence);
+    public record DetectionResult(string ImageId, PaddleOcrResponse.TextBox TextBox);
+
+    public Task<IEnumerable<DetectionResult>> RequestForDetection
+        (Dictionary<string, byte[]> imagesBytesKeyById, CancellationToken stoppingToken = default) =>
+        Request(_paddleOcrDetectionEndpoint, imagesBytesKeyById,
+            nestedResults => imagesBytesKeyById
+                .Zip(nestedResults, (images, results) => (imageId: images.Key, results))
+                .SelectMany(t => t.results
+                    .Select(result => new DetectionResult(t.imageId, result.TextBox))),
+            stoppingToken);
+
+    public record RecognitionResult(string ImageId, string Script, PaddleOcrResponse.TextBox TextBox, string Text, ushort Confidence);
 
     public Task<IEnumerable<RecognitionResult>[]> RequestForRecognition
         (Dictionary<string, byte[]> imagesBytesKeyById, CancellationToken stoppingToken = default) =>
@@ -30,7 +43,11 @@ public class PaddleOcrRequester
                 nestedResults => imagesBytesKeyById
                     .Zip(nestedResults, (images, results) => (imageId: images.Key, results))
                     .SelectMany(t => t.results
-                        .Select(result => new RecognitionResult(t.imageId, pair.Key, result.TextBox, result.Text, result.Confidence))),
+                        .Select(result =>
+                        {
+                            var (textBox, text, confidence) = result;
+                            return new RecognitionResult(t.imageId, pair.Key, textBox, text, (ushort)Math.Round(confidence * 100, 0));
+                        })),
                 stoppingToken)));
 
     private record PaddleOcrRequestPayload(IEnumerable<string> Images);

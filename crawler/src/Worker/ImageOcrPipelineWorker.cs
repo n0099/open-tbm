@@ -69,7 +69,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                     _logger.LogInformation("{} {}", groupByImageId.Key, groupByScript.Key);
                     var texts = string.Join("\n", groupByScript.Select(groupByLine =>
                             string.Join("\n", groupByLine.Select(result =>
-                                    $"{result.TextBox.ToCircumscribedRectangle()} {result.Confidence * 100:F0} {result.Text.Trim()}"))
+                                    $"{result.TextBox.ToCircumscribedRectangle()} {result.Confidence} {result.Text.Trim()}"))
                             .Trim()))
                         .Trim()
                         .Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
