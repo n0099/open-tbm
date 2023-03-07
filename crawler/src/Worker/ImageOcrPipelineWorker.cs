@@ -1,8 +1,10 @@
-using System.Drawing;
 using Clipper2Lib;
 using Emgu.CV;
 using Emgu.CV.Util;
+using OpenCvSharp;
 using tbm.Crawler.ImagePipeline.Ocr;
+using Mat = OpenCvSharp.Mat;
+using Point = System.Drawing.Point;
 
 namespace tbm.Crawler.Worker;
 
@@ -10,20 +12,20 @@ public class ImageOcrPipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
     private static HttpClient _http = null!;
-    private readonly PaddleOcrRequester _requester;
-    private readonly TesseractRecognizer _recognizer;
+    private readonly PaddleOcrRecognizer _paddleOcrRecognizer;
+    private readonly TesseractRecognizer _tesseractRecognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
     private readonly int _paddleOcrConfidenceThreshold;
     private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox;
     private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox;
 
-    public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config,
-        IHttpClientFactory httpFactory, PaddleOcrRequester requester, TesseractRecognizer recognizer) : base(logger)
+    public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config, IHttpClientFactory httpFactory,
+        PaddleOcrRecognizer paddleOcrRecognizer, TesseractRecognizer tesseractRecognizer) : base(logger)
     {
         _logger = logger;
         _http = httpFactory.CreateClient("tbImage");
-        _requester = requester;
-        _recognizer = recognizer;
+        _paddleOcrRecognizer = paddleOcrRecognizer;
+        _tesseractRecognizer = tesseractRecognizer;
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
         _paddleOcrConfidenceThreshold = configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
@@ -40,14 +42,36 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         var imagesKeyByUrlFilename = (await Task.WhenAll(
                 imagesUrlFilename.Select(async filename =>
                     (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
-            .ToDictionary(t => t.filename, t => t.bytes);
-        var recognizedResultsByPaddleOcr =
-            (await _requester.RequestForRecognition(imagesKeyByUrlFilename, stoppingToken))
-            .SelectMany(i => i).ToList();
-        var detectedResultsBy = await _requester.RequestForDetection(imagesKeyByUrlFilename, stoppingToken);
+            .SelectMany(t =>
+            {
+                Mat Flip(Mat mat, FlipMode flipMode)
+                {
+                    var ret = new Mat();
+                    Cv2.Flip(mat, ret, flipMode);
+                    return ret;
+                }
+                var (filename, bytes) = t;
+                var mat = Cv2.ImDecode(bytes, ImreadModes.Color); // convert to BGR three channels without alpha
+                return new (string Filename, Mat Mat)[]
+                {
+                    (filename, mat),
+                    (filename + "-flip", Flip(mat, FlipMode.X)),
+                    (filename + "-flop", Flip(mat, FlipMode.Y)),
+                    (filename + "-flip-flop", Flip(mat, FlipMode.XY)) // same with 180 degrees clockwise rotation
+                };
+            })
+            .ToDictionary(t => t.Filename, t => t.Mat);
+        await _paddleOcrRecognizer.InitializeModels(stoppingToken);
+        var recognizedResultsByPaddleOcr = _paddleOcrRecognizer.RecognizeImageMatrices(imagesKeyByUrlFilename).ToList();
+        var detectionResults = _paddleOcrRecognizer.DetectImageMatrices(imagesKeyByUrlFilename);
         var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
             .GroupBy(result => result.Script).Select(g =>
-                GetRecognizedResultsByTesseract(g, detectedResultsBy, imagesKeyByUrlFilename));
+                GetRecognizedResultsByTesseract(g, detectionResults,
+                    imagesKeyByUrlFilename.ToDictionary(pair => pair.Key, pair =>
+                    {
+                        Cv2.ImEncode(".png", pair.Value, out var ret);
+                        return ret;
+                    })));
         foreach (var groupByImageId in recognizedResultsByPaddleOcr
                      .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
                      .Concat(recognizedResultsByTesseract.SelectMany(i => i))
@@ -152,6 +176,6 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 return TesseractRecognizer.PreprocessTextBoxes(imageId, imagesKeyByUrlFilename[imageId], boxes);
             })
             .SelectMany(textBoxes => textBoxes.SelectMany(b =>
-                _recognizer.RecognizePreprocessedTextBox(recognizedResultsByPaddleOcrGroupByScript.Key, b)));
+                _tesseractRecognizer.RecognizePreprocessedTextBox(recognizedResultsByPaddleOcrGroupByScript.Key, b)));
     }
 }

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text.Json.Serialization;
+using OpenCvSharp;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
@@ -27,6 +28,12 @@ public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Res
             Math.Max(TopRight.X, BottomRight.X),
             Math.Max(BottomLeft.Y, BottomRight.Y));
 
+        public static implicit operator TextBox(RotatedRect rotatedRect)
+        {
+            var points = rotatedRect.Points();
+            return new(points[0], points[1], points[3], points[2]);
+        }
+
         public float GetRotationDegrees()
         {
             if (TopLeft.X == BottomLeft.X
@@ -41,7 +48,10 @@ public record PaddleOcrResponse(string Msg, string Status, PaddleOcrResponse.Res
         }
     }
 
-    public record Coordinate(int X, int Y);
+    public record Coordinate(int X, int Y)
+    {
+        public static implicit operator Coordinate(Point2f point) => new(point.X.RoundToUshort(), point.Y.RoundToUshort());
+    }
 
     private class ResultsConverter : JsonConverter<Result[][]>
     {
