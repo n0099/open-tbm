@@ -4,11 +4,11 @@ using Emgu.CV.OCR;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
-public class TesseractRecognizer
+public class TesseractRecognizer : IDisposable
 {
     private readonly (Dictionary<string, Tesseract> Horizontal, Dictionary<string, Tesseract> Vertical) _tesseractInstancesKeyByScript;
     private readonly int _confidenceThreshold;
-    private readonly float _aspectRatioThresholdToUseTesseract;
+    private readonly float _aspectRatioThresholdToConsiderAsVertical;
 
     public TesseractRecognizer(IConfiguration config)
     {
@@ -33,8 +33,12 @@ public class TesseractRecognizer
             {"ja", CreateTesseract("best/jpn_vert")}
         };
         _confidenceThreshold = configSection.GetValue("ConfidenceThreshold", 20);
-        _aspectRatioThresholdToUseTesseract = configSection.GetValue("AspectRatioThresholdToUseTesseract", 0.8f);
+        _aspectRatioThresholdToConsiderAsVertical = configSection.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
     }
+
+    public void Dispose() => _tesseractInstancesKeyByScript.Horizontal
+        .Concat(_tesseractInstancesKeyByScript.Vertical)
+        .ForEach(pair => pair.Value.Dispose());
 
     public record PreprocessedTextBox(string ImageId, bool IsUnrecognized, PaddleOcrResponse.TextBox TextBox, Mat PreprocessedTextBoxMat);
 
@@ -69,7 +73,7 @@ public class TesseractRecognizer
     {
         var (imageId, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
-        var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToUseTesseract;
+        var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToConsiderAsVertical;
         return (isVertical ? _tesseractInstancesKeyByScript.Vertical : _tesseractInstancesKeyByScript.Horizontal)
             .Where(pair => pair.Key == script)
             .Select(pair =>
