@@ -72,7 +72,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 .GroupBy(result => result.Script)
                 .SelectMany(scripts => scripts.Select(result =>
                         {
-                            var rect = result.TextBox.ToCircumscribedRectangle();
+                            var rect = result.TextBox.BoundingRect();
                             // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                             // which have similar but different values of y coordinates get rearranged in a wrong order
                             var alignedY = ((double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine).RoundToUshort();
@@ -91,8 +91,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                                     var tesseractExtraInfos = result is TesseractRecognitionResult r
                                         ? $" vert={r.IsVertical} unrecognized={r.IsUnrecognized} "
                                         : "";
-                                    var circumscribedRectangle = result.TextBox.ToCircumscribedRectangle();
-                                    return $"{circumscribedRectangle} {result.Confidence} {result.Text.Trim()} {tesseractExtraInfos}";
+                                    return $"{result.TextBox.BoundingRect()} {result.Confidence} {result.Text.Trim()} {tesseractExtraInfos}";
                                 }))
                             .Trim()))
                         .Trim()
@@ -104,19 +103,23 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     }
 
     private record CorrelatedTextBoxPair(string ImageId, ushort PercentageOfIntersection,
-        PaddleOcrResponse.TextBox DetectedTextBox, PaddleOcrResponse.TextBox RecognizedTextBox);
+        RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
     private IEnumerable<TesseractRecognitionResult> GetRecognizedResultsByTesseract(
         IGrouping<string, PaddleOcrRecognitionResult> recognizedResultsByPaddleOcrGroupByScript,
-        IEnumerable<PaddleOcrRequester.DetectionResult> detectionResults,
+        IEnumerable<PaddleOcrRecognizer.DetectionResult> detectionResults,
         IReadOnlyDictionary<string, Mat> imageMatricesKeyByImageId)
     {
-        ushort GetPercentageOfIntersectionArea(PaddleOcrResponse.TextBox subject, PaddleOcrResponse.TextBox clip)
+        ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {
-            Paths64 ConvertTextBoxToPath(PaddleOcrResponse.TextBox b) => new() {Clipper.MakePath(new[] {
-                b.TopLeft.X, b.TopLeft.Y, b.TopRight.X, b.TopRight.Y,
-                b.BottomRight.X, b.BottomRight.Y, b.BottomLeft.X, b.BottomLeft.Y
-            })};
+            Paths64 ConvertTextBoxToPath(RotatedRect box)
+            {
+                var (topLeft, topRight, bottomLeft, bottomRight) = box.GetPoints();
+                return new() {Clipper.MakePath(new[] {
+                    topLeft.X, topLeft.Y, topRight.X, topRight.Y,
+                    bottomRight.X, bottomRight.Y, bottomLeft.X, bottomLeft.Y
+                })};
+            }
             double GetContourArea(Paths64 paths) => paths.Any()
                 ? Cv2.ContourArea(paths.SelectMany(path => path.Select(point => new Point((int)point.X, (int)point.Y))))
                 : 0;
@@ -161,7 +164,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 var boxes = g
                     .Select(result => recognizedDetectedTextBoxes[imageId]
                         .FirstOrDefault(pair => pair.RecognizedTextBox == result.TextBox)?.DetectedTextBox)
-                    .OfType<PaddleOcrResponse.TextBox>()
+                    .OfType<RotatedRect>()
                     .Select(b => (false, b))
                     .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox).Select(b => (true, b)));
                 return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes);

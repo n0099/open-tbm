@@ -41,9 +41,16 @@ public class PaddleOcrRecognizer
 
     public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<string, Mat> matricesKeyByImageId) =>
         matricesKeyByImageId.SelectMany(matrix => _modelsKeyByScript.SelectMany(model =>
-            PaddleOcrRecognitionResult.FromPaddleSharp(matrix.Key, model.Key, model.Value.Run(matrix.Value))));
+            CreateRecognitionResult(matrix.Key, model.Key, model.Value.Run(matrix.Value))));
 
-    public IEnumerable<PaddleOcrRequester.DetectionResult> DetectImageMatrices(Dictionary<string, Mat> matricesKeyByImageId) =>
+    private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
+        (string imageId, string script, PaddleOcrResult result) =>
+        result.Regions.Select(region => new PaddleOcrRecognitionResult(
+            imageId, script, region.Rect, region.Text, (region.Score * 100).NanToZero().RoundToUshort()));
+
+    public record DetectionResult(string ImageId, RotatedRect TextBox);
+
+    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<string, Mat> matricesKeyByImageId) =>
         matricesKeyByImageId.SelectMany(matrix => _modelsKeyByScript.SelectMany(model =>
-            model.Value.Detector.Run(matrix.Value).Select(rect => new PaddleOcrRequester.DetectionResult(matrix.Key, rect))));
+            model.Value.Detector.Run(matrix.Value).Select(rect => new DetectionResult(matrix.Key, rect))));
 }

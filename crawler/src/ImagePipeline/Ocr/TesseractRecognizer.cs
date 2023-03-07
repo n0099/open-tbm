@@ -36,23 +36,22 @@ public class TesseractRecognizer : IDisposable
         .Concat(_tesseractInstancesKeyByScript.Vertical)
         .ForEach(pair => pair.Value.Dispose());
 
-    public record PreprocessedTextBox(string ImageId, bool IsUnrecognized, PaddleOcrResponse.TextBox TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(string ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
     public static List<PreprocessedTextBox> PreprocessTextBoxes
-        (string imageId, Mat imageMat, IEnumerable<(bool IsUnrecognized, PaddleOcrResponse.TextBox)> textBoxes) => textBoxes
+        (string imageId, Mat imageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
         .Select(t =>
         {
             var (isUnrecognized, textBox) = t;
-            var degrees = textBox.GetRotationDegrees();
-            var circumscribed = textBox.ToCircumscribedRectangle(); // crop by circumscribed rectangle
-            var mat = new Mat(imageMat, Rect.FromLTRB(circumscribed.Left, circumscribed.Top, circumscribed.Right, circumscribed.Bottom));
+            var degrees = GetRotationDegrees(textBox);
+            var mat = new Mat(imageMat, textBox.BoundingRect()); // crop by circumscribed rectangle
 
             Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
             // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
             // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
             _ = Cv2.Threshold(mat, mat, 0, 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
 
-            if (degrees != 0) mat.Rotate(degrees);
+            if (degrees != 0) RotateMatrix(mat, degrees);
 
             // https://github.com/tesseract-ocr/tesseract/issues/427
             Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
@@ -60,6 +59,31 @@ public class TesseractRecognizer : IDisposable
             return new PreprocessedTextBox(imageId, isUnrecognized, textBox, mat);
         })
         .ToList(); // eager eval since mat is already disposed after return
+
+    private static float GetRotationDegrees(RotatedRect rotatedRect)
+    { // https://stackoverflow.com/questions/13002979/how-to-calculate-rotation-angle-from-rectangle-points
+        var (topLeft, topRight, bottomLeft, bottomRight) = rotatedRect.GetPoints();
+        if (topLeft.X == bottomLeft.X
+            && topRight.X == bottomRight.X
+            && topLeft.Y == topRight.Y
+            && bottomLeft.Y == bottomRight.Y) return 0;
+        var xAxisDiff = bottomLeft.X - topLeft.X;
+        var yAxisDiff = bottomLeft.Y - topLeft.Y;
+        // https://www.calculator.net/triangle-calculator.html?vc=&vx=4&vy=&va=90&vz=1&vb=&angleunits=d&x=53&y=29
+        return (float)(Math.Atan2(xAxisDiff, yAxisDiff) * 180 / Math.PI); // radians to degrees
+    }
+
+    private static void RotateMatrix(Mat src, float degrees)
+    { // https://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c/75451191#75451191
+        degrees = -degrees; // counter-clockwise to clockwise
+        var center = new Point2f((src.Width - 1) / 2f, (src.Height - 1) / 2f);
+        using var rotationMat = Cv2.GetRotationMatrix2D(center, degrees, 1);
+        var srcSize = src.Size();
+        var boundingRect = new RotatedRect(new(), new(srcSize.Width, srcSize.Height), degrees).BoundingRect();
+        rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
+        rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
+        Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
+    }
 
     public IEnumerable<TesseractRecognitionResult> RecognizePreprocessedTextBox(string script, PreprocessedTextBox textBox)
     {

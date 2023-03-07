@@ -1,3 +1,5 @@
+using OpenCvSharp;
+
 namespace tbm.Crawler;
 
 public static class ExtensionMethods
@@ -128,4 +130,10 @@ public static class ExtensionMethods
     public static float NanToZero(this float number) => float.IsNaN(number) ? 0 : number;
     public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number, 0);
     public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number, 0);
+
+    public static (Point TopLeft, Point TopRight, Point BottomLeft, Point BottomRight) GetPoints(this RotatedRect rotatedRect)
+    {
+        var points = rotatedRect.Points();
+        return (points[0].ToPoint(), points[1].ToPoint(), points[3].ToPoint(), points[2].ToPoint());
+    }
 }
