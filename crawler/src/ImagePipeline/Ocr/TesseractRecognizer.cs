@@ -13,10 +13,11 @@ public class TesseractRecognizer : IDisposable
     {
         var configSection = config.GetSection("ImageOcrPipeline").GetSection("Tesseract");
         var dataPath = configSection.GetValue("DataPath", "") ?? "";
-        // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-        OCRTesseract CreateTesseract(string scripts, int psmode) => OCRTesseract.Create(dataPath, scripts, psmode: psmode);
+        OCRTesseract CreateTesseract(string scripts, int psmode) =>
+            // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
+            OCRTesseract.Create(dataPath, scripts, "", 1, psmode);
         _tesseractInstancesKeyByScript.Horizontal = new()
-        {
+        { // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
             {"zh-Hans", CreateTesseract("best/chi_sim+best/eng", 7)},
             {"zh-Hant", CreateTesseract("best/chi_tra+best/eng", 7)},
             {"ja", CreateTesseract("best/jpn", 7)}, // literal latin letters in japanese is replaced by katakana
@@ -96,12 +97,13 @@ public class TesseractRecognizer : IDisposable
             {
                 var tesseract = pair.Value;
                 tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
+                if (!rects.Any()) return null;
                 var components = rects.Zip(texts, confidences)
                     .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third)).ToList();
                 var text = string.Join("", components
                     .Where(t => t.Confidence > _confidenceThreshold)
                     .Select(t => t.Text)).Trim();
-                if (!components.Any() || text == "") return null;
+                if (text == "") return null;
                 var averageConfidence = components.Select(c => c.Confidence).Average().RoundToUshort();
                 return new TesseractRecognitionResult(imageId, script, isVertical, isUnrecognized, box, text, averageConfidence);
             })
