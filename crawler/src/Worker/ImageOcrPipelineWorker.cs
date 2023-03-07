@@ -1,10 +1,6 @@
 using Clipper2Lib;
-using Emgu.CV;
-using Emgu.CV.Util;
 using OpenCvSharp;
 using tbm.Crawler.ImagePipeline.Ocr;
-using Mat = OpenCvSharp.Mat;
-using Point = System.Drawing.Point;
 
 namespace tbm.Crawler.Worker;
 
@@ -66,12 +62,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         var detectionResults = _paddleOcrRecognizer.DetectImageMatrices(imagesKeyByUrlFilename);
         var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
             .GroupBy(result => result.Script).Select(g =>
-                GetRecognizedResultsByTesseract(g, detectionResults,
-                    imagesKeyByUrlFilename.ToDictionary(pair => pair.Key, pair =>
-                    {
-                        Cv2.ImEncode(".png", pair.Value, out var ret);
-                        return ret;
-                    })));
+                GetRecognizedResultsByTesseract(g, detectionResults, imagesKeyByUrlFilename));
         foreach (var groupByImageId in recognizedResultsByPaddleOcr
                      .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
                      .Concat(recognizedResultsByTesseract.SelectMany(i => i))
@@ -118,7 +109,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private IEnumerable<TesseractRecognitionResult> GetRecognizedResultsByTesseract(
         IGrouping<string, PaddleOcrRecognitionResult> recognizedResultsByPaddleOcrGroupByScript,
         IEnumerable<PaddleOcrRequester.DetectionResult> detectionResults,
-        IReadOnlyDictionary<string, byte[]> imagesKeyByUrlFilename)
+        IReadOnlyDictionary<string, Mat> imageMatricesKeyByImageId)
     {
         ushort GetPercentageOfIntersectionArea(PaddleOcrResponse.TextBox subject, PaddleOcrResponse.TextBox clip)
         {
@@ -127,8 +118,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 b.BottomRight.X, b.BottomRight.Y, b.BottomLeft.X, b.BottomLeft.Y
             })};
             double GetContourArea(Paths64 paths) => paths.Any()
-                ? CvInvoke.ContourArea(new VectorOfPoint(paths
-                    .SelectMany(path => path.Select(point => new Point((int)point.X, (int)point.Y))).ToArray()))
+                ? Cv2.ContourArea(paths.SelectMany(path => path.Select(point => new Point((int)point.X, (int)point.Y))))
                 : 0;
             var subjectPaths = ConvertTextBoxToPath(subject);
             var clipPaths = ConvertTextBoxToPath(clip);
@@ -174,7 +164,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                     .OfType<PaddleOcrResponse.TextBox>()
                     .Select(b => (false, b))
                     .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox).Select(b => (true, b)));
-                return TesseractRecognizer.PreprocessTextBoxes(imageId, imagesKeyByUrlFilename[imageId], boxes);
+                return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes);
             })
             .SelectMany(textBoxes => textBoxes.SelectMany(b =>
                 _tesseractRecognizer.RecognizePreprocessedTextBox(recognizedResultsByPaddleOcrGroupByScript.Key, b)));
