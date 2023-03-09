@@ -40,12 +40,13 @@ public class TesseractRecognizer : IDisposable
     public record PreprocessedTextBox(string ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
     public static List<PreprocessedTextBox> PreprocessTextBoxes
-        (string imageId, Mat imageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
+        (string imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
         .Select(t =>
         {
             var (isUnrecognized, textBox) = t;
-            var degrees = GetRotationDegrees(textBox);
-            var mat = new Mat(imageMat, textBox.BoundingRect()); // crop by circumscribed rectangle
+            // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
+            var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
+            var mat = new Mat(originalImageMat, textBox.BoundingRect()); // crop by circumscribed rectangle
 
             Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
             // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
@@ -79,8 +80,7 @@ public class TesseractRecognizer : IDisposable
         degrees = -degrees; // counter-clockwise to clockwise
         var center = new Point2f((src.Width - 1) / 2f, (src.Height - 1) / 2f);
         using var rotationMat = Cv2.GetRotationMatrix2D(center, degrees, 1);
-        var srcSize = src.Size();
-        var boundingRect = new RotatedRect(new(), new(srcSize.Width, srcSize.Height), degrees).BoundingRect();
+        var boundingRect = new RotatedRect(new(), new(src.Width, src.Height), degrees).BoundingRect();
         rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
         rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);

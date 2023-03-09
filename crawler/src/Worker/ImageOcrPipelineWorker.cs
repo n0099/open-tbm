@@ -8,7 +8,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
     private static HttpClient _http = null!;
-    private readonly PaddleOcrRecognizer _paddleOcrRecognizer;
+    private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector;
     private readonly TesseractRecognizer _tesseractRecognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
     private readonly int _paddleOcrConfidenceThreshold;
@@ -16,11 +16,11 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox;
 
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config, IHttpClientFactory httpFactory,
-        PaddleOcrRecognizer paddleOcrRecognizer, TesseractRecognizer tesseractRecognizer) : base(logger)
+        PaddleOcrRecognizerAndDetector paddleOcrRecognizerAndDetector, TesseractRecognizer tesseractRecognizer) : base(logger)
     {
         _logger = logger;
         _http = httpFactory.CreateClient("tbImage");
-        _paddleOcrRecognizer = paddleOcrRecognizer;
+        _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetector;
         _tesseractRecognizer = tesseractRecognizer;
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
@@ -57,9 +57,9 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 };
             })
             .ToDictionary(t => t.Filename, t => t.Mat);
-        await _paddleOcrRecognizer.InitializeModels(stoppingToken);
-        var recognizedResultsByPaddleOcr = _paddleOcrRecognizer.RecognizeImageMatrices(imagesKeyByUrlFilename).ToList();
-        var detectionResults = _paddleOcrRecognizer.DetectImageMatrices(imagesKeyByUrlFilename);
+        await _paddleOcrRecognizerAndDetector.InitializeModels(stoppingToken);
+        var recognizedResultsByPaddleOcr = _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(imagesKeyByUrlFilename).ToList();
+        var detectionResults = _paddleOcrRecognizerAndDetector.DetectImageMatrices(imagesKeyByUrlFilename);
         var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
             .GroupBy(result => result.Script).Select(g =>
                 GetRecognizedResultsByTesseract(g, detectionResults, imagesKeyByUrlFilename));
@@ -107,7 +107,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
 
     private IEnumerable<TesseractRecognitionResult> GetRecognizedResultsByTesseract(
         IGrouping<string, PaddleOcrRecognitionResult> recognizedResultsByPaddleOcrGroupByScript,
-        IEnumerable<PaddleOcrRecognizer.DetectionResult> detectionResults,
+        IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
         IReadOnlyDictionary<string, Mat> imageMatricesKeyByImageId)
     {
         ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)

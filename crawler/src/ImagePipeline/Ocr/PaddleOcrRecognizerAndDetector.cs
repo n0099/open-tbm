@@ -6,11 +6,11 @@ using Sdcb.PaddleOCR.Models.Online;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
-public class PaddleOcrRecognizer
+public class PaddleOcrRecognizerAndDetector
 {
     private Dictionary<string, PaddleOcrAll> _modelsKeyByScript = new();
 
-    public PaddleOcrRecognizer(IConfiguration config) => Settings.GlobalModelDirectory =
+    public PaddleOcrRecognizerAndDetector(IConfiguration config) => Settings.GlobalModelDirectory =
         config.GetSection("ImageOcrPipeline").GetSection("PaddleOcr")
             .GetValue("ModelPath", "./PaddleOcrModels") ?? "./PaddleOcrModels";
 
@@ -28,7 +28,7 @@ public class PaddleOcrRecognizer
         {
             {"zh-Hans", Create(await OnlineFullModels.ChineseV3.DownloadAsync(stoppingToken))},
             {"zh-Hant", Create(await OnlineFullModels.TranditionalChinseV3.DownloadAsync(stoppingToken))},
-            {
+            { // https://github.com/sdcb/PaddleSharp/pull/35
                 "ja", Create(await new OnlineFullModels(
                     OnlineDetectionModel.MultiLanguageV3,
                     OnlineClassificationModel.ChineseMobileV2,
