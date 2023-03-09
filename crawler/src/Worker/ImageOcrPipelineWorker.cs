@@ -1,4 +1,3 @@
-using Clipper2Lib;
 using OpenCvSharp;
 using tbm.Crawler.ImagePipeline.Ocr;
 
@@ -112,22 +111,15 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     {
         ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {
-            Paths64 ConvertTextBoxToPath(RotatedRect box)
+            var intersectType = Cv2.RotatedRectangleIntersection(subject, clip, out var intersectingRegionPoints);
+            if (intersectType == RectanglesIntersectTypes.Full) return 100;
+            if (intersectType == RectanglesIntersectTypes.None) return 0;
+            var intersectionArea = Cv2.ContourArea(intersectingRegionPoints);
+            var areas = new[]
             {
-                var (topLeft, topRight, bottomLeft, bottomRight) = box.GetPoints();
-                return new() {Clipper.MakePath(new[] {
-                    topLeft.X, topLeft.Y, topRight.X, topRight.Y,
-                    bottomRight.X, bottomRight.Y, bottomLeft.X, bottomLeft.Y
-                })};
-            }
-            double GetContourArea(Paths64 paths) => paths.Any()
-                ? Cv2.ContourArea(paths.SelectMany(path => path.Select(point => new Point((int)point.X, (int)point.Y))))
-                : 0;
-            var subjectPaths = ConvertTextBoxToPath(subject);
-            var clipPaths = ConvertTextBoxToPath(clip);
-            // slower OpenCV approach without Clipper: https://stackoverflow.com/questions/17810681/intersection-area-of-2-polygons-in-opencv
-            var intersectionArea = GetContourArea(Clipper.Intersect(subjectPaths, clipPaths, FillRule.NonZero));
-            var areas = new[] {intersectionArea / GetContourArea(subjectPaths), intersectionArea / GetContourArea(clipPaths)};
+                intersectionArea / Cv2.ContourArea(subject.Points()),
+                intersectionArea / Cv2.ContourArea(clip.Points())
+            };
             return (areas.Where(area => !double.IsNaN(area)).Average() * 100).RoundToUshort();
         }
         var uniqueRecognizedResults = recognizedResultsByPaddleOcrGroupByScript
