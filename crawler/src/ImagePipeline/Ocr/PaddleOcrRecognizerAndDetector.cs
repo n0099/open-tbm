@@ -5,7 +5,7 @@ using Sdcb.PaddleOCR.Models.Online;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
-public class PaddleOcrRecognizerAndDetector
+public class PaddleOcrRecognizerAndDetector : IDisposable
 {
     private readonly string _script;
     private PaddleOcrAll? _model;

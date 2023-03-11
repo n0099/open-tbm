@@ -5,7 +5,8 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 
 public class TesseractRecognizer : IDisposable
 {
-    private readonly (Dictionary<string, OCRTesseract> Horizontal, Dictionary<string, OCRTesseract> Vertical) _tesseractInstancesKeyByScript;
+    private readonly (Dictionary<string, OCRTesseract> Horizontal,
+        Dictionary<string, OCRTesseract> Vertical) _tesseractInstancesKeyByScript;
     private readonly int _confidenceThreshold;
     private readonly float _aspectRatioThresholdToConsiderAsVertical;
 
@@ -97,6 +98,7 @@ public class TesseractRecognizer : IDisposable
             {
                 var tesseract = pair.Value;
                 tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
+
                 var shouldFallbackToPaddleOcr = !rects.Any();
                 var components = rects.Zip(texts, confidences)
                     .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third))
@@ -107,6 +109,7 @@ public class TesseractRecognizer : IDisposable
                 var averageConfidence = components.Any()
                     ? components.Select(c => c.Confidence).Average().RoundToUshort()
                     : (ushort)0;
+
                 return new TesseractRecognitionResult(
                     imageId, script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
             })

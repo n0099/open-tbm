@@ -45,13 +45,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         Fid = fid;
     }
 
-    ~BaseCrawlFacade() => Dispose();
-
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        _locks.ReleaseRange(_lockId, _lockingPages);
-    }
+    public void Dispose() => _locks.ReleaseRange(_lockId, _lockingPages);
 
     protected virtual void BeforeCommitSaveHook(TbmDbContext db) { }
     protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
@@ -147,7 +141,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     }
 
     private async Task<bool> LogException(Func<Task> payload, Page page,
-        FailureCount previousFailureCount, CancellationToken stoppingToken)
+        FailureCount previousFailureCount, CancellationToken stoppingToken = default)
     {
         try
         {
