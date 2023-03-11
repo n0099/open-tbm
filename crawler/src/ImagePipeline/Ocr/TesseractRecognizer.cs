@@ -97,16 +97,19 @@ public class TesseractRecognizer : IDisposable
             {
                 var tesseract = pair.Value;
                 tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
-                if (!rects.Any()) return null;
+                var shouldFallbackToPaddleOcr = !rects.Any();
                 var components = rects.Zip(texts, confidences)
-                    .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third)).ToList();
-                var text = string.Join("", components
+                    .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third))
                     .Where(t => t.Confidence > _confidenceThreshold)
-                    .Select(t => t.Text)).Trim();
-                if (text == "") return null;
-                var averageConfidence = components.Select(c => c.Confidence).Average().RoundToUshort();
-                return new TesseractRecognitionResult(imageId, script, isVertical, isUnrecognized, box, text, averageConfidence);
+                    .ToList();
+                var text = string.Join("", components.Select(t => t.Text)).Trim();
+                if (text == "") shouldFallbackToPaddleOcr = true;
+                var averageConfidence = components.Any()
+                    ? components.Select(c => c.Confidence).Average().RoundToUshort()
+                    : (ushort)0;
+                return new TesseractRecognitionResult(
+                    imageId, script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
             })
-            .OfType<TesseractRecognitionResult>().ToList(); // eager eval since mat is already disposed after return
+            .ToList(); // eager eval since mat is already disposed after return
     }
 }

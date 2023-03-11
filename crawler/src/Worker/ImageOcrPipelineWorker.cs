@@ -57,14 +57,21 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             })
             .ToDictionary(t => t.Filename, t => t.Mat);
         await _paddleOcrRecognizerAndDetector.InitializeModels(stoppingToken);
-        var recognizedResultsByPaddleOcr = _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(imagesKeyByUrlFilename).ToList();
+        var recognizedResultsByPaddleOcr =
+            _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(imagesKeyByUrlFilename).ToList();
         var detectionResults = _paddleOcrRecognizerAndDetector.DetectImageMatrices(imagesKeyByUrlFilename);
         var recognizedResultsByTesseract = recognizedResultsByPaddleOcr
-            .GroupBy(result => result.Script).Select(g =>
-                GetRecognizedResultsByTesseract(g, detectionResults, imagesKeyByUrlFilename));
+            .GroupBy(result => result.Script)
+            .Select(g =>
+                GetRecognizedResultsByTesseract(g, detectionResults, imagesKeyByUrlFilename))
+            .SelectMany(i => i)
+            .ToList();
         foreach (var groupByImageId in recognizedResultsByPaddleOcr
                      .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
-                     .Concat(recognizedResultsByTesseract.SelectMany(i => i))
+                     .Concat(recognizedResultsByTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
+                     .Concat(recognizedResultsByPaddleOcr.IntersectBy(recognizedResultsByTesseract
+                         .Where(result => result.ShouldFallbackToPaddleOcr)
+                         .Select(result => result.TextBox), result => result.TextBox))
                      .GroupBy(result => result.ImageId))
         {
             groupByImageId
@@ -153,12 +160,11 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             .Select(g =>
             {
                 var imageId = g.Key;
-                var boxes = g
-                    .Select(result => recognizedDetectedTextBoxes[imageId]
-                        .FirstOrDefault(pair => pair.RecognizedTextBox == result.TextBox)?.DetectedTextBox)
-                    .OfType<RotatedRect>()
-                    .Select(b => (false, b))
-                    .Concat(unrecognizedDetectedTextBoxes[imageId].Select(pair => pair.DetectedTextBox).Select(b => (true, b)));
+                var boxes = recognizedDetectedTextBoxes[imageId]
+                    .IntersectBy(g.Select(result => result.TextBox), pair => pair.RecognizedTextBox)
+                    .Select(pair => (IsUnrecognized: false, pair.DetectedTextBox))
+                    .Concat(unrecognizedDetectedTextBoxes[imageId]
+                        .Select(pair => pair.DetectedTextBox).Select(b => (IsUnrecognized: true, b)));
                 return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes);
             })
             .SelectMany(textBoxes => textBoxes.SelectMany(b =>
