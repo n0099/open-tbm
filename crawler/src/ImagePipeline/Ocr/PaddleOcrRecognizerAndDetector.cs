@@ -1,47 +1,59 @@
 using OpenCvSharp;
 using Sdcb.PaddleInference;
 using Sdcb.PaddleOCR;
-using Sdcb.PaddleOCR.Models;
 using Sdcb.PaddleOCR.Models.Online;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
 public class PaddleOcrRecognizerAndDetector
 {
-    private Dictionary<string, PaddleOcrAll> _modelsKeyByScript = new();
+    private readonly string _script;
+    private PaddleOcrAll? _model;
 
-    public PaddleOcrRecognizerAndDetector(IConfiguration config) => Settings.GlobalModelDirectory =
-        config.GetSection("ImageOcrPipeline").GetSection("PaddleOcr")
-            .GetValue("ModelPath", "./PaddleOcrModels") ?? "./PaddleOcrModels";
+    public delegate PaddleOcrRecognizerAndDetector New(string script);
 
-    public void Dispose() => _modelsKeyByScript.ForEach(pair => pair.Value.Dispose());
-
-    public async Task InitializeModels(CancellationToken stoppingToken)
+    public PaddleOcrRecognizerAndDetector(IConfiguration config, string script)
     {
-        PaddleOcrAll Create(FullOcrModel model) =>
-            new(model, PaddleDevice.Mkldnn())
-            {
-                AllowRotateDetection = true,
-                Enable180Classification = true
-            };
-        _modelsKeyByScript = new()
-        {
-            {"zh-Hans", Create(await OnlineFullModels.ChineseV3.DownloadAsync(stoppingToken))},
-            {"zh-Hant", Create(await OnlineFullModels.TranditionalChinseV3.DownloadAsync(stoppingToken))},
-            { // https://github.com/sdcb/PaddleSharp/pull/35
-                "ja", Create(await new OnlineFullModels(
-                    OnlineDetectionModel.MultiLanguageV3,
-                    OnlineClassificationModel.ChineseMobileV2,
-                    LocalDictOnlineRecognizationModel.JapanV3
-                ).DownloadAsync(stoppingToken))
-            },
-            {"en", Create(await OnlineFullModels.EnglishV3.DownloadAsync(stoppingToken))}
-        };
+        _script = script;
+        Settings.GlobalModelDirectory =
+            config.GetSection("ImageOcrPipeline").GetSection("PaddleOcr")
+                .GetValue("ModelPath", "./PaddleOcrModels")
+            ?? "./PaddleOcrModels";
     }
 
-    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<string, Mat> matricesKeyByImageId) =>
-        matricesKeyByImageId.SelectMany(matrix => _modelsKeyByScript.SelectMany(model =>
-            CreateRecognitionResult(matrix.Key, model.Key, model.Value.Run(matrix.Value))));
+    public void Dispose() => _model?.Dispose();
+
+    private static Func<CancellationToken, Task<PaddleOcrAll>>
+        GetModelFactory(OnlineFullModels model) => async stoppingToken =>
+        new(await model.DownloadAsync(stoppingToken), PaddleDevice.Mkldnn())
+        {
+            AllowRotateDetection = true,
+            Enable180Classification = true
+        };
+
+    private static readonly Dictionary<string, Func<CancellationToken, Task<PaddleOcrAll>>> AvailableModelKeyByScript = new()
+    {
+        {"zh-Hans", GetModelFactory(OnlineFullModels.ChineseV3)},
+        {"zh-Hant", GetModelFactory(OnlineFullModels.TranditionalChinseV3)},
+        { // https://github.com/sdcb/PaddleSharp/pull/35
+            "ja", GetModelFactory(new(
+                OnlineDetectionModel.MultiLanguageV3,
+                OnlineClassificationModel.ChineseMobileV2,
+                LocalDictOnlineRecognizationModel.JapanV3
+            ))
+        },
+        {"en", GetModelFactory(OnlineFullModels.EnglishV3)}
+    };
+
+    public async Task InitializeModel(CancellationToken stoppingToken = default) =>
+        _model ??= await AvailableModelKeyByScript[_script](stoppingToken);
+
+    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<string, Mat> matricesKeyByImageId)
+    {
+        if (_model == null) throw new("PaddleOcr model haven't been initialized.");
+        return matricesKeyByImageId.SelectMany(matrix =>
+            CreateRecognitionResult(matrix.Key, _script, _model.Run(matrix.Value)));
+    }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
         (string imageId, string script, PaddleOcrResult result) =>
@@ -50,7 +62,10 @@ public class PaddleOcrRecognizerAndDetector
 
     public record DetectionResult(string ImageId, RotatedRect TextBox);
 
-    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<string, Mat> matricesKeyByImageId) =>
-        matricesKeyByImageId.SelectMany(matrix => _modelsKeyByScript.SelectMany(model =>
-            model.Value.Detector.Run(matrix.Value).Select(rect => new DetectionResult(matrix.Key, rect))));
+    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<string, Mat> matricesKeyByImageId)
+    {
+        if (_model == null) throw new("PaddleOcr model haven't been initialized.");
+        return matricesKeyByImageId.SelectMany(matrix =>
+            _model.Detector.Run(matrix.Value).Select(rect => new DetectionResult(matrix.Key, rect)));
+    }
 }

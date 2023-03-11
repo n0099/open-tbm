@@ -83,6 +83,7 @@ static void ConfigureContainer(ContainerBuilder builder)
     builder.RegisterType<SonicPusher>();
     builder.RegisterType<PaddleOcrRecognizerAndDetector>();
     builder.RegisterType<TesseractRecognizer>();
+    builder.RegisterType<ImageOcrConsumer>();
 
     var baseClassOfClassesToBeRegistered = new List<Type>
     {
