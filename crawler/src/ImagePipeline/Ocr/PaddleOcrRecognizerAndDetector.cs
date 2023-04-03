@@ -34,14 +34,8 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     private static readonly Dictionary<string, Func<CancellationToken, Task<PaddleOcrAll>>> AvailableModelKeyByScript = new()
     {
         {"zh-Hans", GetModelFactory(OnlineFullModels.ChineseV3)},
-        {"zh-Hant", GetModelFactory(OnlineFullModels.TranditionalChinseV3)},
-        { // https://github.com/sdcb/PaddleSharp/pull/35
-            "ja", GetModelFactory(new(
-                OnlineDetectionModel.MultiLanguageV3,
-                OnlineClassificationModel.ChineseMobileV2,
-                LocalDictOnlineRecognizationModel.JapanV3
-            ))
-        },
+        {"zh-Hant", GetModelFactory(OnlineFullModels.TraditionalChineseV3)},
+        {"ja", GetModelFactory(OnlineFullModels.JapanV3)},
         {"en", GetModelFactory(OnlineFullModels.EnglishV3)}
     };
 
