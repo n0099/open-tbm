@@ -14,7 +14,7 @@ public class SubReplyPost : IPost, IPostWithAuthorExpGrade
 
     [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Content>))]
     [NotMapped]
-    public RepeatedField<Content> OriginalContents { get; set; } = null!;
+    public required RepeatedField<Content> OriginalContents { get; set; }
     public long AuthorUid { get; set; }
     [NotMapped] public ushort AuthorExpGrade { get; set; }
     public uint PostedAt { get; set; }
