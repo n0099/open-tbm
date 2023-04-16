@@ -33,21 +33,26 @@ public class ImageOcrConsumer
     public Task InitializePaddleOcrModel(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.InitializeModel(stoppingToken);
 
-    public Dictionary<string, string> GetRecognizedTextLinesKeyByImageId(Dictionary<string, Mat> imagesKeyByUrlFilename)
+    public List<IRecognitionResult> GetRecognizedResults(Dictionary<string, Mat> imagesKeyByUrlFilename)
     {
         var recognizedResultsByPaddleOcr =
             _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(imagesKeyByUrlFilename).ToList();
         var detectionResults = _paddleOcrRecognizerAndDetector.DetectImageMatrices(imagesKeyByUrlFilename);
         var recognizedResultsByTesseract = GetRecognizedResultsByTesseract(
             recognizedResultsByPaddleOcr, detectionResults, imagesKeyByUrlFilename).ToList();
-        var recognizedResultsGroupByImageId = recognizedResultsByPaddleOcr
+        return recognizedResultsByPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
             .Concat(recognizedResultsByTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
             .Concat(recognizedResultsByPaddleOcr.IntersectBy(recognizedResultsByTesseract
                 .Where(result => result.ShouldFallbackToPaddleOcr)
                 .Select(result => result.TextBox), result => result.TextBox))
-            .GroupBy(result => result.ImageId);
-        return recognizedResultsGroupByImageId.ToDictionary(g => g.Key, g =>
+            .ToList();
+    }
+
+    public Dictionary<string, string> GetRecognizedTextLinesKeyByImageId
+        (IEnumerable<IRecognitionResult> recognizedResults) => recognizedResults
+        .GroupBy(result => result.ImageId)
+        .ToDictionary(g => g.Key, g =>
         {
             var resultTextLines = g
                 .Select(result =>
@@ -64,7 +69,6 @@ public class ImageOcrConsumer
                     string.Join("\n", groupByLine.Select(result => result.Text.Trim())));
             return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
         });
-    }
 
     private record CorrelatedTextBoxPair(string ImageId, ushort PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);

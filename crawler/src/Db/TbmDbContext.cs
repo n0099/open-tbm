@@ -13,6 +13,8 @@ public class TbmDbContext : DbContext
     public Fid Fid { get; }
     public DbSet<TiebaUser> Users => Set<TiebaUser>();
     public DbSet<TiebaImage> Images => Set<TiebaImage>();
+    public DbSet<TiebaImageOcrBoxes> ImageOcrBoxes => Set<TiebaImageOcrBoxes>();
+    public DbSet<TiebaImageOcrLines> ImageOcrLines => Set<TiebaImageOcrLines>();
     public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
     public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();
     public DbSet<ThreadPost> Threads => Set<ThreadPost>();
@@ -38,6 +40,9 @@ public class TbmDbContext : DbContext
     {
         b.Entity<TiebaUser>().ToTable("tbmc_user");
         b.Entity<TiebaImage>().ToTable("tbmc_image");
+        b.Entity<TiebaImageOcrBoxes>().ToTable("tbmc_image_ocr_boxes").HasKey(e =>
+            new {e.ImageId, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer, e.Script});
+        b.Entity<TiebaImageOcrLines>().ToTable("tbmc_image_ocr_lines").HasKey(e => new {e.ImageId, e.Script});
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");

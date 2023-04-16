@@ -6,45 +6,86 @@ namespace tbm.Crawler.Worker;
 public class ImageOcrPipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
+    private readonly ILifetimeScope _scope0;
     private static HttpClient _http = null!;
-    private readonly ImageOcrConsumer.New _imageOcrConsumerFactory;
 
-    public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IHttpClientFactory httpFactory,
-        ImageOcrConsumer.New imageOcrConsumerFactory) : base(logger)
+    public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, ILifetimeScope scope0,
+        IHttpClientFactory httpFactory) : base(logger)
     {
         _logger = logger;
+        _scope0 = scope0;
         _http = httpFactory.CreateClient("tbImage");
-        _imageOcrConsumerFactory = imageOcrConsumerFactory;
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        var imagesUrlFilename = new List<string> {""};
-        var imagesKeyByUrlFilename = (await Task.WhenAll(
-                imagesUrlFilename.Select(async filename =>
-                    (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
-            .SelectMany(t =>
+        await using var scope1 = _scope0.BeginLifetimeScope();
+        var db = scope1.Resolve<TbmDbContext.New>()(0);
+        uint lastImageIdInPreviousBatch = 0;
+        var isNoMoreImages = false;
+        while (!isNoMoreImages)
+        {
+            var images = (from image in db.Images.AsNoTracking()
+                where image.ImageId > lastImageIdInPreviousBatch
+                    && !db.ImageOcrBoxes.AsNoTracking().Select(e => e.ImageId).Contains(image.ImageId)
+                    && !db.ImageOcrLines.AsNoTracking().Select(e => e.ImageId).Contains(image.ImageId)
+                orderby image.ImageId
+                select image).Take(1000).ToList();
+            if (!images.Any()) isNoMoreImages = true;
+            else
             {
-                Mat Flip(Mat mat, FlipMode flipMode)
+                foreach (var chunkedImages in images.Chunk(16))
                 {
-                    var ret = new Mat();
-                    Cv2.Flip(mat, ret, flipMode);
-                    return ret;
+                    await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+                    await RecognizeTextsThenSave(scope1, db, chunkedImages, "zh-Hans", stoppingToken);
+                    await RecognizeTextsThenSave(scope1, db, chunkedImages, "zh-Hant", stoppingToken);
+                    await RecognizeTextsThenSave(scope1, db, chunkedImages, "ja", stoppingToken);
+                    await RecognizeTextsThenSave(scope1, db, chunkedImages, "en", stoppingToken);
+                    _ = await db.SaveChangesAsync(stoppingToken);
+                    await transaction.CommitAsync(stoppingToken);
                 }
-                var (filename, bytes) = t;
-                var mat = Cv2.ImDecode(bytes, ImreadModes.Color); // convert to BGR three channels without alpha
-                return new (string Filename, Mat Mat)[]
-                {
-                    (filename, mat),
-                    (filename + "-flip", Flip(mat, FlipMode.X)),
-                    (filename + "-flop", Flip(mat, FlipMode.Y)),
-                    (filename + "-flip-flop", Flip(mat, FlipMode.XY)) // same with 180 degrees clockwise rotation
-                };
-            })
-            .ToDictionary(t => t.Filename, t => t.Mat);
-        var consumer = _imageOcrConsumerFactory("");
+            }
+            lastImageIdInPreviousBatch = images.Last().ImageId;
+        }
+    }
+
+    private async Task RecognizeTextsThenSave(ILifetimeScope scope, TbmDbContext db,
+        IReadOnlyCollection<TiebaImage> images, string script, CancellationToken stoppingToken)
+    {
+        await using var scope1 = scope.BeginLifetimeScope();
+        var imageIdKeyByUrlFilename = images.ToDictionary(image => image.UrlFilename, image => image.ImageId);
+        var imagesKeyByUrlFilename = (await Task.WhenAll(images.Select(image => image.UrlFilename)
+                .Select(async filename => (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
+            .ToDictionary(t => t.filename, t => Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
+        var consumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
         await consumer.InitializePaddleOcrModel(stoppingToken);
-        _logger.LogInformation("{}",
-            consumer.GetRecognizedTextLinesKeyByImageId(imagesKeyByUrlFilename));
+        var recognizedResults = consumer.GetRecognizedResults(imagesKeyByUrlFilename);
+        _logger.LogInformation("{}", recognizedResults);
+        db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBoxes
+        {
+            ImageId = imageIdKeyByUrlFilename[result.ImageId],
+            CenterPointX = result.TextBox.Center.X,
+            CenterPointY = result.TextBox.Center.Y,
+            Width = result.TextBox.Size.Width,
+            Height = result.TextBox.Size.Height,
+            RotationDegrees = result.TextBox.Angle,
+            Recognizer = result switch
+            {
+                PaddleOcrRecognitionResult => "PaddleOCR",
+                TesseractRecognitionResult => "Tesseract",
+                _ => ""
+            },
+            Script = script + (result is TesseractRecognitionResult {IsVertical: true} ? "_vert" : ""),
+            Confidence = result.Confidence,
+            Text = result.Text
+        }));
+        var recognizedTextLinesKeyByImageId = consumer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
+        _logger.LogInformation("{}", recognizedTextLinesKeyByImageId);
+        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new TiebaImageOcrLines
+        {
+            ImageId = imageIdKeyByUrlFilename[pair.Key],
+            Script = script,
+            TextLines = pair.Value
+        }));
     }
 }
