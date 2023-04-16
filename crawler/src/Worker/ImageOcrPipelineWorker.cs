@@ -50,20 +50,19 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     }
 
     private async Task RecognizeTextsThenSave(ILifetimeScope scope, TbmDbContext db,
-        IReadOnlyCollection<TiebaImage> images, string script, CancellationToken stoppingToken)
+        IEnumerable<TiebaImage> images, string script, CancellationToken stoppingToken)
     {
         await using var scope1 = scope.BeginLifetimeScope();
-        var imageIdKeyByUrlFilename = images.ToDictionary(image => image.UrlFilename, image => image.ImageId);
-        var imagesKeyByUrlFilename = (await Task.WhenAll(images.Select(image => image.UrlFilename)
-                .Select(async filename => (filename, bytes: await _http.GetByteArrayAsync(filename + ".jpg", stoppingToken)))))
-            .ToDictionary(t => t.filename, t => Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
+        var imagesKeyByUrlFilename = (await Task.WhenAll(images.Select(async image =>
+                (image.ImageId, bytes: await _http.GetByteArrayAsync(image.UrlFilename + ".jpg", stoppingToken)))))
+            .ToDictionary(t => t.ImageId, t => Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
         var consumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
         await consumer.InitializePaddleOcrModel(stoppingToken);
         var recognizedResults = consumer.GetRecognizedResults(imagesKeyByUrlFilename);
         _logger.LogInformation("{}", recognizedResults);
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBoxes
         {
-            ImageId = imageIdKeyByUrlFilename[result.ImageId],
+            ImageId = result.ImageId,
             CenterPointX = result.TextBox.Center.X,
             CenterPointY = result.TextBox.Center.Y,
             Width = result.TextBox.Size.Width,
@@ -83,7 +82,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         _logger.LogInformation("{}", recognizedTextLinesKeyByImageId);
         db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new TiebaImageOcrLines
         {
-            ImageId = imageIdKeyByUrlFilename[pair.Key],
+            ImageId = pair.Key,
             Script = script,
             TextLines = pair.Value
         }));

@@ -38,10 +38,10 @@ public class TesseractRecognizer : IDisposable
         .Concat(_tesseractInstancesKeyByScript.Vertical)
         .ForEach(pair => pair.Value.Dispose());
 
-    public record PreprocessedTextBox(string ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(uint ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
     public static List<PreprocessedTextBox> PreprocessTextBoxes
-        (string imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
+        (uint imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
         .Select(t =>
         {
             var (isUnrecognized, textBox) = t;

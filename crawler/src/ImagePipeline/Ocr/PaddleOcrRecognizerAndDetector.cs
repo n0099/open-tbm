@@ -42,7 +42,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     public async Task InitializeModel(CancellationToken stoppingToken = default) =>
         _model ??= await AvailableModelKeyByScript[_script](stoppingToken);
 
-    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<string, Mat> matricesKeyByImageId)
+    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
         if (_model == null) throw new("PaddleOcr model haven't been initialized.");
         return matricesKeyByImageId.SelectMany(matrix =>
@@ -50,13 +50,13 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
-        (string imageId, string script, PaddleOcrResult result) =>
+        (uint imageId, string script, PaddleOcrResult result) =>
         result.Regions.Select(region => new PaddleOcrRecognitionResult(
             imageId, script, region.Rect, region.Text, (region.Score * 100).NanToZero().RoundToUshort()));
 
-    public record DetectionResult(string ImageId, RotatedRect TextBox);
+    public record DetectionResult(uint ImageId, RotatedRect TextBox);
 
-    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<string, Mat> matricesKeyByImageId)
+    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
         if (_model == null) throw new("PaddleOcr model haven't been initialized.");
         return matricesKeyByImageId.SelectMany(matrix =>
