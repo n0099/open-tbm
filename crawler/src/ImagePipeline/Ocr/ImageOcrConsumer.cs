@@ -33,17 +33,17 @@ public class ImageOcrConsumer
     public Task InitializePaddleOcrModel(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.InitializeModel(stoppingToken);
 
-    public List<IRecognitionResult> GetRecognizedResults(Dictionary<uint, Mat> imagesKeyById)
+    public List<IRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
-        var recognizedResultsByPaddleOcr =
-            _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(imagesKeyById).ToList();
-        var detectionResults = _paddleOcrRecognizerAndDetector.DetectImageMatrices(imagesKeyById);
-        var recognizedResultsByTesseract = GetRecognizedResultsByTesseract(
-            recognizedResultsByPaddleOcr, detectionResults, imagesKeyById).ToList();
-        return recognizedResultsByPaddleOcr
+        var recognizedResultsViaPaddleOcr =
+            _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageId).ToList();
+        var detectionResults = _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageId);
+        var recognizedResultsViaTesseract = RecognizeImageMatricesViaTesseract(
+            recognizedResultsViaPaddleOcr, detectionResults, matricesKeyByImageId).ToList();
+        return recognizedResultsViaPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
-            .Concat(recognizedResultsByTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
-            .Concat(recognizedResultsByPaddleOcr.IntersectBy(recognizedResultsByTesseract
+            .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
+            .Concat(recognizedResultsViaPaddleOcr.IntersectBy(recognizedResultsViaTesseract
                 .Where(result => result.ShouldFallbackToPaddleOcr)
                 .Select(result => result.TextBox), result => result.TextBox))
             .ToList();
@@ -60,8 +60,10 @@ public class ImageOcrConsumer
                     var rect = result.TextBox.BoundingRect();
                     // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                     // which have similar but different values of y coordinates get rearranged in a wrong order
-                    var alignedY = ((double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine).RoundToUshort();
-                    return (result, rect.X, alignedY);
+                    var alignedY = (double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine;
+                    // the bounding rect for a rotated rect might be outside the original image
+                    // so the y-axis coordinate of its top-left point can be negative
+                    return (result, rect.X, alignedY: alignedY < 0 ? 0 : alignedY.RoundToUshort());
                 })
                 .OrderBy(t => t.alignedY).ThenBy(t => t.X)
                 .GroupBy(t => t.alignedY, t => t.result)
@@ -73,15 +75,14 @@ public class ImageOcrConsumer
     private record CorrelatedTextBoxPair(uint ImageId, ushort PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
-    private IEnumerable<TesseractRecognitionResult> GetRecognizedResultsByTesseract(
-        IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsByPaddleOcr,
+    private IEnumerable<TesseractRecognitionResult> RecognizeImageMatricesViaTesseract(
+        IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
         IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
         IReadOnlyDictionary<uint, Mat> imageMatricesKeyByImageId)
     {
-        ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
+        static ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {
             var intersectType = Cv2.RotatedRectangleIntersection(subject, clip, out var intersectingRegionPoints);
-            if (intersectType == RectanglesIntersectTypes.Full) return 100;
             if (intersectType == RectanglesIntersectTypes.None) return 0;
             var intersectionArea = Cv2.ContourArea(intersectingRegionPoints);
             var areas = new[]
@@ -91,7 +92,7 @@ public class ImageOcrConsumer
             };
             return (areas.Where(area => !double.IsNaN(area)).Average() * 100).RoundToUshort();
         }
-        var uniqueRecognizedResults = recognizedResultsByPaddleOcr
+        var uniqueRecognizedResults = recognizedResultsViaPaddleOcr
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
             .GroupBy(result => result.ImageId).SelectMany(g => g.DistinctBy(result => result.TextBox));
         var correlatedTextBoxPairs = (
@@ -112,11 +113,11 @@ public class ImageOcrConsumer
         var unrecognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.DetectedTextBox into g
-            where g.All(pair => pair.PercentageOfIntersection < _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox)
+            where g.All(pair => pair.PercentageOfIntersection <= _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox)
             select g.MinBy(pair => pair.PercentageOfIntersection)
         ).ToLookup(pair => pair.ImageId);
 
-        return recognizedResultsByPaddleOcr
+        return recognizedResultsViaPaddleOcr
             .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
             .GroupBy(result => result.ImageId)
             .Select(g =>

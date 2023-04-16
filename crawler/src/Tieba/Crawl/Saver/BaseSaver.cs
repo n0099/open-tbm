@@ -37,13 +37,13 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
         if (dbSet == null) throw new ArgumentException(
             $"DbSet<{typeof(TPost).Name}> is not exist in DbContext.");
 
-        var existingKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
+        var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
         // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
-        var existingBeforeMerge = existingKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
+        var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
         SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,
-            Posts.Values.ToLookup(p => existingKeyById.ContainsKey(postIdSelector(p))),
-            p => existingKeyById[postIdSelector(p)]);
+            Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
+            p => existingPostsKeyById[postIdSelector(p)]);
         return new(existingBeforeMerge, Posts.Values, postIdSelector);
     }
 }

@@ -47,7 +47,8 @@ public class TesseractRecognizer : IDisposable
             var (isUnrecognized, textBox) = t;
             // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
             var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
-            var mat = new Mat(originalImageMat, textBox.BoundingRect()); // crop by circumscribed rectangle
+            // crop by circumscribed rectangle, intersect will prevent textBox outside originalImageMat
+            var mat = new Mat(originalImageMat, new Rect(new(), originalImageMat.Size()).Intersect(textBox.BoundingRect()));
 
             Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
             // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
