@@ -4,7 +4,6 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 
 public class ImageOcrConsumer
 {
-    private readonly string _script;
     private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector;
     private readonly TesseractRecognizer _tesseractRecognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
@@ -15,11 +14,10 @@ public class ImageOcrConsumer
     public delegate ImageOcrConsumer New(string script);
 
     public ImageOcrConsumer(IConfiguration config, string script,
-        PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory, TesseractRecognizer tesseractRecognizer)
+        PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory, TesseractRecognizer.New tesseractRecognizerFactory)
     {
-        _script = script;
         _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
-        _tesseractRecognizer = tesseractRecognizer;
+        _tesseractRecognizer = tesseractRecognizerFactory(script);
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
         _paddleOcrConfidenceThreshold = configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
@@ -130,7 +128,7 @@ public class ImageOcrConsumer
                         .Select(pair => pair.DetectedTextBox).Select(b => (IsUnrecognized: true, b)));
                 return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes);
             })
-            .SelectMany(textBoxes => textBoxes.SelectMany(b =>
-                _tesseractRecognizer.RecognizePreprocessedTextBox(_script, b)));
+            .SelectMany(textBoxes => textBoxes.Select(b =>
+                _tesseractRecognizer.RecognizePreprocessedTextBox(b)));
     }
 }

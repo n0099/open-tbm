@@ -5,38 +5,47 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 
 public class TesseractRecognizer : IDisposable
 {
-    private readonly (Dictionary<string, OCRTesseract> Horizontal,
-        Dictionary<string, OCRTesseract> Vertical) _tesseractInstancesKeyByScript;
+    private readonly string _script;
+    private readonly OCRTesseract _tesseractInstanceHorizontal;
+    private readonly OCRTesseract _tesseractInstanceVertical;
     private readonly int _confidenceThreshold;
     private readonly float _aspectRatioThresholdToConsiderAsVertical;
 
-    public TesseractRecognizer(IConfiguration config)
+    public delegate TesseractRecognizer New(string script);
+
+    public TesseractRecognizer(IConfiguration config, string script)
     {
+        _script = script;
         var configSection = config.GetSection("ImageOcrPipeline").GetSection("Tesseract");
         var dataPath = configSection.GetValue("DataPath", "") ?? "";
         OCRTesseract CreateTesseract(string scripts, int psmode) =>
             // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
             OCRTesseract.Create(dataPath, scripts, "", 1, psmode);
-        _tesseractInstancesKeyByScript.Horizontal = new()
+        _tesseractInstanceHorizontal = script switch
         { // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-            {"zh-Hans", CreateTesseract("best/chi_sim+best/eng", 7)},
-            {"zh-Hant", CreateTesseract("best/chi_tra+best/eng", 7)},
-            {"ja", CreateTesseract("best/jpn", 7)}, // literal latin letters in japanese is replaced by katakana
-            {"en", CreateTesseract("best/eng", 7)}
+            "zh-Hans" => CreateTesseract("best/chi_sim+best/eng", 7),
+            "zh-Hant" => CreateTesseract("best/chi_tra+best/eng", 7),
+            "ja" => CreateTesseract("best/jpn", 7), // literal latin letters in japanese is replaced by katakana
+            "en" => CreateTesseract("best/eng", 7),
+            _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
         };
-        _tesseractInstancesKeyByScript.Vertical = new()
+        _tesseractInstanceVertical = script switch
         {
-            {"zh-Hans", CreateTesseract("best/chi_sim_vert", 5)},
-            {"zh-Hant", CreateTesseract("best/chi_tra_vert", 5)},
-            {"ja", CreateTesseract("best/jpn_vert", 5)}
+            "zh-Hans" => CreateTesseract("best/chi_sim_vert", 5),
+            "zh-Hant" => CreateTesseract("best/chi_tra_vert", 5),
+            "ja" => CreateTesseract("best/jpn_vert", 5),
+            "en" => _tesseractInstanceHorizontal, // fallback to best/eng since there's no best/eng_vert
+            _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
         };
         _confidenceThreshold = configSection.GetValue("ConfidenceThreshold", 20);
         _aspectRatioThresholdToConsiderAsVertical = configSection.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
     }
 
-    public void Dispose() => _tesseractInstancesKeyByScript.Horizontal
-        .Concat(_tesseractInstancesKeyByScript.Vertical)
-        .ForEach(pair => pair.Value.Dispose());
+    public void Dispose()
+    {
+        _tesseractInstanceHorizontal.Dispose();
+        _tesseractInstanceVertical.Dispose();
+    }
 
     public record PreprocessedTextBox(uint ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
@@ -88,32 +97,26 @@ public class TesseractRecognizer : IDisposable
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
     }
 
-    public IEnumerable<TesseractRecognitionResult> RecognizePreprocessedTextBox(string script, PreprocessedTextBox textBox)
+    public TesseractRecognitionResult RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
     {
         var (imageId, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToConsiderAsVertical;
-        return (isVertical ? _tesseractInstancesKeyByScript.Vertical : _tesseractInstancesKeyByScript.Horizontal)
-            .Where(pair => pair.Key == script)
-            .Select(pair =>
-            {
-                var tesseract = pair.Value;
-                tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
+        if (isVertical && _script == "en") isVertical = false; // there's no vertical english
+        var tesseract = isVertical ? _tesseractInstanceVertical : _tesseractInstanceHorizontal;
+        tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
 
-                var shouldFallbackToPaddleOcr = !rects.Any();
-                var components = rects.Zip(texts, confidences)
-                    .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third))
-                    .Where(t => t.Confidence > _confidenceThreshold)
-                    .ToList();
-                var text = string.Join("", components.Select(t => t.Text)).Trim();
-                if (text == "") shouldFallbackToPaddleOcr = true;
-                var averageConfidence = components.Any()
-                    ? components.Select(c => c.Confidence).Average().RoundToUshort()
-                    : (ushort)0;
+        var shouldFallbackToPaddleOcr = !rects.Any();
+        var components = rects.Zip(texts, confidences)
+            .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third))
+            .Where(t => t.Confidence > _confidenceThreshold)
+            .ToList();
+        var text = string.Join("", components.Select(t => t.Text)).Trim();
+        if (text == "") shouldFallbackToPaddleOcr = true;
+        var averageConfidence = components.Any()
+            ? components.Select(c => c.Confidence).Average().RoundToUshort()
+            : (ushort)0;
 
-                return new TesseractRecognitionResult(
-                    imageId, script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
-            })
-            .ToList(); // eager eval since mat is already disposed after return
+        return new(imageId, _script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
     }
 }

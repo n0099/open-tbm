@@ -57,14 +57,20 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         }
     }
 
-    private async Task RecognizeTextsThenSave(ILifetimeScope scope, TbmDbContext db,
+    private static async Task RecognizeTextsThenSave(ILifetimeScope scope, TbmDbContext db,
         Dictionary<uint, Mat> matricesKeyByImageId, string script, CancellationToken stoppingToken)
     {
         await using var scope1 = scope.BeginLifetimeScope();
         var consumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
         await consumer.InitializePaddleOcrModel(stoppingToken);
-        var recognizedResults = consumer.RecognizeImageMatrices(matricesKeyByImageId);
-        _logger.LogInformation("{}", recognizedResults);
+        var recognizedResults = consumer.RecognizeImageMatrices(matricesKeyByImageId).ToList();
+        var recognizedTextLinesKeyByImageId = consumer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
+        SaveRecognizedTexts(db, script, recognizedResults, recognizedTextLinesKeyByImageId);
+    }
+
+    private static void SaveRecognizedTexts(TbmDbContext db, string script,
+        IEnumerable<IRecognitionResult> recognizedResults, Dictionary<uint, string> recognizedTextLinesKeyByImageId)
+    {
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBoxes
         {
             ImageId = result.ImageId,
@@ -83,8 +89,6 @@ public class ImageOcrPipelineWorker : ErrorableWorker
             Confidence = result.Confidence,
             Text = result.Text
         }));
-        var recognizedTextLinesKeyByImageId = consumer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
-        _logger.LogInformation("{}", recognizedTextLinesKeyByImageId);
         db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new TiebaImageOcrLines
         {
             ImageId = pair.Key,
