@@ -27,7 +27,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         var db = scope1.Resolve<TbmDbContext.New>()(0);
         var forumPostCountsTuples = db.Database.GetDbConnection()
             .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
-                string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).ToList().Select(fid =>
+                string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).AsEnumerable().Select(fid =>
                     $"SELECT {fid} AS Fid,"
                     + $"IFNULL((SELECT id FROM tbmc_f{fid}_reply ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
                     + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount")))

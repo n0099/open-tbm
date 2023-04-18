@@ -63,19 +63,19 @@ public class AuthorRevisionSaver
         where TRevision : AuthorRevision
     {
         Helper.GetNowTimestamp(out var now);
+        _ = dbSet.AsNoTracking().TagWith("ForUpdate") // https://github.com/linq2db/linq2db/issues/4067
+            .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid)).ToList();
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
             .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
             .Where(e => e.Rank == 1)
-            .AsMySql().ForUpdateHint()
             .ToLinqToDB().AsEnumerable()
             .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
             (
                 e.Uid,
                 Existing: (e.DiscoveredAt, e.Value),
                 NewInPost: (DiscoveredAt: now, Value: postAuthorFieldValueSelector(p))
-            ))
-            .ToList();
+            )).ToList();
         var newRevisionOfNewUsers = posts
             .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
             .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));

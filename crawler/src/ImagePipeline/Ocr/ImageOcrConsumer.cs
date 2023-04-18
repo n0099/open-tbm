@@ -31,7 +31,7 @@ public class ImageOcrConsumer
     public Task InitializePaddleOcrModel(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.InitializeModel(stoppingToken);
 
-    public List<IRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
+    public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
         var recognizedResultsViaPaddleOcr =
             _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageId).ToList();
@@ -43,8 +43,7 @@ public class ImageOcrConsumer
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
             .Concat(recognizedResultsViaPaddleOcr.IntersectBy(recognizedResultsViaTesseract
                 .Where(result => result.ShouldFallbackToPaddleOcr)
-                .Select(result => result.TextBox), result => result.TextBox))
-            .ToList();
+                .Select(result => result.TextBox), result => result.TextBox));
     }
 
     public Dictionary<uint, string> GetRecognizedTextLinesKeyByImageId
@@ -126,7 +125,7 @@ public class ImageOcrConsumer
                     .Select(pair => (IsUnrecognized: false, pair.DetectedTextBox))
                     .Concat(unrecognizedDetectedTextBoxes[imageId]
                         .Select(pair => pair.DetectedTextBox).Select(b => (IsUnrecognized: true, b)));
-                return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes);
+                return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes).ToList();
             })
             .SelectMany(textBoxes => textBoxes.Select(b =>
                 _tesseractRecognizer.RecognizePreprocessedTextBox(b)));

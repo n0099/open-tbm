@@ -38,7 +38,7 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
             $"DbSet<{typeof(TPost).Name}> is not exist in DbContext.");
 
         var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
-        // shallow clone before entities get mutated by CommonInSavers.SavePostsOrUsers()
+        // deep copy before entities get mutated by CommonInSavers.SavePostsOrUsers()
         var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
         SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,

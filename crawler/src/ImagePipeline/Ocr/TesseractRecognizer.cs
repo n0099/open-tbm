@@ -49,7 +49,7 @@ public class TesseractRecognizer : IDisposable
 
     public record PreprocessedTextBox(uint ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
-    public static List<PreprocessedTextBox> PreprocessTextBoxes
+    public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes
         (uint imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
         .Select(t =>
         {
@@ -70,8 +70,7 @@ public class TesseractRecognizer : IDisposable
             Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
 
             return new PreprocessedTextBox(imageId, isUnrecognized, textBox, mat);
-        })
-        .ToList(); // eager eval since mat is already disposed after return
+        });
 
     private static float GetRotationDegrees(RotatedRect rotatedRect)
     { // https://stackoverflow.com/questions/13002979/how-to-calculate-rotation-angle-from-rectangle-points

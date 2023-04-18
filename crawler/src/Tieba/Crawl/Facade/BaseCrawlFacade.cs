@@ -80,7 +80,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     { // cancel when startPage is already locked
         if (_lockingPages.Any()) throw new InvalidOperationException(
             "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
-        var acquiredLocks = _locks.AcquireRange(_lockId, new[] {startPage}).ToHashSet();
+        var acquiredLocks = _locks.AcquireRange(_lockId, new[] {startPage});
         if (!acquiredLocks.Any()) _logger.LogInformation(
             "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked",
             startPage, endPage, _locks.LockType, _lockId);
@@ -111,7 +111,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     private Task CrawlPages(IList<Page> pages,
         Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
     {
-        var acquiredLocks = _locks.AcquireRange(_lockId, pages).ToList();
+        var acquiredLocks = _locks.AcquireRange(_lockId, pages);
         if (!acquiredLocks.Any())
         {
             var pagesText = Enumerable

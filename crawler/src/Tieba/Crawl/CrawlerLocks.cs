@@ -37,7 +37,7 @@ public class CrawlerLocks : WithLogTrace
         }
     }
 
-    public IEnumerable<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
+    public HashSet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {
         var acquiredPages = pages.ToHashSet();
         lock (_crawling)
@@ -52,7 +52,7 @@ public class CrawlerLocks : WithLogTrace
             var pagesLock = _crawling[lockId];
             lock (pagesLock)
             {
-                foreach (var page in acquiredPages.ToList()) // iterate on copy in order to mutate the original lockFreePages
+                foreach (var page in acquiredPages.ToList()) // iterate on a shallow copy to mutate the original acquiredPages
                 {
                     if (pagesLock.TryAdd(page, now)) continue;
                     // when page is locking
