@@ -37,24 +37,28 @@ public class ImageOcrPipelineWorker : ErrorableWorker
                 orderby image.ImageId
                 select image).Take(_batchReadFromDbSize).ToList();
             if (!images.Any()) isNoMoreImages = true;
-            else
-            {
-                foreach (var chunkedImages in images.Chunk(_batchRecognizeSize))
-                {
-                    var matricesKeyByImageId = (await Task.WhenAll(chunkedImages.Select(async image =>
-                            (image.ImageId, bytes: await _http.GetByteArrayAsync(image.UrlFilename + ".jpg", stoppingToken)))))
-                        .ToDictionary(t => t.ImageId, t => Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
-                    await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
-                    await RecognizeTextsThenSave(scope1, db, matricesKeyByImageId, "zh-Hans", stoppingToken);
-                    await RecognizeTextsThenSave(scope1, db, matricesKeyByImageId, "zh-Hant", stoppingToken);
-                    await RecognizeTextsThenSave(scope1, db, matricesKeyByImageId, "ja", stoppingToken);
-                    await RecognizeTextsThenSave(scope1, db, matricesKeyByImageId, "en", stoppingToken);
-                    _ = await db.SaveChangesAsync(stoppingToken);
-                    await transaction.CommitAsync(stoppingToken);
-                }
-            }
+            else foreach (var chunkedImages in images.Chunk(_batchRecognizeSize))
+                await RecognizeScriptsInImages(scope1, chunkedImages, stoppingToken);
             lastImageIdInPreviousBatch = images.Last().ImageId;
         }
+    }
+
+    private static async Task RecognizeScriptsInImages(ILifetimeScope scope, IEnumerable<TiebaImage> images, CancellationToken stoppingToken)
+    {
+        await using var scope1 = scope.BeginLifetimeScope();
+        var db = scope1.Resolve<TbmDbContext.New>()(0);
+        var matricesKeyByImageId = (await Task.WhenAll(images.Select(async image =>
+                (image.ImageId, bytes: await _http.GetByteArrayAsync(image.UrlFilename + ".jpg", stoppingToken)))))
+            .ToDictionary(t => t.ImageId, t =>
+                Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+        await RecognizeTextsThenSave(scope, db, matricesKeyByImageId, "zh-Hans", stoppingToken);
+        await RecognizeTextsThenSave(scope, db, matricesKeyByImageId, "zh-Hant", stoppingToken);
+        await RecognizeTextsThenSave(scope, db, matricesKeyByImageId, "ja", stoppingToken);
+        await RecognizeTextsThenSave(scope, db, matricesKeyByImageId, "en", stoppingToken);
+        matricesKeyByImageId.Values.ForEach(mat => mat.Dispose());
+        _ = await db.SaveChangesAsync(stoppingToken);
+        await transaction.CommitAsync(stoppingToken);
     }
 
     private static async Task RecognizeTextsThenSave(ILifetimeScope scope, TbmDbContext db,

@@ -69,8 +69,9 @@ public class TesseractRecognizer : IDisposable
             // https://github.com/tesseract-ocr/tesseract/issues/427
             Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
 
-            return new PreprocessedTextBox(imageId, isUnrecognized, textBox, mat);
-        });
+            // https://github.com/tesseract-ocr/tesseract/issues/3001
+            return mat.Width < 3 ? null : new PreprocessedTextBox(imageId, isUnrecognized, textBox, mat);
+        }).OfType<PreprocessedTextBox>();
 
     private static float GetRotationDegrees(RotatedRect rotatedRect)
     { // https://stackoverflow.com/questions/13002979/how-to-calculate-rotation-angle-from-rectangle-points

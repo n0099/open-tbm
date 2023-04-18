@@ -2,10 +2,10 @@ using OpenCvSharp;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
-public class ImageOcrConsumer
+public class ImageOcrConsumer : IDisposable
 {
     private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector;
-    private readonly TesseractRecognizer _tesseractRecognizer;
+    private readonly Lazy<TesseractRecognizer> _tesseractRecognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
     private readonly int _paddleOcrConfidenceThreshold;
     private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox;
@@ -17,7 +17,7 @@ public class ImageOcrConsumer
         PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory, TesseractRecognizer.New tesseractRecognizerFactory)
     {
         _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
-        _tesseractRecognizer = tesseractRecognizerFactory(script);
+        _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
         _paddleOcrConfidenceThreshold = configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
@@ -28,6 +28,12 @@ public class ImageOcrConsumer
             tesseractConfigSection.GetValue("PercentageThresholdOfIntersectionAreaToConsiderAsNewTextBox", 10);
     }
 
+    public void Dispose()
+    {
+        _paddleOcrRecognizerAndDetector.Dispose();
+        if (_tesseractRecognizer.IsValueCreated) _tesseractRecognizer.Value.Dispose();
+    }
+
     public Task InitializePaddleOcrModel(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.InitializeModel(stoppingToken);
 
@@ -35,9 +41,12 @@ public class ImageOcrConsumer
     {
         var recognizedResultsViaPaddleOcr =
             _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageId).ToList();
-        var detectionResults = _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageId);
+        var detectedResults =
+            _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageId).ToList();
+        _paddleOcrRecognizerAndDetector.Dispose(); // dispose early for saving memory
         var recognizedResultsViaTesseract = RecognizeImageMatricesViaTesseract(
-            recognizedResultsViaPaddleOcr, detectionResults, matricesKeyByImageId).ToList();
+            recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageId).ToList();
+        if (_tesseractRecognizer.IsValueCreated) _tesseractRecognizer.Value.Dispose(); // dispose early for saving memory
         return recognizedResultsViaPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
@@ -128,6 +137,6 @@ public class ImageOcrConsumer
                 return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes).ToList();
             })
             .SelectMany(textBoxes => textBoxes.Select(b =>
-                _tesseractRecognizer.RecognizePreprocessedTextBox(b)));
+                _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b)));
     }
 }
