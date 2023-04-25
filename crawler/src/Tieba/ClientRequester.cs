@@ -76,9 +76,9 @@ public class ClientRequester
             {"_client_type", "2"},
             {"_client_version", clientVersion}
         }.Concat(param).ToList();
-        var sign = postData.Aggregate("", (acc, i) =>
+        var sign = postData.Aggregate("", (acc, pair) =>
         {
-            acc += i.Key + '=' + i.Value;
+            acc += pair.Key + '=' + pair.Value;
             return acc;
         }) + "tiebaclient!!!";
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
@@ -96,7 +96,7 @@ public class ClientRequester
         // https://github.com/MoeNetwork/wmzz_post/blob/80aba25de46f5b2cb1a15aa2a69b527a7374ffa9/wmzz_post_setting.php#L64
         setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
 
-        // https://github.com/dotnet/runtime/issues/22996, http://test.greenbytes.de/tech/tc2231
+        // https://github.com/dotnet/runtime/issues/22996 http://test.greenbytes.de/tech/tc2231
         var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
         protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
         var content = new MultipartFormDataContent {protoBufFile};

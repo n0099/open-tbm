@@ -25,7 +25,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     private static Func<CancellationToken, Task<PaddleOcrAll>>
         GetModelFactory(OnlineFullModels model) => async stoppingToken =>
-        new(await model.DownloadAsync(stoppingToken), PaddleDevice.Mkldnn())
+        new(await model.DownloadAsync(stoppingToken), PaddleDevice.Mkldnn(1)) // https://github.com/sdcb/PaddleSharp/pull/46
         {
             AllowRotateDetection = true,
             Enable180Classification = true
@@ -45,8 +45,8 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
         if (_model == null) throw new("PaddleOcr model haven't been initialized.");
-        return matricesKeyByImageId.SelectMany(matrix =>
-            CreateRecognitionResult(matrix.Key, _script, _model.Run(matrix.Value)));
+        return matricesKeyByImageId.SelectMany(pair =>
+            CreateRecognitionResult(pair.Key, _script, _model.Run(pair.Value)));
     }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
@@ -59,7 +59,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
         if (_model == null) throw new("PaddleOcr model haven't been initialized.");
-        return matricesKeyByImageId.SelectMany(matrix =>
-            _model.Detector.Run(matrix.Value).Select(rect => new DetectionResult(matrix.Key, rect)));
+        return matricesKeyByImageId.SelectMany(pair =>
+            _model.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect)));
     }
 }

@@ -8,8 +8,7 @@ public class ImageOcrConsumer : IDisposable
     private readonly Lazy<TesseractRecognizer> _tesseractRecognizer;
     private readonly int _gridSizeToMergeBoxesIntoSingleLine;
     private readonly int _paddleOcrConfidenceThreshold;
-    private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox;
-    private readonly int _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox;
+    private readonly (int ToConsiderAsSameTextBox, int ToConsiderAsNewTextBox) _intersectionAreaThresholds;
 
     public delegate ImageOcrConsumer New(string script);
 
@@ -21,11 +20,10 @@ public class ImageOcrConsumer : IDisposable
         var configSection = config.GetSection("ImageOcrPipeline");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
         _paddleOcrConfidenceThreshold = configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
-        var tesseractConfigSection = configSection.GetSection("Tesseract");
-        _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox =
-            tesseractConfigSection.GetValue("PercentageThresholdOfIntersectionAreaToConsiderAsSameTextBox", 90);
-        _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox =
-            tesseractConfigSection.GetValue("PercentageThresholdOfIntersectionAreaToConsiderAsNewTextBox", 10);
+        var intersectionAreaThresholdConfigSection = configSection.GetSection("Tesseract").GetSection("IntersectionAreaThreshold");
+        _intersectionAreaThresholds = (
+            intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsSameTextBox", 90),
+            intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsNewTextBox", 10));
     }
 
     public void Dispose()
@@ -111,7 +109,7 @@ public class ImageOcrConsumer : IDisposable
         var recognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.RecognizedTextBox into g
-            select g.Where(pair => pair.PercentageOfIntersection > _percentageThresholdOfIntersectionAreaToConsiderAsSameTextBox)
+            select g.Where(pair => pair.PercentageOfIntersection > _intersectionAreaThresholds.ToConsiderAsSameTextBox)
                 .DefaultIfEmpty().MaxBy(pair => pair?.PercentageOfIntersection) into pair
             where pair != default
             select pair
@@ -119,7 +117,7 @@ public class ImageOcrConsumer : IDisposable
         var unrecognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.DetectedTextBox into g
-            where g.All(pair => pair.PercentageOfIntersection <= _percentageThresholdOfIntersectionAreaToConsiderAsNewTextBox)
+            where g.All(pair => pair.PercentageOfIntersection <= _intersectionAreaThresholds.ToConsiderAsNewTextBox)
             select g.MinBy(pair => pair.PercentageOfIntersection)
         ).ToLookup(pair => pair.ImageId);
 
