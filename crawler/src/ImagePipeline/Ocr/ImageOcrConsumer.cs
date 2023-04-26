@@ -2,7 +2,7 @@ using OpenCvSharp;
 
 namespace tbm.Crawler.ImagePipeline.Ocr;
 
-public class ImageOcrConsumer : IDisposable
+public class ImageOcrConsumer
 {
     private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector;
     private readonly Lazy<TesseractRecognizer> _tesseractRecognizer;
@@ -26,14 +26,8 @@ public class ImageOcrConsumer : IDisposable
             intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsNewTextBox", 10));
     }
 
-    public void Dispose()
-    {
-        _paddleOcrRecognizerAndDetector.Dispose();
-        if (_tesseractRecognizer.IsValueCreated) _tesseractRecognizer.Value.Dispose();
-    }
-
-    public Task InitializePaddleOcrModel(CancellationToken stoppingToken = default) =>
-        _paddleOcrRecognizerAndDetector.InitializeModel(stoppingToken);
+    public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
+        _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
     public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {

@@ -66,7 +66,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     {
         await using var scope1 = scope.BeginLifetimeScope();
         var consumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
-        await consumer.InitializePaddleOcrModel(stoppingToken);
+        await consumer.InitializePaddleOcr(stoppingToken);
         var recognizedResults = consumer.RecognizeImageMatrices(matricesKeyByImageId).ToList();
         var recognizedTextLinesKeyByImageId = consumer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
         SaveRecognizedTexts(db, script, recognizedResults, recognizedTextLinesKeyByImageId);

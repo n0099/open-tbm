@@ -8,7 +8,7 @@ namespace tbm.Crawler.ImagePipeline.Ocr;
 public class PaddleOcrRecognizerAndDetector : IDisposable
 {
     private readonly string _script;
-    private PaddleOcrAll? _model;
+    private PaddleOcrAll? _ocr;
 
     public delegate PaddleOcrRecognizerAndDetector New(string script);
 
@@ -21,32 +21,31 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             ?? "./PaddleOcrModels";
     }
 
-    public void Dispose() => _model?.Dispose();
+    public void Dispose() => _ocr?.Dispose();
 
     private static Func<CancellationToken, Task<PaddleOcrAll>>
-        GetModelFactory(OnlineFullModels model) => async stoppingToken =>
+        GetPaddleOcrFactory(OnlineFullModels model) => async stoppingToken =>
         new(await model.DownloadAsync(stoppingToken), PaddleDevice.Mkldnn(1)) // https://github.com/sdcb/PaddleSharp/pull/46
         {
             AllowRotateDetection = true,
             Enable180Classification = true
         };
 
-    private static readonly Dictionary<string, Func<CancellationToken, Task<PaddleOcrAll>>> AvailableModelKeyByScript = new()
-    {
-        {"zh-Hans", GetModelFactory(OnlineFullModels.ChineseV3)},
-        {"zh-Hant", GetModelFactory(OnlineFullModels.TraditionalChineseV3)},
-        {"ja", GetModelFactory(OnlineFullModels.JapanV3)},
-        {"en", GetModelFactory(OnlineFullModels.EnglishV3)}
-    };
-
-    public async Task InitializeModel(CancellationToken stoppingToken = default) =>
-        _model ??= await AvailableModelKeyByScript[_script](stoppingToken);
+    public async Task Initialize(CancellationToken stoppingToken = default) =>
+        _ocr ??= await (_script switch
+        {
+            "zh-Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseV3),
+            "zh-Hant" => GetPaddleOcrFactory(OnlineFullModels.TraditionalChineseV3),
+            "ja" => GetPaddleOcrFactory(OnlineFullModels.JapanV3),
+            "en" => GetPaddleOcrFactory(OnlineFullModels.EnglishV3),
+            _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
+        })(stoppingToken);
 
     public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
-        if (_model == null) throw new("PaddleOcr model haven't been initialized.");
+        if (_ocr == null) throw new("PaddleOcr model haven't been initialized.");
         return matricesKeyByImageId.SelectMany(pair =>
-            CreateRecognitionResult(pair.Key, _script, _model.Run(pair.Value)));
+            CreateRecognitionResult(pair.Key, _script, _ocr.Run(pair.Value)));
     }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
@@ -58,8 +57,8 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
     {
-        if (_model == null) throw new("PaddleOcr model haven't been initialized.");
+        if (_ocr == null) throw new("PaddleOcr haven't been initialized.");
         return matricesKeyByImageId.SelectMany(pair =>
-            _model.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect)));
+            _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect)));
     }
 }
