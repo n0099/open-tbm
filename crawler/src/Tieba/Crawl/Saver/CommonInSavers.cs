@@ -9,10 +9,9 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
 
     protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
 
-    protected virtual Dictionary<string, ushort> RevisionNullFieldsBitMasks =>
-        throw new NotImplementedException();
+    protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
     protected virtual Dictionary<Type, Action<TbmDbContext, IEnumerable<TBaseRevision>>>
-        RevisionSplitEntitiesUpsertPayloads => throw new NotImplementedException();
+        RevisionUpsertPayloadKeyBySplitEntity => throw new NotImplementedException();
 
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
         TbmDbContext db,
@@ -81,11 +80,9 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
                     revisionProp.SetValue(revision, p.OriginalValue);
 
                     if (p.OriginalValue != null) continue;
-                    // fields that have already split out will not exist in RevisionNullFieldsBitMasks
-                    if (RevisionNullFieldsBitMasks.TryGetValue(pName, out var whichBitToMask))
-                    { // mask the corresponding field bit with 1
-                        revisionNullFieldsBitMask |= whichBitToMask;
-                    }
+                    // fields that have already split out will not exist in GetRevisionNullFieldBitMask
+                    var whichBitToMask = GetRevisionNullFieldBitMask(pName);
+                    revisionNullFieldsBitMask |= whichBitToMask; // mask the corresponding field bit with 1
                 }
             }
             if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask.NullIfZero();
@@ -99,7 +96,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
         newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
             .SelectMany(rev => rev.SplitEntities)
             .GroupBy(pair => pair.Key, pair => pair.Value)
-            .ForEach(g => RevisionSplitEntitiesUpsertPayloads[g.Key](db, g));
+            .ForEach(g => RevisionUpsertPayloadKeyBySplitEntity[g.Key](db, g));
     }
 
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)

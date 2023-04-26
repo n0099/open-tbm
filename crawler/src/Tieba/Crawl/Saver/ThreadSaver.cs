@@ -11,21 +11,22 @@ public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
             _ => false
         }, (_, _, _, _) => false);
 
-    protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
-        {nameof(ThreadPost.StickyType),       1},
-        {nameof(ThreadPost.TopicType),        1 << 1},
-        {nameof(ThreadPost.IsGood),           1 << 2},
-        {nameof(ThreadPost.LatestReplierUid), 1 << 4},
-        {nameof(ThreadPost.ReplyCount),       1 << 5},
-        {nameof(ThreadPost.ShareCount),       1 << 7},
-        {nameof(ThreadPost.AgreeCount),       1 << 8},
-        {nameof(ThreadPost.DisagreeCount),    1 << 9},
-        {nameof(ThreadPost.Geolocation),      1 << 10}
+        nameof(ThreadPost.StickyType)       => 1,
+        nameof(ThreadPost.TopicType)        => 1 << 1,
+        nameof(ThreadPost.IsGood)           => 1 << 2,
+        nameof(ThreadPost.LatestReplierUid) => 1 << 4,
+        nameof(ThreadPost.ReplyCount)       => 1 << 5,
+        nameof(ThreadPost.ShareCount)       => 1 << 7,
+        nameof(ThreadPost.AgreeCount)       => 1 << 8,
+        nameof(ThreadPost.DisagreeCount)    => 1 << 9,
+        nameof(ThreadPost.Geolocation)      => 1 << 10,
+        _ => 0
     };
 
     protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseThreadRevision>>>
-        RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
             typeof(ThreadRevision.SplitViewCount), (db, revisions) =>

@@ -14,10 +14,10 @@ public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
             _ => false
         }, (_, _, _, _) => false);
 
-    protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new();
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => 0;
 
     protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseSubReplyRevision>>>
-        RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
             typeof(SubReplyRevision.SplitAgreeCount), (db, revisions) =>

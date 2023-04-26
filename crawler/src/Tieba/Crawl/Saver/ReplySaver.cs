@@ -14,15 +14,16 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             _ => false
         });
 
-    protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
-        {nameof(ReplyPost.IsFold),        1 << 2},
-        {nameof(ReplyPost.DisagreeCount), 1 << 4},
-        {nameof(ReplyPost.Geolocation),   1 << 5}
+        nameof(ReplyPost.IsFold)        => 1 << 2,
+        nameof(ReplyPost.DisagreeCount) => 1 << 4,
+        nameof(ReplyPost.Geolocation)   => 1 << 5,
+        _ => 0
     };
 
     protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseReplyRevision>>>
-        RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
             typeof(ReplyRevision.SplitFloor), (db, revisions) =>

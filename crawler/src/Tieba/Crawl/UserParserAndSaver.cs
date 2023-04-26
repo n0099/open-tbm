@@ -5,15 +5,16 @@ namespace tbm.Crawler.Tieba.Crawl;
 
 public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
 {
-    protected override Dictionary<string, ushort> RevisionNullFieldsBitMasks { get; } = new()
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
-        {nameof(TiebaUser.Name),   1},
-        {nameof(TiebaUser.Gender), 1 << 3},
-        {nameof(TiebaUser.Icon),   1 << 5}
+        nameof(TiebaUser.Name)   => 1,
+        nameof(TiebaUser.Gender) => 1 << 3,
+        nameof(TiebaUser.Icon)   => 1 << 5,
+        _ => 0
     };
 
     protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseUserRevision>>>
-        RevisionSplitEntitiesUpsertPayloads { get; } = new()
+        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
             typeof(UserRevision.SplitDisplayName), (db, revisions) =>
