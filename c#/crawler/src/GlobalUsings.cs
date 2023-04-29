@@ -18,6 +18,7 @@ global using System.Text;
 global using System.Data;
 global using Timer = System.Timers.Timer;
 
+global using tbm.Shared;
 global using tbm.Crawler.Db;
 global using tbm.Crawler.Db.Post;
 global using tbm.Crawler.Db.Revision;

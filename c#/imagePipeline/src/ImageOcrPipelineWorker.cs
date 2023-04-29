@@ -1,7 +1,7 @@
 using OpenCvSharp;
-using tbm.Crawler.ImagePipeline.Ocr;
+using tbm.ImagePipeline.Ocr;
 
-namespace tbm.Crawler.Worker;
+namespace tbm.ImagePipeline;
 
 public class ImageOcrPipelineWorker : ErrorableWorker
 {
@@ -25,7 +25,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<TbmDbContext.New>()(0);
+        var db = scope1.Resolve<TbmDbContext.New>()("");
         uint lastImageIdInPreviousBatch = 0;
         var isNoMoreImages = false;
         while (!isNoMoreImages)
@@ -46,7 +46,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private static async Task RecognizeScriptsInImages(ILifetimeScope scope, IEnumerable<TiebaImage> images, CancellationToken stoppingToken)
     {
         await using var scope1 = scope.BeginLifetimeScope();
-        var db = scope1.Resolve<TbmDbContext.New>()(0);
+        var db = scope1.Resolve<TbmDbContext.New>()("");
         var matricesKeyByImageId = (await Task.WhenAll(images.Select(async image =>
                 (image.ImageId, bytes: await _http.GetByteArrayAsync(image.UrlFilename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.ImageId, t =>

@@ -1,4 +1,7 @@
-namespace tbm.Crawler.Worker;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace tbm.Shared;
 
 public abstract class ErrorableWorker : BackgroundService
 {

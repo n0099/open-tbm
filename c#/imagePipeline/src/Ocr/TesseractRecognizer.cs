@@ -1,7 +1,7 @@
 using OpenCvSharp;
 using OpenCvSharp.Text;
 
-namespace tbm.Crawler.ImagePipeline.Ocr;
+namespace tbm.ImagePipeline.Ocr;
 
 public class TesseractRecognizer : IDisposable
 {

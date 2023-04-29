@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Db;
+namespace tbm.ImagePipeline.Db;
 
 public class TiebaImageOcrBoxes
 {

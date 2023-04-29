@@ -1,0 +1,10 @@
+global using Autofac;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;
+global using System.Text;
+global using System.Data;
+global using tbm.Shared;
+global using tbm.ImagePipeline.Db;
+global using System.ComponentModel.DataAnnotations;

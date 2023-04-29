@@ -1,4 +1,6 @@
-namespace tbm.Crawler.Db;
+using System.ComponentModel.DataAnnotations;
+
+namespace tbm.Shared;
 
 public class TiebaImage
 {

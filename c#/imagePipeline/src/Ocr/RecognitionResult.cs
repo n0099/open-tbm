@@ -1,6 +1,6 @@
 using OpenCvSharp;
 
-namespace tbm.Crawler.ImagePipeline.Ocr;
+namespace tbm.ImagePipeline.Ocr;
 
 public interface IRecognitionResult
 {

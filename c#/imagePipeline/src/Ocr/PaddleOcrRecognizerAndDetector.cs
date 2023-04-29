@@ -3,7 +3,7 @@ using Sdcb.PaddleInference;
 using Sdcb.PaddleOCR;
 using Sdcb.PaddleOCR.Models.Online;
 
-namespace tbm.Crawler.ImagePipeline.Ocr;
+namespace tbm.ImagePipeline.Ocr;
 
 public class PaddleOcrRecognizerAndDetector : IDisposable
 {
