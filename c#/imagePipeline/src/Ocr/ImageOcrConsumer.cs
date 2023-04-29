@@ -29,7 +29,7 @@ public class ImageOcrConsumer
     public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
-    public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
+    public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
     {
         var recognizedResultsViaPaddleOcr =
             _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageId).ToList();
@@ -47,7 +47,7 @@ public class ImageOcrConsumer
                 .Select(result => result.TextBox), result => result.TextBox));
     }
 
-    public Dictionary<uint, string> GetRecognizedTextLinesKeyByImageId
+    public Dictionary<ImageId, string> GetRecognizedTextLinesKeyByImageId
         (IEnumerable<IRecognitionResult> recognizedResults) => recognizedResults
         .GroupBy(result => result.ImageId)
         .ToDictionary(g => g.Key, g =>
@@ -70,13 +70,13 @@ public class ImageOcrConsumer
             return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
         });
 
-    private record CorrelatedTextBoxPair(uint ImageId, ushort PercentageOfIntersection,
+    private record CorrelatedTextBoxPair(ImageId ImageId, ushort PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
     private IEnumerable<TesseractRecognitionResult> RecognizeImageMatricesViaTesseract(
         IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
         IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
-        IReadOnlyDictionary<uint, Mat> imageMatricesKeyByImageId)
+        IReadOnlyDictionary<ImageId, Mat> imageMatricesKeyByImageId)
     {
         static ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {

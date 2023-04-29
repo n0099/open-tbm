@@ -25,7 +25,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
-        uint lastImageIdInPreviousBatch = 0;
+        ImageId lastImageIdInPreviousBatch = 0;
         var isNoMoreImages = false;
         while (!isNoMoreImages)
         {
@@ -61,7 +61,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     }
 
     private static async Task RecognizeTextsThenSave(ILifetimeScope scope, ImagePipelineDbContext db,
-        Dictionary<uint, Mat> matricesKeyByImageId, string script, CancellationToken stoppingToken)
+        Dictionary<ImageId, Mat> matricesKeyByImageId, string script, CancellationToken stoppingToken)
     {
         await using var scope1 = scope.BeginLifetimeScope();
         var consumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
@@ -72,7 +72,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     }
 
     private static void SaveRecognizedTexts(ImagePipelineDbContext db, string script,
-        IEnumerable<IRecognitionResult> recognizedResults, Dictionary<uint, string> recognizedTextLinesKeyByImageId)
+        IEnumerable<IRecognitionResult> recognizedResults, Dictionary<ImageId, string> recognizedTextLinesKeyByImageId)
     {
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBoxes
         {

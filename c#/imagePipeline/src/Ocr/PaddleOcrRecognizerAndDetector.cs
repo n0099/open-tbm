@@ -40,7 +40,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
-    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
+    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
     {
         if (_ocr == null) throw new("PaddleOcr model haven't been initialized.");
         return matricesKeyByImageId.SelectMany(pair =>
@@ -48,13 +48,13 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
-        (uint imageId, string script, PaddleOcrResult result) =>
+        (ImageId imageId, string script, PaddleOcrResult result) =>
         result.Regions.Select(region => new PaddleOcrRecognitionResult(
             imageId, script, region.Rect, region.Text, (region.Score * 100).NanToZero().RoundToUshort()));
 
-    public record DetectionResult(uint ImageId, RotatedRect TextBox);
+    public record DetectionResult(ImageId ImageId, RotatedRect TextBox);
 
-    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<uint, Mat> matricesKeyByImageId)
+    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
     {
         if (_ocr == null) throw new("PaddleOcr haven't been initialized.");
         return matricesKeyByImageId.SelectMany(pair =>

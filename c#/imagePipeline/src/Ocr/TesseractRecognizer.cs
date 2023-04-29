@@ -46,10 +46,10 @@ public class TesseractRecognizer : IDisposable
         _tesseractInstanceVertical.Dispose();
     }
 
-    public record PreprocessedTextBox(uint ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(ImageId ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
     public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes
-        (uint imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
+        (ImageId imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
         .Select(t =>
         {
             var (isUnrecognized, textBox) = t;
