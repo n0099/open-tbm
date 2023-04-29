@@ -1,4 +1,5 @@
 using NSonic;
+using tbm.Crawler.Worker;
 
 namespace tbm.Crawler;
 

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace tbm.Crawler.Tieba;
 
 public class ClientRequester

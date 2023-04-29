@@ -1,4 +1,3 @@
-using OpenCvSharp;
 using OpenCvSharp.Text;
 
 namespace tbm.ImagePipeline.Ocr;

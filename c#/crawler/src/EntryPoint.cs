@@ -2,7 +2,10 @@ using System.Net;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
+using tbm.Crawler.Worker;
+
 #pragma warning disable IDE0058
 
 namespace tbm.Crawler;

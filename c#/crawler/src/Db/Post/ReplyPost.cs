@@ -1,7 +1,5 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-using System.Text.Json.Serialization;
-
 namespace tbm.Crawler.Db.Post;
 
 public class ReplyPost : IPost, IPostWithAuthorExpGrade

@@ -1,5 +1,3 @@
-using OpenCvSharp;
-
 namespace tbm.ImagePipeline;
 
 public static class ExtensionMethods

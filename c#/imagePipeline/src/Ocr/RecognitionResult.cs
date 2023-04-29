@@ -1,5 +1,3 @@
-using OpenCvSharp;
-
 namespace tbm.ImagePipeline.Ocr;
 
 public interface IRecognitionResult

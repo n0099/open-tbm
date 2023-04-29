@@ -1,5 +1,4 @@
-using OpenCvSharp;
-using tbm.ImagePipeline.Ocr;
+using System.Data;
 
 namespace tbm.ImagePipeline;
 

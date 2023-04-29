@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace tbm.Crawler.Db;
 
 public class ProtoBufRepeatedFieldJsonConverter<T> : JsonConverter<RepeatedField<T>> where T : IMessage

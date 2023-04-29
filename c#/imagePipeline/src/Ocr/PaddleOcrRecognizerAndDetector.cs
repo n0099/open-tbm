@@ -1,4 +1,3 @@
-using OpenCvSharp;
 using Sdcb.PaddleInference;
 using Sdcb.PaddleOCR;
 using Sdcb.PaddleOCR.Models.Online;
