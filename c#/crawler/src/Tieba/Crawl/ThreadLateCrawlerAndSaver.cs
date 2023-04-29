@@ -3,7 +3,7 @@ namespace tbm.Crawler.Tieba.Crawl;
 public class ThreadLateCrawlerAndSaver
 {
     private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
-    private readonly TbmDbContext.New _dbContextFactory;
+    private readonly CrawlerDbContext.New _dbContextFactory;
     private readonly ClientRequester _requester;
     private readonly Fid _fid;
     private readonly ClientRequesterTcs _requesterTcs;
@@ -13,7 +13,7 @@ public class ThreadLateCrawlerAndSaver
 
     public ThreadLateCrawlerAndSaver(
         ILogger<ThreadLateCrawlerAndSaver> logger,
-        TbmDbContext.New dbContextFactory,
+        CrawlerDbContext.New dbContextFactory,
         ClientRequester requester,
         ClientRequesterTcs requesterTcs,
         IIndex<string, CrawlerLocks> locks,

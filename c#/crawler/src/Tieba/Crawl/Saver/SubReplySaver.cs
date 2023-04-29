@@ -16,7 +16,7 @@ public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
 
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => 0;
 
-    protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseSubReplyRevision>>>
+    protected override Dictionary<Type, Action<CrawlerDbContext, IEnumerable<BaseSubReplyRevision>>>
         RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
@@ -38,7 +38,7 @@ public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "subReply") { }
 
-    public override SaverChangeSet<SubReplyPost> SavePosts(TbmDbContext db)
+    public override SaverChangeSet<SubReplyPost> SavePosts(CrawlerDbContext db)
     {
         var changeSet = SavePosts(db, sr => sr.Spid,
             sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},

@@ -10,11 +10,11 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
     protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
 
     protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
-    protected virtual Dictionary<Type, Action<TbmDbContext, IEnumerable<TBaseRevision>>>
+    protected virtual Dictionary<Type, Action<CrawlerDbContext, IEnumerable<TBaseRevision>>>
         RevisionUpsertPayloadKeyBySplitEntity => throw new NotImplementedException();
 
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
-        TbmDbContext db,
+        CrawlerDbContext db,
         FieldChangeIgnoranceCallbacks userFieldChangeIgnorance,
         Func<TPostOrUser, TRevision> revisionFactory,
         ILookup<bool, TPostOrUser> existingOrNewLookup,

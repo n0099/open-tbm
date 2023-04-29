@@ -1,15 +1,17 @@
-using System.Data.Common;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using NLog.Extensions.Logging;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-
 namespace tbm.Crawler.Db;
 
-public class TbmDbContext : DbContext
+public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheKeyFactory>
 {
-    private readonly IConfiguration _config;
-    private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
+    public class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
+    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
+        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
+        public object Create(DbContext context, bool designTime) =>
+            context is CrawlerDbContext dbContext
+                ? (context.GetType(), dbContext.Fid, designTime)
+                : context.GetType();
+    }
+
     public Fid Fid { get; }
     public DbSet<TiebaUser> Users => Set<TiebaUser>();
     public DbSet<TiebaImage> Images => Set<TiebaImage>();
@@ -25,13 +27,9 @@ public class TbmDbContext : DbContext
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
     public DbSet<Forum> Forum => Set<Forum>();
 
-    public delegate TbmDbContext New(Fid fid);
+    public delegate CrawlerDbContext New(Fid fid);
 
-    public TbmDbContext(IConfiguration config, Fid fid)
-    {
-        _config = config;
-        Fid = fid;
-    }
+    public CrawlerDbContext(IConfiguration config, Fid fid) : base(config) => Fid = fid;
 
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
@@ -74,23 +72,6 @@ public class TbmDbContext : DbContext
         b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator").HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorType});
         b.Entity<Forum>().ToTable("tbm_forum");
     }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-    {
-        var connectionStr = _config.GetConnectionString("Main");
-        options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr))
-            .ReplaceService<IModelCacheKeyFactory, ModelWithFidCacheKeyFactory>()
-            .AddInterceptors(SelectForUpdateCommandInterceptorInstance)
-            .UseCamelCaseNamingConvention();
-
-        var dbSettings = _config.GetSection("DbSettings");
-        options.UseLoggerFactory(LoggerFactory.Create(builder =>
-            builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})
-                .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(
-                    dbSettings.GetValue("LogLevel", "Trace")).Ordinal)));
-        if (dbSettings.GetValue("EnableDetailedErrors", false)) options.EnableDetailedErrors();
-        if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
-    }
 #pragma warning restore IDE0058 // Expression value is never used
 
     public void TimestampingEntities() =>
@@ -124,47 +105,4 @@ public class TbmDbContext : DbContext
                 };
             }
         });
-
-    private class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
-    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
-        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(DbContext context) => Create(context, false);
-        public object Create(DbContext context, bool designTime) =>
-            context is TbmDbContext dbContext
-                ? (context.GetType(), dbContext.Fid, designTime)
-                : context.GetType();
-    }
-
-    private class SelectForUpdateCommandInterceptor : DbCommandInterceptor
-    { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
-        public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
-        {
-            ManipulateCommand(command);
-            return result;
-        }
-
-        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
-        {
-            ManipulateCommand(command);
-            return new(result);
-        }
-
-        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
-        {
-            ManipulateCommand(command);
-            return result;
-        }
-
-        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
-        {
-            ManipulateCommand(command);
-            return new(result);
-        }
-
-        private static void ManipulateCommand(IDbCommand command)
-        {
-            if (command.CommandText.StartsWith("-- ForUpdate", StringComparison.Ordinal))
-                command.CommandText += " FOR UPDATE";
-        }
-    }
 }

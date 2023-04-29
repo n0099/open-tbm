@@ -54,7 +54,7 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
 
 static void ConfigureContainer(ContainerBuilder builder)
 {
-    builder.RegisterType<TbmDbContext>();
+    builder.RegisterType<ImagePipelineDbContext>();
     builder.RegisterType<PaddleOcrRecognizerAndDetector>();
     builder.RegisterType<TesseractRecognizer>();
     builder.RegisterType<ImageOcrConsumer>();

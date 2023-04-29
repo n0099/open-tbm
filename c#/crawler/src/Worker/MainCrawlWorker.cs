@@ -25,7 +25,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
     private async IAsyncEnumerable<FidAndName> ForumGenerator()
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<TbmDbContext.New>()(0);
+        var db = scope1.Resolve<CrawlerDbContext.New>()(0);
         var forums = (from f in db.Forum.AsNoTracking()
             where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
         var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
@@ -54,7 +54,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
             // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
             // https://stackoverflow.com/questions/341264/max-or-default
             maxLatestReplyPostedAtOccurInPreviousCrawl =
-                scope1.Resolve<TbmDbContext.New>()(fid).Threads
+                scope1.Resolve<CrawlerDbContext.New>()(fid).Threads
                     .Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
         do
         {
@@ -137,7 +137,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
         };
         if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
 
-        var db = scope.Resolve<TbmDbContext.New>()(fid);
+        var db = scope.Resolve<CrawlerDbContext.New>()(fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
         var firstReply = from r in db.Replies.AsNoTracking()
             where r.Pid == parentThread.FirstReplyPid select r.Pid;

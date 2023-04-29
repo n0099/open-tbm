@@ -24,7 +24,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<TbmDbContext.New>()(0);
+        var db = scope1.Resolve<CrawlerDbContext.New>()(0);
         var forumPostCountsTuples = db.Database.GetDbConnection()
             .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
                 string.Join(" UNION ALL ", (from f in db.Forum select f.Fid).AsEnumerable().Select(fid =>
@@ -39,7 +39,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         foreach (var ((fid, replyCount, subReplyCount), index) in forumPostCountsTuples.WithIndex())
         {
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
-            var dbWithFid = scope1.Resolve<TbmDbContext.New>()(fid);
+            var dbWithFid = scope1.Resolve<CrawlerDbContext.New>()(fid);
             _ = await dbWithFid.Database.ExecuteSqlRawAsync(
                 // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
                 // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure

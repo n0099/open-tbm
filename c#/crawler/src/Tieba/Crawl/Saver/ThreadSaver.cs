@@ -25,7 +25,7 @@ public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
         _ => 0
     };
 
-    protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseThreadRevision>>>
+    protected override Dictionary<Type, Action<CrawlerDbContext, IEnumerable<BaseThreadRevision>>>
         RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
@@ -42,7 +42,7 @@ public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "thread") { }
 
-    public override SaverChangeSet<ThreadPost> SavePosts(TbmDbContext db) => SavePosts(db, th => th.Tid,
+    public override SaverChangeSet<ThreadPost> SavePosts(CrawlerDbContext db) => SavePosts(db, th => th.Tid,
         th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
         PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 }

@@ -10,7 +10,7 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
     public virtual FieldChangeIgnoranceCallbacks TiebaUserFieldChangeIgnorance =>
         throw new NotImplementedException();
 
-    public abstract SaverChangeSet<TPost> SavePosts(TbmDbContext db);
+    public abstract SaverChangeSet<TPost> SavePosts(CrawlerDbContext db);
 
     protected delegate void PostSaveEventHandler();
     protected event PostSaveEventHandler PostSaveEvent = () => { };
@@ -27,7 +27,7 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
         PostType = postType;
     }
 
-    protected SaverChangeSet<TPost> SavePosts<TRevision>(TbmDbContext db,
+    protected SaverChangeSet<TPost> SavePosts<TRevision>(CrawlerDbContext db,
         Func<TPost, ulong> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
         ExpressionStarter<TPost> existingPostPredicate)

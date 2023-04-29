@@ -22,7 +22,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         _ => 0
     };
 
-    protected override Dictionary<Type, Action<TbmDbContext, IEnumerable<BaseReplyRevision>>>
+    protected override Dictionary<Type, Action<CrawlerDbContext, IEnumerable<BaseReplyRevision>>>
         RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
     {
         {
@@ -65,7 +65,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "reply") { }
 
-    public override SaverChangeSet<ReplyPost> SavePosts(TbmDbContext db)
+    public override SaverChangeSet<ReplyPost> SavePosts(CrawlerDbContext db)
     {
         var changeSet = SavePosts(db, r => r.Pid,
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
@@ -80,7 +80,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         return changeSet;
     }
 
-    private Action SaveReplySignatures(TbmDbContext db, IEnumerable<ReplyPost> replies)
+    private Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         Helper.GetNowTimestamp(out var now);
         var signatures = replies
@@ -130,7 +130,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         };
     }
 
-    private static void SaveReplyContentImages(TbmDbContext db, IEnumerable<ReplyPost> replies)
+    private static void SaveReplyContentImages(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         var pidAndImageList = (
                 from r in replies

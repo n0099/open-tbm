@@ -8,7 +8,7 @@ public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, BaseSubReplyRev
 
     public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 
-    public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, TbmDbContext.New dbContextFactory,
+    public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, CrawlerDbContext.New dbContextFactory,
         SubReplyCrawler.New crawler, SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users, SonicPusher pusher,
         ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, Tid tid, Pid pid
     ) : base(logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"], new (fid, tid, pid)), fid)

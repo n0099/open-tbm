@@ -25,7 +25,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<TbmDbContext.New>()("");
+        var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
         uint lastImageIdInPreviousBatch = 0;
         var isNoMoreImages = false;
         while (!isNoMoreImages)
@@ -46,7 +46,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
     private static async Task RecognizeScriptsInImages(ILifetimeScope scope, IEnumerable<TiebaImage> images, CancellationToken stoppingToken)
     {
         await using var scope1 = scope.BeginLifetimeScope();
-        var db = scope1.Resolve<TbmDbContext.New>()("");
+        var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
         var matricesKeyByImageId = (await Task.WhenAll(images.Select(async image =>
                 (image.ImageId, bytes: await _http.GetByteArrayAsync(image.UrlFilename + ".jpg", stoppingToken)))))
             .ToDictionary(t => t.ImageId, t =>
@@ -61,7 +61,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         await transaction.CommitAsync(stoppingToken);
     }
 
-    private static async Task RecognizeTextsThenSave(ILifetimeScope scope, TbmDbContext db,
+    private static async Task RecognizeTextsThenSave(ILifetimeScope scope, ImagePipelineDbContext db,
         Dictionary<uint, Mat> matricesKeyByImageId, string script, CancellationToken stoppingToken)
     {
         await using var scope1 = scope.BeginLifetimeScope();
@@ -72,7 +72,7 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         SaveRecognizedTexts(db, script, recognizedResults, recognizedTextLinesKeyByImageId);
     }
 
-    private static void SaveRecognizedTexts(TbmDbContext db, string script,
+    private static void SaveRecognizedTexts(ImagePipelineDbContext db, string script,
         IEnumerable<IRecognitionResult> recognizedResults, Dictionary<uint, string> recognizedTextLinesKeyByImageId)
     {
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBoxes

@@ -8,7 +8,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
 {
     private readonly ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> _logger;
-    private readonly TbmDbContext.New _dbContextFactory;
+    private readonly CrawlerDbContext.New _dbContextFactory;
     private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
     private readonly BaseParser<TPost, TPostProtoBuf> _parser;
     private readonly BaseSaver<TPost, TBaseRevision> _saver;
@@ -25,7 +25,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
     protected BaseCrawlFacade(
         ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> logger,
-        TbmDbContext.New dbContextFactory,
+        CrawlerDbContext.New dbContextFactory,
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
         BaseParser<TPost, TPostProtoBuf> parser,
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
@@ -47,7 +47,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
     public void Dispose() => _locks.ReleaseRange(_lockId, _lockingPages);
 
-    protected virtual void BeforeCommitSaveHook(TbmDbContext db) { }
+    protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
     protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
 
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)

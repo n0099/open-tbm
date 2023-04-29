@@ -15,7 +15,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db0 = scope1.Resolve<TbmDbContext.New>()(0);
+        var db0 = scope1.Resolve<CrawlerDbContext.New>()(0);
         var browsing = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
         foreach (var forum in from f in db0.Forum.AsNoTracking() where f.IsCrawling select new {f.Fid, f.Name})
         {
@@ -38,7 +38,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
 
             var fid = forum.Fid;
             Helper.GetNowTimestamp(out var now);
-            await using var db1 = scope1.Resolve<TbmDbContext.New>()(0);
+            await using var db1 = scope1.Resolve<CrawlerDbContext.New>()(0);
             await using var transaction = await db1.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
             var revisions = moderators
                 .SelectMany(i => i)

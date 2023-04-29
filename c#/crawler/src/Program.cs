@@ -67,7 +67,7 @@ static void ConfigureServices(HostBuilderContext context, IServiceCollection ser
 
 static void ConfigureContainer(ContainerBuilder builder)
 {
-    builder.RegisterType<TbmDbContext>();
+    builder.RegisterType<CrawlerDbContext>();
     builder.RegisterType<ClientRequester>();
     builder.RegisterType<ClientRequesterTcs>().SingleInstance();
     CrawlerLocks.RegisteredCrawlerLocks.ForEach(type =>
