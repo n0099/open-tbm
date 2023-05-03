@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "tbm": {
+    "tbm.ImagePipeline": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
