@@ -24,7 +24,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     private static Func<CancellationToken, Task<PaddleOcrAll>>
         GetPaddleOcrFactory(OnlineFullModels model) => async stoppingToken =>
-        new(await model.DownloadAsync(stoppingToken), PaddleDevice.Mkldnn(1)) // https://github.com/sdcb/PaddleSharp/pull/46
+        new(await model.DownloadAsync(stoppingToken), PaddleDevice.Mkldnn()) // https://github.com/sdcb/PaddleSharp/pull/46
         {
             AllowRotateDetection = true,
             Enable180Classification = true

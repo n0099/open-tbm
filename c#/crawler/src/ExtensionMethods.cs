@@ -54,16 +54,6 @@ public static class ExtensionMethods
     /// <see>https://stackoverflow.com/questions/10295028/c-sharp-empty-string-null/10295082#10295082</see>
     public static string? NullIfWhiteSpace(this string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
-    /// <see>https://stackoverflow.com/questions/101265/why-is-there-no-foreach-extension-method-on-ienumerable/101278#101278</see>
-    public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
-    {
-        foreach (var element in source) action(element);
-    }
-
-    /// <see>https://stackoverflow.com/questions/9464112/c-sharp-get-value-subset-from-dictionary-by-keylist/9464468#9464468</see>
-    public static IEnumerable<TValue> GetValuesByKeys<TKey, TValue>(this IDictionary<TKey, TValue> dict, IEnumerable<TKey> keys) =>
-        keys.Where(dict.ContainsKey).Select(x => dict[x]);
-
     /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
     private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)
     {
@@ -124,8 +114,4 @@ public static class ExtensionMethods
     /// <see>https://stackoverflow.com/questions/43021/how-do-you-get-the-index-of-the-current-iteration-of-a-foreach-loop/39997157#39997157</see>
     public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> self) =>
         self.Select((item, index) => (item, index));
-
-    public static float NanToZero(this float number) => float.IsNaN(number) ? 0 : number;
-    public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number, 0);
-    public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number, 0);
 }

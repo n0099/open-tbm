@@ -8,10 +8,6 @@ public static class ExtensionMethods
         foreach (var element in source) action(element);
     }
 
-    public static float NanToZero(this float number) => float.IsNaN(number) ? 0 : number;
-    public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number, 0);
-    public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number, 0);
-
     public static (Point TopLeft, Point TopRight, Point BottomLeft, Point BottomRight) GetPoints(this RotatedRect rotatedRect)
     {
         var points = rotatedRect.Points();
