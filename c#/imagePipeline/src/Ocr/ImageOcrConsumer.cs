@@ -35,10 +35,8 @@ public class ImageOcrConsumer
             _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageId).ToList();
         var detectedResults =
             _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageId).ToList();
-        _paddleOcrRecognizerAndDetector.Dispose(); // dispose early for saving memory
         var recognizedResultsViaTesseract = RecognizeImageMatricesViaTesseract(
             recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageId).ToList();
-        if (_tesseractRecognizer.IsValueCreated) _tesseractRecognizer.Value.Dispose(); // dispose early for saving memory
         return recognizedResultsViaPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))

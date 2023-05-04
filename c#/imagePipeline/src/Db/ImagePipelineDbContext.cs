@@ -26,9 +26,9 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<TiebaImage>().ToTable("tbmc_image");
-        b.Entity<TiebaImageOcrBoxes>().ToTable("tbmc_image_ocr_boxes").HasKey(e =>
-            new {e.ImageId, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer, e.Script});
-        b.Entity<TiebaImageOcrLines>().ToTable("tbmc_image_ocr_lines").HasKey(e => new {e.ImageId, e.Script});
+        b.Entity<TiebaImageOcrBoxes>().ToTable($"tbmc_image_ocr_boxes_{Script}").HasKey(e =>
+            new {e.ImageId, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
+        b.Entity<TiebaImageOcrLines>().ToTable($"tbmc_image_ocr_lines_{Script}");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }
