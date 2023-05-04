@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <PathMap>$(MSBuildProjectDirectory)=/</PathMap>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="..\..\tbclient.protobuf\tbm_cs\**" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.22.3" />
+    </ItemGroup>
+</Project>

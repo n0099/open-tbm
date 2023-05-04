@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TbClient", "tbClient\TbClient.csproj", "{4D782E36-9769-4B10-8D5F-F1F3648F8D74}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tbm.Shared", "shared\tbm.Shared.csproj", "{D7F086F7-6DBF-4C26-AB68-0093063FF755}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tbm.Crawler", "crawler\tbm.Crawler.csproj", "{3DAC21AE-4493-4CF2-B887-203A781C12AA}"
@@ -32,6 +34,10 @@ Global
 		{3DC9F1EC-5F76-4F78-9F00-99908CED450B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DC9F1EC-5F76-4F78-9F00-99908CED450B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DC9F1EC-5F76-4F78-9F00-99908CED450B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D782E36-9769-4B10-8D5F-F1F3648F8D74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D782E36-9769-4B10-8D5F-F1F3648F8D74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D782E36-9769-4B10-8D5F-F1F3648F8D74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D782E36-9769-4B10-8D5F-F1F3648F8D74}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
