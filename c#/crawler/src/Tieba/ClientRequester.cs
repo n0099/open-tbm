@@ -7,7 +7,7 @@ public class ClientRequester
     private readonly ILogger<ClientRequester> _logger;
     private readonly IConfigurationSection _config;
     private readonly ClientRequesterTcs _requesterTcs;
-    private static HttpClient _http = null!;
+    private readonly IHttpClientFactory _httpFactory;
     private static readonly Random Rand = new();
 
     public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
@@ -15,7 +15,7 @@ public class ClientRequester
     {
         _logger = logger;
         _config = config.GetSection("ClientRequester");
-        _http = httpFactory.CreateClient("tbClient");
+        _httpFactory = httpFactory;
         _requesterTcs = requesterTcs;
     }
 
@@ -86,7 +86,11 @@ public class ClientRequester
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
-        return Post(() => _http.PostAsync(url, new FormUrlEncodedContent(postData)),
+        return Post(() =>
+            {
+                using var http = _httpFactory.CreateClient("tbClient");
+                return http.PostAsync(url, new FormUrlEncodedContent(postData));
+            },
             () => _logger.LogTrace("POST {} {}", url, param));
     }
 
@@ -112,7 +116,11 @@ public class ClientRequester
         request.Headers.Accept.ParseAdd("*/*");
         request.Headers.Connection.Add("keep-alive");
 
-        return Post(() => _http.SendAsync(request),
+        return Post(() =>
+            {
+                using var http = _httpFactory.CreateClient("tbClient");
+                return http.SendAsync(request);
+            },
             () => _logger.LogTrace("POST {} {}", url, requestParam));
     }
 

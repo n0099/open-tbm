@@ -6,15 +6,15 @@ public class ImageOcrPipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImageOcrPipelineWorker> _logger;
     private readonly ILifetimeScope _scope0;
-    private static HttpClient _http = null!;
+    private readonly ImageRequester _imageRequester;
     private readonly int _batchSize;
 
     public ImageOcrPipelineWorker(ILogger<ImageOcrPipelineWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, IHttpClientFactory httpFactory) : base(logger)
+        ILifetimeScope scope0, ImageRequester imageRequester) : base(logger)
     {
         _logger = logger;
         _scope0 = scope0;
-        _http = httpFactory.CreateClient("tbImage");
+        _imageRequester = imageRequester;
         var configSection = config.GetSection("ImageOcrPipeline");
         _batchSize = configSection.GetValue("BatchSize", 1000);
     }
@@ -44,11 +44,11 @@ public class ImageOcrPipelineWorker : ErrorableWorker
         }
     }
 
-    private static async Task RecognizeScriptsInImages(ImagePipelineDbContext db, ImageOcrConsumer consumer,
+    private async Task RecognizeScriptsInImages(ImagePipelineDbContext db, ImageOcrConsumer consumer,
         IEnumerable<TiebaImage> images, CancellationToken stoppingToken)
     {
         var matricesKeyByImageId = (await Task.WhenAll(images.Select(async image =>
-                (image.ImageId, bytes: await _http.GetByteArrayAsync(image.UrlFilename + ".jpg", stoppingToken)))))
+                (image.ImageId, bytes: await _imageRequester.GetImageBytes(image.UrlFilename, image.ByteSize, stoppingToken)))))
             .ToDictionary(t => t.ImageId, t =>
                 Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
