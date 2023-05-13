@@ -86,11 +86,7 @@ public class ClientRequester
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
-        return Post(() =>
-            {
-                using var http = _httpFactory.CreateClient("tbClient");
-                return http.PostAsync(url, new FormUrlEncodedContent(postData));
-            },
+        return Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData)),
             () => _logger.LogTrace("POST {} {}", url, param));
     }
 
@@ -116,19 +112,17 @@ public class ClientRequester
         request.Headers.Accept.ParseAdd("*/*");
         request.Headers.Connection.Add("keep-alive");
 
-        return Post(() =>
-            {
-                using var http = _httpFactory.CreateClient("tbClient");
-                return http.SendAsync(request);
-            },
+        return Post(http => http.SendAsync(request),
             () => _logger.LogTrace("POST {} {}", url, requestParam));
     }
 
-    private Task<HttpResponseMessage> Post(Func<Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)
+    private Task<HttpResponseMessage> Post
+        (Func<HttpClient, Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)
     {
+        var http = _httpFactory.CreateClient("tbClient");
         _requesterTcs.Wait();
         if (_config.GetValue("LogTrace", false)) logTraceCallback();
-        var ret = responseTaskFactory();
+        var ret = responseTaskFactory(http);
         _ = ret.ContinueWith(task =>
         {
             if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) _requesterTcs.Increase();
