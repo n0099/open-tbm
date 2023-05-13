@@ -13,7 +13,7 @@ public class EntryPoint : BaseEntryPoint
 {
     protected override void ConfigureServices(HostBuilderContext context, IServiceCollection service)
     {
-        service.AddHostedService<ImageOcrPipelineWorker>();
+        service.AddHostedService<ImagePipelineWorker>();
 
         var imageRequesterConfig = context.Configuration.GetSection("ImageRequester");
         service.AddHttpClient("tbImage", client =>
@@ -42,6 +42,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<ImagePipelineDbContext>();
         builder.RegisterType<PaddleOcrRecognizerAndDetector>();
         builder.RegisterType<TesseractRecognizer>();
+        builder.RegisterType<JoinedRecognizer>();
         builder.RegisterType<ImageOcrConsumer>();
         builder.RegisterType<ImageRequester>();
     }
