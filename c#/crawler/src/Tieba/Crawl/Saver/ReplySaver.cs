@@ -1,3 +1,5 @@
+using System.IO.Hashing;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
@@ -42,16 +44,16 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         }
     };
 
-    private record UniqueSignature(uint Id, byte[] Md5)
+    private record UniqueSignature(uint Id, byte[] XxHash3)
     {
         public virtual bool Equals(UniqueSignature? other) =>
-            ReferenceEquals(this, other) || (other != null && Id == other.Id && Md5.SequenceEqual(other.Md5));
+            ReferenceEquals(this, other) || (other != null && Id == other.Id && XxHash3.SequenceEqual(other.XxHash3));
         // https://stackoverflow.com/questions/7244699/gethashcode-on-byte-array/72925335#72925335
         public override int GetHashCode()
         {
             var hash = new HashCode();
             hash.Add(Id);
-            hash.AddBytes(Md5);
+            hash.AddBytes(XxHash3);
             return hash.ToHashCode();
         }
     }
@@ -90,7 +92,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             {
                 UserId = r.AuthorUid,
                 SignatureId = (uint)r.SignatureId!,
-                SignatureMd5 = MD5.HashData(r.Signature!),
+                SignatureXxHash3 = XxHash3.Hash(r.Signature!),
                 Signature = r.Signature!,
                 FirstSeenAt = now,
                 LastSeenAt = now
@@ -98,11 +100,11 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         if (!signatures.Any()) return () => { };
 
         var uniqueSignatures = signatures
-            .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)).ToList();
+            .Select(s => new UniqueSignature(s.SignatureId, s.SignatureXxHash3)).ToList();
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking().TagWith("ForUpdate")
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
-                  && uniqueSignatures.Select(us => us.Md5).Contains(s.SignatureMd5)
+                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.SignatureXxHash3)
             select s
         ).ToList();
         (from existing in existingSignatures
@@ -114,12 +116,12 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         {
             var newSignaturesExceptLocked = signatures
                 .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureMd5))
+                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureXxHash3))
                 .ToList();
             if (!newSignaturesExceptLocked.Any()) return () => { };
 
             _savedSignatures.AddRange(newSignaturesExceptLocked
-                .Select(s => new UniqueSignature(s.SignatureId, s.SignatureMd5)));
+                .Select(s => new UniqueSignature(s.SignatureId, s.SignatureXxHash3)));
             SignatureLocks.UnionWith(_savedSignatures);
             db.ReplySignatures.AddRange(newSignaturesExceptLocked);
         }

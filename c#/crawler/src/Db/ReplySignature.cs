@@ -6,7 +6,7 @@ public class ReplySignature
 {
     public long UserId { get; set; }
     public uint SignatureId { get; set; }
-    public required byte[] SignatureMd5 { get; set; }
+    public required byte[] SignatureXxHash3 { get; set; }
     public required byte[] Signature { get; set; }
     public uint FirstSeenAt { get; set; }
     public uint LastSeenAt { get; set; }

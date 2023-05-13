@@ -22,6 +22,7 @@
         <PackageReference Include="LinqKit.Microsoft.EntityFrameworkCore" Version="7.1.4" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
         <PackageReference Include="NSonic" Version="1.3.3" />
+        <PackageReference Include="System.IO.Hashing" Version="8.0.0-preview.3.23174.8" />
     </ItemGroup>
     <ItemGroup>
         <None Update="appsettings.Development.json">

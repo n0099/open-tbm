@@ -3,7 +3,6 @@ global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Data;
 global using System.Diagnostics;
-global using System.Security.Cryptography;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using Timer = System.Timers.Timer;
