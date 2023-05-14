@@ -30,7 +30,7 @@ public class ReplyRevision : BaseReplyRevision
     public byte[]? Geolocation { get; set; }
 
     public override bool IsAllFieldsIsNullExceptSplit() =>
-        NullFieldsBitMask == null && IsFold == null && DisagreeCount == null && Geolocation == null;
+        (NullFieldsBitMask, IsFold, DisagreeCount, Geolocation) == default;
 
     public class SplitFloor : BaseReplyRevision
     {

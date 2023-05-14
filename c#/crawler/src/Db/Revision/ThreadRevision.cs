@@ -26,18 +26,19 @@ public class ThreadRevision : BaseThreadRevision
     public byte[]? Geolocation { get; set; }
 
     public override bool IsAllFieldsIsNullExceptSplit() =>
-        NullFieldsBitMask == null
-        && ThreadType == null
-        && StickyType == null
-        && TopicType == null
-        && IsGood == null
-        && LatestReplyPostedAt == null
-        && LatestReplierUid == null
-        && ReplyCount == null
-        && ShareCount == null
-        && AgreeCount == null
-        && DisagreeCount == null
-        && Geolocation == null;
+        (NullFieldsBitMask,
+            ThreadType,
+            StickyType,
+            TopicType,
+            IsGood,
+            LatestReplyPostedAt,
+            LatestReplierUid,
+            ReplyCount,
+            ShareCount,
+            AgreeCount,
+            DisagreeCount,
+            Geolocation)
+        == default;
 
     public class SplitViewCount : BaseThreadRevision
     {

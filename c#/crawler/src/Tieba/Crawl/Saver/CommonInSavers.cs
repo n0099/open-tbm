@@ -115,14 +115,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
     }
 
     private static bool IsSameUser(TiebaUser a, TiebaUser b) =>
-        a.Uid == b.Uid
-        && a.Name == b.Name
-        && a.DisplayName == b.DisplayName
-        && a.Portrait == b.Portrait
-        && a.PortraitUpdatedAt == b.PortraitUpdatedAt
-        && a.Gender == b.Gender
-        && a.FansNickname == b.FansNickname
-        && (a.Icon == b.Icon
-            || (a.Icon != null && b.Icon != null && a.Icon.SequenceEqual(b.Icon)))
-        && a.IpGeolocation == b.IpGeolocation;
+        (a.Uid, a.Name, a.DisplayName, a.Portrait, a.PortraitUpdatedAt, a.Gender, a.FansNickname, a.IpGeolocation)
+        == (b.Uid, b.Name, b.DisplayName, b.Portrait, b.PortraitUpdatedAt, b.Gender, b.FansNickname, b.IpGeolocation)
+        && (a.Icon == b.Icon || (a.Icon != null && b.Icon != null && a.Icon.SequenceEqual(b.Icon)));
 }
