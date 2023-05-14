@@ -44,6 +44,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<TesseractRecognizer>();
         builder.RegisterType<JoinedRecognizer>();
         builder.RegisterType<ImageOcrConsumer>();
+        builder.RegisterType<ImageHashConsumer>();
         builder.RegisterType<ImageRequester>();
     }
 }

@@ -15,7 +15,7 @@ public class TesseractRecognizer : IDisposable
     public TesseractRecognizer(IConfiguration config, string script)
     {
         _script = script;
-        var configSection = config.GetSection("ImageOcrPipeline").GetSection("Tesseract");
+        var configSection = config.GetSection("ImageOcrConsumer").GetSection("Tesseract");
         var dataPath = configSection.GetValue("DataPath", "") ?? "";
         OCRTesseract CreateTesseract(string scripts, int psmode) =>
             // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153

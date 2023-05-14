@@ -15,7 +15,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     {
         _script = script;
         Settings.GlobalModelDirectory =
-            config.GetSection("ImageOcrPipeline").GetSection("PaddleOcr")
+            config.GetSection("ImageOcrConsumer").GetSection("PaddleOcr")
                 .GetValue("ModelPath", "./PaddleOcrModels")
             ?? "./PaddleOcrModels";
     }

@@ -6,6 +6,7 @@ global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.Logging;
 global using OpenCvSharp;
 
+global using tbm.ImagePipeline.Consumer;
 global using tbm.ImagePipeline.Db;
 global using tbm.ImagePipeline.Ocr;
 global using tbm.Shared;

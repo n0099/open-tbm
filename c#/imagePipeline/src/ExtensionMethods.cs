@@ -1,3 +1,5 @@
+using Point = OpenCvSharp.Point;
+
 namespace tbm.ImagePipeline;
 
 public static class ExtensionMethods

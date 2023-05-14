@@ -13,8 +13,8 @@ public class ImagePipelineWorker : ErrorableWorker
         _logger = logger;
         _scope0 = scope0;
         _imageRequester = imageRequester;
-        var configSection = config.GetSection("ImageOcrPipeline");
-        _batchSize = configSection.GetValue("BatchSize", 1000);
+        var configSection = config.GetSection("ImagePipeline");
+        _batchSize = configSection.GetValue("BatchSize", 16);
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -23,8 +23,9 @@ public class ImagePipelineWorker : ErrorableWorker
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(script);
-            var consumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
-            await consumer.InitializePaddleOcr(stoppingToken);
+            var hashConsumer = scope1.Resolve<ImageHashConsumer>();
+            var ocrConsumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
+            await ocrConsumer.InitializePaddleOcr(stoppingToken);
             ImageId lastImageIdInPreviousBatch = 0;
             var isNoMoreImages = false;
             while (!isNoMoreImages)
@@ -42,7 +43,8 @@ public class ImagePipelineWorker : ErrorableWorker
                             (image.ImageId, bytes: await _imageRequester.GetImageBytes(image, stoppingToken)))))
                         .ToDictionary(t => t.ImageId, t =>
                             Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
-                    await consumer.RecognizeScriptsInImages(matricesKeyByImageId, stoppingToken);
+                    await hashConsumer.Consume(matricesKeyByImageId, stoppingToken);
+                    await ocrConsumer.Consume(matricesKeyByImageId, stoppingToken);
                 }
                 lastImageIdInPreviousBatch = images.Last().ImageId;
             }

@@ -19,7 +19,7 @@ public class JoinedRecognizer
     {
         _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
         _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));
-        var configSection = config.GetSection("ImageOcrPipeline");
+        var configSection = config.GetSection("ImageOcrConsumer");
         _gridSizeToMergeBoxesIntoSingleLine = configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
         _paddleOcrConfidenceThreshold = configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
         var intersectionAreaThresholdConfigSection = configSection.GetSection("Tesseract").GetSection("IntersectionAreaThreshold");
