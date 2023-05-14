@@ -1,12 +1,12 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public class ImageOcrConsumer : ImageBaseConsumer
+public class OcrConsumer : MatrixConsumer
 {
     private readonly JoinedRecognizer _recognizer;
 
-    public delegate ImageOcrConsumer New(string script);
+    public delegate OcrConsumer New(string script);
 
-    public ImageOcrConsumer(ImagePipelineDbContext.New dbContextFactory,
+    public OcrConsumer(ImagePipelineDbContext.New dbContextFactory,
         JoinedRecognizer.New recognizerFactory,
         string script
     ) : base(dbContextFactory, script) =>
@@ -15,12 +15,12 @@ public class ImageOcrConsumer : ImageBaseConsumer
     public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         _recognizer.InitializePaddleOcr(stoppingToken);
 
-    protected override Task ConsumeInternal
-        (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
+    protected override void ConsumeInternal
+        (ImagePipelineDbContext db, Dictionary<uint, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
     {
         var recognizedResults = _recognizer.RecognizeImageMatrices(matricesKeyByImageId).ToList();
         var recognizedTextLinesKeyByImageId = _recognizer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
-        db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBox
+        db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
             ImageId = result.ImageId,
             CenterPointX = result.TextBox.Center.X,
@@ -38,11 +38,10 @@ public class ImageOcrConsumer : ImageBaseConsumer
             Confidence = result.Confidence,
             Text = result.Text
         }));
-        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new TiebaImageOcrLine
+        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new ImageOcrLine
         {
             ImageId = pair.Key,
             TextLines = pair.Value
         }));
-        return Task.CompletedTask;
     }
 }

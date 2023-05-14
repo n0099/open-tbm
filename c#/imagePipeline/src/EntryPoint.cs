@@ -43,8 +43,8 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<PaddleOcrRecognizerAndDetector>();
         builder.RegisterType<TesseractRecognizer>();
         builder.RegisterType<JoinedRecognizer>();
-        builder.RegisterType<ImageOcrConsumer>();
-        builder.RegisterType<ImageHashConsumer>();
+        builder.RegisterType<OcrConsumer>();
+        builder.RegisterType<HashConsumer>();
         builder.RegisterType<ImageRequester>();
     }
 }

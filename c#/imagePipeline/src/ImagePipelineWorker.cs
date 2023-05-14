@@ -23,9 +23,10 @@ public class ImagePipelineWorker : ErrorableWorker
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(script);
-            var hashConsumer = scope1.Resolve<ImageHashConsumer>();
-            var ocrConsumer = scope1.Resolve<ImageOcrConsumer.New>()(script);
+            var hashConsumer = scope1.Resolve<HashConsumer>();
+            var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
+
             ImageId lastImageIdInPreviousBatch = 0;
             var isNoMoreImages = false;
             while (!isNoMoreImages)
@@ -43,8 +44,15 @@ public class ImagePipelineWorker : ErrorableWorker
                             (image.ImageId, bytes: await _imageRequester.GetImageBytes(image, stoppingToken)))))
                         .ToDictionary(t => t.ImageId, t =>
                             Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
-                    await hashConsumer.Consume(matricesKeyByImageId, stoppingToken);
-                    await ocrConsumer.Consume(matricesKeyByImageId, stoppingToken);
+                    try
+                    {
+                        await hashConsumer.Consume(matricesKeyByImageId, stoppingToken);
+                        await ocrConsumer.Consume(matricesKeyByImageId, stoppingToken);
+                    }
+                    finally
+                    {
+                        matricesKeyByImageId.Values.ForEach(mat => mat.Dispose());
+                    }
                 }
                 lastImageIdInPreviousBatch = images.Last().ImageId;
             }

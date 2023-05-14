@@ -1,6 +1,6 @@
 namespace tbm.ImagePipeline.Db;
 
-public class TiebaImageOcrBox
+public class ImageOcrBox
 {
     [Key] public uint ImageId { get; set; }
     public float CenterPointX { get; set; }

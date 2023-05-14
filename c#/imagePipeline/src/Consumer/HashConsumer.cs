@@ -2,15 +2,15 @@ using OpenCvSharp.ImgHash;
 
 namespace tbm.ImagePipeline.Consumer;
 
-public class ImageHashConsumer : ImageBaseConsumer
+public class HashConsumer : MatrixConsumer
 {
-    private readonly ILogger<ImageHashConsumer> _logger;
+    private readonly ILogger<HashConsumer> _logger;
 
-    public ImageHashConsumer(ILogger<ImageHashConsumer> logger,
+    public HashConsumer(ILogger<HashConsumer> logger,
         ImagePipelineDbContext.New dbContextFactory
     ) : base(dbContextFactory) => _logger = logger;
 
-    protected override Task ConsumeInternal
+    protected override void ConsumeInternal
         (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
     {
         var hashAlgorithms = new List<ImgHashBase>
@@ -28,6 +28,5 @@ public class ImageHashConsumer : ImageBaseConsumer
             });
         });
         hashAlgorithms.ForEach(hash => hash.Dispose());
-        return Task.CompletedTask;
     }
 }
