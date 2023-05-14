@@ -15,8 +15,8 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
 
     private string Script { get; }
     public DbSet<TiebaImage> Images => Set<TiebaImage>();
-    public DbSet<TiebaImageOcrBoxes> ImageOcrBoxes => Set<TiebaImageOcrBoxes>();
-    public DbSet<TiebaImageOcrLines> ImageOcrLines => Set<TiebaImageOcrLines>();
+    public DbSet<TiebaImageOcrBox> ImageOcrBoxes => Set<TiebaImageOcrBox>();
+    public DbSet<TiebaImageOcrLine> ImageOcrLines => Set<TiebaImageOcrLine>();
 
     public delegate ImagePipelineDbContext New(string script);
 
@@ -26,9 +26,9 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<TiebaImage>().ToTable("tbmc_image");
-        b.Entity<TiebaImageOcrBoxes>().ToTable($"tbmc_image_ocr_boxes_{Script}").HasKey(e =>
+        b.Entity<TiebaImageOcrBox>().ToTable($"tbmc_image_ocr_box_{Script}").HasKey(e =>
             new {e.ImageId, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
-        b.Entity<TiebaImageOcrLines>().ToTable($"tbmc_image_ocr_lines_{Script}");
+        b.Entity<TiebaImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }

@@ -20,7 +20,7 @@ public class ImageOcrConsumer : ImageBaseConsumer
     {
         var recognizedResults = _recognizer.RecognizeImageMatrices(matricesKeyByImageId).ToList();
         var recognizedTextLinesKeyByImageId = _recognizer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
-        db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBoxes
+        db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new TiebaImageOcrBox
         {
             ImageId = result.ImageId,
             CenterPointX = result.TextBox.Center.X,
@@ -38,7 +38,7 @@ public class ImageOcrConsumer : ImageBaseConsumer
             Confidence = result.Confidence,
             Text = result.Text
         }));
-        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new TiebaImageOcrLines
+        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new TiebaImageOcrLine
         {
             ImageId = pair.Key,
             TextLines = pair.Value

@@ -15,12 +15,18 @@ public abstract class ImageBaseConsumer
 
     public async Task Consume(Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
     {
-        var db = _dbContextFactory(_script);
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
-        await ConsumeInternal(db, matricesKeyByImageId, stoppingToken);
-        matricesKeyByImageId.Values.ForEach(mat => mat.Dispose());
-        _ = await db.SaveChangesAsync(stoppingToken);
-        await transaction.CommitAsync(stoppingToken);
+        try
+        {
+            var db = _dbContextFactory(_script);
+            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+            await ConsumeInternal(db, matricesKeyByImageId, stoppingToken);
+            _ = await db.SaveChangesAsync(stoppingToken);
+            await transaction.CommitAsync(stoppingToken);
+        }
+        finally
+        {
+            matricesKeyByImageId.Values.ForEach(mat => mat.Dispose());
+        }
     }
 
     protected abstract Task ConsumeInternal
