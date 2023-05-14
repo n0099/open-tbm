@@ -19,6 +19,8 @@
         <PackageReference Include="Sdcb.PaddleInference.runtime.win64.mkl" Version="2.4.1" />
         <PackageReference Include="Sdcb.PaddleOCR" Version="2.6.0.4" />
         <PackageReference Include="Sdcb.PaddleOCR.Models.Online" Version="2.6.0.3" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
+        <PackageReference Include="System.IO.Hashing" Version="8.0.0-preview.3.23174.8" />
     </ItemGroup>
     <ItemGroup>
         <None Update="appsettings.Development.json">

@@ -23,6 +23,7 @@ public class ImagePipelineWorker : ErrorableWorker
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(script);
+            var metadataConsumer = scope1.Resolve<MetadataConsumer>();
             var hashConsumer = scope1.Resolve<HashConsumer>();
             var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
@@ -40,10 +41,12 @@ public class ImagePipelineWorker : ErrorableWorker
                 if (!images.Any()) isNoMoreImages = true;
                 else
                 {
-                    var matricesKeyByImageId = (await Task.WhenAll(images.Select(async image =>
-                            (image.ImageId, bytes: await _imageRequester.GetImageBytes(image, stoppingToken)))))
-                        .ToDictionary(t => t.ImageId, t =>
-                            Cv2.ImDecode(t.bytes, ImreadModes.Color)); // convert to BGR three channels without alpha
+                    var imagesBytesKeyById = new Dictionary<ImageId, byte[]>(
+                        await Task.WhenAll(images.Select(async image =>
+                            KeyValuePair.Create(image.ImageId, await _imageRequester.GetImageBytes(image, stoppingToken)))));
+                    await metadataConsumer.Consume(imagesBytesKeyById, stoppingToken);
+                    var matricesKeyByImageId = imagesBytesKeyById.ToDictionary(pair => pair.Key,
+                        pair => Cv2.ImDecode(pair.Value, ImreadModes.Color)); // convert to BGR three channels without alpha
                     try
                     {
                         await hashConsumer.Consume(matricesKeyByImageId, stoppingToken);

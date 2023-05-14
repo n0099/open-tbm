@@ -18,6 +18,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
     public DbSet<ImageOcrLine> ImageOcrLines => Set<ImageOcrLine>();
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
+    public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
 
     public delegate ImagePipelineDbContext New(string script);
 
@@ -31,6 +32,13 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
             new {e.ImageId, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
         b.Entity<ImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}");
         b.Entity<ImageHash>().ToTable("tbmc_image_hash");
+        b.Entity<ImageMetadata>().ToTable("tbmc_image_metadata");
+        b.Entity<ImageMetadata>().HasOne(e => e.EmbeddedMetadata).WithOne()
+            .HasForeignKey<ImageMetadata.Embedded>(e => e.ImageId);
+        b.Entity<ImageMetadata.Embedded>().ToTable("tbmc_image_metadata_embedded");
+        b.Entity<ImageMetadata>().HasOne(e => e.JpgMetadata).WithOne()
+            .HasForeignKey<ImageMetadata.Jpg>(e => e.ImageId);
+        b.Entity<ImageMetadata.Jpg>().ToTable("tbmc_image_metadata_jpg");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }
