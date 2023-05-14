@@ -12,12 +12,8 @@ public class ReplyCrawlFacade : BaseCrawlFacade<ReplyPost, BaseReplyRevision, Re
         CrawlerDbContext.New parentDbContextFactory, CrawlerDbContext.New dbContextFactory,
         ReplyCrawler.New crawler, ReplyParser parser, ReplySaver.New saver, UserParserAndSaver users, SonicPusher pusher,
         ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, Tid tid
-    ) : base(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"], new (fid, tid)), fid)
-    {
-        _dbContextFactory = dbContextFactory;
-        _pusher = pusher;
-        _tid = tid;
-    }
+    ) : base(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users, requesterTcs, (locks["reply"], new (fid, tid)), fid) =>
+        (_dbContextFactory, _pusher, _tid) = (dbContextFactory, pusher, tid);
 
     protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, ReplyPost> parsedPostsInResponse)
     {

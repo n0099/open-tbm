@@ -19,11 +19,7 @@ public class ThreadLateCrawlerAndSaver
         IIndex<string, CrawlerLocks> locks,
         Fid fid)
     {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _requester = requester;
-        _fid = fid;
-        _requesterTcs = requesterTcs;
+        (_logger, _dbContextFactory, _requester, _fid, _requesterTcs) = (logger, dbContextFactory, requester, fid, requesterTcs);
         _locks = locks["threadLate"];
     }
 

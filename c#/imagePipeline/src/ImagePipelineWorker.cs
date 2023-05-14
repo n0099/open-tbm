@@ -10,9 +10,7 @@ public class ImagePipelineWorker : ErrorableWorker
     public ImagePipelineWorker(ILogger<ImagePipelineWorker> logger, IConfiguration config,
         ILifetimeScope scope0, ImageRequester imageRequester) : base(logger)
     {
-        _logger = logger;
-        _scope0 = scope0;
-        _imageRequester = imageRequester;
+        (_logger, _scope0, _imageRequester) = (logger, scope0, imageRequester);
         var configSection = config.GetSection("ImagePipeline");
         _batchSize = configSection.GetValue("BatchSize", 16);
     }

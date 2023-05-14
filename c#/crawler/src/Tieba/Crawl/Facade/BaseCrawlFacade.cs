@@ -34,10 +34,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         (CrawlerLocks, CrawlerLocks.LockId) lockAndId,
         Fid fid)
     {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _crawler = crawler;
-        _parser = parser;
+        (_logger, _dbContextFactory, _crawler, _parser) = (logger, dbContextFactory, crawler, parser);
         _saver = saverFactory(Posts);
         Users = users;
         _requesterTcs = requesterTcs;

@@ -15,10 +15,8 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
     public PushAllPostContentsIntoSonicWorker(ILogger<PushAllPostContentsIntoSonicWorker> logger,
         IConfiguration config, ILifetimeScope scope0, SonicPusher pusher) : base(logger)
     {
-        _logger = logger;
+        (_logger, _scope0, _pusher) = (logger, scope0, pusher);
         _config = config.GetSection("Sonic");
-        _scope0 = scope0;
-        _pusher = pusher;
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)

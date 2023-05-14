@@ -11,12 +11,8 @@ public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, BaseSubReplyRev
     public SubReplyCrawlFacade(ILogger<SubReplyCrawlFacade> logger, CrawlerDbContext.New dbContextFactory,
         SubReplyCrawler.New crawler, SubReplyParser parser, SubReplySaver.New saver, UserParserAndSaver users, SonicPusher pusher,
         ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, Tid tid, Pid pid
-    ) : base(logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"], new (fid, tid, pid)), fid)
-    {
-        _pusher = pusher;
-        _tid = tid;
-        _pid = pid;
-    }
+    ) : base(logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke, users, requesterTcs, (locks["subReply"], new (fid, tid, pid)), fid) =>
+        (_pusher, _tid, _pid) = (pusher, tid, pid);
 
     protected override void ThrowIfEmptyUsersEmbedInPosts() =>
         throw new TiebaException(

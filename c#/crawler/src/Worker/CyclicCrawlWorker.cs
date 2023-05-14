@@ -9,8 +9,7 @@ public abstract class CyclicCrawlWorker : ErrorableWorker
     protected CyclicCrawlWorker(ILogger<CyclicCrawlWorker> logger, IConfiguration config,
         bool shouldRunAtFirst = true) : base(logger)
     {
-        _config = config;
-        _shouldRunAtFirst = shouldRunAtFirst;
+        (_config, _shouldRunAtFirst) = (config, shouldRunAtFirst);
         _ = SyncCrawlIntervalWithConfig();
     }
 

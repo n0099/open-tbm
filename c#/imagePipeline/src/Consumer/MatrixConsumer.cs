@@ -7,11 +7,8 @@ public abstract class MatrixConsumer
     private readonly ImagePipelineDbContext.New _dbContextFactory;
     private readonly string _script;
 
-    protected MatrixConsumer(ImagePipelineDbContext.New dbContextFactory, string script = "")
-    {
-        _dbContextFactory = dbContextFactory;
-        _script = script;
-    }
+    protected MatrixConsumer(ImagePipelineDbContext.New dbContextFactory, string script = "") =>
+        (_dbContextFactory, _script) = (dbContextFactory, script);
 
     public async Task Consume(Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
     {

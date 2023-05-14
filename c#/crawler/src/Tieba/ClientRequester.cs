@@ -7,17 +7,15 @@ public class ClientRequester
 {
     private readonly ILogger<ClientRequester> _logger;
     private readonly IConfigurationSection _config;
-    private readonly ClientRequesterTcs _requesterTcs;
     private readonly IHttpClientFactory _httpFactory;
+    private readonly ClientRequesterTcs _requesterTcs;
     private static readonly Random Rand = new();
 
     public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
         IHttpClientFactory httpFactory, ClientRequesterTcs requesterTcs)
     {
-        _logger = logger;
+        (_logger, _httpFactory, _requesterTcs) = (logger, httpFactory, requesterTcs);
         _config = config.GetSection("ClientRequester");
-        _httpFactory = httpFactory;
-        _requesterTcs = requesterTcs;
     }
 
     public Task<JsonElement> RequestJson(string url, string clientVersion, Dictionary<string, string> param) =>

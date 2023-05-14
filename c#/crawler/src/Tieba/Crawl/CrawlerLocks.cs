@@ -17,9 +17,8 @@ public class CrawlerLocks : WithLogTrace
 
     public CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
     {
-        _logger = logger;
+        (_logger, LockType) = (logger, lockType);
         _config = config.GetSection($"CrawlerLocks:{lockType}");
-        LockType = lockType;
         InitLogTrace(_config);
     }
 

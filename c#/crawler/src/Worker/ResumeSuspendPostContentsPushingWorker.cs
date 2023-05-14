@@ -6,11 +6,7 @@ public class ResumeSuspendPostContentsPushingWorker : ErrorableWorker
     private readonly SonicPusher _pusher;
 
     public ResumeSuspendPostContentsPushingWorker(ILogger<ResumeSuspendPostContentsPushingWorker> logger,
-        SonicPusher pusher) : base(logger)
-    {
-        _logger = logger;
-        _pusher = pusher;
-    }
+        SonicPusher pusher) : base(logger) => (_logger, _pusher) = (logger, pusher);
 
     public static string GetFilePath(string postType) =>
         Path.Combine(AppContext.BaseDirectory, $"suspendPostContentsPushIntoSonic.{postType}.csv");

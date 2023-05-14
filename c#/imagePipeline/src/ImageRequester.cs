@@ -8,9 +8,8 @@ public class ImageRequester
 
     public ImageRequester(ILogger<ImageRequester> logger, IConfiguration config, IHttpClientFactory httpFactory)
     {
-        _logger = logger;
+        (_logger, _httpFactory) = (logger, httpFactory);
         _config = config.GetSection("ImageRequester");
-        _httpFactory = httpFactory;
     }
 
     public async Task<byte[]> GetImageBytes(TiebaImage image, CancellationToken stoppingToken)
