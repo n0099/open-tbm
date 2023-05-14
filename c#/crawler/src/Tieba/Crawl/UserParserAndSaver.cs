@@ -95,8 +95,7 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         if (_users.IsEmpty) return;
         lock (UserIdLocks)
         {
-            var usersExceptLocked = _users.ExceptBy(UserIdLocks, pair => pair.Key)
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
+            var usersExceptLocked = new Dictionary<Uid, TiebaUser>(_users.ExceptBy(UserIdLocks, pair => pair.Key));
             if (!usersExceptLocked.Any()) return;
             _savedUsersId.AddRange(usersExceptLocked.Keys);
             UserIdLocks.UnionWith(_savedUsersId);

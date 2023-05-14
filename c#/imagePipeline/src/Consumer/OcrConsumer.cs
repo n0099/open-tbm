@@ -16,7 +16,7 @@ public class OcrConsumer : MatrixConsumer
         _recognizer.InitializePaddleOcr(stoppingToken);
 
     protected override void ConsumeInternal
-        (ImagePipelineDbContext db, Dictionary<uint, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
+        (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
     {
         var recognizedResults = _recognizer.RecognizeImageMatrices(matricesKeyByImageId).ToList();
         var recognizedTextLinesKeyByImageId = _recognizer.GetRecognizedTextLinesKeyByImageId(recognizedResults);

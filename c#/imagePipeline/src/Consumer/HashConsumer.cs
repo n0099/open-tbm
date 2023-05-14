@@ -2,31 +2,36 @@ using OpenCvSharp.ImgHash;
 
 namespace tbm.ImagePipeline.Consumer;
 
-public class HashConsumer : MatrixConsumer
+public class HashConsumer : MatrixConsumer, IDisposable
 {
-    private readonly ILogger<HashConsumer> _logger;
+    private readonly Dictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;
 
-    public HashConsumer(ILogger<HashConsumer> logger,
-        ImagePipelineDbContext.New dbContextFactory
-    ) : base(dbContextFactory) => _logger = logger;
+    public HashConsumer(ImagePipelineDbContext.New dbContextFactory) : base(dbContextFactory) =>
+        _imageHashSettersKeyByAlgorithm = new()
+        {
+            {PHash.Create(), (image, bytes) => image.PHash = BitConverter.ToUInt64(bytes)},
+            {AverageHash.Create(), (image, bytes) => image.AverageHash = BitConverter.ToUInt64(bytes)},
+            {BlockMeanHash.Create(), (image, bytes) => image.BlockMeanHash = bytes},
+            {MarrHildrethHash.Create(), (image, bytes) => image.MarrHildrethHash = bytes}
+        };
+
+    public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
 
     protected override void ConsumeInternal
         (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
     {
-        var hashAlgorithms = new List<ImgHashBase>
+        var hashesKeyByImageId = matricesKeyByImageId.Keys.Select(imageId => new ImageHash
         {
-            AverageHash.Create(), BlockMeanHash.Create(), MarrHildrethHash.Create(), PHash.Create()
-        };
-        hashAlgorithms.ForEach(hash =>
+            ImageId = imageId, BlockMeanHash = Array.Empty<byte>(), MarrHildrethHash = Array.Empty<byte>()
+        }).ToDictionary(hash => hash.ImageId);
+        _imageHashSettersKeyByAlgorithm.ForEach(hashPair => matricesKeyByImageId.ForEach(imagePair =>
         {
-            matricesKeyByImageId.ForEach(pair =>
-            {
-                using var mat = new Mat();
-                hash.Compute(pair.Value, mat);
-                _logger.LogInformation("{} {} {} {} {} {}",
-                    pair.Key, hash.GetType().Name, mat.Height, mat.Width, mat.Channels(), mat.Dump());
-            });
-        });
-        hashAlgorithms.ForEach(hash => hash.Dispose());
+            using var mat = new Mat();
+            hashPair.Key.Compute(imagePair.Value, mat);
+            if (mat.GetArray(out byte[] bytes))
+                hashPair.Value(hashesKeyByImageId[imagePair.Key], bytes);
+            else throw new("Failed to convert matrix into byte array.");
+        }));
+        db.ImageHashes.AddRange(hashesKeyByImageId.Values);
     }
 }

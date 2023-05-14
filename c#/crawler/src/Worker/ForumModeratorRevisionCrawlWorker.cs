@@ -38,7 +38,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
 
             var fid = forum.Fid;
             Helper.GetNowTimestamp(out var now);
-            await using var db1 = scope1.Resolve<CrawlerDbContext.New>()(0);
+            var db1 = scope1.Resolve<CrawlerDbContext.New>()(0);
             await using var transaction = await db1.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
             var revisions = moderators
                 .SelectMany(i => i)

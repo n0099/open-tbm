@@ -32,5 +32,5 @@ public abstract class MatrixConsumer
     }
 
     protected abstract void ConsumeInternal
-        (ImagePipelineDbContext db, Dictionary<uint, Mat> matricesKeyByImageId, CancellationToken stoppingToken);
+        (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken);
 }
