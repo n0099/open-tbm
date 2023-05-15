@@ -7,14 +7,13 @@ public class HashConsumer : MatrixConsumer, IDisposable
 {
     private readonly Dictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;
 
-    public HashConsumer(ImagePipelineDbContext.New dbContextFactory) : base(dbContextFactory) =>
-        _imageHashSettersKeyByAlgorithm = new()
-        {
-            {PHash.Create(), (image, bytes) => image.PHash = BitConverter.ToUInt64(bytes)},
-            {AverageHash.Create(), (image, bytes) => image.AverageHash = BitConverter.ToUInt64(bytes)},
-            {BlockMeanHash.Create(), (image, bytes) => image.BlockMeanHash = bytes},
-            {MarrHildrethHash.Create(), (image, bytes) => image.MarrHildrethHash = bytes}
-        };
+    public HashConsumer() => _imageHashSettersKeyByAlgorithm = new()
+    {
+        {PHash.Create(), (image, bytes) => image.PHash = BitConverter.ToUInt64(bytes)},
+        {AverageHash.Create(), (image, bytes) => image.AverageHash = BitConverter.ToUInt64(bytes)},
+        {BlockMeanHash.Create(), (image, bytes) => image.BlockMeanHash = bytes},
+        {MarrHildrethHash.Create(), (image, bytes) => image.MarrHildrethHash = bytes}
+    };
 
     public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
 

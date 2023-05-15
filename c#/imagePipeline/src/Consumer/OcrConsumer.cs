@@ -6,10 +6,7 @@ public class OcrConsumer : MatrixConsumer
 
     public delegate OcrConsumer New(string script);
 
-    public OcrConsumer(ImagePipelineDbContext.New dbContextFactory,
-        JoinedRecognizer.New recognizerFactory,
-        string script
-    ) : base(dbContextFactory, script) =>
+    public OcrConsumer(JoinedRecognizer.New recognizerFactory, string script) =>
         _recognizer = recognizerFactory(script);
 
     public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>

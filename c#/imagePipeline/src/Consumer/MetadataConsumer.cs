@@ -1,4 +1,3 @@
-using System.Data;
 using System.IO.Hashing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 
@@ -6,15 +5,9 @@ namespace tbm.ImagePipeline.Consumer;
 
 public class MetadataConsumer
 {
-    private readonly ImagePipelineDbContext.New _dbContextFactory;
-
-    public MetadataConsumer(ImagePipelineDbContext.New dbContextFactory) => _dbContextFactory = dbContextFactory;
-
-    public async Task Consume(Dictionary<ImageId, (TiebaImage Image, byte[] Bytes)> imageAndBytesKeyById, CancellationToken stoppingToken)
-    {
-        var db = _dbContextFactory("");
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
-
+    public static void Consume(ImagePipelineDbContext db,
+        Dictionary<ImageId, (TiebaImage Image, byte[] Bytes)> imageAndBytesKeyById,
+        CancellationToken stoppingToken) =>
         db.ImageMetadata.AddRange(imageAndBytesKeyById.Select(pair =>
         {
             var (imageId, (image, imageBytes)) = pair;
@@ -44,8 +37,4 @@ public class MetadataConsumer
                 XxHash3 = XxHash3.HashToUInt64(imageBytes)
             };
         }));
-
-        _ = await db.SaveChangesAsync(stoppingToken);
-        await transaction.CommitAsync(stoppingToken);
-    }
 }
