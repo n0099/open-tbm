@@ -7,4 +7,5 @@ public class ImageHash
     public ulong AverageHash { get; set; }
     public required byte[] BlockMeanHash { get; set; }
     public required byte[] MarrHildrethHash { get; set; }
+    public required byte[] ThumbHash { get; set; }
 }

@@ -1,4 +1,5 @@
 using OpenCvSharp.ImgHash;
+using Size = OpenCvSharp.Size;
 
 namespace tbm.ImagePipeline.Consumer;
 
@@ -22,8 +23,31 @@ public class HashConsumer : MatrixConsumer, IDisposable
     {
         var hashesKeyByImageId = matricesKeyByImageId.Keys.Select(imageId => new ImageHash
         {
-            ImageId = imageId, BlockMeanHash = Array.Empty<byte>(), MarrHildrethHash = Array.Empty<byte>()
+            ImageId = imageId, BlockMeanHash = Array.Empty<byte>(),
+            MarrHildrethHash = Array.Empty<byte>(), ThumbHash = Array.Empty<byte>()
         }).ToDictionary(hash => hash.ImageId);
+        matricesKeyByImageId.ForEach(pair =>
+        {
+            var (imageId, mat) = pair;
+            if (mat.Width > 100 || mat.Height > 100)
+            { // not preserve the original aspect ratio, https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
+                using var thumbnail = mat.Resize(new(100, 100), interpolation: InterpolationFlags.Area);
+                hashesKeyByImageId[imageId].ThumbHash = GetThumbHash(thumbnail);
+            }
+            else hashesKeyByImageId[imageId].ThumbHash = GetThumbHash(mat);
+
+            static byte[] GetThumbHash(Mat mat)
+            {
+                using var rgbaMat = new Mat(new Size(mat.Width, mat.Height), MatType.CV_8UC4);
+                // https://stackoverflow.com/questions/67550415/in-place-rgb-bgr-color-conversion-is-slower-in-opencv
+                Cv2.CvtColor(mat, rgbaMat, ColorConversionCodes.BGR2RGBA);
+                return rgbaMat.GetArray(out Vec4b[] pixels)
+                    ? ThumbHash.ThumbHash.RgbaToThumbHash(mat.Width, mat.Height,
+                        pixels.Select(vec => new[] {vec.Item0, vec.Item1, vec.Item2, vec.Item3})
+                            .SelectMany(i => i).ToArray())
+                    : throw new("Failed to convert matrix into byte array.");
+            }
+        });
         _imageHashSettersKeyByAlgorithm.ForEach(hashPair => matricesKeyByImageId.ForEach(imagePair =>
         {
             using var mat = new Mat();

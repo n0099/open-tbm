@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -20,6 +21,7 @@ public class EntryPoint : BaseEntryPoint
             {
                 client.BaseAddress = new("https://imgsrc.baidu.com/forum/pic/item/");
                 client.Timeout = Timeout.InfiniteTimeSpan; // overall timeout, will sum up after each retry by polly
+                client.DefaultRequestVersion = HttpVersion.Version20;
             })
             .SetHandlerLifetime(TimeSpan.FromSeconds(imageRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
             .AddPolicyHandler((provider, request) => HttpPolicyExtensions.HandleTransientHttpError()
