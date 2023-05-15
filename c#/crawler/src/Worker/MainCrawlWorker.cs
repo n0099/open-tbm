@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace tbm.Crawler.Worker;
 
 using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
@@ -22,7 +24,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
 
     private record FidAndName(Fid Fid, string Name);
 
-    private async IAsyncEnumerable<FidAndName> ForumGenerator()
+    private async IAsyncEnumerable<FidAndName> ForumGenerator([EnumeratorCancellation] CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.New>()(0);
@@ -32,13 +34,13 @@ public class MainCrawlWorker : CyclicCrawlWorker
         foreach (var fidAndName in forums)
         {
             yield return fidAndName;
-            await Task.Delay((yieldInterval * 1000).RoundToUshort());
+            await Task.Delay((yieldInterval * 1000).RoundToUshort(), stoppingToken);
         }
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await foreach (var (fid, forumName) in ForumGenerator().WithCancellation(stoppingToken))
+        await foreach (var (fid, forumName) in ForumGenerator(stoppingToken))
             await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid, stoppingToken), fid, stoppingToken), fid, stoppingToken);
     }
 

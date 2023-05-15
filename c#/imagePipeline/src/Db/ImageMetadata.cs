@@ -12,8 +12,14 @@ public class ImageMetadata
     public ushort FrameCount { get; set; }
     public Embedded? EmbeddedMetadata { get; set; }
     public Jpg? JpgMetadata { get; set; }
-    public uint ByteSize { get; set; }
+    public ByteSize? DownloadedByteSize { get; set; }
     public ulong XxHash3 { get; set; }
+
+    public class ByteSize
+    {
+        [Key] public uint ImageId { get; set; }
+        public uint DownloadedByteSize { get; set; }
+    }
 
     public class Embedded
     {
@@ -32,13 +38,12 @@ public class ImageMetadata
         public bool? Interleaved { get; set; }
         public bool? Progressive { get; set; }
 
-        public static Jpg? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta, ImageId imageId)
+        public static Jpg? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
         {
             if (meta.DecodedImageFormat is not JpegFormat) return null;
             var other = meta.GetJpegMetadata();
             return new()
             {
-                ImageId = imageId,
                 Quality = other.Quality,
                 ColorType = other.ColorType == null ? null : Enum.GetName(other.ColorType.Value),
                 Interleaved = other.Interleaved,

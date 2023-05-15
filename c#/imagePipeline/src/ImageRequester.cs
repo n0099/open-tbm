@@ -18,16 +18,19 @@ public class ImageRequester
         var expectedByteSize = image.ByteSize;
         var http = _httpFactory.CreateClient("tbImage");
         if (_config.GetValue("LogTrace", false))
-            _logger.LogTrace("Requesting image {} and expecting {} bytes of file size", urlFilename, expectedByteSize);
+            _logger.LogTrace("Requesting image {} and expecting {} bytes of file size",
+                urlFilename, expectedByteSize);
 
         var response = await http.GetAsync(urlFilename + ".jpg", stoppingToken);
         var contentLength = response.Content.Headers.ContentLength;
         if (expectedByteSize != 0 && contentLength != expectedByteSize)
-            throw new($"Unexpected response header Content-Length: {contentLength} bytes, expecting {expectedByteSize} bytes.");
+            _logger.LogWarning("Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {}",
+                contentLength, expectedByteSize, urlFilename);
 
         var bytes = await response.Content.ReadAsByteArrayAsync(stoppingToken);
         if (expectedByteSize != 0 && bytes.Length != expectedByteSize)
-            throw new($"Unexpected response body length {bytes.Length} bytes, expecting {expectedByteSize} bytes.");
+            _logger.LogWarning("Unexpected response body length {} bytes, expecting {} bytes for image {}",
+                bytes.Length, expectedByteSize, urlFilename);
         return bytes;
     }
 }

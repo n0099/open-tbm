@@ -40,7 +40,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
             {
                 using var rgbaMat = new Mat(new Size(mat.Width, mat.Height), MatType.CV_8UC4);
                 // https://stackoverflow.com/questions/67550415/in-place-rgb-bgr-color-conversion-is-slower-in-opencv
-                Cv2.CvtColor(mat, rgbaMat, ColorConversionCodes.BGR2RGBA);
+                Cv2.CvtColor(mat, rgbaMat, ColorConversionCodes.BGRA2RGBA);
                 return rgbaMat.GetArray(out Vec4b[] pixels)
                     ? ThumbHash.ThumbHash.RgbaToThumbHash(mat.Width, mat.Height,
                         pixels.Select(vec => new[] {vec.Item0, vec.Item1, vec.Item2, vec.Item3})

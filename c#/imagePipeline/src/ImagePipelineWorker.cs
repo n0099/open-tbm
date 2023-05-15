@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace tbm.ImagePipeline;
 
 public class ImagePipelineWorker : ErrorableWorker
@@ -26,37 +28,42 @@ public class ImagePipelineWorker : ErrorableWorker
             var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
 
-            ImageId lastImageIdInPreviousBatch = 0;
-            var isNoMoreImages = false;
-            while (!isNoMoreImages)
+            await foreach (var imageAndBytesKeyById in ImageBatchGenerator(db, stoppingToken))
             {
-                var images = (from image in db.Images.AsNoTracking()
-                    where image.ImageId > lastImageIdInPreviousBatch
-                          && !db.ImageOcrBoxes.AsNoTracking().Select(e => e.ImageId).Contains(image.ImageId)
-                          && !db.ImageOcrLines.AsNoTracking().Select(e => e.ImageId).Contains(image.ImageId)
-                    orderby image.ImageId
-                    select image).Take(_batchSize).ToList();
-                if (!images.Any()) isNoMoreImages = true;
-                else
+                await metadataConsumer.Consume(imageAndBytesKeyById, stoppingToken);
+                var matricesKeyByImageId = imageAndBytesKeyById.ToDictionary(pair => pair.Key,
+                    // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
+                    pair => Cv2.ImDecode(pair.Value.Bytes, ImreadModes.Unchanged));
+                try
                 {
-                    var imagesBytesKeyById = new Dictionary<ImageId, byte[]>(
-                        await Task.WhenAll(images.Select(async image =>
-                            KeyValuePair.Create(image.ImageId, await _imageRequester.GetImageBytes(image, stoppingToken)))));
-                    await metadataConsumer.Consume(imagesBytesKeyById, stoppingToken);
-                    var matricesKeyByImageId = imagesBytesKeyById.ToDictionary(pair => pair.Key,
-                        pair => Cv2.ImDecode(pair.Value, ImreadModes.Color)); // convert to BGR three channels without alpha
-                    try
-                    {
-                        await hashConsumer.Consume(matricesKeyByImageId, stoppingToken);
-                        await ocrConsumer.Consume(matricesKeyByImageId, stoppingToken);
-                    }
-                    finally
-                    {
-                        matricesKeyByImageId.Values.ForEach(mat => mat.Dispose());
-                    }
+                    await hashConsumer.Consume(matricesKeyByImageId, stoppingToken);
+                    await ocrConsumer.Consume(matricesKeyByImageId, stoppingToken);
                 }
-                lastImageIdInPreviousBatch = images.Last().ImageId;
+                finally
+                {
+                    matricesKeyByImageId.Values.ForEach(mat => mat.Dispose());
+                }
             }
+        }
+    }
+
+    private async IAsyncEnumerable<Dictionary<ImageId, (TiebaImage Image, byte[] Bytes)>> ImageBatchGenerator
+        (ImagePipelineDbContext db, [EnumeratorCancellation] CancellationToken stoppingToken)
+    {
+        ImageId lastImageIdInPreviousBatch = 0;
+        while (true)
+        {
+            var images = (from image in db.Images.AsNoTracking()
+                where image.ImageId > lastImageIdInPreviousBatch
+                      && !db.ImageOcrBoxes.AsNoTracking().Select(e => e.ImageId).Contains(image.ImageId)
+                      && !db.ImageOcrLines.AsNoTracking().Select(e => e.ImageId).Contains(image.ImageId)
+                orderby image.ImageId
+                select image).Take(_batchSize).ToList();
+            if (images.Any()) yield return new(
+                await Task.WhenAll(images.Select(async image =>
+                    KeyValuePair.Create(image.ImageId, (image, await _imageRequester.GetImageBytes(image, stoppingToken))))));
+            else yield break;
+            lastImageIdInPreviousBatch = images.Last().ImageId;
         }
     }
 }

@@ -33,6 +33,9 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         b.Entity<ImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}");
         b.Entity<ImageHash>().ToTable("tbmc_image_hash");
         b.Entity<ImageMetadata>().ToTable("tbmc_image_metadata");
+        b.Entity<ImageMetadata>().HasOne(e => e.DownloadedByteSize).WithOne()
+            .HasForeignKey<ImageMetadata.ByteSize>(e => e.ImageId);
+        b.Entity<ImageMetadata.ByteSize>().ToTable("tbmc_image_metadata_downloadedByteSize");
         b.Entity<ImageMetadata>().HasOne(e => e.EmbeddedMetadata).WithOne()
             .HasForeignKey<ImageMetadata.Embedded>(e => e.ImageId);
         b.Entity<ImageMetadata.Embedded>().ToTable("tbmc_image_metadata_embedded");
