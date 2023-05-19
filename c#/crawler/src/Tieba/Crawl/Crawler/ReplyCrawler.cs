@@ -19,22 +19,18 @@ public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
     protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
     public override TbClient.Page GetResponsePage(ReplyResponse response) => response.Data.Page;
 
-    protected override Task<IEnumerable<Request>> GetRequestsForPage(Page page)
+    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
     {
-        const string url = "c/f/pb/page?cmd=302001";
-        const string clientVersion = "12.26.1.0";
-        var data = new ReplyRequest.Types.Data
-        { // reverse order will be {"last", "1"}, {"r", "1"}
-            Kz = (long)_tid,
-            Pn = (int)page,
-            Rn = 30
-        };
-        var response = Requester.RequestProtoBuf(url, clientVersion,
-            new ReplyRequest {Data = data},
+        new Request(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.26.1.0",
+            new ReplyRequest {Data = new()
+            { // reverse order will be {"last", "1"}, {"r", "1"}
+                Kz = (long)_tid,
+                Pn = (int)page,
+                Rn = 30
+            }},
             (req, common) => req.Data.Common = common,
-            () => new ReplyResponse());
-        return Task.FromResult(new[] {new Request(response)}.AsEnumerable());
-    }
+            () => new ReplyResponse(), stoppingToken))
+    };
 
     public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
     {

@@ -114,8 +114,8 @@ public class ArchiveCrawlWorker : ErrorableWorker
             page, page, stoppingToken)).SaveCrawled(stoppingToken);
         if (savedThreads != null)
         {
-            await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid)
-                .Crawl(savedThreads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0));
+            var failureCountsKeyByTid = savedThreads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0);
+            await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).Crawl(failureCountsKeyByTid, stoppingToken);
         }
         return savedThreads;
     }

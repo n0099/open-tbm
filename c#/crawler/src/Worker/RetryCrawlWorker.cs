@@ -29,7 +29,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
                     var failureCountsKeyByTid = tidGroupByFid.Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
                     _logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",
                         fid, Helper.UnescapedJsonSerialize(tidGroupByFid));
-                    await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).Crawl(failureCountsKeyByTid);
+                    await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).Crawl(failureCountsKeyByTid, stoppingToken);
                 }
                 continue; // skip into next lock type
             }

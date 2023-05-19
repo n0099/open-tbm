@@ -18,22 +18,27 @@ public class ClientRequester
         _config = config.GetSection("ClientRequester");
     }
 
-    public Task<JsonElement> RequestJson(string url, string clientVersion, Dictionary<string, string> param) =>
-        Request(() => PostJson(url, param, clientVersion), stream =>
+    public Task<JsonElement> RequestJson
+        (string url, string clientVersion, Dictionary<string, string> postParam, CancellationToken stoppingToken = default) =>
+        Request(() => PostJson(url, postParam, clientVersion, stoppingToken), stream =>
         {
+            stoppingToken.ThrowIfCancellationRequested();
             using var doc = JsonDocument.Parse(stream);
             return doc.RootElement.Clone();
         });
 
     public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
-        string url, string clientVersion, TRequest requestParam,
-        Action<TRequest, Common> setCommonParamOnRequest, Func<TResponse> responseFactory)
+        string url, string clientVersion,
+        TRequest requestParam, Action<TRequest, Common> commonParamSetter,
+        Func<TResponse> responseFactory, CancellationToken stoppingToken = default
+    )
         where TRequest : IMessage<TRequest>
         where TResponse : IMessage<TResponse> =>
-        Request(() => PostProtoBuf(url, clientVersion, requestParam, setCommonParamOnRequest), stream =>
+        Request(() => PostProtoBuf(url, clientVersion, requestParam, commonParamSetter, stoppingToken), stream =>
         {
             try
             {
+                stoppingToken.ThrowIfCancellationRequested();
                 return new MessageParser<TResponse>(responseFactory).ParseFrom(stream);
             }
             catch (InvalidProtocolBufferException e)
@@ -69,14 +74,15 @@ public class ClientRequester
         }
     }
 
-    private Task<HttpResponseMessage> PostJson(string url, Dictionary<string, string> param, string clientVersion)
+    private Task<HttpResponseMessage> PostJson
+        (string url, Dictionary<string, string> postParam, string clientVersion, CancellationToken stoppingToken = default)
     {
         var postData = new Dictionary<string, string>
         {
             {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
             {"_client_type", "2"},
             {"_client_version", clientVersion}
-        }.Concat(param).ToList();
+        }.Concat(postParam).ToList();
         var sign = postData.Aggregate("", (acc, pair) =>
         {
             acc += pair.Key + '=' + pair.Value;
@@ -85,17 +91,20 @@ public class ClientRequester
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
-        return Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData)),
-            () => _logger.LogTrace("POST {} {}", url, param));
+        return Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData), stoppingToken),
+            () => _logger.LogTrace("POST {} {}", url, postParam));
     }
 
-    private Task<HttpResponseMessage> PostProtoBuf<TRequest>
-        (string url, string clientVersion, TRequest requestParam, Action<TRequest, Common> setCommonParamOnRequest)
+    private Task<HttpResponseMessage> PostProtoBuf<TRequest>(
+        string url, string clientVersion,
+        TRequest requestParam, Action<TRequest, Common> commonParamSetter,
+        CancellationToken stoppingToken = default
+    )
         where TRequest : IMessage<TRequest>
     {
         // https://github.com/Starry-OvO/aiotieba/issues/67#issuecomment-1376006123
         // https://github.com/MoeNetwork/wmzz_post/blob/80aba25de46f5b2cb1a15aa2a69b527a7374ffa9/wmzz_post_setting.php#L64
-        setCommonParamOnRequest(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
+        commonParamSetter(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
 
         // https://github.com/dotnet/runtime/issues/22996 http://test.greenbytes.de/tech/tc2231
         var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
@@ -111,7 +120,7 @@ public class ClientRequester
         request.Headers.Accept.ParseAdd("*/*");
         request.Headers.Connection.Add("keep-alive");
 
-        return Post(http => http.SendAsync(request),
+        return Post(http => http.SendAsync(request, stoppingToken),
             () => _logger.LogTrace("POST {} {}", url, requestParam));
     }
 

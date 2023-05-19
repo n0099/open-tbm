@@ -29,7 +29,7 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
             Rn = 30
         };
 
-    protected override Task<IEnumerable<Request>> GetRequestsForPage(Page page)
+    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default)
     {
         var data602 = GetRequestDataForClientVersion602(page);
         var data = new ThreadRequest.Types.Data
@@ -40,17 +40,17 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
             RnNeed = 30,
             SortType = 5
         };
-        return Task.FromResult(new[]
+        return new[]
         {
             new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0",
                 new ThreadRequest {Data = data},
                 (req, common) => req.Data.Common = common,
-                () => new ThreadResponse())),
+                () => new ThreadResponse(), stoppingToken)),
             new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
                 new ThreadRequest {Data = data602},
                 (req, common) => req.Data.Common = common,
-                () => new ThreadResponse()), CrawlRequestFlag.ThreadClientVersion602)
-        }.AsEnumerable());
+                () => new ThreadResponse(), stoppingToken), CrawlRequestFlag.ThreadClientVersion602)
+        };
     }
 
     public override IList<Thread> GetValidPosts(ThreadResponse response, CrawlRequestFlag flag)

@@ -23,7 +23,7 @@ public class ThreadLateCrawlerAndSaver
         _locks = locks["threadLate"];
     }
 
-    public async Task Crawl(Dictionary<Tid, FailureCount> failureCountsKeyByTid)
+    public async Task Crawl(Dictionary<Tid, FailureCount> failureCountsKeyByTid, CancellationToken stoppingToken = default)
     {
         var threads = await Task.WhenAll(failureCountsKeyByTid.Select(async pair =>
         {
@@ -37,7 +37,7 @@ public class ThreadLateCrawlerAndSaver
                     {"kz", tid.ToString()},
                     {"pn", "1"},
                     {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
-                });
+                }, stoppingToken);
                 try
                 {
                     var errorCodeProp = json.GetProperty("error_code");
@@ -114,13 +114,13 @@ public class ThreadLateCrawlerAndSaver
         }));
 
         var db = _dbContextFactory(_fid);
-        await using var transaction = await db.Database.BeginTransactionAsync();
+        await using var transaction = await db.Database.BeginTransactionAsync(stoppingToken);
 
         db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception
         db.ChangeTracker.Entries<ThreadPost>()
             .ForEach(ee => ee.Property(th => th.AuthorPhoneType).IsModified = true);
 
-        _ = await db.SaveChangesAsync(); // do not touch UpdateAt field for the accuracy of time field in thread revisions
-        await transaction.CommitAsync();
+        _ = await db.SaveChangesAsync(stoppingToken); // do not touch UpdateAt field for the accuracy of time field in thread revisions
+        await transaction.CommitAsync(stoppingToken);
     }
 }
