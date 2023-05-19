@@ -15,5 +15,6 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.2.3" />
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
+        <PackageReference Include="SuperLinq" Version="5.0.0" />
     </ItemGroup>
 </Project>

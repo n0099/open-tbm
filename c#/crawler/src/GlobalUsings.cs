@@ -11,10 +11,10 @@ global using Autofac;
 global using Autofac.Features.Indexed;
 global using Google.Protobuf;
 global using Google.Protobuf.Collections;
-global using LinqKit;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.Logging;
+global using SuperLinq;
 
 global using tbm.Crawler.Db;
 global using tbm.Crawler.Db.Post;

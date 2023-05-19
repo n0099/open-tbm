@@ -1,3 +1,5 @@
+using LinqKit;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevision>

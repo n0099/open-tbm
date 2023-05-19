@@ -26,29 +26,6 @@ public static class ExtensionMethods
         return (long)(ulongRand % uRange) + min;
     }
 
-    /// <see>https://stackoverflow.com/questions/1651619/optimal-linq-query-to-get-a-random-sub-collection-shuffle/1653204#1653204</see>
-    public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source) => source.Shuffle(new());
-
-    private static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source, Random rng)
-    {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (rng == null) throw new ArgumentNullException(nameof(rng));
-
-        return source.ShuffleIterator(rng);
-    }
-
-    private static IEnumerable<T> ShuffleIterator<T>(this IEnumerable<T> source, Random rng)
-    {
-        var buffer = source.ToList();
-        for (var i = 0; i < buffer.Count; i++)
-        {
-            var j = rng.Next(i, buffer.Count);
-            yield return buffer[j];
-
-            buffer[j] = buffer[i];
-        }
-    }
-
     public static string GetStrProp(this JsonElement el, string propName) => el.GetProperty(propName).GetString() ?? "";
 
     /// <see>https://stackoverflow.com/questions/10295028/c-sharp-empty-string-null/10295082#10295082</see>
