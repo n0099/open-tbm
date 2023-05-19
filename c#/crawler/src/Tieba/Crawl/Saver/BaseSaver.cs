@@ -39,8 +39,6 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
         where TRevision : class, IRevision
     {
         var dbSet = db.Set<TPost>().TagWith("ForUpdate");
-        if (dbSet == null) throw new ArgumentException(
-            $"DbSet<{typeof(TPost).Name}> is not exist in DbContext.");
 
         var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
         // deep copy before entities get mutated by CommonInSavers.SavePostsOrUsers()

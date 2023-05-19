@@ -106,8 +106,8 @@ public class TesseractRecognizer : IDisposable
         tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
 
         var shouldFallbackToPaddleOcr = !rects.Any();
-        var components = rects.Zip(texts, confidences)
-            .Select(t => (Rect: t.First, Text: t.Second, Confidence: t.Third))
+        var components = rects.EquiZip(texts, confidences)
+            .Select(t => (Rect: t.Item1, Text: t.Item2, Confidence: t.Item3))
             .Where(t => t.Confidence > _confidenceThreshold)
             .ToList();
         var text = string.Join("", components.Select(t => t.Text)).Trim();

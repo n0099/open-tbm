@@ -9,6 +9,7 @@ global using Timer = System.Timers.Timer;
 
 global using Autofac;
 global using Autofac.Features.Indexed;
+global using CommunityToolkit.Diagnostics;
 global using Google.Protobuf;
 global using Google.Protobuf.Collections;
 global using Microsoft.EntityFrameworkCore;

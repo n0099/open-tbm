@@ -16,9 +16,8 @@ public class SubReplyCrawlFacade : BaseCrawlFacade<SubReplyPost, BaseSubReplyRev
         requesterTcs, (locks["subReply"], new(fid, tid, pid)), fid) =>
         (_pusher, _tid, _pid) = (pusher, tid, pid);
 
-    protected override void ThrowIfEmptyUsersEmbedInPosts() =>
-        throw new TiebaException(
-            $"User list in the response of sub reply request for fid {Fid}, tid {_tid}, pid {_pid} is empty.");
+    protected override void ThrowIfEmptyUsersEmbedInPosts() => throw new TiebaException(
+        $"User list in the response of sub reply request for fid {Fid}, tid {_tid}, pid {_pid} is empty.");
 
     protected override void PostParseHook(SubReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, SubReplyPost> parsedPostsInResponse)
     {

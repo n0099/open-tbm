@@ -11,8 +11,7 @@ public static class ExtensionMethods
     /// <see>https://stackoverflow.com/questions/6651554/random-number-in-long-range-is-this-the-way/13095144#13095144</see>
     public static long NextLong(this Random random, long min, long max)
     {
-        if (max <= min)
-            throw new ArgumentOutOfRangeException(nameof(max), "Max must be > min!");
+        Guard.IsLessThanOrEqualTo(max, min);
 
         var uRange = (ulong)(max - min);
         ulong ulongRand;
@@ -69,7 +68,7 @@ public static class ExtensionMethods
     /// <see>https://stackoverflow.com/questions/9314172/getting-all-messages-from-innerexceptions/9314368#9314368</see>
     public static IEnumerable<Exception> GetInnerExceptions(this Exception ex)
     {
-        if (ex == null) throw new ArgumentNullException(nameof(ex));
+        Guard.IsNotNull(ex);
 
         var inner = ex;
         do

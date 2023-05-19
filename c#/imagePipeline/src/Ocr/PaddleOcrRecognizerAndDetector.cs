@@ -42,7 +42,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
     {
-        if (_ocr == null) throw new("PaddleOcr model haven't been initialized.");
+        Guard.IsNotNull(_ocr);
         return matricesKeyByImageId.SelectMany(pair =>
             CreateRecognitionResult(pair.Key, _script, _ocr.Run(pair.Value)));
     }
@@ -56,7 +56,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
     {
-        if (_ocr == null) throw new("PaddleOcr haven't been initialized.");
+        Guard.IsNotNull(_ocr);
         return matricesKeyByImageId.SelectMany(pair =>
             _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect)));
     }

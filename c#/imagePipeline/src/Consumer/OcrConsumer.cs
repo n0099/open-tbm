@@ -28,8 +28,8 @@ public class OcrConsumer : MatrixConsumer
             Recognizer = result switch
             {
                 PaddleOcrRecognitionResult => "PaddleOCR",
-                TesseractRecognitionResult { IsVertical: false } => "TesseractHorizontal",
-                TesseractRecognitionResult { IsVertical: true } => "TesseractVertical",
+                TesseractRecognitionResult {IsVertical: false} => "TesseractHorizontal",
+                TesseractRecognitionResult {IsVertical: true} => "TesseractVertical",
                 _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)
             },
             Confidence = result.Confidence,
