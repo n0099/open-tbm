@@ -44,19 +44,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         }
     };
 
-    private record UniqueSignature(uint Id, byte[] XxHash3)
-    {
-        public virtual bool Equals(UniqueSignature? other) =>
-            ReferenceEquals(this, other) || (other != null && Id == other.Id && XxHash3.SequenceEqual(other.XxHash3));
-        // https://stackoverflow.com/questions/7244699/gethashcode-on-byte-array/72925335#72925335
-        public override int GetHashCode()
-        {
-            var hash = new HashCode();
-            hash.Add(Id);
-            hash.AddBytes(XxHash3);
-            return hash.ToHashCode();
-        }
-    }
+    private record UniqueSignature(uint Id, ulong XxHash3);
     private static readonly HashSet<UniqueSignature> SignatureLocks = new();
     private readonly List<UniqueSignature> _savedSignatures = new();
 
@@ -92,7 +80,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             {
                 UserId = r.AuthorUid,
                 SignatureId = (uint)r.SignatureId!,
-                SignatureXxHash3 = XxHash3.Hash(r.Signature!),
+                SignatureXxHash3 = XxHash3.HashToUInt64(r.Signature!),
                 Signature = r.Signature!,
                 FirstSeenAt = now,
                 LastSeenAt = now
