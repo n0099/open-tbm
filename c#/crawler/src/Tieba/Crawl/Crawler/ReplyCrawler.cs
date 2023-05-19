@@ -27,8 +27,7 @@ public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
         { // reverse order will be {"last", "1"}, {"r", "1"}
             Kz = (long)_tid,
             Pn = (int)page,
-            Rn = 30,
-            QType = 2
+            Rn = 30
         };
         var response = await Requester.RequestProtoBuf(url, clientVersion,
             new ReplyRequest {Data = data},

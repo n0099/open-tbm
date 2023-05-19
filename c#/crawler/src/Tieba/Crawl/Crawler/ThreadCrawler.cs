@@ -38,7 +38,6 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
             Pn = (int)page,
             Rn = 90,
             RnNeed = 30,
-            QType = 2,
             SortType = 5
         };
         return Task.FromResult(new[]
