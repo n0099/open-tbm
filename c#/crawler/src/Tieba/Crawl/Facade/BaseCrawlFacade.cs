@@ -105,8 +105,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         return this;
     }
 
-    private Task CrawlPages(IList<Page> pages,
-        Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
+    private Task CrawlPages
+        (IList<Page> pages, Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
     {
         var acquiredLocks = _locks.AcquireRange(_lockId, pages);
         if (!acquiredLocks.Any())
@@ -128,8 +128,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));
     }
 
-    public async Task<SaverChangeSet<TPost>?> RetryThenSave(IList<Page> pages,
-        Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
+    public async Task<SaverChangeSet<TPost>?> RetryThenSave
+        (IList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
     {
         if (_lockingPages.Any()) throw new InvalidOperationException(
             "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
@@ -137,8 +137,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         return SaveCrawled(stoppingToken);
     }
 
-    private async Task<bool> LogException(Func<Task> payload, Page page,
-        FailureCount previousFailureCount, CancellationToken stoppingToken = default)
+    private async Task<bool> LogException
+        (Func<Task> payload, Page page, FailureCount previousFailureCount, CancellationToken stoppingToken = default)
     {
         try
         {

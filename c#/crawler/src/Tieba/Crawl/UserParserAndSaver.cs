@@ -89,8 +89,7 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
 
     public void ResetUsersIcon() => _users.Values.ForEach(u => u.Icon = null);
 
-    public void SaveUsers(CrawlerDbContext db, string postType,
-        FieldChangeIgnoranceCallbacks tiebaUserFieldChangeIgnorance)
+    public void SaveUsers(CrawlerDbContext db, string postType, FieldChangeIgnoranceCallbacks tiebaUserFieldChangeIgnorance)
     {
         if (_users.IsEmpty) return;
         lock (UserIdLocks)

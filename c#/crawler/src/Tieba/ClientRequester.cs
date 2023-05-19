@@ -11,7 +11,8 @@ public class ClientRequester
     private readonly ClientRequesterTcs _requesterTcs;
     private static readonly Random Rand = new();
 
-    public ClientRequester(ILogger<ClientRequester> logger, IConfiguration config,
+    public ClientRequester(
+        ILogger<ClientRequester> logger, IConfiguration config,
         IHttpClientFactory httpFactory, ClientRequesterTcs requesterTcs)
     {
         (_logger, _httpFactory, _requesterTcs) = (logger, httpFactory, requesterTcs);

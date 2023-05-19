@@ -12,8 +12,9 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
     private readonly ILifetimeScope _scope0;
     private readonly SonicPusher _pusher;
 
-    public PushAllPostContentsIntoSonicWorker(ILogger<PushAllPostContentsIntoSonicWorker> logger,
-        IConfiguration config, ILifetimeScope scope0, SonicPusher pusher) : base(logger)
+    public PushAllPostContentsIntoSonicWorker(
+        ILogger<PushAllPostContentsIntoSonicWorker> logger, IConfiguration config,
+        ILifetimeScope scope0, SonicPusher pusher) : base(logger)
     {
         (_logger, _scope0, _pusher) = (logger, scope0, pusher);
         _config = config.GetSection("Sonic");
@@ -34,7 +35,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         var totalPostCount = forumPostCountsTuples.Sum(t => t.ReplyCount)
                              + forumPostCountsTuples.Sum(t => t.SubReplyCount);
         var pushedPostCount = 0;
-        foreach (var ((fid, replyCount, subReplyCount), index) in forumPostCountsTuples.WithIndex())
+        foreach (var (index, (fid, replyCount, subReplyCount)) in forumPostCountsTuples.Index())
         {
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
             var dbWithFid = scope1.Resolve<CrawlerDbContext.New>()(fid);
@@ -63,10 +64,8 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         }
     }
 
-    private int PushPostContentsWithTiming<T>(Fid fid,
-        int currentForumIndex,
-        int forumCount,
-        string postTypeInLog,
+    private int PushPostContentsWithTiming<T>(
+        Fid fid, int currentForumIndex, int forumCount, string postTypeInLog,
         int postApproxCount,
         int forumsPostTotalApproxCount,
         int previousPushedPostCount,

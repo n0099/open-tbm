@@ -6,7 +6,8 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
 
     public delegate ThreadCrawler New(string forumName);
 
-    public ThreadCrawler(ClientRequester requester, string forumName) : base(requester) => _forumName = forumName;
+    public ThreadCrawler(ClientRequester requester, string forumName) :
+        base(requester) => _forumName = forumName;
 
     public override Exception FillExceptionData(Exception e)
     {

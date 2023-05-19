@@ -12,7 +12,8 @@ public class JoinedRecognizer
 
     public delegate JoinedRecognizer New(string script);
 
-    public JoinedRecognizer(IConfiguration config,
+    public JoinedRecognizer(
+        IConfiguration config,
         PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
         TesseractRecognizer.New tesseractRecognizerFactory,
         string script)
@@ -70,7 +71,8 @@ public class JoinedRecognizer
             return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
         });
 
-    private record CorrelatedTextBoxPair(ImageId ImageId, ushort PercentageOfIntersection,
+    private record CorrelatedTextBoxPair(
+        ImageId ImageId, ushort PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
     private IEnumerable<TesseractRecognitionResult> RecognizeImageMatricesViaTesseract(

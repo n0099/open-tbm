@@ -59,8 +59,10 @@ public sealed class SonicPusher : IDisposable
         return ret;
     }
 
-    public void PushPostWithCancellationToken<T>(IReadOnlyCollection<T> posts, Fid fid, string postType,
-        Func<T, PostId> postIdSelector, Func<T, RepeatedField<Content>?> postContentSelector,
+    public void PushPostWithCancellationToken<T>(
+        IReadOnlyCollection<T> posts, Fid fid, string postType,
+        Func<T, PostId> postIdSelector,
+        Func<T, RepeatedField<Content>?> postContentSelector,
         CancellationToken stoppingToken = default)
     {
         try

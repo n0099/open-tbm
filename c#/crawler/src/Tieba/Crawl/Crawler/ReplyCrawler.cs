@@ -7,7 +7,8 @@ public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
 
     public delegate ReplyCrawler New(Fid fid, Tid tid);
 
-    public ReplyCrawler(ClientRequester requester, Fid fid, Tid tid) : base(requester) => (_fid, _tid) = (fid, tid);
+    public ReplyCrawler(ClientRequester requester, Fid fid, Tid tid) :
+        base(requester) => (_fid, _tid) = (fid, tid);
 
     public override Exception FillExceptionData(Exception e)
     {

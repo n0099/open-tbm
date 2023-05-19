@@ -6,10 +6,12 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
-    public ThreadCrawlFacade(ILogger<ThreadCrawlFacade> logger, CrawlerDbContext.New dbContextFactory,
+    public ThreadCrawlFacade(
+        ILogger<ThreadCrawlFacade> logger, CrawlerDbContext.New dbContextFactory,
         ThreadCrawler.New crawler, ThreadParser parser, ThreadSaver.New saver, UserParserAndSaver users,
         ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, string forumName
-    ) : base(logger, dbContextFactory, crawler(forumName), parser, saver.Invoke, users, requesterTcs, (locks["thread"], new (fid)), fid) { }
+    ) : base(logger, dbContextFactory, crawler(forumName), parser, saver.Invoke, users,
+        requesterTcs, (locks["thread"], new(fid)), fid) { }
 
     protected override void BeforeCommitSaveHook(CrawlerDbContext db)
     { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()

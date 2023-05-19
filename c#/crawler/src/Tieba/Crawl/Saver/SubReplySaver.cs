@@ -35,7 +35,8 @@ public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
 
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-    public SubReplySaver(ILogger<SubReplySaver> logger,
+    public SubReplySaver(
+        ILogger<SubReplySaver> logger,
         ConcurrentDictionary<PostId, SubReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "subReply") { }

@@ -9,7 +9,8 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
     protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<User?> outUsers);
     protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
 
-    public void ParsePosts(CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
+    public void ParsePosts(
+        CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
         out Dictionary<PostId, TPost> outPosts, out List<User> outUsers)
     {
         outUsers = new(30);

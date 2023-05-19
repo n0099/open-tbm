@@ -51,7 +51,8 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-    public ReplySaver(ILogger<ReplySaver> logger,
+    public ReplySaver(
+        ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "reply") { }

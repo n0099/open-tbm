@@ -8,8 +8,10 @@ public class RetryCrawlWorker : CyclicCrawlWorker
     private readonly ILifetimeScope _scope0;
     private readonly IIndex<string, CrawlerLocks> _registeredLocksKeyByType;
 
-    public RetryCrawlWorker(ILogger<RetryCrawlWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, IIndex<string, CrawlerLocks> registeredLocksLookup) : base(logger, config) =>
+    public RetryCrawlWorker(
+        ILogger<RetryCrawlWorker> logger, IConfiguration config,
+        ILifetimeScope scope0, IIndex<string, CrawlerLocks> registeredLocksLookup
+    ) : base(logger, config) =>
         (_logger, _scope0, _registeredLocksKeyByType) = (logger, scope0, registeredLocksLookup);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -25,7 +27,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
                 foreach (var tidGroupByFid in failed.Keys.GroupBy(lockId => lockId.Fid, lockId => lockId.Tid))
                 {
                     var fid = tidGroupByFid.Key;
-                    FailureCount FailureCountSelector(Tid tid) => failed[new (fid, tid)].Single().Value; // it should always contains only one page which is 1
+                    FailureCount FailureCountSelector(Tid tid) => failed[new(fid, tid)].Single().Value; // it should always contains only one page which is 1
                     var failureCountsKeyByTid = tidGroupByFid.Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
                     _logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",
                         fid, Helper.UnescapedJsonSerialize(tidGroupByFid));

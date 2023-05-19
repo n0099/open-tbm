@@ -11,8 +11,10 @@ public class MainCrawlWorker : CyclicCrawlWorker
     // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
     private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
 
-    public MainCrawlWorker(ILogger<MainCrawlWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks) : base(logger, config)
+    public MainCrawlWorker(
+        ILogger<MainCrawlWorker> logger, IConfiguration config,
+        ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks
+    ) : base(logger, config)
     {
         _scope0 = scope0;
         // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
@@ -91,10 +93,12 @@ public class MainCrawlWorker : CyclicCrawlWorker
         return savedThreads;
     }
 
-    private Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
+    private Task<SavedRepliesKeyByTid> CrawlReplies
+        (SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
         CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
 
-    public static async Task<SavedRepliesKeyByTid> CrawlReplies(SavedThreadsList savedThreads, Fid fid,
+    public static async Task<SavedRepliesKeyByTid> CrawlReplies(
+        SavedThreadsList savedThreads, Fid fid,
         ILifetimeScope scope, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
@@ -162,7 +166,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
     private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
         CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
 
-    public static async Task CrawlSubReplies(IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid,
+    public static async Task CrawlSubReplies(
+        IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid,
         ILifetimeScope scope, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();

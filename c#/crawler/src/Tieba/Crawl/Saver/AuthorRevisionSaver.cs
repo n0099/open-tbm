@@ -51,14 +51,16 @@ public class AuthorRevisionSaver
         return () => ReleaseAllLocks(AuthorExpGradeLocks);
     }
 
-    private void SaveAuthorRevisions<TPost, TRevision, TValue>(CrawlerDbContext db,
+    private void SaveAuthorRevisions<TPost, TRevision, TValue>(
+        CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
         HashSet<(Fid Fid, long Uid)> locks,
         IQueryable<TRevision> dbSet,
         Func<TPost, TValue?> postAuthorFieldValueSelector,
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
         Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-        Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
+        Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory
+    )
         where TPost : IPost
         where TRevision : AuthorRevision
     {

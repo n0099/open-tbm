@@ -10,7 +10,8 @@ public class ImagePipelineWorker : ErrorableWorker
     private readonly ImageRequester _imageRequester;
     private readonly int _batchSize;
 
-    public ImagePipelineWorker(ILogger<ImagePipelineWorker> logger, IConfiguration config,
+    public ImagePipelineWorker(
+        ILogger<ImagePipelineWorker> logger, IConfiguration config,
         ILifetimeScope scope0, ImageRequester imageRequester) : base(logger)
     {
         (_logger, _scope0, _imageRequester) = (logger, scope0, imageRequester);

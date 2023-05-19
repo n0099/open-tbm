@@ -39,12 +39,14 @@ public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
 
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-    public ThreadSaver(ILogger<ThreadSaver> logger,
+    public ThreadSaver(
+        ILogger<ThreadSaver> logger,
         ConcurrentDictionary<Tid, ThreadPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory
     ) : base(logger, posts, authorRevisionSaverFactory, "thread") { }
 
-    public override SaverChangeSet<ThreadPost> SavePosts(CrawlerDbContext db) => SavePosts(db, th => th.Tid,
-        th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
-        PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
+    public override SaverChangeSet<ThreadPost> SavePosts(CrawlerDbContext db) =>
+        SavePosts(db, th => th.Tid,
+            th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
+            PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 }

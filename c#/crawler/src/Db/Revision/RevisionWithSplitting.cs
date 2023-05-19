@@ -9,14 +9,15 @@ public abstract class RevisionWithSplitting<TSplitEntities> : IRevision
 
     public Dictionary<Type, TSplitEntities> SplitEntities { get; } = new();
 
-    protected TValue? GetSplitEntityValue<TSplitEntity, TValue>(Func<TSplitEntity, TValue?> valueSelector)
+    protected TValue? GetSplitEntityValue<TSplitEntity, TValue>
+        (Func<TSplitEntity, TValue?> valueSelector)
         where TSplitEntity : class, TSplitEntities =>
         SplitEntities.TryGetValue(typeof(TSplitEntity), out var entity)
             ? valueSelector((TSplitEntity)entity)
             : default;
 
-    protected void SetSplitEntityValue<TSplitEntity, TValue>(TValue? value,
-        Action<TSplitEntity, TValue?> valueSetter, Func<TSplitEntity> entityFactory)
+    protected void SetSplitEntityValue<TSplitEntity, TValue>
+        (TValue? value, Action<TSplitEntity, TValue?> valueSetter, Func<TSplitEntity> entityFactory)
         where TSplitEntity : class, TSplitEntities
     {
         if (SplitEntities.TryGetValue(typeof(TSplitEntity), out var entity))

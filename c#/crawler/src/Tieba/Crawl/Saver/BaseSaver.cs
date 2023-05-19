@@ -18,7 +18,8 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
     protected event PostSaveEventHandler PostSaveEvent = () => { };
     public void OnPostSaveEvent() => PostSaveEvent();
 
-    protected BaseSaver(ILogger<BaseSaver<TPost, TBaseRevision>> logger,
+    protected BaseSaver(
+        ILogger<BaseSaver<TPost, TBaseRevision>> logger,
         ConcurrentDictionary<PostId, TPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory,
         string postType
@@ -29,10 +30,12 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
         PostType = postType;
     }
 
-    protected SaverChangeSet<TPost> SavePosts<TRevision>(CrawlerDbContext db,
+    protected SaverChangeSet<TPost> SavePosts<TRevision>(
+        CrawlerDbContext db,
         Func<TPost, ulong> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
-        ExpressionStarter<TPost> existingPostPredicate)
+        ExpressionStarter<TPost> existingPostPredicate
+    )
         where TRevision : class, IRevision
     {
         var dbSet = db.Set<TPost>().TagWith("ForUpdate");

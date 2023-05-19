@@ -7,7 +7,8 @@ public class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
 
     public delegate SubReplyCrawler New(Tid tid, Pid pid);
 
-    public SubReplyCrawler(ClientRequester requester, Tid tid, Pid pid) : base(requester) => (_tid, _pid) = (tid, pid);
+    public SubReplyCrawler(ClientRequester requester, Tid tid, Pid pid) :
+        base(requester) => (_tid, _pid) = (tid, pid);
 
     public override Exception FillExceptionData(Exception e)
     {

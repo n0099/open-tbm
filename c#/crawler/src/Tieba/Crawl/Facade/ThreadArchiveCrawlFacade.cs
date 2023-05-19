@@ -4,10 +4,12 @@ public class ThreadArchiveCrawlFacade : ThreadCrawlFacade
 {
     public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 
-    public ThreadArchiveCrawlFacade(ILogger<ThreadArchiveCrawlFacade> logger, CrawlerDbContext.New dbContextFactory,
+    public ThreadArchiveCrawlFacade(
+        ILogger<ThreadArchiveCrawlFacade> logger, CrawlerDbContext.New dbContextFactory,
         ThreadArchiveCrawler.New crawler, ThreadParser parser, ThreadSaver.New saver, UserParserAndSaver users,
         ClientRequesterTcs requesterTcs, IIndex<string, CrawlerLocks> locks, Fid fid, string forumName
-    ) : base(logger, dbContextFactory, crawler.Invoke, parser, saver, users, requesterTcs, locks, fid, forumName) { }
+    ) : base(logger, dbContextFactory, crawler.Invoke, parser, saver, users,
+        requesterTcs, locks, fid, forumName) { }
 
     protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
     { // the second respond with flag is as same as the first one so just skip it

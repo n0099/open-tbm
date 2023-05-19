@@ -18,8 +18,10 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
         FieldChangeIgnoranceCallbacks userFieldChangeIgnorance,
         Func<TPostOrUser, TRevision> revisionFactory,
         ILookup<bool, TPostOrUser> existingOrNewLookup,
-        Func<TPostOrUser, TPostOrUser> existingSelector)
-        where TPostOrUser : class where TRevision : class, IRevision
+        Func<TPostOrUser, TPostOrUser> existingSelector
+    )
+        where TPostOrUser : class
+        where TRevision : class, IRevision
     {
         db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
         var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>

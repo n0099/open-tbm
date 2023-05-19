@@ -5,7 +5,8 @@ namespace tbm.ImagePipeline.Consumer;
 
 public class MetadataConsumer
 {
-    public static void Consume(ImagePipelineDbContext db,
+    public static void Consume(
+        ImagePipelineDbContext db,
         Dictionary<ImageId, (TiebaImage Image, byte[] Bytes)> imageAndBytesKeyById,
         CancellationToken stoppingToken) =>
         db.ImageMetadata.AddRange(imageAndBytesKeyById.Select(pair =>
