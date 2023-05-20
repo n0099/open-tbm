@@ -20,7 +20,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
             o.ThreadType = (ulong)inPost.ThreadTypes;
             o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
             o.IsGood = (ushort?)inPost.IsGood.NullIfZero();
-            o.TopicType = inPost.LivePostType.NullIfWhiteSpace();
+            o.TopicType = inPost.LivePostType.NullIfEmpty();
             o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.SaveParentThreadTitle()
             o.AuthorUid = inPost.AuthorId;
             o.PostedAt = (uint)inPost.CreateTime;

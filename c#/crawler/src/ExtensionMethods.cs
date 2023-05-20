@@ -28,7 +28,7 @@ public static class ExtensionMethods
     public static string GetStrProp(this JsonElement el, string propName) => el.GetProperty(propName).GetString() ?? "";
 
     /// <see>https://stackoverflow.com/questions/10295028/c-sharp-empty-string-null/10295082#10295082</see>
-    public static string? NullIfWhiteSpace(this string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    public static string? NullIfEmpty(this string? value) => string.IsNullOrEmpty(value) ? null : value;
 
     /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
     private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)

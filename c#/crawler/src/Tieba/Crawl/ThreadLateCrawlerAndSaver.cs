@@ -75,7 +75,7 @@ public class ThreadLateCrawlerAndSaver
                             ? new ThreadPost
                             {
                                 Tid = Tid.Parse(thread.GetStrProp("id")),
-                                AuthorPhoneType = phoneType.GetString().NullIfWhiteSpace()
+                                AuthorPhoneType = phoneType.GetString().NullIfEmpty()
                             }
                             : throw new TiebaException(false,
                                 "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")

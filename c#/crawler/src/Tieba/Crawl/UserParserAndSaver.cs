@@ -64,8 +64,9 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
                 };
             }
 
-            var name = el.Name.NullIfWhiteSpace(); // null when he haven't set username for his baidu account yet
-            var nameShow = el.NameShow.NullIfWhiteSpace();
+            // will be empty string when he haven't set username for his baidu account yet
+            var name = el.Name.NullIfEmpty();
+            var nameShow = el.NameShow.NullIfEmpty();
             var u = new TiebaUser();
             try
             {
@@ -75,10 +76,10 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
                 u.Portrait = portrait;
                 u.PortraitUpdatedAt = portraitUpdatedAt;
                 u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
-                u.FansNickname = el.FansNickname.NullIfWhiteSpace();
+                u.FansNickname = el.FansNickname.NullIfEmpty();
                 u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(el.Iconinfo,
                     () => new UserIconWrapper {Value = {el.Iconinfo}});
-                u.IpGeolocation = el.IpAddress.NullIfWhiteSpace();
+                u.IpGeolocation = el.IpAddress.NullIfEmpty();
                 return u;
             }
             catch (Exception e)

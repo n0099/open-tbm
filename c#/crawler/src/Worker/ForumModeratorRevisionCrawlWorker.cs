@@ -32,7 +32,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                 if (string.IsNullOrEmpty(type)) throw new TiebaException();
                 var memberPortraits = typeEl.QuerySelectorAll(".member")
                     .Select(memberEl => memberEl.QuerySelector("a.avatar")
-                        ?.GetAttribute("href")?.Split("/home/main?id=")[1].NullIfWhiteSpace())
+                        ?.GetAttribute("href")?.Split("/home/main?id=")[1].NullIfEmpty())
                     .OfType<string>();
                 return memberPortraits.Select(portrait => (type, portrait));
             });
