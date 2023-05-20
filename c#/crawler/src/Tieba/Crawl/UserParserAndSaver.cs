@@ -47,7 +47,8 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         {
             static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
                 PortraitExtractingRegex.Match(portrait) is {Success: true} m
-                    ? (m.Groups[1].Value, Time.Parse(m.Groups[2].ValueSpan)) : (portrait, null);
+                    ? (m.Groups[1].Value, Time.Parse(m.Groups[2].ValueSpan))
+                    : (portrait, null);
 
             var uid = el.Uid;
             if (uid == 0) return null; // in client version 12.x the last user in list will be a empty user with uid 0

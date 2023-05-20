@@ -19,7 +19,7 @@ public abstract class BaseCrawler<TResponse, TPostProtoBuf>
     public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
 
     public async Task<Response[]> CrawlSinglePage(Page page, CancellationToken stoppingToken = default) =>
-        await Task.WhenAll((GetRequestsForPage(page, stoppingToken))
+        await Task.WhenAll(GetRequestsForPage(page, stoppingToken)
             .Select(async request => new Response(await request.Response, request.Flag)));
 
     protected void ValidateOtherErrorCode(TResponse response)

@@ -3,7 +3,7 @@ namespace tbm.Crawler;
 public static class ExtensionMethods
 {
     /// <summary>
-    /// Returns a random long from min (inclusive) to max (exclusive)
+    ///     Returns a random long from min (inclusive) to max (exclusive)
     /// </summary>
     /// <param name="random">The given random instance</param>
     /// <param name="min">The inclusive minimum bound</param>

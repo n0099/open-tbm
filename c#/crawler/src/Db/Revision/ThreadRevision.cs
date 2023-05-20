@@ -5,6 +5,7 @@ public abstract class BaseThreadRevision : RevisionWithSplitting<BaseThreadRevis
 {
     public ulong Tid { get; set; }
 }
+
 public class ThreadRevision : BaseThreadRevision
 {
     public ulong? ThreadType { get; set; }
@@ -14,12 +15,15 @@ public class ThreadRevision : BaseThreadRevision
     public uint? LatestReplyPostedAt { get; set; }
     public long? LatestReplierUid { get; set; }
     public uint? ReplyCount { get; set; }
-    [NotMapped] public uint ViewCount
+
+    [NotMapped]
+    public uint ViewCount
     {
         get => GetSplitEntityValue<SplitViewCount, uint>(s => s.ViewCount);
         set => SetSplitEntityValue<SplitViewCount, uint>(value, (s, v) => s.ViewCount = v,
             () => new() {TakenAt = TakenAt, Tid = Tid, ViewCount = value});
     }
+
     public uint? ShareCount { get; set; }
     public int? AgreeCount { get; set; }
     public int? DisagreeCount { get; set; }
