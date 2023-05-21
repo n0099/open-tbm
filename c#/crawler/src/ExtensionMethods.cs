@@ -11,7 +11,7 @@ public static class ExtensionMethods
     /// <see>https://stackoverflow.com/questions/6651554/random-number-in-long-range-is-this-the-way/13095144#13095144</see>
     public static long NextLong(this Random random, long min, long max)
     {
-        Guard.IsLessThanOrEqualTo(max, min);
+        Guard.IsLessThanOrEqualTo(min, max);
 
         var uRange = (ulong)(max - min);
         ulong ulongRand;
