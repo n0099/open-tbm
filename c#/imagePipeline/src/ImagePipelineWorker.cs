@@ -1,5 +1,5 @@
 using System.Data;
-using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 
 namespace tbm.ImagePipeline;
 
@@ -7,21 +7,15 @@ public class ImagePipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImagePipelineWorker> _logger;
     private readonly ILifetimeScope _scope0;
-    private readonly ImageRequester _imageRequester;
-    private readonly int _batchSize;
+    private readonly ChannelReader<ImageAndBytesKeyByImageId> _reader;
 
-    public ImagePipelineWorker(
-        ILogger<ImagePipelineWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, ImageRequester imageRequester) : base(logger)
-    {
-        (_logger, _scope0, _imageRequester) = (logger, scope0, imageRequester);
-        var configSection = config.GetSection("ImagePipeline");
-        _batchSize = configSection.GetValue("BatchSize", 16);
-    }
+    public ImagePipelineWorker
+        (ILogger<ImagePipelineWorker> logger, ILifetimeScope scope0, Channel<ImageAndBytesKeyByImageId> channel) :
+        base(logger) => (_logger, _scope0, _reader) = (logger, scope0, channel);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await foreach (var imageAndBytesKeyById in ImageBatchGenerator(stoppingToken))
+        await foreach (var imageAndBytesKeyById in _reader.ReadAllAsync(stoppingToken))
         {
             await using var scope1 = _scope0.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
@@ -61,34 +55,6 @@ public class ImagePipelineWorker : ErrorableWorker
 
             _ = await db.SaveChangesAsync(stoppingToken);
             await transaction.CommitAsync(stoppingToken);
-        }
-    }
-
-    private async IAsyncEnumerable<Dictionary<ImageId, (TiebaImage Image, byte[] Bytes)>> ImageBatchGenerator
-        ([EnumeratorCancellation] CancellationToken stoppingToken)
-    {
-        ImageId lastImageIdInPreviousBatch = 0;
-        while (true)
-        {
-            List<TiebaImage> GetUnconsumedImages()
-            { // dispose db inside scope1 after returned to prevent long running db connection
-                using var scope1 = _scope0.BeginLifetimeScope();
-                var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
-                return (from image in db.Images.AsNoTracking()
-                        where image.ImageId > lastImageIdInPreviousBatch
-                              // this will not get images that have not yet been consumed by OcrConsumer
-                              // since the transaction in ConsumeOcrConsumerWithAllScrips() is de-synced with other consumer
-                              && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
-                        orderby image.ImageId
-                        select image
-                    ).Take(_batchSize).ToList();
-            }
-            var images = GetUnconsumedImages();
-            if (images.Any()) yield return new(
-                await Task.WhenAll(images.Select(async image =>
-                    KeyValuePair.Create(image.ImageId, (image, await _imageRequester.GetImageBytes(image, stoppingToken))))));
-            else yield break;
-            lastImageIdInPreviousBatch = images.Last().ImageId;
         }
     }
 }

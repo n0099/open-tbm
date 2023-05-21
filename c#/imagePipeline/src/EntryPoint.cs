@@ -1,4 +1,5 @@
 using System.Net;
+using System.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +16,7 @@ public class EntryPoint : BaseEntryPoint
     protected override void ConfigureServices(HostBuilderContext context, IServiceCollection service)
     {
         service.AddHostedService<ImagePipelineWorker>();
+        service.AddHostedService<ImageBatchProducingWorker>();
 
         var imageRequesterConfig = context.Configuration.GetSection("ImageRequester");
         service.AddHttpClient("tbImage", client =>
@@ -49,5 +51,12 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<HashConsumer>();
         builder.RegisterType<MetadataConsumer>();
         builder.RegisterType<ImageRequester>();
+        builder.Register(context => Channel.CreateBounded<ImageAndBytesKeyByImageId>(
+            new BoundedChannelOptions(
+                context.Resolve<IConfiguration>()
+                    .GetSection("ImagePipeline")
+                    .GetValue("MaxBufferedImageBatches", 8)
+            ) {SingleReader = true, SingleWriter = true})
+        ).SingleInstance();
     }
 }
