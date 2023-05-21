@@ -32,6 +32,8 @@ public class MetadataConsumer
                         Xmp = meta.XmpProfile?.ToByteArray()
                     },
                 JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
+                PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
+                GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
                 DownloadedByteSize = image.ByteSize == imageBytes.Length
                     ? null
                     : new() {DownloadedByteSize = (uint)imageBytes.Length},

@@ -42,6 +42,12 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         b.Entity<ImageMetadata>().HasOne(e => e.JpgMetadata).WithOne()
             .HasForeignKey<ImageMetadata.Jpg>(e => e.ImageId);
         b.Entity<ImageMetadata.Jpg>().ToTable("tbmc_image_metadata_jpg");
+        b.Entity<ImageMetadata>().HasOne(e => e.PngMetadata).WithOne()
+            .HasForeignKey<ImageMetadata.Png>(e => e.ImageId);
+        b.Entity<ImageMetadata.Png>().ToTable("tbmc_image_metadata_png");
+        b.Entity<ImageMetadata>().HasOne(e => e.GifMetadata).WithOne()
+            .HasForeignKey<ImageMetadata.Gif>(e => e.ImageId);
+        b.Entity<ImageMetadata.Gif>().ToTable("tbmc_image_metadata_gif");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }

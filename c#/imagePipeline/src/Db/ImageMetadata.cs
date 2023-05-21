@@ -1,4 +1,7 @@
+using System.Text.Json;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace tbm.ImagePipeline.Db;
 
@@ -12,6 +15,8 @@ public class ImageMetadata
     public ushort FrameCount { get; set; }
     public Embedded? EmbeddedMetadata { get; set; }
     public Jpg? JpgMetadata { get; set; }
+    public Png? PngMetadata { get; set; }
+    public Gif? GifMetadata { get; set; }
     public ByteSize? DownloadedByteSize { get; set; }
     public ulong XxHash3 { get; set; }
 
@@ -48,6 +53,62 @@ public class ImageMetadata
                 ColorType = other.ColorType == null ? null : Enum.GetName(other.ColorType.Value),
                 Interleaved = other.Interleaved,
                 Progressive = other.Progressive
+            };
+        }
+    }
+
+    public class Png
+    {
+        [Key] public uint ImageId { get; set; }
+        public string? BitDepth { get; set; }
+        public string? ColorType { get; set; }
+        public string? InterlaceMethod { get; set; }
+        public float Gamma { get; set; }
+        public byte? TransparentR { get; set; }
+        public byte? TransparentG { get; set; }
+        public byte? TransparentB { get; set; }
+        public byte? TransparentL { get; set; }
+        public bool HasTransparency { get; set; }
+        public required string TextData { get; set; }
+
+        public static Png? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
+        {
+            if (meta.DecodedImageFormat is not PngFormat) return null;
+            var other = meta.GetPngMetadata();
+            return new()
+            {
+                BitDepth = other.BitDepth == null ? null : Enum.GetName(other.BitDepth.Value),
+                ColorType = other.ColorType == null ? null : Enum.GetName(other.ColorType.Value),
+                InterlaceMethod = other.InterlaceMethod == null ? null : Enum.GetName(other.InterlaceMethod.Value),
+                Gamma = other.Gamma,
+                TransparentR = other.TransparentRgb24?.R,
+                TransparentG = other.TransparentRgb24?.G,
+                TransparentB = other.TransparentRgb24?.B,
+                TransparentL = other.TransparentL8?.PackedValue,
+                HasTransparency = other.HasTransparency,
+                TextData = JsonSerializer.Serialize(other.TextData)
+            };
+        }
+    }
+
+    public class Gif
+    {
+        [Key] public uint ImageId { get; set; }
+        public ushort RepeatCount { get; set; }
+        public required string ColorTableMode { get; set; }
+        public int GlobalColorTableLength { get; set; }
+        public required string Comments { get; set; }
+
+        public static Gif? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
+        {
+            if (meta.DecodedImageFormat is not GifFormat) return null;
+            var other = meta.GetGifMetadata();
+            return new()
+            {
+                RepeatCount = other.RepeatCount,
+                ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new IndexOutOfRangeException() ,
+                GlobalColorTableLength = other.GlobalColorTableLength,
+                Comments = JsonSerializer.Serialize(other.Comments)
             };
         }
     }
