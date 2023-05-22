@@ -10,14 +10,14 @@ public class MetadataConsumer
 {
     public static void Consume(
         ImagePipelineDbContext db,
-        Dictionary<ImageId, (TiebaImage Image, byte[] Bytes)> imageAndBytesKeyById,
+        ImageAndBytesKeyById imageAndBytesKeyById,
         CancellationToken stoppingToken) =>
         db.ImageMetadata.AddRange(imageAndBytesKeyById.Select(pair =>
         {
             var (imageId, (image, imageBytes)) = pair;
             var info = Image.Identify(imageBytes);
             var meta = info.Metadata;
-            if (meta.DecodedImageFormat is not JpegFormat or PngFormat or GifFormat)
+            if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat))
                 ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
             return new ImageMetadata
             {

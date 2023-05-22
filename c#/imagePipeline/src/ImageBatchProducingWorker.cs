@@ -7,13 +7,13 @@ public class ImageBatchProducingWorker : ErrorableWorker
     private readonly ILogger<ImageBatchProducingWorker> _logger;
     private readonly ILifetimeScope _scope0;
     private readonly ImageRequester _imageRequester;
-    private readonly ChannelWriter<ImageAndBytesKeyByImageId> _writer;
+    private readonly ChannelWriter<ImageAndBytesKeyById> _writer;
     private readonly int _batchSize;
 
     public ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger, IConfiguration config,
         ILifetimeScope scope0, ImageRequester imageRequester,
-        Channel<ImageAndBytesKeyByImageId> channel) : base(logger)
+        Channel<ImageAndBytesKeyById> channel) : base(logger)
     {
         (_logger, _scope0, _imageRequester, _writer) = (logger, scope0, imageRequester, channel);
         var configSection = config.GetSection("ImagePipeline");

@@ -7,10 +7,10 @@ public class ImagePipelineWorker : ErrorableWorker
 {
     private readonly ILogger<ImagePipelineWorker> _logger;
     private readonly ILifetimeScope _scope0;
-    private readonly ChannelReader<ImageAndBytesKeyByImageId> _reader;
+    private readonly ChannelReader<ImageAndBytesKeyById> _reader;
 
     public ImagePipelineWorker
-        (ILogger<ImagePipelineWorker> logger, ILifetimeScope scope0, Channel<ImageAndBytesKeyByImageId> channel) :
+        (ILogger<ImagePipelineWorker> logger, ILifetimeScope scope0, Channel<ImageAndBytesKeyById> channel) :
         base(logger) => (_logger, _scope0, _reader) = (logger, scope0, channel);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
