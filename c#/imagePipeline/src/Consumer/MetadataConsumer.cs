@@ -34,7 +34,7 @@ public class MetadataConsumer
                         Exif = meta.ExifProfile == null ? null : new ImageMetadata.Embedded.EmbeddedExif
                         {
                             TagNames = JsonSerializer.Serialize(meta.ExifProfile.Values.Select(i => i.Tag.ToString())),
-                            Bytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
+                            RawBytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
                         },
                         Icc = meta.IccProfile?.ToByteArray(),
                         Iptc = meta.IptcProfile?.Data,
@@ -43,9 +43,9 @@ public class MetadataConsumer
                 JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
                 PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
                 GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
-                DownloadedByteSize = image.ByteSize == imageBytes.Length
+                DownloadedBytesSize = image.BytesSize == imageBytes.Length
                     ? null
-                    : new() {DownloadedByteSize = (uint)imageBytes.Length},
+                    : new() {DownloadedBytesSize = (uint)imageBytes.Length},
                 XxHash3 = XxHash3.HashToUInt64(imageBytes)
             };
         }));

@@ -47,13 +47,13 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
             _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}replies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",
                 replyCount, totalPostCount, pushedPostCount, dbWithFid.ReplyContents.AsNoTracking(),
-                r => _pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.Content)), stoppingToken);
+                r => _pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.ProtoBufBytes)), stoppingToken);
             TriggerConsolidate();
 
             _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}subReplies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex, forumCount, "sub replies",
                 subReplyCount, totalPostCount, pushedPostCount, dbWithFid.SubReplyContents.AsNoTracking(),
-                sr => _pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.Content)), stoppingToken);
+                sr => _pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
             TriggerConsolidate();
 
             void TriggerConsolidate() => NSonicFactory.Control(

@@ -64,7 +64,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
         db.ReplyContents.AddRange(changeSet.NewlyAdded
-            .Select(r => new ReplyContent {Pid = r.Pid, Content = r.Content}));
+            .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
         SaveReplyContentImages(db, changeSet.NewlyAdded);
         PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
         PostSaveEvent += SaveReplySignatures(db, changeSet.AllAfter).Invoke;
@@ -82,19 +82,19 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             {
                 UserId = r.AuthorUid,
                 SignatureId = (uint)r.SignatureId!,
-                SignatureXxHash3 = XxHash3.HashToUInt64(r.Signature!),
-                Signature = r.Signature!,
+                XxHash3 = XxHash3.HashToUInt64(r.Signature!),
+                ProtoBufBytes = r.Signature!,
                 FirstSeenAt = now,
                 LastSeenAt = now
             }).ToList();
         if (!signatures.Any()) return () => { };
 
         var uniqueSignatures = signatures
-            .Select(s => new UniqueSignature(s.SignatureId, s.SignatureXxHash3)).ToList();
+            .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList();
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking().TagWith("ForUpdate")
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
-                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.SignatureXxHash3)
+                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3)
             select s
         ).ToList();
         (from existing in existingSignatures
@@ -106,12 +106,12 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         {
             var newSignaturesExceptLocked = signatures
                 .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.SignatureXxHash3))
+                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.XxHash3))
                 .ToList();
             if (!newSignaturesExceptLocked.Any()) return () => { };
 
             _savedSignatures.AddRange(newSignaturesExceptLocked
-                .Select(s => new UniqueSignature(s.SignatureId, s.SignatureXxHash3)));
+                .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)));
             SignatureLocks.UnionWith(_savedSignatures);
             db.ReplySignatures.AddRange(newSignaturesExceptLocked);
         }
@@ -133,7 +133,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
                 select (r.Pid, Image: new TiebaImage
                 {
                     UrlFilename = c.OriginSrc,
-                    ByteSize = c.OriginSize
+                    BytesSize = c.OriginSize
                 }))
             .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
             .ToList();
@@ -145,10 +145,10 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
             select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
-                where existing.ByteSize == 0 // randomly respond with 0
+                where existing.BytesSize == 0 // randomly respond with 0
                 join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
-            .ForEach(t => t.existing.ByteSize = t.newInContent.ByteSize);
+            .ForEach(t => t.existing.BytesSize = t.newInContent.BytesSize);
         db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
         {
             Pid = t.Pid,

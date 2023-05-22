@@ -23,13 +23,13 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public Jpg? JpgMetadata { get; set; }
     public Png? PngMetadata { get; set; }
     public Gif? GifMetadata { get; set; }
-    public ByteSize? DownloadedByteSize { get; set; }
+    public BytesSize? DownloadedBytesSize { get; set; }
     public ulong XxHash3 { get; set; }
 
-    public class ByteSize : IImageMetadata
+    public class BytesSize : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
-        public uint DownloadedByteSize { get; set; }
+        public uint DownloadedBytesSize { get; set; }
     }
 
     public class Embedded : IImageMetadata
@@ -44,7 +44,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         {
             [Key] public uint ImageId { get; set; }
             public required string TagNames { get; set; }
-            public required byte[] Bytes { get; set; }
+            public required byte[] RawBytes { get; set; }
         }
     }
 
