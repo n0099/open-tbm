@@ -3,6 +3,7 @@ using System.Text.Json;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 
 namespace tbm.ImagePipeline.Consumer;
 
@@ -19,6 +20,8 @@ public class MetadataConsumer
             var meta = info.Metadata;
             if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat))
                 ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
+            T? GetExifTagValueOrNull<T>(ExifTag<T> tag) where T : class =>
+                meta.ExifProfile.TryGetValue(tag, out var value) ? value.Value : null;
             return new ImageMetadata
             {
                 ImageId = imageId,
@@ -32,7 +35,14 @@ public class MetadataConsumer
                     : new()
                     {
                         Exif = meta.ExifProfile == null ? null : new ImageMetadata.Embedded.EmbeddedExif
-                        {
+                        { // https://exiftool.org/TagNames/EXIF.html, https://exiv2.org/tags.html
+                            Orientation = meta.ExifProfile.TryGetValue(ExifTag.Orientation, out var orientation)
+                                ? Enum.GetName((ImageMetadata.Embedded.EmbeddedExif.ExifOrientation)orientation.Value)
+                                : null,
+                            Make = GetExifTagValueOrNull(ExifTag.Make),
+                            Model = GetExifTagValueOrNull(ExifTag.Model),
+                            CreateDate =GetExifTagValueOrNull(ExifTag.DateTimeDigitized),
+                            ModifyDate = GetExifTagValueOrNull(ExifTag.DateTime),
                             TagNames = JsonSerializer.Serialize(meta.ExifProfile.Values.Select(i => i.Tag.ToString())),
                             RawBytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
                         },

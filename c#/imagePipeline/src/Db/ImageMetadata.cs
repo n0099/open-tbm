@@ -43,8 +43,25 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public class EmbeddedExif : IImageMetadata
         {
             [Key] public uint ImageId { get; set; }
+            public string? Orientation { get; set; }
+            public string? Make { get; set; }
+            public string? Model { get; set; }
+            public string? CreateDate { get; set; }
+            public string? ModifyDate { get; set; }
             public required string TagNames { get; set; }
             public required byte[] RawBytes { get; set; }
+
+            public enum ExifOrientation
+            { // https://magnushoff.com/articles/jpeg-orientation/
+                Horizontal = 1,
+                MirrorHorizontal = 2,
+                Rotate180 = 3,
+                MirrorVertical = 4,
+                MirrorHorizontalRotate270Cw = 5,
+                Rotate90Cw = 6,
+                MirrorHorizontalRotate90Cw = 7,
+                Rotate270Cw = 8,
+            }
         }
     }
 
