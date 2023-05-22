@@ -2,11 +2,17 @@ using System.Text.Json;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImageMetadata
+public class ImageMetadata : ImageMetadata.IImageMetadata
 {
+    public interface IImageMetadata
+    {
+        [Key] public uint ImageId { get; set; }
+    }
+
     [Key] public uint ImageId { get; set; }
     public string? Format { get; set; }
     public ushort Width { get; set; }
@@ -20,22 +26,29 @@ public class ImageMetadata
     public ByteSize? DownloadedByteSize { get; set; }
     public ulong XxHash3 { get; set; }
 
-    public class ByteSize
+    public class ByteSize : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public uint DownloadedByteSize { get; set; }
     }
 
-    public class Embedded
+    public class Embedded : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
-        public byte[]? Exif { get; set; }
+        public EmbeddedExif? Exif { get; set; }
         public byte[]? Icc { get; set; }
         public byte[]? Iptc { get; set; }
         public byte[]? Xmp { get; set; }
+
+        public class EmbeddedExif : IImageMetadata
+        {
+            [Key] public uint ImageId { get; set; }
+            public required string TagNames { get; set; }
+            public required byte[] Bytes { get; set; }
+        }
     }
 
-    public class Jpg
+    public class Jpg : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public int Quality { get; set; }
@@ -57,7 +70,7 @@ public class ImageMetadata
         }
     }
 
-    public class Png
+    public class Png : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public string? BitDepth { get; set; }
@@ -69,7 +82,7 @@ public class ImageMetadata
         public byte? TransparentB { get; set; }
         public byte? TransparentL { get; set; }
         public bool HasTransparency { get; set; }
-        public required string TextData { get; set; }
+        public string? TextData { get; set; }
 
         public static Png? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
         {
@@ -86,18 +99,18 @@ public class ImageMetadata
                 TransparentB = other.TransparentRgb24?.B,
                 TransparentL = other.TransparentL8?.PackedValue,
                 HasTransparency = other.HasTransparency,
-                TextData = JsonSerializer.Serialize(other.TextData)
+                TextData = other.TextData.Any() ? JsonSerializer.Serialize(other.TextData) : null
             };
         }
     }
 
-    public class Gif
+    public class Gif : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public ushort RepeatCount { get; set; }
         public required string ColorTableMode { get; set; }
         public int GlobalColorTableLength { get; set; }
-        public required string Comments { get; set; }
+        public string? Comments { get; set; }
 
         public static Gif? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
         {
@@ -108,7 +121,7 @@ public class ImageMetadata
                 RepeatCount = other.RepeatCount,
                 ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new IndexOutOfRangeException() ,
                 GlobalColorTableLength = other.GlobalColorTableLength,
-                Comments = JsonSerializer.Serialize(other.Comments)
+                Comments = other.Comments.Any() ? JsonSerializer.Serialize(other.Comments) : null
             };
         }
     }

@@ -1,5 +1,8 @@
 using System.IO.Hashing;
+using System.Text.Json;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace tbm.ImagePipeline.Consumer;
 
@@ -14,6 +17,8 @@ public class MetadataConsumer
             var (imageId, (image, imageBytes)) = pair;
             var info = Image.Identify(imageBytes);
             var meta = info.Metadata;
+            if (meta.DecodedImageFormat is not JpegFormat or PngFormat or GifFormat)
+                ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
             return new ImageMetadata
             {
                 ImageId = imageId,
@@ -26,7 +31,11 @@ public class MetadataConsumer
                     ? null
                     : new()
                     {
-                        Exif = meta.ExifProfile?.ToByteArray(),
+                        Exif = meta.ExifProfile == null ? null : new ImageMetadata.Embedded.EmbeddedExif
+                        {
+                            TagNames = JsonSerializer.Serialize(meta.ExifProfile.Values.Select(i => i.Tag.ToString())),
+                            Bytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
+                        },
                         Icc = meta.IccProfile?.ToByteArray(),
                         Iptc = meta.IptcProfile?.Data,
                         Xmp = meta.XmpProfile?.ToByteArray()

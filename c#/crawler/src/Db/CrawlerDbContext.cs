@@ -1,4 +1,9 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using static tbm.Crawler.Db.Revision.ThreadRevision;
+using static tbm.Crawler.Db.Revision.ReplyRevision;
+using static tbm.Crawler.Db.Revision.SubReplyRevision;
+using static tbm.Crawler.Db.Revision.UserRevision;
+
 namespace tbm.Crawler.Db;
 
 public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheKeyFactory>
@@ -45,29 +50,28 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheK
         b.Entity<ReplyContentImage>().HasOne(e => e.Image).WithMany();
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
-        b.Entity<ThreadRevision>().ToTable("tbmcr_thread").HasKey(e => new {e.Tid, e.TakenAt});
-        b.Entity<ThreadRevision.SplitViewCount>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_thread_viewCount").HasKey(e => new {e.Tid, e.TakenAt});
-        b.Entity<ReplyRevision>().ToTable("tbmcr_reply").HasKey(e => new {e.Pid, e.TakenAt});
-        b.Entity<ReplyRevision.SplitAgreeCount>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_reply_agreeCount").HasKey(e => new {e.Pid, e.TakenAt});
-        b.Entity<ReplyRevision.SplitSubReplyCount>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_reply_subReplyCount").HasKey(e => new {e.Pid, e.TakenAt});
-        b.Entity<ReplyRevision.SplitFloor>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_reply_floor").HasKey(e => new {e.Pid, e.TakenAt});
-        b.Entity<SubReplyRevision>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_subReply").HasKey(e => new {e.Spid, e.TakenAt});
-        b.Entity<SubReplyRevision.SplitAgreeCount>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_subReply_agreeCount").HasKey(e => new {e.Spid, e.TakenAt});
-        b.Entity<SubReplyRevision.SplitDisagreeCount>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_subReply_disagreeCount").HasKey(e => new {e.Spid, e.TakenAt});
-        b.Entity<UserRevision>().ToTable("tbmcr_user").HasKey(e => new {e.Uid, e.TakenAt});
-        b.Entity<UserRevision.SplitIpGeolocation>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_user_ipGeolocation").HasKey(e => new {e.Uid, e.TakenAt});
-        b.Entity<UserRevision.SplitPortraitUpdatedAt>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_user_portraitUpdatedAt").HasKey(e => new {e.Uid, e.TakenAt});
-        b.Entity<UserRevision.SplitDisplayName>().Ignore(e => e.NullFieldsBitMask)
-            .ToTable("tbmcr_user_displayName").HasKey(e => new {e.Uid, e.TakenAt});
+
+        var thread = new RevisionWithSplitting<BaseThreadRevision>.ModelBuilderHelper(b, "tbmcr_thread");
+        thread.HasKey<ThreadRevision>(e => new {e.Tid, e.TakenAt});
+        thread.SplittingHasKeyAndName<SplitViewCount>("viewCount", e => new {e.Tid, e.TakenAt});
+
+        var reply = new RevisionWithSplitting<BaseReplyRevision>.ModelBuilderHelper(b, "tbmcr_reply");
+        reply.HasKey<ReplyRevision>(e => new {e.Pid, e.TakenAt});
+        reply.SplittingHasKeyAndName<ReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Pid, e.TakenAt});
+        reply.SplittingHasKeyAndName<SplitSubReplyCount>("subReplyCount", e => new {e.Pid, e.TakenAt});
+        reply.SplittingHasKeyAndName<SplitFloor>("floor", e => new {e.Pid, e.TakenAt});
+
+        var subReply = new RevisionWithSplitting<BaseSubReplyRevision>.ModelBuilderHelper(b, "tbmcr_subReply");
+        subReply.HasKey<SubReplyRevision>(e => new {e.Spid, e.TakenAt});
+        subReply.SplittingHasKeyAndName<SubReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Spid, e.TakenAt});
+        subReply.SplittingHasKeyAndName<SplitDisagreeCount>("disagreeCount", e => new {e.Spid, e.TakenAt});
+
+        var user = new RevisionWithSplitting<BaseUserRevision>.ModelBuilderHelper(b, "tbmcr_user");
+        user.HasKey<UserRevision>(e => new {e.Uid, e.TakenAt});
+        user.SplittingHasKeyAndName<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
+        user.SplittingHasKeyAndName<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
+        user.SplittingHasKeyAndName<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
+
         b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
         b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator").HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorType});
         b.Entity<Forum>().ToTable("tbm_forum");

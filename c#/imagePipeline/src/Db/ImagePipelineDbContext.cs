@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using static tbm.ImagePipeline.Db.ImageMetadata;
 
 namespace tbm.ImagePipeline.Db;
 
@@ -33,21 +35,20 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         b.Entity<ImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}");
         b.Entity<ImageHash>().ToTable("tbmc_image_hash");
         b.Entity<ImageMetadata>().ToTable("tbmc_image_metadata");
-        b.Entity<ImageMetadata>().HasOne(e => e.DownloadedByteSize).WithOne()
-            .HasForeignKey<ImageMetadata.ByteSize>(e => e.ImageId);
-        b.Entity<ImageMetadata.ByteSize>().ToTable("tbmc_image_metadata_downloadedByteSize");
-        b.Entity<ImageMetadata>().HasOne(e => e.EmbeddedMetadata).WithOne()
-            .HasForeignKey<ImageMetadata.Embedded>(e => e.ImageId);
-        b.Entity<ImageMetadata.Embedded>().ToTable("tbmc_image_metadata_embedded");
-        b.Entity<ImageMetadata>().HasOne(e => e.JpgMetadata).WithOne()
-            .HasForeignKey<ImageMetadata.Jpg>(e => e.ImageId);
-        b.Entity<ImageMetadata.Jpg>().ToTable("tbmc_image_metadata_jpg");
-        b.Entity<ImageMetadata>().HasOne(e => e.PngMetadata).WithOne()
-            .HasForeignKey<ImageMetadata.Png>(e => e.ImageId);
-        b.Entity<ImageMetadata.Png>().ToTable("tbmc_image_metadata_png");
-        b.Entity<ImageMetadata>().HasOne(e => e.GifMetadata).WithOne()
-            .HasForeignKey<ImageMetadata.Gif>(e => e.ImageId);
-        b.Entity<ImageMetadata.Gif>().ToTable("tbmc_image_metadata_gif");
+
+        void SplitImageMetadata<TEntity, TRelatedEntity>(Expression<Func<TEntity, TRelatedEntity?>> keySelector, string tableNameSuffix)
+            where TEntity : class
+            where TRelatedEntity : class, IImageMetadata
+        {
+            b.Entity<TEntity>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
+            b.Entity<TRelatedEntity>().ToTable("tbmc_image_metadata_" + tableNameSuffix);
+        }
+        SplitImageMetadata<ImageMetadata, ByteSize>(e => e.DownloadedByteSize, "downloadedByteSize");
+        SplitImageMetadata<ImageMetadata, Embedded>(e => e.EmbeddedMetadata, "embedded");
+        SplitImageMetadata<Embedded, Embedded.EmbeddedExif>(e => e.Exif, "embedded_exif");
+        SplitImageMetadata<ImageMetadata, Jpg>(e => e.JpgMetadata, "jpg");
+        SplitImageMetadata<ImageMetadata, Png>(e => e.PngMetadata, "png");
+        SplitImageMetadata<ImageMetadata, Gif>(e => e.GifMetadata, "gif");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }
