@@ -67,8 +67,10 @@ public class ImagePipelineWorker : ErrorableWorker
         }
     }
 
-    private static async Task ConsumeOcrConsumerWithAllScrips
-        (ILifetimeScope scope, IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix, CancellationToken stoppingToken)
+    private static async Task ConsumeOcrConsumerWithAllScrips(
+        ILifetimeScope scope,
+        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
+        CancellationToken stoppingToken = default)
     {
         foreach (var script in new[] {"zh-Hans", "zh-Hant", "ja", "en"})
         {

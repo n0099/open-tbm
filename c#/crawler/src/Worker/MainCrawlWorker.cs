@@ -26,7 +26,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
 
     private record FidAndName(Fid Fid, string Name);
 
-    private async IAsyncEnumerable<FidAndName> ForumGenerator([EnumeratorCancellation] CancellationToken stoppingToken)
+    private async IAsyncEnumerable<FidAndName> ForumGenerator
+        ([EnumeratorCancellation] CancellationToken stoppingToken = default)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.New>()(0);

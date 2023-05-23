@@ -12,14 +12,16 @@ public class OcrConsumer : MatrixConsumer
     public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         _recognizer.InitializePaddleOcr(stoppingToken);
 
-    protected override void ConsumeInternal
-        (ImagePipelineDbContext db, IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix, CancellationToken stoppingToken)
+    protected override void ConsumeInternal(
+        ImagePipelineDbContext db,
+        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
+        CancellationToken stoppingToken = default)
     {
-        var recognizedResults = _recognizer.RecognizeImageMatrices(
+        var recognizedResults = _recognizer.RecognizeMatrices(
             imageKeysWithMatrix.ToDictionary(
                 i => new ImageKey(i.ImageId, i.FrameIndex),
                 imageKeyWithMatrix => imageKeyWithMatrix.Matrix
-            )).ToList();
+            ), stoppingToken).ToList();
         var recognizedTextLinesKeyByImageKey = _recognizer.GetRecognizedTextLines(recognizedResults);
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {

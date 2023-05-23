@@ -17,22 +17,23 @@ public class TesseractRecognizer : IDisposable
         _script = script;
         var configSection = config.GetSection("OcrConsumer").GetSection("Tesseract");
         var dataPath = configSection.GetValue("DataPath", "") ?? "";
-        OCRTesseract CreateTesseract(string scripts, int psmode) =>
+        OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
             // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
-            OCRTesseract.Create(dataPath, scripts, "", 1, psmode);
+            // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
+            OCRTesseract.Create(dataPath, scripts, "", 1, isVertical ? 5 : 7);
         _tesseractInstanceHorizontal = script switch
-        { // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-            "zh-Hans" => CreateTesseract("best/chi_sim+best/eng", 7),
-            "zh-Hant" => CreateTesseract("best/chi_tra+best/eng", 7),
-            "ja" => CreateTesseract("best/jpn", 7), // literal latin letters in japanese is replaced by katakana
-            "en" => CreateTesseract("best/eng", 7),
+        {
+            "zh-Hans" => CreateTesseract("best/chi_sim+best/eng"),
+            "zh-Hant" => CreateTesseract("best/chi_tra+best/eng"),
+            "ja" => CreateTesseract("best/jpn"), // literal latin letters in japanese is replaced by katakana
+            "en" => CreateTesseract("best/eng"),
             _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
         };
         _tesseractInstanceVertical = script switch
         {
-            "zh-Hans" => CreateTesseract("best/chi_sim_vert", 5),
-            "zh-Hant" => CreateTesseract("best/chi_tra_vert", 5),
-            "ja" => CreateTesseract("best/jpn_vert", 5),
+            "zh-Hans" => CreateTesseract("best/chi_sim_vert", true),
+            "zh-Hant" => CreateTesseract("best/chi_tra_vert", true),
+            "ja" => CreateTesseract("best/jpn_vert", true),
             "en" => _tesseractInstanceHorizontal, // fallback to best/eng since there's no best/eng_vert
             _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
         };
@@ -48,15 +49,20 @@ public class TesseractRecognizer : IDisposable
 
     public record PreprocessedTextBox(ImageKey ImageKey, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
-    public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes
-        (ImageKey imageKey, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
+    public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes(
+        ImageKey imageKey,
+        Mat originalMatrix,
+        IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes,
+        CancellationToken stoppingToken = default
+    ) => textBoxes
         .Select(t =>
         {
+            stoppingToken.ThrowIfCancellationRequested();
             var (isUnrecognized, textBox) = t;
             // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
             var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
-            // crop by circumscribed rectangle, intersect will prevent textBox outside originalImageMat
-            var mat = new Mat(originalImageMat, new Rect(new(), originalImageMat.Size()).Intersect(textBox.BoundingRect()));
+            // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
+            var mat = new Mat(originalMatrix, new Rect(new(), originalMatrix.Size()).Intersect(textBox.BoundingRect()));
 
             Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
             // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
@@ -96,8 +102,10 @@ public class TesseractRecognizer : IDisposable
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
     }
 
-    public TesseractRecognitionResult RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
+    public TesseractRecognitionResult RecognizePreprocessedTextBox
+        (PreprocessedTextBox textBox, CancellationToken stoppingToken = default)
     {
+        stoppingToken.ThrowIfCancellationRequested();
         var (imageKey, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToConsiderAsVertical;

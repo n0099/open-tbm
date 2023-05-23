@@ -40,11 +40,15 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
-    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<ImageKey, Mat> matricesKeyByImageKey)
+    public IEnumerable<PaddleOcrRecognitionResult> RecognizeMatrices
+        (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
         return matricesKeyByImageKey.SelectMany(pair =>
-            CreateRecognitionResult(pair.Key, _script, _ocr.Run(pair.Value)));
+        {
+            stoppingToken.ThrowIfCancellationRequested();
+            return CreateRecognitionResult(pair.Key, _script, _ocr.Run(pair.Value));
+        });
     }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
@@ -55,10 +59,14 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 
-    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<ImageKey, Mat> matricesKeyByImageKey)
+    public IEnumerable<DetectionResult> DetectMatrices
+        (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
         return matricesKeyByImageKey.SelectMany(pair =>
-            _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect)));
+        {
+            stoppingToken.ThrowIfCancellationRequested();
+            return _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect));
+        });
     }
 }

@@ -32,14 +32,15 @@ public class JoinedRecognizer
     public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
-    public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<ImageKey, Mat> matricesKeyByImageKey)
+    public IEnumerable<IRecognitionResult> RecognizeMatrices
+        (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         var recognizedResultsViaPaddleOcr =
-            _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageKey).ToList();
+            _paddleOcrRecognizerAndDetector.RecognizeMatrices(matricesKeyByImageKey, stoppingToken).ToList();
         var detectedResults =
-            _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageKey).ToList();
-        var recognizedResultsViaTesseract = RecognizeImageMatricesViaTesseract(
-            recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageKey).ToList();
+            _paddleOcrRecognizerAndDetector.DetectMatrices(matricesKeyByImageKey, stoppingToken).ToList();
+        var recognizedResultsViaTesseract = RecognizeMatricesViaTesseract(
+            recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageKey, stoppingToken).ToList();
         return recognizedResultsViaPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
@@ -75,13 +76,15 @@ public class JoinedRecognizer
         ImageKey ImageKey, ushort PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
-    private IEnumerable<TesseractRecognitionResult> RecognizeImageMatricesViaTesseract(
+    private IEnumerable<TesseractRecognitionResult> RecognizeMatricesViaTesseract(
         IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
         IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
-        IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey)
+        IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
+        CancellationToken stoppingToken = default)
     {
-        static ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
+        ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {
+            stoppingToken.ThrowIfCancellationRequested();
             var intersectType = Cv2.RotatedRectangleIntersection(subject, clip, out var intersectingRegionPoints);
             if (intersectType == RectanglesIntersectTypes.None) return 0;
             var intersectionArea = Cv2.ContourArea(intersectingRegionPoints);
@@ -94,12 +97,14 @@ public class JoinedRecognizer
         }
         var uniqueRecognizedResults = recognizedResultsViaPaddleOcr
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
-            .GroupBy(result => result.ImageKey).SelectMany(g => g.DistinctBy(result => result.TextBox));
+            .GroupBy(result => result.ImageKey)
+            .SelectMany(g => g.DistinctBy(result => result.TextBox));
         var correlatedTextBoxPairs = (
             from detectionResult in detectionResults
             join recognitionResult in uniqueRecognizedResults on detectionResult.ImageKey equals recognitionResult.ImageKey
             let percentageOfIntersection = GetPercentageOfIntersectionArea(detectionResult.TextBox, recognitionResult.TextBox)
-            select new CorrelatedTextBoxPair(detectionResult.ImageKey, percentageOfIntersection, detectionResult.TextBox, recognitionResult.TextBox)
+            select new CorrelatedTextBoxPair(detectionResult.ImageKey, percentageOfIntersection,
+                detectionResult.TextBox, recognitionResult.TextBox)
         ).ToList();
 
         var recognizedDetectedTextBoxes = (
@@ -128,9 +133,10 @@ public class JoinedRecognizer
                     .Select(pair => (IsUnrecognized: false, pair.DetectedTextBox))
                     .Concat(unrecognizedDetectedTextBoxes[imageKey]
                         .Select(pair => pair.DetectedTextBox).Select(b => (IsUnrecognized: true, b)));
-                return TesseractRecognizer.PreprocessTextBoxes(imageKey, matricesKeyByImageKey[imageKey], boxes).ToList();
+                return TesseractRecognizer.PreprocessTextBoxes(
+                    imageKey, matricesKeyByImageKey[imageKey], boxes, stoppingToken).ToList();
             })
             .SelectMany(textBoxes => textBoxes.Select(b =>
-                _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b)));
+                _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken)));
     }
 }

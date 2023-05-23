@@ -17,8 +17,10 @@ public class HashConsumer : MatrixConsumer, IDisposable
 
     public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
 
-    protected override void ConsumeInternal
-        (ImagePipelineDbContext db, IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix, CancellationToken stoppingToken)
+    protected override void ConsumeInternal(
+        ImagePipelineDbContext db,
+        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
+        CancellationToken stoppingToken = default)
     {
         var hashesKeyByImageKey = imageKeysWithMatrix.ToDictionary(
             imageKeyWithMatrix => imageKeyWithMatrix,
@@ -32,6 +34,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
             });
         imageKeysWithMatrix.ForEach(imageKeyWithMatrix =>
         {
+            stoppingToken.ThrowIfCancellationRequested();
             var mat = imageKeyWithMatrix.Matrix;
             if (mat.Width > 100 || mat.Height > 100)
             { // not preserve the original aspect ratio, https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
@@ -54,6 +57,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
         });
         _imageHashSettersKeyByAlgorithm.ForEach(hashPair => imageKeysWithMatrix.ForEach(imageKeyWithMatrix =>
         {
+            stoppingToken.ThrowIfCancellationRequested();
             using var mat = new Mat();
             hashPair.Key.Compute(imageKeyWithMatrix.Matrix, mat);
             if (mat.GetArray(out byte[] bytes))

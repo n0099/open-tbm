@@ -12,7 +12,7 @@ public class ImageRequester
         _config = config.GetSection("ImageRequester");
     }
 
-    public async Task<byte[]> GetImageBytes(TiebaImage image, CancellationToken stoppingToken)
+    public async Task<byte[]> GetImageBytes(TiebaImage image, CancellationToken stoppingToken = default)
     {
         var urlFilename = image.UrlFilename;
         var expectedByteSize = image.ByteSize;

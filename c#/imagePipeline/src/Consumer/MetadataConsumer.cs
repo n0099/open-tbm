@@ -12,9 +12,10 @@ public class MetadataConsumer
     public static void Consume(
         ImagePipelineDbContext db,
         IEnumerable<ImageWithBytes> imagesWithBytes,
-        CancellationToken stoppingToken) =>
+        CancellationToken stoppingToken = default) =>
         db.ImageMetadata.AddRange(imagesWithBytes.Select(imageWithBytes =>
         {
+            stoppingToken.ThrowIfCancellationRequested();
             var (image, imageBytes) = imageWithBytes;
             var info = Image.Identify(imageBytes);
             var meta = info.Metadata;

@@ -71,7 +71,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         int previousPushedPostCount,
         IEnumerable<T> postContents,
         Func<T, float> pushCallback,
-        CancellationToken stoppingToken)
+        CancellationToken stoppingToken = default)
     {
         var stopWatch = new Stopwatch();
         stopWatch.Start();
