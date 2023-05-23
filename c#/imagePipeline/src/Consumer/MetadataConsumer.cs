@@ -29,7 +29,7 @@ public class MetadataConsumer
                 Width = (ushort)info.Width,
                 Height = (ushort)info.Height,
                 BitsPerPixel = (ushort)info.PixelType.BitsPerPixel,
-                FrameCount = (ushort)info.FrameMetadataCollection.Count,
+                FrameCount = (uint)info.FrameMetadataCollection.Count,
                 EmbeddedMetadata = (meta.ExifProfile, meta.IccProfile, meta.IptcProfile, meta.XmpProfile) == default // is all null
                     ? null
                     : new()
@@ -53,9 +53,9 @@ public class MetadataConsumer
                 JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
                 PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
                 GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
-                DownloadedBytesSize = image.BytesSize == imageBytes.Length
+                DownloadedByteSize = image.ByteSize == imageBytes.Length
                     ? null
-                    : new() {DownloadedBytesSize = (uint)imageBytes.Length},
+                    : new() {DownloadedByteSize = (uint)imageBytes.Length},
                 XxHash3 = XxHash3.HashToUInt64(imageBytes)
             };
         }));

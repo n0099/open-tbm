@@ -133,7 +133,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
                 select (r.Pid, Image: new TiebaImage
                 {
                     UrlFilename = c.OriginSrc,
-                    BytesSize = c.OriginSize
+                    ByteSize = c.OriginSize
                 }))
             .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
             .ToList();
@@ -145,10 +145,10 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
             select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
-                where existing.BytesSize == 0 // randomly respond with 0
+                where existing.ByteSize == 0 // randomly respond with 0
                 join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
-            .ForEach(t => t.existing.BytesSize = t.newInContent.BytesSize);
+            .ForEach(t => t.existing.ByteSize = t.newInContent.ByteSize);
         db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
         {
             Pid = t.Pid,

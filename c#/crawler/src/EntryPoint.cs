@@ -48,7 +48,11 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<ThreadArchiveCrawler>();
         builder.RegisterType<SonicPusher>();
 
-        var baseClassOfClassesToBeRegistered = new List<Type> {typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,,>), typeof(BaseParser<,>), typeof(BaseSaver<,>)};
+        var baseClassOfClassesToBeRegistered = new[]
+        {
+            typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,,>),
+            typeof(BaseParser<,>), typeof(BaseSaver<,>)
+        };
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
             .Where(type => baseClassOfClassesToBeRegistered.Any(baseType => baseType.IsSubTypeOfRawGeneric(type)))
             .AsSelf();

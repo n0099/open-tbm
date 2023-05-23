@@ -15,22 +15,22 @@ public class ImageRequester
     public async Task<byte[]> GetImageBytes(TiebaImage image, CancellationToken stoppingToken)
     {
         var urlFilename = image.UrlFilename;
-        var expectedBytesSize = image.BytesSize;
+        var expectedByteSize = image.ByteSize;
         var http = _httpFactory.CreateClient("tbImage");
         if (_config.GetValue("LogTrace", false))
             _logger.LogTrace("Requesting image {} and expecting {} bytes of file size",
-                urlFilename, expectedBytesSize);
+                urlFilename, expectedByteSize);
 
         var response = await http.GetAsync(urlFilename + ".jpg", stoppingToken);
         var contentLength = response.Content.Headers.ContentLength;
-        if (expectedBytesSize != 0 && contentLength != expectedBytesSize)
+        if (expectedByteSize != 0 && contentLength != expectedByteSize)
             _logger.LogWarning("Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {}",
-                contentLength, expectedBytesSize, urlFilename);
+                contentLength, expectedByteSize, urlFilename);
 
         var bytes = await response.Content.ReadAsByteArrayAsync(stoppingToken);
-        if (expectedBytesSize != 0 && bytes.Length != expectedBytesSize)
+        if (expectedByteSize != 0 && bytes.Length != expectedByteSize)
             _logger.LogWarning("Unexpected response body length {} bytes, expecting {} bytes for image {}",
-                bytes.Length, expectedBytesSize, urlFilename);
+                bytes.Length, expectedByteSize, urlFilename);
         return bytes;
     }
 }

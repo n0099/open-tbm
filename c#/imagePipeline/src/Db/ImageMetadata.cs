@@ -18,18 +18,18 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public ushort Width { get; set; }
     public ushort Height { get; set; }
     public ushort BitsPerPixel { get; set; }
-    public ushort FrameCount { get; set; }
+    public uint FrameCount { get; set; }
     public Embedded? EmbeddedMetadata { get; set; }
     public Jpg? JpgMetadata { get; set; }
     public Png? PngMetadata { get; set; }
     public Gif? GifMetadata { get; set; }
-    public BytesSize? DownloadedBytesSize { get; set; }
+    public ByteSize? DownloadedByteSize { get; set; }
     public ulong XxHash3 { get; set; }
 
-    public class BytesSize : IImageMetadata
+    public class ByteSize : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
-        public uint DownloadedBytesSize { get; set; }
+        public uint DownloadedByteSize { get; set; }
     }
 
     public class Embedded : IImageMetadata

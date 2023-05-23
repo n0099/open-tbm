@@ -14,7 +14,7 @@ public class ResumeSuspendPostContentsPushingWorker : ErrorableWorker
 
     protected override Task DoWork(CancellationToken stoppingToken)
     {
-        foreach (var postType in new List<string> {"replies", "subReplies"})
+        foreach (var postType in new[] {"replies", "subReplies"})
         {
             var path = GetFilePath(postType);
             if (!File.Exists(path)) continue;
