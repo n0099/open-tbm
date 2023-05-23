@@ -11,11 +11,11 @@ public class MetadataConsumer
 {
     public static void Consume(
         ImagePipelineDbContext db,
-        ImageAndBytesKeyById imageAndBytesKeyById,
+        IEnumerable<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken) =>
-        db.ImageMetadata.AddRange(imageAndBytesKeyById.Select(pair =>
+        db.ImageMetadata.AddRange(imagesWithBytes.Select(imageWithBytes =>
         {
-            var (imageId, (image, imageBytes)) = pair;
+            var (image, imageBytes) = imageWithBytes;
             var info = Image.Identify(imageBytes);
             var meta = info.Metadata;
             if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat))
@@ -24,7 +24,7 @@ public class MetadataConsumer
                 meta.ExifProfile.TryGetValue(tag, out var value) ? value.Value : null;
             return new ImageMetadata
             {
-                ImageId = imageId,
+                ImageId = image.ImageId,
                 Format = meta.DecodedImageFormat?.Name,
                 Width = (ushort)info.Width,
                 Height = (ushort)info.Height,

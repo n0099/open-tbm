@@ -2,7 +2,8 @@ namespace tbm.ImagePipeline.Db;
 
 public class ImageOcrBox
 {
-    [Key] public uint ImageId { get; set; }
+    public uint ImageId { get; set; }
+    public uint FrameIndex { get; set; }
     public float CenterPointX { get; set; }
     public float CenterPointY { get; set; }
     public float Width { get; set; }

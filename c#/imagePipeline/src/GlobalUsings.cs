@@ -14,4 +14,3 @@ global using tbm.ImagePipeline.Ocr;
 global using tbm.Shared;
 
 global using ImageId = System.UInt32;
-global using ImageAndBytesKeyById = System.Collections.Generic.Dictionary<uint, (tbm.Shared.TiebaImage Image, byte[] Bytes)>;

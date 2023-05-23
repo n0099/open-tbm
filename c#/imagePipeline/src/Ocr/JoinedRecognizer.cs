@@ -32,14 +32,14 @@ public class JoinedRecognizer
     public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
-    public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
+    public IEnumerable<IRecognitionResult> RecognizeImageMatrices(Dictionary<ImageKey, Mat> matricesKeyByImageKey)
     {
         var recognizedResultsViaPaddleOcr =
-            _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageId).ToList();
+            _paddleOcrRecognizerAndDetector.RecognizeImageMatrices(matricesKeyByImageKey).ToList();
         var detectedResults =
-            _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageId).ToList();
+            _paddleOcrRecognizerAndDetector.DetectImageMatrices(matricesKeyByImageKey).ToList();
         var recognizedResultsViaTesseract = RecognizeImageMatricesViaTesseract(
-            recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageId).ToList();
+            recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageKey).ToList();
         return recognizedResultsViaPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
@@ -48,9 +48,9 @@ public class JoinedRecognizer
                 .Select(result => result.TextBox), result => result.TextBox));
     }
 
-    public Dictionary<ImageId, string> GetRecognizedTextLinesKeyByImageId
+    public Dictionary<ImageKey, string> GetRecognizedTextLines
         (IEnumerable<IRecognitionResult> recognizedResults) => recognizedResults
-        .GroupBy(result => result.ImageId)
+        .GroupBy(result => result.ImageKey)
         .ToDictionary(g => g.Key, g =>
         {
             var resultTextLines = g
@@ -72,13 +72,13 @@ public class JoinedRecognizer
         });
 
     private record CorrelatedTextBoxPair(
-        ImageId ImageId, ushort PercentageOfIntersection,
+        ImageKey ImageKey, ushort PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
     private IEnumerable<TesseractRecognitionResult> RecognizeImageMatricesViaTesseract(
         IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
         IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
-        IReadOnlyDictionary<ImageId, Mat> imageMatricesKeyByImageId)
+        IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey)
     {
         static ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {
@@ -94,12 +94,12 @@ public class JoinedRecognizer
         }
         var uniqueRecognizedResults = recognizedResultsViaPaddleOcr
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
-            .GroupBy(result => result.ImageId).SelectMany(g => g.DistinctBy(result => result.TextBox));
+            .GroupBy(result => result.ImageKey).SelectMany(g => g.DistinctBy(result => result.TextBox));
         var correlatedTextBoxPairs = (
             from detectionResult in detectionResults
-            join recognitionResult in uniqueRecognizedResults on detectionResult.ImageId equals recognitionResult.ImageId
+            join recognitionResult in uniqueRecognizedResults on detectionResult.ImageKey equals recognitionResult.ImageKey
             let percentageOfIntersection = GetPercentageOfIntersectionArea(detectionResult.TextBox, recognitionResult.TextBox)
-            select new CorrelatedTextBoxPair(detectionResult.ImageId, percentageOfIntersection, detectionResult.TextBox, recognitionResult.TextBox)
+            select new CorrelatedTextBoxPair(detectionResult.ImageKey, percentageOfIntersection, detectionResult.TextBox, recognitionResult.TextBox)
         ).ToList();
 
         var recognizedDetectedTextBoxes = (
@@ -109,26 +109,26 @@ public class JoinedRecognizer
                 .DefaultIfEmpty().MaxBy(pair => pair?.PercentageOfIntersection) into pair
             where pair != default
             select pair
-        ).ToLookup(pair => pair.ImageId);
+        ).ToLookup(pair => pair.ImageKey);
         var unrecognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.DetectedTextBox into g
             where g.All(pair => pair.PercentageOfIntersection <= _intersectionAreaThresholds.ToConsiderAsNewTextBox)
             select g.MinBy(pair => pair.PercentageOfIntersection)
-        ).ToLookup(pair => pair.ImageId);
+        ).ToLookup(pair => pair.ImageKey);
 
         return recognizedResultsViaPaddleOcr
             .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
-            .GroupBy(result => result.ImageId)
+            .GroupBy(result => result.ImageKey)
             .Select(g =>
             {
-                var imageId = g.Key;
-                var boxes = recognizedDetectedTextBoxes[imageId]
+                var imageKey = g.Key;
+                var boxes = recognizedDetectedTextBoxes[imageKey]
                     .IntersectBy(g.Select(result => result.TextBox), pair => pair.RecognizedTextBox)
                     .Select(pair => (IsUnrecognized: false, pair.DetectedTextBox))
-                    .Concat(unrecognizedDetectedTextBoxes[imageId]
+                    .Concat(unrecognizedDetectedTextBoxes[imageKey]
                         .Select(pair => pair.DetectedTextBox).Select(b => (IsUnrecognized: true, b)));
-                return TesseractRecognizer.PreprocessTextBoxes(imageId, imageMatricesKeyByImageId[imageId], boxes).ToList();
+                return TesseractRecognizer.PreprocessTextBoxes(imageKey, matricesKeyByImageKey[imageKey], boxes).ToList();
             })
             .SelectMany(textBoxes => textBoxes.Select(b =>
                 _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b)));

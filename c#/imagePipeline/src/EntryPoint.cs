@@ -51,7 +51,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<HashConsumer>();
         builder.RegisterType<MetadataConsumer>();
         builder.RegisterType<ImageRequester>();
-        builder.Register(context => Channel.CreateBounded<ImageAndBytesKeyById>(
+        builder.Register(context => Channel.CreateBounded<List<ImageWithBytes>>(
             new BoundedChannelOptions(
                 context.Resolve<IConfiguration>()
                     .GetSection("ImagePipeline")

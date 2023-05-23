@@ -46,10 +46,10 @@ public class TesseractRecognizer : IDisposable
         _tesseractInstanceVertical.Dispose();
     }
 
-    public record PreprocessedTextBox(ImageId ImageId, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(ImageKey ImageKey, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
     public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes
-        (ImageId imageId, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
+        (ImageKey imageKey, Mat originalImageMat, IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes) => textBoxes
         .Select(t =>
         {
             var (isUnrecognized, textBox) = t;
@@ -69,7 +69,7 @@ public class TesseractRecognizer : IDisposable
             Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
 
             // https://github.com/tesseract-ocr/tesseract/issues/3001
-            return mat.Width < 3 ? null : new PreprocessedTextBox(imageId, isUnrecognized, textBox, mat);
+            return mat.Width < 3 ? null : new PreprocessedTextBox(imageKey, isUnrecognized, textBox, mat);
         }).OfType<PreprocessedTextBox>();
 
     private static float GetRotationDegrees(RotatedRect rotatedRect)
@@ -98,7 +98,7 @@ public class TesseractRecognizer : IDisposable
 
     public TesseractRecognitionResult RecognizePreprocessedTextBox(PreprocessedTextBox textBox)
     {
-        var (imageId, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
+        var (imageKey, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToConsiderAsVertical;
         if (isVertical && _script == "en") isVertical = false; // there's no vertical english
@@ -116,6 +116,6 @@ public class TesseractRecognizer : IDisposable
             ? components.Select(c => c.Confidence).Average().RoundToUshort()
             : (ushort)0;
 
-        return new(imageId, _script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
+        return new(imageKey, _script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
     }
 }

@@ -40,24 +40,25 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
-    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
+    public IEnumerable<PaddleOcrRecognitionResult> RecognizeImageMatrices(Dictionary<ImageKey, Mat> matricesKeyByImageKey)
     {
         Guard.IsNotNull(_ocr);
-        return matricesKeyByImageId.SelectMany(pair =>
+        return matricesKeyByImageKey.SelectMany(pair =>
             CreateRecognitionResult(pair.Key, _script, _ocr.Run(pair.Value)));
     }
 
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
-        (ImageId imageId, string script, PaddleOcrResult result) =>
+        (ImageKey imageKey, string script, PaddleOcrResult result) =>
         result.Regions.Select(region => new PaddleOcrRecognitionResult(
-            imageId, script, region.Rect, region.Text, (region.Score * 100).NanToZero().RoundToUshort()));
+            imageKey, script, region.Rect, region.Text,
+            (region.Score * 100).NanToZero().RoundToUshort()));
 
-    public record DetectionResult(ImageId ImageId, RotatedRect TextBox);
+    public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 
-    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<ImageId, Mat> matricesKeyByImageId)
+    public IEnumerable<DetectionResult> DetectImageMatrices(Dictionary<ImageKey, Mat> matricesKeyByImageKey)
     {
         Guard.IsNotNull(_ocr);
-        return matricesKeyByImageId.SelectMany(pair =>
+        return matricesKeyByImageKey.SelectMany(pair =>
             _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect)));
     }
 }

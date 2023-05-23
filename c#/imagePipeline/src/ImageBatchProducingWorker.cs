@@ -7,13 +7,13 @@ public class ImageBatchProducingWorker : ErrorableWorker
     private readonly ILogger<ImageBatchProducingWorker> _logger;
     private readonly ILifetimeScope _scope0;
     private readonly ImageRequester _imageRequester;
-    private readonly ChannelWriter<ImageAndBytesKeyById> _writer;
+    private readonly ChannelWriter<List<ImageWithBytes>> _writer;
     private readonly int _batchSize;
 
     public ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger, IConfiguration config,
         ILifetimeScope scope0, ImageRequester imageRequester,
-        Channel<ImageAndBytesKeyById> channel) : base(logger)
+        Channel<List<ImageWithBytes>> channel) : base(logger)
     {
         (_logger, _scope0, _imageRequester, _writer) = (logger, scope0, imageRequester, channel);
         var configSection = config.GetSection("ImagePipeline");
@@ -28,7 +28,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
             var images = GetUnconsumedImages(lastImageIdInPreviousBatch);
             if (images.Any()) await _writer.WriteAsync(new(
                 await Task.WhenAll(images.Select(async image =>
-                    KeyValuePair.Create(image.ImageId, (image, await _imageRequester.GetImageBytes(image, stoppingToken)))
+                    new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken))
                 ))), stoppingToken);
             else break;
             lastImageIdInPreviousBatch = images.Last().ImageId;

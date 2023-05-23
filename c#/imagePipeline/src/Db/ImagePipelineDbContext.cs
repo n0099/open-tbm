@@ -31,9 +31,9 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     {
         b.Entity<TiebaImage>().ToTable("tbmc_image");
         b.Entity<ImageOcrBox>().ToTable($"tbmc_image_ocr_box_{Script}").HasKey(e =>
-            new {e.ImageId, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
-        b.Entity<ImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}");
-        b.Entity<ImageHash>().ToTable("tbmc_image_hash");
+            new {e.ImageId, e.FrameIndex, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
+        b.Entity<ImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageHash>().ToTable("tbmc_image_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageMetadata>().ToTable("tbmc_image_metadata");
 
         void SplitImageMetadata<TEntity, TRelatedEntity>(Expression<Func<TEntity, TRelatedEntity?>> keySelector, string tableNameSuffix)

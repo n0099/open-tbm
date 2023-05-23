@@ -13,13 +13,18 @@ public class OcrConsumer : MatrixConsumer
         _recognizer.InitializePaddleOcr(stoppingToken);
 
     protected override void ConsumeInternal
-        (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
+        (ImagePipelineDbContext db, IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix, CancellationToken stoppingToken)
     {
-        var recognizedResults = _recognizer.RecognizeImageMatrices(matricesKeyByImageId).ToList();
-        var recognizedTextLinesKeyByImageId = _recognizer.GetRecognizedTextLinesKeyByImageId(recognizedResults);
+        var recognizedResults = _recognizer.RecognizeImageMatrices(
+            imageKeysWithMatrix.ToDictionary(
+                i => new ImageKey(i.ImageId, i.FrameIndex),
+                imageKeyWithMatrix => imageKeyWithMatrix.Matrix
+            )).ToList();
+        var recognizedTextLinesKeyByImageKey = _recognizer.GetRecognizedTextLines(recognizedResults);
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
-            ImageId = result.ImageId,
+            ImageId = result.ImageKey.ImageId,
+            FrameIndex = result.ImageKey.FrameIndex,
             CenterPointX = result.TextBox.Center.X,
             CenterPointY = result.TextBox.Center.Y,
             Width = result.TextBox.Size.Width,
@@ -35,9 +40,10 @@ public class OcrConsumer : MatrixConsumer
             Confidence = result.Confidence,
             Text = result.Text
         }));
-        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageId.Select(pair => new ImageOcrLine
+        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageKey.Select(pair => new ImageOcrLine
         {
-            ImageId = pair.Key,
+            ImageId = pair.Key.ImageId,
+            FrameIndex = pair.Key.FrameIndex,
             TextLines = pair.Value
         }));
     }

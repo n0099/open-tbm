@@ -18,22 +18,27 @@ public class HashConsumer : MatrixConsumer, IDisposable
     public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
 
     protected override void ConsumeInternal
-        (ImagePipelineDbContext db, Dictionary<ImageId, Mat> matricesKeyByImageId, CancellationToken stoppingToken)
+        (ImagePipelineDbContext db, IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix, CancellationToken stoppingToken)
     {
-        var hashesKeyByImageId = matricesKeyByImageId.Keys.Select(imageId => new ImageHash
+        var hashesKeyByImageKey = imageKeysWithMatrix.ToDictionary(
+            imageKeyWithMatrix => imageKeyWithMatrix,
+            imageKeyWithMatrix => new ImageHash
+            {
+                ImageId = imageKeyWithMatrix.ImageId,
+                FrameIndex = imageKeyWithMatrix.FrameIndex,
+                BlockMeanHash = Array.Empty<byte>(),
+                MarrHildrethHash = Array.Empty<byte>(),
+                ThumbHash = Array.Empty<byte>()
+            });
+        imageKeysWithMatrix.ForEach(imageKeyWithMatrix =>
         {
-            ImageId = imageId, BlockMeanHash = Array.Empty<byte>(),
-            MarrHildrethHash = Array.Empty<byte>(), ThumbHash = Array.Empty<byte>()
-        }).ToDictionary(hash => hash.ImageId);
-        matricesKeyByImageId.ForEach(pair =>
-        {
-            var (imageId, mat) = pair;
+            var mat = imageKeyWithMatrix.Matrix;
             if (mat.Width > 100 || mat.Height > 100)
             { // not preserve the original aspect ratio, https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
                 using var thumbnail = mat.Resize(new(100, 100), interpolation: InterpolationFlags.Area);
-                hashesKeyByImageId[imageId].ThumbHash = GetThumbHash(thumbnail);
+                hashesKeyByImageKey[imageKeyWithMatrix].ThumbHash = GetThumbHash(thumbnail);
             }
-            else hashesKeyByImageId[imageId].ThumbHash = GetThumbHash(mat);
+            else hashesKeyByImageKey[imageKeyWithMatrix].ThumbHash = GetThumbHash(mat);
 
             static byte[] GetThumbHash(Mat mat)
             {
@@ -47,14 +52,14 @@ public class HashConsumer : MatrixConsumer, IDisposable
                     : throw new("Failed to convert matrix into byte array.");
             }
         });
-        _imageHashSettersKeyByAlgorithm.ForEach(hashPair => matricesKeyByImageId.ForEach(imagePair =>
+        _imageHashSettersKeyByAlgorithm.ForEach(hashPair => imageKeysWithMatrix.ForEach(imageKeyWithMatrix =>
         {
             using var mat = new Mat();
-            hashPair.Key.Compute(imagePair.Value, mat);
+            hashPair.Key.Compute(imageKeyWithMatrix.Matrix, mat);
             if (mat.GetArray(out byte[] bytes))
-                hashPair.Value(hashesKeyByImageId[imagePair.Key], bytes);
+                hashPair.Value(hashesKeyByImageKey[imageKeyWithMatrix], bytes);
             else throw new("Failed to convert matrix into byte array.");
         }));
-        db.ImageHashes.AddRange(hashesKeyByImageId.Values);
+        db.ImageHashes.AddRange(hashesKeyByImageKey.Values);
     }
 }
