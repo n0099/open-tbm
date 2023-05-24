@@ -54,6 +54,24 @@ public class ImagePipelineWorker : ErrorableWorker
         var imageMat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
         if (!imageMat.Empty())
             return new ImageKeyWithMatrix[] {new(imageId, 0, imageMat)};
+
+        ImageKeyWithMatrix DecodeFrame(ImageFrame<Rgb24> frame, int frameIndex)
+        {
+            stoppingToken.ThrowIfCancellationRequested();
+            var frameBytes = new Rgb24[frame.Width * frame.Height];
+            frame.CopyPixelDataTo(frameBytes);
+            var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
+            var stream = new MemoryStream();
+            frameImage.SaveAsPng(stream);
+            if (stream.TryGetBuffer(out var buffer))
+            {
+                var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
+                if (frameMat.Empty()) throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
+                return new(imageId, (uint)frameIndex, frameMat);
+            }
+            throw new ObjectDisposedException(nameof(stream));
+        }
+
         try
         {
             if (Image.DetectFormat(imageBytes) is GifFormat)
@@ -61,22 +79,7 @@ public class ImagePipelineWorker : ErrorableWorker
                 var image = Image.Load<Rgb24>(imageBytes);
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
-                var ret = image.Frames.AsEnumerable().Select((frame, frameIndex) =>
-                {
-                    stoppingToken.ThrowIfCancellationRequested();
-                    var frameBytes = new Rgb24[frame.Width * frame.Height];
-                    frame.CopyPixelDataTo(frameBytes);
-                    var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
-                    var stream = new MemoryStream();
-                    frameImage.SaveAsPng(stream);
-                    if (stream.TryGetBuffer(out var buffer))
-                    {
-                        var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
-                        if (frameMat.Empty()) throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
-                        return new ImageKeyWithMatrix(imageId, (uint)frameIndex, frameMat);
-                    }
-                    throw new ObjectDisposedException(nameof(stream));
-                }).ToList();
+                var ret = image.Frames.AsEnumerable().Select(DecodeFrame).ToList();
                 _logger.LogTrace("Spending {}ms to Extracted {} frames out of GIF image {}",
                     stopwatch.ElapsedMilliseconds, image.Frames.Count, imageId);
                 return ret;

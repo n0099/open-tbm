@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
@@ -25,6 +26,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public Jpg? JpgMetadata { get; set; }
     public Png? PngMetadata { get; set; }
     public Gif? GifMetadata { get; set; }
+    public Bmp? BmpMetadata { get; set; }
     public ByteSize? DownloadedByteSize { get; set; }
     public ulong XxHash3 { get; set; }
 
@@ -143,9 +145,27 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
             return new()
             {
                 RepeatCount = other.RepeatCount,
-                ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new IndexOutOfRangeException() ,
+                ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new IndexOutOfRangeException(),
                 GlobalColorTableLength = other.GlobalColorTableLength,
                 Comments = other.Comments.Any() ? JsonSerializer.Serialize(other.Comments) : null
+            };
+        }
+    }
+
+    public class Bmp : IImageMetadata
+    {
+        [Key] public uint ImageId { get; set; }
+        public required string InfoHeaderType { get; set; }
+        public required string BitsPerPixel { get; set; }
+
+        public static Bmp? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
+        {
+            if (meta.DecodedImageFormat is not BmpFormat) return null;
+            var other = meta.GetBmpMetadata();
+            return new()
+            {
+                InfoHeaderType = Enum.GetName(other.InfoHeaderType) ?? throw new IndexOutOfRangeException(),
+                BitsPerPixel = Enum.GetName(other.BitsPerPixel) ?? throw new IndexOutOfRangeException()
             };
         }
     }

@@ -1,5 +1,6 @@
 using System.IO.Hashing;
 using System.Text.Json;
+using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
@@ -25,7 +26,7 @@ public class MetadataConsumer
             var (image, imageBytes) = imageWithBytes;
             var info = Image.Identify(imageBytes);
             var meta = info.Metadata;
-            if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat))
+            if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat or BmpFormat))
                 ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
 
             T? GetExifTagValueOrNull<T>(ExifTag<T> tag) where T : class =>
@@ -60,10 +61,10 @@ public class MetadataConsumer
                     Orientation = meta.ExifProfile.TryGetValue(ExifTag.Orientation, out var orientation)
                         ? Enum.GetName((ImageMetadata.Exif.ExifOrientation)orientation.Value)
                         : null,
-                    Make = GetExifTagValueOrNull(ExifTag.Make),
-                    Model = GetExifTagValueOrNull(ExifTag.Model),
-                    CreateDate = GetExifTagValueOrNull(ExifTag.DateTimeDigitized),
-                    ModifyDate = GetExifTagValueOrNull(ExifTag.DateTime),
+                    Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty(),
+                    Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty(),
+                    CreateDate = GetExifTagValueOrNull(ExifTag.DateTimeDigitized).NullIfEmpty(),
+                    ModifyDate = GetExifTagValueOrNull(ExifTag.DateTime).NullIfEmpty(),
                     TagNames = JsonSerializer.Serialize(meta.ExifProfile.Values.Select(i => i.Tag.ToString())),
                     RawBytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
                 },
@@ -71,6 +72,7 @@ public class MetadataConsumer
                 JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
                 PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
                 GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
+                BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta),
                 DownloadedByteSize = image.ByteSize == imageBytes.Length
                     ? null
                     : new() {DownloadedByteSize = (uint)imageBytes.Length},

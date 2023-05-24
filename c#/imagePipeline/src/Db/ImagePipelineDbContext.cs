@@ -50,6 +50,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         SplitImageMetadata<ImageMetadata, Jpg>(e => e.JpgMetadata, "jpg");
         SplitImageMetadata<ImageMetadata, Png>(e => e.PngMetadata, "png");
         SplitImageMetadata<ImageMetadata, Gif>(e => e.GifMetadata, "gif");
+        SplitImageMetadata<ImageMetadata, Bmp>(e => e.BmpMetadata, "bmp");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }
