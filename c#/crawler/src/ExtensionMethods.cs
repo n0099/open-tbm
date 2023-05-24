@@ -27,9 +27,6 @@ public static class ExtensionMethods
 
     public static string GetStrProp(this JsonElement el, string propName) => el.GetProperty(propName).GetString() ?? "";
 
-    /// <see>https://stackoverflow.com/questions/10295028/c-sharp-empty-string-null/10295082#10295082</see>
-    public static string? NullIfEmpty(this string? value) => string.IsNullOrEmpty(value) ? null : value;
-
     /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
     private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)
     {
@@ -82,8 +79,4 @@ public static class ExtensionMethods
     {
         if (value != null) dict[key] = value;
     }
-
-    public static int? NullIfZero(this int num) => num == 0 ? null : num;
-    public static uint? NullIfZero(this uint num) => num == 0 ? null : num;
-    public static long? NullIfZero(this long num) => num == 0 ? null : num;
 }

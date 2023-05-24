@@ -25,41 +25,10 @@ public class ImagePipelineWorker : ErrorableWorker
             var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
             await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
-            MetadataConsumer.Consume(db, imagesWithBytes, stoppingToken);
-            var imageKeysWithMatrix = imagesWithBytes.SelectMany(imageWithBytes =>
-            {
-                var imageBytes = imageWithBytes.Bytes;
-                var imageId = imageWithBytes.Image.ImageId;
-                // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
-                var mat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
-                if (!mat.Empty())
-                    return new ImageKeyWithMatrix[] {new(imageId, 0, mat)};
-                if (Image.DetectFormat(imageBytes) is GifFormat)
-                {
-                    var image = Image.Load<Rgb24>(imageBytes);
-                    var stopwatch = new Stopwatch();
-                    stopwatch.Start();
-                    var ret = image.Frames.AsEnumerable().Select((frame, frameIndex) =>
-                    {
-                        var frameBytes = new Rgb24[frame.Width * frame.Height];
-                        frame.CopyPixelDataTo(frameBytes);
-                        var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
-                        var stream = new MemoryStream();
-                        frameImage.SaveAsPng(stream);
-                        if (stream.TryGetBuffer(out var buffer))
-                        {
-                            var mat2 = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
-                            if (mat2.Empty()) throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
-                            return new ImageKeyWithMatrix(imageId, (uint)frameIndex, mat2);
-                        }
-                        throw new ObjectDisposedException(nameof(stream));
-                    }).ToList();
-                    _logger.LogTrace("Spending {}ms to Extracted {} frames out of GIF image {}",
-                        stopwatch.ElapsedMilliseconds, image.Frames.Count, imageId);
-                    return ret.AsEnumerable();
-                }
-                throw new NotSupportedException($"Image {imageId} cannot decode by OpenCV and is not GIF format.");
-            }).ToList();
+            var metadataConsumer = scope1.Resolve<MetadataConsumer>();
+            metadataConsumer.Consume(db, imagesWithBytes, stoppingToken);
+            var imageKeysWithMatrix = imagesWithBytes
+                .SelectMany(i => DecodeImageOrFramesBytes(i, stoppingToken)).ToList();
             try
             {
                 var hashConsumer = scope1.Resolve<HashConsumer>();
@@ -73,6 +42,50 @@ public class ImagePipelineWorker : ErrorableWorker
             {
                 imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
             }
+        }
+    }
+
+    private IEnumerable<ImageKeyWithMatrix> DecodeImageOrFramesBytes
+        (ImageWithBytes imageWithBytes, CancellationToken stoppingToken = default)
+    {
+        var imageBytes = imageWithBytes.Bytes;
+        var imageId = imageWithBytes.Image.ImageId;
+        // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
+        var imageMat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
+        if (!imageMat.Empty())
+            return new ImageKeyWithMatrix[] {new(imageId, 0, imageMat)};
+        try
+        {
+            if (Image.DetectFormat(imageBytes) is GifFormat)
+            {
+                var image = Image.Load<Rgb24>(imageBytes);
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+                var ret = image.Frames.AsEnumerable().Select((frame, frameIndex) =>
+                {
+                    stoppingToken.ThrowIfCancellationRequested();
+                    var frameBytes = new Rgb24[frame.Width * frame.Height];
+                    frame.CopyPixelDataTo(frameBytes);
+                    var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
+                    var stream = new MemoryStream();
+                    frameImage.SaveAsPng(stream);
+                    if (stream.TryGetBuffer(out var buffer))
+                    {
+                        var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
+                        if (frameMat.Empty()) throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
+                        return new ImageKeyWithMatrix(imageId, (uint)frameIndex, frameMat);
+                    }
+                    throw new ObjectDisposedException(nameof(stream));
+                }).ToList();
+                _logger.LogTrace("Spending {}ms to Extracted {} frames out of GIF image {}",
+                    stopwatch.ElapsedMilliseconds, image.Frames.Count, imageId);
+                return ret;
+            }
+            throw new NotSupportedException($"Image {imageId} cannot decode by OpenCV and is not GIF format.");
+        }
+        finally
+        {
+            imageMat.Dispose();
         }
     }
 

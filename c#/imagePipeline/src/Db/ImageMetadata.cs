@@ -19,7 +19,9 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public ushort Height { get; set; }
     public ushort BitsPerPixel { get; set; }
     public uint FrameCount { get; set; }
-    public Embedded? EmbeddedMetadata { get; set; }
+    public Other? EmbeddedOther { get; set; }
+    public Exif? EmbeddedExif { get; set; }
+    public Icc? EmbeddedIcc { get; set; }
     public Jpg? JpgMetadata { get; set; }
     public Png? PngMetadata { get; set; }
     public Gif? GifMetadata { get; set; }
@@ -32,37 +34,42 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public uint DownloadedByteSize { get; set; }
     }
 
-    public class Embedded : IImageMetadata
+    public class Other : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
-        public EmbeddedExif? Exif { get; set; }
-        public byte[]? Icc { get; set; }
         public byte[]? Iptc { get; set; }
         public byte[]? Xmp { get; set; }
+    }
 
-        public class EmbeddedExif : IImageMetadata
-        {
-            [Key] public uint ImageId { get; set; }
-            public string? Orientation { get; set; }
-            public string? Make { get; set; }
-            public string? Model { get; set; }
-            public string? CreateDate { get; set; }
-            public string? ModifyDate { get; set; }
-            public required string TagNames { get; set; }
-            public required byte[] RawBytes { get; set; }
+    public class Exif : IImageMetadata
+    {
+        [Key] public uint ImageId { get; set; }
+        public string? Orientation { get; set; }
+        public string? Make { get; set; }
+        public string? Model { get; set; }
+        public string? CreateDate { get; set; }
+        public string? ModifyDate { get; set; }
+        public required string TagNames { get; set; }
+        public required byte[] RawBytes { get; set; }
 
-            public enum ExifOrientation
-            { // https://magnushoff.com/articles/jpeg-orientation/
-                Horizontal = 1,
-                MirrorHorizontal = 2,
-                Rotate180 = 3,
-                MirrorVertical = 4,
-                MirrorHorizontalRotate270Cw = 5,
-                Rotate90Cw = 6,
-                MirrorHorizontalRotate90Cw = 7,
-                Rotate270Cw = 8,
-            }
+        public enum ExifOrientation
+        { // https://magnushoff.com/articles/jpeg-orientation/
+            Horizontal = 1,
+            MirrorHorizontal = 2,
+            Rotate180 = 3,
+            MirrorVertical = 4,
+            MirrorHorizontalRotate270Cw = 5,
+            Rotate90Cw = 6,
+            MirrorHorizontalRotate90Cw = 7,
+            Rotate270Cw = 8,
         }
+    }
+
+    public class Icc : IImageMetadata
+    {
+        [Key] public uint ImageId { get; set; }
+        public ulong XxHash3 { get; set; }
+        public required byte[] RawBytes { get; set; }
     }
 
     public class Jpg : IImageMetadata
