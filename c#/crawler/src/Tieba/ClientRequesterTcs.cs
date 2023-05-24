@@ -7,11 +7,11 @@ public class ClientRequesterTcs : WithLogTrace
     private readonly ConcurrentQueue<TaskCompletionSource> _queue = new();
     private readonly Timer _timer = new() {Enabled = true};
     private double _maxRps;
-    private readonly Stopwatch _stopWatch = new();
+    private readonly Stopwatch _stopwatch = new();
     private int _requestCounter;
 
     private int QueueLength => _queue.Count;
-    private float AverageRps => _requestCounter / (float)_stopWatch.Elapsed.TotalSeconds;
+    private float AverageRps => _requestCounter / (float)_stopwatch.Elapsed.TotalSeconds;
     private double MaxRps
     {
         get => _maxRps;
@@ -33,7 +33,7 @@ public class ClientRequesterTcs : WithLogTrace
         _config = config.GetSection("ClientRequesterTcs");
         InitLogTrace(_config);
         MaxRps = _config.GetValue("InitialRps", 15);
-        _stopWatch.Start();
+        _stopwatch.Start();
 
         _timer.Elapsed += (_, _) =>
         {
@@ -45,7 +45,7 @@ public class ClientRequesterTcs : WithLogTrace
     {
         if (!ShouldLogTrace()) return;
         _logger.LogTrace("TCS: queueLen={} maxLimitRps={:F2} avgRps={:F2} elapsed={:F1}s",
-            QueueLength, MaxRps, AverageRps, _stopWatch.Elapsed.TotalSeconds);
+            QueueLength, MaxRps, AverageRps, _stopwatch.Elapsed.TotalSeconds);
         if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
     }
 
@@ -67,6 +67,6 @@ public class ClientRequesterTcs : WithLogTrace
     private void ResetAverageRps()
     {
         _ = Interlocked.Exchange(ref _requestCounter, 0);
-        _stopWatch.Restart();
+        _stopwatch.Restart();
     }
 }

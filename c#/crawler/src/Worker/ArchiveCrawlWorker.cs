@@ -36,20 +36,20 @@ public class ArchiveCrawlWorker : ErrorableWorker
         var totalSavedThreadCount = 0;
         var totalSavedReplyCount = 0;
         var totalSavedSubReplyCount = 0;
-        var stopWatchPageInterval = new Stopwatch();
-        stopWatchPageInterval.Start();
+        var stopwatchPageInterval = new Stopwatch();
+        stopwatchPageInterval.Start();
         var totalPage = Math.Min(MaxCrawlablePage, await GetTotalPageForForum(stoppingToken));
 
         async ValueTask ArchivePostsInPage(int page, CancellationToken cancellationToken)
         {
-            var stopWatchTotal = new Stopwatch();
-            stopWatchTotal.Start();
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
+            var stopwatchTotal = new Stopwatch();
+            stopwatchTotal.Start();
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             string GetHumanizedElapsedTimeThenRestart()
             {
-                var ret = stopWatch.Elapsed.Humanize(minUnit: TimeUnit.Second);
-                stopWatch.Restart();
+                var ret = stopwatch.Elapsed.Humanize(minUnit: TimeUnit.Second);
+                stopwatch.Restart();
                 return ret;
             }
 
@@ -73,11 +73,11 @@ public class ArchiveCrawlWorker : ErrorableWorker
             _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                 savedSubReplyCount, savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
             _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
-                savedSubReplyCount + savedReplyCount + savedThreadCount, page, _forumName, stopWatchTotal.Elapsed.TotalSeconds);
+                savedSubReplyCount + savedReplyCount + savedThreadCount, page, _forumName, stopwatchTotal.Elapsed.TotalSeconds);
             _ = Interlocked.Add(ref totalSavedSubReplyCount, savedSubReplyCount);
 
-            var intervalBetweenPage = (float)stopWatchPageInterval.Elapsed.TotalSeconds;
-            stopWatchPageInterval.Restart();
+            var intervalBetweenPage = (float)stopwatchPageInterval.Elapsed.TotalSeconds;
+            stopwatchPageInterval.Restart();
             _ = Interlocked.CompareExchange(ref averageElapsed, intervalBetweenPage, 0); // first run
             _ = Interlocked.Increment(ref finishedPageCount);
             var ca = GetCumulativeAverage(intervalBetweenPage, averageElapsed, finishedPageCount); // in seconds

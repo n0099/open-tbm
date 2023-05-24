@@ -37,13 +37,11 @@ public class ImageBatchProducingWorker : ErrorableWorker
     }
 
     private List<TiebaImage> GetUnconsumedImages(ImageId lastImageIdInPreviousBatch)
-    { // dispose db inside scope1 after returned to prevent long running db connection
+    { // dispose db inside scope1 after returned to prevent long running idle connection
         using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
         return (from image in db.Images.AsNoTracking()
                 where image.ImageId > lastImageIdInPreviousBatch
-                      // this will not get images that have not yet been consumed by OcrConsumer
-                      // since the transaction in ConsumeOcrConsumerWithAllScrips() is de-synced with other consumer
                       && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                 orderby image.ImageId
                 select image

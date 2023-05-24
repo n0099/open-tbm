@@ -73,8 +73,8 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         Func<T, float> pushCallback,
         CancellationToken stoppingToken = default)
     {
-        var stopWatch = new Stopwatch();
-        stopWatch.Start();
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
         _logger.LogInformation("Pushing all historical {}' content into sonic for fid {} started", postTypeInLog, fid);
         var (pushedPostCount, durationCa) = postContents.Aggregate((Count: 0, DurationCa: 0f), (acc, post) =>
         {
@@ -104,7 +104,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
             return (pushedCount, ca);
         });
         _logger.LogInformation("Pushing {} historical {}' content into sonic for fid {} finished after {} (total={}ms, cumulativeAvg={:F3}ms)",
-            pushedPostCount, postTypeInLog, fid, stopWatch.Elapsed.Humanize(precision: 5, minUnit: TimeUnit.Second), stopWatch.ElapsedMilliseconds, durationCa);
+            pushedPostCount, postTypeInLog, fid, stopwatch.Elapsed.Humanize(precision: 5, minUnit: TimeUnit.Second), stopwatch.ElapsedMilliseconds, durationCa);
         return pushedPostCount;
     }
 }

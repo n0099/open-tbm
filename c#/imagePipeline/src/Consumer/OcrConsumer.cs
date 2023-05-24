@@ -20,8 +20,13 @@ public class OcrConsumer : MatrixConsumer
         var recognizedResults = _recognizer.RecognizeMatrices(
             imageKeysWithMatrix.ToDictionary(
                 i => new ImageKey(i.ImageId, i.FrameIndex),
-                imageKeyWithMatrix => imageKeyWithMatrix.Matrix
-            ), stoppingToken).ToList();
+                imageKeyWithMatrix =>
+                {
+                    var mat =  imageKeyWithMatrix.Matrix;
+                    if (mat.Channels() == 4) // https://github.com/sdcb/PaddleSharp/blob/2.4.1.2/src/Sdcb.PaddleOCR/PaddleOcrDetector.cs#L62
+                        Cv2.CvtColor(mat, mat, ColorConversionCodes.BGRA2BGR);
+                    return mat;
+                }), stoppingToken).ToList();
         var recognizedTextLinesKeyByImageKey = _recognizer.GetRecognizedTextLines(recognizedResults);
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {

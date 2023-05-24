@@ -1,5 +1,8 @@
 using System.Data;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Threading.Channels;
+using Microsoft.EntityFrameworkCore.Storage;
 using SixLabors.ImageSharp.Formats.Gif;
 
 namespace tbm.ImagePipeline;
@@ -34,9 +37,11 @@ public class ImagePipelineWorker : ErrorableWorker
                 if (Image.DetectFormat(imageBytes) is GifFormat)
                 {
                     var image = Image.Load<Rgb24>(imageBytes);
-                    return image.Frames.AsEnumerable().Select((frame, frameIndex) =>
+                    var stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                    var ret = image.Frames.AsEnumerable().Select((frame, frameIndex) =>
                     {
-                        var frameBytes = Span<Rgb24>.Empty;
+                        var frameBytes = new Rgb24[frame.Width * frame.Height];
                         frame.CopyPixelDataTo(frameBytes);
                         var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
                         var stream = new MemoryStream();
@@ -48,7 +53,10 @@ public class ImagePipelineWorker : ErrorableWorker
                             return new ImageKeyWithMatrix(imageId, (uint)frameIndex, mat2);
                         }
                         throw new ObjectDisposedException(nameof(stream));
-                    });
+                    }).ToList();
+                    _logger.LogTrace("Spending {}ms to Extracted {} frames out of GIF image {}",
+                        stopwatch.ElapsedMilliseconds, image.Frames.Count, imageId);
+                    return ret.AsEnumerable();
                 }
                 throw new NotSupportedException($"Image {imageId} cannot decode by OpenCV and is not GIF format.");
             }).ToList();
@@ -57,8 +65,9 @@ public class ImagePipelineWorker : ErrorableWorker
                 var hashConsumer = scope1.Resolve<HashConsumer>();
                 hashConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
                 _ = await db.SaveChangesAsync(stoppingToken);
+                await ConsumeOcrConsumerWithAllScrips(scope1, db.Database.GetDbConnection(),
+                    transaction.GetDbTransaction(), imageKeysWithMatrix, stoppingToken);
                 await transaction.CommitAsync(stoppingToken);
-                await ConsumeOcrConsumerWithAllScrips(scope1, imageKeysWithMatrix, stoppingToken);
             }
             finally
             {
@@ -69,6 +78,8 @@ public class ImagePipelineWorker : ErrorableWorker
 
     private static async Task ConsumeOcrConsumerWithAllScrips(
         ILifetimeScope scope,
+        DbConnection parentConnection,
+        DbTransaction parentTransaction,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
     {
@@ -76,14 +87,14 @@ public class ImagePipelineWorker : ErrorableWorker
         {
             await using var scope1 = scope.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(script);
-            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+            // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
+            db.Database.SetDbConnection(parentConnection);
+            _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
 
             var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
             ocrConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
-
             _ = await db.SaveChangesAsync(stoppingToken);
-            await transaction.CommitAsync(stoppingToken);
         }
     }
 }

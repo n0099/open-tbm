@@ -28,9 +28,9 @@ public sealed class SonicPusher : IDisposable
     public float PushPost(Fid fid, string type, PostId id, RepeatedField<Content>? content)
     {
         if (!_config.GetValue("Enabled", false)) return 0;
-        var stopWatch = new Stopwatch();
-        stopWatch.Start();
-        float GetElapsedMs() => (float)stopWatch.ElapsedTicks / Stopwatch.Frequency * 1000;
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        float GetElapsedMs() => (float)stopwatch.ElapsedTicks / Stopwatch.Frequency * 1000;
 
         if (content == null) return GetElapsedMs();
         var contentTexts = string.Join(" ", content
