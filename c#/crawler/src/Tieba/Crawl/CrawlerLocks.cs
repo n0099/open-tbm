@@ -6,7 +6,7 @@ public class CrawlerLocks : WithLogTrace
 
     public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
     {
-        public override string ToString() => $"f{Fid}" + (Tid == null ? "" : $" t{Tid}") + (Pid == null ? "" : $" p{Pid}");
+        public override string ToString() => $"f{Fid}{(Tid == null ? "" : $" t{Tid}")}{(Pid == null ? "" : $" p{Pid}")}";
     }
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry

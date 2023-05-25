@@ -61,7 +61,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
 
                 if (!RevisionPropertiesCache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                 {
-                    object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? "0x" + Convert.ToHexString(bytes).ToLowerInvariant() : value;
+                    object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? $"0x{Convert.ToHexString(bytes).ToLowerInvariant()}" : value;
                     _logger.LogWarning("Updating field {} is not existing in revision table, " +
                                        "newValue={}, oldValue={}, newObject={}, oldObject={}",
                         pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),

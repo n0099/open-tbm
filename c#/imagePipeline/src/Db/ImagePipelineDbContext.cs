@@ -41,7 +41,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
             where TRelatedEntity : class, IImageMetadata
         {
             b.Entity<TEntity>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
-            b.Entity<TRelatedEntity>().ToTable("tbmi_metadata_" + tableNameSuffix);
+            b.Entity<TRelatedEntity>().ToTable($"tbmi_metadata_{tableNameSuffix}");
         }
         SplitImageMetadata<ImageMetadata, ByteSize>(e => e.DownloadedByteSize, "downloadedByteSize");
         SplitImageMetadata<ImageMetadata, Other>(e => e.EmbeddedOther, "embedded");
