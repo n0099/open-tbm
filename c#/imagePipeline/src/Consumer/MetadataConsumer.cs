@@ -73,7 +73,7 @@ public class MetadataConsumer
                 PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
                 GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
                 BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta),
-                DownloadedByteSize = image.ByteSize == imageBytes.Length
+                DownloadedByteSize = image.ExpectedByteSize == imageBytes.Length
                     ? null
                     : new() {DownloadedByteSize = (uint)imageBytes.Length},
                 XxHash3 = XxHash3.HashToUInt64(imageBytes)

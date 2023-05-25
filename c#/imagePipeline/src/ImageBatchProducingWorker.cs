@@ -36,11 +36,11 @@ public class ImageBatchProducingWorker : ErrorableWorker
         _writer.Complete();
     }
 
-    private List<TiebaImage> GetUnconsumedImages(ImageId lastImageIdInPreviousBatch)
+    private List<ImageInReply> GetUnconsumedImages(ImageId lastImageIdInPreviousBatch)
     { // dispose db inside scope1 after returned to prevent long running idle connection
         using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
-        return (from image in db.Images.AsNoTracking()
+        return (from image in db.ImagesInReply.AsNoTracking()
                 where image.ImageId > lastImageIdInPreviousBatch
                       && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                 orderby image.ImageId

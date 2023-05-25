@@ -19,7 +19,6 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheK
 
     public Fid Fid { get; }
     public DbSet<TiebaUser> Users => Set<TiebaUser>();
-    public DbSet<TiebaImage> Images => Set<TiebaImage>();
     public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
     public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();
     public DbSet<ThreadPost> Threads => Set<ThreadPost>();
@@ -39,15 +38,15 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheK
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
     {
+        base.OnModelCreating(b);
         b.Entity<TiebaUser>().ToTable("tbmc_user");
-        b.Entity<TiebaImage>().ToTable("tbmc_image");
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
         b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image").HasKey(e => new {e.Pid, e.ImageId});
-        b.Entity<ReplyContentImage>().HasOne(e => e.Image).WithMany();
+        b.Entity<ReplyContentImage>().HasOne(e => e.ImageInReply).WithMany();
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 

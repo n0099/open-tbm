@@ -130,10 +130,10 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
                 where c.Type == 3
                 // only save image filename without extension that extracted from url by ReplyParser.Convert()
                 where ReplyParser.ValidateContentImageFilenameRegex.IsMatch(c.OriginSrc)
-                select (r.Pid, Image: new TiebaImage
+                select (r.Pid, Image: new ImageInReply
                 {
                     UrlFilename = c.OriginSrc,
-                    ByteSize = c.OriginSize
+                    ExpectedByteSize = c.OriginSize
                 }))
             .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
             .ToList();
@@ -141,14 +141,14 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
         var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
             .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
-        var existingImages = (from e in db.Images
+        var existingImages = (from e in db.ImagesInReply
             where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
             select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
-                where existing.ByteSize == 0 // randomly respond with 0
+                where existing.ExpectedByteSize == 0 // randomly respond with 0
                 join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
-            .ForEach(t => t.existing.ByteSize = t.newInContent.ByteSize);
+            .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
         db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
         {
             Pid = t.Pid,
@@ -157,7 +157,9 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
             // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key
             // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
             // https://github.com/dotnet/efcore/issues/30236
-            Image = existingImages.TryGetValue(t.Image.UrlFilename, out var e) ? e : imagesKeyByUrlFilename[t.Image.UrlFilename]
+            ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)
+                ? e
+                : imagesKeyByUrlFilename[t.Image.UrlFilename]
         }));
     }
 }

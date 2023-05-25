@@ -16,7 +16,6 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     }
 
     private string Script { get; }
-    public DbSet<TiebaImage> Images => Set<TiebaImage>();
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
     public DbSet<ImageOcrLine> ImageOcrLines => Set<ImageOcrLine>();
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
@@ -29,12 +28,12 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
     {
-        b.Entity<TiebaImage>().ToTable("tbmc_image");
-        b.Entity<ImageOcrBox>().ToTable($"tbmc_image_ocr_box_{Script}").HasKey(e =>
+        base.OnModelCreating(b);
+        b.Entity<ImageOcrBox>().ToTable($"tbmi_ocr_box_{Script}").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
-        b.Entity<ImageOcrLine>().ToTable($"tbmc_image_ocr_line_{Script}").HasKey(e => new {e.ImageId, e.FrameIndex});
-        b.Entity<ImageHash>().ToTable("tbmc_image_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
-        b.Entity<ImageMetadata>().ToTable("tbmc_image_metadata");
+        b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageMetadata>().ToTable("tbmi_metadata");
 
         void SplitImageMetadata<TEntity, TRelatedEntity>
             (Expression<Func<TEntity, TRelatedEntity?>> keySelector, string tableNameSuffix)
@@ -42,7 +41,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
             where TRelatedEntity : class, IImageMetadata
         {
             b.Entity<TEntity>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
-            b.Entity<TRelatedEntity>().ToTable("tbmc_image_metadata_" + tableNameSuffix);
+            b.Entity<TRelatedEntity>().ToTable("tbmi_metadata_" + tableNameSuffix);
         }
         SplitImageMetadata<ImageMetadata, ByteSize>(e => e.DownloadedByteSize, "downloadedByteSize");
         SplitImageMetadata<ImageMetadata, Other>(e => e.EmbeddedOther, "embedded");

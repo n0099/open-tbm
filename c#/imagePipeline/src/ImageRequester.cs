@@ -18,10 +18,10 @@ public class ImageRequester
         _config = config.GetSection("ImageRequester");
     }
 
-    public async Task<byte[]> GetImageBytes(TiebaImage image, CancellationToken stoppingToken = default)
+    public async Task<byte[]> GetImageBytes(ImageInReply imageInReply, CancellationToken stoppingToken = default)
     {
-        var urlFilename = image.UrlFilename;
-        var expectedByteSize = image.ByteSize;
+        var urlFilename = imageInReply.UrlFilename;
+        var expectedByteSize = imageInReply.ExpectedByteSize;
         var http = _httpFactory.CreateClient("tbImage");
         if (_config.GetValue("LogTrace", false))
             _logger.LogTrace("Requesting image {} and expecting {} bytes of file size",

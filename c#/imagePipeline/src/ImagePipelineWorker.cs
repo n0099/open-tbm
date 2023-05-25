@@ -49,7 +49,7 @@ public class ImagePipelineWorker : ErrorableWorker
         (ImageWithBytes imageWithBytes, CancellationToken stoppingToken = default)
     {
         var imageBytes = imageWithBytes.Bytes;
-        var imageId = imageWithBytes.Image.ImageId;
+        var imageId = imageWithBytes.ImageInReply.ImageId;
         // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
         var imageMat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
         if (!imageMat.Empty())
