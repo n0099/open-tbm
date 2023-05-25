@@ -105,7 +105,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         return this;
     }
 
-    private Task CrawlPages
+    private async Task CrawlPages
         (IList<Page> pages, Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
     {
         var acquiredLocks = _locks.AcquireRange(_lockId, pages);
@@ -122,7 +122,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         }
         _lockingPages.UnionWith(acquiredLocks);
 
-        return Task.WhenAll(acquiredLocks.Shuffle()
+        _ = await Task.WhenAll(acquiredLocks.Shuffle()
             .Select(page => LogException(
                 async () => (await _crawler.CrawlSinglePage(page, stoppingToken)).ForEach(ValidateThenParse),
                 page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));

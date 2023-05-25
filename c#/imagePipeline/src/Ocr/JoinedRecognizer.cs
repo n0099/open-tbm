@@ -24,16 +24,16 @@ public class JoinedRecognizer
         _gridSizeToMergeBoxesIntoSingleLine =
             configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
         _paddleOcrConfidenceThreshold =
-            configSection.GetSection("PaddleOcr").GetValue("ConfidenceThreshold", 80);
+            configSection.GetValue("PaddleOcr:ConfidenceThreshold", 80);
         var intersectionAreaThresholdConfigSection =
-            configSection.GetSection("Tesseract").GetSection("IntersectionAreaThreshold");
+            configSection.GetSection("Tesseract:IntersectionAreaThreshold");
         _intersectionAreaThresholds = (
             intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsSameTextBox", 90),
             intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsNewTextBox", 10));
     }
 
-    public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
-        _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
+    public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
+        await _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
     public IEnumerable<IRecognitionResult> RecognizeMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)

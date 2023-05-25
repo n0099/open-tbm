@@ -19,23 +19,23 @@ public class ClientRequester
         _config = config.GetSection("ClientRequester");
     }
 
-    public Task<JsonElement> RequestJson
+    public async Task<JsonElement> RequestJson
         (string url, string clientVersion, Dictionary<string, string> postParam, CancellationToken stoppingToken = default) =>
-        Request(() => PostJson(url, postParam, clientVersion, stoppingToken), stream =>
+        await Request(() => PostJson(url, postParam, clientVersion, stoppingToken), stream =>
         {
             stoppingToken.ThrowIfCancellationRequested();
             using var doc = JsonDocument.Parse(stream);
             return doc.RootElement.Clone();
         });
 
-    public Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
+    public async Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
         string url, string clientVersion,
         TRequest requestParam, Action<TRequest, Common> commonParamSetter,
         Func<TResponse> responseFactory, CancellationToken stoppingToken = default
     )
         where TRequest : IMessage<TRequest>
         where TResponse : IMessage<TResponse> =>
-        Request(() => PostProtoBuf(url, clientVersion, requestParam, commonParamSetter, stoppingToken), stream =>
+        await Request(() => PostProtoBuf(url, clientVersion, requestParam, commonParamSetter, stoppingToken), stream =>
         {
             try
             {
@@ -77,7 +77,7 @@ public class ClientRequester
         }
     }
 
-    private Task<HttpResponseMessage> PostJson
+    private async Task<HttpResponseMessage> PostJson
         (string url, Dictionary<string, string> postParam, string clientVersion, CancellationToken stoppingToken = default)
     {
         var postData = new Dictionary<string, string>
@@ -94,11 +94,11 @@ public class ClientRequester
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
-        return Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData), stoppingToken),
-            () => _logger.LogTrace("POST {} {}", url, postParam));
+        return await Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData), stoppingToken),
+            () => _logger.LogTrace("POST {} {}", url, postParam), stoppingToken);
     }
 
-    private Task<HttpResponseMessage> PostProtoBuf<TRequest>(
+    private async Task<HttpResponseMessage> PostProtoBuf<TRequest>(
         string url, string clientVersion,
         TRequest requestParam, Action<TRequest, Common> commonParamSetter,
         CancellationToken stoppingToken = default
@@ -123,15 +123,17 @@ public class ClientRequester
         request.Headers.Accept.ParseAdd("*/*");
         request.Headers.Connection.Add("keep-alive");
 
-        return Post(http => http.SendAsync(request, stoppingToken),
-            () => _logger.LogTrace("POST {} {}", url, requestParam));
+        return await Post(http => http.SendAsync(request, stoppingToken),
+            () => _logger.LogTrace("POST {} {}", url, requestParam), stoppingToken);
     }
 
-    private Task<HttpResponseMessage> Post
-        (Func<HttpClient, Task<HttpResponseMessage>> responseTaskFactory, Action logTraceCallback)
+    private async Task<HttpResponseMessage> Post(
+        Func<HttpClient, Task<HttpResponseMessage>> responseTaskFactory,
+        Action logTraceCallback,
+        CancellationToken stoppingToken = default)
     {
         var http = _httpFactory.CreateClient("tbClient");
-        _requesterTcs.Wait();
+        await _requesterTcs.Wait(stoppingToken);
         if (_config.GetValue("LogTrace", false)) logTraceCallback();
         var ret = responseTaskFactory(http);
         _ = ret.ContinueWith(task =>
@@ -139,6 +141,6 @@ public class ClientRequester
             if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) _requesterTcs.Increase();
             else _requesterTcs.Decrease();
         }, TaskContinuationOptions.ExecuteSynchronously);
-        return ret;
+        return await ret;
     }
 }

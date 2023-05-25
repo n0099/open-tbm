@@ -25,17 +25,24 @@ public class EntryPoint : BaseEntryPoint
                 client.Timeout = Timeout.InfiniteTimeSpan; // overall timeout, will sum up after each retry by polly
                 client.DefaultRequestVersion = HttpVersion.Version20;
             })
-            .SetHandlerLifetime(TimeSpan.FromSeconds(imageRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
-            .AddPolicyHandler((provider, request) => HttpPolicyExtensions.HandleTransientHttpError()
-                .RetryForeverAsync((outcome, tryCount, _) =>
-                {
-                    var failReason = outcome.Exception == null ? "HTTP " + outcome.Result.StatusCode : "exception" + outcome.Exception;
-                    provider.GetRequiredService<ILogger<ImageRequester>>().LogWarning(
-                        "Fetch for {} failed due to {} after {} retries, still trying until reach the configured HttpClient.TimeoutMs.",
-                        request.RequestUri, failReason, tryCount);
-                }))
+            .SetHandlerLifetime(TimeSpan.FromSeconds(imageRequesterConfig.GetValue("HandlerLifetimeSec", 600))); // 10 mins
+        // https://stackoverflow.com/questions/69749167/polly-handletransienthttperror-not-catching-httprequestexception/69750053#69750053
+        service.AddPolicyRegistry().Add("tbImage", Policy.WrapAsync(
+            HttpPolicyExtensions.HandleTransientHttpError()
+                .RetryForeverAsync((outcome, tryCount, context2) =>
+                { // https://www.stevejgordon.co.uk/passing-an-ilogger-to-polly-policies
+                    if (!(context2.TryGetValue("ILogger<ImageRequester>", out var o1)
+                          && o1 is ILogger<ImageRequester> logger)) return;
+                    if (!(context2.TryGetValue("imageUrlFilename", out var o2)
+                          && o2 is string imageUrlFilename)) return;
+                    var failReason = outcome.Exception == null
+                        ? "HTTP " + outcome.Result.StatusCode
+                        : "exception" + outcome.Exception;
+                    logger.LogWarning("Fetch for image {} failed due to {} after {} retries, still trying...",
+                        imageUrlFilename, failReason, tryCount);
+                }),
             // timeout for each retry, https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
-            .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(imageRequesterConfig.GetValue("TimeoutMs", 3000)));
+            Policy.TimeoutAsync<HttpResponseMessage>(imageRequesterConfig.GetValue("TimeoutMs", 3000))));
 
         // https://stackoverflow.com/questions/52889827/remove-http-client-logging-handler-in-asp-net-core/52970073#52970073
         service.RemoveAll<IHttpMessageHandlerBuilderFilter>();

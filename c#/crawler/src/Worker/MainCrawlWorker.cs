@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace tbm.Crawler.Worker;
 
 using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
-using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPost>>;
+using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
 public class MainCrawlWorker : CyclicCrawlWorker
 {
@@ -94,9 +94,9 @@ public class MainCrawlWorker : CyclicCrawlWorker
         return savedThreads;
     }
 
-    private Task<SavedRepliesKeyByTid> CrawlReplies
+    private async Task<SavedRepliesKeyByTid> CrawlReplies
         (SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
-        CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
+        await CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
 
     public static async Task<SavedRepliesKeyByTid> CrawlReplies(
         SavedThreadsList savedThreads, Fid fid,
@@ -164,8 +164,9 @@ public class MainCrawlWorker : CyclicCrawlWorker
         transaction.Commit();
     };
 
-    private Task CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
-        CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
+    private async Task CrawlSubReplies
+        (SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
+        await CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
 
     public static async Task CrawlSubReplies(
         IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid,

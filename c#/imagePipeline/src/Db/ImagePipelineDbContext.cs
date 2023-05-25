@@ -36,7 +36,8 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         b.Entity<ImageHash>().ToTable("tbmc_image_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageMetadata>().ToTable("tbmc_image_metadata");
 
-        void SplitImageMetadata<TEntity, TRelatedEntity>(Expression<Func<TEntity, TRelatedEntity?>> keySelector, string tableNameSuffix)
+        void SplitImageMetadata<TEntity, TRelatedEntity>
+            (Expression<Func<TEntity, TRelatedEntity?>> keySelector, string tableNameSuffix)
             where TEntity : class
             where TRelatedEntity : class, IImageMetadata
         {

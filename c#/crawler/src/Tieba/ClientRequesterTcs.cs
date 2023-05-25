@@ -57,11 +57,11 @@ public class ClientRequesterTcs : WithLogTrace
         _config.GetValue("LimitRps:0", 1),
         MaxRps - _config.GetValue("DeltaRps:1", 0.5));
 
-    public void Wait()
+    public async Task Wait(CancellationToken stoppingToken = default)
     { // https://devblogs.microsoft.com/premier-developer/the-danger-of-taskcompletionsourcet-class/
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _queue.Enqueue(tcs);
-        tcs.Task.Wait();
+        await tcs.Task.WaitAsync(stoppingToken);
     }
 
     private void ResetAverageRps()

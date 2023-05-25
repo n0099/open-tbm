@@ -9,8 +9,8 @@ public class OcrConsumer : MatrixConsumer
     public OcrConsumer(JoinedRecognizer.New recognizerFactory, string script) =>
         _recognizer = recognizerFactory(script);
 
-    public Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
-        _recognizer.InitializePaddleOcr(stoppingToken);
+    public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
+        await _recognizer.InitializePaddleOcr(stoppingToken);
 
     protected override void ConsumeInternal(
         ImagePipelineDbContext db,
