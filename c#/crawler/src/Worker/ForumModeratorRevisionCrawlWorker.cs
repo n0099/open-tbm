@@ -9,9 +9,12 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
 {
     private readonly ILifetimeScope _scope0;
 
-    public ForumModeratorRevisionCrawlWorker
-        (ILogger<ForumModeratorRevisionCrawlWorker> logger, IConfiguration config, ILifetimeScope scope0) :
-        base(logger, config, false) => _scope0 = scope0;
+    public ForumModeratorRevisionCrawlWorker(
+        ILogger<ForumModeratorRevisionCrawlWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IConfiguration config,
+        ILifetimeScope scope0
+    ) : base(logger, applicationLifetime, config, false) => _scope0 = scope0;
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {

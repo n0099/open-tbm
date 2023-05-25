@@ -14,6 +14,7 @@ global using Google.Protobuf;
 global using Google.Protobuf.Collections;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 global using SuperLinq;
 

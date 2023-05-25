@@ -15,8 +15,10 @@ public class ArchiveCrawlWorker : ErrorableWorker
     private readonly string _forumName = "";
     private readonly Fid _fid = 0;
 
-    public ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0) :
-        base(logger) => (_logger, _scope0) = (logger, scope0);
+    public ArchiveCrawlWorker
+        (ILogger<ArchiveCrawlWorker> logger, IHostApplicationLifetime applicationLifetime, ILifetimeScope scope0) :
+        base(logger, applicationLifetime, true, true) =>
+        (_logger, _scope0) = (logger, scope0);
 
     // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
     public static float GetCumulativeAverage(float currentCa, float previousCa, int currentIndex) =>

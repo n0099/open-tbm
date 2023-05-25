@@ -11,9 +11,12 @@ public class ImageBatchProducingWorker : ErrorableWorker
     private readonly int _batchSize;
 
     public ImageBatchProducingWorker(
-        ILogger<ImageBatchProducingWorker> logger, IConfiguration config,
+        ILogger<ImageBatchProducingWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IConfiguration config,
         ILifetimeScope scope0, ImageRequester imageRequester,
-        Channel<List<ImageWithBytes>> channel) : base(logger)
+        Channel<List<ImageWithBytes>> channel
+    ) : base(logger, applicationLifetime, true)
     {
         (_logger, _scope0, _imageRequester, _writer) = (logger, scope0, imageRequester, channel);
         var configSection = config.GetSection("ImagePipeline");

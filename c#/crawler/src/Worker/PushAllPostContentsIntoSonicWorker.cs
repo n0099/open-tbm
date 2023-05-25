@@ -13,8 +13,12 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
     private readonly SonicPusher _pusher;
 
     public PushAllPostContentsIntoSonicWorker(
-        ILogger<PushAllPostContentsIntoSonicWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, SonicPusher pusher) : base(logger)
+        ILogger<PushAllPostContentsIntoSonicWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IConfiguration config,
+        ILifetimeScope scope0,
+        SonicPusher pusher
+    ) : base(logger, applicationLifetime, true, true)
     {
         (_logger, _scope0, _pusher) = (logger, scope0, pusher);
         _config = config.GetSection("Sonic");

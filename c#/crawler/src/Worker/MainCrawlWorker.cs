@@ -12,9 +12,12 @@ public class MainCrawlWorker : CyclicCrawlWorker
     private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
 
     public MainCrawlWorker(
-        ILogger<MainCrawlWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks
-    ) : base(logger, config)
+        ILogger<MainCrawlWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IConfiguration config,
+        ILifetimeScope scope0,
+        IIndex<string, CrawlerLocks> locks
+    ) : base(logger, applicationLifetime, config)
     {
         _scope0 = scope0;
         // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace

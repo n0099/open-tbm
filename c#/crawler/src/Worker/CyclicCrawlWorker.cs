@@ -6,8 +6,12 @@ public abstract class CyclicCrawlWorker : ErrorableWorker
     private int _interval; // in seconds
     private readonly bool _shouldRunAtFirst;
 
-    protected CyclicCrawlWorker
-        (ILogger<CyclicCrawlWorker> logger, IConfiguration config, bool shouldRunAtFirst = true) : base(logger)
+    protected CyclicCrawlWorker(
+        ILogger<CyclicCrawlWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IConfiguration config,
+        bool shouldRunAtFirst = true
+    ) : base(logger, applicationLifetime)
     {
         (_config, _shouldRunAtFirst) = (config, shouldRunAtFirst);
         _ = SyncCrawlIntervalWithConfig();

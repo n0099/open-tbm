@@ -13,9 +13,13 @@ public class ImagePipelineWorker : ErrorableWorker
     private readonly ILifetimeScope _scope0;
     private readonly ChannelReader<List<ImageWithBytes>> _reader;
 
-    public ImagePipelineWorker
-        (ILogger<ImagePipelineWorker> logger, ILifetimeScope scope0, Channel<List<ImageWithBytes>> channel) :
-        base(logger) => (_logger, _scope0, _reader) = (logger, scope0, channel);
+    public ImagePipelineWorker(
+        ILogger<ImagePipelineWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        ILifetimeScope scope0,
+        Channel<List<ImageWithBytes>> channel
+    ) : base(logger, applicationLifetime, true, true) =>
+        (_logger, _scope0, _reader) = (logger, scope0, channel);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {

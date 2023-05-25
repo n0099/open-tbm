@@ -1,9 +1,9 @@
 global using System.ComponentModel.DataAnnotations;
-
 global using Autofac;
 global using CommunityToolkit.Diagnostics;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 global using OpenCvSharp;
 global using SuperLinq;

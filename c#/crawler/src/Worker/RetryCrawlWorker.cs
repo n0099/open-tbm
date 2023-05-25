@@ -9,9 +9,12 @@ public class RetryCrawlWorker : CyclicCrawlWorker
     private readonly IIndex<string, CrawlerLocks> _registeredLocksKeyByType;
 
     public RetryCrawlWorker(
-        ILogger<RetryCrawlWorker> logger, IConfiguration config,
-        ILifetimeScope scope0, IIndex<string, CrawlerLocks> registeredLocksLookup
-    ) : base(logger, config) =>
+        ILogger<RetryCrawlWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IConfiguration config,
+        ILifetimeScope scope0,
+        IIndex<string, CrawlerLocks> registeredLocksLookup
+    ) : base(logger, applicationLifetime, config) =>
         (_logger, _scope0, _registeredLocksKeyByType) = (logger, scope0, registeredLocksLookup);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
