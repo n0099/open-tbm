@@ -8,7 +8,7 @@ public class ThreadArchiveCrawler : ThreadCrawler
 
     protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default)
     {
-        var response = Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
+        var response = Requester.RequestProtoBuf(LegacyEndPointUrl, "6.0.2",
             new ThreadRequest {Data = GetRequestDataForClientVersion602(page)},
             (req, common) => req.Data.Common = common,
             () => new ThreadResponse(), stoppingToken);

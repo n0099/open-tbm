@@ -33,24 +33,27 @@ public class ThreadLateCrawlerAndSaver
             if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
             try
             {
-                var json = await _requester.RequestJson("c/f/pb/page", "8.8.8.8", new()
-                {
-                    {"kz", tid.ToString()},
-                    {"pn", "1"},
-                    {"rn", "2"} // have to be at least 2, since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
-                }, stoppingToken);
+                var json = await _requester.RequestJson(
+                    $"{ClientRequester.LegacyClientApiDomain}/c/f/pb/page", "8.8.8.8", new()
+                    {
+                        {"kz", tid.ToString()},
+                        {"pn", "1"},
+                        // rn have to be at least 2
+                        // since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
+                        {"rn", "2"}
+                    }, stoppingToken);
                 try
                 {
                     var errorCodeProp = json.GetProperty("error_code");
                     Func<(int ErrorCode, bool IsErrorCodeParsed)> tryGetErrorCode = errorCodeProp.ValueKind switch
                     { // https://github.com/MoeNetwork/Tieba-Cloud-Sign/pull/220#issuecomment-1367570540
                         JsonValueKind.Number => () =>
-                        { // https://stackoverflow.com/questions/62100000/why-doesnt-system-text-json-jsonelement-have-trygetstring-or-trygetboolean/62100246#62100246
+                        {
                             var r = errorCodeProp.TryGetInt32(out var p);
                             return (p, r);
                         },
                         JsonValueKind.String => () =>
-                        {
+                        { // https://stackoverflow.com/questions/62100000/why-doesnt-system-text-json-jsonelement-have-trygetstring-or-trygetboolean/62100246#62100246
                             var r = int.TryParse(errorCodeProp.GetString(), out var p);
                             return (p, r);
                         },

@@ -24,8 +24,13 @@ public class ImageRequester
         var expectedByteSize = imageInReply.ExpectedByteSize;
         var http = _httpFactory.CreateClient("tbImage");
         if (_config.GetValue("LogTrace", false))
-            _logger.LogTrace("Requesting image {} and expecting {} bytes of file size",
+        {
+            if (expectedByteSize == 0)
+                _logger.LogTrace("Requesting image {} and not expecting determined byte size", urlFilename);
+            else
+                _logger.LogTrace("Requesting image {} and expecting {} bytes of file size",
                 urlFilename, expectedByteSize);
+        }
 
         Context CreatePollyContext() => new() {{"ILogger<ImageRequester>", _logger}, {"imageUrlFilename", urlFilename}};
         Task<T> ExecuteByPolly<T>(Func<Task<T>> action) =>

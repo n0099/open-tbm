@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.IO.Hashing;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.Formats.Bmp;
 using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -8,13 +10,23 @@ using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 
 namespace tbm.ImagePipeline.Consumer;
 
-public class MetadataConsumer
+public partial class MetadataConsumer
 {
+
+    [GeneratedRegex( // should able to guess malformed string, e.g. 2018:09:08 15:288
+        "^(?<year>(?:19|20|21)[0-9]{2}):?(?<month>[0-1]?[0-9]):?(?<day>[0-1]?[0-9]) (?<hour>[0-2]?[0-9]):?(?<minute>[0-5]?[0-9]):?(?<second>[0-5]?[0-9])$",
+        RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+    private static partial Regex ExtractMalformedExifDateTimeRegex();
+
+    private readonly ILogger<MetadataConsumer> _logger;
     private readonly ulong[] _commonIccProfilesXxHash3ToIgnore;
 
-    public MetadataConsumer(IConfiguration config) =>
+    public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config)
+    {
+        _logger = logger;
         _commonIccProfilesXxHash3ToIgnore = config.GetSection("MetadataConsumer")
             .GetSection("CommonIccProfilesXxHash3ToIgnore").Get<ulong[]>() ?? Array.Empty<ulong>();
+    }
 
     public void Consume(
         ImagePipelineDbContext db,
@@ -63,8 +75,8 @@ public class MetadataConsumer
                         : null,
                     Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty(),
                     Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty(),
-                    CreateDate = GetExifTagValueOrNull(ExifTag.DateTimeDigitized).NullIfEmpty(),
-                    ModifyDate = GetExifTagValueOrNull(ExifTag.DateTime).NullIfEmpty(),
+                    CreateDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeDigitized)),
+                    ModifyDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTime)),
                     TagNames = JsonSerializer.Serialize(meta.ExifProfile.Values.Select(i => i.Tag.ToString())),
                     RawBytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
                 },
@@ -79,4 +91,35 @@ public class MetadataConsumer
                 XxHash3 = XxHash3.HashToUInt64(imageBytes)
             };
         }));
+
+    private DateTime? ParseExifDateTimeOrNull(string? exifDateTime)
+    {
+        static DateTime? ParseDateTimeWithFormatOrNull(string? dateTime) =>
+            DateTime.TryParseExact(dateTime, "yyyy:M:d H:m:s", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var ret) ? ret : null;
+
+        if (string.IsNullOrEmpty(exifDateTime)) return null;
+        var originalDateTime = ParseDateTimeWithFormatOrNull(exifDateTime);
+        if (originalDateTime != null) return originalDateTime;
+
+        // try to extract parts in malformed date time then try parse the parts composed formatted string
+        // e.g. 2018:09:08 15:288 -> 2018:09:08 15:28:08
+        // doing this should extract date time values from raw EXIF bytes as much as possible
+        // since they usually only done by once for all
+        var match = ExtractMalformedExifDateTimeRegex().Match(exifDateTime);
+        if (!match.Success)
+        {
+            _logger.LogWarning("Unable to extract parts from malformed exif date time {}", exifDateTime);
+            return null;
+        }
+        var ret = ParseDateTimeWithFormatOrNull( // sync with format "yyyy:M:d H:m:s"
+            $"{match.Groups["year"]}:{match.Groups["month"]}:{match.Groups["day"]} "
+            + $"{match.Groups["hour"]}:{match.Groups["minute"]}:{match.Groups["second"]}");
+        if (ret == null)
+            _logger.LogWarning("Unable to extract parts from malformed exif date time {}", exifDateTime);
+        else
+            _logger.LogWarning("Converted malformed exif date time {} to {:yyyy:MM:D HH:mm:ss}",
+                exifDateTime, ret);
+        return ret;
+    }
 }

@@ -20,7 +20,8 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     public override TbClient.Page? GetResponsePage(ThreadResponse response) =>
         response.Data?.Page; // response.Data.Page will be null when it's requested with CrawlRequestFlag.ThreadClientVersion8888
 
-    protected const string EndPointUrl = "c/f/frs/page?cmd=301001";
+    private const string EndPointUrl = "c/f/frs/page?cmd=301001";
+    protected const string LegacyEndPointUrl = $"{ClientRequester.LegacyClientApiDomain}/{EndPointUrl}";
 
     protected ThreadRequest.Types.Data GetRequestDataForClientVersion602(Page page) =>
         new()
@@ -47,7 +48,7 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
                 new ThreadRequest {Data = data},
                 (req, common) => req.Data.Common = common,
                 () => new ThreadResponse(), stoppingToken)),
-            new Request(Requester.RequestProtoBuf(EndPointUrl, "6.0.2",
+            new Request(Requester.RequestProtoBuf(LegacyEndPointUrl, "6.0.2",
                 new ThreadRequest {Data = data602},
                 (req, common) => req.Data.Common = common,
                 () => new ThreadResponse(), stoppingToken), CrawlRequestFlag.ThreadClientVersion602)

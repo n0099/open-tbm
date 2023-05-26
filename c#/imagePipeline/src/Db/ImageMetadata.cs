@@ -49,8 +49,8 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public string? Orientation { get; set; }
         public string? Make { get; set; }
         public string? Model { get; set; }
-        public string? CreateDate { get; set; }
-        public string? ModifyDate { get; set; }
+        public DateTime? CreateDate { get; set; }
+        public DateTime? ModifyDate { get; set; }
         public required string TagNames { get; set; }
         public required byte[] RawBytes { get; set; }
 

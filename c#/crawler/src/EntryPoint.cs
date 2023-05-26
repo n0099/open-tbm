@@ -21,7 +21,7 @@ public class EntryPoint : BaseEntryPoint
         var clientRequesterConfig = context.Configuration.GetSection("ClientRequester");
         service.AddHttpClient("tbClient", client =>
             {
-                client.BaseAddress = new("http://c.tieba.baidu.com");
+                client.BaseAddress = new(ClientRequester.ClientApiDomain);
                 client.Timeout = TimeSpan.FromMilliseconds(clientRequesterConfig.GetValue("TimeoutMs", 3000));
             })
             .SetHandlerLifetime(TimeSpan.FromSeconds(clientRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins

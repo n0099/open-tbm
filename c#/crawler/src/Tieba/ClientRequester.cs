@@ -5,6 +5,10 @@ namespace tbm.Crawler.Tieba;
 
 public class ClientRequester
 {
+    // https://github.com/Starry-OvO/aiotieba/issues/123#issuecomment-1563314122
+    public const string LegacyClientApiDomain = "http://c.tieba.baidu.com";
+    public const string ClientApiDomain = "http://tiebac.baidu.com";
+
     private readonly ILogger<ClientRequester> _logger;
     private readonly IConfigurationSection _config;
     private readonly IHttpClientFactory _httpFactory;
