@@ -52,7 +52,7 @@ public class ClientRequester
                 var responseBody = Encoding.UTF8.GetString(buffer);
                 // the invalid protoBuf bytes usually is just a plain html string
                 if (responseBody.Contains("为了保护您的账号安全和最佳的浏览体验，当前业务已经不支持IE8以下浏览器"))
-                    throw new TiebaException(true, true);
+                    throw new TiebaException(shouldRetry: true, shouldSilent: true);
                 throw new TiebaException($"Malformed protoBuf response from tieba. {responseBody}", e);
             }
         });

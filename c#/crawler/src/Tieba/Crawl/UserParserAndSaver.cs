@@ -33,9 +33,9 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         }
     };
 
-    [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, 100)]
-    private static partial Regex PortraitExtractingGeneratedRegex();
-    private static readonly Regex PortraitExtractingRegex = PortraitExtractingGeneratedRegex();
+    [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+    private static partial Regex ExtractPortraitRegex();
+
     private static readonly HashSet<Uid> UserIdLocks = new();
     private readonly List<Uid> _savedUsersId = new();
     private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
@@ -46,7 +46,7 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         users.Select(el =>
         {
             static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
-                PortraitExtractingRegex.Match(portrait) is {Success: true} m
+                ExtractPortraitRegex().Match(portrait) is {Success: true} m
                     ? (m.Groups[1].Value, Time.Parse(m.Groups[2].ValueSpan))
                     : (portrait, null);
 

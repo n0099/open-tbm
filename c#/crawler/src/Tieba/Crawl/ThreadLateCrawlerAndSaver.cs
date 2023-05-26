@@ -65,7 +65,8 @@ public class ThreadLateCrawlerAndSaver
                     switch (errorCode)
                     {
                         case 4 or 350008:
-                            throw new TiebaException(false, "Thread already deleted while thread late crawl.");
+                            throw new TiebaException(shouldRetry: false,
+                                "Thread already deleted while thread late crawl.");
                         case not 0:
                             throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
                     }
@@ -78,7 +79,7 @@ public class ThreadLateCrawlerAndSaver
                                 Tid = Tid.Parse(thread.GetStrProp("id")),
                                 AuthorPhoneType = phoneType.GetString().NullIfEmpty()
                             }
-                            : throw new TiebaException(false,
+                            : throw new TiebaException(shouldRetry: false,
                                 "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
                         : null; // silent fail without any retry since the field `json.thread.thread_info`
                     // might not exists in current and upcoming responses
@@ -103,7 +104,7 @@ public class ThreadLateCrawlerAndSaver
                     _logger.LogError(e, "Exception");
                 if (e is not TiebaException {ShouldRetry: false})
                 {
-                    _locks.AcquireFailed(crawlerLockId, 1, failureCount);
+                    _locks.AcquireFailed(crawlerLockId, page: 1, failureCount);
                     _requesterTcs.Decrease();
                 }
                 return null;

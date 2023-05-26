@@ -4,6 +4,10 @@ namespace tbm.Crawler.Tieba.Crawl.Parser;
 
 public partial class ReplyParser : BaseParser<ReplyPost, Reply>
 {
+    // length with 24 char is only appeared in legacy replies
+    [GeneratedRegex("^(?:[0-9a-f]{40}|[0-9a-f]{24})$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+    public static partial Regex ValidateContentImageFilenameRegex();
+
     private readonly ILogger<ReplyParser> _logger;
 
     public ReplyParser(ILogger<ReplyParser> logger) => _logger = logger;
@@ -12,11 +16,6 @@ public partial class ReplyParser : BaseParser<ReplyPost, Reply>
 
     protected override IEnumerable<ReplyPost> ParsePostsInternal
         (IList<Reply> inPosts, List<User?> outUsers) => inPosts.Select(Convert);
-
-    // length with 24 char is only appeared in legacy replies
-    [GeneratedRegex("^(?:[0-9a-f]{40}|[0-9a-f]{24})$", RegexOptions.Compiled, 100)]
-    private static partial Regex ValidateContentImageFilenameGeneratedRegex();
-    public static readonly Regex ValidateContentImageFilenameRegex = ValidateContentImageFilenameGeneratedRegex();
 
     protected override ReplyPost Convert(Reply inPost)
     {
@@ -37,7 +36,7 @@ public partial class ReplyParser : BaseParser<ReplyPost, Reply>
                 var urlFilename = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
                 // only remains the image unique identity at the end of url as "filename", drops domain, path and file extension from url
                 if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com" or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
-                    && ValidateContentImageFilenameRegex.IsMatch(urlFilename))
+                    && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
                     c.OriginSrc = urlFilename;
                 else if (uri.Host is not "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
                     _logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"

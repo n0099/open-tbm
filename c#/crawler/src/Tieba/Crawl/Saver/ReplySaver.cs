@@ -129,7 +129,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
                 from c in r.OriginalContents
                 where c.Type == 3
                 // only save image filename without extension that extracted from url by ReplyParser.Convert()
-                where ReplyParser.ValidateContentImageFilenameRegex.IsMatch(c.OriginSrc)
+                where ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
                 select (r.Pid, Image: new ImageInReply
                 {
                     UrlFilename = c.OriginSrc,
@@ -141,7 +141,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
         var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
             .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
-        var existingImages = (from e in db.ImagesInReply
+        var existingImages = (from e in db.ImageInReplies
             where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
             select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values

@@ -29,7 +29,7 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheK
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
     public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
-    public DbSet<Forum> Forum => Set<Forum>();
+    public DbSet<Forum> Forums => Set<Forum>();
 
     public delegate CrawlerDbContext New(Fid fid);
 

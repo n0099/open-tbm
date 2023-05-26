@@ -20,7 +20,7 @@ public class TesseractRecognizer : IDisposable
         OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
             // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
             // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-            OCRTesseract.Create(dataPath, scripts, "", 1, isVertical ? 5 : 7);
+            OCRTesseract.Create(dataPath, scripts, charWhitelist: "", oem: 1, psmode: isVertical ? 5 : 7);
         _tesseractInstanceHorizontal = script switch
         {
             "zh-Hans" => CreateTesseract("best/chi_sim+best/eng"),
@@ -31,9 +31,9 @@ public class TesseractRecognizer : IDisposable
         };
         _tesseractInstanceVertical = script switch
         {
-            "zh-Hans" => CreateTesseract("best/chi_sim_vert", true),
-            "zh-Hant" => CreateTesseract("best/chi_tra_vert", true),
-            "ja" => CreateTesseract("best/jpn_vert", true),
+            "zh-Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
+            "zh-Hant" => CreateTesseract("best/chi_tra_vert", isVertical: true),
+            "ja" => CreateTesseract("best/jpn_vert", isVertical: true),
             "en" => _tesseractInstanceHorizontal, // fallback to best/eng since there's no best/eng_vert
             _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
         };
@@ -67,7 +67,7 @@ public class TesseractRecognizer : IDisposable
             Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
             // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
             // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
-            _ = Cv2.Threshold(mat, mat, 0, 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
+            _ = Cv2.Threshold(mat, mat, thresh: 0, maxval: 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
 
             if (degrees != 0) RotateMatrix(mat, degrees);
 
@@ -95,7 +95,7 @@ public class TesseractRecognizer : IDisposable
     { // https://stackoverflow.com/questions/22041699/rotate-an-image-without-cropping-in-opencv-in-c/75451191#75451191
         degrees = -degrees; // counter-clockwise to clockwise
         var center = new Point2f((src.Width - 1) / 2f, (src.Height - 1) / 2f);
-        using var rotationMat = Cv2.GetRotationMatrix2D(center, degrees, 1);
+        using var rotationMat = Cv2.GetRotationMatrix2D(center, degrees, scale: 1);
         var boundingRect = new RotatedRect(new(), new(src.Width, src.Height), degrees).BoundingRect();
         rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
         rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));

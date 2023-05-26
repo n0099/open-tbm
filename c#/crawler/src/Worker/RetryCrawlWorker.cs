@@ -50,7 +50,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
 
                 if (lockType == "thread")
                 {
-                    var forumName = (from f in db.Forum.AsNoTracking()
+                    var forumName = (from f in db.Forums.AsNoTracking()
                         where f.Fid == fid select f.Name).SingleOrDefault();
                     if (forumName == null) return;
                     _logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid={}, forumName={}",

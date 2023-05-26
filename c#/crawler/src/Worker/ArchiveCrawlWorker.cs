@@ -17,7 +17,7 @@ public class ArchiveCrawlWorker : ErrorableWorker
 
     public ArchiveCrawlWorker
         (ILogger<ArchiveCrawlWorker> logger, IHostApplicationLifetime applicationLifetime, ILifetimeScope scope0) :
-        base(logger, applicationLifetime, true, true) =>
+        base(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true) =>
         (_logger, _scope0) = (logger, scope0);
 
     // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average

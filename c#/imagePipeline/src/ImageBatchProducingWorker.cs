@@ -16,7 +16,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
         IConfiguration config,
         ILifetimeScope scope0, ImageRequester imageRequester,
         Channel<List<ImageWithBytes>> channel
-    ) : base(logger, applicationLifetime, true)
+    ) : base(logger, applicationLifetime, shouldExitOnException: true)
     {
         (_logger, _scope0, _imageRequester, _writer) = (logger, scope0, imageRequester, channel);
         var configSection = config.GetSection("ImagePipeline");
@@ -43,7 +43,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
     { // dispose db inside scope1 after returned to prevent long running idle connection
         using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
-        return (from image in db.ImagesInReply.AsNoTracking()
+        return (from image in db.ImageInReplies.AsNoTracking()
                 where image.ImageId > lastImageIdInPreviousBatch
                       && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                 orderby image.ImageId

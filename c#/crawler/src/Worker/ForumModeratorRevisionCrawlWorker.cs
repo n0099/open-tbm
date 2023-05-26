@@ -14,14 +14,14 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
         IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
         ILifetimeScope scope0
-    ) : base(logger, applicationLifetime, config, false) => _scope0 = scope0;
+    ) : base(logger, applicationLifetime, config, shouldRunAtFirst: false) => _scope0 = scope0;
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db0 = scope1.Resolve<CrawlerDbContext.New>()(0);
         var browsing = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
-        foreach (var forum in from f in db0.Forum.AsNoTracking() where f.IsCrawling select new {f.Fid, f.Name})
+        foreach (var forum in from f in db0.Forums.AsNoTracking() where f.IsCrawling select new {f.Fid, f.Name})
         {
             if (stoppingToken.IsCancellationRequested) return;
             var doc = await browsing.OpenAsync($"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forum.Name}", stoppingToken);

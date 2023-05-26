@@ -57,6 +57,7 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     public override IList<Thread> GetValidPosts(ThreadResponse response, CrawlRequestFlag flag)
     {
         ValidateOtherErrorCode(response);
-        return EnsureNonEmptyPostList(response, "Forum threads list is empty, forum might doesn't existed.");
+        return EnsureNonEmptyPostList(response,
+            "Forum threads list is empty, forum might doesn't existed.");
     }
 }

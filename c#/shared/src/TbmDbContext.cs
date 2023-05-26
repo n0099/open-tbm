@@ -12,7 +12,7 @@ namespace tbm.Shared;
 
 public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKeyFactory : IModelCacheKeyFactory
 {
-    public DbSet<ImageInReply> ImagesInReply => Set<ImageInReply>();
+    public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
 
     private readonly IConfiguration _config;
     private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();

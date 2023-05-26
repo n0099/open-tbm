@@ -18,7 +18,7 @@ public class ImagePipelineWorker : ErrorableWorker
         IHostApplicationLifetime applicationLifetime,
         ILifetimeScope scope0,
         Channel<List<ImageWithBytes>> channel
-    ) : base(logger, applicationLifetime, true, true) =>
+    ) : base(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true) =>
         (_logger, _scope0, _reader) = (logger, scope0, channel);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -57,7 +57,7 @@ public class ImagePipelineWorker : ErrorableWorker
         // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
         var imageMat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
         if (!imageMat.Empty())
-            return new ImageKeyWithMatrix[] {new(imageId, 0, imageMat)};
+            return new ImageKeyWithMatrix[] {new(imageId, FrameIndex: 0, imageMat)};
 
         ImageKeyWithMatrix DecodeFrame(ImageFrame<Rgb24> frame, int frameIndex)
         {

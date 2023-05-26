@@ -34,7 +34,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.New>()(0);
-        var forums = (from f in db.Forum.AsNoTracking()
+        var forums = (from f in db.Forums.AsNoTracking()
             where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
         var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
         foreach (var fidAndName in forums)
