@@ -10,12 +10,14 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
     protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
 
     protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
-    protected virtual Dictionary<Type, Action<CrawlerDbContext, IEnumerable<TBaseRevision>>>
-        RevisionUpsertPayloadKeyBySplitEntity => throw new NotImplementedException();
+
+    protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
+    protected virtual Dictionary<Type, RevisionUpsertDelegate>
+        RevisionUpsertDelegatesKeyBySplitEntityType => throw new NotImplementedException();
 
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
         CrawlerDbContext db,
-        FieldChangeIgnoranceCallbacks userFieldChangeIgnorance,
+        FieldChangeIgnoranceDelegates userFieldChangeIgnorance,
         Func<TPostOrUser, TRevision> revisionFactory,
         ILookup<bool, TPostOrUser> existingOrNewLookup,
         Func<TPostOrUser, TPostOrUser> existingSelector
@@ -98,7 +100,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
         newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
             .SelectMany(rev => rev.SplitEntities)
             .GroupBy(pair => pair.Key, pair => pair.Value)
-            .ForEach(g => RevisionUpsertPayloadKeyBySplitEntity[g.Key](db, g));
+            .ForEach(g => RevisionUpsertDelegatesKeyBySplitEntityType[g.Key](db, g));
     }
 
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)

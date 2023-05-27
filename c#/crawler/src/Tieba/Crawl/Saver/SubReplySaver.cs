@@ -4,7 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
 {
-    public override FieldChangeIgnoranceCallbacks TiebaUserFieldChangeIgnorance { get; } = new(
+    public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // always ignore updates on iconinfo due to some rare user will show some extra icons
             // compare to reply response in the response of sub reply
@@ -18,8 +18,8 @@ public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
 
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => 0;
 
-    protected override Dictionary<Type, Action<CrawlerDbContext, IEnumerable<BaseSubReplyRevision>>>
-        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
+    protected override Dictionary<Type, RevisionUpsertDelegate>
+        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(SubReplyRevision.SplitAgreeCount), (db, revisions) =>

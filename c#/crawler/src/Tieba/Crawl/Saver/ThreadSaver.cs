@@ -4,7 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
 {
-    public override FieldChangeIgnoranceCallbacks TiebaUserFieldChangeIgnorance { get; } = new(
+    public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, _, _) => propName switch
         { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
             // note this will cause we can't record when did a user update its iconinfo to null
@@ -27,8 +27,8 @@ public class ThreadSaver : BaseSaver<ThreadPost, BaseThreadRevision>
         _ => 0
     };
 
-    protected override Dictionary<Type, Action<CrawlerDbContext, IEnumerable<BaseThreadRevision>>>
-        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
+    protected override Dictionary<Type, RevisionUpsertDelegate>
+        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(ThreadRevision.SplitViewCount), (db, revisions) =>

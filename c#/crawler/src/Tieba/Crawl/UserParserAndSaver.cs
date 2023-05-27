@@ -13,8 +13,8 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
         _ => 0
     };
 
-    protected override Dictionary<Type, Action<CrawlerDbContext, IEnumerable<BaseUserRevision>>>
-        RevisionUpsertPayloadKeyBySplitEntity { get; } = new()
+    protected override Dictionary<Type, RevisionUpsertDelegate>
+        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(UserRevision.SplitDisplayName), (db, revisions) =>
@@ -91,7 +91,7 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
 
     public void ResetUsersIcon() => _users.Values.ForEach(u => u.Icon = null);
 
-    public void SaveUsers(CrawlerDbContext db, string postType, FieldChangeIgnoranceCallbacks tiebaUserFieldChangeIgnorance)
+    public void SaveUsers(CrawlerDbContext db, string postType, FieldChangeIgnoranceDelegates tiebaUserFieldChangeIgnorance)
     {
         if (_users.IsEmpty) return;
         lock (UserIdLocks)

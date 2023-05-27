@@ -12,7 +12,7 @@ namespace tbm.Shared;
 public abstract class BaseEntryPoint
 {
     protected abstract void ConfigureServices(HostBuilderContext context, IServiceCollection service);
-    protected abstract void ConfigureContainer(ContainerBuilder builder);
+    protected abstract void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder);
 
     public async Task Main()
     {

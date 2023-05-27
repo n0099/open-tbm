@@ -133,12 +133,12 @@ public class ClientRequester
 
     private async Task<HttpResponseMessage> Post(
         Func<HttpClient, Task<HttpResponseMessage>> responseTaskFactory,
-        Action logTraceCallback,
+        Action logTraceAction,
         CancellationToken stoppingToken = default)
     {
         var http = _httpFactory.CreateClient("tbClient");
         await _requesterTcs.Wait(stoppingToken);
-        if (_config.GetValue("LogTrace", false)) logTraceCallback();
+        if (_config.GetValue("LogTrace", false)) logTraceAction();
         var ret = responseTaskFactory(http);
         _ = ret.ContinueWith(task =>
         {

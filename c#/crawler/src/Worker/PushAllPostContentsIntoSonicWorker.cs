@@ -74,7 +74,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         int forumsPostTotalApproxCount,
         int previousPushedPostCount,
         IEnumerable<T> postContents,
-        Func<T, float> pushCallback,
+        Func<T, float> pushDelegate,
         CancellationToken stoppingToken = default)
     {
         var stopwatch = new Stopwatch();
@@ -83,7 +83,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
         var (pushedPostCount, durationCa) = postContents.Aggregate((Count: 0, DurationCa: 0f), (acc, post) =>
         {
             stoppingToken.ThrowIfCancellationRequested();
-            var elapsedMs = pushCallback(post);
+            var elapsedMs = pushDelegate(post);
             var pushedCount = acc.Count + 1;
             var totalPushedCount = previousPushedPostCount + pushedCount;
             var ca = ArchiveCrawlWorker.GetCumulativeAverage(elapsedMs, acc.DurationCa, pushedCount);

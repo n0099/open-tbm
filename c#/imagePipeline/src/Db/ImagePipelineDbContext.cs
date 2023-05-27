@@ -35,22 +35,21 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageMetadata>().ToTable("tbmi_metadata");
 
-        void SplitImageMetadata<TEntity, TRelatedEntity>
-            (Expression<Func<TEntity, TRelatedEntity?>> keySelector, string tableNameSuffix)
-            where TEntity : class
+        void SplitImageMetadata<TRelatedEntity>
+            (Expression<Func<ImageMetadata, TRelatedEntity?>> keySelector, string tableNameSuffix)
             where TRelatedEntity : class, IImageMetadata
         {
-            b.Entity<TEntity>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
+            b.Entity<ImageMetadata>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
             b.Entity<TRelatedEntity>().ToTable($"tbmi_metadata_{tableNameSuffix}");
         }
-        SplitImageMetadata<ImageMetadata, ByteSize>(e => e.DownloadedByteSize, "downloadedByteSize");
-        SplitImageMetadata<ImageMetadata, Other>(e => e.EmbeddedOther, "embedded");
-        SplitImageMetadata<ImageMetadata, Exif>(e => e.EmbeddedExif, "embedded_exif");
-        SplitImageMetadata<ImageMetadata, Icc>(e => e.EmbeddedIcc, "embedded_icc");
-        SplitImageMetadata<ImageMetadata, Jpg>(e => e.JpgMetadata, "jpg");
-        SplitImageMetadata<ImageMetadata, Png>(e => e.PngMetadata, "png");
-        SplitImageMetadata<ImageMetadata, Gif>(e => e.GifMetadata, "gif");
-        SplitImageMetadata<ImageMetadata, Bmp>(e => e.BmpMetadata, "bmp");
+        SplitImageMetadata(e => e.DownloadedByteSize, "downloadedByteSize");
+        SplitImageMetadata(e => e.EmbeddedOther, "embedded");
+        SplitImageMetadata(e => e.EmbeddedExif, "embedded_exif");
+        SplitImageMetadata(e => e.EmbeddedIcc, "embedded_icc");
+        SplitImageMetadata(e => e.JpgMetadata, "jpg");
+        SplitImageMetadata(e => e.PngMetadata, "png");
+        SplitImageMetadata(e => e.GifMetadata, "gif");
+        SplitImageMetadata(e => e.BmpMetadata, "bmp");
     }
 #pragma warning restore IDE0058 // Expression value is never used
 }

@@ -31,7 +31,7 @@ public class EntryPoint : BaseEntryPoint
         service.RemoveAll<IHttpMessageHandlerBuilderFilter>();
     }
 
-    protected override void ConfigureContainer(ContainerBuilder builder)
+    protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
         builder.RegisterType<CrawlerDbContext>();
         builder.RegisterType<ClientRequester>();

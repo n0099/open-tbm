@@ -9,9 +9,9 @@ public abstract class StaticCommonInSavers
     private static Dictionary<Type, Dictionary<string, PropertyInfo>> GetPropsKeyByType(List<Type> types) =>
         types.ToDictionary(type => type, type => type.GetProperties().ToDictionary(prop => prop.Name));
 
-    public delegate bool FieldChangeIgnoranceCallback(Type whichPostType, string propName, object? oldValue, object? newValue);
-    public record FieldChangeIgnoranceCallbacks(FieldChangeIgnoranceCallback Update, FieldChangeIgnoranceCallback Revision);
-    protected static FieldChangeIgnoranceCallbacks GlobalFieldChangeIgnorance { get; } = new(
+    public delegate bool FieldChangeIgnoranceDelegate(Type whichPostType, string propName, object? oldValue, object? newValue);
+    public record FieldChangeIgnoranceDelegates(FieldChangeIgnoranceDelegate Update, FieldChangeIgnoranceDelegate Revision);
+    protected static FieldChangeIgnoranceDelegates GlobalFieldChangeIgnorance { get; } = new(
         Update: (whichPostType, propName, oldValue, newValue) =>
         {
             if (whichPostType == typeof(TiebaUser))

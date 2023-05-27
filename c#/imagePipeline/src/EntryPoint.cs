@@ -57,22 +57,29 @@ public class EntryPoint : BaseEntryPoint
         service.RemoveAll<IHttpMessageHandlerBuilderFilter>();
     }
 
-    protected override void ConfigureContainer(ContainerBuilder builder)
+    protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
         builder.RegisterType<ImagePipelineDbContext>();
-        builder.RegisterType<PaddleOcrRecognizerAndDetector>();
-        builder.RegisterType<TesseractRecognizer>();
         builder.RegisterType<JoinedRecognizer>();
         builder.RegisterType<OcrConsumer>();
         builder.RegisterType<HashConsumer>();
         builder.RegisterType<MetadataConsumer>();
         builder.RegisterType<ImageRequester>();
-        builder.Register(context => Channel.CreateBounded<List<ImageWithBytes>>(
+
+        builder.Register(componentContext => Channel.CreateBounded<List<ImageWithBytes>>(
             new BoundedChannelOptions(
-                context.Resolve<IConfiguration>()
+                componentContext.Resolve<IConfiguration>()
                     .GetSection("ImagePipeline")
                     .GetValue("MaxBufferedImageBatches", 8)
             ) {SingleReader = true, SingleWriter = true})
         ).SingleInstance();
+
+        var config = context.Configuration.GetSection("OcrConsumer");
+        var paddleOcr = builder.RegisterType<PaddleOcrRecognizerAndDetector>();
+        if (!config.GetSection("PaddleOcr").GetValue("DisposeAfterEachBatch", false))
+            paddleOcr.SingleInstance();
+        var tesseract = builder.RegisterType<TesseractRecognizer>();
+        if (!config.GetSection("Tesseract").GetValue("DisposeAfterEachBatch", false))
+            tesseract.SingleInstance();
     }
 }
