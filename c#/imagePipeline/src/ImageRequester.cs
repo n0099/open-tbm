@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Polly;
 using Polly.Registry;
 
@@ -20,9 +21,16 @@ public class ImageRequester
 
     public async Task<byte[]> GetImageBytes(ImageInReply imageInReply, CancellationToken stoppingToken = default)
     {
+        var rateLimiter = new FixedWindowRateLimiter(new()
+        {
+            PermitLimit = _config.GetValue("LimitRps", 100),
+            QueueLimit = _config.GetValue("LimitRps", 100),
+            Window = TimeSpan.FromSeconds(1)
+        });
+        using var lease = await rateLimiter.AcquireAsync(permitCount: 0, stoppingToken);
+
         var urlFilename = imageInReply.UrlFilename;
         var expectedByteSize = imageInReply.ExpectedByteSize;
-        var http = _httpFactory.CreateClient("tbImage");
         if (_config.GetValue("LogTrace", false))
         {
             if (expectedByteSize == 0)
@@ -37,6 +45,7 @@ public class ImageRequester
             _registry.Get<IAsyncPolicy<T>>($"tbImage<{typeof(T).Name}>")
                 .ExecuteAsync(async (_, _) => await action(), CreatePollyContext(), stoppingToken);
 
+        var http = _httpFactory.CreateClient("tbImage");
         var response = await ExecuteByPolly(async () => await http.GetAsync(urlFilename + ".jpg", stoppingToken));
         var contentLength = response.Content.Headers.ContentLength;
         if (expectedByteSize != 0 && contentLength != expectedByteSize)

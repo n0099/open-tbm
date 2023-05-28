@@ -9,6 +9,8 @@ public class ImageBatchProducingWorker : ErrorableWorker
     private readonly ImageRequester _imageRequester;
     private readonly ChannelWriter<List<ImageWithBytes>> _writer;
     private readonly int _batchSize;
+    private readonly int _interlaceBatchCount;
+    private readonly int _interlaceBatchIndex;
 
     public ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger,
@@ -19,8 +21,10 @@ public class ImageBatchProducingWorker : ErrorableWorker
     ) : base(logger, applicationLifetime, shouldExitOnException: true)
     {
         (_logger, _scope0, _imageRequester, _writer) = (logger, scope0, imageRequester, channel);
-        var configSection = config.GetSection("ImagePipeline");
+        var configSection = config.GetSection("ImageBatchProducer");
         _batchSize = configSection.GetValue("BatchSize", 16);
+        _interlaceBatchCount = configSection.GetValue("InterlaceBatchCount", 1);
+        _interlaceBatchIndex = configSection.GetValue("InterlaceBatchIndex", 0);
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -33,7 +37,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
                 await Task.WhenAll(images.Select(async image =>
                     new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken))
                 ))), stoppingToken);
-            else break;
+            else break; // no more images to consume
             lastImageIdInPreviousBatch = images.Last().ImageId;
         }
         _writer.Complete();
@@ -48,7 +52,9 @@ public class ImageBatchProducingWorker : ErrorableWorker
                       // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
                       && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                 orderby image.ImageId
-                select image
-            ).Take(_batchSize).ToList();
+                select image)
+            .Take(_batchSize * _interlaceBatchCount)
+            .Where(image => image.ImageId % _interlaceBatchCount == _interlaceBatchIndex)
+            .ToList();
     }
 }
