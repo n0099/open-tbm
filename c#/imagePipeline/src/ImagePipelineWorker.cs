@@ -25,26 +25,33 @@ public class ImagePipelineWorker : ErrorableWorker
     {
         await foreach (var imagesWithBytes in _reader.ReadAllAsync(stoppingToken))
         {
-            await using var scope1 = _scope0.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
-            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
-
-            var metadataConsumer = scope1.Resolve<MetadataConsumer>();
-            metadataConsumer.Consume(db, imagesWithBytes, stoppingToken);
-            var imageKeysWithMatrix = imagesWithBytes
-                .SelectMany(i => DecodeImageOrFramesBytes(i, stoppingToken)).ToList();
             try
             {
-                var hashConsumer = scope1.Resolve<HashConsumer>();
-                hashConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
-                _ = await db.SaveChangesAsync(stoppingToken);
-                await ConsumeOcrConsumerWithAllScrips(scope1, db.Database.GetDbConnection(),
-                    transaction.GetDbTransaction(), imageKeysWithMatrix, stoppingToken);
-                await transaction.CommitAsync(stoppingToken);
+                await using var scope1 = _scope0.BeginLifetimeScope();
+                var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
+                await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+
+                var metadataConsumer = scope1.Resolve<MetadataConsumer>();
+                metadataConsumer.Consume(db, imagesWithBytes, stoppingToken);
+                var imageKeysWithMatrix = imagesWithBytes
+                    .SelectMany(i => DecodeImageOrFramesBytes(i, stoppingToken)).ToList();
+                try
+                {
+                    var hashConsumer = scope1.Resolve<HashConsumer>();
+                    hashConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
+                    _ = await db.SaveChangesAsync(stoppingToken);
+                    await ConsumeOcrConsumerWithAllScrips(scope1, db.Database.GetDbConnection(),
+                        transaction.GetDbTransaction(), imageKeysWithMatrix, stoppingToken);
+                    await transaction.CommitAsync(stoppingToken);
+                }
+                finally
+                {
+                    imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
+                }
             }
-            finally
+            catch (Exception e)
             {
-                imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
+                _logger.LogError(e, "Exception");
             }
         }
     }

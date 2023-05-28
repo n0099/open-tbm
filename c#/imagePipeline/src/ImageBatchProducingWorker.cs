@@ -45,6 +45,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
         var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
         return (from image in db.ImageInReplies.AsNoTracking()
                 where image.ImageId > lastImageIdInPreviousBatch
+                      // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
                       && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                 orderby image.ImageId
                 select image

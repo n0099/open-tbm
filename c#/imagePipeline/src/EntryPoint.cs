@@ -43,15 +43,13 @@ public class EntryPoint : BaseEntryPoint
                 Policy.TimeoutAsync<T>(imageRequesterConfig.GetValue("TimeoutMs", 3000))));
         AddPolicyToRegistry(HttpPolicyExtensions.HandleTransientHttpError(), (logger, imageUrlFilename, outcome, tryCount) =>
         {
-            var failReason = outcome.Exception == null
-                ? $"HTTP {outcome.Result.StatusCode}"
-                : $"exception {outcome.Exception.GetType().FullName}";
+            var failReason = outcome.Exception == null ? $"HTTP {outcome.Result.StatusCode}" : "exception";
             logger.LogWarning(outcome.Exception, "Fetch for image {} failed due to {} after {} retries, still trying...",
                 imageUrlFilename, failReason, tryCount);
         });
         AddPolicyToRegistry(Policy<byte[]>.Handle<HttpRequestException>(), (logger, imageUrlFilename, outcome, tryCount) =>
-            logger.LogWarning("Fetch for image {} failed after {} bytes downloaded due to {} after {} retries, still trying...",
-                imageUrlFilename, outcome.Result.Length, $"exception {outcome.Exception.GetType().FullName}", tryCount));
+            logger.LogWarning(outcome.Exception, "Fetch for image {} failed after {} bytes downloaded due to exception after {} retries, still trying...",
+                imageUrlFilename, outcome.Result.Length, tryCount));
 
         // https://stackoverflow.com/questions/52889827/remove-http-client-logging-handler-in-asp-net-core/52970073#52970073
         service.RemoveAll<IHttpMessageHandlerBuilderFilter>();
