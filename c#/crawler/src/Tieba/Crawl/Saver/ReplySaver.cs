@@ -141,9 +141,11 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
 
         var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
             .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
-        var existingImages = (from e in db.ImageInReplies
-            where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
-            select e).TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
+        var existingImages = (
+                from e in db.ImageInReplies
+                where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
+                select e)
+            .TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
                 where existing.ExpectedByteSize == 0 // randomly respond with 0
                 join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename

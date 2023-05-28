@@ -15,7 +15,7 @@ public class EntryPoint : BaseEntryPoint
 {
     protected override void ConfigureServices(HostBuilderContext context, IServiceCollection service)
     {
-        service.AddHostedService<ImagePipelineWorker>();
+        service.AddHostedService<ImageBatchConsumingWorker>();
         service.AddHostedService<ImageBatchProducingWorker>();
 
         var imageRequesterConfig = context.Configuration.GetSection("ImageRequester");

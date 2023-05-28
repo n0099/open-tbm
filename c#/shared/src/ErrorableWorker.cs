@@ -33,7 +33,8 @@ public abstract class ErrorableWorker : BackgroundService
             }
             catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
             {
-                _logger.LogInformation(e, "OperationCanceledException at {}", e.Source);
+                _logger.LogInformation("{}: {} CancellationToken={}",
+                    e.GetType().FullName, e.Message, e.CancellationToken);
                 throw;
             }
             catch (Exception e)

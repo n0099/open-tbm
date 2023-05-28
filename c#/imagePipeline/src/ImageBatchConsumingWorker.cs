@@ -7,14 +7,14 @@ using SixLabors.ImageSharp.Formats.Gif;
 
 namespace tbm.ImagePipeline;
 
-public class ImagePipelineWorker : ErrorableWorker
+public class ImageBatchConsumingWorker : ErrorableWorker
 {
-    private readonly ILogger<ImagePipelineWorker> _logger;
+    private readonly ILogger<ImageBatchConsumingWorker> _logger;
     private readonly ILifetimeScope _scope0;
     private readonly ChannelReader<List<ImageWithBytes>> _reader;
 
-    public ImagePipelineWorker(
-        ILogger<ImagePipelineWorker> logger,
+    public ImageBatchConsumingWorker(
+        ILogger<ImageBatchConsumingWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         ILifetimeScope scope0,
         Channel<List<ImageWithBytes>> channel

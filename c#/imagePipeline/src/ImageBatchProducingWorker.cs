@@ -29,32 +29,39 @@ public class ImageBatchProducingWorker : ErrorableWorker
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        ImageId lastImageIdInPreviousBatch = 0;
         while (await _writer.WaitToWriteAsync(stoppingToken))
         {
-            var images = GetUnconsumedImages(lastImageIdInPreviousBatch);
-            if (images.Any()) await _writer.WriteAsync(new(
-                await Task.WhenAll(images.Select(async image =>
-                    new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken))
-                ))), stoppingToken);
-            else break; // no more images to consume
-            lastImageIdInPreviousBatch = images.Last().ImageId;
+            foreach (var images in GetUnconsumedImages())
+            {
+                await _writer.WriteAsync(new(
+                    await Task.WhenAll(images.Select(async image =>
+                        new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken))
+                    ))), stoppingToken);
+            }
         }
         _writer.Complete();
     }
 
-    private List<ImageInReply> GetUnconsumedImages(ImageId lastImageIdInPreviousBatch)
-    { // dispose db inside scope1 after returned to prevent long running idle connection
-        using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
-        return (from image in db.ImageInReplies.AsNoTracking()
-                where image.ImageId > lastImageIdInPreviousBatch
-                      // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
-                      && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
-                orderby image.ImageId
-                select image)
-            .Take(_batchSize * _interlaceBatchCount)
-            .Where(image => image.ImageId % _interlaceBatchCount == _interlaceBatchIndex)
-            .ToList();
+    private IEnumerable<IEnumerable<ImageInReply>> GetUnconsumedImages()
+    {
+        ImageId lastImageIdInPreviousBatch = 0;
+        while (true)
+        {
+            // dispose db inside scope1 after returned to prevent long running idle connection
+            using var scope1 = _scope0.BeginLifetimeScope();
+            var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
+            var interlaceBatches = (
+                    from image in db.ImageInReplies.AsNoTracking()
+                    where image.ImageId > lastImageIdInPreviousBatch
+                          // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
+                          && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
+                    orderby image.ImageId
+                    select image)
+                .Take(_batchSize * _interlaceBatchCount).ToList();
+            lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;
+            if (!interlaceBatches.Any()) yield break;
+            yield return interlaceBatches
+                .Where(image => image.ImageId % _interlaceBatchCount == _interlaceBatchIndex);
+        }
     }
 }
