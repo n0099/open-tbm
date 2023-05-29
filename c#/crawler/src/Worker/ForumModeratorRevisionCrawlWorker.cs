@@ -1,4 +1,5 @@
 using AngleSharp;
+using AngleSharp.Io;
 using LinqToDB;
 using LinqToDB.EntityFrameworkCore;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
@@ -8,23 +9,32 @@ namespace tbm.Crawler.Worker;
 public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
 {
     private readonly ILifetimeScope _scope0;
+    private readonly IConfiguration _config;
 
     public ForumModeratorRevisionCrawlWorker(
         ILogger<ForumModeratorRevisionCrawlWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
         ILifetimeScope scope0
-    ) : base(logger, applicationLifetime, config, shouldRunAtFirst: false) => _scope0 = scope0;
+    ) : base(logger, applicationLifetime, config, shouldRunAtFirst: false) =>
+        (_config, _scope0) = (config.GetSection("CrawlForumModeratorRevision"), scope0);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db0 = scope1.Resolve<CrawlerDbContext.New>()(0);
-        var browsing = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
         foreach (var forum in from f in db0.Forums.AsNoTracking() where f.IsCrawling select new {f.Fid, f.Name})
         {
             if (stoppingToken.IsCancellationRequested) return;
-            var doc = await browsing.OpenAsync($"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forum.Name}", stoppingToken);
+            var requester = new DefaultHttpRequester {Headers =
+            {
+                {"User-Agent", _config.GetValue("UserAgent", Strings.DefaultUserAgent) ?? Strings.DefaultUserAgent},
+                {"Referrer", $"https://tieba.baidu.com/bawu2/platform/detailsInfo?word={forum.Name}&ie=utf-8"}
+            }};
+            var browsing = BrowsingContext.New(Configuration.Default.With(requester).WithDefaultLoader());
+            var url = $"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forum.Name}";
+            var doc = await browsing.OpenAsync(url, stoppingToken);
+
             var moderators = doc.QuerySelectorAll("div.bawu_single_type").Select(typeEl =>
             {
                 var type = typeEl.QuerySelector("div.title")?.Children

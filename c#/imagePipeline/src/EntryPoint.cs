@@ -24,6 +24,9 @@ public class EntryPoint : BaseEntryPoint
                 client.BaseAddress = new("https://imgsrc.baidu.com/forum/pic/item/");
                 client.Timeout = Timeout.InfiniteTimeSpan; // overall timeout, will sum up after each retry by polly
                 client.DefaultRequestVersion = HttpVersion.Version20;
+                client.DefaultRequestHeaders.UserAgent.TryParseAdd(
+                    imageRequesterConfig.GetValue("UserAgent", Strings.DefaultUserAgent));
+                client.DefaultRequestHeaders.Referrer = new("https://tieba.baidu.com/"); // https://github.com/w3c/webappsec/issues/382
             })
             .SetHandlerLifetime(TimeSpan.FromSeconds(imageRequesterConfig.GetValue("HandlerLifetimeSec", 600))); // 10 mins
 

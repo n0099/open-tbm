@@ -92,7 +92,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
         var uniqueSignatures = signatures
             .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList();
         var existingSignatures = (
-            from s in db.ReplySignatures.AsTracking().TagWith("ForUpdate")
+            from s in db.ReplySignatures.AsTracking().ForUpdate()
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
                   && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3)
             select s
@@ -145,7 +145,7 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
                 from e in db.ImageInReplies
                 where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
                 select e)
-            .TagWith("ForUpdate").ToDictionary(e => e.UrlFilename);
+            .ForUpdate().ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
                 where existing.ExpectedByteSize == 0 // randomly respond with 0
                 join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename

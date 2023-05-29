@@ -153,7 +153,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
             where r.Pid == parentThread.FirstReplyPid select r.Pid;
         if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
 
-        var existingEntity = db.ThreadMissingFirstReplies.AsTracking().TagWith("ForUpdate")
+        var existingEntity = db.ThreadMissingFirstReplies.AsTracking().ForUpdate()
             .SingleOrDefault(e => e.Tid == tid);
         if (existingEntity == null) _ = db.ThreadMissingFirstReplies.Add(newEntity);
         else

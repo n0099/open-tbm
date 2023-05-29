@@ -38,7 +38,7 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
     )
         where TRevision : class, IRevision
     {
-        var dbSet = db.Set<TPost>().TagWith("ForUpdate");
+        var dbSet = db.Set<TPost>().ForUpdate();
 
         var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
         // deep copy before entities get mutated by CommonInSavers.SavePostsOrUsers()
