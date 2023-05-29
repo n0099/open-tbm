@@ -33,10 +33,19 @@ public class ImageBatchProducingWorker : ErrorableWorker
         {
             foreach (var images in GetUnconsumedImages())
             {
-                await _writer.WriteAsync(new(
-                    await Task.WhenAll(images.Select(async image =>
-                        new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken))
-                    ))), stoppingToken);
+                var imageWithBytesArray = await Task.WhenAll(images.Select(async image =>
+                {
+                    try
+                    {
+                        return new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken));
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Exception");
+                        return null;
+                    }
+                }));
+                await _writer.WriteAsync(new(imageWithBytesArray.OfType<ImageWithBytes>()), stoppingToken);
             }
         }
         _writer.Complete();

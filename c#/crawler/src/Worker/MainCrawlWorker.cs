@@ -91,7 +91,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
             if (stoppingToken.IsCancellationRequested) return;
             await using var scope3 = _scope0.BeginLifetimeScope();
             var failureCountsKeyByTid = threads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).Crawl(failureCountsKeyByTid, stoppingToken);
+            await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }));
 
         return savedThreads;

@@ -29,15 +29,17 @@ public class ImageRequester
         });
         using var lease = await rateLimiter.AcquireAsync(permitCount: 0, stoppingToken);
 
+        var imageId = imageInReply.ImageId;
         var urlFilename = imageInReply.UrlFilename;
         var expectedByteSize = imageInReply.ExpectedByteSize;
         if (_config.GetValue("LogTrace", false))
         {
             if (expectedByteSize == 0)
-                _logger.LogTrace("Requesting image {} and not expecting determined byte size", urlFilename);
+                _logger.LogTrace("Requesting image {} with id {} and not expecting determined byte size",
+                    urlFilename, imageId);
             else
-                _logger.LogTrace("Requesting image {} and expecting {} bytes of file size",
-                urlFilename, expectedByteSize);
+                _logger.LogTrace("Requesting image {} with id {} and expecting {} bytes of file size",
+                    urlFilename, imageId, expectedByteSize);
         }
 
         Context CreatePollyContext() => new() {{"ILogger<ImageRequester>", _logger}, {"imageUrlFilename", urlFilename}};
@@ -48,14 +50,18 @@ public class ImageRequester
         var http = _httpFactory.CreateClient("tbImage");
         var response = await ExecuteByPolly(async () => await http.GetAsync(urlFilename + ".jpg", stoppingToken));
         var contentLength = response.Content.Headers.ContentLength;
-        if (expectedByteSize != 0 && contentLength != expectedByteSize)
-            _logger.LogWarning("Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {}",
-                contentLength, expectedByteSize, urlFilename);
+        if (expectedByteSize != 0 && contentLength != expectedByteSize) _logger.LogWarning(
+            "Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {} with id {}",
+            contentLength, expectedByteSize, urlFilename, imageId);
 
         var bytes = await ExecuteByPolly(async () => await response.Content.ReadAsByteArrayAsync(stoppingToken));
-        if (expectedByteSize != 0 && bytes.Length != expectedByteSize)
-            _logger.LogWarning("Unexpected response body length {} bytes, expecting {} bytes for image {}",
-                bytes.Length, expectedByteSize, urlFilename);
+        if (contentLength != bytes.Length)
+            throw new($"Mismatch response body length {bytes.Length} with the value {contentLength} "
+                      + $"in the Content-Length header for image {urlFilename} with id {imageId}.");
+        if (expectedByteSize != 0 && bytes.Length != expectedByteSize) _logger.LogWarning(
+            "Unexpected response body length {} bytes, expecting {} bytes for image {} with id {}",
+            bytes.Length, expectedByteSize, urlFilename, imageId);
+
         return bytes;
     }
 }

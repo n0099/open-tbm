@@ -54,9 +54,9 @@ public sealed class SonicPusher : IDisposable
         }
 
         var ret = GetElapsedMs();
-        if (ret > 1000)
-            _logger.LogWarning("Pushing a single post content with {} UTF-16 chars into sonic for {} in fid {} spending {:F0}ms, content={}",
-                contentTexts.Length, type, fid, ret, contentTexts);
+        if (ret > 1000) _logger.LogWarning(
+            "Pushing a single post content with {} UTF-16 chars into sonic for {} in fid {} spending {:F0}ms, content={}",
+            contentTexts.Length, type, fid, ret, contentTexts);
         return ret;
     }
 

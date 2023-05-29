@@ -158,10 +158,9 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
             if (e is TiebaException te)
             {
-                if (!te.ShouldSilent)
-                    _logger.LogWarning("TiebaException: {} {}",
-                        string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
-                        Helper.UnescapedJsonSerialize(e.Data));
+                if (!te.ShouldSilent) _logger.LogWarning("TiebaException: {} {}",
+                    string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
+                    Helper.UnescapedJsonSerialize(e.Data));
             }
             else _logger.LogError(e, "Exception");
 
