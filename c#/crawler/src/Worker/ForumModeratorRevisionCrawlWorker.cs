@@ -1,8 +1,6 @@
 using System.Web;
 using AngleSharp;
 using AngleSharp.Io;
-using LinqToDB;
-using LinqToDB.EntityFrameworkCore;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace tbm.Crawler.Worker;

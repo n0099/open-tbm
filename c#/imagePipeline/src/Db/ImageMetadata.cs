@@ -1,8 +1,3 @@
-using System.Text.Json;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace tbm.ImagePipeline.Db;

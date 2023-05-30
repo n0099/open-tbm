@@ -1,12 +1,7 @@
 using System.Net;
-using System.Threading.Channels;
-using System.Threading.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
-using Polly;
-using Polly.Extensions.Http;
-using Polly.Registry;
 
 #pragma warning disable IDE0058
 

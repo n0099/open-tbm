@@ -1,6 +1,3 @@
-using NSonic;
-using tbm.Crawler.Worker;
-
 namespace tbm.Crawler;
 
 public sealed class SonicPusher : IDisposable

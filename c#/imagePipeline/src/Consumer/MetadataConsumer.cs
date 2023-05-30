@@ -1,11 +1,6 @@
 using System.Globalization;
 using System.IO.Hashing;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 
 namespace tbm.ImagePipeline.Consumer;

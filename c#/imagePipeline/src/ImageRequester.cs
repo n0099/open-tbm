@@ -1,7 +1,3 @@
-using System.Threading.RateLimiting;
-using Polly;
-using Polly.Registry;
-
 namespace tbm.ImagePipeline;
 
 public class ImageRequester
