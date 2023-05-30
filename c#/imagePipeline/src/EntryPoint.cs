@@ -1,5 +1,6 @@
 using System.Net;
 using System.Threading.Channels;
+using System.Threading.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
@@ -67,6 +68,17 @@ public class EntryPoint : BaseEntryPoint
                 .GetValue("MaxBufferedImageBatches", 8)
             ) {SingleReader = true, SingleWriter = true})
         ).SingleInstance();
+        builder.Register(_ =>
+        {
+            var limitRps = context.Configuration
+                .GetSection("ImageRequester").GetValue("LimitRps", 10);
+            return new FixedWindowRateLimiter(new()
+            {
+                PermitLimit = limitRps,
+                QueueLimit = limitRps,
+                Window = TimeSpan.FromSeconds(1)
+            });
+        }).SingleInstance();
 
         var config = context.Configuration.GetSection("OcrConsumer");
         var paddleOcr = builder.RegisterType<PaddleOcrRecognizerAndDetector>();

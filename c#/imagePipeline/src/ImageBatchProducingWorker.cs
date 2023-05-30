@@ -11,6 +11,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
     private readonly int _batchSize;
     private readonly int _interlaceBatchCount;
     private readonly int _interlaceBatchIndex;
+    private readonly bool _rerunFailedBatchFromStart;
 
     public ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger,
@@ -25,6 +26,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
         _batchSize = configSection.GetValue("BatchSize", 16);
         _interlaceBatchCount = configSection.GetValue("InterlaceBatchCount", 1);
         _interlaceBatchIndex = configSection.GetValue("InterlaceBatchIndex", 0);
+        _rerunFailedBatchFromStart = configSection.GetValue("RerunFailedBatchFromStart", false);
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -49,11 +51,19 @@ public class ImageBatchProducingWorker : ErrorableWorker
             }
         }
         _writer.Complete();
+        _logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.RerunFailedBatchFromStart\""
+                               + " to TRUE then restart will rerun all previous failed image batches from start.");
     }
 
     private IEnumerable<IEnumerable<ImageInReply>> GetUnconsumedImages()
     {
         ImageId lastImageIdInPreviousBatch = 0;
+        if (!_rerunFailedBatchFromStart)
+        {
+            using var scope1 = _scope0.BeginLifetimeScope();
+            var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
+            lastImageIdInPreviousBatch = db.ImageMetadata.AsNoTracking().Max(image => image.ImageId);
+        }
         while (true)
         {
             // dispose db inside scope1 after returned to prevent long running idle connection

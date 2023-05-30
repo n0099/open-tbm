@@ -10,25 +10,19 @@ public class ImageRequester
     private readonly IConfigurationSection _config;
     private readonly IHttpClientFactory _httpFactory;
     private readonly IReadOnlyPolicyRegistry<string> _registry;
+    private readonly FixedWindowRateLimiter _rateLimiter;
 
     public ImageRequester(
         ILogger<ImageRequester> logger, IConfiguration config,
-        IHttpClientFactory httpFactory, IReadOnlyPolicyRegistry<string> registry)
+        IHttpClientFactory httpFactory, IReadOnlyPolicyRegistry<string> registry, FixedWindowRateLimiter rateLimiter)
     {
-        (_logger, _httpFactory, _registry) = (logger, httpFactory, registry);
+        (_logger, _httpFactory, _registry, _rateLimiter) = (logger, httpFactory, registry, rateLimiter);
         _config = config.GetSection("ImageRequester");
     }
 
     public async Task<byte[]> GetImageBytes(ImageInReply imageInReply, CancellationToken stoppingToken = default)
     {
-        var rateLimiter = new FixedWindowRateLimiter(new()
-        {
-            PermitLimit = _config.GetValue("LimitRps", 100),
-            QueueLimit = _config.GetValue("LimitRps", 100),
-            Window = TimeSpan.FromSeconds(1)
-        });
-        using var lease = await rateLimiter.AcquireAsync(permitCount: 0, stoppingToken);
-
+        using var lease = await _rateLimiter.AcquireAsync(permitCount: 0, stoppingToken);
         var imageId = imageInReply.ImageId;
         var urlFilename = imageInReply.UrlFilename;
         var expectedByteSize = imageInReply.ExpectedByteSize;
