@@ -18,6 +18,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     private string Script { get; }
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
     public DbSet<ImageOcrLine> ImageOcrLines => Set<ImageOcrLine>();
+    public DbSet<ImageQrCode> ImageQrCodes => Set<ImageQrCode>();
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
 
@@ -29,10 +30,12 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageOcrBox>().ToTable($"tbmi_ocr_box_{Script}").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
-        b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}").HasKey(e => new {e.ImageId, e.FrameIndex});
-        b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageQrCode>().ToTable("tbmi_qrCode").HasKey(e =>
+            new {e.ImageId, e.FrameIndex, e.Point1X, e.Point1Y, e.Point2X, e.Point2Y, e.Point3X, e.Point3Y, e.Point4X, e.Point4Y});
         b.Entity<ImageMetadata>().ToTable("tbmi_metadata");
 
         void SplitImageMetadata<TRelatedEntity>

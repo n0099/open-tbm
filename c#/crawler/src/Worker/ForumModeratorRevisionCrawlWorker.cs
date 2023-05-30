@@ -1,3 +1,4 @@
+using System.Web;
 using AngleSharp;
 using AngleSharp.Io;
 using LinqToDB;
@@ -26,10 +27,10 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
         foreach (var forum in from f in db0.Forums.AsNoTracking() where f.IsCrawling select new {f.Fid, f.Name})
         {
             if (stoppingToken.IsCancellationRequested) return;
-            var requester = new DefaultHttpRequester {Headers =
+            var userAgent = _config.GetValue("UserAgent", Strings.DefaultUserAgent);
+            var requester = new DefaultHttpRequester(userAgent) {Headers =
             {
-                {"User-Agent", _config.GetValue("UserAgent", Strings.DefaultUserAgent) ?? Strings.DefaultUserAgent},
-                {"Referrer", $"https://tieba.baidu.com/bawu2/platform/detailsInfo?word={forum.Name}&ie=utf-8"}
+                {"Referrer", $"https://tieba.baidu.com/bawu2/platform/detailsInfo?word={HttpUtility.UrlEncode(forum.Name)}&ie=utf-8"}
             }};
             var browsing = BrowsingContext.New(Configuration.Default.With(requester).WithDefaultLoader());
             var url = $"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forum.Name}";

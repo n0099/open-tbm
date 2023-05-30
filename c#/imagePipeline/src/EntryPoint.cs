@@ -57,6 +57,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<JoinedRecognizer>();
         builder.RegisterType<OcrConsumer>();
         builder.RegisterType<HashConsumer>();
+        builder.RegisterType<QrCodeConsumer>();
         builder.RegisterType<MetadataConsumer>();
         builder.RegisterType<ImageRequester>();
 

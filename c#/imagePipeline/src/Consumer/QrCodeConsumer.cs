@@ -1,0 +1,51 @@
+namespace tbm.ImagePipeline.Consumer;
+
+public class QrCodeConsumer : MatrixConsumer, IDisposable
+{
+    private readonly WeChatQRCode _qrCode;
+
+    public QrCodeConsumer(IConfiguration config)
+    {
+        var modelsPath = config.GetSection("QrCodeConsumer")
+            .GetValue("ModelPath", "./OpenCvWechatModels") ?? "./OpenCvWechatModels";
+        _qrCode = WeChatQRCode.Create(
+            $"{modelsPath}/detect.prototxt",
+            $"{modelsPath}/detect.caffemodel",
+            $"{modelsPath}/sr.prototxt",
+            $"{modelsPath}/sr.caffemodel");
+    }
+
+    public void Dispose() => _qrCode.Dispose();
+
+    protected override void ConsumeInternal(
+        ImagePipelineDbContext db,
+        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
+        CancellationToken stoppingToken = default) =>
+        db.ImageQrCodes.AddRange(imageKeysWithMatrix.SelectMany(imageKeyWithMatrix =>
+        {
+            _qrCode.DetectAndDecode(imageKeyWithMatrix.Matrix, out var boxes, out var results);
+            return boxes.EquiZip(results).Select(t =>
+            {
+                var (boxMat, result) = t;
+                if (boxMat.Width != 2 || boxMat.Height != 4)
+                    throw new($"Unexpected matrix \"{boxMat}\" returned by WeChatQRCode.DetectAndDecode().");
+                if (!boxMat.GetArray(out float[] boxPoints))
+                    throw new("Failed to convert matrix into byte array.");
+                var points = boxPoints.Chunk(2).ToList();
+                return new ImageQrCode
+                {
+                    ImageId = imageKeyWithMatrix.ImageId,
+                    FrameIndex = imageKeyWithMatrix.FrameIndex,
+                    Point1X = points[0][0],
+                    Point1Y = points[0][1],
+                    Point2X = points[1][0],
+                    Point2Y = points[1][1],
+                    Point3X = points[2][0],
+                    Point3Y = points[2][1],
+                    Point4X = points[3][0],
+                    Point4Y = points[3][1],
+                    Text = result
+                };
+            });
+        }));
+}

@@ -39,6 +39,9 @@ public class ImageBatchConsumingWorker : ErrorableWorker
                 {
                     var hashConsumer = scope1.Resolve<HashConsumer>();
                     hashConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
+                    var qrCodeConsumer = scope1.Resolve<QrCodeConsumer>();
+                    qrCodeConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
+
                     _ = await db.SaveChangesAsync(stoppingToken);
                     await ConsumeOcrConsumerWithAllScrips(scope1, db.Database.GetDbConnection(),
                         transaction.GetDbTransaction(), imageKeysWithMatrix, stoppingToken);
