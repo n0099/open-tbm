@@ -67,8 +67,8 @@ public class ImageBatchProducingWorker : ErrorableWorker
                     orderby image.ImageId
                     select image)
                 .Take(_batchSize * _interlaceBatchCount).ToList();
-            lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;
             if (!interlaceBatches.Any()) yield break;
+            lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;
             yield return interlaceBatches
                 .Where(image => image.ImageId % _interlaceBatchCount == _interlaceBatchIndex);
         }

@@ -50,15 +50,16 @@ public class ImageRequester
         var http = _httpFactory.CreateClient("tbImage");
         var response = await ExecuteByPolly(async () => await http.GetAsync(urlFilename + ".jpg", stoppingToken));
         var contentLength = response.Content.Headers.ContentLength;
-        if (expectedByteSize != 0 && contentLength != expectedByteSize) _logger.LogWarning(
-            "Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {} with id {}",
-            contentLength, expectedByteSize, urlFilename, imageId);
-
         var bytes = await ExecuteByPolly(async () => await response.Content.ReadAsByteArrayAsync(stoppingToken));
+
         if (contentLength != bytes.Length)
             throw new($"Mismatch response body length {bytes.Length} with the value {contentLength} "
                       + $"in the Content-Length header for image {urlFilename} with id {imageId}.");
-        if (expectedByteSize != 0 && bytes.Length != expectedByteSize) _logger.LogWarning(
+        if (expectedByteSize == 0) return bytes;
+        if (contentLength != expectedByteSize) _logger.LogWarning(
+            "Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {} with id {}",
+            contentLength, expectedByteSize, urlFilename, imageId);
+        else if (bytes.Length != expectedByteSize) _logger.LogWarning(
             "Unexpected response body length {} bytes, expecting {} bytes for image {} with id {}",
             bytes.Length, expectedByteSize, urlFilename, imageId);
 

@@ -86,16 +86,18 @@ public class EntryPoint : BaseEntryPoint
         PolicyBuilder<T> policyBuilder,
         PolicyOnRetryLogDelegate<T> onRetryLogDelegate) =>
         registry.Add($"tbImage<{typeof(T).Name}>", Policy.WrapAsync(
-            policyBuilder.RetryForeverAsync((outcome, tryCount, policyContext) =>
-            { // https://www.stevejgordon.co.uk/passing-an-ilogger-to-polly-policies
-                if (policyContext.TryGetValue("ILogger<ImageRequester>", out var o1)
-                    && o1 is ILogger<ImageRequester> logger
-                    && policyContext.TryGetValue("imageUrlFilename", out var o2)
-                    && o2 is string imageUrlFilename)
-                {
-                    onRetryLogDelegate(logger, imageUrlFilename, outcome, tryCount);
-                }
-            }),
+            policyBuilder.RetryAsync(
+                imageRequesterConfig.GetValue("MaxRetryTimes", 5),
+                (outcome, tryCount, policyContext) =>
+                { // https://www.stevejgordon.co.uk/passing-an-ilogger-to-polly-policies
+                    if (policyContext.TryGetValue("ILogger<ImageRequester>", out var o1)
+                        && o1 is ILogger<ImageRequester> logger
+                        && policyContext.TryGetValue("imageUrlFilename", out var o2)
+                        && o2 is string imageUrlFilename)
+                    {
+                        onRetryLogDelegate(logger, imageUrlFilename, outcome, tryCount);
+                    }
+                }),
             // timeout for each retry, https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
             Policy.TimeoutAsync<T>(imageRequesterConfig.GetValue("TimeoutMs", 3000))));
 }
