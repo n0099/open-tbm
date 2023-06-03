@@ -53,8 +53,11 @@ abstract class PostModel extends ModelWithHiddenFields
     {
         // only fetch current post ID and its parent posts ID when we can fetch all fields
         // since BaseQuery::fillWithParentPost() will query detailed value of other fields
-        return $query->addSelect(array_values(\array_slice(Helper::POST_TYPE_TO_ID, 0,
-            array_search(self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class], Helper::POST_TYPES) + 1)));
+        return $query->addSelect(array_values(\array_slice(
+            Helper::POST_TYPE_TO_ID,
+            0,
+            array_search(self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class], Helper::POST_TYPES) + 1
+        )));
     }
 
     public function scopeTid(Builder $query, Collection|array|int $tid): Builder

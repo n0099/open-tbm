@@ -86,8 +86,11 @@ abstract class BaseQuery
             'nextCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
                 ? $postKeyByTypePluralName
                 : $postKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
-            'hasMorePages' => self::unionPageStats($paginators, 'hasMorePages',
-                static fn (Collection $v) => $v->filter()->count() !== 0) // Collection->filter() will remove false values
+            'hasMorePages' => self::unionPageStats(
+                $paginators,
+                'hasMorePages',
+                static fn (Collection $v) => $v->filter()->count() !== 0
+            ) // Collection->filter() will remove false values
         ];
 
         Debugbar::stopMeasure('setResult');
@@ -169,11 +172,13 @@ abstract class BaseQuery
                         '0' => 0, // keep 0 as is
                         'S' => $cursor, // string literal is not base64 encoded
                         default => ((array)(
-                            unpack('P',
+                            unpack(
+                                'P',
                                 str_pad( // re-add removed trailing 0x00 or 0xFF
                                     base64_decode(
                                         str_replace(['-', '_'], ['+', '/'], $cursor) // https://en.wikipedia.org/wiki/Base64#URL_applications
-                                    ), 8, $prefix === '-' ? "\xFF" : "\x00"))
+                                    ), 8, $prefix === '-' ? "\xFF" : "\x00")
+                            )
                         ))[1] // the returned array of unpack() will starts index from 1
                     };
                 })
@@ -301,7 +306,8 @@ abstract class BaseQuery
                     PostModelFactory::newReplyContent($fid)
                         ->pid($replies->pluck('pid'))->get()
                         ->keyBy('pid')->map($parseThenRenderContentModel),
-                    'pid')));
+                    'pid'
+                )));
         }
         if ($subReplies->isNotEmpty()) {
             Debugbar::measure('fillSubRepliesContent', static fn () =>
@@ -309,7 +315,8 @@ abstract class BaseQuery
                 PostModelFactory::newSubReplyContent($fid)
                     ->spid($subReplies->pluck('spid'))->get()
                     ->keyBy('spid')->map($parseThenRenderContentModel),
-                'spid')));
+                'spid'
+            )));
         }
     }
 
@@ -376,7 +383,8 @@ abstract class BaseQuery
                 unset($post['sortingKey']);
                 return $post;
             });
-        $ret = $sortPosts($nestedPosts
+        $ret = $sortPosts(
+            $nestedPosts
             ->map(function (array $thread) use ($sortPosts, $getSortingKeyFromCurrentAndChildPosts) {
                 $thread['replies'] = $sortPosts(collect($thread['replies'])
                     ->map(function (array $reply) use ($getSortingKeyFromCurrentAndChildPosts) {

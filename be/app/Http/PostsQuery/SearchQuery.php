@@ -97,7 +97,7 @@ class SearchQuery extends BaseQuery
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
                         'good' => $qb->where('isGood', !$sub['not']),
-                        'sticky' => $qb->{"where{$inverseNot}Null"}('stickyType')
+                        'sticky' => $qb->{"where{$inverseNot}null"}('stickyType')
                     };
                 }
                 return $qb;
@@ -106,7 +106,10 @@ class SearchQuery extends BaseQuery
                 $qb->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
                     $getAndCacheUserQuery(self::applyTextMatchParamOnQuery(
-                        UserModel::select('uid'), $fieldNameOfUserNameParams, $value, $sub
+                        UserModel::select('uid'),
+                        $fieldNameOfUserNameParams,
+                        $value,
+                        $sub
                     ))
                 ),
             'authorGender', 'latestReplierGender' =>
@@ -116,7 +119,7 @@ class SearchQuery extends BaseQuery
                 ),
             'authorManagerType' =>
                 $value === 'NULL'
-                    ? $qb->{"where{$not}Null"}('authorManagerType')
+                    ? $qb->{"where{$not}null"}('authorManagerType')
                     : $qb->where('authorManagerType', $sub['not'] ? '!=' : '=', $value),
             default => $qb
         };

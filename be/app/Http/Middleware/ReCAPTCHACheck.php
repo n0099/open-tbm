@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Helper;
 use ReCaptcha\ReCaptcha;
 use ReCaptcha\RequestMethod\CurlPost;
+
 class ReCAPTCHACheck
 {
     public function handle(\Illuminate\Http\Request $request, \Closure $next): mixed

@@ -31,8 +31,7 @@ class BilibiliVote extends Command
             ->chunk(10, static function (Collection $voteReplies) use ($voteResultModel) {
                 $voteResults = [];
                 $candidateIDRange = range(1, 1056);
-                $votersPreviousValidVoteCount = $voteResultModel
-                    ::select('authorUid')
+                $votersPreviousValidVoteCount = $voteResultModel::select('authorUid')
                     ->selectRaw('COUNT(*)')
                     ->whereIn('authorUid', $voteReplies->pluck('authorUid'))
                     ->where('isValid', true)
