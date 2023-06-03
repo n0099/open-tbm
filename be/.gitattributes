@@ -1,4 +1,3 @@
-# https://github.com/laravel/laravel/blob/master/.gitattributes
 * text=auto eol=lf
 
 *.blade.php diff=html

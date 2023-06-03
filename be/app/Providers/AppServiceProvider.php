@@ -3,36 +3,21 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use View;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Bootstrap any application services.
-     *
-     * @return void
+     * Register any application services.
      */
-    public function boot()
+    public function register(): void
     {
-        // immediately rollback any transaction left open by previous failed queue
-        \Queue::looping(static function () {
-            while (\DB::transactionLevel() > 0) {
-                \DB::rollBack();
-            }
-        });
-
-        // global view variables
-        View::share('baseUrl', env('APP_URL'));
-        View::share('reCAPTCHASiteKey', env('reCAPTCHA_SITE_KEY'));
-        View::share('GATrackingID', env('GA_TRACKING_ID'));
+        //
     }
 
     /**
-     * Register any application services.
-     *
-     * @return void
+     * Bootstrap any application services.
      */
-    public function register()
+    public function boot(): void
     {
         //
     }
