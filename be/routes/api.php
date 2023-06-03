@@ -3,9 +3,10 @@
 use App\Helper;
 use App\Http\Middleware\ReCAPTCHACheck;
 use App\Tieba\Eloquent\PostModelFactory;
-use Illuminate\Validation\Rule;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,10 +14,11 @@ use Illuminate\Http\Request;
 |--------------------------------------------------------------------------
 |
 | Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
 |
 */
+
 Route::get('/forums', static fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(static function () {
@@ -47,7 +49,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
                 CAST(SUM(parsedUserTimes) AS UNSIGNED) AS parsedUserTimes
             ')
             ->fromSub(static fn (Builder $query) =>
-                $query->from('tbm_crawledPosts')
+            $query->from('tbm_crawledPosts')
                 ->selectRaw($groupByTimeGranularity[$queryParams['timeGranularity']])
                 ->selectRaw('
                     queueTiming,
