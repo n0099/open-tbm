@@ -45,7 +45,7 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheK
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
-        b.Entity<ReplyContentImage>().ToTable("tbmc_reply_content_image").HasKey(e => new {e.Pid, e.ImageId});
+        b.Entity<ReplyContentImage>().ToTable($"tbmc_f{Fid}_reply_content_image").HasKey(e => new {e.Pid, e.ImageId});
         b.Entity<ReplyContentImage>().HasOne(e => e.ImageInReply).WithMany();
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");

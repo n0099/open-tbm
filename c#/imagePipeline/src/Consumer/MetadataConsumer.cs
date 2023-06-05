@@ -46,7 +46,7 @@ public partial class MetadataConsumer
                 RawBytes = iccProfileRawBytes!
             };
             if (iccProfile != null && _commonIccProfilesXxHash3ToIgnore.Contains(iccProfile.XxHash3))
-                iccProfile = null;
+                iccProfile.RawBytes = null;
 
             return new ImageMetadata
             {

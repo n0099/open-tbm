@@ -1,5 +1,5 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.ImagePipeline.Db;
 
 public class ImageMetadata : ImageMetadata.IImageMetadata
@@ -66,7 +66,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public ulong XxHash3 { get; set; }
-        public required byte[] RawBytes { get; set; }
+        public required byte[]? RawBytes { get; set; }
     }
 
     public class Jpg : IImageMetadata

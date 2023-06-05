@@ -11,10 +11,11 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
         // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
         public object Create(DbContext context, bool designTime) =>
             context is ImagePipelineDbContext dbContext
-                ? (context.GetType(), dbContext.Script, designTime)
+                ? (context.GetType(), dbContext.Fid, dbContext.Script, designTime)
                 : context.GetType();
     }
 
+    private Fid Fid { get; }
     private string Script { get; }
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
     public DbSet<ImageOcrLine> ImageOcrLines => Set<ImageOcrLine>();
@@ -22,16 +23,17 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
 
-    public delegate ImagePipelineDbContext New(string script);
+    public delegate ImagePipelineDbContext New(Fid fid, string script);
 
-    public ImagePipelineDbContext(IConfiguration config, string script) : base(config) => Script = script;
+    public ImagePipelineDbContext(IConfiguration config, Fid fid, string script)
+        : base(config) => (Fid, Script) = (fid, script);
 
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
         b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
-        b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}").HasKey(e => new {e.ImageId, e.FrameIndex});
+        b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}_f{Fid}").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageOcrBox>().ToTable($"tbmi_ocr_box_{Script}").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
         b.Entity<ImageQrCode>().ToTable("tbmi_qrCode").HasKey(e =>
