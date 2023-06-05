@@ -38,7 +38,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
             'endTime' => 'required|integer|numeric'
         ]);
 
-        return \DB::query()
+        return DB::query()
             ->selectRaw('
                 CAST(UNIX_TIMESTAMP(startTime) AS UNSIGNED) AS startTime,
                 SUM(queueTiming) AS queueTiming,

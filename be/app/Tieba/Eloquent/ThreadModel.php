@@ -3,6 +3,7 @@
 namespace App\Tieba\Eloquent;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use TbClient\Post\Common\Lbs;
 use TbClient\Post\Common\Zan;
 
@@ -57,7 +58,10 @@ class ThreadModel extends PostModel
         return self::makeProtoBufAttribute(Lbs::class);
     }
 
-    public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * @psalm-return HasMany<ReplyModel>
+     */
+    public function replies(): HasMany
     {
         return $this->hasMany(ReplyModel::class, 'tid', 'tid');
     }

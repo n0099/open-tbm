@@ -97,7 +97,7 @@ class SearchQuery extends BaseQuery
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
                         'good' => $qb->where('isGood', !$sub['not']),
-                        'sticky' => $qb->{"where{$inverseNot}null"}('stickyType')
+                        'sticky' => $qb->{"where{$inverseNot}Null"}('stickyType')
                     };
                 }
                 return $qb;
@@ -119,7 +119,7 @@ class SearchQuery extends BaseQuery
                 ),
             'authorManagerType' =>
                 $value === 'NULL'
-                    ? $qb->{"where{$not}null"}('authorManagerType')
+                    ? $qb->{"where{$not}Null"}('authorManagerType')
                     : $qb->where('authorManagerType', $sub['not'] ? '!=' : '=', $value),
             default => $qb
         };

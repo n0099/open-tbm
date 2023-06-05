@@ -4,6 +4,8 @@ namespace App\Tieba\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use TbClient\Post\Common\Lbs;
 
@@ -40,12 +42,18 @@ class ReplyModel extends PostModel
         return self::makeProtoBufAttribute(Lbs::class);
     }
 
-    public function thread(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    /**
+     * @psalm-return BelongsTo<ThreadModel>
+     */
+    public function thread(): BelongsTo
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
     }
 
-    public function subReplies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * @psalm-return HasMany<SubReplyModel>
+     */
+    public function subReplies(): HasMany
     {
         return $this->hasMany(SubReplyModel::class, 'pid', 'pid');
     }

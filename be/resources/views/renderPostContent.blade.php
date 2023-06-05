@@ -212,5 +212,5 @@ try {
 @endspaceless
 <?php
 } catch (Exception $e) {
-    \Log::channel('post-content-render')->error($e);
+    Log::channel('post-content-render')->error($e);
 }

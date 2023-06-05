@@ -27,11 +27,17 @@ class SubReplyModel extends PostModel
         'disagreeCount' => NullableNumericAttributeCast::class
     ];
 
+    /**
+     * @psalm-return BelongsTo<ThreadModel>
+     */
     public function thread(): BelongsTo
     {
         return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
     }
 
+    /**
+     * @psalm-return BelongsTo<ReplyModel>
+     */
     public function reply(): BelongsTo
     {
         return $this->belongsTo(ReplyModel::class, 'pid', 'pid');

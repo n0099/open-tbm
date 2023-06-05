@@ -19,6 +19,9 @@ class QueryParams
         $this->params = array_map(static fn ($p) => new Param($p), $params);
     }
 
+    /**
+     * @psalm-return int<0, max>
+     */
     public function count(): int
     {
         return count($this->params);
@@ -26,6 +29,7 @@ class QueryParams
 
     /**
      * @return Param[]
+     * @psalm-return list<App\Http\PostsQuery\Param>
      */
     public function pick(string ...$names): array
     {
@@ -38,6 +42,7 @@ class QueryParams
 
     /**
      * @return Param[]
+     * @psalm-return list<App\Http\PostsQuery\Param>
      */
     public function omit(string ...$names): array
     {

@@ -11,6 +11,9 @@ class NullableBooleanAttributeCast implements CastsAttributes
         return $value === 1;
     }
 
+    /**
+     * @psalm-return 0|1
+     */
     public function set($model, string $key, $value, array $attributes): int
     {
         \is_bool($value) || $value = (bool)$value;

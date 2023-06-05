@@ -110,7 +110,7 @@ class Helper
         return array_column($array, null, $itemsKey);
     }
 
-    public static function nullableValidate($value, bool $isJson = false)
+    public static function nullableValidate(string $value, bool $isJson = false)
     {
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
@@ -123,6 +123,10 @@ class Helper
         return array_filter($haystack, static fn ($value) => $value !== $equalTo) === [];
     }
 
+    /**
+     * @return string[]
+     * @psalm-return array{minute: string, hour: string, day: string, week: string, month: string, year: string}
+     */
     #[Pure] public static function rawSqlGroupByTimeGranularity(
         string $fieldName,
         array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year']

@@ -1,8 +1,5 @@
 parameters:
     paths:
-        - app
-    level: 8
+        - app/
+    level: 9
     ignoreErrors:
-    excludePaths:
-        - ./*/*/FileToBeExcluded.php
-    checkMissingIterableValueType: true

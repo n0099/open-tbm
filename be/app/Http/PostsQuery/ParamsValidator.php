@@ -44,7 +44,7 @@ class ParamsValidator
             'userGender' => [0, 1, 2],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin']
         ];
-        $dateRangeValidator = static function ($_, string $value) {
+        $dateRangeValidator = static function ($_, string $value): void {
             \Validator::make(
                 explode(',', $value),
                 ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0']

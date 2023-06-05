@@ -153,8 +153,7 @@ abstract class BaseQuery
     }
 
     /**
-     * @param string $encodedCursors
-     * @return Collection<string, Cursor>
+     * @psalm-return Collection<'reply'|'subReply'|'thread', Cursor>
      */
     private function decodePageCursor(string $encodedCursors): Collection
     {
@@ -223,9 +222,8 @@ abstract class BaseQuery
         /** @var Collection<int> $tids */
         /** @var Collection<int> $pids */
         /** @var Collection<int> $spids */
-        /** @var Collection<ThreadModel> $threads */
-        /** @var Collection<ReplyModel> $replies */
-        /** @var Collection<SubReplyModel> $subReplies */
+        /** @var Collection<array-key, ReplyModel> $replies */
+        /** @var Collection<array-key, SubReplyModel> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
             /**
              * @param string $postIDName
@@ -247,6 +245,7 @@ abstract class BaseQuery
         Debugbar::startMeasure('fillWithThreadsFields');
         /** @var Collection<int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
+        /** @var Collection<array-key, ThreadModel> $threads */
         $threads = $postModels['thread']
             ->tid($parentThreadsID->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->hidePrivateFields()->get()
@@ -293,9 +292,10 @@ abstract class BaseQuery
         /**
          * @param Collection<?string> $contents
          * @param string $postIDName
-         * @return \Closure
+         * @return Closure
+         * @psalm-return Closure(PostModel):PostModel
          */
-        $appendParsedContent = static fn (Collection $contents, string $postIDName) =>
+        $appendParsedContent = static fn (Collection $contents, string $postIDName): Closure =>
             static function (PostModel $post) use ($contents, $postIDName): PostModel {
                 $post->content = $contents[$post[$postIDName]];
                 return $post;
