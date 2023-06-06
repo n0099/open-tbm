@@ -17,6 +17,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
 
     private Fid Fid { get; }
     private string Script { get; }
+    public DbSet<ForumScript> ForumScripts => Set<ForumScript>();
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
     public DbSet<ImageOcrLine> ImageOcrLines => Set<ImageOcrLine>();
     public DbSet<ImageQrCode> ImageQrCodes => Set<ImageQrCode>();
@@ -42,6 +43,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
         b.Entity<ImageQrCode>().ToTable("tbmi_qrCode").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.Point1X, e.Point1Y, e.Point2X, e.Point2Y, e.Point3X, e.Point3Y, e.Point4X, e.Point4Y});
         b.Entity<ImageMetadata>().ToTable("tbmi_metadata");
+        b.Entity<ForumScript>().ToTable("tbmi_forum_script").HasKey(e => new {e.Fid, e.Script});
 
         void SplitImageMetadata<TRelatedEntity>
             (Expression<Func<ImageMetadata, TRelatedEntity?>> keySelector, string tableNameSuffix)

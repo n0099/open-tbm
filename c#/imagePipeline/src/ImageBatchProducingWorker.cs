@@ -37,6 +37,10 @@ public class ImageBatchProducingWorker : ErrorableWorker
                 {
                     return new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken));
                 }
+                catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     _logger.LogError(e, "Exception");
@@ -47,7 +51,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
         }
         _writer.Complete();
         _logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.StartFromLatestSuccessful\""
-                               + " to false then restart will rerun all previous failed image batches from start.");
+                               + " to false then restart will rerun all previous failed image batches from start");
     }
 
     private IEnumerable<IEnumerable<ImageInReply>> GetUnconsumedImages()

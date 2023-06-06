@@ -41,14 +41,18 @@ public class ImageBatchConsumingWorker : ErrorableWorker
                     qrCodeConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
 
                     _ = await db.SaveChangesAsync(stoppingToken);
-                    await ConsumeOcrConsumerWithAllScrips(scope1, db.Database.GetDbConnection(),
-                        transaction.GetDbTransaction(), imageKeysWithMatrix, stoppingToken);
+                    await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
+                        db.ForumScripts, imageKeysWithMatrix, stoppingToken);
                     await transaction.CommitAsync(stoppingToken);
                 }
                 finally
                 {
                     imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
                 }
+            }
+            catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -104,24 +108,40 @@ public class ImageBatchConsumingWorker : ErrorableWorker
         }
     }
 
-    private static async Task ConsumeOcrConsumerWithAllScrips(
+    private static async Task ConsumeOcrConsumer(
         ILifetimeScope scope,
         DbConnection parentConnection,
         DbTransaction parentTransaction,
+        IQueryable<ForumScript> forumScripts,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
     {
-        foreach (var script in new[] {"zh-Hans", "zh-Hant", "ja", "en"})
+        foreach (var scriptsGroupByFid in forumScripts.GroupBy(e => e.Fid, e => e.Script).ToList())
         {
             await using var scope1 = scope.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.New>()(script);
+            var db = scope1.Resolve<ImagePipelineDbContext.New>()(scriptsGroupByFid.Key, "");
+            db.Database.SetDbConnection(parentConnection);
+            _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
+            var imagesInCurrentFid = imageKeysWithMatrix.IntersectBy(
+                db.ReplyContentImages.Where(replyContentImage => imageKeysWithMatrix
+                        .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                        .Contains(replyContentImage.ImageId))
+                    .Select(e => e.ImageId),
+                i => i.ImageId).ToList();
+            foreach (var script in scriptsGroupByFid)
+                await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
+        }
+        async Task ConsumeByFidAndScript(Fid fid, string script, IEnumerable<ImageKeyWithMatrix> imagesInCurrentFid)
+        {
+            await using var scope1 = scope.BeginLifetimeScope();
+            var db = scope1.Resolve<ImagePipelineDbContext.New>()(fid, script);
             // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
             db.Database.SetDbConnection(parentConnection);
             _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
 
             var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
-            ocrConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
+            ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
             _ = await db.SaveChangesAsync(stoppingToken);
         }
     }
