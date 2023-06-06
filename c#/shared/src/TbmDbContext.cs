@@ -13,6 +13,7 @@ namespace tbm.Shared;
 public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKeyFactory : IModelCacheKeyFactory
 {
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
+    public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
     private readonly IConfiguration _config;
     private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
@@ -37,8 +38,15 @@ public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKe
         if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
     }
 
-    protected override void OnModelCreating(ModelBuilder b) =>
+    protected override void OnModelCreating(ModelBuilder b)
+    {
         b.Entity<ImageInReply>().ToTable("tbmi_imageInReply");
+        b.Entity<ReplyContentImage>().HasKey(e => new {e.Pid, e.ImageId});
+        b.Entity<ReplyContentImage>().HasOne(e => e.ImageInReply).WithMany();
+    }
+
+    protected void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
+        b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
 #pragma warning restore IDE0058 // Expression value is never used
 
     private class SelectForUpdateCommandInterceptor : DbCommandInterceptor

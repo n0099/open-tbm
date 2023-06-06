@@ -4,9 +4,9 @@ using static tbm.ImagePipeline.Db.ImageMetadata;
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelWithScriptCacheKeyFactory>
+public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>
 {
-    public class ModelWithScriptCacheKeyFactory : IModelCacheKeyFactory
+    public class ModelCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
         // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
         public object Create(DbContext context, bool designTime) =>
@@ -23,8 +23,10 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
 
+    public delegate ImagePipelineDbContext NewDefault();
     public delegate ImagePipelineDbContext New(Fid fid, string script);
 
+    public ImagePipelineDbContext(IConfiguration config) : base(config) => (Fid, Script) = (0, "");
     public ImagePipelineDbContext(IConfiguration config, Fid fid, string script)
         : base(config) => (Fid, Script) = (fid, script);
 
@@ -32,6 +34,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelW
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        OnModelCreatingWithFid(b, Fid);
         b.Entity<ImageHash>().ToTable("tbmi_hash").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageOcrLine>().ToTable($"tbmi_ocr_line_{Script}_f{Fid}").HasKey(e => new {e.ImageId, e.FrameIndex});
         b.Entity<ImageOcrBox>().ToTable($"tbmi_ocr_box_{Script}").HasKey(e =>

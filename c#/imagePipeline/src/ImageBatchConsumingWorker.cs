@@ -26,7 +26,7 @@ public class ImageBatchConsumingWorker : ErrorableWorker
             try
             {
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
+                var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
                 await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
                 var metadataConsumer = scope1.Resolve<MetadataConsumer>();

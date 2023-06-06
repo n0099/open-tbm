@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Db;
+namespace tbm.Shared;
 
 public class ReplyContentImage
 {

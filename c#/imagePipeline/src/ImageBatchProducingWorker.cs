@@ -29,24 +29,21 @@ public class ImageBatchProducingWorker : ErrorableWorker
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        while (await _writer.WaitToWriteAsync(stoppingToken))
+        foreach (var images in GetUnconsumedImages())
         {
-            foreach (var images in GetUnconsumedImages())
+            var imageWithBytesArray = await Task.WhenAll(images.Select(async image =>
             {
-                var imageWithBytesArray = await Task.WhenAll(images.Select(async image =>
+                try
                 {
-                    try
-                    {
-                        return new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken));
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError(e, "Exception");
-                        return null;
-                    }
-                }));
-                await _writer.WriteAsync(new(imageWithBytesArray.OfType<ImageWithBytes>()), stoppingToken);
-            }
+                    return new ImageWithBytes(image, await _imageRequester.GetImageBytes(image, stoppingToken));
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Exception");
+                    return null;
+                }
+            }));
+            await _writer.WriteAsync(new(imageWithBytesArray.OfType<ImageWithBytes>()), stoppingToken);
         }
         _writer.Complete();
         _logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.StartFromLatestSuccessful\""
@@ -59,14 +56,14 @@ public class ImageBatchProducingWorker : ErrorableWorker
         if (_startFromLatestSuccessful)
         {
             using var scope1 = _scope0.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
+            var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
             lastImageIdInPreviousBatch = db.ImageMetadata.AsNoTracking().Max(image => image.ImageId);
         }
         while (true)
         {
             // dispose db inside scope1 after returned to prevent long running idle connection
             using var scope1 = _scope0.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.New>()("");
+            var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
             var interlaceBatches = (
                     from image in db.ImageInReplies.AsNoTracking()
                     where image.ImageId > lastImageIdInPreviousBatch

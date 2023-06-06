@@ -21,7 +21,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db0 = scope1.Resolve<CrawlerDbContext.New>()(0);
+        var db0 = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         foreach (var forum in from e in db0.Forums.AsNoTracking() where e.IsCrawling select new {e.Fid, e.Name})
         {
             if (stoppingToken.IsCancellationRequested) return;
@@ -63,7 +63,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
         CancellationToken stoppingToken = default)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<CrawlerDbContext.New>()(0);
+        var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
         Helper.GetNowTimestamp(out var now);

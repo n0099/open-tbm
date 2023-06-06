@@ -24,7 +24,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<CrawlerDbContext.New>()(0);
+        var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         var forumPostCountsTuples = db.Database.GetDbConnection()
             .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
                 string.Join(" UNION ALL ", (from f in db.Forums select f.Fid).AsEnumerable().Select(fid =>

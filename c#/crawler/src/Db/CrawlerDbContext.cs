@@ -6,9 +6,9 @@ using static tbm.Crawler.Db.Revision.UserRevision;
 
 namespace tbm.Crawler.Db;
 
-public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheKeyFactory>
+public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>
 {
-    public class ModelWithFidCacheKeyFactory : IModelCacheKeyFactory
+    public class ModelCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
         // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
         public object Create(DbContext context, bool designTime) =>
@@ -26,27 +26,27 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelWithFidCacheK
     public DbSet<ReplyPost> Replies => Set<ReplyPost>();
     public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
     public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
-    public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
     public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
     public DbSet<Forum> Forums => Set<Forum>();
 
+    public delegate CrawlerDbContext NewDefault();
     public delegate CrawlerDbContext New(Fid fid);
 
+    public CrawlerDbContext(IConfiguration config) : base(config) => Fid = 0;
     public CrawlerDbContext(IConfiguration config, Fid fid) : base(config) => Fid = fid;
 
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        OnModelCreatingWithFid(b, Fid);
         b.Entity<TiebaUser>().ToTable("tbmc_user");
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
-        b.Entity<ReplyContentImage>().ToTable($"tbmc_f{Fid}_reply_content_image").HasKey(e => new {e.Pid, e.ImageId});
-        b.Entity<ReplyContentImage>().HasOne(e => e.ImageInReply).WithMany();
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 

@@ -43,7 +43,7 @@ public class RetryCrawlWorker : CyclicCrawlWorker
             {
                 if (stoppingToken.IsCancellationRequested) return;
                 await using var scope1 = _scope0.BeginLifetimeScope();
-                var db = scope1.Resolve<CrawlerDbContext.New>()(0);
+                var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
                 var ((fid, tid, pid), failureCountsKeyByPage) = pair;
                 var pages = failureCountsKeyByPage.Keys.ToList();
                 FailureCount FailureCountSelector(Page p) => failureCountsKeyByPage[p];

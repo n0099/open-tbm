@@ -33,7 +33,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
         ([EnumeratorCancellation] CancellationToken stoppingToken = default)
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<CrawlerDbContext.New>()(0);
+        var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         var forums = (from f in db.Forums.AsNoTracking()
             where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
         var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
