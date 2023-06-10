@@ -58,8 +58,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
         (ImageKey imageKey, string script, PaddleOcrResult result) =>
         result.Regions.Select(region => new PaddleOcrRecognitionResult(
-            imageKey, script, region.Rect, region.Text,
-            (region.Score * 100).NanToZero().RoundToUshort()));
+            imageKey, region.Rect, region.Text, (region.Score * 100).NanToZero().RoundToUshort()));
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 

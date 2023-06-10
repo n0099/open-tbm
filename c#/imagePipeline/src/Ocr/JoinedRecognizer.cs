@@ -133,9 +133,8 @@ public class JoinedRecognizer
                 var imageKey = g.Key;
                 var boxes = recognizedDetectedTextBoxes[imageKey]
                     .IntersectBy(g.Select(result => result.TextBox), pair => pair.RecognizedTextBox)
-                    .Select(pair => (IsUnrecognized: false, pair.DetectedTextBox))
-                    .Concat(unrecognizedDetectedTextBoxes[imageKey]
-                        .Select(pair => pair.DetectedTextBox).Select(b => (IsUnrecognized: true, b)));
+                    .Select(pair => pair.DetectedTextBox)
+                    .Concat(unrecognizedDetectedTextBoxes[imageKey].Select(pair => pair.DetectedTextBox));
                 return TesseractRecognizer.PreprocessTextBoxes(
                     imageKey, matricesKeyByImageKey[imageKey], boxes, stoppingToken).ToList();
             })

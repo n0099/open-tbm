@@ -47,36 +47,34 @@ public class TesseractRecognizer : IDisposable
         _tesseractInstanceVertical.Dispose();
     }
 
-    public record PreprocessedTextBox(ImageKey ImageKey, bool IsUnrecognized, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 
     public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes(
         ImageKey imageKey,
         Mat originalMatrix,
-        IEnumerable<(bool IsUnrecognized, RotatedRect)> textBoxes,
+        IEnumerable<RotatedRect> textBoxes,
         CancellationToken stoppingToken = default
-    ) => textBoxes
-        .Select(t =>
-        {
-            stoppingToken.ThrowIfCancellationRequested();
-            var (isUnrecognized, textBox) = t;
-            // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
-            var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
-            // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
-            var mat = new Mat(originalMatrix, new Rect(new(), originalMatrix.Size()).Intersect(textBox.BoundingRect()));
+    ) => textBoxes.Select(textBox =>
+    {
+        stoppingToken.ThrowIfCancellationRequested();
+        // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
+        var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
+        // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
+        var mat = new Mat(originalMatrix, new Rect(new(), originalMatrix.Size()).Intersect(textBox.BoundingRect()));
 
-            Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
-            // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
-            // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
-            _ = Cv2.Threshold(mat, mat, thresh: 0, maxval: 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
+        Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
+        // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
+        // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
+        _ = Cv2.Threshold(mat, mat, thresh: 0, maxval: 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
 
-            if (degrees != 0) RotateMatrix(mat, degrees);
+        if (degrees != 0) RotateMatrix(mat, degrees);
 
-            // https://github.com/tesseract-ocr/tesseract/issues/427
-            Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
+        // https://github.com/tesseract-ocr/tesseract/issues/427
+        Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
 
-            // https://github.com/tesseract-ocr/tesseract/issues/3001
-            return mat.Width < 3 ? null : new PreprocessedTextBox(imageKey, isUnrecognized, textBox, mat);
-        }).OfType<PreprocessedTextBox>();
+        // https://github.com/tesseract-ocr/tesseract/issues/3001
+        return mat.Width < 3 ? null : new PreprocessedTextBox(imageKey, textBox, mat);
+    }).OfType<PreprocessedTextBox>();
 
     private static float GetRotationDegrees(RotatedRect rotatedRect)
     { // https://stackoverflow.com/questions/13002979/how-to-calculate-rotation-angle-from-rectangle-points
@@ -106,7 +104,7 @@ public class TesseractRecognizer : IDisposable
         (PreprocessedTextBox textBox, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
-        var (imageKey, isUnrecognized, box, preprocessedTextBoxMat) = textBox;
+        var (imageKey, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToConsiderAsVertical;
         if (isVertical && _script == "en") isVertical = false; // there's no vertical english
@@ -124,6 +122,6 @@ public class TesseractRecognizer : IDisposable
             ? components.Select(c => c.Confidence).Average().RoundToUshort()
             : (ushort)0;
 
-        return new(imageKey, _script, box, text, averageConfidence, isVertical, isUnrecognized, shouldFallbackToPaddleOcr);
+        return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);
     }
 }
