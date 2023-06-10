@@ -1,5 +1,3 @@
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Revision;
 
 public class ForumModeratorRevision

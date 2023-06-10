@@ -1,5 +1,6 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
+// ReSharper disable UnusedMember.Global
 namespace tbm.ImagePipeline.Db;
 
 public class ImageMetadata : ImageMetadata.IImageMetadata

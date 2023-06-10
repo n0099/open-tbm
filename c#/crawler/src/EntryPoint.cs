@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 
-#pragma warning disable IDE0058
+#pragma warning disable IDE0058 // Expression value is never used
 
 namespace tbm.Crawler;
 

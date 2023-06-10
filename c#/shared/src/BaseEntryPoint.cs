@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 
-#pragma warning disable IDE0058
-
 namespace tbm.Shared;
 
 public abstract class BaseEntryPoint
@@ -25,10 +23,10 @@ public abstract class BaseEntryPoint
         try
         {
             var host = Host.CreateDefaultBuilder()
-                .ConfigureLogging((_, logging) =>
+                .ConfigureLogging((__, logging) =>
                 {
-                    logging.ClearProviders();
-                    logging.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false});
+                    _ = logging.ClearProviders();
+                    _ = logging.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false});
                 })
                 .ConfigureServices(ConfigureServices)
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())

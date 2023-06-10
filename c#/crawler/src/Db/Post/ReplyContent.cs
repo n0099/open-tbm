@@ -1,4 +1,3 @@
-// ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
 public class ReplyContent

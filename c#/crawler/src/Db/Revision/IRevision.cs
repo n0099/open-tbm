@@ -1,4 +1,3 @@
-// ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMemberInSuper.Global
 namespace tbm.Crawler.Db.Revision;
 
