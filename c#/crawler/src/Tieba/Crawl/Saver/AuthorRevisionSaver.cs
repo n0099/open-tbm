@@ -24,7 +24,7 @@ public class AuthorRevisionSaver
 
     public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
-        where TPostWithAuthorExpGrade : IPost, IPostWithAuthorExpGrade
+        where TPostWithAuthorExpGrade : class, IPost, IPostWithAuthorExpGrade
     {
         SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
             db.AuthorExpGradeRevisions,
@@ -58,7 +58,7 @@ public class AuthorRevisionSaver
         Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
         Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory
     )
-        where TPost : IPost
+        where TPost : class, IPost
         where TRevision : AuthorRevision
     {
         Helper.GetNowTimestamp(out var now);

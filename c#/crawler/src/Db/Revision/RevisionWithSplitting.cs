@@ -1,7 +1,7 @@
 namespace tbm.Crawler.Db.Revision;
 
 public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
-    where TBaseRevision : IRevision
+    where TBaseRevision : class, IRevision
 {
     public uint TakenAt { get; set; }
     public ushort? NullFieldsBitMask { get; set; }

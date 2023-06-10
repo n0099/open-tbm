@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
-public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread, ThreadCrawler>
+public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
 {
     private readonly Dictionary<long, TiebaUser> _latestRepliers = new();
 

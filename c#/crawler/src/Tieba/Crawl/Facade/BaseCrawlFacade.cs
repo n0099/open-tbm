@@ -1,13 +1,12 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
-public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler> : IDisposable
+public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf> : IDisposable
     where TPost : class, IPost
     where TBaseRevision : class, IRevision
-    where TResponse : IMessage<TResponse>
-    where TPostProtoBuf : IMessage<TPostProtoBuf>
-    where TCrawler : BaseCrawler<TResponse, TPostProtoBuf>
+    where TResponse : class, IMessage<TResponse>
+    where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    private readonly ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> _logger;
+    private readonly ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> _logger;
     private readonly CrawlerDbContext.New _dbContextFactory;
     private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
     private readonly BaseParser<TPost, TPostProtoBuf> _parser;
@@ -24,7 +23,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     protected UserParserAndSaver Users { get; }
 
     protected BaseCrawlFacade(
-        ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>> logger,
+        ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> logger,
         CrawlerDbContext.New dbContextFactory,
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
         BaseParser<TPost, TPostProtoBuf> parser,
@@ -73,7 +72,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         return savedPosts;
     }
 
-    public async Task<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>>
+    public async Task<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>>
         CrawlPageRange(Page startPage, Page endPage = Page.MaxValue, CancellationToken stoppingToken = default)
     { // cancel when startPage is already locked
         if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
@@ -183,7 +182,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         }
     }
 
-    public BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf, TCrawler>
+    public BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>
         AddExceptionHandler(ExceptionHandler handler)
     {
         _exceptionHandler += handler;

@@ -9,7 +9,7 @@ public abstract class Helper
         protoBuf == null || protoBuf.CalculateSize() == 0 ? null : protoBuf.ToByteArray();
 
     public static byte[]? SerializedProtoBufWrapperOrNullIfEmpty<T>
-        (IEnumerable<T>? valuesToWrap, Func<IMessage?> wrapperFactory) where T : IMessage =>
+        (IEnumerable<T>? valuesToWrap, Func<IMessage?> wrapperFactory) where T : class, IMessage =>
         valuesToWrap?.Select(message => message.CalculateSize()).Sum() is 0 or null
             ? null
             : SerializedProtoBufOrNullIfEmpty(wrapperFactory());

@@ -37,8 +37,8 @@ public class ClientRequester
         TRequest requestParam, Action<TRequest, Common> commonParamSetter,
         Func<TResponse> responseFactory, CancellationToken stoppingToken = default
     )
-        where TRequest : IMessage<TRequest>
-        where TResponse : IMessage<TResponse> =>
+        where TRequest : class, IMessage<TRequest>
+        where TResponse : class, IMessage<TResponse> =>
         await Request(() => PostProtoBuf(url, clientVersion, requestParam, commonParamSetter, stoppingToken), stream =>
         {
             try
@@ -107,7 +107,7 @@ public class ClientRequester
         TRequest requestParam, Action<TRequest, Common> commonParamSetter,
         CancellationToken stoppingToken = default
     )
-        where TRequest : IMessage<TRequest>
+        where TRequest : class, IMessage<TRequest>
     {
         // https://github.com/Starry-OvO/aiotieba/issues/67#issuecomment-1376006123
         // https://github.com/MoeNetwork/wmzz_post/blob/80aba25de46f5b2cb1a15aa2a69b527a7374ffa9/wmzz_post_setting.php#L64

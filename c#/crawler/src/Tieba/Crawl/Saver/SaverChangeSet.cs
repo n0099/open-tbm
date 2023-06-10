@@ -2,13 +2,16 @@ using System.Collections.ObjectModel;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class SaverChangeSet<T> where T : class, IPost
+public class SaverChangeSet<TPost> where TPost : class, IPost
 {
-    public ReadOnlyCollection<(T Before, T After)> Existing { get; }
-    public ReadOnlyCollection<T> NewlyAdded { get; }
-    public ReadOnlyCollection<T> AllAfter { get; }
+    public ReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }
+    public ReadOnlyCollection<TPost> NewlyAdded { get; }
+    public ReadOnlyCollection<TPost> AllAfter { get; }
 
-    public SaverChangeSet(ICollection<T> existingBefore, ICollection<T> existingAfterAndNewlyAdded, Func<T, PostId> postIdSelector)
+    public SaverChangeSet(
+        ICollection<TPost> existingBefore,
+        ICollection<TPost> existingAfterAndNewlyAdded,
+        Func<TPost, PostId> postIdSelector)
     {
         var existingAfter = existingAfterAndNewlyAdded
             .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)

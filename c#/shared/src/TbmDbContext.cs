@@ -10,7 +10,7 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Shared;
 
-public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKeyFactory : IModelCacheKeyFactory
+public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();

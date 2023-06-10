@@ -47,7 +47,7 @@ public class EntryPoint : BaseEntryPoint
 
         var baseClassOfClassesToBeRegistered = new[]
         {
-            typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,,>),
+            typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
             typeof(BaseParser<,>), typeof(BaseSaver<,>)
         };
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
