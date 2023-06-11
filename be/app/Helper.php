@@ -102,25 +102,12 @@ class Helper
         exit;
     }
 
-    public static function keyBy(array $array, string $itemsKey): array
-    {
-        // similar with Illuminate\Support\Collection::keyBy()
-        // https://stackoverflow.com/questions/56108051/is-it-possible-to-assign-keys-to-array-elements-in-php-from-a-value-column-with
-        // note array_column() won't check is every item have determined key, if not it will fill with numeric key
-        return array_column($array, null, $itemsKey);
-    }
-
     public static function nullableValidate(string $value, bool $isJson = false)
     {
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
         }
         return $isJson ? Utils::jsonEncode($value) : $value;
-    }
-
-    public static function isArrayValuesAllEqualTo(array $haystack, $equalTo): bool
-    {
-        return array_filter($haystack, static fn ($value) => $value !== $equalTo) === [];
     }
 
     /**

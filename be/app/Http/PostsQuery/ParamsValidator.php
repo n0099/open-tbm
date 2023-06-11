@@ -74,9 +74,13 @@ class ParamsValidator
             '*.latestReplierGender' => Rule::in($paramsPossibleValue['userGender']),
 
             '*.not' => 'boolean',
-            // sub param of tid, pid, spid, threadViewCount, threadShareCount, threadReplyCount, replySubReplyCount, authorUid, authorExpGrade, latestReplierUid
+            // sub param of tid, pid, spid
+            // threadViewCount, threadShareCount, threadReplyCount, replySubReplyCount
+            // authorUid, authorExpGrade, latestReplierUid
             '*.range' => 'in:<,=,>,IN,BETWEEN',
-            // sub param of threadTitle, postContent, authorName, authorDisplayName, latestReplierName, latestReplierDisplayName
+            // sub param of threadTitle, postContent
+            // authorName, authorDisplayName
+            // latestReplierName, latestReplierDisplayName
             '*.matchBy' => 'in:implicit,explicit,regex',
             '*.spaceSplit' => 'boolean'
         ])->validate();
@@ -137,7 +141,10 @@ class ParamsValidator
         ];
         $currentOrderBy = (string)$this->params->getUniqueParamValue('orderBy');
         if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
-            Helper::abortAPIIfNot(40004, self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]));
+            Helper::abortAPIIfNot(
+                40004,
+                self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy])
+            );
         }
     }
 }

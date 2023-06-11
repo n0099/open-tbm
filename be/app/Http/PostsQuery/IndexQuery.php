@@ -41,10 +41,6 @@ class IndexQuery extends BaseQuery
             collect(PostModelFactory::getPostModelsByFid($fid))
                 ->only($postTypes)
                 ->transform(static fn (PostModel $model, string $type) => $model->selectCurrentAndParentPostID());
-        /**
-         * @param array<string, int> $postsID key by post ID name
-         * @return int fid
-         */
         $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
             $fids = ForumModel::get('fid')->pluck('fid')->toArray();
             $counts = collect($fids)
@@ -63,7 +59,7 @@ class IndexQuery extends BaseQuery
         if (\array_key_exists('fid', $flatParams)) {
             /** @var int $fid */ $fid = $flatParams['fid'];
             if ((new ForumModel())->fid($fid)->exists()) {
-                /** @var Collection<string, EloquentBuilder> $queries key by post type */
+                /** @var Collection<string, EloquentBuilder<PostModel>> $queries key by post type */
                 $queries = $getQueryBuilders($fid);
             } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid
                 $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
@@ -80,8 +76,10 @@ class IndexQuery extends BaseQuery
 
         if ($hasPostIDParam) {
             $queries = $queries
-                ->only(\array_slice(Helper::POST_TYPES, // only query post types that own the querying post ID param
-                    array_search($postIDParamName, Helper::POST_ID, true)))
+                ->only(array_slice(
+                    Helper::POST_TYPES, // only query post types that own the querying post ID param
+                    array_search($postIDParamName, Helper::POST_ID, true)
+                ))
                 ->map(static fn (EloquentBuilder $qb, string $type) => $qb->where($postIDParamName, $postIDParamValue));
         }
 

@@ -15,17 +15,22 @@ class SearchQuery extends BaseQuery
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
-        /** @var array<string, Collection> $cachedUserQuery key by param name */
+        /** @var array<string, Collection<string, Builder<UserModel>>> $cachedUserQuery key by param name */
         $cachedUserQuery = [];
-        /** @var Collection<string, Builder> $queries key by post type */
+        /** @var Collection<string, Builder<PostModel>> $queries key by post type */
         $queries = collect(PostModelFactory::getPostModelsByFid($fid))
             ->only($params->getUniqueParamValue('postTypes'))
             ->map(function (PostModel $postModel) use ($params, &$cachedUserQuery): Builder {
                 $postQuery = $postModel->newQuery();
                 foreach ($params->omit() as $param) { // omit nothing to get all params
-                    // even when $cachedUserQuery[$param->name] is null, it will still pass as a reference to the array item
-                    // which is null at this point, but will be later updated by ref
-                    self::applyQueryParamsOnQuery($postQuery, $param, $cachedUserQuery[$param->name]);
+                    // even when $cachedUserQuery[$param->name] is null
+                    // it will still pass as a reference to the array item
+                    // that is null at this point, but will be later updated by ref
+                    $postQuery = self::applyQueryParamsOnQuery(
+                        $postQuery,
+                        $param,
+                        $cachedUserQuery[$param->name]
+                    );
                 }
                 return $postQuery->selectCurrentAndParentPostID();
             });
@@ -45,8 +50,11 @@ class SearchQuery extends BaseQuery
     /**
      * Apply conditions of query params on a query builder that created from posts model
      */
-    private static function applyQueryParamsOnQuery(Builder $qb, Param $param, ?Collection &$outCachedUserQueryResult): Builder
-    {
+    private static function applyQueryParamsOnQuery(
+        Builder $query,
+        Param $param,
+        ?Collection &$outCachedUserQueryResult
+    ): Builder {
         $name = $param->name;
         $value = $param->value;
         $sub = $param->getAllSub();
@@ -68,7 +76,8 @@ class SearchQuery extends BaseQuery
 
         $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
         $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
-        $getAndCacheUserQuery = static function (BuilderContract $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
+        $getAndCacheUserQuery =
+            static function (BuilderContract $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
             // $outCachedUserQueryResult === null means it's the first call
             $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->get();
             return $outCachedUserQueryResult;
@@ -80,30 +89,30 @@ class SearchQuery extends BaseQuery
             'authorUid', 'authorExpGrade', 'latestReplierUid',
             'threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount' =>
                 $sub['range'] === 'IN' || $sub['range'] === 'BETWEEN'
-                    ? $qb->{"where$not{$sub['range']}"}($fieldNameOfNumericParams, explode(',', $value))
-                    : $qb->where(
+                    ? $query->{"where$not{$sub['range']}"}($fieldNameOfNumericParams, explode(',', $value))
+                    : $query->where(
                         $fieldNameOfNumericParams,
                         $sub['not'] ? $inverseRangeOfNumericParams : $sub['range'],
                         $value
                     ),
             // textMatch
             'threadTitle', 'postContent' =>
-                self::applyTextMatchParamOnQuery($qb, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
+                self::applyTextMatchParamOnQuery($query, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
             // dateTimeRange
             'postTime', 'latestReplyTime' =>
-                $qb->{"where{$not}Between"}($name, explode(',', $value)),
+                $query->{"where{$not}Between"}($name, explode(',', $value)),
             // array
-            'threadProperties' => static function () use ($sub, $inverseNot, $value, $qb) {
+            'threadProperties' => static function () use ($sub, $inverseNot, $value, $query) {
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
-                        'good' => $qb->where('isGood', !$sub['not']),
-                        'sticky' => $qb->{"where{$inverseNot}Null"}('stickyType')
+                        'good' => $query->where('isGood', !$sub['not']),
+                        'sticky' => $query->{"where{$inverseNot}null"}('stickyType')
                     };
                 }
-                return $qb;
+                return $query;
             },
             'authorName', 'latestReplierName', 'authorDisplayName', 'latestReplierDisplayName' =>
-                $qb->{"where{$not}In"}(
+                $query->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
                     $getAndCacheUserQuery(self::applyTextMatchParamOnQuery(
                         UserModel::select('uid'),
@@ -113,25 +122,32 @@ class SearchQuery extends BaseQuery
                     ))
                 ),
             'authorGender', 'latestReplierGender' =>
-                $qb->{"where{$not}In"}(
+                $query->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
                     $getAndCacheUserQuery(UserModel::select('uid')->where('gender', $value))
                 ),
             'authorManagerType' =>
                 $value === 'NULL'
-                    ? $qb->{"where{$not}Null"}('authorManagerType')
-                    : $qb->where('authorManagerType', $sub['not'] ? '!=' : '=', $value),
-            default => $qb
+                    ? $query->{"where{$not}null"}('authorManagerType')
+                    : $query->where('authorManagerType', $sub['not'] ? '!=' : '=', $value),
+            default => $query
         };
     }
 
-    private static function applyTextMatchParamOnQuery(BuilderContract $qb, string $field, string $value, array $subParams): BuilderContract
-    {
-        $not = $subParams['not'] ? 'Not' : '';
+    /**
+     * @psalm-param array<string, mixed> $subParams
+     */
+    private static function applyTextMatchParamOnQuery(
+        BuilderContract $query,
+        string $field,
+        string $value,
+        array $subParams
+    ): BuilderContract {
+        $not = $subParams['not'] === true ? 'Not' : '';
         if ($subParams['matchBy'] === 'regex') {
-            return $qb->where($field, "$not REGEXP", $value);
+            return $query->where($field, "$not REGEXP", $value);
         }
-        return $qb->where(static function (Builder $subQuery) use ($subParams, $field, $not, $value) {
+        return $query->where(static function (Builder $subQuery) use ($subParams, $field, $not, $value) {
             // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
             $isOrWhere = $not === 'Not' ? '' : 'or';
             $addMatchKeyword = static fn (string $keyword) =>

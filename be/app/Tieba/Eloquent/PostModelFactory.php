@@ -42,6 +42,9 @@ class PostModelFactory
         'subReply' => SubReplyModel::class
     ])] public static function getPostModelsByFid(int $fid): array
     {
-        return array_combine(Helper::POST_TYPES, [self::newThread($fid), self::newReply($fid), self::newSubReply($fid)]);
+        return array_combine(
+            Helper::POST_TYPES,
+            [self::newThread($fid), self::newReply($fid), self::newSubReply($fid)]
+        );
     }
 }

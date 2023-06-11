@@ -29,7 +29,7 @@ class QueryParams
 
     /**
      * @return Param[]
-     * @psalm-return list<App\Http\PostsQuery\Param>
+     * @psalm-return list<Param>
      */
     public function pick(string ...$names): array
     {
@@ -42,7 +42,7 @@ class QueryParams
 
     /**
      * @return Param[]
-     * @psalm-return list<App\Http\PostsQuery\Param>
+     * @psalm-return list<Param>
      */
     public function omit(string ...$names): array
     {

@@ -52,16 +52,21 @@ abstract class BaseQuery
      * @param string|null $queryByPostIDParamName
      * @return void
      */
-    protected function setResult(int $fid, Collection $queries, ?string $cursorParamValue, ?string $queryByPostIDParamName = null): void
-    {
+    protected function setResult(
+        int $fid,
+        Collection $queries,
+        ?string $cursorParamValue,
+        ?string $queryByPostIDParamName = null
+    ): void {
         Debugbar::startMeasure('setResult');
 
         $addOrderByForBuilder = fn (Builder $qb, string $postType): Builder => $qb
             ->addSelect($this->orderByField)
             ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
-            // if not it should fall back to other unique field (here is the post id primary key)
-            // we don't have to select the post id since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
+            // if not it should fall back to other unique field (here is the post ID primary key)
+            // we don't have to select the post ID
+            // since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
             ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
 
         $queriesWithOrderBy = $queries->map($addOrderByForBuilder);
@@ -77,8 +82,10 @@ abstract class BaseQuery
         Debugbar::stopMeasure('initPaginators');
         /** @var Collection<string, Collection> $postKeyByTypePluralName */
         $postKeyByTypePluralName = $paginators
-            ->map(static fn (CursorPaginator $paginator) => $paginator->collect()) // cast paginator with queried posts to Collection<PostModel>
-            ->mapWithKeys(static fn (Collection $posts, string $type) => [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
+            // cast paginator with queried posts to Collection<PostModel>
+            ->map(static fn (CursorPaginator $paginator) => $paginator->collect())
+            ->mapWithKeys(static fn (Collection $posts, string $type) =>
+                [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
 
         Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
@@ -99,7 +106,11 @@ abstract class BaseQuery
     /**
      * @param Collection<string, PostModel> $postKeyByTypePluralName
      * @return string
-     * @test-input collect(['threads' => collect([new ThreadModel(['tid' => 1,'postTime' => 0])]),'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])])
+     * @test-input collect([
+     *     'threads' => collect([new ThreadModel(['tid' => 1,'postTime' => 0])]),
+     *     'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),
+     *     'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])
+     * ])
      */
     private function encodeNextPageCursor(Collection $postKeyByTypePluralName): string
     {
@@ -117,7 +128,7 @@ abstract class BaseQuery
                     if (\is_int($cursor) && $cursor === 0) {
                         // quick exit to keep 0 as is
                         // to prevent packed 0 with the default format 'P' after 0x00 trimming is an empty string
-                        // that will be confused with post types without a cursor, they will have a blank encoded cursor ',,'
+                        // that will be confused with post types without a cursor that is a blank encoded cursor ',,'
                         return '0';
                     }
 
@@ -130,13 +141,15 @@ abstract class BaseQuery
                     ], '');
 
                     $value = \is_int($cursor)
-                        // remove trailing 0x00 for unsigned int or 0xFF for signed negative int
+                        // remove trailing 0x00 for an unsigned int or 0xFF for a signed negative int
                         ? rtrim(pack('P', $cursor), $cursor >= 0 ? "\x00" : "\xFF")
                         : ($prefix === 'S'
-                            ? $cursor // keep string as is since encoded string will always longer than the original string
+                            // keep string as is since encoded string will always longer than the original string
+                            ? $cursor
                             : throw new \RuntimeException('Invalid cursor value'));
                     if ($prefix !== 'S') {
-                        $value = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($value)); // https://en.wikipedia.org/wiki/Base64#URL_applications
+                        // https://en.wikipedia.org/wiki/Base64#URL_applications
+                        $value = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($value));
                     }
 
                     return $prefix . ($prefix === '' ? '' : ':') . $value;
@@ -146,7 +159,8 @@ abstract class BaseQuery
             // merge cursors into flipped Helper::POST_TYPES with the same post type key
             // value of keys that non exists in $encodedCursorKeyByPostType will remain as int
             ->flip()->merge($encodedCursorKeyByPostType)
-            // if the flipped value is an default int key there's no posts of this type (type key not exists in $postKeyByTypePluralName)
+            // if the flipped value is a default int key there's no posts of this type
+            // (type key not exists in $postKeyByTypePluralName)
             // so we just return an empty ',' as placeholder
             ->map(static fn (string|int $cursor) => \is_int($cursor) ? ',' : $cursor)
             ->join(',');
@@ -162,11 +176,11 @@ abstract class BaseQuery
                 ->explode(',')
                 ->map(static function (string $encodedCursor): int|string|null {
                     [$prefix, $cursor] = array_pad(explode(':', $encodedCursor), 2, null);
-                    if ($cursor === null) { // no prefix being provided means the value of cursor is an positive int
+                    if ($cursor === null) { // no prefix being provided means the value of cursor is a positive int
                         $cursor = $prefix;
                         $prefix = '';
                     }
-                    return match($prefix) {
+                    return match ($prefix) {
                         null => null, // original encoded cursor is an empty string
                         '0' => 0, // keep 0 as is
                         'S' => $cursor, // string literal is not base64 encoded
@@ -175,8 +189,12 @@ abstract class BaseQuery
                                 'P',
                                 str_pad( // re-add removed trailing 0x00 or 0xFF
                                     base64_decode(
-                                        str_replace(['-', '_'], ['+', '/'], $cursor) // https://en.wikipedia.org/wiki/Base64#URL_applications
-                                    ), 8, $prefix === '-' ? "\xFF" : "\x00")
+                                        // https://en.wikipedia.org/wiki/Base64#URL_applications
+                                        str_replace(['-', '_'], ['+', '/'], $cursor)
+                                    ),
+                                    8,
+                                    $prefix === '-' ? "\xFF" : "\x00"
+                                )
                             )
                         ))[1] // the returned array of unpack() will starts index from 1
                     };
@@ -202,8 +220,11 @@ abstract class BaseQuery
      * @param Closure $unionCallback (Collection)
      * @return mixed returned by $unionCallback()
      */
-    private static function unionPageStats(Collection $paginators, string $unionMethodName, Closure $unionCallback): mixed
-    {
+    private static function unionPageStats(
+        Collection $paginators,
+        string $unionMethodName,
+        Closure $unionCallback
+    ): mixed {
         // Collection::filter() will remove falsy values
         $unionValues = $paginators->map(static fn (CursorPaginator $p) => $p->$unionMethodName());
         return $unionCallback($unionValues->isEmpty() ? collect(0) : $unionValues); // prevent empty array
@@ -247,7 +268,8 @@ abstract class BaseQuery
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<array-key, ThreadModel> $threads */
         $threads = $postModels['thread']
-            ->tid($parentThreadsID->concat($tids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            ->tid($parentThreadsID->concat($tids))
             ->hidePrivateFields()->get()
             ->map(static fn (ThreadModel $t) => // mark threads that in the original $this->queryResult
                 $t->setAttribute('isQueryMatch', $tids->contains($t->tid)));
@@ -257,7 +279,8 @@ abstract class BaseQuery
         /** @var Collection<int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = $postModels['reply']
-            ->pid($parentRepliesID->concat($pids)) // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            ->pid($parentRepliesID->concat($pids))
             ->hidePrivateFields()->get()
             ->map(static fn (ReplyModel $r) => // mark replies that in the original $this->queryResult
                 $r->setAttribute('isQueryMatch', $pids->contains($r->pid)));
@@ -320,8 +343,12 @@ abstract class BaseQuery
         }
     }
 
-    public static function nestPostsWithParent(Collection $threads, Collection $replies, Collection $subReplies, ...$_): Collection
-    {
+    public static function nestPostsWithParent(
+        Collection $threads,
+        Collection $replies,
+        Collection $subReplies,
+        ...$_
+    ): Collection {
         Debugbar::startMeasure('nestPostsWithParent');
 
         $replies = $replies->groupBy('tid');
@@ -353,18 +380,21 @@ abstract class BaseQuery
         $getSortingKeyFromCurrentAndChildPosts = function (array $curPost, string $childPostTypePluralName) {
             /** @var Collection<array> $childPosts sorted child posts */
             $childPosts = $curPost[$childPostTypePluralName];
-            $curPost[$childPostTypePluralName] = $childPosts->values()->toArray(); // assign child post back to current post
+            // assign child post back to current post
+            $curPost[$childPostTypePluralName] = $childPosts->values()->toArray();
 
-            /** @var Collection<array> $topmostChildPostInQueryMatch the first child post which is isQueryMatch after previous sorting */
+            // the first child post which is isQueryMatch after previous sorting
             $topmostChildPostInQueryMatch = $childPosts
-                ->filter(static fn (array $p) => ($p['isQueryMatch'] ?? true) === true);  // sub replies won't have isQueryMatch
+                // sub replies won't have isQueryMatch
+                ->filter(static fn (array $p) => ($p['isQueryMatch'] ?? true) === true);
             // use the topmost value between sorting key or value of orderBy field within its child posts
             $curAndChildSortingKeys = collect([
                 // value of orderBy field in the first sorted child post
                 // if no child posts matching the query, use null as the sorting key
                 $topmostChildPostInQueryMatch->first()[$this->orderByField] ?? null,
                 // sorting key from the first sorted child posts
-                // not requiring isQueryMatch since a child post without isQueryMatch might have its own child posts with isQueryMatch
+                // not requiring isQueryMatch since a child post without isQueryMatch
+                // might have its own child posts with isQueryMatch
                 // and its sortingKey would be selected from its own child posts
                 $childPosts->first()['sortingKey'] ?? null
             ]);
@@ -373,13 +403,17 @@ abstract class BaseQuery
                 $curAndChildSortingKeys->push($curPost[$this->orderByField]);
             }
 
-            $curAndChildSortingKeys = $curAndChildSortingKeys->filter()->sort(); // Collection->filter() will remove falsy values like null
-            $curPost['sortingKey'] = $this->orderByDesc ? $curAndChildSortingKeys->last() : $curAndChildSortingKeys->first();
+            // Collection->filter() will remove falsy values like null
+            $curAndChildSortingKeys = $curAndChildSortingKeys->filter()->sort();
+            $curPost['sortingKey'] = $this->orderByDesc
+                ? $curAndChildSortingKeys->last()
+                : $curAndChildSortingKeys->first();
             return $curPost;
         };
         $sortPosts = fn (Collection $posts) => $posts
             ->sortBy('sortingKey', descending: $this->orderByDesc)
-            ->map(static function (array $post) { // remove sorting key from posts after sorting
+            ->map(static function (array $post) {
+                // remove sorting key from posts after sorting
                 unset($post['sortingKey']);
                 return $post;
             });

@@ -13,7 +13,8 @@ class ReCAPTCHACheck
         if (\App::environment('production')) {
             $reCAPTCHA = new ReCaptcha(env('reCAPTCHA_SECRET_KEY'), new CurlPost());
             $requestReCAPTCHA = $request->input('reCAPTCHA');
-            $isReCAPTCHAValid = $requestReCAPTCHA !== null && $reCAPTCHA->verify($requestReCAPTCHA, $request->ip())->isSuccess();
+            $isReCAPTCHAValid = \is_string($requestReCAPTCHA)
+                && $reCAPTCHA->verify($requestReCAPTCHA, $request->ip())->isSuccess();
             Helper::abortAPIIfNot(40101, $isReCAPTCHAValid);
         }
 
