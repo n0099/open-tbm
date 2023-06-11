@@ -107,9 +107,9 @@ abstract class BaseQuery
      * @param Collection<string, PostModel> $postKeyByTypePluralName
      * @return string
      * @test-input collect([
-     *     'threads' => collect([new ThreadModel(['tid' => 1,'postTime' => 0])]),
-     *     'replies' => collect([new ReplyModel(['pid' => 2,'postTime' => -2147483649])]),
-     *     'subReplies' => collect([new SubReplyModel(['spid' => 3,'postTime' => 'test'])])
+     *     'threads' => collect([new ThreadModel(['tid' => 1,'postedAt' => 0])]),
+     *     'replies' => collect([new ReplyModel(['pid' => 2,'postedAt' => -2147483649])]),
+     *     'subReplies' => collect([new SubReplyModel(['spid' => 3,'postedAt' => 'test'])])
      * ])
      */
     private function encodeNextPageCursor(Collection $postKeyByTypePluralName): string
@@ -370,8 +370,8 @@ abstract class BaseQuery
     /**
      * @param Collection<array<array>> $nestedPosts
      * @return array<array<array>>
-     * @test-input [{"postTime":1,"isQueryMatch":true,"replies":[{"postTime":2,"isQueryMatch":true,"subReplies":[{"postTime":30}]},{"postTime":20,"isQueryMatch":false,"subReplies":[{"postTime":3}]},{"postTime":4,"isQueryMatch":false,"subReplies":[{"postTime":5},{"postTime":60}]}]},{"postTime":7,"isQueryMatch":false,"replies":[{"postTime":31,"isQueryMatch":true,"subReplies":[]}]}]
-     * @test-output [{"postTime":1,"isQueryMatch":true,"replies":[{"postTime":4,"isQueryMatch":false,"subReplies":[{"postTime":60},{"postTime":5}],"sortingKey":60},{"postTime":2,"isQueryMatch":true,"subReplies":[{"postTime":30}],"sortingKey":30},{"postTime":20,"isQueryMatch":false,"subReplies":[{"postTime":3}],"sortingKey":3}],"sortingKey":60},{"postTime":7,"isQueryMatch":false,"replies":[{"postTime":31,"isQueryMatch":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
+     * @test-input [{"postedAt":1,"isQueryMatch":true,"replies":[{"postedAt":2,"isQueryMatch":true,"subReplies":[{"postedAt":30}]},{"postedAt":20,"isQueryMatch":false,"subReplies":[{"postedAt":3}]},{"postedAt":4,"isQueryMatch":false,"subReplies":[{"postedAt":5},{"postedAt":60}]}]},{"postedAt":7,"isQueryMatch":false,"replies":[{"postedAt":31,"isQueryMatch":true,"subReplies":[]}]}]
+     * @test-output [{"postedAt":1,"isQueryMatch":true,"replies":[{"postedAt":4,"isQueryMatch":false,"subReplies":[{"postedAt":60},{"postedAt":5}],"sortingKey":60},{"postedAt":2,"isQueryMatch":true,"subReplies":[{"postedAt":30}],"sortingKey":30},{"postedAt":20,"isQueryMatch":false,"subReplies":[{"postedAt":3}],"sortingKey":3}],"sortingKey":60},{"postedAt":7,"isQueryMatch":false,"replies":[{"postedAt":31,"isQueryMatch":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
      */
     public function reOrderNestedPosts(Collection $nestedPosts): array
     {

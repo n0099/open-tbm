@@ -14,9 +14,7 @@ class SubReplyModel extends PostModel
     protected static array $fields = [
         ...Helper::POST_ID,
         'authorUid',
-        'authorManagerType',
-        'authorExpGrade',
-        'postTime',
+        'postedAt',
         'agreeCount',
         'disagreeCount',
         ...parent::TIMESTAMP_FIELDS

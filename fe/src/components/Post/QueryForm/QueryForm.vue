@@ -41,7 +41,7 @@
                     <select v-model="uniqueParams.orderBy.value"
                             :class="{ 'is-invalid': isOrderByInvalid }" class="form-select form-control">
                         <option value="default">默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
-                        <option value="postTime">发帖时间</option>
+                        <option value="postedAt">发帖时间</option>
                         <optgroup label="帖子ID">
                             <option value="tid">主题帖tid</option>
                             <option value="pid">回复帖pid</option>
@@ -79,7 +79,7 @@
                         number: p.name === 'tid' ? '5000000000' : '15000000000'
                     }" />
                 </template>
-                <template v-if="['postTime', 'latestReplyTime'].includes(p.name)">
+                <template v-if="['postedAt', 'latestReplyPostedAt'].includes(p.name)">
                     <RangePicker v-model="p.subParam.range" :showTime="true"
                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>

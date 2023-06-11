@@ -28,7 +28,7 @@ export default defineComponent({
                 spid: 'spid（楼中楼ID）'
             },
             所有帖子类型: {
-                postTime: '发帖时间',
+                postedAt: '发帖时间',
                 authorUid: '发帖人UID',
                 authorName: '发帖人用户名',
                 authorDisplayName: '发帖人覆盖名',
@@ -36,7 +36,7 @@ export default defineComponent({
                 authorManagerType: '发帖人吧务级别'
             },
             仅主题帖: {
-                latestReplyTime: '最后回复时间',
+                latestReplyPostedAt: '最后回复时间',
                 threadTitle: '主题帖标题',
                 threadViewCount: '主题帖浏览量',
                 threadShareCount: '主题帖分享量',

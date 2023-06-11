@@ -39,7 +39,7 @@ class SearchQuery extends BaseQuery
         $this->orderByField = $orderByParam->value;
         $this->orderByDesc = $orderByParam->getSub('direction');
         if ($this->orderByField === 'default') {
-            $this->orderByField = 'postTime';
+            $this->orderByField = 'postedAt';
             $this->orderByDesc = true;
         }
 
@@ -99,7 +99,7 @@ class SearchQuery extends BaseQuery
             'threadTitle', 'postContent' =>
                 self::applyTextMatchParamOnQuery($query, $name === 'threadTitle' ? 'title' : 'content', $value, $sub),
             // dateTimeRange
-            'postTime', 'latestReplyTime' =>
+            'postedAt', 'latestReplyPostedAt' =>
                 $query->{"where{$not}Between"}($name, explode(',', $value)),
             // array
             'threadProperties' => static function () use ($sub, $inverseNot, $value, $query) {

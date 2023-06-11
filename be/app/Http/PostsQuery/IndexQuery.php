@@ -88,7 +88,7 @@ class IndexQuery extends BaseQuery
         }
 
         if ($flatParams['orderBy'] === 'default') {
-            $this->orderByField = 'postTime'; // order by postTime to prevent posts out of order when order by post ID
+            $this->orderByField = 'postedAt'; // order by postedAt to prevent posts out of order when order by post ID
             if (\array_key_exists('fid', $flatParams) && $postIDParam->count() === 0) { // query by fid only
                 $this->orderByDesc = true;
             } elseif ($hasPostIDParam) { // query by post ID (with or without fid)

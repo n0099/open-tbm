@@ -101,9 +101,9 @@ export default defineComponent({
                 { title: '回复量', dataIndex: 'replyCount' },
                 { title: '浏览量', dataIndex: 'viewCount' },
                 { title: '发帖人', slots: { customRender: 'postAuthor' } },
-                { title: '发帖时间', dataIndex: 'postTime' },
+                { title: '发帖时间', dataIndex: 'postedAt' },
                 { title: '最后回复人', slots: { customRender: 'postLatestReplier' } },
-                { title: '最后回复时间', dataIndex: 'latestReplyTime' },
+                { title: '最后回复时间', dataIndex: 'latestReplyPostedAt' },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
                 { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
                 { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
@@ -120,7 +120,7 @@ export default defineComponent({
                 { title: '楼中楼回复量', dataIndex: 'subReplyCount' },
                 { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
-                { title: '发帖时间', dataIndex: 'postTime' },
+                { title: '发帖时间', dataIndex: 'postedAt' },
                 { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
                 { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
                 { title: '客户端小尾巴', dataIndex: 'sign' }, // todo: unknown json struct
@@ -133,7 +133,7 @@ export default defineComponent({
                 { title: 'spid', dataIndex: 'spid' },
                 { title: '发帖人', slots: { customRender: 'postAuthor' } },
                 { title: '发帖人UID', dataIndex: 'authorUid' },
-                { title: '发帖时间', dataIndex: 'postTime' },
+                { title: '发帖时间', dataIndex: 'postedAt' },
                 { title: '首次收录时间', dataIndex: 'created_at' },
                 { title: '最后更新时间', dataIndex: 'updated_at' }
             ]

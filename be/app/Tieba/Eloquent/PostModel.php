@@ -27,7 +27,7 @@ abstract class PostModel extends ModelWithHiddenFields
     protected const TIMESTAMP_FIELDS = [
         'createdAt',
         'updatedAt',
-        'lastSeen'
+        'lastSeenAt'
     ];
 
     private const MODEL_CLASS_TO_TABLE_NAME_SUFFIX = [

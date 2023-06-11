@@ -21,10 +21,11 @@ class UserModel extends ModelWithHiddenFields
         'name',
         'displayName',
         'portrait',
-        'portraitUpdateTime',
+        'portraitUpdatedAt',
         'gender',
         'fansNickname',
         'icon',
+        'ipGeolocation',
         'createdAt',
         'updatedAt'
     ];

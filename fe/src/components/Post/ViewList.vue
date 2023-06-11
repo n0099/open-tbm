@@ -12,7 +12,7 @@
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
                         <PostCommonMetadataIconLinks :meta="thread" postTypeID="tid" />
-                        <PostTimeBadge :time="thread.postTime" tippyPrefix="发帖时间：" badgeColor="success" />
+                        <PostTimeBadge :time="thread.postedAt" tippyPrefix="发帖时间：" badgeColor="success" />
                     </div>
                 </div>
                 <div class="row justify-content-between mt-2">
@@ -57,7 +57,7 @@
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </RouterLink>
                         </template>
-                        <PostTimeBadge :time="thread.latestReplyTime" tippyPrefix="最后回复时间：" badgeColor="secondary" />
+                        <PostTimeBadge :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" badgeColor="secondary" />
                     </div>
                 </div>
             </div>
@@ -79,7 +79,7 @@
                         <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
                         <PostCommonMetadataIconLinks :meta="reply" postTypeID="pid" />
-                        <PostTimeBadge :time="reply.postTime" badgeColor="primary" />
+                        <PostTimeBadge :time="reply.postedAt" badgeColor="primary" />
                     </div>
                 </div>
                 <div class="reply row shadow-sm bs-callout bs-callout-info">
@@ -123,7 +123,7 @@
                                                 <div class="d-inline" :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
                                                     <PostCommonMetadataIconLinks :meta="subReply" postTypeID="spid" />
                                                 </div>
-                                                <PostTimeBadge :time="subReply.postTime" badgeColor="info" />
+                                                <PostTimeBadge :time="subReply.postedAt" badgeColor="info" />
                                             </div>
                                         </template>
                                         <div v-viewer.static v-html="subReply.content" />

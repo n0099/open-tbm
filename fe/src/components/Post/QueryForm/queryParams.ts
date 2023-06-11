@@ -9,7 +9,7 @@ export type RequiredPostTypes = Record<string, ['ALL' | 'SUB', PostType[]] | und
 export const paramsRequiredPostTypes: RequiredPostTypes = {
     pid: ['SUB', ['reply', 'subReply']],
     spid: ['ALL', ['subReply']],
-    latestReplyTime: ['ALL', ['thread']],
+    latestReplyPostedAt: ['ALL', ['thread']],
     threadTitle: ['ALL', ['thread']],
     postContent: ['SUB', ['reply', 'subReply']],
     threadViewCount: ['ALL', ['thread']],
@@ -81,8 +81,8 @@ export const paramsNameByType = {
         'latestReplierDisplayName'
     ],
     dateTime: [
-        'postTime',
-        'latestReplyTime'
+        'postedAt',
+        'latestReplyPostedAt'
     ]
 } as const;
 export const paramTypeNumericSubParamRangeValues = ['<', '=', '>', 'BETWEEN', 'IN'] as const;
@@ -134,7 +134,7 @@ const useQueryFormDeps: Parameters<typeof useQueryForm>[0] = {
 export interface UniqueParams extends Record<string, Param> {
     fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
-    orderBy: { name: 'orderBy', value: PostID | 'default' | 'postTime', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
+    orderBy: { name: 'orderBy', value: PostID | 'default' | 'postedAt', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
 }
 // must get invoked with in the setup() of component
 export const useQueryFormWithUniqueParams = () => {

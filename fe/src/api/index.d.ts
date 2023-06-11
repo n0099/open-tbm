@@ -70,9 +70,9 @@ export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampField
     title: string,
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,
-    postTime: SqlDateTimeUtcPlus8,
+    postedAt: SqlDateTimeUtcPlus8,
     latestReplierUid: BaiduUserID,
-    latestReplyTime: SqlDateTimeUtcPlus8,
+    latestReplyPostedAt: SqlDateTimeUtcPlus8,
     replyCount: UInt,
     viewCount: UInt,
     shareCount: UInt,
@@ -90,7 +90,7 @@ export interface ReplyRecord extends LaravelEloquentRecordsCommonTimestampFields
     authorManagerType: AuthorManagerType,
     authorExpGrade: AuthorExpGrade,
     subReplyCount: UInt,
-    postTime: SqlDateTimeUtcPlus8,
+    postedAt: SqlDateTimeUtcPlus8,
     isFold: 0 | 6,
     location: ObjUnknown | null,
     agree: ObjUnknown | null,
@@ -105,7 +105,7 @@ export interface SubReplyRecord extends LaravelEloquentRecordsCommonTimestampFie
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,
     authorExpGrade: AuthorExpGrade,
-    postTime: SqlDateTimeUtcPlus8
+    postedAt: SqlDateTimeUtcPlus8
 }
 export type PostRecord = ReplyRecord | SubReplyRecord | ThreadRecord;
 
