@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Topic;
 
-use App\Eloquent\BilibiliVoteModel;
+use App\Eloquent\Model\BilibiliVoteModel;
 use App\Helper;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Spatie\Regex\Regex;
 
 /**

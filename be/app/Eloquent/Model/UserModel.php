@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent\Model;
 
 use App\Eloquent\ModelWithHiddenFields;
 use Illuminate\Database\Eloquent\Builder;

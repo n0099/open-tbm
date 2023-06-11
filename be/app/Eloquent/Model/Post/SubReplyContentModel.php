@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent\Model\Post;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-class SubReplyContentModel extends PostModel
+class SubReplyContentModel extends PostContentModel
 {
     protected $primaryKey = 'spid';
 

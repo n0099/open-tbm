@@ -2,16 +2,16 @@
 
 namespace App\Http\PostsQuery;
 
+use App\Eloquent\Model\Post\PostContentModel;
+use App\Eloquent\Model\Post\PostModel;
+use App\Eloquent\Model\Post\PostModelFactory;
+use App\Eloquent\Model\Post\ReplyModel;
+use App\Eloquent\Model\Post\SubReplyModel;
+use App\Eloquent\Model\Post\ThreadModel;
 use App\Helper;
-use App\Tieba\Eloquent\PostModel;
-use App\Tieba\Eloquent\PostModelFactory;
-use App\Tieba\Eloquent\ReplyModel;
-use App\Tieba\Eloquent\SubReplyModel;
-use App\Tieba\Eloquent\ThreadModel;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;

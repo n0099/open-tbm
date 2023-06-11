@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent\Model\Post;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-class ReplyContentModel extends PostModel
+class ReplyContentModel extends PostContentModel
 {
     protected $primaryKey = 'pid';
 

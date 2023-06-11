@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Helper;
 use App\Http\PostsQuery\IndexQuery;
-use App\Http\PostsQuery\SearchQuery;
 use App\Http\PostsQuery\ParamsValidator;
-use App\Tieba\Eloquent\ForumModel;
-use App\Tieba\Eloquent\UserModel;
+use App\Http\PostsQuery\SearchQuery;
+use App\Eloquent\Model\ForumModel;
+use App\Eloquent\Model\UserModel;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;

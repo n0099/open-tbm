@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper;
-use App\Tieba\Eloquent\UserModel;
+use App\Eloquent\Model\UserModel;
 
 class UsersQuery extends Controller
 {

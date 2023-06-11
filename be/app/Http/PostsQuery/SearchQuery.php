@@ -2,9 +2,9 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Tieba\Eloquent\PostModel;
-use App\Tieba\Eloquent\UserModel;
-use App\Tieba\Eloquent\PostModelFactory;
+use App\Eloquent\Model\Post\PostModel;
+use App\Eloquent\Model\Post\PostModelFactory;
+use App\Eloquent\Model\UserModel;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;

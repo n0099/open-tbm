@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent\Model\Post;
 
+use App\Eloquent\NullableNumericAttributeCast;
 use App\Helper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

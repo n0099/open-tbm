@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Eloquent\Model\BilibiliVoteModel;
+use App\Eloquent\Model\Post\PostModelFactory;
 use App\Helper;
-use App\Eloquent\BilibiliVoteModel;
-use App\Tieba\Eloquent\PostModelFactory;
-use App\Tieba\Eloquent\UserModel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Spatie\Regex\Regex;

@@ -2,10 +2,10 @@
 
 namespace App\Http\PostsQuery;
 
+use App\Eloquent\Model\ForumModel;
+use App\Eloquent\Model\Post\PostModel;
+use App\Eloquent\Model\Post\PostModelFactory;
 use App\Helper;
-use App\Tieba\Eloquent\ForumModel;
-use App\Tieba\Eloquent\PostModel;
-use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;

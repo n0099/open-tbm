@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Tieba\Eloquent\ForumModel;
+use App\Eloquent\Model\ForumModel;
 use Illuminate\Console\Command;
 
 class BatchTableSQLGenerator extends Command

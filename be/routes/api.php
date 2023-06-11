@@ -1,8 +1,10 @@
 <?php
 
+use App\Eloquent\Model\Post\PostModelFactory;
 use App\Helper;
+use App\Http\Controllers\PostsQuery;
+use App\Http\Controllers\UsersQuery;
 use App\Http\Middleware\ReCAPTCHACheck;
-use App\Tieba\Eloquent\PostModelFactory;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,7 +21,7 @@ use Illuminate\Validation\Rule;
 |
 */
 
-Route::get('/forums', static fn () => App\Tieba\Eloquent\ForumModel::all()->toJson());
+Route::get('/forums', static fn () => \App\Eloquent\Model\ForumModel::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(static function () {
     Route::get('/posts/query', 'PostsQuery@query');

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tieba\Eloquent;
+namespace App\Eloquent\Model\Post;
 
 use App\Helper;
 use JetBrains\PhpStorm\ArrayShape;
