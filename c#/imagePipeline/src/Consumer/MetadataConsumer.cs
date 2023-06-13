@@ -93,6 +93,8 @@ public partial class MetadataConsumer
     {
         T? GetExifTagValueOrNull<T>(ExifTag<T> tag) where T : class =>
             exif.TryGetValue(tag, out var value) ? value.Value : null;
+        T? GetExifTagValueOrNull2<T>(ExifTag<T> tag) where T : struct =>
+            exif.TryGetValue(tag, out var value) ? value.Value : null;
 
         var ret = CreateEmbeddedFromProfile<ExifProfile, ImageMetadata.Exif>
             (_commonEmbeddedMetadataXxHash3ToIgnore.Exif, exif, i => i?.ToByteArray());
@@ -101,10 +103,29 @@ public partial class MetadataConsumer
             ret.Orientation = exif.TryGetValue(ExifTag.Orientation, out var orientation)
                 ? Enum.GetName((ImageMetadata.Exif.ExifOrientation)orientation.Value)
                 : null;
+            ret.ImageDescription = GetExifTagValueOrNull(ExifTag.ImageDescription).NullIfEmpty();
+            ret.UserComment = GetExifTagValueOrNull2(ExifTag.UserComment).ToString().NullIfEmpty();
+            ret.Artist = GetExifTagValueOrNull(ExifTag.Artist).NullIfEmpty();
+            ret.XpAuthor = GetExifTagValueOrNull(ExifTag.XPAuthor).NullIfEmpty();
+            ret.Copyright = GetExifTagValueOrNull(ExifTag.Copyright).NullIfEmpty();
+            ret.ImageUniqueId = GetExifTagValueOrNull(ExifTag.ImageUniqueID).NullIfEmpty();
+            ret.BodySerialNumber = GetExifTagValueOrNull(ExifTag.SerialNumber).NullIfEmpty();
             ret.Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty();
             ret.Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty();
-            ret.CreateDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeDigitized));
-            ret.ModifyDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTime));
+            ret.Software = GetExifTagValueOrNull(ExifTag.Software).NullIfEmpty();
+            ret.CustomRendered = GetExifTagValueOrNull2(ExifTag.CustomRendered);
+            ret.DateTime = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTime));
+            ret.DateTimeDigitized = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeDigitized));
+            ret.DateTimeOriginal = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeOriginal));
+            ret.SubsecTime = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.SubsecTime));
+            ret.SubsecTimeDigitized = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.SubsecTimeDigitized));
+            ret.SubsecTimeOriginal = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.SubsecTimeOriginal));
+            ret.OffsetTime = GetExifTagValueOrNull(ExifTag.OffsetTime).NullIfEmpty();
+            ret.OffsetTimeDigitized = GetExifTagValueOrNull(ExifTag.OffsetTimeDigitized).NullIfEmpty();
+            ret.OffsetTimeOriginal = GetExifTagValueOrNull(ExifTag.OffsetTimeOriginal).NullIfEmpty();
+            ret.GpsImgDirection = GetExifTagValueOrNull2(ExifTag.GPSImgDirection)?.ToSingle();
+            ret.GpsImgDirectionRef = GetExifTagValueOrNull(ExifTag.GPSImgDirectionRef).NullIfEmpty();
+            ret.TagNames = exif.Values.Select(i => new ImageMetadata.Exif.TagName {Name = i.Tag.ToString()});
         }
         return ret;
     }

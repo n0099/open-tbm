@@ -43,12 +43,39 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public string? Orientation { get; set; }
+        public string? ImageDescription { get; set; }
+        public string? UserComment { get; set; }
+        public string? Artist { get; set; }
+        public string? XpAuthor { get; set; }
+        public string? Copyright { get; set; }
+        public string? ImageUniqueId { get; set; }
+        public string? BodySerialNumber { get; set; }
         public string? Make { get; set; }
         public string? Model { get; set; }
-        public DateTime? CreateDate { get; set; }
-        public DateTime? ModifyDate { get; set; }
+        public string? Software { get; set; }
+        public ushort? CustomRendered { get; set; }
+        public DateTime? DateTime { get; set; }
+        public DateTime? DateTimeDigitized { get; set; }
+        public DateTime? DateTimeOriginal { get; set; }
+        public DateTime? SubsecTime { get; set; }
+        public DateTime? SubsecTimeDigitized { get; set; }
+        public DateTime? SubsecTimeOriginal { get; set; }
+        public string? OffsetTime { get; set; }
+        public string? OffsetTimeDigitized { get; set; }
+        public string? OffsetTimeOriginal { get; set; }
+        public float? GpsImgDirection { get; set; }
+        public string? GpsImgDirectionRef { get; set; }
         public ulong XxHash3 { get; set; }
         public byte[]? RawBytes { get; set; }
+        // workaround to work with MetadataConsumer.CreateEmbeddedFromProfile()
+        // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
+        public IEnumerable<TagName> TagNames { get; set; } = null!;
+
+        public class TagName : IImageMetadata
+        {
+            [Key] public uint ImageId { get; set; }
+            public required string Name { get; set; }
+        }
 
         public enum ExifOrientation
         { // https://magnushoff.com/articles/jpeg-orientation/
