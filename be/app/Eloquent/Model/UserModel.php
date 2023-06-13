@@ -2,12 +2,15 @@
 
 namespace App\Eloquent\Model;
 
-use App\Eloquent\ModelWithHiddenFields;
+use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class UserModel extends ModelWithHiddenFields
+class UserModel extends Model
 {
+    use ModelHasPublicField;
+
     protected $table = 'tbmc_user';
 
     protected $guarded = [];
@@ -16,7 +19,7 @@ class UserModel extends ModelWithHiddenFields
         'icon' => 'array'
     ];
 
-    protected static array $fields = [
+    protected static array $publicFields = [
         'uid',
         'name',
         'displayName',

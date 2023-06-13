@@ -2,17 +2,18 @@
 
 namespace App\Eloquent\Model;
 
-use App\Eloquent\ModelWithHiddenFields;
+use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class ForumModel extends ModelWithHiddenFields
+class ForumModel extends Model
 {
+    use ModelHasPublicField;
+
     protected $table = 'tbm_forum';
 
-    protected $guarded = [];
-
-    protected static array $fields = ['fid', 'name'];
+    protected static array $publicFields = ['fid', 'name'];
 
     public function scopeIsCrawling(Builder $query, bool $isCrawling): Builder
     {

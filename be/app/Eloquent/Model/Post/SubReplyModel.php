@@ -12,7 +12,7 @@ class SubReplyModel extends PostModel
 {
     protected $primaryKey = 'spid';
 
-    protected static array $fields = [
+    protected static array $publicFields = [
         ...Helper::POST_ID,
         'authorUid',
         'postedAt',

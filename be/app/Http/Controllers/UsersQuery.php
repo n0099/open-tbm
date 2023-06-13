@@ -32,7 +32,7 @@ class UsersQuery extends Controller
         $queriedInfo = $queryBuilder
             ->where($queryParams)
             ->orderBy('id', 'DESC')
-            ->hidePrivateFields()
+            ->selectPublicFields()
             ->simplePaginate($this->pagingPerPageItems);
         Helper::abortAPIIf(40402, $queriedInfo->isEmpty());
 

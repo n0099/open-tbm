@@ -2,27 +2,19 @@
 
 namespace App\Eloquent\Model\Post;
 
-use App\Eloquent\ModelWithHiddenFields;
+use App\Eloquent\Model\Post\Content\ReplyContentModel;
+use App\Eloquent\Model\Post\Content\SubReplyContentModel;
+use App\Eloquent\ModelHasProtoBufAttribute;
+use App\Eloquent\ModelHasPublicField;
+use App\Eloquent\ModelWithTableNameSplitByFid;
 use App\Helper;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Collection;
 
-/**
- * Class Post
- * Parent abstract class for App\Tieba\Post\Thread|Reply|SubReply class
- *
- * @package App\Tieba\Eloquent
- */
-abstract class PostModel extends ModelWithHiddenFields
+abstract class PostModel extends ModelWithTableNameSplitByFid
 {
-    /**
-     * @var string Default table name
-     * @throw SQL:NoSuchTableException
-     */
-    protected $table = 'tbmc_f0';
-
-    protected int $fid = 0;
+    use ModelHasPublicField;
+    use ModelHasProtoBufAttribute;
 
     protected const TIMESTAMP_FIELDS = [
         'createdAt',
@@ -38,15 +30,14 @@ abstract class PostModel extends ModelWithHiddenFields
         SubReplyContentModel::class => 'subReply_content'
     ];
 
-    /**
-     * Setting model table name by fid and post type
-     */
-    public function setFid(int $fid): static
+    protected function getTableNameSuffix(): string
     {
-        $this->fid = $fid;
-        $this->setTable("tbmc_f{$fid}_" . self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class]);
+        return self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class];
+    }
 
-        return $this;
+    protected function getTableNameWithFid(int $fid): string
+    {
+        return "tbmc_f{$fid}_" . $this->getTableNameSuffix();
     }
 
     public function scopeSelectCurrentAndParentPostID(Builder $query): Builder
@@ -56,7 +47,7 @@ abstract class PostModel extends ModelWithHiddenFields
         return $query->addSelect(array_values(\array_slice(
             Helper::POST_TYPE_TO_ID,
             0,
-            array_search(self::MODEL_CLASS_TO_TABLE_NAME_SUFFIX[$this::class], Helper::POST_TYPES) + 1
+            array_search($this->getTableNameSuffix(), Helper::POST_TYPES) + 1
         )));
     }
 
@@ -74,41 +65,5 @@ abstract class PostModel extends ModelWithHiddenFields
             return $query->whereIn($postIDName, $postID);
         }
         throw new \InvalidArgumentException("$postIDName must be int or array");
-    }
-
-    /**
-     * @param class-string $protoBufClass
-     * @return Attribute
-     */
-    protected static function makeProtoBufAttribute(string $protoBufClass)
-    {
-        return Attribute::make(get: static function (?string $value) use ($protoBufClass) {
-            if ($value === null) {
-                return null;
-            }
-            $proto = new $protoBufClass();
-            $proto->mergeFromString($value);
-            return json_decode($proto->serializeToJsonString());
-        });
-    }
-
-    /**
-     * Override the parent relation instance method for passing valid fid to new related post model
-     */
-    protected function newRelatedInstance($class)
-    {
-        return tap((new $class())->setFid($this->fid), function ($instance) {
-            if (!$instance->getConnectionName()) {
-                $instance->setConnection($this->connection);
-            }
-        });
-    }
-
-    /**
-     * Override the parent newInstance method for passing valid fid to model's query builder
-     */
-    public function newInstance($attributes = [], $exists = false): static
-    {
-        return parent::newInstance($attributes, $exists)->setFid($this->fid);
     }
 }

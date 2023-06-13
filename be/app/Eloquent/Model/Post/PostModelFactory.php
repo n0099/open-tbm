@@ -2,6 +2,8 @@
 
 namespace App\Eloquent\Model\Post;
 
+use App\Eloquent\Model\Post\Content\ReplyContentModel;
+use App\Eloquent\Model\Post\Content\SubReplyContentModel;
 use App\Helper;
 use JetBrains\PhpStorm\ArrayShape;
 

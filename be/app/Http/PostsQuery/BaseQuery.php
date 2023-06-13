@@ -2,7 +2,7 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Eloquent\Model\Post\PostContentModel;
+use App\Eloquent\Model\Post\Content\PostContentModel;
 use App\Eloquent\Model\Post\PostModel;
 use App\Eloquent\Model\Post\PostModelFactory;
 use App\Eloquent\Model\Post\ReplyModel;
@@ -270,7 +270,7 @@ abstract class BaseQuery
         $threads = $postModels['thread']
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
-            ->hidePrivateFields()->get()
+            ->selectPublicFields()->get()
             ->map(static fn (ThreadModel $t) => // mark threads that in the original $this->queryResult
                 $t->setAttribute('isQueryMatch', $tids->contains($t->tid)));
         Debugbar::stopMeasure('fillWithThreadsFields');
@@ -281,11 +281,11 @@ abstract class BaseQuery
         $replies = $postModels['reply']
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->pid($parentRepliesID->concat($pids))
-            ->hidePrivateFields()->get()
+            ->selectPublicFields()->get()
             ->map(static fn (ReplyModel $r) => // mark replies that in the original $this->queryResult
                 $r->setAttribute('isQueryMatch', $pids->contains($r->pid)));
 
-        $subReplies = $postModels['subReply']->spid($spids)->hidePrivateFields()->get();
+        $subReplies = $postModels['subReply']->spid($spids)->selectPublicFields()->get();
         Debugbar::stopMeasure('fillWithRepliesFields');
 
         self::fillPostsContent($fid, $replies, $subReplies);
@@ -304,13 +304,14 @@ abstract class BaseQuery
 
     private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies): void
     {
-        $parseThenRenderContentModel = static function (Model $contentModel): ?string {
-            if ($contentModel->content === null) {
+        $parseThenRenderContentModel = static function (PostContentModel $contentModel): ?string {
+            if ($contentModel->protoBufBytes === null) {
                 return null;
             }
             $proto = new PostContentWrapper();
-            $proto->mergeFromString($contentModel->content);
-            return str_replace("\n", '', trim(view('renderPostContent', ['content' => $proto->getValue()])->render()));
+            $proto->mergeFromString($contentModel->protoBufBytes);
+            $renderedView = view('renderPostContent', ['content' => $proto->getValue()])->render();
+            return str_replace("\n", '', trim($renderedView));
         };
         /**
          * @param Collection<?string> $contents
@@ -327,7 +328,7 @@ abstract class BaseQuery
             Debugbar::measure('fillRepliesContent', static fn () =>
                 $replies->transform($appendParsedContent(
                     PostModelFactory::newReplyContent($fid)
-                        ->pid($replies->pluck('pid'))->get()
+                        ->pid($replies->pluck('pid'))->selectPublicFields()->get()
                         ->keyBy('pid')->map($parseThenRenderContentModel),
                     'pid'
                 )));
@@ -336,7 +337,7 @@ abstract class BaseQuery
             Debugbar::measure('fillSubRepliesContent', static fn () =>
             $subReplies->transform($appendParsedContent(
                 PostModelFactory::newSubReplyContent($fid)
-                    ->spid($subReplies->pluck('spid'))->get()
+                    ->spid($subReplies->pluck('spid'))->selectPublicFields()->get()
                     ->keyBy('spid')->map($parseThenRenderContentModel),
                 'spid'
             )));

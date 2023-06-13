@@ -15,7 +15,7 @@ class ReplyModel extends PostModel
 {
     protected $primaryKey = 'pid';
 
-    protected static array $fields = [
+    protected static array $publicFields = [
         'tid',
         'pid',
         'floor',

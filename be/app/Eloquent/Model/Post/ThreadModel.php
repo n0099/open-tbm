@@ -18,7 +18,7 @@ class ThreadModel extends PostModel
 {
     protected $primaryKey = 'tid';
 
-    protected static array $fields = [
+    protected static array $publicFields = [
         'tid',
         'threadType',
         'stickyType',

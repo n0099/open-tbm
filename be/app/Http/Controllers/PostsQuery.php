@@ -59,7 +59,7 @@ class PostsQuery extends Controller
                 ...$query->getResultPages(),
                 ...Arr::except($result, Helper::POST_TYPES_PLURAL)
             ],
-            'forum' => ForumModel::fid($result['fid'])->hidePrivateFields()->first()?->toArray(),
+            'forum' => ForumModel::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
             'users' => UserModel::whereIn(
                 'uid',
@@ -70,7 +70,7 @@ class PostsQuery extends Controller
                         Helper::POST_TYPES_PLURAL
                     ))
                     ->flatten()->unique()->toArray()
-            )->hidePrivateFields()->get()->toArray()
+            )->selectPublicFields()->get()->toArray()
         ];
     }
 }
