@@ -1,7 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Hashing;
 using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using SixLabors.ImageSharp.Metadata.Profiles.Icc;
+using SixLabors.ImageSharp.Metadata.Profiles.Iptc;
+using SixLabors.ImageSharp.Metadata.Profiles.Xmp;
 
 namespace tbm.ImagePipeline.Consumer;
 
@@ -14,13 +18,19 @@ public partial class MetadataConsumer
     private static partial Regex ExtractMalformedExifDateTimeRegex();
 
     private readonly ILogger<MetadataConsumer> _logger;
-    private readonly ulong[] _commonIccProfilesXxHash3ToIgnore;
+    private readonly (ulong[] Exif, ulong[] Icc, ulong[] Iptc, ulong[] Xmp) _commonEmbeddedMetadataXxHash3ToIgnore;
 
     public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config)
     {
         _logger = logger;
-        _commonIccProfilesXxHash3ToIgnore = config.GetSection("MetadataConsumer")
-            .GetSection("CommonIccProfilesXxHash3ToIgnore").Get<ulong[]>() ?? Array.Empty<ulong>();
+        var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
+        ulong[] GetCommonXxHash3ToIgnore(string key) => section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
+        _commonEmbeddedMetadataXxHash3ToIgnore = (
+            Exif: GetCommonXxHash3ToIgnore("Exif"),
+            Icc: GetCommonXxHash3ToIgnore("Icc"),
+            Iptc: GetCommonXxHash3ToIgnore("Iptc"),
+            Xmp: GetCommonXxHash3ToIgnore("Xmp")
+        );
     }
 
     public void Consume(
@@ -36,18 +46,6 @@ public partial class MetadataConsumer
             if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat or BmpFormat))
                 ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
 
-            T? GetExifTagValueOrNull<T>(ExifTag<T> tag) where T : class =>
-                meta.ExifProfile.TryGetValue(tag, out var value) ? value.Value : null;
-
-            var iccProfileRawBytes = meta.IccProfile?.ToByteArray();
-            var iccProfile = meta.IccProfile == null ? null : new ImageMetadata.Icc
-            {
-                XxHash3 = XxHash3.HashToUInt64(iccProfileRawBytes),
-                RawBytes = iccProfileRawBytes!
-            };
-            if (iccProfile != null && _commonIccProfilesXxHash3ToIgnore.Contains(iccProfile.XxHash3))
-                iccProfile.RawBytes = null;
-
             return new ImageMetadata
             {
                 ImageId = image.ImageId,
@@ -56,36 +54,60 @@ public partial class MetadataConsumer
                 Height = (ushort)info.Height,
                 BitsPerPixel = (ushort)info.PixelType.BitsPerPixel,
                 FrameCount = (uint)info.FrameMetadataCollection.Count,
-                EmbeddedOther = (meta.IptcProfile, meta.XmpProfile) == default // is all null
-                    ? null
-                    : new()
-                    {
-                        Iptc = meta.IptcProfile?.Data,
-                        Xmp = meta.XmpProfile?.ToByteArray()
-                    },
-                EmbeddedExif = meta.ExifProfile == null ? null : new ImageMetadata.Exif
-                { // https://exiftool.org/TagNames/EXIF.html, https://exiv2.org/tags.html
-                    Orientation = meta.ExifProfile.TryGetValue(ExifTag.Orientation, out var orientation)
-                        ? Enum.GetName((ImageMetadata.Exif.ExifOrientation)orientation.Value)
-                        : null,
-                    Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty(),
-                    Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty(),
-                    CreateDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeDigitized)),
-                    ModifyDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTime)),
-                    TagNames = JsonSerializer.Serialize(meta.ExifProfile.Values.Select(i => i.Tag.ToString())),
-                    RawBytes = meta.ExifProfile.ToByteArray() ?? throw new NullReferenceException()
-                },
-                EmbeddedIcc = iccProfile,
-                JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
-                PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
-                GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
-                BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta),
+                XxHash3 = XxHash3.HashToUInt64(imageBytes),
                 DownloadedByteSize = image.ExpectedByteSize == imageBytes.Length
                     ? null
                     : new() {DownloadedByteSize = (uint)imageBytes.Length},
-                XxHash3 = XxHash3.HashToUInt64(imageBytes)
+                EmbeddedExif = CreateEmbeddedExifFromProfile(meta.ExifProfile),
+                EmbeddedIcc = CreateEmbeddedFromProfile<IccProfile, ImageMetadata.Icc>
+                    (_commonEmbeddedMetadataXxHash3ToIgnore.Icc, meta.IccProfile, i => i?.ToByteArray()),
+                EmbeddedIptc = CreateEmbeddedFromProfile<IptcProfile, ImageMetadata.Iptc>
+                    (_commonEmbeddedMetadataXxHash3ToIgnore.Iptc, meta.IptcProfile, i => i?.Data),
+                EmbeddedXmp = CreateEmbeddedFromProfile<XmpProfile, ImageMetadata.Xmp>
+                    (_commonEmbeddedMetadataXxHash3ToIgnore.Xmp, meta.XmpProfile, i => i?.ToByteArray()),
+                JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
+                PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
+                GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
+                BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta)
             };
         }));
+
+    [return: NotNullIfNotNull(nameof(profile))]
+    private static TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
+        IEnumerable<ulong> commonXxHash3ToIgnore,
+        TImageSharpProfile? profile,
+        Func<TImageSharpProfile?, byte[]?> rawBytesSelector
+    )
+        where TEmbeddedMetadata : class, ImageMetadata.IEmbedded, new()
+    {
+        var rawBytes = rawBytesSelector(profile); // will be null when param profile is null
+        var xxHash3 = XxHash3.HashToUInt64(rawBytes);
+        return profile == null ? null : new TEmbeddedMetadata
+        {
+            XxHash3 = xxHash3,
+            RawBytes = commonXxHash3ToIgnore.Contains(xxHash3) ? null : rawBytes
+        };
+    }
+
+    private ImageMetadata.Exif? CreateEmbeddedExifFromProfile(ExifProfile? exif)
+    {
+        T? GetExifTagValueOrNull<T>(ExifTag<T> tag) where T : class =>
+            exif.TryGetValue(tag, out var value) ? value.Value : null;
+
+        var ret = CreateEmbeddedFromProfile<ExifProfile, ImageMetadata.Exif>
+            (_commonEmbeddedMetadataXxHash3ToIgnore.Exif, exif, i => i?.ToByteArray());
+        if (ret != null && exif != null)
+        { // https://exiftool.org/TagNames/EXIF.html, https://exiv2.org/tags.html
+            ret.Orientation = exif.TryGetValue(ExifTag.Orientation, out var orientation)
+                ? Enum.GetName((ImageMetadata.Exif.ExifOrientation)orientation.Value)
+                : null;
+            ret.Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty();
+            ret.Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty();
+            ret.CreateDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeDigitized));
+            ret.ModifyDate = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTime));
+        }
+        return ret;
+    }
 
     private DateTime? ParseExifDateTimeOrNull(string? exifDateTime)
     {

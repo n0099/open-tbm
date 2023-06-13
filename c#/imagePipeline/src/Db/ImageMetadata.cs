@@ -10,21 +10,28 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         [Key] public uint ImageId { get; set; }
     }
 
+    public interface IEmbedded : IImageMetadata
+    {
+        public ulong XxHash3 { get; set; }
+        public byte[]? RawBytes { get; set; }
+    }
+
     [Key] public uint ImageId { get; set; }
     public string? Format { get; set; }
     public ushort Width { get; set; }
     public ushort Height { get; set; }
     public ushort BitsPerPixel { get; set; }
     public uint FrameCount { get; set; }
-    public Other? EmbeddedOther { get; set; }
+    public ulong XxHash3 { get; set; }
+    public ByteSize? DownloadedByteSize { get; set; }
     public Exif? EmbeddedExif { get; set; }
     public Icc? EmbeddedIcc { get; set; }
+    public Iptc? EmbeddedIptc { get; set; }
+    public Xmp? EmbeddedXmp { get; set; }
     public Jpg? JpgMetadata { get; set; }
     public Png? PngMetadata { get; set; }
     public Gif? GifMetadata { get; set; }
     public Bmp? BmpMetadata { get; set; }
-    public ByteSize? DownloadedByteSize { get; set; }
-    public ulong XxHash3 { get; set; }
 
     public class ByteSize : IImageMetadata
     {
@@ -32,14 +39,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public uint DownloadedByteSize { get; set; }
     }
 
-    public class Other : IImageMetadata
-    {
-        [Key] public uint ImageId { get; set; }
-        public byte[]? Iptc { get; set; }
-        public byte[]? Xmp { get; set; }
-    }
-
-    public class Exif : IImageMetadata
+    public class Exif : IEmbedded
     {
         [Key] public uint ImageId { get; set; }
         public string? Orientation { get; set; }
@@ -47,8 +47,8 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public string? Model { get; set; }
         public DateTime? CreateDate { get; set; }
         public DateTime? ModifyDate { get; set; }
-        public required string TagNames { get; set; }
-        public required byte[] RawBytes { get; set; }
+        public ulong XxHash3 { get; set; }
+        public byte[]? RawBytes { get; set; }
 
         public enum ExifOrientation
         { // https://magnushoff.com/articles/jpeg-orientation/
@@ -63,11 +63,25 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         }
     }
 
-    public class Icc : IImageMetadata
+    public class Icc : IEmbedded
     {
         [Key] public uint ImageId { get; set; }
         public ulong XxHash3 { get; set; }
-        public required byte[]? RawBytes { get; set; }
+        public byte[]? RawBytes { get; set; }
+    }
+
+    public class Iptc : IEmbedded
+    {
+        [Key] public uint ImageId { get; set; }
+        public ulong XxHash3 { get; set; }
+        public byte[]? RawBytes { get; set; }
+    }
+
+    public class Xmp : IEmbedded
+    {
+        [Key] public uint ImageId { get; set; }
+        public ulong XxHash3 { get; set; }
+        public byte[]? RawBytes { get; set; }
     }
 
     public class Jpg : IImageMetadata

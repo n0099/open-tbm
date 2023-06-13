@@ -53,9 +53,10 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
             b.Entity<TRelatedEntity>().ToTable($"tbmi_metadata_{tableNameSuffix}");
         }
         SplitImageMetadata(e => e.DownloadedByteSize, "downloadedByteSize");
-        SplitImageMetadata(e => e.EmbeddedOther, "embedded");
         SplitImageMetadata(e => e.EmbeddedExif, "embedded_exif");
         SplitImageMetadata(e => e.EmbeddedIcc, "embedded_icc");
+        SplitImageMetadata(e => e.EmbeddedIptc, "embedded_iptc");
+        SplitImageMetadata(e => e.EmbeddedXmp, "embedded_xmp");
         SplitImageMetadata(e => e.JpgMetadata, "jpg");
         SplitImageMetadata(e => e.PngMetadata, "png");
         SplitImageMetadata(e => e.GifMetadata, "gif");
