@@ -56,6 +56,12 @@ abstract class PostModel extends ModelWithTableNameSplitByFid
         return $this->scopeIDType($query, 'tid', $tid);
     }
 
+    /**
+     * @param Builder<PostModel> $query
+     * @param string $postIDName
+     * @param Collection<array-key, int>|list<int>|int $postID
+     * @return Builder<PostModel>
+     */
     protected function scopeIDType(Builder $query, string $postIDName, Collection|array|int $postID): Builder
     {
         if (\is_int($postID)) {

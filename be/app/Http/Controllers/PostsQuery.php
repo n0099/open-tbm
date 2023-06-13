@@ -9,22 +9,20 @@ use App\Http\PostsQuery\SearchQuery;
 use App\Eloquent\Model\ForumModel;
 use App\Eloquent\Model\UserModel;
 use Barryvdh\Debugbar\Facades\Debugbar;
-use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
 class PostsQuery extends Controller
 {
     public function query(\Illuminate\Http\Request $request): array
     {
-        $validator = new ParamsValidator((array)Utils::jsonDecode(
+        $validator = new ParamsValidator(Helper::jsonDecode(
             $request->validate([
                 'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                     // (,|$)|,){6} means allow at most six parts of base64 segment or empty string to co-exist
                     'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/'
                 ],
-                'query' => 'json'
+                'query' => 'json|required'
             ])['query'],
-            true
         ));
         $params = $validator->params;
 

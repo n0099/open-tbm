@@ -24,8 +24,8 @@ use Illuminate\Validation\Rule;
 Route::get('/forums', static fn () => \App\Eloquent\Model\ForumModel::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(static function () {
-    Route::get('/posts/query', 'PostsQuery@query');
-    Route::get('/users/query', 'UsersQuery@query');
+    Route::get('/posts/query', [PostsQuery::class, 'query']);
+    Route::get('/users/query', [UsersQuery::class, 'query']);
     Route::get('/status', static function (Request $request): string {
         $groupByTimeGranularity = [
             'minute' => 'FROM_UNIXTIME(startTime, "%Y-%m-%d %H:%i") AS startTime',

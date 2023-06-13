@@ -13,8 +13,6 @@ class UserModel extends Model
 
     protected $table = 'tbmc_user';
 
-    protected $guarded = [];
-
     protected $casts = [
         'icon' => 'array'
     ];
@@ -33,7 +31,12 @@ class UserModel extends Model
         'updatedAt'
     ];
 
-    public function scopeUid(Builder $query, $uid): Builder
+    /**
+     * @param Builder<UserModel> $query
+     * @param Collection<array-key, int>|list<int>|int $uid
+     * @return Builder<UserModel>
+     */
+    public function scopeUid(Builder $query, Collection|array|int $uid): Builder
     {
         if (\is_int($uid)) {
             return $query->where('uid', $uid);

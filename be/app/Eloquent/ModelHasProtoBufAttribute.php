@@ -25,7 +25,7 @@ trait ModelHasProtoBufAttribute
             /** @var Message $proto */
             $proto = new $protoBufClass();
             $proto->mergeFromString($value);
-            return json_decode($proto->serializeToJsonString(), false, flags: JSON_THROW_ON_ERROR);
+            return Helper::jsonDecode($proto->serializeToJsonString(), false);
         });
     }
 }

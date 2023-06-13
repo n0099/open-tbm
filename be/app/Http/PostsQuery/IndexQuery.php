@@ -10,7 +10,6 @@ use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class IndexQuery extends BaseQuery
 {
@@ -45,8 +44,8 @@ class IndexQuery extends BaseQuery
             $fids = ForumModel::get('fid')->pluck('fid')->toArray();
             $counts = collect($fids)
                 ->map(static fn (int $fid) =>
-                    DB::table("tbmc_f{$fid}_" . (Helper::POST_ID_TO_TYPE[$postIDName]))
-                        ->selectRaw("$fid AS fid, COUNT(*) AS count")
+                    PostModelFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
+                        ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
                 ->reduce(static fn (?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): BuilderContract =>
                     $acc === null ? $cur : $acc->union($cur))
@@ -76,7 +75,7 @@ class IndexQuery extends BaseQuery
 
         if ($hasPostIDParam) {
             $queries = $queries
-                ->only(array_slice(
+                ->only(\array_slice(
                     Helper::POST_TYPES, // only query post types that own the querying post ID param
                     array_search($postIDParamName, Helper::POST_ID, true)
                 ))

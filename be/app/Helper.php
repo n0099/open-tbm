@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Support\Arr;
 use JetBrains\PhpStorm\Pure;
-use GuzzleHttp\Utils;
 
 class Helper
 {
@@ -93,7 +92,7 @@ class Helper
             }
         }
         if ($errorInfo === null) {
-            throw new \InvalidArgumentException('given error code doesn\'t existed');
+            throw new \InvalidArgumentException('Given error code doesn\'t existed');
         }
         \Response::json([
             'errorCode' => $errorCode,
@@ -102,12 +101,15 @@ class Helper
         exit;
     }
 
-    public static function nullableValidate(string $value, bool $isJson = false)
+    /**
+     * @throws \JsonException
+     */
+    public static function nullableValidate(string $value, bool $isJson = false): ?string
     {
         if ($value === '""' || $value === '[]' || blank($value)) {
             return null;
         }
-        return $isJson ? Utils::jsonEncode($value) : $value;
+        return $isJson ? self::jsonEncode($value) : $value;
     }
 
     /**
@@ -131,5 +133,21 @@ class Helper
     public static function timestampToLocalDateTime(int $timestamp): string
     {
         return date("Y-m-d\TH:i:s", $timestamp);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public static function jsonEncode($value): string
+    {
+        return json_encode($value, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public static function jsonDecode(string $json, bool $assoc = true)
+    {
+        return json_decode($json, $assoc, flags: JSON_THROW_ON_ERROR);
     }
 }

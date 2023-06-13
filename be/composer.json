@@ -39,7 +39,9 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "TbClient\\": "../tbclient.protobuf/tbm_php/TbClient/",
+            "GPBMetadata\\": "../tbclient.protobuf/tbm_php/GPBMetadata/"
         }
     },
     "autoload-dev": {
