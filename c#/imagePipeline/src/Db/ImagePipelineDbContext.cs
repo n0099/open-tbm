@@ -31,6 +31,8 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
     public ImagePipelineDbContext(IConfiguration config, Fid fid, string script)
         : base(config) => (Fid, Script) = (fid, script);
 
+    protected override void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
+
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
     {

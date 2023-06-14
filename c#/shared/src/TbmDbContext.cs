@@ -24,7 +24,7 @@ public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKe
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         var connectionStr = _config.GetConnectionString("Main");
-        options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr))
+        options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr), OnConfiguringMysql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .AddInterceptors(SelectForUpdateCommandInterceptorInstance)
             .UseCamelCaseNamingConvention();
@@ -48,6 +48,8 @@ public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKe
     protected void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
         b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
 #pragma warning restore IDE0058 // Expression value is never used
+
+    protected virtual void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) { }
 
     private class SelectForUpdateCommandInterceptor : DbCommandInterceptor
     { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260

@@ -1,6 +1,8 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable UnusedMember.Global
+using Point = NetTopologySuite.Geometries.Point;
+
 namespace tbm.ImagePipeline.Db;
 
 public class ImageMetadata : ImageMetadata.IImageMetadata
@@ -63,6 +65,8 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public string? OffsetTime { get; set; }
         public string? OffsetTimeDigitized { get; set; }
         public string? OffsetTimeOriginal { get; set; }
+        public DateTime? GpsDateTime { get; set; }
+        public Point? GpsCoordinate { get; set; }
         public float? GpsImgDirection { get; set; }
         public string? GpsImgDirectionRef { get; set; }
         public ulong XxHash3 { get; set; }
