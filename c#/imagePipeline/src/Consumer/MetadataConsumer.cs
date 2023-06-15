@@ -13,18 +13,10 @@ namespace tbm.ImagePipeline.Consumer;
 
 public partial class MetadataConsumer
 {
-
-    [GeneratedRegex( // should able to guess malformed string, e.g. 2018:09:08 15:288
-        "^(?<year>(?:19|20|21)[0-9]{2}):?(?<month>[0-1]?[0-9]):?(?<day>[0-1]?[0-9]) (?<hour>[0-2]?[0-9]):?(?<minute>[0-5]?[0-9]):?(?<second>[0-5]?[0-9])$",
-        RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
-    private static partial Regex ExtractMalformedExifDateTimeRegex();
-
-    private readonly ILogger<MetadataConsumer> _logger;
     private readonly (ulong[] Exif, ulong[] Icc, ulong[] Iptc, ulong[] Xmp) _commonEmbeddedMetadataXxHash3ToIgnore;
 
-    public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config)
+    public MetadataConsumer(IConfiguration config)
     {
-        _logger = logger;
         var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
         ulong[] GetCommonXxHash3ToIgnore(string key) => section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
         _commonEmbeddedMetadataXxHash3ToIgnore = (
@@ -123,15 +115,26 @@ public partial class MetadataConsumer
             ret.Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty();
             ret.Software = GetExifTagValueOrNull(ExifTag.Software).NullIfEmpty();
             ret.CustomRendered = GetExifTagValueOrNull2(ExifTag.CustomRendered);
-            ret.DateTime = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTime));
-            ret.DateTimeDigitized = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeDigitized));
-            ret.DateTimeOriginal = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.DateTimeOriginal));
-            ret.SubsecTime = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.SubsecTime));
-            ret.SubsecTimeDigitized = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.SubsecTimeDigitized));
-            ret.SubsecTimeOriginal = ParseExifDateTimeOrNull(GetExifTagValueOrNull(ExifTag.SubsecTimeOriginal));
+
+            var parsedDateTime = ExifDateTimeParser.ParseExifDateTimeOrNull(
+                GetExifTagValueOrNull(ExifTag.DateTime), GetExifTagValueOrNull(ExifTag.SubsecTime));
+            ret.DateTime = parsedDateTime?.DateTime;
+            ret.DateTimeOffset = parsedDateTime?.Offset;
+
+            var parsedDateTimeDigitized = ExifDateTimeParser.ParseExifDateTimeOrNull(
+                GetExifTagValueOrNull(ExifTag.DateTimeDigitized), GetExifTagValueOrNull(ExifTag.SubsecTimeDigitized));
+            ret.DateTimeDigitized = parsedDateTimeDigitized?.DateTime;
+            ret.DateTimeDigitizedOffset = parsedDateTimeDigitized?.Offset;
+
+            var parsedDateTimeOriginal = ExifDateTimeParser.ParseExifDateTimeOrNull(
+                GetExifTagValueOrNull(ExifTag.DateTimeOriginal), GetExifTagValueOrNull(ExifTag.SubsecTimeOriginal));
+            ret.DateTimeOriginal = parsedDateTimeOriginal?.DateTime;
+            ret.DateTimeOriginalOffset = parsedDateTimeOriginal?.Offset;
+
             ret.OffsetTime = GetExifTagValueOrNull(ExifTag.OffsetTime).NullIfEmpty();
             ret.OffsetTimeDigitized = GetExifTagValueOrNull(ExifTag.OffsetTimeDigitized).NullIfEmpty();
             ret.OffsetTimeOriginal = GetExifTagValueOrNull(ExifTag.OffsetTimeOriginal).NullIfEmpty();
+
             ret.GpsDateTime = GetGpsDateTimeOrNull(
                 GetExifTagValueOrNull(ExifTag.GPSTimestamp),
                 GetExifTagValueOrNull(ExifTag.GPSDateStamp));
@@ -142,7 +145,8 @@ public partial class MetadataConsumer
                 GetExifTagValueOrNull(ExifTag.GPSLongitudeRef));
             ret.GpsImgDirection = GetExifTagValueOrNull2(ExifTag.GPSImgDirection)?.ToSingle();
             ret.GpsImgDirectionRef = GetExifTagValueOrNull(ExifTag.GPSImgDirectionRef).NullIfEmpty();
-            ret.TagNames = exif.Values.Select(i => new ImageMetadata.Exif.TagName {Name = i.Tag.ToString()});
+
+            ret.TagNames = exif.Values.Select(i => new ImageMetadata.Exif.TagName {Name = i.Tag.ToString()}).ToList();
         }
         return ret;
     }
@@ -161,7 +165,8 @@ public partial class MetadataConsumer
             "Unexpected fraction number in parts of GPSTimeStamp, expecting integer as rationals.", nameof(timeStamp));
         var timeParts = timeStamp.Select(i => (int)i.ToDouble()).ToList();
 
-        return new DateTime(dateParts[0], dateParts[1], dateParts[2], timeParts[0], timeParts[1], timeParts[2]);
+        return new DateTime(year: dateParts[0], month: dateParts[1], day: dateParts[2],
+            hour: timeParts[0], minute: timeParts[1], second: timeParts[2]);
     }
 
     private static Point? GetGpsCoordinateOrNull
@@ -192,7 +197,7 @@ public partial class MetadataConsumer
     }
 
     private static double ConvertDmsToDd(IReadOnlyList<double> dms)
-    {
+    { // https://stackoverflow.com/questions/3249700/convert-degrees-minutes-seconds-to-decimal-coordinates
         if (dms.Count != 3) throw new ArgumentException(
             "Unexpected length for DMS, expecting three doubles.", nameof(dms));
         var degrees = dms[0];
@@ -203,34 +208,102 @@ public partial class MetadataConsumer
             : degrees - (minutes / 60) - (seconds / 3600);
     }
 
-    private DateTime? ParseExifDateTimeOrNull(string? exifDateTime)
+    private partial class ExifDateTimeParser
     {
-        static DateTime? ParseDateTimeWithFormatOrNull(string? dateTime) =>
-            DateTime.TryParseExact(dateTime, "yyyy:M:d H:m:s", CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out var ret) ? ret : null;
+        public record DateTimeAndOffset(DateTime DateTime, string? Offset);
 
-        if (string.IsNullOrEmpty(exifDateTime)) return null;
-        var originalDateTime = ParseDateTimeWithFormatOrNull(exifDateTime);
-        if (originalDateTime != null) return originalDateTime;
-
-        // try to extract parts in malformed date time then try parse the parts composed formatted string
-        // e.g. 2018:09:08 15:288 -> 2018:09:08 15:28:08
-        // doing this should extract date time values from raw EXIF bytes as much as possible
-        // since they usually only done by once for all
-        var match = ExtractMalformedExifDateTimeRegex().Match(exifDateTime);
-        if (!match.Success)
-        {
-            _logger.LogWarning("Unable to extract parts from malformed exif date time {}", exifDateTime);
-            return null;
+        public static DateTimeAndOffset? ParseExifDateTimeOrNull(string? exifDateTime, string? exifFractionalSeconds)
+        { // https://gist.github.com/thanatos/eee17100476a336a711e
+            // tested inputs with valid results:
+            // "2019:02:07 21:238"         => "2019/2/7 21:23:08"  , ""
+            // "2019:04:26 20:08:02"       => "2019/4/26 20:08:02" , ""
+            // "2019:04:26 24:08:02"       => "2019/4/27 0:08:02"  , ""
+            // "2018:09:12 21:20:08下午"    => "2018/9/12 21:20:08" , ""
+            // "2018:09:12 09:20:08上午"    => "2018/9/12 9:20:08"  , ""
+            // "2018:09:12 09:20:08下午"    => "2018/9/12 21:20:08" , ""
+            // "2018:09:12 9:20:08下午"     => "2018/9/12 21:20:08" , ""
+            // "2013: 1: 1  8:10:25"       => "2013/1/1 8:10:25"   , ""
+            // "2019-04-09T02:14:04-12:00" => "2019/4/9 2:14:04"   , "-12:00"
+            // "2019-04-09T02:14:04+09:00" => "2019/4/9 2:14:04"   , "+09:00"
+            // "2017/05/22 00:04:31"       => "2017/5/22 0:04:31"  , ""
+            // "Sat Mar 03 10:05:45 2007"  => "2007/3/3 10:05:45"  , ""
+            // "1556068385188"             => "2019/4/24 1:13:05"  , "+00:00"
+            if (exifDateTime == null) return null;
+            var hasFractionalSeconds = int.TryParse(exifFractionalSeconds, out var fractionalSeconds);
+            fractionalSeconds = hasFractionalSeconds ? fractionalSeconds : 0;
+            return ParseExifDateTimeWithoutOffset(exifDateTime, fractionalSeconds)
+                   ?? ParseExifDateTimeWithOffset(exifDateTime, fractionalSeconds)
+                   ?? ParseExifDateTimeWithHoursBeyond24(exifDateTime)
+                   ?? ParseExifDateTimeAsUnixTimestampMilliseconds(exifDateTime)
+                   ?? throw new ArgumentException(
+                       $"Failed to parse provided EXIF date time {exifDateTime} with fractional seconds {fractionalSeconds}.");
         }
-        var ret = ParseDateTimeWithFormatOrNull( // sync with format "yyyy:M:d H:m:s"
-            $"{match.Groups["year"]}:{match.Groups["month"]}:{match.Groups["day"]} "
-            + $"{match.Groups["hour"]}:{match.Groups["minute"]}:{match.Groups["second"]}");
-        if (ret == null)
-            _logger.LogWarning("Unable to extract parts from malformed exif date time {}", exifDateTime);
-        else
-            _logger.LogWarning("Converted malformed exif date time {} to {:yyyy:MM:D HH:mm:ss}",
-                exifDateTime, ret);
-        return ret;
+
+        private static DateTimeAndOffset? ParseExifDateTimeWithoutOffset(string exifDateTime, int fractionalSeconds)
+        {
+            var culture = (DateTimeFormatInfo)CultureInfo.InvariantCulture.DateTimeFormat.Clone();
+            culture.AMDesignator = "上午";
+            culture.PMDesignator = "下午";
+            var dateTime = DateTime.TryParseExact(exifDateTime, new[]
+            {
+                "yyyy':'MM':'dd HH':'mm':'ss",   // 2019:04:26 20:08:02
+                "yyyy':'MM':'dd HH':'mm':'sstt", // 2018:09:12 21:20:08下午, 2018:09:12 09:20:08上午
+                "yyyy':'MM':'dd h':'mm':'sstt",  // 2018:09:12 09:20:08下午, 2018:09:12 9:20:08下午
+                "yyyy':'MM':'dd HH':'mms",       // 2019:02:07 21:238
+                "yyyy':'M':'d H':'m':'s",        // 2013: 1: 1  8:10:25 with DateTimeStyles.AllowWhiteSpaces
+                "yyyy'/'MM'/'dd HH':'mm':'ss",   // 2017/05/22 00:04:31
+                "ddd MMM dd HH':'mm':'ss yyyy"   // Sat Mar 03 10:05:45 2007
+            }, culture, DateTimeStyles.AllowWhiteSpaces, out var dt)
+                ? dt
+                : default;
+            if (dateTime == default) return null;
+            if (fractionalSeconds != 0) dateTime = dateTime.AddSeconds(fractionalSeconds / 10d);
+            return new(dateTime, Offset: null);
+        }
+
+        private static DateTimeAndOffset? ParseExifDateTimeWithOffset(string exifDateTime, int fractionalSeconds)
+        {
+            var dateTimeOffset = DateTimeOffset.TryParseExact(exifDateTime,
+                "yyyy-MM-ddTHH':'mm':'sszzz" // 2019-04-09T02:14:04-12:00, 2019-04-09T02:14:04+09:00
+                , CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dto)
+                ? dto
+                : default;
+            if (dateTimeOffset == default) return null;
+            if (fractionalSeconds != 0) dateTimeOffset = dateTimeOffset.AddSeconds(fractionalSeconds / 10d);
+            return new(dateTimeOffset.DateTime, dateTimeOffset.ToString("zzz"));
+        }
+
+        [GeneratedRegex(
+            "^(?<year>[0-9]{4}):(?<month>[0-9]{2}):(?<day>[0-9]{2}) (?<hour>[0-9]{2}):(?<minute>[0-9]{2}):(?<second>[0-9]{2})$",
+            RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+        private static partial Regex ExtractExifDateTimePartsRegex();
+
+        private static DateTimeAndOffset? ParseExifDateTimeWithHoursBeyond24(string exifDateTime)
+        { // https://stackoverflow.com/questions/5208607/parsing-times-above-24-hours-in-c-sharp/76483705#76483705
+            // https://en.wikipedia.org/wiki/Date_and_time_notation_in_Japan#Time
+            // https://ja.wikipedia.org/wiki/30%E6%99%82%E9%96%93%E5%88%B6
+            // e.g. 2019:04:26 24:08:02
+            var match = ExtractExifDateTimePartsRegex().Match(exifDateTime);
+            if (!match.Success) return null;
+            return new(new DateTime(
+                    int.Parse(match.Groups["year"].ValueSpan),
+                    int.Parse(match.Groups["month"].ValueSpan),
+                    int.Parse(match.Groups["day"].ValueSpan),
+                    hour: 0,
+                    int.Parse(match.Groups["minute"].ValueSpan),
+                    int.Parse(match.Groups["second"].ValueSpan))
+                .AddHours(int.Parse(match.Groups["hour"].ValueSpan)), Offset: null);
+        }
+
+        // accepting from 1973-03-03 17:46:40.000 to 2286-11-21 01:46:39.999 when the input contains no leading zeros
+        [GeneratedRegex("^[0-9]{12,13}$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+        private static partial Regex ExtractUnixTimestampMillisecondsRegex();
+
+        private static DateTimeAndOffset? ParseExifDateTimeAsUnixTimestampMilliseconds(string exifDateTime)
+        { // e.g. 1556068385188
+            var isMatch = ExtractUnixTimestampMillisecondsRegex().IsMatch(exifDateTime);
+            if (!isMatch) return null;
+            return new(DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(exifDateTime)).DateTime, "+00:00");
+        }
     }
 }

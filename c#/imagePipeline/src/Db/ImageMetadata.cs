@@ -57,11 +57,11 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public string? Software { get; set; }
         public ushort? CustomRendered { get; set; }
         public DateTime? DateTime { get; set; }
+        public string? DateTimeOffset { get; set; }
         public DateTime? DateTimeDigitized { get; set; }
+        public string? DateTimeDigitizedOffset { get; set; }
         public DateTime? DateTimeOriginal { get; set; }
-        public DateTime? SubsecTime { get; set; }
-        public DateTime? SubsecTimeDigitized { get; set; }
-        public DateTime? SubsecTimeOriginal { get; set; }
+        public string? DateTimeOriginalOffset { get; set; }
         public string? OffsetTime { get; set; }
         public string? OffsetTimeDigitized { get; set; }
         public string? OffsetTimeOriginal { get; set; }
