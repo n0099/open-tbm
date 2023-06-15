@@ -73,11 +73,11 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public byte[]? RawBytes { get; set; }
         // workaround to work with MetadataConsumer.CreateEmbeddedFromProfile()
         // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
-        public IEnumerable<TagName> TagNames { get; set; } = null!;
+        public ICollection<TagName> TagNames { get; set; } = new List<TagName>();
 
         public class TagName : IImageMetadata
         {
-            [Key] public uint ImageId { get; set; }
+            public uint ImageId { get; set; }
             public required string Name { get; set; }
         }
 

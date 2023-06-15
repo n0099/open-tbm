@@ -116,17 +116,17 @@ public partial class MetadataConsumer
             ret.Software = GetExifTagValueOrNull(ExifTag.Software).NullIfEmpty();
             ret.CustomRendered = GetExifTagValueOrNull2(ExifTag.CustomRendered);
 
-            var parsedDateTime = ExifDateTimeParser.ParseExifDateTimeOrNull(
+            var parsedDateTime = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
                 GetExifTagValueOrNull(ExifTag.DateTime), GetExifTagValueOrNull(ExifTag.SubsecTime));
             ret.DateTime = parsedDateTime?.DateTime;
             ret.DateTimeOffset = parsedDateTime?.Offset;
 
-            var parsedDateTimeDigitized = ExifDateTimeParser.ParseExifDateTimeOrNull(
+            var parsedDateTimeDigitized = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
                 GetExifTagValueOrNull(ExifTag.DateTimeDigitized), GetExifTagValueOrNull(ExifTag.SubsecTimeDigitized));
             ret.DateTimeDigitized = parsedDateTimeDigitized?.DateTime;
             ret.DateTimeDigitizedOffset = parsedDateTimeDigitized?.Offset;
 
-            var parsedDateTimeOriginal = ExifDateTimeParser.ParseExifDateTimeOrNull(
+            var parsedDateTimeOriginal = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
                 GetExifTagValueOrNull(ExifTag.DateTimeOriginal), GetExifTagValueOrNull(ExifTag.SubsecTimeOriginal));
             ret.DateTimeOriginal = parsedDateTimeOriginal?.DateTime;
             ret.DateTimeOriginalOffset = parsedDateTimeOriginal?.Offset;
@@ -135,10 +135,10 @@ public partial class MetadataConsumer
             ret.OffsetTimeDigitized = GetExifTagValueOrNull(ExifTag.OffsetTimeDigitized).NullIfEmpty();
             ret.OffsetTimeOriginal = GetExifTagValueOrNull(ExifTag.OffsetTimeOriginal).NullIfEmpty();
 
-            ret.GpsDateTime = GetGpsDateTimeOrNull(
+            ret.GpsDateTime = ExifGpsTagValuesParser.ParseGpsDateTimeOrNull(
                 GetExifTagValueOrNull(ExifTag.GPSTimestamp),
                 GetExifTagValueOrNull(ExifTag.GPSDateStamp));
-            ret.GpsCoordinate = GetGpsCoordinateOrNull(
+            ret.GpsCoordinate = ExifGpsTagValuesParser.ParseGpsCoordinateOrNull(
                 GetExifTagValueOrNull(ExifTag.GPSLatitude),
                 GetExifTagValueOrNull(ExifTag.GPSLatitudeRef),
                 GetExifTagValueOrNull(ExifTag.GPSLongitude),
@@ -151,64 +151,67 @@ public partial class MetadataConsumer
         return ret;
     }
 
-    private static DateTime? GetGpsDateTimeOrNull(Rational[]? timeStamp, string? dateStamp)
+    private class ExifGpsTagValuesParser
     {
-        if (timeStamp == null || dateStamp == null) return null;
-
-        var dateParts = dateStamp.Split(':').Select(int.Parse).ToList();
-        if (dateParts.Count != 3) throw new ArgumentOutOfRangeException(nameof(dateStamp), dateStamp,
-            "Unexpected GPSDateStamp, expecting three parts separated by \":\".");
-
-        if (timeStamp.Length != 3) throw new ArgumentOutOfRangeException(nameof(timeStamp), timeStamp,
-            "Unexpected GPSTimeStamp, expecting three rationals.");
-        if (timeStamp.Any(i => i.Denominator != 1)) throw new ArgumentException(
-            "Unexpected fraction number in parts of GPSTimeStamp, expecting integer as rationals.", nameof(timeStamp));
-        var timeParts = timeStamp.Select(i => (int)i.ToDouble()).ToList();
-
-        return new DateTime(year: dateParts[0], month: dateParts[1], day: dateParts[2],
-            hour: timeParts[0], minute: timeParts[1], second: timeParts[2]);
-    }
-
-    private static Point? GetGpsCoordinateOrNull
-        (IEnumerable<Rational>? latitude, string? latitudeRef, IEnumerable<Rational>? longitude, string? longitudeRef)
-    {
-        var latitudeDms = latitude?.Select(i => i.ToDouble()).ToList();
-        var longitudeDms = longitude?.Select(i => i.ToDouble()).ToList();
-        if (latitudeDms == null || latitudeRef == null || longitudeDms == null || longitudeRef == null)
-            return null;
-
-        latitudeDms[0] = latitudeRef switch
+        public static DateTime? ParseGpsDateTimeOrNull(Rational[]? timeStamp, string? dateStamp)
         {
-            "N" => latitudeDms[0],
-            "S" => -latitudeDms[0],
-            _ => throw new ArgumentOutOfRangeException(nameof(latitudeRef), latitudeRef,
-                "Unexpected GPSLatitudeRef, expecting \"N\" or \"S\".")
-        };
-        longitudeDms[0] = longitudeRef switch
+            if (timeStamp == null || dateStamp == null) return null;
+
+            var dateParts = dateStamp.Split(':').Select(int.Parse).ToList();
+            if (dateParts.Count != 3) throw new ArgumentOutOfRangeException(nameof(dateStamp), dateStamp,
+                "Unexpected GPSDateStamp, expecting three parts separated by \":\".");
+
+            if (timeStamp.Length != 3) throw new ArgumentOutOfRangeException(nameof(timeStamp), timeStamp,
+                "Unexpected GPSTimeStamp, expecting three rationals.");
+            if (timeStamp.Any(i => i.Denominator != 1)) throw new ArgumentException(
+                "Unexpected fraction number in parts of GPSTimeStamp, expecting integer as rationals.", nameof(timeStamp));
+            var timeParts = timeStamp.Select(i => (int)i.ToDouble()).ToList();
+
+            return new DateTime(year: dateParts[0], month: dateParts[1], day: dateParts[2],
+                hour: timeParts[0], minute: timeParts[1], second: timeParts[2]);
+        }
+
+        public static Point? ParseGpsCoordinateOrNull
+            (IEnumerable<Rational>? latitude, string? latitudeRef, IEnumerable<Rational>? longitude, string? longitudeRef)
         {
-            "E" => longitudeDms[0],
-            "W" => -longitudeDms[0],
-            _ => throw new ArgumentOutOfRangeException(nameof(longitudeRef), longitudeRef,
-                "Unexpected GPSLongitudeRef, expecting \"E\" or \"W\".")
-        };
+            var latitudeDms = latitude?.Select(i => i.ToDouble()).ToList();
+            var longitudeDms = longitude?.Select(i => i.ToDouble()).ToList();
+            if (latitudeDms == null || latitudeRef == null || longitudeDms == null || longitudeRef == null)
+                return null;
 
-        return NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory()
-            .CreatePoint(new Coordinate(ConvertDmsToDd(longitudeDms), ConvertDmsToDd(latitudeDms)));
+            latitudeDms[0] = latitudeRef switch
+            {
+                "N" => latitudeDms[0],
+                "S" => -latitudeDms[0],
+                _ => throw new ArgumentOutOfRangeException(nameof(latitudeRef), latitudeRef,
+                    "Unexpected GPSLatitudeRef, expecting \"N\" or \"S\".")
+            };
+            longitudeDms[0] = longitudeRef switch
+            {
+                "E" => longitudeDms[0],
+                "W" => -longitudeDms[0],
+                _ => throw new ArgumentOutOfRangeException(nameof(longitudeRef), longitudeRef,
+                    "Unexpected GPSLongitudeRef, expecting \"E\" or \"W\".")
+            };
+
+            return NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory()
+                .CreatePoint(new Coordinate(ConvertDmsToDd(longitudeDms), ConvertDmsToDd(latitudeDms)));
+        }
+
+        private static double ConvertDmsToDd(IReadOnlyList<double> dms)
+        { // https://stackoverflow.com/questions/3249700/convert-degrees-minutes-seconds-to-decimal-coordinates
+            if (dms.Count != 3) throw new ArgumentException(
+                "Unexpected length for DMS, expecting three doubles.", nameof(dms));
+            var degrees = dms[0];
+            var minutes = dms[1];
+            var seconds = dms[2];
+            return degrees > 0
+                ? degrees + (minutes / 60) + (seconds / 3600)
+                : degrees - (minutes / 60) - (seconds / 3600);
+        }
     }
 
-    private static double ConvertDmsToDd(IReadOnlyList<double> dms)
-    { // https://stackoverflow.com/questions/3249700/convert-degrees-minutes-seconds-to-decimal-coordinates
-        if (dms.Count != 3) throw new ArgumentException(
-            "Unexpected length for DMS, expecting three doubles.", nameof(dms));
-        var degrees = dms[0];
-        var minutes = dms[1];
-        var seconds = dms[2];
-        return degrees > 0
-            ? degrees + (minutes / 60) + (seconds / 3600)
-            : degrees - (minutes / 60) - (seconds / 3600);
-    }
-
-    private partial class ExifDateTimeParser
+    private partial class ExifDateTimeTagValuesParser
     {
         public record DateTimeAndOffset(DateTime DateTime, string? Offset);
 
