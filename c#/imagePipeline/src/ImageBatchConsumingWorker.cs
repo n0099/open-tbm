@@ -32,7 +32,7 @@ public class ImageBatchConsumingWorker : ErrorableWorker
                 var metadataConsumer = scope1.Resolve<MetadataConsumer>();
                 metadataConsumer.Consume(db, imagesWithBytes, stoppingToken);
                 var imageKeysWithMatrix = imagesWithBytes
-                    .SelectMany(i => DecodeImageOrFramesBytes(i, stoppingToken)).ToList();
+                    .SelectMany(imageWithBytes => DecodeImageOrFramesBytes(imageWithBytes, stoppingToken)).ToList();
                 try
                 {
                     var hashConsumer = scope1.Resolve<HashConsumer>();
@@ -126,8 +126,8 @@ public class ImageBatchConsumingWorker : ErrorableWorker
                 db.ReplyContentImages.Where(replyContentImage => imageKeysWithMatrix
                         .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
                         .Contains(replyContentImage.ImageId))
-                    .Select(e => e.ImageId),
-                i => i.ImageId).ToList();
+                    .Select(replyContentImage => replyContentImage.ImageId),
+                imageKeyWithMatrix => imageKeyWithMatrix.ImageId).ToList();
             foreach (var script in scriptsGroupByFid)
                 await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
         }

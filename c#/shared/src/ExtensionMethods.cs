@@ -10,6 +10,7 @@ public static class ExtensionMethods
     public static uint? NullIfZero(this uint num) => num == 0 ? null : num;
     public static long? NullIfZero(this long num) => num == 0 ? null : num;
     public static float NanToZero(this float number) => float.IsNaN(number) ? 0 : number;
+    public static float? NanToNull(this float number) => float.IsNaN(number) ? null : number;
     public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number, 0);
     public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number, 0);
     public static IQueryable<T> ForUpdate<T>(this IQueryable<T> query) => query.TagWith("ForUpdate");
