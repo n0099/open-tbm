@@ -21,7 +21,7 @@ abstract class ModelWithTableNameSplitByFid extends Model
      * Override the parent relation instance method for passing valid fid to new related model
      * @param class-string $class
      */
-    protected function newRelatedInstance(string $class)
+    protected function newRelatedInstance($class)
     {
         return tap((new $class())->setFid($this->fid), function ($instance) {
             if (!$instance->getConnectionName()) {

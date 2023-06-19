@@ -12,19 +12,23 @@ class SubReplyModel extends PostModel
 {
     protected $primaryKey = 'spid';
 
-    protected static array $publicFields = [
-        ...Helper::POST_ID,
-        'authorUid',
-        'postedAt',
-        'agreeCount',
-        'disagreeCount',
-        ...parent::TIMESTAMP_FIELDS
-    ];
-
     protected $casts = [
         'agreeCount' => NullableNumericAttributeCast::class,
         'disagreeCount' => NullableNumericAttributeCast::class
     ];
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = [
+            ...Helper::POST_ID,
+            'authorUid',
+            'postedAt',
+            'agreeCount',
+            'disagreeCount',
+            ...parent::TIMESTAMP_FIELDS
+        ];
+    }
 
     /**
      * @psalm-return BelongsTo<ThreadModel>

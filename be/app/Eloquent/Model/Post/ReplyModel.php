@@ -15,27 +15,31 @@ class ReplyModel extends PostModel
 {
     protected $primaryKey = 'pid';
 
-    protected static array $publicFields = [
-        'tid',
-        'pid',
-        'floor',
-        'authorUid',
-        'subReplyCount',
-        'postedAt',
-        'isFold',
-        'agreeCount',
-        'disagreeCount',
-        'geolocation',
-        'signatureId',
-        ...parent::TIMESTAMP_FIELDS
-    ];
-
     protected $casts = [
         'subReplyCount' => NullableNumericAttributeCast::class,
         'isFold' => NullableBooleanAttributeCast::class,
         'agreeCount' => NullableNumericAttributeCast::class,
         'disagreeCount' => NullableNumericAttributeCast::class
     ];
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = [
+            'tid',
+            'pid',
+            'floor',
+            'authorUid',
+            'subReplyCount',
+            'postedAt',
+            'isFold',
+            'agreeCount',
+            'disagreeCount',
+            'geolocation',
+            'signatureId',
+            ...parent::TIMESTAMP_FIELDS
+        ];
+    }
 
     protected function geolocation(): Attribute
     {

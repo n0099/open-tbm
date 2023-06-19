@@ -9,7 +9,11 @@ class ReplyContentModel extends PostContentModel
 {
     protected $primaryKey = 'pid';
 
-    protected static array $publicFields = ['pid', 'protoBufBytes'];
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = ['pid', 'protoBufBytes'];
+    }
 
     public function scopePid(Builder $query, Collection|array|int $pid): Builder
     {

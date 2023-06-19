@@ -47,7 +47,7 @@ abstract class PostModel extends ModelWithTableNameSplitByFid
         return $query->addSelect(array_values(\array_slice(
             Helper::POST_TYPE_TO_ID,
             0,
-            array_search($this->getTableNameSuffix(), Helper::POST_TYPES) + 1
+            array_search($this->getTableNameSuffix(), Helper::POST_TYPES, true) + 1
         )));
     }
 

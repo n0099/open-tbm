@@ -9,7 +9,11 @@ class SubReplyContentModel extends PostContentModel
 {
     protected $primaryKey = 'spid';
 
-    protected static array $publicFields = ['spid', 'protoBufBytes'];
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = ['spid', 'protoBufBytes'];
+    }
 
     public function scopeSpid(Builder $query, Collection|array|int $spid): Builder
     {

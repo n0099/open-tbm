@@ -17,19 +17,23 @@ class UserModel extends Model
         'icon' => 'array'
     ];
 
-    protected static array $publicFields = [
-        'uid',
-        'name',
-        'displayName',
-        'portrait',
-        'portraitUpdatedAt',
-        'gender',
-        'fansNickname',
-        'icon',
-        'ipGeolocation',
-        'createdAt',
-        'updatedAt'
-    ];
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = [
+            'uid',
+            'name',
+            'displayName',
+            'portrait',
+            'portraitUpdatedAt',
+            'gender',
+            'fansNickname',
+            'icon',
+            'ipGeolocation',
+            'createdAt',
+            'updatedAt'
+        ];
+    }
 
     /**
      * @param Builder<UserModel> $query

@@ -13,7 +13,11 @@ class ForumModel extends Model
 
     protected $table = 'tbm_forum';
 
-    protected static array $publicFields = ['fid', 'name'];
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = ['fid', 'name'];
+    }
 
     public function scopeIsCrawling(Builder $query, bool $isCrawling): Builder
     {

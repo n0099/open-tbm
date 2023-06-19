@@ -18,28 +18,6 @@ class ThreadModel extends PostModel
 {
     protected $primaryKey = 'tid';
 
-    protected static array $publicFields = [
-        'tid',
-        'threadType',
-        'stickyType',
-        'topicType',
-        'isGood',
-        'title',
-        'authorUid',
-        'postedAt',
-        'latestReplyPostedAt',
-        'latestReplierUid',
-        'replyCount',
-        'viewCount',
-        'shareCount',
-        'agreeCount',
-        'disagreeCount',
-        'zan',
-        'geolocation',
-        'authorPhoneType',
-        ...parent::TIMESTAMP_FIELDS
-    ];
-
     protected $casts = [
         'isGood' => NullableBooleanAttributeCast::class,
         'replyCount' => NullableNumericAttributeCast::class,
@@ -48,6 +26,32 @@ class ThreadModel extends PostModel
         'agreeCount' => NullableNumericAttributeCast::class,
         'disagreeCount' => NullableNumericAttributeCast::class
     ];
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->publicFields = [
+            'tid',
+            'threadType',
+            'stickyType',
+            'topicType',
+            'isGood',
+            'title',
+            'authorUid',
+            'postedAt',
+            'latestReplyPostedAt',
+            'latestReplierUid',
+            'replyCount',
+            'viewCount',
+            'shareCount',
+            'agreeCount',
+            'disagreeCount',
+            'zan',
+            'geolocation',
+            'authorPhoneType',
+            ...parent::TIMESTAMP_FIELDS
+        ];
+    }
 
     protected function zan(): Attribute
     {

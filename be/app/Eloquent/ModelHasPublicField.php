@@ -12,12 +12,12 @@ trait ModelHasPublicField
     /**
      * @var list<string>
      */
-    protected static array $publicFields;
+    protected array $publicFields = [];
 
     /**
      * @var list<string>
      */
-    protected static array $hiddenFields = [];
+    protected array $hiddenFields = [];
 
     /**
      * @param Builder<TModel> $query
@@ -25,6 +25,6 @@ trait ModelHasPublicField
      */
     public function scopeSelectPublicFields(Builder $query): Builder
     {
-        return $query->select(array_diff(static::$publicFields, static::$hiddenFields));
+        return $query->select(array_diff($this->publicFields, $this->hiddenFields));
     }
 }
