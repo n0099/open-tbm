@@ -55,7 +55,7 @@ class PostsQuery extends Controller
             'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
                 ...$query->getResultPages(),
-                ...Arr::except($result, Helper::POST_TYPES_PLURAL)
+                ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL])
             ],
             'forum' => ForumModel::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),

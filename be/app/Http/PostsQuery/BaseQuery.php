@@ -90,7 +90,7 @@ abstract class BaseQuery
         Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
         $this->queryResultPages = [
-            'nextCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
+            'nextPageCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
                 ? $postKeyByTypePluralName
                 : $postKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
             'hasMorePages' => self::unionPageStats(
@@ -232,8 +232,8 @@ abstract class BaseQuery
 
     #[ArrayShape([
         'fid' => 'int',
-        'postsQueryMatchCount' => 'array{thread: int, reply: int, subReply: int}',
-        'notMatchQueryParentPostsCount' => 'array{thread: int, reply: int}',
+        'matchQueryPostCount' => 'array{thread: int, reply: int, subReply: int}',
+        'notMatchQueryParentPostCount' => 'array{thread: int, reply: int}',
         'threads' => 'Collection<ThreadModel>',
         'replies' => 'Collection<ReplyModel>',
         'subReplies' => 'Collection<SubReplyModel>'
@@ -271,8 +271,8 @@ abstract class BaseQuery
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
             ->selectPublicFields()->get()
-            ->map(static fn (ThreadModel $t) => // mark threads that in the original $this->queryResult
-                $t->setAttribute('isQueryMatch', $tids->contains($t->tid)));
+            ->map(static fn (ThreadModel $t) => // mark threads that exists in the original $this->queryResult
+                $t->setAttribute('isMatchQuery', $tids->contains($t->tid)));
         Debugbar::stopMeasure('fillWithThreadsFields');
 
         Debugbar::startMeasure('fillWithRepliesFields');
@@ -282,8 +282,8 @@ abstract class BaseQuery
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->pid($parentRepliesID->concat($pids))
             ->selectPublicFields()->get()
-            ->map(static fn (ReplyModel $r) => // mark replies that in the original $this->queryResult
-                $r->setAttribute('isQueryMatch', $pids->contains($r->pid)));
+            ->map(static fn (ReplyModel $r) => // mark replies that exists in the original $this->queryResult
+                $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
 
         $subReplies = $postModels['subReply']->spid($spids)->selectPublicFields()->get();
         Debugbar::stopMeasure('fillWithRepliesFields');
@@ -291,10 +291,10 @@ abstract class BaseQuery
         self::fillPostsContent($fid, $replies, $subReplies);
         return [
             'fid' => $fid,
-            'postsQueryMatchCount' => collect(Helper::POST_TYPES)
+            'matchQueryPostCount' => collect(Helper::POST_TYPES)
                 ->combine([$tids, $pids, $spids])
                 ->map(static fn (Collection $ids, string $type) => $ids->count()),
-            'notMatchQueryParentPostsCount' => [
+            'notMatchQueryParentPostCount' => [
                 'thread' => $parentThreadsID->diff($tids)->count(),
                 'reply' => $parentRepliesID->diff($pids)->count(),
             ],
@@ -371,8 +371,8 @@ abstract class BaseQuery
     /**
      * @param Collection<array<array>> $nestedPosts
      * @return array<array<array>>
-     * @test-input [{"postedAt":1,"isQueryMatch":true,"replies":[{"postedAt":2,"isQueryMatch":true,"subReplies":[{"postedAt":30}]},{"postedAt":20,"isQueryMatch":false,"subReplies":[{"postedAt":3}]},{"postedAt":4,"isQueryMatch":false,"subReplies":[{"postedAt":5},{"postedAt":60}]}]},{"postedAt":7,"isQueryMatch":false,"replies":[{"postedAt":31,"isQueryMatch":true,"subReplies":[]}]}]
-     * @test-output [{"postedAt":1,"isQueryMatch":true,"replies":[{"postedAt":4,"isQueryMatch":false,"subReplies":[{"postedAt":60},{"postedAt":5}],"sortingKey":60},{"postedAt":2,"isQueryMatch":true,"subReplies":[{"postedAt":30}],"sortingKey":30},{"postedAt":20,"isQueryMatch":false,"subReplies":[{"postedAt":3}],"sortingKey":3}],"sortingKey":60},{"postedAt":7,"isQueryMatch":false,"replies":[{"postedAt":31,"isQueryMatch":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
+     * @test-input [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}]},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}]},{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":5},{"postedAt":60}]}]},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[]}]}]
+     * @test-output [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":60},{"postedAt":5}],"sortingKey":60},{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}],"sortingKey":30},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}],"sortingKey":3}],"sortingKey":60},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
      */
     public function reOrderNestedPosts(Collection $nestedPosts): array
     {
@@ -384,22 +384,22 @@ abstract class BaseQuery
             // assign child post back to current post
             $curPost[$childPostTypePluralName] = $childPosts->values()->toArray();
 
-            // the first child post which is isQueryMatch after previous sorting
+            // the first child post that is isMatchQuery after previous sorting
             $topmostChildPostInQueryMatch = $childPosts
-                // sub replies won't have isQueryMatch
-                ->filter(static fn (array $p) => ($p['isQueryMatch'] ?? true) === true);
+                // sub replies won't have isMatchQuery
+                ->filter(static fn (array $p) => ($p['isMatchQuery'] ?? true) === true);
             // use the topmost value between sorting key or value of orderBy field within its child posts
             $curAndChildSortingKeys = collect([
                 // value of orderBy field in the first sorted child post
                 // if no child posts matching the query, use null as the sorting key
                 $topmostChildPostInQueryMatch->first()[$this->orderByField] ?? null,
                 // sorting key from the first sorted child posts
-                // not requiring isQueryMatch since a child post without isQueryMatch
-                // might have its own child posts with isQueryMatch
+                // not requiring isMatchQuery since a child post without isMatchQuery
+                // might have its own child posts with isMatchQuery
                 // and its sortingKey would be selected from its own child posts
                 $childPosts->first()['sortingKey'] ?? null
             ]);
-            if ($curPost['isQueryMatch'] === true) {
+            if ($curPost['isMatchQuery'] === true) {
                 // also try to use the value of orderBy field in current post
                 $curAndChildSortingKeys->push($curPost[$this->orderByField]);
             }
