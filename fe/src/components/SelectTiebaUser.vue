@@ -18,7 +18,7 @@
                 <input v-model="params.uid" type="number" placeholder="4000000000" aria-label="UID" class="form-control" required />
             </template>
             <template v-if="selectBy === 'name'">
-                <input v-model="params.name" type="text" placeholder="n0099" aria-label="用户名" class="form-control" required />
+                <input v-model="params.name" type="text" aria-label="用户名" class="form-control" required />
                 <div class="input-group-text">
                     <div class="form-check">
                         <input v-model="params.nameUseRegex" id="selectUserNameUseRegex" type="checkbox" class="form-check-input" />
@@ -27,7 +27,7 @@
                 </div>
             </template>
             <template v-if="selectBy === 'displayName'">
-                <input v-model="params.displayName" type="text" placeholder="神奇🍀" aria-label="覆盖名" class="form-control" required />
+                <input v-model="params.displayName" type="text" aria-label="覆盖名" class="form-control" required />
                 <div class="input-group-text">
                     <div class="form-check">
                         <input v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex" type="checkbox" class="form-check-input" />

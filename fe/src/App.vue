@@ -10,7 +10,6 @@
     </ConfigProvider>
     <footer class="footer-outer text-light pt-4 mt-4">
         <div class="text-center">
-            <p>四叶重工QQ群：292311751</p>
             <p>
                 Google <a class="text-white" href="https://www.google.com/analytics/terms/cn.html" target="_blank">Analytics 服务条款</a> |
                 <a class="text-white" href="https://policies.google.com/terms" target="_blank">reCAPTCHA 服务条款</a> |
@@ -18,7 +17,7 @@
             </p>
         </div>
         <footer class="footer-inner text-center p-3">
-            <span>© 2018 ~ 2021 n0099</span>
+            <span>{{ envFooterText }}</span>
         </footer>
     </footer>
 </template>
@@ -35,7 +34,7 @@ export default defineComponent({
     components: { RouterView, ConfigProvider, GlobalNavBar, HorizontalMobileMessage },
     setup() {
         onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
-        return { AntdZhCn };
+        return { AntdZhCn, envFooterText: process.env.VUE_APP_FOOTER_TEXT };
     }
 });
 </script>

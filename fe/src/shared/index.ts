@@ -29,7 +29,7 @@ export type Spid = UInt;
 
 // we can't declare global timeout like `window.noty = new Noty({...});` due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 5000, type, text }).show() };
-export const titleTemplate = (title: string) => `${title} - 贴吧云监控`;
+export const titleTemplate = (title: string) => `${title} - open-tbm ${process.env.VUE_APP_INSTANCE_NAME}`;
 export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
     return `https://tieba.baidu.com/p/${tid}`;

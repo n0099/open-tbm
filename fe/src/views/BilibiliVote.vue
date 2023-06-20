@@ -140,6 +140,7 @@ const voteCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, curre
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;
 };
 
+const sourceAttribution = `来源：open-tbm @ ${process.env.VUE_APP_INSTANCE_NAME}`;
 type ChartOptionTop10CandidatesTimeline = echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {
     top50CandidatesCount: echarts.ComposeOption<BarSeriesOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
@@ -150,7 +151,7 @@ const chartsInitialOption: {
     top50CandidatesCount: {
         title: {
             text: 'bilibili吧吧主公投 前50候选人票数',
-            subtext: '候选人间线上数字为与前一人票差 数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+            subtext: `候选人间线上数字为与前一人票差 数据仅供参考 ${sourceAttribution}`
         },
         axisPointer: { link: [{ xAxisIndex: 'all' }] },
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
@@ -247,7 +248,7 @@ const chartsInitialOption: {
             },
             title: {
                 text: 'bilibili吧吧主公投 前10候选人票数时间轴',
-                subtext: '候选人间线上数字为与前一人票差\n数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+                subtext: `候选人间线上数字为与前一人票差\n数据仅供参考 ${sourceAttribution}`
             },
             tooltip: {
                 trigger: 'axis',
@@ -326,7 +327,7 @@ const chartsInitialOption: {
     top5CandidatesCountGroupByTime: {
         title: {
             text: 'bilibili吧吧主公投 前5票数分时增量',
-            subtext: '数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+            subtext: `数据仅供参考 ${sourceAttribution}`
         },
         axisPointer: { link: [{ xAxisIndex: 'all' }] },
         tooltip: { trigger: 'axis' },
@@ -359,7 +360,7 @@ const chartsInitialOption: {
     allVotesCountGroupByTime: {
         title: {
             text: 'bilibili吧吧主公投 总票数分时增量',
-            subtext: '数据仅供参考 来源：四叶贴吧云监控 QQ群：292311751'
+            subtext: `数据仅供参考 ${sourceAttribution}`
         },
         tooltip: { trigger: 'axis' },
         toolbox: {

@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-light">
         <div id="nav" class="container-fluid">
-            <RouterLink to="/" class="navbar-brand">贴吧云监控</RouterLink>
+            <RouterLink to="/" class="navbar-brand">open-tbm @ {{ envInstanceName }}</RouterLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                     aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon" />
@@ -25,9 +25,6 @@
                             </RouterLink>
                         </li>
                     </template>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://n0099.net/donor-list"><FontAwesomeIcon icon="donate" /> 捐助</a>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -74,7 +71,7 @@ export default defineComponent({
             }));
         });
 
-        return { navs };
+        return { navs, envInstanceName: process.env.VUE_APP_INSTANCE_NAME };
     }
 });
 </script>
