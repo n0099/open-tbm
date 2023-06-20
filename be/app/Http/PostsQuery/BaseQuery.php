@@ -74,6 +74,7 @@ abstract class BaseQuery
             ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
 
         $queriesWithOrderBy = $queries->map($addOrderByForBuilder);
+        $cursorsKeyByPostType = null;
         if ($cursorParamValue !== null) {
             $cursorsKeyByPostType = $this->decodePageCursor($cursorParamValue);
             // remove queries for post types with encoded cursor ',,'
@@ -276,8 +277,8 @@ abstract class BaseQuery
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
             ->selectPublicFields()->get()
-            ->map(static fn (ThreadModel $t) => // mark threads that exists in the original $this->queryResult
-                $t->setAttribute('isMatchQuery', $tids->contains($t->tid)));
+            ->map(static fn (ThreadModel $thread) => // mark threads that exists in the original $this->queryResult
+                $thread->setAttribute('isMatchQuery', $tids->contains($thread->tid)));
         Debugbar::stopMeasure('fillWithThreadsFields');
 
         Debugbar::startMeasure('fillWithRepliesFields');
@@ -289,9 +290,11 @@ abstract class BaseQuery
             ->selectPublicFields()->get()
             ->map(static fn (ReplyModel $r) => // mark replies that exists in the original $this->queryResult
                 $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
-
-        $subReplies = $postModels['subReply']->spid($spids)->selectPublicFields()->get();
         Debugbar::stopMeasure('fillWithRepliesFields');
+
+        Debugbar::startMeasure('fillWithSubRepliesFields');
+        $subReplies = $postModels['subReply']->spid($spids)->selectPublicFields()->get();
+        Debugbar::stopMeasure('fillWithSubRepliesFields');
 
         self::fillPostsContent($fid, $replies, $subReplies);
         return [
@@ -349,6 +352,13 @@ abstract class BaseQuery
         }
     }
 
+    /**
+     * @param Collection<int, ThreadModel> $threads
+     * @param Collection<int, ReplyModel> $replies
+     * @param Collection<int, SubReplyModel> $subReplies
+     * @param mixed ...$_
+     * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>>
+     */
     public static function nestPostsWithParent(
         Collection $threads,
         Collection $replies,
@@ -359,23 +369,23 @@ abstract class BaseQuery
 
         $replies = $replies->groupBy('tid');
         $subReplies = $subReplies->groupBy('pid');
-        $ret = $threads->map(fn (ThreadModel $thread) => [
+        $ret = $threads->map(fn (ThreadModel $thread) => collect([
             ...$thread->toArray(),
             'replies' => $replies->get($thread->tid, collect())
-                ->map(fn (ReplyModel $reply) => [
+                ->map(fn (ReplyModel $reply) => collect([
                     ...$reply->toArray(),
                     'subReplies' => $subReplies->get($reply->pid, collect())
-                        ->map(static fn (SubReplyModel $subReply) => $subReply->toArray())
-                ])
-        ]);
+                        ->map(static fn (SubReplyModel $subReply) => collect($subReply->toArray()))
+                ]))
+        ]));
 
         Debugbar::stopMeasure('nestPostsWithParent');
         return $ret;
     }
 
     /**
-     * @param Collection<array<array>> $nestedPosts
-     * @return array<array<array>>
+     * @param Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>> $nestedPosts
+     * @return list<array<string, mixed|list<array<string, mixed|list<array<string, mixed>>>>>>
      * @test-input [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}]},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}]},{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":5},{"postedAt":60}]}]},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[]}]}]
      * @test-output [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":60},{"postedAt":5}],"sortingKey":60},{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}],"sortingKey":30},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}],"sortingKey":3}],"sortingKey":60},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
      */
@@ -383,21 +393,24 @@ abstract class BaseQuery
     {
         Debugbar::startMeasure('reOrderNestedPosts');
 
-        $getSortingKeyFromCurrentAndChildPosts = function (array $curPost, string $childPostTypePluralName) {
-            /** @var Collection<array> $childPosts sorted child posts */
+        /**
+         * @param Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>> $curPost
+         * @param string $childPostTypePluralName
+         * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>
+         */
+        $setSortingKeyFromCurrentAndChildPosts = function (Collection $curPost, string $childPostTypePluralName) {
+            /** @var Collection<int, Collection<string, mixed>> $childPosts sorted child posts */
             $childPosts = $curPost[$childPostTypePluralName];
-            // assign child post back to current post
-            $curPost[$childPostTypePluralName] = $childPosts->values()->toArray();
+            $curPost[$childPostTypePluralName] = $childPosts->values(); // reset keys
 
-            // the first child post that is isMatchQuery after previous sorting
-            $topmostChildPostInQueryMatch = $childPosts
-                // sub replies won't have isMatchQuery
-                ->filter(static fn (array $p) => ($p['isMatchQuery'] ?? true) === true);
             // use the topmost value between sorting key or value of orderBy field within its child posts
             $curAndChildSortingKeys = collect([
-                // value of orderBy field in the first sorted child post
-                // if no child posts matching the query, use null as the sorting key
-                $topmostChildPostInQueryMatch->first()[$this->orderByField] ?? null,
+                // value of orderBy field in the first sorted child post that isMatchQuery after previous sorting
+                $childPosts
+                    // sub replies won't have isMatchQuery
+                    ->filter(static fn (Collection $p) => ($p['isMatchQuery'] ?? true) === true)
+                    // if no child posts matching the query, use null as the sorting key
+                    ->first()[$this->orderByField] ?? null,
                 // sorting key from the first sorted child posts
                 // not requiring isMatchQuery since a child post without isMatchQuery
                 // might have its own child posts with isMatchQuery
@@ -414,29 +427,43 @@ abstract class BaseQuery
             $curPost['sortingKey'] = $this->orderByDesc
                 ? $curAndChildSortingKeys->last()
                 : $curAndChildSortingKeys->first();
+
             return $curPost;
         };
-        $sortPosts = fn (Collection $posts) => $posts
-            ->sortBy('sortingKey', descending: $this->orderByDesc)
-            ->map(static function (array $post) {
-                // remove sorting key from posts after sorting
-                unset($post['sortingKey']);
-                return $post;
-            });
-        $ret = $sortPosts(
-            $nestedPosts
-            ->map(function (array $thread) use ($sortPosts, $getSortingKeyFromCurrentAndChildPosts) {
-                $thread['replies'] = $sortPosts(collect($thread['replies'])
-                    ->map(function (array $reply) use ($getSortingKeyFromCurrentAndChildPosts) {
-                        $reply['subReplies'] = collect($reply['subReplies'])->sortBy(
-                            fn (array $subReplies) => $subReplies[$this->orderByField],
-                            descending: $this->orderByDesc
-                        );
-                        return $getSortingKeyFromCurrentAndChildPosts($reply, 'subReplies');
-                    }));
-                return $getSortingKeyFromCurrentAndChildPosts($thread, 'replies');
-            })
-        )->values()->toArray();
+        $sortBySortingKey = fn (Collection $posts) => $posts
+            ->sortBy(fn (Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
+        $removeSortingKey = static fn (Collection $posts) => $posts
+            ->map(fn (Collection $i) => $i->except('sortingKey'));
+        $ret = $removeSortingKey($sortBySortingKey(
+            $nestedPosts->map(
+                /**
+                 * @param Collection{replies: Collection} $thread
+                 * @return Collection{replies: Collection}
+                 */
+                function (Collection $thread) use (
+                    $sortBySortingKey,
+                    $removeSortingKey,
+                    $setSortingKeyFromCurrentAndChildPosts
+                ) {
+                    $thread['replies'] = $sortBySortingKey($thread['replies']->map(
+                        /**
+                         * @param Collection{subReplies: Collection} $reply
+                         * @return Collection{subReplies: Collection}
+                         */
+                        function (Collection $reply) use ($setSortingKeyFromCurrentAndChildPosts) {
+                            $reply['subReplies'] = $reply['subReplies']->sortBy(
+                                fn (Collection $subReplies) => $subReplies[$this->orderByField],
+                                descending: $this->orderByDesc
+                            );
+                            return $setSortingKeyFromCurrentAndChildPosts($reply, 'subReplies');
+                        }
+                    ));
+                    $setSortingKeyFromCurrentAndChildPosts($thread, 'replies');
+                    $thread['replies'] = $removeSortingKey($thread['replies']);
+                    return $thread;
+                }
+            )
+        ))->values()->toArray();
 
         Debugbar::stopMeasure('reOrderNestedPosts');
         return $ret;
