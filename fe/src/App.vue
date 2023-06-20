@@ -34,7 +34,7 @@ export default defineComponent({
     components: { RouterView, ConfigProvider, GlobalNavBar, HorizontalMobileMessage },
     setup() {
         onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
-        return { AntdZhCn, envFooterText: process.env.VUE_APP_FOOTER_TEXT };
+        return { AntdZhCn, envFooterText: import.meta.env.VITE_FOOTER_TEXT };
     }
 });
 </script>

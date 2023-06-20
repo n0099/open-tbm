@@ -18,7 +18,7 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
     let errorMessage = `GET ${endpoint}<br />`;
     try {
         const response = await fetch(
-            process.env.VUE_APP_API_URL_PREFIX + endpoint + (_.isEmpty(queryString) ? '' : '?') + qs.stringify(queryString),
+            import.meta.env.VITE_API_URL_PREFIX + endpoint + (_.isEmpty(queryString) ? '' : '?') + qs.stringify(queryString),
             { headers: { Accept: 'application/json' } }
         );
         errorCode = response.status;
@@ -51,9 +51,9 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
     }
 };
 const reCAPTCHACheck = async (action = ''): Promise<{ reCAPTCHA?: string }> => new Promise((reslove, reject) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.NODE_ENV === 'production') {
         grecaptcha.ready(() => {
-            grecaptcha.execute(process.env.VUE_APP_RECAPTCHA_SITE_KEY, { action }).then(
+            grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action }).then(
                 reCAPTCHA => {
                     reslove({ reCAPTCHA });
                 }, (...args) => {

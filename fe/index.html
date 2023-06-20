@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+        <link rel="preload" href="%BASE_URL%assets/icon-loading-blocks.svg" as="image">
+        <style>
+            #loadingBlocksInitial, #loadingBlocksRouteUpdate {
+                display: block;
+                margin: auto;
+                padding: 15vh 0;
+            }
+            .grecaptcha-badge {
+                visibility: hidden;
+            }
+        </style>
+        <title>open-tbm @ %VITE_INSTANCE_NAME%</title>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '%VITE_GA_MEASUREMENT_ID%');
+        </script>
+    </head>
+    <body>
+        <noscript>
+            <strong>We're sorry but open-tbm @ %VITE_INSTANCE_NAME% doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+        </noscript>
+        <img id="loadingBlocksInitial" src="%BASE_URL%assets/icon-loading-blocks.svg" />
+        <div id="app"></div>
+        <script type="module" src="/src/main.js"></script>
+        <script src="https://www.recaptcha.net/recaptcha/api.js?render=%VITE_RECAPTCHA_SITE_KEY%"></script>
+    </body>
+</html>

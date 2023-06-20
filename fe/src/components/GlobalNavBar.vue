@@ -71,7 +71,7 @@ export default defineComponent({
             }));
         });
 
-        return { navs, envInstanceName: process.env.VUE_APP_INSTANCE_NAME };
+        return { navs, envInstanceName: import.meta.env.VITE_INSTANCE_NAME };
     }
 });
 </script>
