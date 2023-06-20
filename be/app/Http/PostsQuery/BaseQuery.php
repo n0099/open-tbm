@@ -23,9 +23,9 @@ abstract class BaseQuery
 {
     #[ArrayShape([
         'fid' => 'int',
-        'threads' => '?Collection<ThreadModel>',
-        'replies' => '?Collection<ReplyModel>',
-        'subReplies' => '?Collection<SubReplyModel>',
+        'threads' => '?Collection<int, ThreadModel>',
+        'replies' => '?Collection<int, ReplyModel>',
+        'subReplies' => '?Collection<int, SubReplyModel>',
     ])] protected array $queryResult;
 
     private array $queryResultPages;
@@ -47,7 +47,7 @@ abstract class BaseQuery
 
     /**
      * @param int $fid
-     * @param Collection<string, Builder> $queries key by post type
+     * @param Collection<string, Builder<PostModel>> $queries key by post type
      * @param string|null $cursorParamValue
      * @param string|null $queryByPostIDParamName
      * @return void
@@ -61,38 +61,42 @@ abstract class BaseQuery
         Debugbar::startMeasure('setResult');
 
         $addOrderByForBuilder = fn (Builder $qb, string $postType): Builder => $qb
+            // we don't have to select the post ID
+            // since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
             ->addSelect($this->orderByField)
             ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
             // if not it should fall back to other unique field (here is the post ID primary key)
-            // we don't have to select the post ID
-            // since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
+            // https://use-the-index-luke.com/no-offset
+            // https://mysql.rjweb.org/doc.php/pagination
+            // https://medium.com/swlh/how-to-implement-cursor-pagination-like-a-pro-513140b65f32
+            // https://slack.engineering/evolving-api-pagination-at-slack/
             ->orderBy(Helper::POST_TYPE_TO_ID[$postType]);
 
         $queriesWithOrderBy = $queries->map($addOrderByForBuilder);
         if ($cursorParamValue !== null) {
-            $cursorKeyByPostType = $this->decodePageCursor($cursorParamValue);
+            $cursorsKeyByPostType = $this->decodePageCursor($cursorParamValue);
             // remove queries for post types with encoded cursor ',,'
-            $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorKeyByPostType);
+            $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorsKeyByPostType);
         }
         Debugbar::startMeasure('initPaginators');
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
         $paginators = $queriesWithOrderBy->map(fn (Builder $qb, string $type) =>
-            $qb->cursorPaginate($this->perPageItems, cursor: $cursorKeyByPostType[$type] ?? null));
+            $qb->cursorPaginate($this->perPageItems, cursor: $cursorsKeyByPostType[$type] ?? null));
         Debugbar::stopMeasure('initPaginators');
-        /** @var Collection<string, Collection> $postKeyByTypePluralName */
-        $postKeyByTypePluralName = $paginators
-            // cast paginator with queried posts to Collection<PostModel>
+
+        /** @var Collection<string, Collection> $postsKeyByTypePluralName */
+        $postsKeyByTypePluralName = $paginators
+            // cast paginator with queried posts to Collection<int, PostModel>
             ->map(static fn (CursorPaginator $paginator) => $paginator->collect())
             ->mapWithKeys(static fn (Collection $posts, string $type) =>
                 [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
-
-        Helper::abortAPIIf(40401, $postKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
-        $this->queryResult = ['fid' => $fid, ...$postKeyByTypePluralName];
+        Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
+        $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
         $this->queryResultPages = [
             'nextPageCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
-                ? $postKeyByTypePluralName
-                : $postKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
+                ? $postsKeyByTypePluralName
+                : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
             'hasMorePages' => self::unionPageStats(
                 $paginators,
                 'hasMorePages',
@@ -104,7 +108,7 @@ abstract class BaseQuery
     }
 
     /**
-     * @param Collection<string, PostModel> $postKeyByTypePluralName
+     * @param Collection<string, PostModel> $postsKeyByTypePluralName
      * @return string
      * @test-input collect([
      *     'threads' => collect([new ThreadModel(['tid' => 1,'postedAt' => 0])]),
@@ -112,9 +116,9 @@ abstract class BaseQuery
      *     'subReplies' => collect([new SubReplyModel(['spid' => 3,'postedAt' => 'test'])])
      * ])
      */
-    private function encodeNextPageCursor(Collection $postKeyByTypePluralName): string
+    private function encodeNextPageCursor(Collection $postsKeyByTypePluralName): string
     {
-        $encodedCursorKeyByPostType = $postKeyByTypePluralName
+        $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
             ->mapWithKeys(static fn (Collection $posts, string $type) => [
                 Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last() // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
@@ -157,10 +161,10 @@ abstract class BaseQuery
                 ->join(','));
         return collect(Helper::POST_TYPES)
             // merge cursors into flipped Helper::POST_TYPES with the same post type key
-            // value of keys that non exists in $encodedCursorKeyByPostType will remain as int
-            ->flip()->merge($encodedCursorKeyByPostType)
+            // value of keys that non exists in $encodedCursorsKeyByPostType will remain as int
+            ->flip()->merge($encodedCursorsKeyByPostType)
             // if the flipped value is a default int key there's no posts of this type
-            // (type key not exists in $postKeyByTypePluralName)
+            // (type key not exists in $postsKeyByTypePluralName)
             // so we just return an empty ',' as placeholder
             ->map(static fn (string|int $cursor) => \is_int($cursor) ? ',' : $cursor)
             ->join(',');
@@ -215,10 +219,11 @@ abstract class BaseQuery
     /**
      * Union builders pagination $unionMethodName data by $unionStatement
      *
-     * @param Collection<CursorPaginator> $paginators
+     * @param Collection<string, CursorPaginator> $paginators key by post type
      * @param string $unionMethodName
-     * @param Closure $unionCallback (Collection)
-     * @return mixed returned by $unionCallback()
+     * @param Closure $unionCallback (Collection): TReturn
+     * @template TReturn
+     * @return TReturn returned by $unionCallback()
      */
     private static function unionPageStats(
         Collection $paginators,
@@ -234,21 +239,21 @@ abstract class BaseQuery
         'fid' => 'int',
         'matchQueryPostCount' => 'array{thread: int, reply: int, subReply: int}',
         'notMatchQueryParentPostCount' => 'array{thread: int, reply: int}',
-        'threads' => 'Collection<ThreadModel>',
-        'replies' => 'Collection<ReplyModel>',
-        'subReplies' => 'Collection<SubReplyModel>'
+        'threads' => 'Collection<int, ThreadModel>',
+        'replies' => 'Collection<int, ReplyModel>',
+        'subReplies' => 'Collection<int, SubReplyModel>'
     ])] public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
-        /** @var Collection<int> $tids */
-        /** @var Collection<int> $pids */
-        /** @var Collection<int> $spids */
-        /** @var Collection<array-key, ReplyModel> $replies */
-        /** @var Collection<array-key, SubReplyModel> $subReplies */
+        /** @var Collection<int, int> $tids */
+        /** @var Collection<int, int> $pids */
+        /** @var Collection<int, int> $spids */
+        /** @var Collection<int, ReplyModel> $replies */
+        /** @var Collection<int, SubReplyModel> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
             /**
              * @param string $postIDName
-             * @return array{0: Collection<PostModel>, 1: Collection<int>}
+             * @return array{0: Collection<int, PostModel>, 1: Collection<int, int>}
              */
             static function (string $postIDName) use ($result): array {
                 $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
@@ -264,9 +269,9 @@ abstract class BaseQuery
         $postModels = PostModelFactory::getPostModelsByFid($fid);
 
         Debugbar::startMeasure('fillWithThreadsFields');
-        /** @var Collection<int> $parentThreadsID parent tid of all replies and their sub replies */
+        /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
-        /** @var Collection<array-key, ThreadModel> $threads */
+        /** @var Collection<int, ThreadModel> $threads */
         $threads = $postModels['thread']
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
@@ -276,7 +281,7 @@ abstract class BaseQuery
         Debugbar::stopMeasure('fillWithThreadsFields');
 
         Debugbar::startMeasure('fillWithRepliesFields');
-        /** @var Collection<int> $parentRepliesID parent pid of all sub replies */
+        /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = $postModels['reply']
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
@@ -314,7 +319,7 @@ abstract class BaseQuery
             return str_replace("\n", '', trim($renderedView));
         };
         /**
-         * @param Collection<?string> $contents
+         * @param Collection<int, ?string> $contents key by post ID
          * @param string $postIDName
          * @return Closure
          * @psalm-return Closure(PostModel):PostModel
