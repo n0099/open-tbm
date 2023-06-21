@@ -18,31 +18,31 @@
         <p><a href="https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
         <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
         <hr />
-        <div ref="top50CandidatesCount" id="top50CandidatesCount" class="echarts" />
+        <div ref="top50CandidateCount" id="top50CandidateCount" class="echarts" />
         <hr />
         <div ref="top10CandidatesTimeline" id="top10CandidatesTimeline" class="echarts" />
         <hr />
         <div class="row justify-content-end">
-            <label class="col-2 col-form-label text-end" for="top5CandidatesCountGroupByTime">时间粒度</label>
+            <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTime">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeGranularity v-model="query.top5CandidatesCountGroupByTimeGranularity" id="top5CandidatesCountGroupByTime" :granularities="['minute', 'hour']" />
+                    <QueryTimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity" id="top5CandidateCountGroupByTime" :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
-        <div ref="top5CandidatesCountGroupByTime" id="top5CandidatesCountGroupByTime" class="echarts" />
+        <div ref="top5CandidateCountGroupByTime" id="top5CandidateCountGroupByTime" class="echarts" />
         <hr />
         <div class="row justify-content-end">
-            <label class="col-2 col-form-label text-end" for="allVotesCountGroupByTimeGranularity">时间粒度</label>
+            <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <QueryTimeGranularity v-model="query.allVotesCountGroupByTimeGranularity" id="allVotesCountGroupByTimeGranularity" :granularities="['minute', 'hour']" />
+                    <QueryTimeGranularity v-model="query.allVoteCountGroupByTimeGranularity" id="allVoteCountGroupByTimeGranularity" :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
-        <div ref="allVotesCountGroupByTime" id="allVotesCountGroupByTime" class="echarts" />
+        <div ref="allVoteCountGroupByTime" id="allVoteCountGroupByTime" class="echarts" />
         <hr />
         <Table :columns="candidatesDetailColumns"
                :data-source="candidatesDetailData"
@@ -114,16 +114,16 @@ const candidatesDetailColumns: Array<ObjUnknown & {
 
 type Charts = keyof typeof chartsDom;
 const chartsDom = {
-    top50CandidatesCount: ref<HTMLElement>(),
+    top50CandidateCount: ref<HTMLElement>(),
     top10CandidatesTimeline: ref<HTMLElement>(),
-    top5CandidatesCountGroupByTime: ref<HTMLElement>(),
-    allVotesCountGroupByTime: ref<HTMLElement>()
+    top5CandidateCountGroupByTime: ref<HTMLElement>(),
+    allVoteCountGroupByTime: ref<HTMLElement>()
 };
 const charts: { [P in Charts]: echarts.ECharts | null } = {
-    top50CandidatesCount: null,
+    top50CandidateCount: null,
     top10CandidatesTimeline: null,
-    top5CandidatesCountGroupByTime: null,
-    allVotesCountGroupByTime: null
+    top5CandidateCountGroupByTime: null,
+    allVoteCountGroupByTime: null
 };
 
 let top10CandidatesTimelineVotes: { [P in 'invalid' | 'valid']: Top10CandidatesTimeline } = { valid: [], invalid: [] };
@@ -143,12 +143,12 @@ const voteCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, curre
 const sourceAttribution = `来源：open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
 type ChartOptionTop10CandidatesTimeline = echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {
-    top50CandidatesCount: echarts.ComposeOption<BarSeriesOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
+    top50CandidateCount: echarts.ComposeOption<BarSeriesOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
     top10CandidatesTimeline: ChartOptionTop10CandidatesTimeline,
-    top5CandidatesCountGroupByTime: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | TooltipComponentOption>,
-    allVotesCountGroupByTime: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>
+    top5CandidateCountGroupByTime: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | TooltipComponentOption>,
+    allVoteCountGroupByTime: echarts.ComposeOption<DataZoomComponentOption | GridComponentOption | LegendComponentOption | LineSeriesOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>
 } = {
-    top50CandidatesCount: {
+    top50CandidateCount: {
         title: {
             text: 'bilibili吧吧主公投 前50候选人票数',
             subtext: `候选人间线上数字为与前一人票差 数据仅供参考 ${sourceAttribution}`
@@ -324,7 +324,7 @@ const chartsInitialOption: {
             }
         }
     },
-    top5CandidatesCountGroupByTime: {
+    top5CandidateCountGroupByTime: {
         title: {
             text: 'bilibili吧吧主公投 前5票数分时增量',
             subtext: `数据仅供参考 ${sourceAttribution}`
@@ -357,7 +357,7 @@ const chartsInitialOption: {
             { type: 'value', gridIndex: 1 }
         ]
     },
-    allVotesCountGroupByTime: {
+    allVoteCountGroupByTime: {
         title: {
             text: 'bilibili吧吧主公投 总票数分时增量',
             subtext: `数据仅供参考 ${sourceAttribution}`
@@ -402,8 +402,8 @@ const chartsInitialOption: {
 
 const {
     allCandidatesVoteCount,
-    allVotesCountGroupByHour,
-    allVotesCountGroupByMinute,
+    allVoteCountGroupByHour,
+    allVoteCountGroupByMinute,
     candidateNames,
     top5CandidatesVoteCountGroupByHour,
     top5CandidatesVoteCountGroupByMinute,
@@ -418,16 +418,16 @@ export default defineComponent({
         useHead({ title: titleTemplate('bilibili吧2019年吧主公投 - 专题') });
         const state = reactive<{
             query: {
-                top5CandidatesCountGroupByTimeGranularity: GroupByTimeGranularity,
-                allVotesCountGroupByTimeGranularity: GroupByTimeGranularity
+                top5CandidateCountGroupByTimeGranularity: GroupByTimeGranularity,
+                allVoteCountGroupByTimeGranularity: GroupByTimeGranularity
             },
             candidateNames: CandidatesName,
             candidatesDetailData: CandidatesDetailData,
             top50CandidatesOfficialValidVoteCount: Top50CandidatesOfficialValidVoteCount
         }>({
             query: {
-                top5CandidatesCountGroupByTimeGranularity: 'hour',
-                allVotesCountGroupByTimeGranularity: 'hour'
+                top5CandidateCountGroupByTimeGranularity: 'hour',
+                allVoteCountGroupByTimeGranularity: 'hour'
             },
             candidateNames: [],
             candidatesDetailData: [],
@@ -439,7 +439,7 @@ export default defineComponent({
         const formatCandidateNameByID = (id: number) => `${id}号\n${state.candidateNames[id - 1]}`;
 
         const loadCharts = {
-            top50CandidatesCount: () => {
+            top50CandidateCount: () => {
                 // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
                 const dataset = _.chain(top50CandidatesVoteCount)
                     .groupBy('voteFor')
@@ -470,7 +470,7 @@ export default defineComponent({
                 }, { coord: [index - 1, validCount[index - 1]] }]);
                 validCountDiffWithPrevious.shift(); // first candidate doesn't need to exceed anyone
 
-                charts.top50CandidatesCount?.setOption<echarts.ComposeOption<DatasetComponentOption | LineSeriesOption | MarkLineComponentOption>>({
+                charts.top50CandidateCount?.setOption<echarts.ComposeOption<DatasetComponentOption | LineSeriesOption | MarkLineComponentOption>>({
                     dataset: { source: dataset },
                     series: [{
                         id: 'validCount',
@@ -589,14 +589,14 @@ export default defineComponent({
                     });
                 });
             },
-            top5CandidatesCountGroupByTime: () => {
-                const timeGranularity = state.query.top5CandidatesCountGroupByTimeGranularity;
-                const top5CandidatesCountGroupByTime = timeGranularity === 'minute'
+            top5CandidateCountGroupByTime: () => {
+                const timeGranularity = state.query.top5CandidateCountGroupByTimeGranularity;
+                const top5CandidateCountGroupByTime = timeGranularity === 'minute'
                     ? top5CandidatesVoteCountGroupByMinute
                     : top5CandidatesVoteCountGroupByHour;
-                const top5CandidatesIndex = _.chain(top5CandidatesCountGroupByTime).filter({ isValid: 1 }).map('voteFor').sort().sortedUniq().value(); // not order by votes count
-                const validVotes = _.filter(top5CandidatesCountGroupByTime, { isValid: 1 });
-                const invalidVotes = _.filter(top5CandidatesCountGroupByTime, { isValid: 0 });
+                const top5CandidatesIndex = _.chain(top5CandidateCountGroupByTime).filter({ isValid: 1 }).map('voteFor').sort().sortedUniq().value(); // not order by votes count
+                const validVotes = _.filter(top5CandidateCountGroupByTime, { isValid: 1 });
+                const invalidVotes = _.filter(top5CandidateCountGroupByTime, { isValid: 0 });
                 const series: LineSeriesOption[] = [];
                 top5CandidatesIndex.forEach(candidateIndex => {
                     series.push({
@@ -616,17 +616,17 @@ export default defineComponent({
                         data: _.filter(invalidVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
                     });
                 });
-                charts.top5CandidatesCountGroupByTime?.setOption<echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>>({
+                charts.top5CandidateCountGroupByTime?.setOption<echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>>({
                     axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
                     xAxis: Array(2).fill({ type: timeGranularityAxisType[timeGranularity] }),
                     series
                 });
             },
-            allVotesCountGroupByTime: () => {
-                const timeGranularity = state.query.allVotesCountGroupByTimeGranularity;
-                const allVotesCountGroupByTime = timeGranularity === 'minute' ? allVotesCountGroupByMinute : allVotesCountGroupByHour;
+            allVoteCountGroupByTime: () => {
+                const timeGranularity = state.query.allVoteCountGroupByTimeGranularity;
+                const allVoteCountGroupByTime = timeGranularity === 'minute' ? allVoteCountGroupByMinute : allVoteCountGroupByHour;
                 // [{ time: '2019-03-11 12:00', validCount: 1, invalidCount: 0 }, ... ]
-                const dataset = _.chain(allVotesCountGroupByTime)
+                const dataset = _.chain(allVoteCountGroupByTime)
                     .groupBy('time')
                     .map((count, time) => ({
                         time,
@@ -634,7 +634,7 @@ export default defineComponent({
                         invalidCount: findVoteCount(count, 0)
                     }))
                     .value();
-                charts.allVotesCountGroupByTime?.setOption<echarts.ComposeOption<DatasetComponentOption | GridComponentOption>>({
+                charts.allVoteCountGroupByTime?.setOption<echarts.ComposeOption<DatasetComponentOption | GridComponentOption>>({
                     axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
                     xAxis: { type: timeGranularityAxisType[timeGranularity] },
                     dataset: { source: dataset }
@@ -642,8 +642,8 @@ export default defineComponent({
             }
         };
 
-        watch(() => state.query.top5CandidatesCountGroupByTimeGranularity, () => { loadCharts.top5CandidatesCountGroupByTime() });
-        watch(() => state.query.allVotesCountGroupByTimeGranularity, () => { loadCharts.allVotesCountGroupByTime() });
+        watch(() => state.query.top5CandidateCountGroupByTimeGranularity, () => { loadCharts.top5CandidateCountGroupByTime() });
+        watch(() => state.query.allVoteCountGroupByTimeGranularity, () => { loadCharts.allVoteCountGroupByTime() });
         onMounted(() => {
             _.map(chartsDom, (i, k: Charts) => {
                 if (i.value === undefined) return;
@@ -690,16 +690,16 @@ export default defineComponent({
 .echarts {
     margin-top: .5rem;
 }
-#top50CandidatesCount {
+#top50CandidateCount {
     height: 32rem;
 }
 #top10CandidatesTimeline {
     height: 40rem;
 }
-#top5CandidatesCountGroupByTime {
+#top5CandidateCountGroupByTime {
     height: 40rem;
 }
-#allVotesCountGroupByTime {
+#allVoteCountGroupByTime {
     height: 20rem;
 }
 </style>

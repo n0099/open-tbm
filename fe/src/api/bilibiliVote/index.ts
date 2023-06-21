@@ -1,6 +1,6 @@
 import allCandidatesVoteCount from './allCandidatesVoteCount.json';
-import allVotesCountGroupByHour from './allVotesCountGroupByHour.json';
-import allVotesCountGroupByMinute from './allVotesCountGroupByMinute.json';
+import allVoteCountGroupByHour from './allVoteCountGroupByHour.json';
+import allVoteCountGroupByMinute from './allVoteCountGroupByMinute.json';
 import candidateNames from './candidateNames.json';
 import top5CandidatesVoteCountGroupByHour from './top5CandidatesVoteCountGroupByHour.json';
 import top5CandidatesVoteCountGroupByMinute from './top5CandidatesVoteCountGroupByMinute.json';
@@ -11,8 +11,8 @@ import type { BoolInt, Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@
 
 export const json: {
     allCandidatesVoteCount: AllCandidatesVoteCount,
-    allVotesCountGroupByHour: AllVoteCountsGroupByTime,
-    allVotesCountGroupByMinute: AllVoteCountsGroupByTime,
+    allVoteCountGroupByHour: AllVoteCountsGroupByTime,
+    allVoteCountGroupByMinute: AllVoteCountsGroupByTime,
     candidateNames: CandidatesName,
     top5CandidatesVoteCountGroupByHour: Top5CandidatesVoteCountGroupByTime,
     top5CandidatesVoteCountGroupByMinute: Top5CandidatesVoteCountGroupByTime,
@@ -21,8 +21,8 @@ export const json: {
     top50CandidatesOfficialValidVoteCount: Top50CandidatesOfficialValidVoteCount
 } = {
     allCandidatesVoteCount: allCandidatesVoteCount as AllCandidatesVoteCount,
-    allVotesCountGroupByHour: allVotesCountGroupByHour as AllVoteCountsGroupByTime,
-    allVotesCountGroupByMinute: allVotesCountGroupByMinute as AllVoteCountsGroupByTime,
+    allVoteCountGroupByHour: allVoteCountGroupByHour as AllVoteCountsGroupByTime,
+    allVoteCountGroupByMinute: allVoteCountGroupByMinute as AllVoteCountsGroupByTime,
     candidateNames,
     top5CandidatesVoteCountGroupByHour: top5CandidatesVoteCountGroupByHour as Top5CandidatesVoteCountGroupByTime,
     top5CandidatesVoteCountGroupByMinute: top5CandidatesVoteCountGroupByMinute as Top5CandidatesVoteCountGroupByTime,
