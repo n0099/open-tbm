@@ -45,7 +45,7 @@ const withPageRoute = <T extends { components: Record<string, () => Promise<Comp
 const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
 const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) } };
 export default createRouter({
-    history: createWebHistory(import.meta.env.VITE_PUBLIC_PATH),
+    history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
         {
             path: '/:pathMatch(.*)*',

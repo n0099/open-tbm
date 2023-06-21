@@ -3,7 +3,6 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-    readonly VITE_PUBLIC_PATH: string,
     readonly VITE_API_URL_PREFIX: string,
     readonly VITE_GA_MEASUREMENT_ID: string,
     readonly VITE_RECAPTCHA_SITE_KEY: string,
