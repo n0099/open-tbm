@@ -9,7 +9,7 @@
     </select>
 </template>
 
-<script>
+<script lang="ts">
 import { emitEventStrValidator } from '@/shared';
 import { defineComponent } from 'vue';
 

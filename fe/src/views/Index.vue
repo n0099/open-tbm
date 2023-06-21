@@ -4,7 +4,7 @@
     <div class="text-center" style="font-size: 2rem">请访问其他页面</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { titleTemplate } from '@/shared';
 import { useHead } from '@vueuse/head';
 
