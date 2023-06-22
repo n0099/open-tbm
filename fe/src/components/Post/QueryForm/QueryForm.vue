@@ -158,7 +158,7 @@ import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, input
 import type { Params, RequiredPostTypes, UniqueParams } from './queryParams';
 import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
-import type { ObjValues, PostType } from '@/shared';
+import type { ObjValues, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
@@ -344,7 +344,7 @@ export default defineComponent({
             if (to.length === 0) useState.uniqueParams.postTypes.value = from; // to prevent empty post types
         });
 
-        return { upperFirst: _.upperFirst, postID, inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), queryFormSubmit, parseRouteToGetFlattenParams, getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam };
+        return { upperFirst: _.upperFirst, postID: postID as Writable<typeof postID> as string[], inputTextMatchParamPlaceholder, ...toRefs(state), ...toRefs(useState), queryFormSubmit, parseRouteToGetFlattenParams, getCurrentQueryType, currentQueryTypeDesc, addParam, changeParam, deleteParam };
     }
 });
 </script>

@@ -12,30 +12,24 @@
            type="number" class="col-2 form-control flex-grow-0" required />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { ParamTypeNumeric, ParamTypeWithCommon } from './queryParams';
 import { paramTypeNumericSubParamRangeValues } from './queryParams';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 import _ from 'lodash';
 
-export default defineComponent({
-    props: {
-        modelValue: { type: Object as PropType<ParamTypeWithCommon<string, ParamTypeNumeric>>, required: true },
-        placeholders: { type: Object as PropType<{ [P in 'BETWEEN' | 'IN' | 'number']: string }>, required: true }
-    },
-    emits: {
-        'update:modelValue': (p: ParamTypeWithCommon<string, ParamTypeNumeric>) =>
-            _.isString(p.name) && _.isString(p.value)
-                && paramTypeNumericSubParamRangeValues.includes(p.subParam.range)
-    },
-    setup(props, { emit }) {
-        const emitModelChange = (e: InputEvent & { target: HTMLInputElement }) => {
-            emit('update:modelValue', { ...props.modelValue, value: e.target.value });
-        };
-        return { emitModelChange };
-    }
+const props = defineProps<{
+    modelValue: ParamTypeWithCommon<string, ParamTypeNumeric>,
+    placeholders: { [P in 'BETWEEN' | 'IN' | 'number']: string }
+}>();
+const emit = defineEmits({
+    'update:modelValue': (p: ParamTypeWithCommon<string, ParamTypeNumeric>) =>
+        _.isString(p.name) && _.isString(p.value)
+        && paramTypeNumericSubParamRangeValues.includes(p.subParam.range)
 });
+
+const emitModelChange = (e: Event) => {
+    emit('update:modelValue', { ...props.modelValue, value: (e.target as HTMLInputElement).value });
+};
 </script>
 
 <style scoped>
