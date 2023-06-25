@@ -45,7 +45,7 @@ import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
 
-import { computed, nextTick, reactive, watchEffect } from 'vue';
+import { computed, nextTick, watchEffect } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
@@ -55,25 +55,14 @@ import _ from 'lodash';
 export type PostViewRenderer = 'list' | 'table';
 
 const route = useRoute();
-const state = reactive<{
-    title: string,
-    forumList: ApiForumList,
-    postPages: ApiPostsQuery[],
-    isLoading: boolean,
-    lastFetchError: ApiError | null,
-    showPlaceholderPostList: boolean,
-    renderType: PostViewRenderer,
-    selectedRenderTypes: [PostViewRenderer]
-}>({
-    title: '帖子查询',
-    forumList: [],
-    postPages: [],
-    isLoading: false,
-    lastFetchError: null,
-    showPlaceholderPostList: true,
-    renderType: 'list',
-    selectedRenderTypes: ['list']
-});
+const title = ref<string>('帖子查询');
+const forumList = ref<ApiForumList>([]);
+const postPages = ref<ApiPostsQuery[]>([]);
+const isLoading = ref<boolean>(false);
+const lastFetchError = ref<ApiError | null>(null);
+const showPlaceholderPostList = ref<boolean>(true);
+const renderType = ref<PostViewRenderer>('list');
+const selectedRenderTypes = ref<[PostViewRenderer]>(['list']);
 const queryFormRef = ref<typeof QueryForm>();
 useHead({ title: computed(() => titleTemplate(title.value)) });
 

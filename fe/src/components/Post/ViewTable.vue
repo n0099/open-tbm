@@ -71,67 +71,59 @@ import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';
 import type { Pid, Tid } from '@/shared';
 import { tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
 
-import { onMounted, reactive } from 'vue';
+import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import { Table } from 'ant-design-vue';
 import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPostsQuery }>();
-const state = reactive<{
-    threads: ApiPostsQuery['threads'],
-    threadsReply: Record<Tid, ApiPostsQuery['threads'][number]['replies']>,
-    repliesSubReply: Record<Pid, SubReplyRecord[]>,
-    threadColumns: ColumnType[],
-    replyColumns: ColumnType[],
-    subReplyColumns: ColumnType[]
-}>({
-    threads: [],
-    threadsReply: [],
-    repliesSubReply: [],
-    threadColumns: [
-        { title: 'tid', dataIndex: 'tid', slots: { customRender: 'tid' } },
-        { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },
-        { title: '回复量', dataIndex: 'replyCount' },
-        { title: '浏览量', dataIndex: 'viewCount' },
-        { title: '发帖人', slots: { customRender: 'postAuthor' } },
-        { title: '发帖时间', dataIndex: 'postedAt' },
-        { title: '最后回复人', slots: { customRender: 'postLatestReplier' } },
-        { title: '最后回复时间', dataIndex: 'latestReplyPostedAt' },
-        { title: '发帖人UID', dataIndex: 'authorUid' },
-        { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
-        { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
-        { title: '分享量', dataIndex: 'shareCount' },
-        { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
-        { title: '旧版客户端赞', dataIndex: 'zan' }, // todo: unknown json struct
-        { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
-        { title: '首次收录时间', dataIndex: 'created_at' },
-        { title: '最后更新时间', dataIndex: 'updated_at' }
-    ],
-    replyColumns: [
-        { title: 'pid', dataIndex: 'pid' },
-        { title: '楼层', dataIndex: 'floor' },
-        { title: '楼中楼回复量', dataIndex: 'subReplyCount' },
-        { title: '发帖人', slots: { customRender: 'postAuthor' } },
-        { title: '发帖人UID', dataIndex: 'authorUid' },
-        { title: '发帖时间', dataIndex: 'postedAt' },
-        { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
-        { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
-        { title: '客户端小尾巴', dataIndex: 'sign' }, // todo: unknown json struct
-        { title: '发帖来源', dataIndex: 'tail' }, // todo: unknown json struct
-        { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
-        { title: '首次收录时间', dataIndex: 'created_at' },
-        { title: '最后更新时间', dataIndex: 'updated_at' }
-    ],
-    subReplyColumns: [
-        { title: 'spid', dataIndex: 'spid' },
-        { title: '发帖人', slots: { customRender: 'postAuthor' } },
-        { title: '发帖人UID', dataIndex: 'authorUid' },
-        { title: '发帖时间', dataIndex: 'postedAt' },
-        { title: '首次收录时间', dataIndex: 'created_at' },
-        { title: '最后更新时间', dataIndex: 'updated_at' }
-    ]
-});
+const threads = ref<ApiPostsQuery['threads']>();
+const threadsReply = ref<Record<Tid, ApiPostsQuery['threads'][number]['replies']>>([]);
+const repliesSubReply = ref<Record<Pid, SubReplyRecord[]>>([]);
+const threadColumns = ref<ColumnType[]>([
+    { title: 'tid', dataIndex: 'tid', slots: { customRender: 'tid' } },
+    { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },
+    { title: '回复量', dataIndex: 'replyCount' },
+    { title: '浏览量', dataIndex: 'viewCount' },
+    { title: '发帖人', slots: { customRender: 'postAuthor' } },
+    { title: '发帖时间', dataIndex: 'postedAt' },
+    { title: '最后回复人', slots: { customRender: 'postLatestReplier' } },
+    { title: '最后回复时间', dataIndex: 'latestReplyPostedAt' },
+    { title: '发帖人UID', dataIndex: 'authorUid' },
+    { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
+    { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
+    { title: '分享量', dataIndex: 'shareCount' },
+    { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
+    { title: '旧版客户端赞', dataIndex: 'zan' }, // todo: unknown json struct
+    { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
+    { title: '首次收录时间', dataIndex: 'created_at' },
+    { title: '最后更新时间', dataIndex: 'updated_at' }
+]);
+const replyColumns = ref<ColumnType[]>([
+    { title: 'pid', dataIndex: 'pid' },
+    { title: '楼层', dataIndex: 'floor' },
+    { title: '楼中楼回复量', dataIndex: 'subReplyCount' },
+    { title: '发帖人', slots: { customRender: 'postAuthor' } },
+    { title: '发帖人UID', dataIndex: 'authorUid' },
+    { title: '发帖时间', dataIndex: 'postedAt' },
+    { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
+    { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
+    { title: '客户端小尾巴', dataIndex: 'sign' }, // todo: unknown json struct
+    { title: '发帖来源', dataIndex: 'tail' }, // todo: unknown json struct
+    { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
+    { title: '首次收录时间', dataIndex: 'created_at' },
+    { title: '最后更新时间', dataIndex: 'updated_at' }
+]);
+const subReplyColumns = ref<ColumnType[]>([
+    { title: 'spid', dataIndex: 'spid' },
+    { title: '发帖人', slots: { customRender: 'postAuthor' } },
+    { title: '发帖人UID', dataIndex: 'authorUid' },
+    { title: '发帖时间', dataIndex: 'postedAt' },
+    { title: '首次收录时间', dataIndex: 'created_at' },
+    { title: '最后更新时间', dataIndex: 'updated_at' }
+]);
+
 const getUser = baseGetUser(props.posts.users);
 const renderUsername = baseRenderUsername(getUser);
 

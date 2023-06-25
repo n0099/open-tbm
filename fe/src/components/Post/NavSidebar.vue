@@ -40,7 +40,7 @@ import { assertRouteNameIsStr, routeNameWithPage } from '@/router';
 import type { Pid, Tid } from '@/shared';
 import { removeEnd } from '@/shared';
 
-import { onUnmounted, reactive, watchEffect } from 'vue';
+import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
@@ -50,21 +50,15 @@ import _ from 'lodash';
 const route = useRoute();
 const router = useRouter();
 const props = defineProps<{ postPages: ApiPostsQuery[] }>();
-const state = reactive<{
-    expandedPages: string[],
-    selectedThread: string[],
-    firstPostInView: { page: number, pid: Pid, tid: Tid }
-}>({
-    expandedPages: [],
-    selectedThread: [],
-    firstPostInView: { tid: 0, pid: 0, page: 0 }
-});
+const expandedPages = ref<string[]>([]);
+const selectedThread = ref<string[]>([]);
+const firstPostInView = ref<{ page: number, pid: Pid, tid: Tid }>({ tid: 0, pid: 0, page: 0 });
 const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
 
 let isScrollTriggeredByNavigate = false;
-const navigate = (page: number | string, tid?: string, pid?: Pid | string) => {
+const navigate = (page: number | string, tid: string | null, pid?: Pid | string) => {
     router.replace({
-        hash: `#${pid ?? (tid === undefined ? '' : `t${tid}`)}`,
+        hash: `#${pid ?? (tid === null ? '' : `t${tid}`)}`,
         params: { ...route.params, page }
     });
     isScrollTriggeredByNavigate = true;
@@ -89,20 +83,20 @@ const scrollStop = _.debounce(() => {
             { top: Infinity, el: document.createElement('null') }
         ).el;
 
-    const firstPostInView = {
+    const currentFirstPostInView = {
         t: findFirstDomInView('.thread-title'),
         p: findFirstDomInView('.reply-title', 80) // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
     };
-    const firstPostIDInView = _.mapValues(firstPostInView, i =>
+    const firstPostIDInView = _.mapValues(currentFirstPostInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
-    // when there's no thread or reply item in the viewport, firstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
+    // when there's no thread or reply item in the viewport, currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
         firstPostInView.value = { tid: 0, pid: 0, page: 0 };
         router.replace({ hash: '' }); // empty route hash
         isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
         return;
     }
-    const firstPostPageInView = _.mapValues(firstPostInView, i =>
+    const firstPostPageInView = _.mapValues(currentFirstPostInView, i =>
         Number(i.closest('.post-render-list')?.getAttribute('data-page')));
 
     const replaceRouteHash = (page: number, postID: Pid | Tid, hashPrefix = '') => {

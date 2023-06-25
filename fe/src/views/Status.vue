@@ -35,7 +35,7 @@ import { apiStatus, throwIfApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 import { titleTemplate } from '@/shared';
 
-import { onMounted, reactive, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
 import { useHead } from '@vueuse/head';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -161,17 +161,12 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 useHead({ title: titleTemplate('状态') });
-const state = reactive<{
-    autoRefresh: boolean,
-    query: ApiStatusQP
-}>({
-    autoRefresh: false,
-    query: {
-        timeGranularity: 'minute',
-        startTime: 0,
-        endTime: 0
-    }
+const query = ref<ApiStatusQP>({
+    timeGranularity: 'minute',
+    startTime: 0,
+    endTime: 0
 });
+const autoRefresh = ref<boolean>(false);
 const chartDom = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
@@ -197,8 +192,8 @@ const submitQueryForm = async () => {
 };
 
 const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
-watch(() => autoRefresh.value, autoRefresh => {
-    if (autoRefresh) resume();
+watch(() => autoRefresh.value, () => {
+    if (autoRefresh.value) resume();
     else pause();
 });
 onMounted(submitQueryForm);

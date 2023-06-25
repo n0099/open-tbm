@@ -21,7 +21,7 @@ import SelectTiebaUser, { selectTiebaUserBy } from './SelectTiebaUser.vue';
 import type { BaiduUserID, TiebaUserGenderQP } from '@/api/index.d';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 
-import { reactive, watchEffect } from 'vue';
+import { ref, watchEffect } from 'vue';
 import type { LocationQueryValueRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
@@ -38,13 +38,8 @@ const props = defineProps<{
     },
     selectUserBy: SelectTiebaUserBy
 }>();
-const state = reactive<{
-    gender: TiebaUserGenderQP | 'default',
-    selectUser: SelectTiebaUserModel
-}>({
-    gender: 'default',
-    selectUser: { selectBy: '', params: {} }
-});
+const gender = ref<TiebaUserGenderQP | 'default'>('default');
+const selectUser = ref<SelectTiebaUserModel>({ selectBy: '', params: {} });
 
 const defaultParamsValue = {
     gender: 'default',

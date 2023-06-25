@@ -73,20 +73,15 @@ const emit = defineEmits({
         && selectTiebaUserBy.includes(p.selectBy)
         && _.isObject(p.params) // todo: check p.params against props.paramsNameMap
 });
-const state = reactive<{
-    selectBy: SelectTiebaUserBy | 'displayNameNULL' | 'nameNULL',
-    params: SelectTiebaUserParams
-}>({
-    selectBy: '',
-    params: {}
-});
+const selectBy = ref<SelectTiebaUserBy | 'displayNameNULL' | 'nameNULL'>('');
+const params = ref<SelectTiebaUserParams>({});
 
 const emitModelChange = () => {
     if (props.paramsNameMap !== undefined) {
         params.value = _.mapKeys(params, (_v, oldParamName) =>
             (props.paramsNameMap as Record<string, string>)[oldParamName]);
     }
-    emit('update:modelValue', state);
+    emit('update:modelValue', { selectBy: selectBy.value, params: params.value });
 };
 
 watch(() => params, emitModelChange, { deep: true });
@@ -99,7 +94,7 @@ watch(() => props.modelValue, () => {
     // reset to default selectBy if it's a invalid value
     if (!selectTiebaUserBy.includes(selectBy.value)) selectBy.value = '';
     if (selectBy.value === 'uid') params.value.uidCompareBy ??= '='; // set to default value if it's undefined
-    if (params.value.value.name === 'NULL') selectBy.value = 'nameNULL';
+    if (params.value.name === 'NULL') selectBy.value = 'nameNULL';
     if (params.value.displayName === 'NULL') selectBy.value = 'displayNameNULL';
 }, { immediate: true });
 onMounted(() => {

@@ -1,6 +1,6 @@
 import type { ObjUnknown, ObjValues } from '@/shared';
 import { boolStrToBool } from '@/shared';
-import { onBeforeMount, reactive, watch } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
@@ -21,16 +21,9 @@ export default <
     type TUniqueParam = ObjValues<UniqueParams>;
     type TParam = ObjValues<Params>;
     const router = useRouter();
-    interface State {
-        uniqueParams: UniqueParams,
-        params: TParam[],
-        invalidParamsIndex: number[]
-    }
-    const state = reactive<State>({
-        uniqueParams: {} as UniqueParams,
-        params: [], // [{ name: '', value: '', subParam: { name: value } },...]
-        invalidParamsIndex: []
-    }) as State; // https://github.com/vuejs/vue-next/issues/1324, https://github.com/vuejs/vue-next/issues/2136
+    const uniqueParams = ref<UniqueParams>({} as UniqueParams);
+    const params = ref<TParam[]>([]); // [{ name: '', value: '', subParam: { name: value } },...]
+    const invalidParamsIndex = ref<number[]>([]);
 
     const fillParamWithDefaultValue = <T extends TParam | TUniqueParam>
     (param: Partial<Param> & { name: string }, resetToDefault = false): T => {
@@ -155,8 +148,8 @@ export default <
     };
 
     watch([() => uniqueParams.value, () => params.value], newParamsArray => {
-        const [uniqueParams, params] = newParamsArray;
-        _.chain([...Object.values(uniqueParams), ...params])
+        const [newUniqueParams, newParams] = newParamsArray;
+        _.chain([...Object.values(newUniqueParams), ...newParams])
             .filter(param => param.name in deps.paramsWatcher)
             .each(param => deps.paramsWatcher[param.name]?.(param))
             .value();
@@ -168,7 +161,9 @@ export default <
     });
 
     return {
-        state,
+        uniqueParams,
+        params,
+        invalidParamsIndex,
         addParam,
         changeParam,
         deleteParam,

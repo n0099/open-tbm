@@ -21,7 +21,7 @@ import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
 
-import { nextTick, reactive, watchEffect } from 'vue';
+import { nextTick, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
@@ -35,21 +35,12 @@ const props = defineProps<{
     name: string,
     displayName: string
 }>();
-const state = reactive<{
-    params: Pick<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, '' | 'displayNameNULL' | 'nameNULL'>>,
-    selectUserBy: SelectTiebaUserBy,
-    userPages: ApiUsersQuery[],
-    isLoading: boolean,
-    lastFetchError: ApiError | null,
-    showPlaceholderPostList: boolean
-}>({
-    params: {},
-    selectUserBy: '',
-    userPages: [],
-    isLoading: false,
-    lastFetchError: null,
-    showPlaceholderPostList: false
-});
+const params = ref<Pick<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
+const selectUserBy = ref<SelectTiebaUserBy>('');
+const userPages = ref<ApiUsersQuery[]>([]);
+const isLoading = ref<boolean>(false);
+const lastFetchError = ref<ApiError | null>(null);
+const showPlaceholderPostList = ref<boolean>(false);
 
 const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery: boolean) => {
     const startTime = Date.now();

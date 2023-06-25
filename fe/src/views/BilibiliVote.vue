@@ -57,13 +57,13 @@
 
 <script setup lang="ts">
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
-import type { CandidatesName, GroupByTimeGranularity, IsValid, Top10CandidatesTimeline, Top50CandidatesOfficialValidVoteCount } from '@/api/bilibiliVote';
+import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
 import { tiebaUserLink, titleTemplate } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
-import { onMounted, reactive, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useHead } from '@vueuse/head';
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -413,28 +413,19 @@ const {
 } = json;
 
 useHead({ title: titleTemplate('bilibili吧2019年吧主公投 - 专题') });
-const state = reactive<{
-    query: {
-        top5CandidateCountGroupByTimeGranularity: GroupByTimeGranularity,
-        allVoteCountGroupByTimeGranularity: GroupByTimeGranularity
-    },
-    candidateNames: CandidatesName,
-    candidatesDetailData: CandidatesDetailData,
-    top50CandidatesOfficialValidVoteCount: Top50CandidatesOfficialValidVoteCount
+const query = ref<{
+    top5CandidateCountGroupByTimeGranularity: GroupByTimeGranularity,
+    allVoteCountGroupByTimeGranularity: GroupByTimeGranularity
 }>({
-    query: {
-        top5CandidateCountGroupByTimeGranularity: 'hour',
-        allVoteCountGroupByTimeGranularity: 'hour'
-    },
-    candidateNames: [],
-    candidatesDetailData: [],
-    top50CandidatesOfficialValidVoteCount: []
+    top5CandidateCountGroupByTimeGranularity: 'hour',
+    allVoteCountGroupByTimeGranularity: 'hour'
 });
+const candidatesDetailData = ref<CandidatesDetailData>([]);
 
 interface Coord { coord: [number, number] }
 type DiffWithPreviousMarkLineFormatter = Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
 const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) => _.find(votes, { isValid })?.count ?? 0;
-const formatCandidateNameByID = (id: number) => `${id}号\n${candidateNames.value[id - 1]}`;
+const formatCandidateNameByID = (id: number) => `${id}号\n${candidateNames[id - 1]}`;
 
 const loadCharts = {
     top50CandidateCount: () => {
@@ -445,7 +436,7 @@ const loadCharts = {
             .map(candidateVotes => {
                 const validVotes = _.find(candidateVotes, { isValid: 1 });
                 const invalidVotes = _.find(candidateVotes, { isValid: 0 });
-                const officialValidCount = _.find(top50CandidatesOfficialValidVoteCount.value, { voteFor: candidateVotes[0].voteFor })?.officialValidCount ?? 0;
+                const officialValidCount = _.find(top50CandidatesOfficialValidVoteCount, { voteFor: candidateVotes[0].voteFor })?.officialValidCount ?? 0;
                 return {
                     voteFor: formatCandidateNameByID(candidateVotes[0].voteFor),
                     validCount: validVotes?.count ?? 0,
@@ -553,7 +544,7 @@ const loadCharts = {
         _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
         options.push(_.merge(originalTimelineOptions, { // deep merge
             dataset: {
-                source: _.chain(top50CandidatesOfficialValidVoteCount.value)
+                source: _.chain(top50CandidatesOfficialValidVoteCount)
                     .orderBy('officialValidCount')
                     .takeRight(10)
                     .map(({ voteFor, officialValidCount }) => ({
@@ -650,7 +641,6 @@ onMounted(() => {
         chart.setOption(chartsInitialOption[k]);
         charts[k] = chart;
     });
-    candidateNames.value = candidateNames;
     candidatesDetailData.value = candidateNames.map((candidateName, index) =>
         ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
     candidatesDetailData.value = candidatesDetailData.value.map(candidate => {
@@ -662,7 +652,6 @@ onMounted(() => {
         };
     });
 
-    top50CandidatesOfficialValidVoteCount.value = top50CandidatesOfficialValidVoteCount;
     // add candidate index as keys then deep merge will combine same keys values, finally remove keys
     candidatesDetailData.value = Object.values(_.merge(
         _.keyBy(candidatesDetailData.value, 'candidateIndex'),

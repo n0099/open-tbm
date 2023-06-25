@@ -162,7 +162,7 @@ import type { ObjValues, PostType } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
-import { computed, reactive, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
@@ -175,7 +175,9 @@ defineProps<{
     forumList: ApiForumList
 }>();
 const {
-    state: useState,
+    uniqueParams,
+    params,
+    invalidParamsIndex,
     addParam,
     changeParam,
     deleteParam,
@@ -187,13 +189,8 @@ const {
     parseParamRoute,
     submitParamRoute
 } = useQueryFormWithUniqueParams();
-const state = reactive<{
-    isOrderByInvalid: boolean,
-    isFidInvalid: boolean
-}>({
-    isOrderByInvalid: false,
-    isFidInvalid: false
-});
+const isOrderByInvalid = ref(false);
+const isFidInvalid = ref(false);
 
 const getCurrentQueryType = () => {
     const clearedParams = clearedParamsDefaultValue(); // not including unique params
@@ -284,7 +281,7 @@ const checkParams = () => {
     const postTypes = _.sortBy(uniqueParams.value.postTypes.value);
 
     // check params required post types, index query doesn't restrict on post types
-    useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
+    invalidParamsIndex.value = []; // reset to prevent duplicate indexes
     if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
         params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
             if (param === null || param.name === undefined || param.value === undefined) {
@@ -317,7 +314,7 @@ const checkParams = () => {
 const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     assertRouteNameIsStr(route.name);
     uniqueParams.value = _.mapValues(uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
-    useState.params = [];
+    params.value = [];
     const routeName = removeEnd(route.name, '+p');
     // parse route path to params
     if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
@@ -325,7 +322,7 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
         uniqueParams.value.fid.value = parseInt(route.params.fid);
     } else { // post id routes
-        uniqueParams.value = _.mapValues(useState.uniqueParams, param =>
+        uniqueParams.value = _.mapValues(uniqueParams.value, param =>
             fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
         params.value = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
             fillParamWithDefaultValue({ name, value }));
@@ -340,6 +337,8 @@ const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded): Ret
 watch(() => uniqueParams.value.postTypes.value, (to, from) => {
     if (to.length === 0) uniqueParams.value.postTypes.value = from; // to prevent empty post types
 });
+
+defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });
 </script>
 
 <style>

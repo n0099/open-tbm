@@ -43,7 +43,7 @@ import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranu
 import { titleTemplate } from '@/shared';
 
 import _ from 'lodash';
-import { defineComponent, reactive, ref, toRefs } from 'vue';
+import { ref } from 'vue';
 import { useHead } from '@vueuse/head';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
@@ -104,18 +104,13 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 useHead({ title: titleTemplate('统计') });
-const state = reactive<{
-    query: ApiStatsForumPostCountQP,
-    forumList: ApiForumList
-}>({
-    query: {
-        fid: 0,
-        timeGranularity: 'day',
-        startTime: 0,
-        endTime: 0
-    },
-    forumList: []
+const query = ref<ApiStatsForumPostCountQP>({
+    fid: 0,
+    timeGranularity: 'day',
+    startTime: 0,
+    endTime: 0
 });
+const forumList = ref<ApiForumList>([]);
 const chartDom = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
