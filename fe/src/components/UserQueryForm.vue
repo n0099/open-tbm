@@ -15,74 +15,63 @@
     </form>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './SelectTiebaUser.vue';
 import SelectTiebaUser, { selectTiebaUserBy } from './SelectTiebaUser.vue';
 import type { BaiduUserID, TiebaUserGenderQP } from '@/api/index.d';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 
-import type { PropType } from 'vue';
-import { defineComponent, reactive, toRefs, watchEffect } from 'vue';
+import { reactive, watchEffect } from 'vue';
 import type { LocationQueryValueRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
 type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>> & { gender?: TiebaUserGenderQP };
-export default defineComponent({
-    components: { SelectTiebaUser },
-    props: {
-        query: { type: Object as PropType<RouteQueryString>, required: true },
-        params: {
-            type: Object as PropType<{
-                uid?: BaiduUserID,
-                name?: string,
-                displayName?: string
-            }>,
-            required: true
-        },
-        selectUserBy: { type: String as PropType<SelectTiebaUserBy>, required: true }
+
+const router = useRouter();
+const props = defineProps<{
+    query: RouteQueryString,
+    params: {
+        uid?: BaiduUserID,
+        name?: string,
+        displayName?: string
     },
-    setup(props) {
-        const router = useRouter();
-        const state = reactive<{
-            gender: TiebaUserGenderQP | 'default',
-            selectUser: SelectTiebaUserModel
-        }>({
-            gender: 'default',
-            selectUser: { selectBy: '', params: {} }
-        });
+    selectUserBy: SelectTiebaUserBy
+}>();
+const state = reactive<{
+    gender: TiebaUserGenderQP | 'default',
+    selectUser: SelectTiebaUserModel
+}>({
+    gender: 'default',
+    selectUser: { selectBy: '', params: {} }
+});
 
-        const defaultParamsValue = {
-            gender: 'default',
-            uidCompareBy: '=',
-            nameUseRegex: 'false',
-            displayNameUseRegex: 'false'
-        } as const;
-        const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) => {
-            _.each(defaultParamsValue, (value, param) => {
-                if (params[param] === value || params[param] === undefined) Reflect.deleteProperty(params, param);
-            });
-            return params;
-        };
+const defaultParamsValue = {
+    gender: 'default',
+    uidCompareBy: '=',
+    nameUseRegex: 'false',
+    displayNameUseRegex: 'false'
+} as const;
+const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) => {
+    _.each(defaultParamsValue, (value, param) => {
+        if (params[param] === value || params[param] === undefined) Reflect.deleteProperty(params, param);
+    });
+    return params;
+};
+const submitQueryForm = () => {
+    /* eslint-disable @typescript-eslint/no-unsafe-argument */
+    const params = boolPropToStr<LocationQueryValueRaw>(state.selectUser.params);
+    const routeName = removeEnd(state.selectUser.selectBy, 'NULL');
+    /* eslint-enable @typescript-eslint/no-unsafe-argument */
+    router.push({
+        name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
+        query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: state.gender }),
+        params: _.pick(params, selectTiebaUserBy)
+    });
+};
 
-        const submitQueryForm = () => {
-            /* eslint-disable @typescript-eslint/no-unsafe-argument */
-            const params = boolPropToStr<LocationQueryValueRaw>(state.selectUser.params);
-            const routeName = removeEnd(state.selectUser.selectBy, 'NULL');
-            /* eslint-enable @typescript-eslint/no-unsafe-argument */
-            router.push({
-                name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
-                query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: state.gender }),
-                params: _.pick(params, selectTiebaUserBy)
-            });
-        };
-
-        watchEffect(() => {
-            state.gender = props.query.gender ?? defaultParamsValue.gender;
-            state.selectUser = { selectBy: props.selectUserBy, params: { ...props.params, ...boolStrPropToBool(props.query) } };
-        });
-
-        return { ...toRefs(state), submitQueryForm };
-    }
+watchEffect(() => {
+    state.gender = props.query.gender ?? defaultParamsValue.gender;
+    state.selectUser = { selectBy: props.selectUserBy, params: { ...props.params, ...boolStrPropToBool(props.query) } };
 });
 </script>

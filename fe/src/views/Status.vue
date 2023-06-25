@@ -27,7 +27,7 @@
     <div ref="chartDom" id="statusChartDom" class="echarts mt-4" />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
 import type { ApiStatus, ApiStatusQP } from '@/api/index.d';
@@ -35,10 +35,9 @@ import { apiStatus, throwIfApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 import { titleTemplate } from '@/shared';
 
-import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
 import { useHead } from '@vueuse/head';
-import { Switch } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
@@ -161,54 +160,48 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     }]
 };
 
-export default defineComponent({
-    components: { FontAwesomeIcon, Switch, QueryTimeGranularity, QueryTimeRange },
-    setup() {
-        useHead({ title: titleTemplate('状态') });
-        const state = reactive<{
-            autoRefresh: boolean,
-            query: ApiStatusQP
-        }>({
-            autoRefresh: false,
-            query: {
-                timeGranularity: 'minute',
-                startTime: 0,
-                endTime: 0
-            }
-        });
-        const chartDom = ref<HTMLElement>();
-        const submitQueryForm = async () => {
-            if (chartDom.value === undefined) return;
-            chartDom.value.classList.add('loading');
-            if (chart === null) {
-                chart = echarts.init(chartDom.value);
-                chart.setOption(chartInitialOption);
-            }
-            emptyChartSeriesData(chart);
-
-            const statusResult = throwIfApiError(await apiStatus(state.query)
-                .finally(() => { chartDom.value?.classList.remove('loading') }));
-            const series = _.chain(chartInitialOption.series)
-                .map('id')
-                .map((seriesName: keyof ApiStatus[0]) => ({
-                    id: seriesName,
-                    // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
-                    data: statusResult.map(i => [i.startTime * 1000, i[seriesName]])
-                }))
-                .value();
-            chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
-        };
-        const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
-
-        watch(() => state.autoRefresh, autoRefresh => {
-            if (autoRefresh) resume();
-            else pause();
-        });
-        onMounted(submitQueryForm);
-
-        return { ...toRefs(state), chartDom, submitQueryForm };
+useHead({ title: titleTemplate('状态') });
+const state = reactive<{
+    autoRefresh: boolean,
+    query: ApiStatusQP
+}>({
+    autoRefresh: false,
+    query: {
+        timeGranularity: 'minute',
+        startTime: 0,
+        endTime: 0
     }
 });
+const chartDom = ref<HTMLElement>();
+
+const submitQueryForm = async () => {
+    if (chartDom.value === undefined) return;
+    chartDom.value.classList.add('loading');
+    if (chart === null) {
+        chart = echarts.init(chartDom.value);
+        chart.setOption(chartInitialOption);
+    }
+    emptyChartSeriesData(chart);
+
+    const statusResult = throwIfApiError(await apiStatus(state.query)
+        .finally(() => { chartDom.value?.classList.remove('loading') }));
+    const series = _.chain(chartInitialOption.series)
+        .map('id')
+        .map((seriesName: keyof ApiStatus[0]) => ({
+            id: seriesName,
+            // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
+            data: statusResult.map(i => [i.startTime * 1000, i[seriesName]])
+        }))
+        .value();
+    chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
+};
+
+const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
+watch(() => state.autoRefresh, autoRefresh => {
+    if (autoRefresh) resume();
+    else pause();
+});
+onMounted(submitQueryForm);
 </script>
 
 <style scoped>

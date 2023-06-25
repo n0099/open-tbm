@@ -34,7 +34,7 @@
     <div ref="chartDom" id="statsChartDom" class="echarts mt-4" />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
 import type { ApiForumList, ApiStatsForumPostCountQP } from '@/api/index.d';
@@ -103,69 +103,63 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
     }]
 };
 
-export default defineComponent({
-    components: { FontAwesomeIcon, QueryTimeGranularity, QueryTimeRange },
-    setup() {
-        useHead({ title: titleTemplate('统计') });
-        const chartDom = ref<HTMLElement>();
-        const state = reactive<{
-            query: ApiStatsForumPostCountQP,
-            forumList: ApiForumList
-        }>({
-            query: {
-                fid: 0,
-                timeGranularity: 'day',
-                startTime: 0,
-                endTime: 0
-            },
-            forumList: []
-        });
-        const submitQueryForm = async () => {
-            if (chartDom.value === undefined) return;
-            chartDom.value.classList.add('loading');
-            if (chart === null) {
-                chart = echarts.init(chartDom.value);
-                chart.setOption(chartInitialOption);
-            }
-            emptyChartSeriesData(chart);
-            chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
-                { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧帖量统计` } }
-            );
-
-            const statsResult = throwIfApiError(await apiStatsForumsPostCount(state.query)
-                .finally(() => { chartDom.value?.classList.remove('loading') }));
-            const series = _.map(statsResult, (dates, postType) => ({
-                id: postType,
-                data: _.map(dates, Object.values)
-            }));
-            const axisType = timeGranularityAxisType[state.query.timeGranularity];
-            chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
-                dataZoom: [{ start: 0, end: 100 }],
-                xAxis: {
-                    ...axisType === 'category'
-                        ? {
-                            data: _.chain(statsResult)
-                                .map(counts => _.map(counts, 'time'))
-                                .flatten()
-                                .sort()
-                                .sortedUniq()
-                                .value()
-                        }
-                        : {},
-                    type: axisType,
-                    axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[state.query.timeGranularity] } }
-                },
-                series
-            });
-        };
-
-        (async () => {
-            state.forumList = throwIfApiError(await apiForumList());
-        })();
-
-        return { timeGranularities, ...toRefs(state), chartDom, submitQueryForm };
-    }
+useHead({ title: titleTemplate('统计') });
+const state = reactive<{
+    query: ApiStatsForumPostCountQP,
+    forumList: ApiForumList
+}>({
+    query: {
+        fid: 0,
+        timeGranularity: 'day',
+        startTime: 0,
+        endTime: 0
+    },
+    forumList: []
 });
+const chartDom = ref<HTMLElement>();
+
+const submitQueryForm = async () => {
+    if (chartDom.value === undefined) return;
+    chartDom.value.classList.add('loading');
+    if (chart === null) {
+        chart = echarts.init(chartDom.value);
+        chart.setOption(chartInitialOption);
+    }
+    emptyChartSeriesData(chart);
+    chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
+        { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧帖量统计` } }
+    );
+
+    const statsResult = throwIfApiError(await apiStatsForumsPostCount(state.query)
+        .finally(() => { chartDom.value?.classList.remove('loading') }));
+    const series = _.map(statsResult, (dates, postType) => ({
+        id: postType,
+        data: _.map(dates, Object.values)
+    }));
+    const axisType = timeGranularityAxisType[state.query.timeGranularity];
+    chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
+        dataZoom: [{ start: 0, end: 100 }],
+        xAxis: {
+            ...axisType === 'category'
+                ? {
+                    data: _.chain(statsResult)
+                        .map(counts => _.map(counts, 'time'))
+                        .flatten()
+                        .sort()
+                        .sortedUniq()
+                        .value()
+                }
+                : {},
+            type: axisType,
+            axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[state.query.timeGranularity] } }
+        },
+        series
+    });
+};
+
+(async () => {
+    state.forumList = throwIfApiError(await apiForumList());
+})();
 </script>
 
 <style scoped>

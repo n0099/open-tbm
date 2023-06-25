@@ -32,7 +32,7 @@
     </a>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery } from '@/api/index.d';
@@ -40,127 +40,117 @@ import { assertRouteNameIsStr, routeNameWithPage } from '@/router';
 import type { Pid, Tid } from '@/shared';
 import { removeEnd } from '@/shared';
 
-import type { PropType } from 'vue';
-import { defineComponent, onUnmounted, reactive, toRefs, watchEffect } from 'vue';
+import { onUnmounted, reactive, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
-export default defineComponent({
-    components: { FontAwesomeIcon, Menu, MenuItem, SubMenu },
-    props: {
-        postPages: { type: Array as PropType<ApiPostsQuery[]>, required: true }
-    },
-    setup(props) {
-        const route = useRoute();
-        const router = useRouter();
-        const state = reactive<{
-            expandedPages: string[],
-            selectedThread: string[],
-            firstPostInView: { page: number, pid: Pid, tid: Tid }
-        }>({
-            expandedPages: [],
-            selectedThread: [],
-            firstPostInView: { tid: 0, pid: 0, page: 0 }
-        });
-        const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
+const route = useRoute();
+const router = useRouter();
+const props = defineProps<{ postPages: ApiPostsQuery[] }>();
+const state = reactive<{
+    expandedPages: string[],
+    selectedThread: string[],
+    firstPostInView: { page: number, pid: Pid, tid: Tid }
+}>({
+    expandedPages: [],
+    selectedThread: [],
+    firstPostInView: { tid: 0, pid: 0, page: 0 }
+});
+const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
 
-        let isScrollTriggeredByNavigate = false;
-        const navigate = (page: number | string, tid?: string, pid?: Pid | string) => {
-            router.replace({
-                hash: `#${pid ?? (tid === undefined ? '' : `t${tid}`)}`,
-                params: { ...route.params, page }
-            });
-            isScrollTriggeredByNavigate = true;
-        };
-        const selectThread = ({ domEvent, key }: { domEvent: PointerEvent & { target: Element }, key: string }) => {
-            if (domEvent.target.tagName !== 'BUTTON') { // ignore clicks on reply link
-                const [, p, t] = /page(\d+)-t(\d+)/u.exec(key) ?? [];
-                navigate(p, t);
-            }
-        };
-
-        const scrollStop = _.debounce(() => {
-            const reduceFindTopmostElementInView = (topOffset: number) => (result: { top: number, el: Element }, curEl: Element) => {
-                const elTop = curEl.getBoundingClientRect().top - topOffset;
-                // ignore element which its y coord is ahead of the top of viewport
-                if (elTop >= 0 && result.top > elTop) return { top: elTop, el: curEl };
-                return result;
-            };
-            const findFirstDomInView = (selector: string, topOffset = 0): Element =>
-                [...document.querySelectorAll(selector)].reduce(
-                    reduceFindTopmostElementInView(topOffset),
-                    { top: Infinity, el: document.createElement('null') }
-                ).el;
-
-            const firstPostInView = {
-                t: findFirstDomInView('.thread-title'),
-                p: findFirstDomInView('.reply-title', 80) // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
-            };
-            const firstPostIDInView = _.mapValues(firstPostInView, i =>
-                Number(i.parentElement?.getAttribute('data-post-id')));
-            // when there's no thread or reply item in the viewport, firstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
-            if (Number.isNaN(firstPostIDInView.t)) {
-                state.firstPostInView = { tid: 0, pid: 0, page: 0 };
-                router.replace({ hash: '' }); // empty route hash
-                isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
-                return;
-            }
-            const firstPostPageInView = _.mapValues(firstPostInView, i =>
-                Number(i.closest('.post-render-list')?.getAttribute('data-page')));
-
-            const replaceRouteHash = (page: number, postID: Pid | Tid, hashPrefix = '') => {
-                assertRouteNameIsStr(route.name);
-                const hash = `#${hashPrefix}${postID}`;
-                router.replace(page === 1 // to prevent '/page/1' occurs in route path
-                    ? { hash, name: removeEnd(route.name, '+p'), params: _.omit(route.params, 'page') }
-                    : { hash, name: routeNameWithPage(route.name), params: { ...route.params, page } });
-            };
-            // is first reply belongs to first thread, true when first thread have no reply, so the first reply will belongs to other thread which comes after first thread in view
-            if (_.chain(props.postPages)
-                .map(i => i.threads)
-                .flatten()
-                .filter({ tid: firstPostIDInView.t })
-                .map(i => i.replies)
-                .flatten()
-                .filter({ pid: firstPostIDInView.p })
-                .isEmpty()
-                .value()) {
-                state.firstPostInView = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
-                replaceRouteHash(firstPostPageInView.t, firstPostIDInView.t, 't');
-            } else {
-                state.firstPostInView = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
-                replaceRouteHash(firstPostPageInView.p, firstPostIDInView.p);
-            }
-            isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
-        }, 200);
-        const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
-        onUnmounted(removeScrollEventListener);
-
-        watchEffect(() => {
-            if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
-            else document.addEventListener('scroll', scrollStop, { passive: true });
-            state.expandedPages = props.postPages.map(i => `page${i.pages.currentPage}`);
-        });
-        watchEffect(() => {
-            const { page, tid, pid } = state.firstPostInView;
-            state.selectedThread = [`page${page}_t${tid}`];
-            if (isScrollTriggeredByNavigate) {
-                isScrollTriggeredByNavigate = false;
-                return;
-            }
-            // scroll menu to the link to reply in <ViewList> which is the topmost one in viewport (nearest to top border of viewport)
-            const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
-            const navMenuEl = replyEl?.closest('.posts-nav');
-            if (replyEl !== null && navMenuEl
-                && navMenuEl.getBoundingClientRect().top === 0 // is navMenuEl sticking to the top border of viewport
-            ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
-        });
-
-        return { ...toRefs(state), isPostsNavExpanded, togglePostsNavExpanded, navigate, selectThread };
+let isScrollTriggeredByNavigate = false;
+const navigate = (page: number | string, tid?: string, pid?: Pid | string) => {
+    router.replace({
+        hash: `#${pid ?? (tid === undefined ? '' : `t${tid}`)}`,
+        params: { ...route.params, page }
+    });
+    isScrollTriggeredByNavigate = true;
+};
+const selectThread = ({ domEvent, key }: { domEvent: PointerEvent & { target: Element }, key: string }) => {
+    if (domEvent.target.tagName !== 'BUTTON') { // ignore clicks on reply link
+        const [, p, t] = /page(\d+)-t(\d+)/u.exec(key) ?? [];
+        navigate(p, t);
     }
+};
+
+const scrollStop = _.debounce(() => {
+    const reduceFindTopmostElementInView = (topOffset: number) => (result: { top: number, el: Element }, curEl: Element) => {
+        const elTop = curEl.getBoundingClientRect().top - topOffset;
+        // ignore element which its y coord is ahead of the top of viewport
+        if (elTop >= 0 && result.top > elTop) return { top: elTop, el: curEl };
+        return result;
+    };
+    const findFirstDomInView = (selector: string, topOffset = 0): Element =>
+        [...document.querySelectorAll(selector)].reduce(
+            reduceFindTopmostElementInView(topOffset),
+            { top: Infinity, el: document.createElement('null') }
+        ).el;
+
+    const firstPostInView = {
+        t: findFirstDomInView('.thread-title'),
+        p: findFirstDomInView('.reply-title', 80) // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
+    };
+    const firstPostIDInView = _.mapValues(firstPostInView, i =>
+        Number(i.parentElement?.getAttribute('data-post-id')));
+    // when there's no thread or reply item in the viewport, firstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
+    if (Number.isNaN(firstPostIDInView.t)) {
+        state.firstPostInView = { tid: 0, pid: 0, page: 0 };
+        router.replace({ hash: '' }); // empty route hash
+        isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
+        return;
+    }
+    const firstPostPageInView = _.mapValues(firstPostInView, i =>
+        Number(i.closest('.post-render-list')?.getAttribute('data-page')));
+
+    const replaceRouteHash = (page: number, postID: Pid | Tid, hashPrefix = '') => {
+        assertRouteNameIsStr(route.name);
+        const hash = `#${hashPrefix}${postID}`;
+        router.replace(page === 1 // to prevent '/page/1' occurs in route path
+            ? { hash, name: removeEnd(route.name, '+p'), params: _.omit(route.params, 'page') }
+            : { hash, name: routeNameWithPage(route.name), params: { ...route.params, page } });
+    };
+    // is first reply belongs to first thread, true when first thread have no reply, so the first reply will belongs to other thread which comes after first thread in view
+    if (_.chain(props.postPages)
+        .map(i => i.threads)
+        .flatten()
+        .filter({ tid: firstPostIDInView.t })
+        .map(i => i.replies)
+        .flatten()
+        .filter({ pid: firstPostIDInView.p })
+        .isEmpty()
+        .value()) {
+        state.firstPostInView = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
+        replaceRouteHash(firstPostPageInView.t, firstPostIDInView.t, 't');
+    } else {
+        state.firstPostInView = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
+        replaceRouteHash(firstPostPageInView.p, firstPostIDInView.p);
+    }
+    isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
+}, 200);
+const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
+onUnmounted(removeScrollEventListener);
+
+watchEffect(() => {
+    if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
+    else document.addEventListener('scroll', scrollStop, { passive: true });
+    state.expandedPages = props.postPages.map(i => `page${i.pages.currentPage}`);
+});
+watchEffect(() => {
+    const { page, tid, pid } = state.firstPostInView;
+    state.selectedThread = [`page${page}_t${tid}`];
+    if (isScrollTriggeredByNavigate) {
+        isScrollTriggeredByNavigate = false;
+        return;
+    }
+    // scroll menu to the link to reply in <ViewList> which is the topmost one in the viewport (nearest to top border of viewport)
+    const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
+    const navMenuEl = replyEl?.closest('.posts-nav');
+    if (replyEl !== null && navMenuEl
+        && navMenuEl.getBoundingClientRect().top === 0 // is navMenuEl sticking to the top border of viewport
+    ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
 });
 </script>
 

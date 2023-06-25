@@ -30,6 +30,12 @@
 </template>
 
 <script lang="ts">
+import { ref } from 'vue';
+
+export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
+</script>
+
+<script setup lang="ts">
 import type { ApiError, ApiForumList, ApiPostsQuery } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
 import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
@@ -39,7 +45,7 @@ import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
 
-import { computed, defineComponent, nextTick, reactive, ref, toRefs, watchEffect } from 'vue';
+import { computed, nextTick, reactive, watchEffect } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
@@ -47,111 +53,105 @@ import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
 export type PostViewRenderer = 'list' | 'table';
-export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
-export default defineComponent({
-    components: { Menu, MenuItem, PlaceholderError, PlaceholderPostList, QueryForm, NavSidebar, PostViewPage },
-    setup() {
-        const route = useRoute();
-        const state = reactive<{
-            title: string,
-            forumList: ApiForumList,
-            postPages: ApiPostsQuery[],
-            isLoading: boolean,
-            lastFetchError: ApiError | null,
-            showPlaceholderPostList: boolean,
-            renderType: PostViewRenderer,
-            selectedRenderTypes: [PostViewRenderer]
-        }>({
-            title: '帖子查询',
-            forumList: [],
-            postPages: [],
-            isLoading: false,
-            lastFetchError: null,
-            showPlaceholderPostList: true,
-            renderType: 'list',
-            selectedRenderTypes: ['list']
-        });
-        useHead({ title: computed(() => titleTemplate(state.title)) });
-        const queryFormRef = ref<typeof QueryForm>();
-        const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page = 1) => {
-            const startTime = Date.now();
-            state.lastFetchError = null;
-            state.showPlaceholderPostList = true;
-            if (isNewQuery) state.postPages = [];
-            state.isLoading = true;
 
-            const postsQuery = await apiPostsQuery({
-                query: JSON.stringify(queryParams),
-                page: isNewQuery ? 1 : page
-            }).finally(() => {
-                state.showPlaceholderPostList = false;
-                state.isLoading = false;
-            });
-
-            if (isApiError(postsQuery)) {
-                state.lastFetchError = postsQuery;
-                return false;
-            }
-            if (isNewQuery) state.postPages = [postsQuery];
-            else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
-
-            const forumName = `${state.postPages[0].forum.name}吧`;
-            const threadTitle = state.postPages[0].threads[0].title;
-            switch (queryFormRef.value?.getCurrentQueryType()) {
-                case 'fid':
-                case 'search':
-                    state.title = `第${page}页 - ${forumName} - 帖子查询`;
-                    break;
-                case 'postID':
-                    state.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
-                    break;
-            }
-
-            const networkTime = Date.now() - startTime;
-            await nextTick(); // wait for child components finish dom update
-            notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
-            lazyLoadUpdate();
-            return true;
-        };
-
-        const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, page: number) => {
-            if (queryFormRef.value === undefined) return false;
-            const flattenParams = queryFormRef.value.parseRouteToGetFlattenParams(_route);
-            if (flattenParams === false) return false;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, page);
-            if (isFetchSuccess) {
-                const scrollPosition = postListItemScrollPosition(_route);
-                const el = document.querySelector(scrollPosition.el);
-                if (el === null) return isFetchSuccess;
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
-            }
-            return isFetchSuccess;
-        };
-        onBeforeRouteUpdate(async (to, from) => {
-            const isNewQuery = isRouteUpdateTriggeredBySubmitQueryForm.value || compareRouteIsNewQuery(to, from);
-            isRouteUpdateTriggeredBySubmitQueryForm.value = false;
-            const page = routePageParamNullSafe(to);
-            if (!isNewQuery && !_.isEmpty(_.filter(
-                state.postPages,
-                i => i.pages.currentPage === page
-            ))) return true;
-            const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, page);
-            return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
-        });
-
-        (async () => {
-            state.forumList = throwIfApiError(await apiForumList());
-            parseRouteThenFetch(route, true, routePageParamNullSafe(route));
-        })();
-        watchEffect(() => {
-            [state.renderType] = state.selectedRenderTypes;
-        });
-
-        return { routePageParamNullSafe, ...toRefs(state), queryFormRef, fetchPosts };
-    }
+const route = useRoute();
+const state = reactive<{
+    title: string,
+    forumList: ApiForumList,
+    postPages: ApiPostsQuery[],
+    isLoading: boolean,
+    lastFetchError: ApiError | null,
+    showPlaceholderPostList: boolean,
+    renderType: PostViewRenderer,
+    selectedRenderTypes: [PostViewRenderer]
+}>({
+    title: '帖子查询',
+    forumList: [],
+    postPages: [],
+    isLoading: false,
+    lastFetchError: null,
+    showPlaceholderPostList: true,
+    renderType: 'list',
+    selectedRenderTypes: ['list']
 });
+const queryFormRef = ref<typeof QueryForm>();
+useHead({ title: computed(() => titleTemplate(state.title)) });
+
+const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page = 1) => {
+    const startTime = Date.now();
+    state.lastFetchError = null;
+    state.showPlaceholderPostList = true;
+    if (isNewQuery) state.postPages = [];
+    state.isLoading = true;
+
+    const postsQuery = await apiPostsQuery({
+        query: JSON.stringify(queryParams),
+        page: isNewQuery ? 1 : page
+    }).finally(() => {
+        state.showPlaceholderPostList = false;
+        state.isLoading = false;
+    });
+
+    if (isApiError(postsQuery)) {
+        state.lastFetchError = postsQuery;
+        return false;
+    }
+    if (isNewQuery) state.postPages = [postsQuery];
+    else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
+
+    const forumName = `${state.postPages[0].forum.name}吧`;
+    const threadTitle = state.postPages[0].threads[0].title;
+    switch (queryFormRef.value?.getCurrentQueryType()) {
+        case 'fid':
+        case 'search':
+            state.title = `第${page}页 - ${forumName} - 帖子查询`;
+            break;
+        case 'postID':
+            state.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
+            break;
+    }
+
+    const networkTime = Date.now() - startTime;
+    await nextTick(); // wait for child components finish dom update
+    notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+    lazyLoadUpdate();
+    return true;
+};
+const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, page: number) => {
+    if (queryFormRef.value === undefined) return false;
+    const flattenParams = queryFormRef.value.parseRouteToGetFlattenParams(_route);
+    if (flattenParams === false) return false;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, page);
+    if (isFetchSuccess) {
+        const scrollPosition = postListItemScrollPosition(_route);
+        const el = document.querySelector(scrollPosition.el);
+        if (el === null) return isFetchSuccess;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
+    }
+    return isFetchSuccess;
+};
+
+onBeforeRouteUpdate(async (to, from) => {
+    const isNewQuery = isRouteUpdateTriggeredBySubmitQueryForm.value || compareRouteIsNewQuery(to, from);
+    isRouteUpdateTriggeredBySubmitQueryForm.value = false;
+    const page = routePageParamNullSafe(to);
+    if (!isNewQuery && !_.isEmpty(_.filter(
+        state.postPages,
+        i => i.pages.currentPage === page
+    ))) return true;
+    const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, page);
+    return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
+});
+watchEffect(() => {
+    [state.renderType] = state.selectedRenderTypes;
+});
+
+(async () => {
+    state.forumList = throwIfApiError(await apiForumList());
+    parseRouteThenFetch(route, true, routePageParamNullSafe(route));
+})();
 </script>
 
 <style scoped>
