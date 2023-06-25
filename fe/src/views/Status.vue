@@ -183,7 +183,7 @@ const submitQueryForm = async () => {
     }
     emptyChartSeriesData(chart);
 
-    const statusResult = throwIfApiError(await apiStatus(state.query)
+    const statusResult = throwIfApiError(await apiStatus(query.value)
         .finally(() => { chartDom.value?.classList.remove('loading') }));
     const series = _.chain(chartInitialOption.series)
         .map('id')
@@ -197,7 +197,7 @@ const submitQueryForm = async () => {
 };
 
 const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
-watch(() => state.autoRefresh, autoRefresh => {
+watch(() => autoRefresh.value, autoRefresh => {
     if (autoRefresh) resume();
     else pause();
 });

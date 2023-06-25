@@ -250,7 +250,7 @@ const queryFormSubmit = () => {
 };
 const checkParams = () => {
     // check query type
-    state.isFidInvalid = false;
+    isFidInvalid.value = false;
     const clearedUniqueParams = clearedUniqueParamsDefaultValue();
     const currentQueryType = getCurrentQueryType();
     switch (currentQueryType) {
@@ -259,14 +259,14 @@ const checkParams = () => {
             return false; // exit early
         case 'postID':
             if (clearedUniqueParams.fid !== undefined) {
-                useState.uniqueParams.fid.value = 0; // reset fid to default,
+                uniqueParams.value.fid.value = 0; // reset fid to default,
                 notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
                 submitRoute(); // update route to match new params without fid
             }
             break;
         case 'search':
             if (clearedUniqueParams.fid === undefined) {
-                state.isFidInvalid = true; // search query require fid param
+                isFidInvalid.value = true; // search query require fid param
                 notyShow('warning', '搜索查询必须指定查询贴吧');
             }
             break;
@@ -281,18 +281,18 @@ const checkParams = () => {
     };
     const requiredPostTypesToString = (required: NonNullable<RequiredPostTypes[string]>) =>
         `${required[1].join(required[0] === 'SUB' ? ' | ' : ' & ')}`;
-    const postTypes = _.sortBy(useState.uniqueParams.postTypes.value);
+    const postTypes = _.sortBy(uniqueParams.value.postTypes.value);
 
     // check params required post types, index query doesn't restrict on post types
     useState.invalidParamsIndex = []; // reset to prevent duplicate indexes
     if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
-        useState.params.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
+        params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
             if (param === null || param.name === undefined || param.value === undefined) {
-                useState.invalidParamsIndex.push(paramIndex);
+                invalidParamsIndex.value.push(paramIndex);
             } else {
                 const required = paramsRequiredPostTypes[param.name];
                 if (!isRequiredPostTypes(postTypes, required)) {
-                    useState.invalidParamsIndex.push(paramIndex);
+                    invalidParamsIndex.value.push(paramIndex);
                     notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求帖子类型为${requiredPostTypesToString(required)}`);
                 }
             }
@@ -300,34 +300,34 @@ const checkParams = () => {
     }
 
     // check order by required post types
-    state.isOrderByInvalid = false;
-    const orderBy = useState.uniqueParams.orderBy.value;
+    isOrderByInvalid.value = false;
+    const orderBy = uniqueParams.value.orderBy.value;
     if (orderBy in orderByRequiredPostTypes) {
         const required = orderByRequiredPostTypes[orderBy];
         if (!isRequiredPostTypes(postTypes, required)) {
-            state.isOrderByInvalid = true;
+            isOrderByInvalid.value = true;
             notyShow('warning', `排序方式与查询帖子类型要求不匹配<br />当前要求帖子类型为${requiredPostTypesToString(required)}`);
         }
     }
 
     // return false when there have at least one invalid params
-    return _.isEmpty(useState.invalidParamsIndex) && !state.isOrderByInvalid && !state.isFidInvalid;
+    return _.isEmpty(invalidParamsIndex) && !isOrderByInvalid.value && !isFidInvalid.value;
 };
 
 const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     assertRouteNameIsStr(route.name);
-    useState.uniqueParams = _.mapValues(useState.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
+    uniqueParams.value = _.mapValues(uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
     useState.params = [];
     const routeName = removeEnd(route.name, '+p');
     // parse route path to params
     if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
         parseParamRoute(route.params.pathMatch); // omit the page param from route full path
     } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
-        useState.uniqueParams.fid.value = parseInt(route.params.fid);
+        uniqueParams.value.fid.value = parseInt(route.params.fid);
     } else { // post id routes
-        useState.uniqueParams = _.mapValues(useState.uniqueParams, param =>
+        uniqueParams.value = _.mapValues(useState.uniqueParams, param =>
             fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
-        useState.params = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
+        params.value = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
             fillParamWithDefaultValue({ name, value }));
     }
 };
@@ -337,8 +337,8 @@ const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded): Ret
     return false;
 };
 
-watch(() => useState.uniqueParams.postTypes.value, (to, from) => {
-    if (to.length === 0) useState.uniqueParams.postTypes.value = from; // to prevent empty post types
+watch(() => uniqueParams.value.postTypes.value, (to, from) => {
+    if (to.length === 0) uniqueParams.value.postTypes.value = from; // to prevent empty post types
 });
 </script>
 

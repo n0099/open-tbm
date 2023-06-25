@@ -54,24 +54,24 @@ const state = reactive<{
 const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery: boolean) => {
     const startTime = Date.now();
     const queryString = { ..._route.params, ..._route.query };
-    state.lastFetchError = null;
-    state.showPlaceholderPostList = true;
-    if (isNewQuery) state.userPages = [];
+    lastFetchError.value = null;
+    showPlaceholderPostList.value = true;
+    if (isNewQuery) userPages.value = [];
     if (_.isEmpty(queryString)) {
         notyShow('warning', '请输入用户查询参数');
         return false;
     }
-    state.isLoading = true;
+    isLoading.value = true;
     const usersQuery = await apiUsersQuery(queryString).finally(() => {
-        state.showPlaceholderPostList = false;
-        state.isLoading = false;
+        showPlaceholderPostList.value = false;
+        isLoading.value = false;
     });
     if (isApiError(usersQuery)) {
-        state.lastFetchError = usersQuery;
+        lastFetchError.value = usersQuery;
         return false;
     }
-    if (isNewQuery) state.userPages = [usersQuery];
-    else state.userPages = _.sortBy([...state.userPages, usersQuery], i => i.pages.currentPage);
+    if (isNewQuery) userPages.value = [usersQuery];
+    else userPages.value = _.sortBy([...userPages.value, usersQuery], i => i.pages.currentPage);
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
     notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
@@ -80,13 +80,13 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
 fetchUsersData(route, true);
 
 watchEffect(() => {
-    state.selectUserBy = removeStart(removeEnd(route.name?.toString() ?? '', '+p'), 'user/') as SelectTiebaUserBy;
-    state.params = { ..._.omit(props, 'page'), uid: props.uid === undefined ? undefined : Number(props.uid) };
+    selectUserBy.value = removeStart(removeEnd(route.name?.toString() ?? '', '+p'), 'user/') as SelectTiebaUserBy;
+    params.value = { ..._.omit(props, 'page'), uid: props.uid === undefined ? undefined : Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);
     if (!isNewQuery && !_.isEmpty(_.filter(
-        state.userPages,
+        userPages.value,
         i => i.pages.currentPage === routePageParamNullSafe(to)
     ))) return true;
     const isFetchSuccess = await fetchUsersData(to, isNewQuery);

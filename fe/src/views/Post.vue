@@ -75,39 +75,39 @@ const state = reactive<{
     selectedRenderTypes: ['list']
 });
 const queryFormRef = ref<typeof QueryForm>();
-useHead({ title: computed(() => titleTemplate(state.title)) });
+useHead({ title: computed(() => titleTemplate(title.value)) });
 
 const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page = 1) => {
     const startTime = Date.now();
-    state.lastFetchError = null;
-    state.showPlaceholderPostList = true;
-    if (isNewQuery) state.postPages = [];
-    state.isLoading = true;
+    lastFetchError.value = null;
+    showPlaceholderPostList.value = true;
+    if (isNewQuery) postPages.value = [];
+    isLoading.value = true;
 
     const postsQuery = await apiPostsQuery({
         query: JSON.stringify(queryParams),
         page: isNewQuery ? 1 : page
     }).finally(() => {
-        state.showPlaceholderPostList = false;
-        state.isLoading = false;
+        showPlaceholderPostList.value = false;
+        isLoading.value = false;
     });
 
     if (isApiError(postsQuery)) {
-        state.lastFetchError = postsQuery;
+        lastFetchError.value = postsQuery;
         return false;
     }
-    if (isNewQuery) state.postPages = [postsQuery];
-    else state.postPages = _.sortBy([...state.postPages, postsQuery], i => i.pages.currentPage);
+    if (isNewQuery) postPages.value = [postsQuery];
+    else postPages.value = _.sortBy([...postPages.value, postsQuery], i => i.pages.currentPage);
 
-    const forumName = `${state.postPages[0].forum.name}吧`;
-    const threadTitle = state.postPages[0].threads[0].title;
+    const forumName = `${postPages.value[0].forum.name}吧`;
+    const threadTitle = postPages.value[0].threads[0].title;
     switch (queryFormRef.value?.getCurrentQueryType()) {
         case 'fid':
         case 'search':
-            state.title = `第${page}页 - ${forumName} - 帖子查询`;
+            title.value = `第${page}页 - ${forumName} - 帖子查询`;
             break;
         case 'postID':
-            state.title = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
+            title.value = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
             break;
     }
 
@@ -138,18 +138,18 @@ onBeforeRouteUpdate(async (to, from) => {
     isRouteUpdateTriggeredBySubmitQueryForm.value = false;
     const page = routePageParamNullSafe(to);
     if (!isNewQuery && !_.isEmpty(_.filter(
-        state.postPages,
+        postPages.value,
         i => i.pages.currentPage === page
     ))) return true;
     const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, page);
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
 watchEffect(() => {
-    [state.renderType] = state.selectedRenderTypes;
+    [renderType.value] = selectedRenderTypes.value;
 });
 
 (async () => {
-    state.forumList = throwIfApiError(await apiForumList());
+    forumList.value = throwIfApiError(await apiForumList());
     parseRouteThenFetch(route, true, routePageParamNullSafe(route));
 })();
 </script>

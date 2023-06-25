@@ -127,16 +127,16 @@ const submitQueryForm = async () => {
     }
     emptyChartSeriesData(chart);
     chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
-        { title: { text: `${_.find(state.forumList, { fid: state.query.fid })?.name}吧帖量统计` } }
+        { title: { text: `${_.find(forumList.value, { fid: query.value.fid })?.name}吧帖量统计` } }
     );
 
-    const statsResult = throwIfApiError(await apiStatsForumsPostCount(state.query)
+    const statsResult = throwIfApiError(await apiStatsForumsPostCount(query.value)
         .finally(() => { chartDom.value?.classList.remove('loading') }));
     const series = _.map(statsResult, (dates, postType) => ({
         id: postType,
         data: _.map(dates, Object.values)
     }));
-    const axisType = timeGranularityAxisType[state.query.timeGranularity];
+    const axisType = timeGranularityAxisType[query.value.timeGranularity];
     chart.setOption<echarts.ComposeOption<GridComponentOption | LineSeriesOption>>({
         dataZoom: [{ start: 0, end: 100 }],
         xAxis: {
@@ -151,14 +151,14 @@ const submitQueryForm = async () => {
                 }
                 : {},
             type: axisType,
-            axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[state.query.timeGranularity] } }
+            axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[query.value.timeGranularity] } }
         },
         series
     });
 };
 
 (async () => {
-    state.forumList = throwIfApiError(await apiForumList());
+    forumList.value = throwIfApiError(await apiForumList());
 })();
 </script>
 

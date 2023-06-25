@@ -83,7 +83,7 @@ const state = reactive<{
 
 const emitModelChange = () => {
     if (props.paramsNameMap !== undefined) {
-        state.params = _.mapKeys(params, (_v, oldParamName) =>
+        params.value = _.mapKeys(params, (_v, oldParamName) =>
             (props.paramsNameMap as Record<string, string>)[oldParamName]);
     }
     emit('update:modelValue', state);
@@ -93,21 +93,21 @@ watch(() => params, emitModelChange, { deep: true });
 watch(() => props.modelValue, () => {
     // emit with default params value when parent haven't passing modelValue
     if (_.isEmpty(props.modelValue)) emitModelChange();
-    else ({ selectBy: state.selectBy, params: state.params } = props.modelValue);
+    else ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
     // filter out unnecessary and undefined params
-    state.params = _.omitBy(_.pick(state.params, selectTiebaUserParamsNames), (i?: SelectTiebaUserParamsValues) => i === undefined);
+    params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), (i?: SelectTiebaUserParamsValues) => i === undefined);
     // reset to default selectBy if it's a invalid value
-    if (!selectTiebaUserBy.includes(state.selectBy)) state.selectBy = '';
-    if (state.selectBy === 'uid') state.params.uidCompareBy ??= '='; // set to default value if it's undefined
-    if (state.params.value.name === 'NULL') state.selectBy = 'nameNULL';
-    if (state.params.displayName === 'NULL') state.selectBy = 'displayNameNULL';
+    if (!selectTiebaUserBy.includes(selectBy.value)) selectBy.value = '';
+    if (selectBy.value === 'uid') params.value.uidCompareBy ??= '='; // set to default value if it's undefined
+    if (params.value.value.name === 'NULL') selectBy.value = 'nameNULL';
+    if (params.value.displayName === 'NULL') selectBy.value = 'displayNameNULL';
 }, { immediate: true });
 onMounted(() => {
-    watch(() => state.selectBy, selectBy => { // defer listening to prevent watch triggered by assigning initial selectBy
-        state.params = {}; // empty params to prevent old value remains after selectBy changed
-        if (selectBy === 'uid') state.params.uidCompareBy = '='; // reset to default
-        if (selectBy === 'nameNULL') state.params.name = 'NULL';
-        if (selectBy === 'displayNameNULL') state.params.displayName = 'NULL';
+    watch(() => selectBy.value, selectBy => { // defer listening to prevent watch triggered by assigning initial selectBy
+        params.value = {}; // empty params to prevent old value remains after selectBy changed
+        if (selectBy === 'uid') params.value.uidCompareBy = '='; // reset to default
+        if (selectBy === 'nameNULL') params.value.name = 'NULL';
+        if (selectBy === 'displayNameNULL') params.value.displayName = 'NULL';
         emitModelChange();
     });
 });

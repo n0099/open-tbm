@@ -97,7 +97,7 @@ const scrollStop = _.debounce(() => {
         Number(i.parentElement?.getAttribute('data-post-id')));
     // when there's no thread or reply item in the viewport, firstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
-        state.firstPostInView = { tid: 0, pid: 0, page: 0 };
+        firstPostInView.value = { tid: 0, pid: 0, page: 0 };
         router.replace({ hash: '' }); // empty route hash
         isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
         return;
@@ -122,10 +122,10 @@ const scrollStop = _.debounce(() => {
         .filter({ pid: firstPostIDInView.p })
         .isEmpty()
         .value()) {
-        state.firstPostInView = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
+        firstPostInView.value = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
         replaceRouteHash(firstPostPageInView.t, firstPostIDInView.t, 't');
     } else {
-        state.firstPostInView = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
+        firstPostInView.value = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
         replaceRouteHash(firstPostPageInView.p, firstPostIDInView.p);
     }
     isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
@@ -136,11 +136,11 @@ onUnmounted(removeScrollEventListener);
 watchEffect(() => {
     if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
     else document.addEventListener('scroll', scrollStop, { passive: true });
-    state.expandedPages = props.postPages.map(i => `page${i.pages.currentPage}`);
+    expandedPages.value = props.postPages.map(i => `page${i.pages.currentPage}`);
 });
 watchEffect(() => {
-    const { page, tid, pid } = state.firstPostInView;
-    state.selectedThread = [`page${page}_t${tid}`];
+    const { page, tid, pid } = firstPostInView.value;
+    selectedThread.value = [`page${page}_t${tid}`];
     if (isScrollTriggeredByNavigate) {
         isScrollTriggeredByNavigate = false;
         return;

@@ -38,24 +38,24 @@ export default <
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
-        if (!Object.keys(state.uniqueParams).includes(param.name)) defaultParam.subParam.not = false; // add subParam.not on every param
+        if (!Object.keys(uniqueParams.value).includes(param.name)) defaultParam.subParam.not = false; // add subParam.not on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
         if (resetToDefault) return _.defaultsDeep(defaultParam, param);
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
     };
     const addParam = (name: string) => {
-        state.params.push(fillParamWithDefaultValue({ name }));
+        params.value.push(fillParamWithDefaultValue({ name }));
     };
     const changeParam = (beforeParamIndex: number, afterParamName: string) => {
-        _.pull(state.invalidParamsIndex, beforeParamIndex);
-        state.params[beforeParamIndex] = fillParamWithDefaultValue({ name: afterParamName });
+        _.pull(invalidParamsIndex.value, beforeParamIndex);
+        params.value[beforeParamIndex] = fillParamWithDefaultValue({ name: afterParamName });
     };
     const deleteParam = (paramIndex: number) => {
-        _.pull(state.invalidParamsIndex, paramIndex);
+        _.pull(invalidParamsIndex.value, paramIndex);
         // move forward index of all params, which after current
-        state.invalidParamsIndex = state.invalidParamsIndex.map(invalidParamIndex =>
+        invalidParamsIndex.value = invalidParamsIndex.value.map(invalidParamIndex =>
             (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex));
-        state.params.splice(paramIndex, 1);
+        params.value.splice(paramIndex, 1);
     };
     const clearParamDefaultValue = <T extends Param>(param: Param): Partial<Param | T> | null => {
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
@@ -80,10 +80,10 @@ export default <
         return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam; // return null for further filter()
     };
     const clearedParamsDefaultValue = (): Array<Partial<TParam>> =>
-        _.filter(state.params.map(clearParamDefaultValue)) as Array<Partial<TParam>>; // filter() will remove falsy values like null
+        _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<TParam>>; // filter() will remove falsy values like null
     const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
-        _.pickBy(_.mapValues(state.uniqueParams, clearParamDefaultValue)) as Partial<UniqueParams>;
+        _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;
     const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Partial<Param>) => {
             const flatted: ObjUnknown = {};
@@ -133,11 +133,11 @@ export default <
                     preprocessor(param);
                     param.subParam.not = boolStrToBool(param.subParam.not);
                 }
-                const isUniqueParam = (p: Param): p is TUniqueParam => p.name in state.uniqueParams;
+                const isUniqueParam = (p: Param): p is TUniqueParam => p.name in uniqueParams.value;
                 if (isUniqueParam(param)) { // is unique param
-                    state.uniqueParams[param.name as keyof UniqueParams] = param;
+                    uniqueParams.value[param.name as keyof UniqueParams] = param;
                 } else {
-                    state.params.push(param as TParam);
+                    params.value.push(param as TParam);
                 }
             })
             .value();
@@ -154,7 +154,7 @@ export default <
         });
     };
 
-    watch([() => state.uniqueParams, () => state.params], newParamsArray => {
+    watch([() => uniqueParams.value, () => params.value], newParamsArray => {
         const [uniqueParams, params] = newParamsArray;
         _.chain([...Object.values(uniqueParams), ...params])
             .filter(param => param.name in deps.paramsWatcher)
@@ -163,8 +163,8 @@ export default <
     }, { deep: true });
 
     onBeforeMount(() => {
-        state.uniqueParams = _.mapValues(state.uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
-        state.params = state.params.map(_.unary(fillParamWithDefaultValue)) as typeof state.params;
+        uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamWithDefaultValue)) as UniqueParams;
+        params.value = params.value.map(_.unary(fillParamWithDefaultValue)) as typeof params.value;
     });
 
     return {

@@ -60,18 +60,18 @@ const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) =
 };
 const submitQueryForm = () => {
     /* eslint-disable @typescript-eslint/no-unsafe-argument */
-    const params = boolPropToStr<LocationQueryValueRaw>(state.selectUser.params);
-    const routeName = removeEnd(state.selectUser.selectBy, 'NULL');
+    const params = boolPropToStr<LocationQueryValueRaw>(selectUser.value.params);
+    const routeName = removeEnd(selectUser.value.selectBy, 'NULL');
     /* eslint-enable @typescript-eslint/no-unsafe-argument */
     router.push({
         name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
-        query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: state.gender }),
+        query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: gender.value }),
         params: _.pick(params, selectTiebaUserBy)
     });
 };
 
 watchEffect(() => {
-    state.gender = props.query.gender ?? defaultParamsValue.gender;
-    state.selectUser = { selectBy: props.selectUserBy, params: { ...props.params, ...boolStrPropToBool(props.query) } };
+    gender.value = props.query.gender ?? defaultParamsValue.gender;
+    selectUser.value = { selectBy: props.selectUserBy, params: { ...props.params, ...boolStrPropToBool(props.query) } };
 });
 </script>

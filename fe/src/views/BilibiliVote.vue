@@ -434,7 +434,7 @@ const state = reactive<{
 interface Coord { coord: [number, number] }
 type DiffWithPreviousMarkLineFormatter = Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
 const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) => _.find(votes, { isValid })?.count ?? 0;
-const formatCandidateNameByID = (id: number) => `${id}号\n${state.candidateNames[id - 1]}`;
+const formatCandidateNameByID = (id: number) => `${id}号\n${candidateNames.value[id - 1]}`;
 
 const loadCharts = {
     top50CandidateCount: () => {
@@ -445,7 +445,7 @@ const loadCharts = {
             .map(candidateVotes => {
                 const validVotes = _.find(candidateVotes, { isValid: 1 });
                 const invalidVotes = _.find(candidateVotes, { isValid: 0 });
-                const officialValidCount = _.find(state.top50CandidatesOfficialValidVoteCount, { voteFor: candidateVotes[0].voteFor })?.officialValidCount ?? 0;
+                const officialValidCount = _.find(top50CandidatesOfficialValidVoteCount.value, { voteFor: candidateVotes[0].voteFor })?.officialValidCount ?? 0;
                 return {
                     voteFor: formatCandidateNameByID(candidateVotes[0].voteFor),
                     validCount: validVotes?.count ?? 0,
@@ -553,7 +553,7 @@ const loadCharts = {
         _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
         options.push(_.merge(originalTimelineOptions, { // deep merge
             dataset: {
-                source: _.chain(state.top50CandidatesOfficialValidVoteCount)
+                source: _.chain(top50CandidatesOfficialValidVoteCount.value)
                     .orderBy('officialValidCount')
                     .takeRight(10)
                     .map(({ voteFor, officialValidCount }) => ({
@@ -588,7 +588,7 @@ const loadCharts = {
         });
     },
     top5CandidateCountGroupByTime: () => {
-        const timeGranularity = state.query.top5CandidateCountGroupByTimeGranularity;
+        const timeGranularity = query.value.top5CandidateCountGroupByTimeGranularity;
         const top5CandidateCountGroupByTime = timeGranularity === 'minute'
             ? top5CandidatesVoteCountGroupByMinute
             : top5CandidatesVoteCountGroupByHour;
@@ -621,7 +621,7 @@ const loadCharts = {
         });
     },
     allVoteCountGroupByTime: () => {
-        const timeGranularity = state.query.allVoteCountGroupByTimeGranularity;
+        const timeGranularity = query.value.allVoteCountGroupByTimeGranularity;
         const allVoteCountGroupByTime = timeGranularity === 'minute' ? allVoteCountGroupByMinute : allVoteCountGroupByHour;
         // [{ time: '2019-03-11 12:00', validCount: 1, invalidCount: 0 }, ... ]
         const dataset = _.chain(allVoteCountGroupByTime)
@@ -640,8 +640,8 @@ const loadCharts = {
     }
 };
 
-watch(() => state.query.top5CandidateCountGroupByTimeGranularity, () => { loadCharts.top5CandidateCountGroupByTime() });
-watch(() => state.query.allVoteCountGroupByTimeGranularity, () => { loadCharts.allVoteCountGroupByTime() });
+watch(() => query.value.top5CandidateCountGroupByTimeGranularity, () => { loadCharts.top5CandidateCountGroupByTime() });
+watch(() => query.value.allVoteCountGroupByTimeGranularity, () => { loadCharts.allVoteCountGroupByTime() });
 onMounted(() => {
     _.map(chartsDom, (i, k: Charts) => {
         if (i.value === undefined) return;
@@ -650,10 +650,10 @@ onMounted(() => {
         chart.setOption(chartsInitialOption[k]);
         charts[k] = chart;
     });
-    state.candidateNames = candidateNames;
-    state.candidatesDetailData = candidateNames.map((candidateName, index) =>
+    candidateNames.value = candidateNames;
+    candidatesDetailData.value = candidateNames.map((candidateName, index) =>
         ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
-    state.candidatesDetailData = state.candidatesDetailData.map(candidate => {
+    candidatesDetailData.value = candidatesDetailData.value.map(candidate => {
         const candidateVotes = _.filter(allCandidatesVoteCount, { voteFor: candidate.candidateIndex });
         return {
             ...candidate,
@@ -662,10 +662,10 @@ onMounted(() => {
         };
     });
 
-    state.top50CandidatesOfficialValidVoteCount = top50CandidatesOfficialValidVoteCount;
+    top50CandidatesOfficialValidVoteCount.value = top50CandidatesOfficialValidVoteCount;
     // add candidate index as keys then deep merge will combine same keys values, finally remove keys
-    state.candidatesDetailData = Object.values(_.merge(
-        _.keyBy(state.candidatesDetailData, 'candidateIndex'),
+    candidatesDetailData.value = Object.values(_.merge(
+        _.keyBy(candidatesDetailData.value, 'candidateIndex'),
         _.keyBy(top50CandidatesOfficialValidVoteCount.map(candidate => ({
             candidateIndex: candidate.voteFor,
             officialValidCount: candidate.officialValidCount

@@ -136,13 +136,13 @@ const getUser = baseGetUser(props.posts.users);
 const renderUsername = baseRenderUsername(getUser);
 
 onMounted(() => {
-    state.threads = props.posts.threads;
-    state.threadsReply = _.chain(state.threads)
+    threads.value = props.posts.threads;
+    threadsReply.value = _.chain(threads.value)
         .map(i => i.replies)
         .reject(_.isEmpty) // remove threads which have no reply
         .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
         .value();
-    state.repliesSubReply = _.chain(state.threadsReply)
+    repliesSubReply.value = _.chain(threadsReply.value)
         .toArray() // cast tid keyed object to array
         .flatten() // flatten every thread's replies
         .map(i => i.subReplies)
