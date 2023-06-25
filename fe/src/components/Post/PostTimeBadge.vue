@@ -5,22 +5,15 @@
     </span>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { BootstrapColors } from '@/shared';
 import { dateTimeFromUTC8 } from '@/shared/echarts';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 
-export default defineComponent({
-    props: {
-        time: { type: String, required: true },
-        tippyPrefix: { type: String, default: '' },
-        badgeColor: { type: String as PropType<BootstrapColors>, required: true }
-    },
-    setup() {
-        return { dateTimeFromUTC8 };
-    }
-});
+withDefaults(defineProps<{
+    time: string,
+    tippyPrefix: string,
+    badgeColor: BootstrapColors
+}>(), { tippyPrefix: '' });
 </script>
 
 <style scoped>

@@ -139,22 +139,10 @@
 </template>
 
 <script lang="ts">
-import '@/shared/bootstrapCallout.css';
-import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
-import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
-import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
-import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
-import type { Modify } from '@/shared';
-import { tiebaUserPortraitUrl } from '@/shared';
-import { initialTippy } from '@/shared/tippy';
-
-import type { PropType } from 'vue';
-import { computed, defineComponent, onMounted, ref } from 'vue';
-import type { RouteLocationNormalizedLoaded } from 'vue-router';
-import { RouterLink } from 'vue-router';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { routePageParamNullSafe } from '@/router';
+import { RouteLocationNormalizedLoaded } from 'vue-router';
+import { ref } from 'vue';
 import _ from 'lodash';
-import { DateTime } from 'luxon';
 
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.substring(1);
@@ -165,60 +153,68 @@ export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded)
     };
 };
 export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
+</script>
 
-export default defineComponent({
-    components: { RouterLink, FontAwesomeIcon, PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag },
-    props: {
-        initialPosts: { type: Object as PropType<ApiPostsQuery>, required: true }
-    },
-    setup(props) {
-        const hoveringSubReplyID = ref(0);
-        const posts = computed(() => {
-            const newPosts = props.initialPosts as Modify<ApiPostsQuery, { // https://github.com/microsoft/TypeScript/issues/33591
-                threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: Array<SubReplyRecord | SubReplyRecord[]> }> }>
-            }>;
-            newPosts.threads = newPosts.threads.map(thread => {
-                thread.replies = thread.replies.map(reply => {
-                    reply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
-                        (groupedSubReplies, subReply, index, subReplies) => {
-                            if (_.isArray(subReply)) return [subReply]; // useless since subReply will never be an array
-                            // group sub replies item by continuous and same post author
-                            const previousSubReply = subReplies[index - 1] as SubReplyRecord | undefined;
-                            // https://github.com/microsoft/TypeScript/issues/13778
-                            if (previousSubReply !== undefined
-                                && subReply.authorUid === previousSubReply.authorUid
-                                && subReply.authorManagerType === previousSubReply.authorManagerType
-                                && subReply.authorExpGrade === previousSubReply.authorExpGrade
-                            ) _.last(groupedSubReplies)?.push(subReply); // append to last group
-                            else groupedSubReplies.push([subReply]); // new group
-                            return groupedSubReplies;
-                        },
-                        []
-                    );
-                    return reply;
-                });
-                return thread;
-            });
-            return newPosts as Modify<ApiPostsQuery, {
-                threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
-            }>;
+<script setup lang="ts">
+import '@/shared/bootstrapCallout.css';
+import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
+import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
+import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
+import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { Modify } from '@/shared';
+import { tiebaUserPortraitUrl } from '@/shared';
+import { initialTippy } from '@/shared/tippy';
+
+import { computed, onMounted } from 'vue';
+import { RouterLink } from 'vue-router';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { DateTime } from 'luxon';
+
+const props = defineProps<{ initialPosts: ApiPostsQuery }>();
+const hoveringSubReplyID = ref(0);
+
+const posts = computed(() => {
+    const newPosts = props.initialPosts as Modify<ApiPostsQuery, { // https://github.com/microsoft/TypeScript/issues/33591
+        threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: Array<SubReplyRecord | SubReplyRecord[]> }> }>
+    }>;
+    newPosts.threads = newPosts.threads.map(thread => {
+        thread.replies = thread.replies.map(reply => {
+            reply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
+                (groupedSubReplies, subReply, index, subReplies) => {
+                    if (_.isArray(subReply)) return [subReply]; // useless since subReply will never be an array
+                    // group sub replies item by continuous and same post author
+                    const previousSubReply = subReplies[index - 1] as SubReplyRecord | undefined;
+                    // https://github.com/microsoft/TypeScript/issues/13778
+                    if (previousSubReply !== undefined
+                        && subReply.authorUid === previousSubReply.authorUid
+                        && subReply.authorManagerType === previousSubReply.authorManagerType
+                        && subReply.authorExpGrade === previousSubReply.authorExpGrade
+                    ) _.last(groupedSubReplies)?.push(subReply); // append to last group
+                    else groupedSubReplies.push([subReply]); // new group
+                    return groupedSubReplies;
+                },
+                []
+            );
+            return reply;
         });
-        const getUser = baseGetUser(props.initialPosts.users);
-        const renderUsername = baseRenderUsername(getUser);
-        const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
+        return thread;
+    });
+    return newPosts as Modify<ApiPostsQuery, {
+        threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
+    }>;
+});
+const getUser = baseGetUser(props.initialPosts.users);
+const renderUsername = baseRenderUsername(getUser);
+const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
-        onMounted(initialTippy);
-        setComponentCustomScrollBehaviour((to, from) => {
-            if (isRouteUpdateTriggeredByPostsNavScrollEvent.value) {
-                isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
-                return false;
-            }
-            if (!compareRouteIsNewQuery(to, from)) return postListItemScrollPosition(to);
-            return undefined;
-        });
-
-        return { DateTime, tiebaUserPortraitUrl, hoveringSubReplyID, posts, getUser, renderUsername, userRoute };
+onMounted(initialTippy);
+setComponentCustomScrollBehaviour((to, from) => {
+    if (isRouteUpdateTriggeredByPostsNavScrollEvent.value) {
+        isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
+        return false;
     }
+    if (!compareRouteIsNewQuery(to, from)) return postListItemScrollPosition(to);
+    return undefined;
 });
 </script>
 

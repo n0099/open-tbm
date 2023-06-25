@@ -13,20 +13,15 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { Pagination } from '@/api/index.d';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
 import { RouterLink } from 'vue-router';
 
-export default defineComponent({
-    components: { RouterLink },
-    props: {
-        page: { type: Object as PropType<Pagination>, required: true },
-        pageRoutes: { type: Object as PropType<{ prev: RouteLocationRaw }>, required: true }
-    }
-});
+defineProps<{
+    page: Pagination,
+    pageRoutes: { prev: RouteLocationRaw }
+}>();
 </script>
 
 <style scoped>

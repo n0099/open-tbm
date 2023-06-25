@@ -13,21 +13,12 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { AuthorExpGrade, AuthorManagerType, BaiduUserID } from '@/api/index.d';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 
-export default defineComponent({
-    props: {
-        user: {
-            type: Object as PropType<{
-                uid?: { current: BaiduUserID } & ({ reply: BaiduUserID } | { thread: BaiduUserID }),
-                managerType: AuthorManagerType,
-                expGrade?: AuthorExpGrade
-            }>,
-            required: true
-        }
-    }
-});
+defineProps<{ user: {
+    uid?: { current: BaiduUserID } & ({ reply: BaiduUserID } | { thread: BaiduUserID }),
+    managerType: AuthorManagerType,
+    expGrade?: AuthorExpGrade
+} }>();
 </script>

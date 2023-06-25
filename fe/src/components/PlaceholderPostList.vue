@@ -17,12 +17,8 @@
     </div>
 </template>
 
-<script lang="ts">
-export default {
-    props: {
-        isLoading: { type: Boolean, default: true }
-    }
-};
+<script setup lang="ts">
+defineProps<{ isLoading: boolean }>();
 </script>
 
 <style scoped>

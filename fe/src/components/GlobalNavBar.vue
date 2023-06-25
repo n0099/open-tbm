@@ -31,47 +31,42 @@
     </nav>
 </template>
 
-<script lang="ts">
-import { defineComponent, reactive, watch } from 'vue';
+<script setup lang="ts">
+import { reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-export default defineComponent({
-    components: { FontAwesomeIcon, RouterLink },
-    setup() {
-        const route = useRoute();
-        interface Route { route: string, title: string, icon?: string, isActive?: boolean }
-        interface DropDown { title: string, icon: string, routes: Route[], isActive?: boolean }
-        const navs = reactive<Array<DropDown | Route>>([
-            {
-                title: '查询',
-                icon: 'search',
-                routes: [
-                    { route: 'post', title: '帖子', icon: 'comment-dots' },
-                    { route: 'user', title: '用户', icon: 'users' }
-                ]
-            },
-            { route: 'stats', title: '统计', icon: 'chart-pie' },
-            { route: 'status', title: '状态', icon: 'satellite-dish' },
-            {
-                title: '专题',
-                icon: 'paper-plane',
-                routes: [
-                    { route: 'bilibiliVote', title: 'bilibili吧公投' }
-                ]
-            }
-        ]);
+const route = useRoute();
+const envInstanceName = import.meta.env.VITE_INSTANCE_NAME;
 
-        watch(() => route.name, () => {
-            navs.forEach(nav => ({ // we don't have to reassign navs since it's reactive
-                ...nav,
-                isActive: 'routes' in nav
-                    ? nav.routes.some(i => i.route === route.name)
-                    : nav.route === route.name
-            }));
-        });
-
-        return { navs, envInstanceName: import.meta.env.VITE_INSTANCE_NAME };
+interface Route { route: string, title: string, icon?: string, isActive?: boolean }
+interface DropDown { title: string, icon: string, routes: Route[], isActive?: boolean }
+const navs = reactive<Array<DropDown | Route>>([
+    {
+        title: '查询',
+        icon: 'search',
+        routes: [
+            { route: 'post', title: '帖子', icon: 'comment-dots' },
+            { route: 'user', title: '用户', icon: 'users' }
+        ]
+    },
+    { route: 'stats', title: '统计', icon: 'chart-pie' },
+    { route: 'status', title: '状态', icon: 'satellite-dish' },
+    {
+        title: '专题',
+        icon: 'paper-plane',
+        routes: [
+            { route: 'bilibiliVote', title: 'bilibili吧公投' }
+        ]
     }
+]);
+
+watch(() => route.name, () => {
+    navs.forEach(nav => ({ // we don't have to reassign navs since it's reactive
+        ...nav,
+        isActive: 'routes' in nav
+            ? nav.routes.some(i => i.route === route.name)
+            : nav.route === route.name
+    }));
 });
 </script>

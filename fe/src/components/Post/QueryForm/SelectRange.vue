@@ -1,5 +1,5 @@
 <template>
-    <select @input="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)" :value="modelValue"
+    <select @input="$emit('update:modelValue', $event.target as HTMLSelectElement.value)" :value="modelValue"
             class="form-select form-control flex-grow-0">
         <option>&lt;</option>
         <option>=</option>
@@ -9,18 +9,11 @@
     </select>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { emitEventStrValidator } from '@/shared';
-import { defineComponent } from 'vue';
 
-export default defineComponent({
-    props: {
-        modelValue: { type: String, default: '=' }
-    },
-    emits: {
-        'update:modelValue': emitEventStrValidator
-    }
-});
+defineProps<{ modelValue: string }>();
+defineEmits({ 'update:modelValue': emitEventStrValidator });
 </script>
 
 <style scoped>

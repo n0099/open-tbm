@@ -8,14 +8,8 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { ThreadRecord } from '@/api/index.d';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 
-export default defineComponent({
-    props: {
-        thread: { type: Object as PropType<ThreadRecord>, required: true }
-    }
-});
+defineProps<{ thread: ThreadRecord }>();
 </script>

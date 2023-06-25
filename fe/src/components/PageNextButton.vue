@@ -12,16 +12,9 @@
     </div>
 </template>
 
-<script lang="ts">
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+<script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router';
 import { RouterLink } from 'vue-router';
 
-export default defineComponent({
-    components: { RouterLink },
-    props: {
-        pageRoutes: { type: Object as PropType<{ next: RouteLocationRaw }>, required: true }
-    }
-});
+defineProps<{ pageRoutes: { next: RouteLocationRaw } }>();
 </script>

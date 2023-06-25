@@ -22,21 +22,16 @@
     </footer>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import GlobalNavBar from '@/components/GlobalNavBar.vue';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
-import { defineComponent, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
-export default defineComponent({
-    components: { RouterView, ConfigProvider, GlobalNavBar, HorizontalMobileMessage },
-    setup() {
-        onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
-        return { AntdZhCn, envFooterText: import.meta.env.VITE_FOOTER_TEXT };
-    }
-});
+const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
+onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
 </script>
 
 <style scoped>

@@ -13,47 +13,44 @@
     }" :allowClear="false" size="large" class="col" />
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { emitEventNumValidator } from '@/shared';
-import type { PropType } from 'vue';
-import { defineComponent, ref, watchEffect } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { RangePicker } from 'ant-design-vue';
 import type { DurationLike } from 'luxon';
 import { DateTime } from 'luxon';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
-export default defineComponent({
-    components: { RangePicker },
-    props: {
-        startTime: { type: Number, default: 0 },
-        endTime: { type: Number, default: 0 },
-        id: { type: Function as PropType<StringConstructor>, default: () => 'queryTimeRange' },
-        timesAgo: { type: Object as PropType<DurationLike>, required: true }
-    },
-    emits: {
-        'update:startTime': emitEventNumValidator,
-        'update:endTime': emitEventNumValidator
-    },
-    setup(props, { emit }) {
-        const timeRange = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
-        const timeRangeChanged = ([startTime, endTime]: [Dayjs, Dayjs]) => {
-            emit('update:startTime', startTime.unix());
-            emit('update:endTime', endTime.unix());
-        };
-
-        watchEffect(() => {
-            timeRange.value = [dayjs.unix(props.startTime), dayjs.unix(props.endTime)];
-        });
-        const initialRangeWithTimesAgo: [Dayjs, Dayjs] = [
-            dayjs(DateTime.now().minus(props.timesAgo).startOf('minute').toISO()),
-            dayjs(DateTime.now().startOf('minute').toISO())
-        ];
-        // timesAgo will overwrite first assign to timeRange with initial props value
-        timeRange.value = initialRangeWithTimesAgo;
-        timeRangeChanged(initialRangeWithTimesAgo);
-
-        return { dayjs, timeRange, timeRangeChanged };
-    }
+const props = withDefaults(defineProps<{
+    id: StringConstructor,
+    startTime: number,
+    endTime: number,
+    timesAgo: DurationLike
+}>(), {
+    id: () => 'queryTimeRange',
+    startTime: 0,
+    endTime: 0
 });
+const emit = defineEmits({
+    'update:startTime': emitEventNumValidator,
+    'update:endTime': emitEventNumValidator
+});
+
+const timeRange = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
+const timeRangeChanged = ([startTime, endTime]: [Dayjs, Dayjs]) => {
+    emit('update:startTime', startTime.unix());
+    emit('update:endTime', endTime.unix());
+};
+
+watchEffect(() => {
+    timeRange.value = [dayjs.unix(props.startTime), dayjs.unix(props.endTime)];
+});
+const initialRangeWithTimesAgo: [Dayjs, Dayjs] = [
+    dayjs(DateTime.now().minus(props.timesAgo).startOf('minute').toISO()),
+    dayjs(DateTime.now().startOf('minute').toISO())
+];
+// timesAgo will overwrite first assign to timeRange with initial props value
+timeRange.value = initialRangeWithTimesAgo;
+timeRangeChanged(initialRangeWithTimesAgo);
 </script>

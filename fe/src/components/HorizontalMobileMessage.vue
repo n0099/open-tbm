@@ -4,10 +4,6 @@
     </div>
 </template>
 
-<script lang="ts">
-export default {};
-</script>
-
 <style scoped>
 .horizontal-mobile-message {
     z-index: 1040;

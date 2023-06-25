@@ -19,35 +19,29 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { PageNextButton, PagePrevButton, usePageRoutes } from './usePageNextAndPrevButton';
 import type { ApiUsersQuery, TiebaUserGender } from '@/api/index.d';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import { tiebaUserPortraitUrl } from '@/shared';
-import type { PropType } from 'vue';
-import { defineComponent, watch } from 'vue';
+import { watch } from 'vue';
 
-export default defineComponent({
-    components: { PageNextButton, PagePrevButton },
-    props: {
-        users: { type: Object as PropType<ApiUsersQuery>, required: true },
-        isLoadingNewPage: { type: Boolean, required: true },
-        isLastPageInPages: { type: Boolean, required: true }
-    },
-    setup(props) {
-        const userGender = (gender: TiebaUserGender) => {
-            const gendersList = {
-                /* eslint-disable @typescript-eslint/naming-convention */
-                0: '未指定（显示为男）',
-                1: '男 ♂',
-                2: '女 ♀'
-                /* eslint-enable @typescript-eslint/naming-convention */
-            } as const;
-            return gender === null ? 'NULL' : gendersList[gender];
-        };
-        const pageRoutes = usePageRoutes(props.users.pages.currentPage);
-        watch(() => props.users, lazyLoadUpdate);
-        return { tiebaUserPortraitUrl, userGender, pageRoutes };
-    }
-});
+const props = defineProps<{
+    users: ApiUsersQuery,
+    isLoadingNewPage: boolean,
+    isLastPageInPages: boolean
+}>();
+const pageRoutes = usePageRoutes(props.users.pages.currentPage);
+
+const userGender = (gender: TiebaUserGender) => {
+    const gendersList = {
+        /* eslint-disable @typescript-eslint/naming-convention */
+        0: '未指定（显示为男）',
+        1: '男 ♂',
+        2: '女 ♀'
+        /* eslint-enable @typescript-eslint/naming-convention */
+    } as const;
+    return gender === null ? 'NULL' : gendersList[gender];
+};
+watch(() => props.users, lazyLoadUpdate);
 </script>

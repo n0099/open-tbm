@@ -10,16 +10,10 @@
     </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { ApiError } from '@/api/index.d';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 
-export default defineComponent({
-    props: {
-        error: { type: [Object, null] as PropType<ApiError | null>, required: true }
-    }
-});
+defineProps<{ error: ApiError | null }>();
 </script>
 
 <style scoped>

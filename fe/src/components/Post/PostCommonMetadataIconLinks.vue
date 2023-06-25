@@ -11,25 +11,15 @@
     </a>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import type { PostRecord } from '@/api/index.d';
 import type { PostID } from '@/shared';
 import { tiebaPostLink } from '@/shared';
-import { dateTimeFromUTC8 } from '@/shared/echarts';
-
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
-export default defineComponent({
-    components: { FontAwesomeIcon },
-    props: {
-        meta: { type: Object as PropType<PostRecord>, required: true },
-        postTypeID: { type: String as PropType<PostID>, required: true }
-    },
-    setup() {
-        return { DateTime, dateTimeFromUTC8, tiebaPostLink };
-    }
-});
+defineProps<{
+    meta: PostRecord,
+    postTypeID: PostID
+}>();
 </script>
