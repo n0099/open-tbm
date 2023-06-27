@@ -63,6 +63,7 @@ public class JoinedRecognizer
                     var rect = result.TextBox.BoundingRect();
                     // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                     // which have similar but different values of y coordinates get rearranged in a wrong order
+                    // https://github.com/sdcb/PaddleSharp/issues/55#issuecomment-1607067510
                     var alignedY = (double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine;
                     // the bounding rect for a rotated rect might be outside the original image
                     // so the y-axis coordinate of its top-left point can be negative

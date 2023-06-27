@@ -71,8 +71,11 @@ public class ImageBatchProducingWorker : ErrorableWorker
             var interlaceBatches = (
                     from image in db.ImageInReplies.AsNoTracking()
                     where image.ImageId > lastImageIdInPreviousBatch
-                          // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
-                          && !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
+                    where _startFromLatestSuccessful
+                        // fast path compare to WHERE imageId NOT IN (SELECT imageId FROM ...)
+                        ? image.ImageId > db.ImageMetadata.Max(e => e.ImageId)
+                        // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
+                        : !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                     orderby image.ImageId
                     select image)
                 .Take(_batchSize * _interlaceBatchCount).ToList();

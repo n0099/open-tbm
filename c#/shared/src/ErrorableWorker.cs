@@ -26,25 +26,21 @@ public abstract class ErrorableWorker : BackgroundService
     {
         try
         {
-            try
-            {
-                await DoWork(stoppingToken);
-                if (_shouldExitOnFinish) _applicationLifetime.StopApplication();
-            }
-            catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
-            {
-                _logger.LogInformation("{}: {} CancellationToken={}",
-                    e.GetType().FullName, e.Message, e.CancellationToken);
-                throw;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Exception");
-                throw;
-            }
+            await Task.Yield(); // https://blog.stephencleary.com/2020/05/backgroundservice-gotcha-startup.html
+            await DoWork(stoppingToken);
+            // https://blog.stephencleary.com/2020/06/backgroundservice-gotcha-application-lifetime.html
+            if (_shouldExitOnFinish) _applicationLifetime.StopApplication();
         }
-        catch (Exception)
+        catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
         {
+            _logger.LogInformation("{}: {} CancellationToken={}",
+                e.GetType().FullName, e.Message, e.CancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Exception");
+            // https://stackoverflow.com/questions/68387710/exit-the-application-with-exit-code-from-async-thread
+            Environment.ExitCode = 1;
             if (_shouldExitOnException) _applicationLifetime.StopApplication();
         }
     }
