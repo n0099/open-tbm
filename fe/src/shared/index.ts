@@ -35,9 +35,10 @@ export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
     return `https://tieba.baidu.com/p/${tid}`;
 };
-export const toTiebaUserProfileUrl = (user: TiebaUserRecord) => (user.portrait === ''
-    ? `https://tieba.baidu.com/home/main?un=${user.name}`
-    : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
+export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUserRecord, 'name' | 'portrait'>>) =>
+    (user.portrait === ''
+        ? `https://tieba.baidu.com/home/main?un=${user.name}`
+        : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
 
 export const toTiebaUserPortraitImageUrl = (portrait: string) =>
     `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image

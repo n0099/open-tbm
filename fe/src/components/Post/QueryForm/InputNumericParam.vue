@@ -8,7 +8,7 @@
            :placeholder="placeholders.BETWEEN" :aria-label="modelValue.name"
            type="text" class="col-3 form-control flex-grow-0" required pattern="\d+,\d+" />
     <input v-else @input="emitModelChange" :value="modelValue.value"
-           :placeholder="placeholders.number" :aria-label="modelValue.name"
+           :placeholder="placeholders.single" :aria-label="modelValue.name"
            type="number" class="col-2 form-control flex-grow-0" required />
 </template>
 
@@ -19,7 +19,7 @@ import _ from 'lodash';
 
 const props = defineProps<{
     modelValue: KnownNumericParams,
-    placeholders: { [P in 'BETWEEN' | 'IN' | 'number']: string }
+    placeholders: { [P in 'BETWEEN' | 'IN' | 'single']: string }
 }>();
 const emit = defineEmits({
     'update:modelValue': (p: KnownNumericParams) =>

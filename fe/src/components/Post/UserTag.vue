@@ -17,7 +17,7 @@
 import type { AuthorExpGrade, AuthorManagerType, BaiduUserID } from '@/api/index.d';
 
 defineProps<{ user: {
-    uid?: { current: BaiduUserID } & ({ reply: BaiduUserID } | { thread: BaiduUserID }),
+    uid?: { current: BaiduUserID, thread: BaiduUserID, reply?: BaiduUserID },
     managerType: AuthorManagerType,
     expGrade?: AuthorExpGrade
 } }>();

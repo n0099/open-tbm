@@ -11,7 +11,7 @@
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
-                        <PostCommonMetadataIconLinks :meta="thread" postTypeID="tid" />
+                        <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" :postIDSelector="() => thread.tid" />
                         <PostTimeBadge :time="thread.postedAt" tippyPrefix="发帖时间：" badgeColor="success" />
                     </div>
                 </div>
@@ -26,9 +26,9 @@
                         <span v-if="thread.shareCount !== 0" data-tippy-content="分享量" class="badge bg-info">
                             <FontAwesomeIcon icon="share-alt" class="me-1" /> {{ thread.shareCount }}
                         </span>
-                        <span v-if="thread.agree !== null" data-tippy-content="赞踩量" class="badge bg-info">
-                            <FontAwesomeIcon icon="thumbs-up" class="me-1" /> {{ thread.agree.agree_num }}
-                            <FontAwesomeIcon icon="thumbs-down" class="me-1" /> {{ thread.agree.disagree_num }}
+                        <span data-tippy-content="赞踩量" class="badge bg-info">
+                            <FontAwesomeIcon icon="thumbs-up" class="me-1" /> {{ thread.agreeCount }}
+                            <FontAwesomeIcon icon="thumbs-down" class="me-1" /> {{ thread.disagreeCount }}
                         </span>
                         <span v-if="thread.zan !== null" :data-tippy-content="`
                             点赞量：${thread.zan.num}<br />
@@ -79,7 +79,7 @@
                     <div class="float-end badge bg-light">
                         <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
-                        <PostCommonMetadataIconLinks :meta="reply" postTypeID="pid" />
+                        <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" :postIDSelector="() => reply.pid" />
                         <PostTimeBadge :time="reply.postedAt" badgeColor="primary" />
                     </div>
                 </div>
@@ -122,7 +122,7 @@
                                             </RouterLink>
                                             <div class="float-end badge bg-light">
                                                 <div class="d-inline" :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
-                                                    <PostCommonMetadataIconLinks :meta="subReply" postTypeID="spid" />
+                                                    <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" :postIDSelector="() => subReply.spid" />
                                                 </div>
                                                 <PostTimeBadge :time="subReply.postedAt" badgeColor="info" />
                                             </div>
@@ -140,9 +140,9 @@
 </template>
 
 <script lang="ts">
-import { routePageParamNullSafe } from '@/router';
+import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import _ from 'lodash';
 
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
@@ -160,13 +160,11 @@ export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
-import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
 import type { Modify } from '@/shared';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 
-import { computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
