@@ -13,16 +13,16 @@
 </template>
 
 <script setup lang="ts">
-import type { ParamTypeNumeric, ParamTypeWithCommon } from './queryParams';
+import type { KnownNumericParams } from './queryParams';
 import { paramTypeNumericSubParamRangeValues } from './queryParams';
 import _ from 'lodash';
 
 const props = defineProps<{
-    modelValue: ParamTypeWithCommon<string, ParamTypeNumeric>,
+    modelValue: KnownNumericParams,
     placeholders: { [P in 'BETWEEN' | 'IN' | 'number']: string }
 }>();
 const emit = defineEmits({
-    'update:modelValue': (p: ParamTypeWithCommon<string, ParamTypeNumeric>) =>
+    'update:modelValue': (p: KnownNumericParams) =>
         _.isString(p.name) && _.isString(p.value)
         && paramTypeNumericSubParamRangeValues.includes(p.subParam.range)
 });

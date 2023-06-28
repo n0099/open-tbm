@@ -101,6 +101,10 @@ export type Params = { [P in 'authorGender' | 'latestReplierGender']: ParamTypeW
 & { [P in typeof paramsNameByType.dateTime[number]]: ParamTypeWithCommon<P, ParamTypeDateTime> }
 & { [P in typeof paramsNameByType.numeric[number]]: ParamTypeWithCommon<P, ParamTypeNumeric> }
 & { [P in typeof paramsNameByType.text[number]]: ParamTypeWithCommon<P, ParamTypeText> };
+export type KnownDateTimeParams = Params[typeof paramsNameByType.dateTime[number]];
+export type KnownNumericParams = Params[typeof paramsNameByType.numeric[number]];
+export type KnownTextParams = Params[typeof paramsNameByType.text[number]];
+
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
     postTypes: { value: ['thread', 'reply', 'subReply'], subParam: {} },

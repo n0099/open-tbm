@@ -71,25 +71,27 @@
                                class="text-secondary fw-bold form-check-label">非</label>
                     </div>
                 </div>
-                <template v-if="postID.includes(p.name)">
+                <template v-if="isPostIDParam(p)">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam v-model="params[pI]" :placeholders="{
-                        IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
-                        BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
-                        number: p.name === 'tid' ? '5000000000' : '15000000000'
-                    }" />
+                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                                       :modelValue="params[pI] as KnownNumericParams"
+                                       :placeholders="getPostIDParamPlaceholders(p)" />
                 </template>
-                <template v-if="['postedAt', 'latestReplyPostedAt'].includes(p.name)">
+                <template v-if="isDateTimeParam(p)">
                     <RangePicker v-model="p.subParam.range" :showTime="true"
                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
-                <template v-if="['threadTitle', 'postContent', 'authorName', 'authorDisplayName', 'latestReplierName', 'latestReplierDisplayName'].includes(p.name)">
+                <template v-if="isTextParam(p)">
                     <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)" type="text" class="form-control" required />
-                    <InputTextMatchParam v-model="params[pI]" :paramIndex="pI" />
+                    <InputTextMatchParam @update:modelValue="v => params[pI] = v"
+                                         :modelValue="params[pI] as KnownTextParams"
+                                         :paramIndex="pI" />
                 </template>
                 <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam v-model="params[pI]" :paramIndex="pI"
+                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                                       :modelValue="params[pI] as KnownNumericParams"
+                                       :paramIndex="pI"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', number: '100' }" />
                 </template>
                 <div v-if="p.name === 'threadProperties'">
@@ -112,11 +114,9 @@
                 </div>
                 <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam v-model="params[pI]" :placeholders="{
-                        IN: '4000000000,4000000001,4000000002,...',
-                        BETWEEN: '4000000000,5000000000',
-                        number: '4000000000'
-                    }" />
+                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                                       :modelValue="params[pI] as KnownNumericParams"
+                                       :placeholders="uidParamPlaceholders" />
                 </template>
                 <template v-if="p.name === 'authorManagerType'">
                     <select v-model="p.value" class="form-control flex-grow-0 w-25">
@@ -135,7 +135,9 @@
                 </template>
                 <template v-if="p.name === 'authorExpGrade'">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam v-model="params[pI]" :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: '18' }" />
+                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                                       :modelValue="params[pI] as KnownNumericParams"
+                                       :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', number: '18' }" />
                 </template>
             </div>
         </div>
@@ -155,10 +157,10 @@
 <script setup lang="ts">
 import { isRouteUpdateTriggeredBySubmitQueryForm } from '@/views/Post.vue';
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, inputTextMatchParamPlaceholder } from './';
-import type { Params, RequiredPostTypes, UniqueParams } from './queryParams';
-import { orderByRequiredPostTypes, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
+import type { KnownDateTimeParams, KnownNumericParams, KnownTextParams, ParamTypeNumeric, ParamTypeWithCommon, Params, RequiredPostTypes, UniqueParams } from './queryParams';
+import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
-import type { ObjValues, PostType } from '@/shared';
+import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
 import { assertRouteNameIsStr } from '@/router';
 
@@ -192,6 +194,24 @@ const {
 const isOrderByInvalid = ref(false);
 const isFidInvalid = ref(false);
 
+type Param = ObjValues<Params>;
+const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
+    (paramsNameByType.dateTime as Writable<typeof paramsNameByType.dateTime> as string[]).includes(param.name);
+const isTextParam = (param: Param): param is KnownTextParams =>
+    (paramsNameByType.text as Writable<typeof paramsNameByType.text> as string[]).includes(param.name);
+const isPostIDParam = (param: Param): param is ParamTypeWithCommon<PostID, ParamTypeNumeric> =>
+    (postID as Writable<typeof postID> as string[]).includes(param.name);
+const getPostIDParamPlaceholders = (p: Param) => ({
+    IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
+    BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
+    number: p.name === 'tid' ? '5000000000' : '15000000000'
+});
+const uidParamPlaceholders = {
+    IN: '4000000000,4000000001,4000000002,...',
+    BETWEEN: '4000000000,5000000000',
+    number: '4000000000'
+};
+
 const getCurrentQueryType = () => {
     const clearedParams = clearedParamsDefaultValue(); // not including unique params
     if (_.isEmpty(clearedParams)) { // is there no other params
@@ -203,7 +223,6 @@ const getCurrentQueryType = () => {
             return 'fid'; // note when query with postTypes and/or orderBy param, the route will go params instead of fid
         }
     }
-    const isPostIDParam = (param: ObjValues<Params>) => (postID as unknown as string[]).includes(param.name);
     if (_.isEmpty(_.reject(clearedParams, isPostIDParam)) // is there no other params except post id params
         && _.filter(clearedParams, isPostIDParam).length === 1 // is there only one post id param
         && _.chain(clearedParams).map('subParam').filter().isEmpty().value()) { // is all post ID params doesn't own any sub param

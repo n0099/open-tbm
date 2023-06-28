@@ -33,31 +33,27 @@
 </template>
 
 <script lang="ts">
-import type { Params, paramsNameByType } from '@/components/Post/QueryForm/queryParams.ts';
-
 const matchByDesc = {
     implicit: '模糊',
     explicit: '精确',
     regex: '正则'
 };
-export const inputTextMatchParamPlaceholder = (p: Params[typeof paramsNameByType.text[number]]) =>
+export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
     `${matchByDesc[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
 </script>
 
 <script setup lang="ts">
 import { paramTypeTextSubParamMatchByValues } from './queryParams';
-import type { ParamTypeText, ParamTypeWithCommon } from './queryParams';
+import type { KnownTextParams, ParamTypeText } from './queryParams';
 import type { ObjValues } from '@/shared';
 import _ from 'lodash';
 
-type ParamType = ParamTypeWithCommon<string, ParamTypeText>;
-
 const props = defineProps<{
-    modelValue: ParamType,
+    modelValue: KnownTextParams,
     paramIndex: number
 }>();
 const emit = defineEmits({
-    'update:modelValue': (p: ParamType) =>
+    'update:modelValue': (p: KnownTextParams) =>
         _.isString(p.name) && _.isString(p.value)
         && paramTypeTextSubParamMatchByValues.includes(p.subParam.matchBy)
         && _.isBoolean(p.subParam.spaceSplit)
@@ -67,7 +63,7 @@ const emitModelChange = (name: keyof ParamTypeText['subParam'], value: ObjValues
     emit('update:modelValue', {
         ...props.modelValue,
         subParam: { ...props.modelValue.subParam, [name]: value }
-    } as ParamType);
+    } as KnownTextParams);
 };
 const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>
     `param${_.upperFirst(props.modelValue.name)}${type}-${props.paramIndex}`;
