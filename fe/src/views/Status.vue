@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import QueryTimeRange from '@/components/QueryTimeRange.vue';
-import type { ApiStatus, ApiStatusQP } from '@/api/index.d';
+import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
 import { apiStatus, throwIfApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 import { titleTemplate } from '@/shared';
@@ -161,7 +161,7 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 useHead({ title: titleTemplate('状态') });
-const query = ref<ApiStatusQP>({
+const query = ref<ApiStatusQueryParam>({
     timeGranularity: 'minute',
     startTime: 0,
     endTime: 0

@@ -1,7 +1,7 @@
+import type { TiebaUserRecord } from '@/api/index.ts';
 import Noty from 'noty';
 import _ from 'lodash';
 
-export type Iso8601DateTimeUtc0 = string; // "2020-10-10T00:11:22Z"
 export type SqlDateTimeUtcPlus8 = string; // '2020-10-10 00:11:22'
 export type UnixTimestamp = number;
 export type Int = number;
@@ -34,8 +34,12 @@ export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
     return `https://tieba.baidu.com/p/${tid}`;
 };
-export const tiebaUserLink = (username: string) => `https://tieba.baidu.com/home/main?un=${username}`;
-export const tiebaUserPortraitUrl = (portrait: string) => `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
+export const toTiebaUserProfileUrl = (user: TiebaUserRecord) => (user.portrait === ''
+    ? `https://tieba.baidu.com/home/main?un=${user.name}`
+    : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
+
+export const toTiebaUserPortraitImageUrl = (portrait: string) =>
+    `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
 
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
 export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);

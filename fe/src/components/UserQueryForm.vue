@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './SelectTiebaUser.vue';
 import SelectTiebaUser, { selectTiebaUserBy } from './SelectTiebaUser.vue';
-import type { BaiduUserID, TiebaUserGenderQP } from '@/api/index.d';
+import type { BaiduUserID, TiebaUserGenderQueryParam } from '@/api/index.d';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 
 import { ref, watchEffect } from 'vue';
@@ -26,7 +26,7 @@ import type { LocationQueryValueRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
-type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>> & { gender?: TiebaUserGenderQP };
+type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>> & { gender?: TiebaUserGenderQueryParam };
 
 const router = useRouter();
 const props = defineProps<{
@@ -38,7 +38,7 @@ const props = defineProps<{
     },
     selectUserBy: SelectTiebaUserBy
 }>();
-const gender = ref<TiebaUserGenderQP | 'default'>('default');
+const gender = ref<TiebaUserGenderQueryParam | 'default'>('default');
 const selectUser = ref<SelectTiebaUserModel>({ selectBy: '', params: {} });
 
 const defaultParamsValue = {

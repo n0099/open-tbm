@@ -14,12 +14,16 @@ app.use(viewer, {
 
 export const baseGetUser = (users: TiebaUserRecord[]) => (uid: BaiduUserID): TiebaUserRecord => _.find(users, { uid }) ?? {
     uid: 0,
-    avatarUrl: '',
     name: '未知用户',
     displayName: null,
-    fansNickname: null,
+    portrait: '',
+    portraitUpdatedAt: null,
     gender: 0,
-    icon: []
+    fansNickname: null,
+    icon: [],
+    ipGeolocation: null,
+    createdAt: 0,
+    updatedAt: 0
 };
 export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUser>) => (uid: BaiduUserID) => {
     const { name, displayName } = injectedGetUser(uid);

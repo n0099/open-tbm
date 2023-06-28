@@ -1,4 +1,4 @@
-import type { ApiError, ApiForumList, ApiPostsQuery, ApiPostsQueryQP, ApiStatsForumPostCount, ApiStatsForumPostCountQP, ApiStatus, ApiStatusQP, ApiUsersQuery, ApiUsersQueryQP } from '@/api/index.d';
+import type { ApiError, ApiForumList, ApiPostsQuery, ApiPostsQueryQueryParam, ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam, ApiStatus, ApiStatusQueryParam, ApiUsersQuery, ApiUsersQueryQueryParam } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import NProgress from 'nprogress';
 import qs from 'qs';
@@ -71,11 +71,11 @@ export const getRequesterWithReCAPTCHA = async <TResponse extends ApiError | unk
 
 export const apiForumList = async (): Promise<ApiError | ApiForumList> =>
     getRequester('/forums');
-export const apiStatus = async (qp: ApiStatusQP): Promise<ApiError | ApiStatus> =>
-    getRequesterWithReCAPTCHA('/status', qp);
-export const apiStatsForumsPostCount = async (qp: ApiStatsForumPostCountQP): Promise<ApiError | ApiStatsForumPostCount> =>
-    getRequesterWithReCAPTCHA('/stats/forums/postCount', qp);
-export const apiUsersQuery = async (qp: ApiUsersQueryQP): Promise<ApiError | ApiUsersQuery> =>
-    getRequesterWithReCAPTCHA('/users/query', qp);
-export const apiPostsQuery = async (qp: ApiPostsQueryQP): Promise<ApiError | ApiPostsQuery> =>
-    getRequesterWithReCAPTCHA('/posts/query', qp);
+export const apiStatus = async (queryParam: ApiStatusQueryParam): Promise<ApiError | ApiStatus> =>
+    getRequesterWithReCAPTCHA('/status', queryParam);
+export const apiStatsForumsPostCount = async (queryParam: ApiStatsForumPostCountQueryParam): Promise<ApiError | ApiStatsForumPostCount> =>
+    getRequesterWithReCAPTCHA('/stats/forums/postCount', queryParam);
+export const apiUsersQuery = async (queryParam: ApiUsersQueryQueryParam): Promise<ApiError | ApiUsersQuery> =>
+    getRequesterWithReCAPTCHA('/users/query', queryParam);
+export const apiPostsQuery = async (queryParam: ApiPostsQueryQueryParam): Promise<ApiError | ApiPostsQuery> =>
+    getRequesterWithReCAPTCHA('/posts/query', queryParam);

@@ -38,8 +38,9 @@
                             <!-- todo: fetch users info in zan.user_id_list -->
                             <FontAwesomeIcon icon="thumbs-up" class="me-1" /> 旧版客户端赞
                         </span>
-                        <span v-if="thread.location !== null" data-tippy-content="发帖位置" class="badge bg-info">
-                            <FontAwesomeIcon icon="location-arrow" class="me-1" /> {{ thread.location }}<!-- todo: unknown json struct -->
+                        <span v-if="thread.geolocation !== null" data-tippy-content="发帖位置" class="badge bg-info">
+                            <FontAwesomeIcon icon="location-arrow" class="me-1" /> {{ thread.geolocation }}
+                            <!-- todo: unknown json struct -->
                         </span>
                     </div>
                     <div class="col-auto badge bg-light" role="group">
@@ -86,7 +87,7 @@
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                          class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
                         <RouterLink :to="userRoute(author.uid)" target="_blank" class="d-block">
-                            <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)"
+                            <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)"
                                  class="tieba-user-portrait-large lazy" />
                             <p class="my-0">{{ author.name }}</p>
                             <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
@@ -111,7 +112,7 @@
                                             <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"
                                                         :to="userRoute(author.uid)" target="_blank"
                                                         class="sub-reply-author text-wrap badge bg-light">
-                                                <img :data-src="tiebaUserPortraitUrl(author.avatarUrl)" class="tieba-user-portrait-small lazy" />
+                                                <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)" class="tieba-user-portrait-small lazy" />
                                                 <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
                                                 <UserTag :user="{
                                                     uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
@@ -162,7 +163,7 @@ import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
 import type { Modify } from '@/shared';
-import { tiebaUserPortraitUrl } from '@/shared';
+import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 
 import { computed, onMounted } from 'vue';

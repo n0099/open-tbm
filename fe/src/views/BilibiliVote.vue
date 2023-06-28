@@ -49,7 +49,7 @@
                :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }"
                rowKey="candidateIndex">
             <template #candidateName="{ text }">
-                <a :href="tiebaUserLink(text)">{{ text }}</a>
+                <a :href="toTiebaUserProfileUrl({ name: text })">{{ text }}</a>
             </template>
         </Table>
     </div>
@@ -60,7 +60,7 @@ import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
 import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
-import { tiebaUserLink, titleTemplate } from '@/shared';
+import { titleTemplate, toTiebaUserProfileUrl } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
 import { onMounted, ref, watch } from 'vue';

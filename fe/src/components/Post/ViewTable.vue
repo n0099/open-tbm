@@ -10,15 +10,15 @@
             <span>{{ record.title }}</span>
         </template>
         <template #postAuthor="{ record: { authorUid, authorManagerType } }">
-            <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
-                <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+            <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
+                <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
             </a>
             <UserTag :user="{ managerType: authorManagerType }" />
         </template>
         <template #postLatestReplier="{ record: { latestReplierUid } }">
-            <a :href="tiebaUserLink(getUser(latestReplierUid).name)" target="_blank">
-                <img :data-src="tiebaUserPortraitUrl(getUser(latestReplierUid).avatarUrl)"
+            <a :href="toTiebaUserProfileUrl(getUser(latestReplierUid))" target="_blank">
+                <img :data-src="toTiebaUserPortraitImageUrl(getUser(latestReplierUid).portrait)"
                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(latestReplierUid) }}
             </a>
         </template>
@@ -27,8 +27,8 @@
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
                    :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
                 <template #postAuthor="{ record: { authorUid, authorManagerType, authorExpGrade } }">
-                    <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
-                        <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                    <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
+                        <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                     </a>
                     <UserTag :user="{
@@ -44,8 +44,8 @@
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                            :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
                         <template #postAuthor="{ record: { authorUid, authorManagerType, authorExpGrade } }">
-                            <a :href="tiebaUserLink(getUser(authorUid).name)" target="_blank">
-                                <img :data-src="tiebaUserPortraitUrl(getUser(authorUid).avatarUrl)"
+                            <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
+                                <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                             </a>
                             <UserTag :user="{
@@ -69,7 +69,7 @@ import { ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';
 import type { Pid, Tid } from '@/shared';
-import { tiebaUserLink, tiebaUserPortraitUrl } from '@/shared';
+import { toTiebaUserProfileUrl, toTiebaUserPortraitImageUrl } from '@/shared';
 
 import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -96,9 +96,9 @@ const threadColumns = ref<ColumnType[]>([
     { title: '分享量', dataIndex: 'shareCount' },
     { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
     { title: '旧版客户端赞', dataIndex: 'zan' }, // todo: unknown json struct
-    { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
-    { title: '首次收录时间', dataIndex: 'created_at' },
-    { title: '最后更新时间', dataIndex: 'updated_at' }
+    { title: '发帖位置', dataIndex: 'geolocation' }, // todo: unknown json struct
+    { title: '首次收录时间', dataIndex: 'createdAt' },
+    { title: '最后更新时间', dataIndex: 'updatedAt' }
 ]);
 const replyColumns = ref<ColumnType[]>([
     { title: 'pid', dataIndex: 'pid' },
@@ -111,17 +111,17 @@ const replyColumns = ref<ColumnType[]>([
     { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
     { title: '客户端小尾巴', dataIndex: 'sign' }, // todo: unknown json struct
     { title: '发帖来源', dataIndex: 'tail' }, // todo: unknown json struct
-    { title: '发帖位置', dataIndex: 'location' }, // todo: unknown json struct
-    { title: '首次收录时间', dataIndex: 'created_at' },
-    { title: '最后更新时间', dataIndex: 'updated_at' }
+    { title: '发帖位置', dataIndex: 'geolocation' }, // todo: unknown json struct
+    { title: '首次收录时间', dataIndex: 'createdAt' },
+    { title: '最后更新时间', dataIndex: 'updatedAt' }
 ]);
 const subReplyColumns = ref<ColumnType[]>([
     { title: 'spid', dataIndex: 'spid' },
     { title: '发帖人', slots: { customRender: 'postAuthor' } },
     { title: '发帖人UID', dataIndex: 'authorUid' },
     { title: '发帖时间', dataIndex: 'postedAt' },
-    { title: '首次收录时间', dataIndex: 'created_at' },
-    { title: '最后更新时间', dataIndex: 'updated_at' }
+    { title: '首次收录时间', dataIndex: 'createdAt' },
+    { title: '最后更新时间', dataIndex: 'updatedAt' }
 ]);
 
 const getUser = baseGetUser(props.posts.users);
