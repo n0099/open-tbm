@@ -83,7 +83,7 @@ export default createRouter({
         { path: '/bilibiliVote', name: 'bilibiliVote', component: async () => lazyLoadRouteView(import('@/views/BilibiliVote.vue')) }
     ],
     linkActiveClass: 'active',
-    scrollBehavior(to, from, savedPosition) {
+    async scrollBehavior(to, from, savedPosition) {
         // 'href' property will not exist in from when user refresh page: https://next.router.vuejs.org/api/#resolve
         if ('href' in from && savedPosition !== null) return savedPosition;
 

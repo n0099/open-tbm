@@ -453,7 +453,7 @@ const loadCharts = {
             label: {
                 show: true,
                 position: 'middle',
-                formatter: (-(count - validCount[index - 1])).toString()
+                formatter: String(-(count - validCount[index - 1]))
             },
             coord: [index, count]
         }, { coord: [index - 1, validCount[index - 1]] }]);
@@ -499,7 +499,7 @@ const loadCharts = {
                         label: {
                             show: true,
                             position: 'middle',
-                            formatter: (-(count - validCount[index + 1])).toString()
+                            formatter: String(-(count - validCount[index + 1]))
                         },
                         coord: [count, index]
                     }, { coord: [validCount[index + 1], index + 1] }

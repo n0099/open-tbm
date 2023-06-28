@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { emitEventStrValidator } from '@/shared';
 
-defineProps<{ modelValue: string }>();
+withDefaults(defineProps<{ modelValue?: string }>(), { modelValue: '=' });
 defineEmits({ 'update:modelValue': emitEventStrValidator });
 </script>
 

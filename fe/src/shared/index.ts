@@ -1,4 +1,4 @@
-import type { TiebaUserRecord } from '@/api/index.ts';
+import type { TiebaUserRecord } from '@/api/index.d';
 import Noty from 'noty';
 import _ from 'lodash';
 

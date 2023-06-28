@@ -69,7 +69,7 @@ import { ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';
 import type { Pid, Tid } from '@/shared';
-import { toTiebaUserProfileUrl, toTiebaUserPortraitImageUrl } from '@/shared';
+import { toTiebaUserPortraitImageUrl, toTiebaUserProfileUrl } from '@/shared';
 
 import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';

@@ -71,8 +71,8 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
 fetchUsersData(route, true);
 
 watchEffect(() => {
-    selectUserBy.value = removeStart(removeEnd(route.name?.toString() ?? '', '+p'), 'user/') as SelectTiebaUserBy;
-    params.value = { ..._.omit(props, 'page'), uid: props.uid === undefined ? undefined : Number(props.uid) };
+    selectUserBy.value = removeStart(removeEnd(String(route.name ?? ''), '+p'), 'user/') as SelectTiebaUserBy;
+    params.value = { ..._.omit(props, 'page'), uid: Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);

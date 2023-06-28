@@ -141,7 +141,7 @@
 
 <script lang="ts">
 import { routePageParamNullSafe } from '@/router';
-import { RouteLocationNormalizedLoaded } from 'vue-router';
+import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { ref } from 'vue';
 import _ from 'lodash';
 

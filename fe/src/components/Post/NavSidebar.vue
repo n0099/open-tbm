@@ -10,7 +10,7 @@
                     {{ thread.title }}
                     <div class="d-block btn-group p-1" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
-                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="isFirstReplyInView.toString()"
+                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="String(isFirstReplyInView)"
                                     @click="navigate(page, null, reply.pid)" :data-pid="reply.pid"
                                     :class="{
                                         'btn-info': isFirstReplyInView,

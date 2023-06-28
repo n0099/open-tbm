@@ -247,7 +247,7 @@ const submitRoute = () => { // decide that route to go
             if (_.isEmpty(_.reject(clearedParams, p => p.name === postIDName)) // is there no other params
                 && postIDParam.length === 1 // is there only one post id param
                 && postIDParam[0]?.subParam === undefined) { // is range subParam not set
-                router.push({ name: `post/${postIDName}`, params: { [postIDName]: postIDParam[0].value?.toString() } });
+                router.push({ name: `post/${postIDName}`, params: { [postIDName]: String(postIDParam[0].value) } });
                 return; // exit early to prevent pushing other route
             }
         }
