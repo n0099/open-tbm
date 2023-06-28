@@ -43,8 +43,8 @@ export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
 </script>
 
 <script setup lang="ts">
-import { paramTypeTextSubParamMatchByValues } from './queryParams';
-import type { KnownTextParams, ParamTypeText } from './queryParams';
+import { textParamSubParamMatchByValues } from './queryParams';
+import type { KnownTextParams, NamelessParamText } from './queryParams';
 import type { ObjValues } from '@/shared';
 import _ from 'lodash';
 
@@ -55,11 +55,11 @@ const props = defineProps<{
 const emit = defineEmits({
     'update:modelValue': (p: KnownTextParams) =>
         _.isString(p.name) && _.isString(p.value)
-        && paramTypeTextSubParamMatchByValues.includes(p.subParam.matchBy)
+        && textParamSubParamMatchByValues.includes(p.subParam.matchBy)
         && _.isBoolean(p.subParam.spaceSplit)
 });
 
-const emitModelChange = (name: keyof ParamTypeText['subParam'], value: ObjValues<ParamTypeText['subParam']>) => {
+const emitModelChange = (name: keyof NamelessParamText['subParam'], value: ObjValues<NamelessParamText['subParam']>) => {
     emit('update:modelValue', {
         ...props.modelValue,
         subParam: { ...props.modelValue.subParam, [name]: value }

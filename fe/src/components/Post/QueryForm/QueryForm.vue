@@ -157,7 +157,7 @@
 <script setup lang="ts">
 import { isRouteUpdateTriggeredBySubmitQueryForm } from '@/views/Post.vue';
 import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, inputTextMatchParamPlaceholder } from './';
-import type { KnownDateTimeParams, KnownNumericParams, KnownTextParams, ParamTypeNumeric, ParamTypeWithCommon, Params, RequiredPostTypes, UniqueParams } from './queryParams';
+import type { AddNameToParam, KnownDateTimeParams, KnownNumericParams, KnownParams, KnownTextParams, KnownUniqueParams, NamelessParamNumeric, RequiredPostTypes } from './queryParams';
 import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
@@ -194,12 +194,12 @@ const {
 const isOrderByInvalid = ref(false);
 const isFidInvalid = ref(false);
 
-type Param = ObjValues<Params>;
+type Param = ObjValues<KnownParams>;
 const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
     (paramsNameByType.dateTime as Writable<typeof paramsNameByType.dateTime> as string[]).includes(param.name);
 const isTextParam = (param: Param): param is KnownTextParams =>
     (paramsNameByType.text as Writable<typeof paramsNameByType.text> as string[]).includes(param.name);
-const isPostIDParam = (param: Param): param is ParamTypeWithCommon<PostID, ParamTypeNumeric> =>
+const isPostIDParam = (param: Param): param is AddNameToParam<PostID, NamelessParamNumeric> =>
     (postID as Writable<typeof postID> as string[]).includes(param.name);
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
@@ -332,7 +332,7 @@ const checkParams = () => {
 
 const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     assertRouteNameIsStr(route.name);
-    uniqueParams.value = _.mapValues(uniqueParams, _.unary(fillParamWithDefaultValue)) as UniqueParams;
+    uniqueParams.value = _.mapValues(uniqueParams, _.unary(fillParamWithDefaultValue)) as KnownUniqueParams;
     params.value = [];
     const routeName = removeEnd(route.name, '+p');
     // parse route path to params
@@ -342,7 +342,7 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
         uniqueParams.value.fid.value = parseInt(route.params.fid);
     } else { // post id routes
         uniqueParams.value = _.mapValues(uniqueParams.value, param =>
-            fillParamWithDefaultValue(param, true)) as UniqueParams; // reset to default
+            fillParamWithDefaultValue(param, true)) as KnownUniqueParams; // reset to default
         params.value = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
             fillParamWithDefaultValue({ name, value }));
     }

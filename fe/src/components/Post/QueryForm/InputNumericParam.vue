@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import type { KnownNumericParams } from './queryParams';
-import { paramTypeNumericSubParamRangeValues } from './queryParams';
+import { numericParamSubParamRangeValues } from './queryParams';
 import _ from 'lodash';
 
 const props = defineProps<{
@@ -24,7 +24,7 @@ const props = defineProps<{
 const emit = defineEmits({
     'update:modelValue': (p: KnownNumericParams) =>
         _.isString(p.name) && _.isString(p.value)
-        && paramTypeNumericSubParamRangeValues.includes(p.subParam.range)
+        && numericParamSubParamRangeValues.includes(p.subParam.range)
 });
 
 const emitModelChange = (e: Event) => {

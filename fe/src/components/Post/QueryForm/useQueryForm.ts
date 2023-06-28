@@ -4,29 +4,28 @@ import { onBeforeMount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
-export interface Param { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
-export interface ParamPartialValue { value?: unknown, subParam?: ObjUnknown }
-export type ParamPartial = ParamPartialValue & { name: string };
-export type ParamPreprocessorOrWatcher = (p: Param) => void;
+export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
+export interface NamelessUnknownParam { value?: unknown, subParam?: ObjUnknown }
+export type ParamPreprocessorOrWatcher = (p: UnknownParam) => void;
 export default <
-    UniqueParams extends Record<string, Param> = Record<string, Param>,
-    Params extends Record<string, Param> = Record<string, Param>
+    UniqueParams extends Record<string, UnknownParam> = Record<string, UnknownParam>,
+    Params extends Record<string, UnknownParam> = Record<string, UnknownParam>
 >(
     deps: {
-        paramsDefaultValue: Readonly<Partial<Record<string, ParamPartialValue>>>,
+        paramsDefaultValue: Readonly<Partial<Record<string, NamelessUnknownParam>>>,
         paramsPreprocessor: Readonly<Partial<Record<string, ParamPreprocessorOrWatcher>>>,
         paramsWatcher: Readonly<Partial<Record<string, ParamPreprocessorOrWatcher>>>
     }
 ) => {
-    type TUniqueParam = ObjValues<UniqueParams>;
-    type TParam = ObjValues<Params>;
+    type UniqueParam = ObjValues<UniqueParams>;
+    type Param = ObjValues<Params>;
     const router = useRouter();
     const uniqueParams = ref<UniqueParams>({} as UniqueParams);
-    const params = ref<TParam[]>([]); // [{ name: '', value: '', subParam: { name: value } },...]
+    const params = ref<Param[]>([]); // [{ name: '', value: '', subParam: { name: value } },...]
     const invalidParamsIndex = ref<number[]>([]);
 
-    const fillParamWithDefaultValue = <T extends TParam | TUniqueParam>
-    (param: Partial<Param> & { name: string }, resetToDefault = false): T => {
+    const fillParamWithDefaultValue = <T extends Param | UniqueParam>
+    (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
@@ -50,12 +49,12 @@ export default <
             (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex));
         params.value.splice(paramIndex, 1);
     };
-    const clearParamDefaultValue = <T extends Param>(param: Param): Partial<Param | T> | null => {
+    const clearParamDefaultValue = <T extends UnknownParam>(param: UnknownParam): Partial<T | UnknownParam> | null => {
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         // remove subParam.not: false, which previously added by fillParamWithDefaultValue()
         if (defaultParam.subParam !== undefined) defaultParam.subParam.not ??= false;
-        const newParam: Partial<Param> = _.cloneDeep(param); // prevent mutating origin param
+        const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
         // number will consider as empty in isEmpty(), to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
             || (_.isArray(newParam.value) && _.isArray(defaultParam.value)
@@ -72,13 +71,13 @@ export default <
 
         return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam; // return null for further filter()
     };
-    const clearedParamsDefaultValue = (): Array<Partial<TParam>> =>
-        _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<TParam>>; // filter() will remove falsy values like null
+    const clearedParamsDefaultValue = (): Array<Partial<Param>> =>
+        _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<Param>>; // filter() will remove falsy values like null
     const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
         _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;
     const flattenParams = (): ObjUnknown[] => {
-        const flattenParam = (param: Partial<Param>) => {
+        const flattenParam = (param: Partial<UnknownParam>) => {
             const flatted: ObjUnknown = {};
             flatted[param.name ?? 'undef'] = param.value;
             return { ...flatted, ...param.subParam };
@@ -105,11 +104,11 @@ export default <
     const parseParamRoute = (routePath: string[]) => {
         _.chain(routePath)
             .map(paramWithSub => {
-                const parsedParam: ParamPartial = { name: '', subParam: {} };
-                paramWithSub.split(';').forEach((params, paramIndex) => { // split multiple params
+                const parsedParam: NamelessUnknownParam & { name: string } = { name: '', subParam: {} };
+                paramWithSub.split(';').forEach((paramNameAndValue, paramIndex) => { // split multiple params
                     const paramPair: [string, unknown] = [
-                        params.substring(0, params.indexOf(':')),
-                        escapeParamValue(params.substring(params.indexOf(':') + 1), true)
+                        paramNameAndValue.substring(0, paramNameAndValue.indexOf(':')),
+                        escapeParamValue(paramNameAndValue.substring(paramNameAndValue.indexOf(':') + 1), true)
                     ]; // split kv pair by first colon, using substr to prevent split array type param value
                     if (paramIndex === 0) { // main param
                         [parsedParam.name, parsedParam.value] = paramPair;
@@ -117,7 +116,7 @@ export default <
                         parsedParam.subParam = { ...parsedParam.subParam, [paramPair[0]]: paramPair[1] };
                     }
                 });
-                return parsedParam as Param;
+                return parsedParam as UnknownParam;
             })
             .map(_.unary(fillParamWithDefaultValue))
             .each(param => {
@@ -126,20 +125,20 @@ export default <
                     preprocessor(param);
                     param.subParam.not = boolStrToBool(param.subParam.not);
                 }
-                const isUniqueParam = (p: Param): p is TUniqueParam => p.name in uniqueParams.value;
+                const isUniqueParam = (p: UnknownParam): p is UniqueParam => p.name in uniqueParams.value;
                 if (isUniqueParam(param)) { // is unique param
                     uniqueParams.value[param.name as keyof UniqueParams] = param;
                 } else {
-                    params.value.push(param as TParam);
+                    params.value.push(param as Param);
                 }
             })
             .value();
     };
-    const submitParamRoute = (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<TParam>>) => {
+    const submitParamRoute = (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<Param>>) => {
         const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
-        const subParamValue = (subParam?: Param['subParam']) =>
+        const subParamValue = (subParam?: UnknownParam['subParam']) =>
             _.map(subParam, (value, name) => `;${name}:${escapeParamValue(value)}`).join('');
-        const flatParams = [...Object.values(filteredUniqueParams) as TParam[], ...filteredParams];
+        const flatParams = [...Object.values(filteredUniqueParams) as Param[], ...filteredParams];
         void router.push({
             path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param => `${param.name}:${paramValue(param.value)}${subParamValue(param.subParam)}`)
