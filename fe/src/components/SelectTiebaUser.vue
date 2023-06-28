@@ -40,15 +40,10 @@
 </template>
 
 <script lang="ts">
-export const selectTiebaUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
-</script>
-
-<script setup lang="ts">
-import type { BaiduUserID } from '@/api/index.d';
+import type { BaiduUserID } from '@/api/index.d.ts';
 import type { ObjValues } from '@/shared';
-import { onMounted, reactive, watch } from 'vue';
-import _ from 'lodash';
 
+export const selectTiebaUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
 export type SelectTiebaUserBy = typeof selectTiebaUserBy[number];
 export type SelectTiebaUserParams = Partial<{
     uid: BaiduUserID,
@@ -58,10 +53,15 @@ export type SelectTiebaUserParams = Partial<{
     displayName: string | 'NULL',
     displayNameUseRegex: boolean
 }>;
-const selectTiebaUserParamsNames = ['uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'] as const;
 type SelectTiebaUserParamsValues = ObjValues<SelectTiebaUserParams>;
+const selectTiebaUserParamsNames = ['uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'] as const;
 // widen type Record<string, SelectTiebaUserParamsValues> for compatible with props.paramsNameMap
 export interface SelectTiebaUserModel { selectBy: SelectTiebaUserBy, params: Record<string, SelectTiebaUserParamsValues> | SelectTiebaUserParams }
+</script>
+
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue';
+import _ from 'lodash';
 
 const props = defineProps<{
     modelValue: SelectTiebaUserModel,

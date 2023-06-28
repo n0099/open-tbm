@@ -1,5 +1,5 @@
 <template>
-    <select @input="$emit('update:modelValue', $event.target.value)"
+    <select @input="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
             :id="id" :value="modelValue" class="form-control">
         <option v-for="(text, granularity) in options" :key="granularity" :value="granularity">{{ text }}</option>
     </select>
@@ -14,7 +14,7 @@ import _ from 'lodash';
 const props = withDefaults(defineProps<{
     modelValue: string,
     id: string,
-    granularities: string[]
+    granularities: readonly string[]
 }>(), { id: 'queryTimeGranularity' });
 defineEmits({
     'update:modelValue': emitEventStrValidator

@@ -1,5 +1,5 @@
 <template>
-    <RangePicker @change="timeRangeChanged" :id="id" :value="timeRange" :ranges="{
+    <RangePicker @change="(value, _) => timeRangeChanged(value as [Dayjs, Dayjs])" :id="id" :value="timeRange" :ranges="{
         昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
         今天: [dayjs().startOf('day'), dayjs().endOf('day')],
         本周: [dayjs().startOf('week'), dayjs().endOf('week')],
@@ -23,7 +23,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
 const props = withDefaults(defineProps<{
-    id: StringConstructor,
+    id: () => string,
     startTime: number,
     endTime: number,
     timesAgo: DurationLike

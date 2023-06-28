@@ -66,7 +66,7 @@ export interface ThreadRecord extends LaravelEloquentRecordsCommonTimestampField
     threadType: UInt | number | 1024 | 1040,
     stickyType: 'membertop' | 'top',
     isGood: BoolInt,
-    topicType: 'normal',
+    topicType: '' | 'text',
     title: string,
     authorUid: BaiduUserID,
     authorManagerType: AuthorManagerType,

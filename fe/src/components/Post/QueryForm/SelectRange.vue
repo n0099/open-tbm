@@ -1,5 +1,5 @@
 <template>
-    <select @input="$emit('update:modelValue', $event.target as HTMLSelectElement.value)" :value="modelValue"
+    <select @input="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)" :value="modelValue"
             class="form-select form-control flex-grow-0">
         <option>&lt;</option>
         <option>=</option>

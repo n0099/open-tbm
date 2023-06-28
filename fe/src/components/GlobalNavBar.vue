@@ -14,7 +14,7 @@
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </a>
                             <div class="dropdown-menu">
-                                <RouterLink v-for="r in nav.routes" :key="r.route.name" :to="{ name: r.route }" class="nav-link">
+                                <RouterLink v-for="r in nav.routes" :key="r.route" :to="{ name: r.route }" class="nav-link">
                                     <FontAwesomeIcon v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
                                 </RouterLink>
                             </div>

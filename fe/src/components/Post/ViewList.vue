@@ -61,7 +61,7 @@
                     </div>
                 </div>
             </div>
-            <div v-for="reply in thread.replies" :key="reply.pid" :id="reply.pid" :data-post-id="reply.pid">
+            <div v-for="reply in thread.replies" :key="reply.pid" :id="String(reply.pid)" :data-post-id="reply.pid">
                 <div class="reply-title sticky-top card-header">
                     <div class="d-inline-flex gap-1 h5">
                         <span class="badge bg-secondary">{{ reply.floor }}楼</span>

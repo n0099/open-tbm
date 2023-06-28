@@ -1,7 +1,7 @@
 <template>
     <div>
         <PagePrevButton :page="users.pages" :pageRoutes="pageRoutes" />
-        <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="user.uid" class="row">
+        <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="String(user.uid)" class="row">
             <div class="col-3">
                 <img :data-src="tiebaUserPortraitUrl(user.avatarUrl)"
                      class="lazy d-block mx-auto badge bg-light" width="110" height="110" />

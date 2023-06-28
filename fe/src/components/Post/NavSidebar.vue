@@ -10,7 +10,7 @@
                     {{ thread.title }}
                     <div class="d-block btn-group p-1" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
-                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="isFirstReplyInView"
+                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="isFirstReplyInView.toString()"
                                     @click="navigate(page, null, reply.pid)" :data-pid="reply.pid"
                                     :class="{
                                         'btn-info': isFirstReplyInView,
@@ -24,7 +24,7 @@
             </SubMenu>
         </template>
     </Menu>
-    <a @click="togglePostsNavExpanded"
+    <a @click="_ => togglePostsNavExpanded"
        class="posts-nav-expanded col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
         <!-- https://github.com/FortAwesome/vue-fontawesome/issues/313 -->
         <span v-show="isPostsNavExpanded"><FontAwesomeIcon icon="angle-left" /></span>
@@ -44,6 +44,7 @@ import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
+import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
@@ -63,9 +64,9 @@ const navigate = (page: number | string, tid: string | null, pid?: Pid | string)
     });
     isScrollTriggeredByNavigate = true;
 };
-const selectThread = ({ domEvent, key }: { domEvent: PointerEvent & { target: Element }, key: string }) => {
-    if (domEvent.target.tagName !== 'BUTTON') { // ignore clicks on reply link
-        const [, p, t] = /page(\d+)-t(\d+)/u.exec(key) ?? [];
+const selectThread: MenuClickEventHandler = ({ domEvent, key }) => {
+    if ((domEvent.target as Element).tagName !== 'BUTTON') { // ignore clicks on reply link
+        const [, p, t] = /page(\d+)-t(\d+)/u.exec(String(key)) ?? [];
         navigate(p, t);
     }
 };
