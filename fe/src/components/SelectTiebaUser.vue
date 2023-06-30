@@ -90,7 +90,7 @@ watch(() => props.modelValue, () => {
     if (_.isEmpty(props.modelValue)) emitModelChange();
     else ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
     // filter out unnecessary and undefined params
-    params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), (i?: SelectTiebaUserParamsValues) => i === undefined);
+    params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), _.isUndefined);
     // reset to default selectBy if it's a invalid value
     if (!selectTiebaUserBy.includes(selectBy.value)) selectBy.value = '';
     if (selectBy.value === 'uid') params.value.uidCompareBy ??= '='; // set to default value if it's undefined

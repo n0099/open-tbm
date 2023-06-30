@@ -183,7 +183,7 @@ const {
     addParam,
     changeParam,
     deleteParam,
-    fillParamWithDefaultValue,
+    fillParamDefaultValue,
     clearParamDefaultValue,
     clearedParamsDefaultValue,
     clearedUniqueParamsDefaultValue,
@@ -332,7 +332,7 @@ const checkParams = () => {
 
 const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     assertRouteNameIsStr(route.name);
-    uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamWithDefaultValue)) as KnownUniqueParams;
+    uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
     params.value = [];
     const routeName = removeEnd(route.name, '+p');
     // parse route path to params
@@ -342,9 +342,9 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
         uniqueParams.value.fid.value = parseInt(route.params.fid);
     } else { // post id routes
         uniqueParams.value = _.mapValues(uniqueParams.value, param =>
-            fillParamWithDefaultValue(param, true)) as KnownUniqueParams; // reset to default
+            fillParamDefaultValue(param, true)) as KnownUniqueParams; // reset to default
         params.value = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
-            fillParamWithDefaultValue({ name, value }));
+            fillParamDefaultValue({ name, value }));
     }
 };
 const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded): ReturnType<typeof flattenParams> | false => {

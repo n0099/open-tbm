@@ -1,5 +1,6 @@
 import type { ObjUnknown, ObjValues } from '@/shared';
 import { boolStrToBool } from '@/shared';
+import type { Ref } from 'vue';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
@@ -20,11 +21,12 @@ export default <
     type UniqueParam = ObjValues<UniqueParams>;
     type Param = ObjValues<Params>;
     const router = useRouter();
-    const uniqueParams = ref<UniqueParams>({} as UniqueParams);
-    const params = ref<Param[]>([]); // [{ name: '', value: '', subParam: { name: value } },...]
+    // [{ name: '', value: '', subParam: { name: value } },...]
+    const uniqueParams = ref<UniqueParams>({} as UniqueParams) as Ref<UniqueParams>;
+    const params = ref<Param[]>([]) as Ref<Param[]>;
     const invalidParamsIndex = ref<number[]>([]);
 
-    const fillParamWithDefaultValue = <T extends Param | UniqueParam>
+    const fillParamDefaultValue = <T extends Param | UniqueParam>
     (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
@@ -36,11 +38,11 @@ export default <
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
     };
     const addParam = (name: string) => {
-        params.value.push(fillParamWithDefaultValue({ name }));
+        params.value.push(fillParamDefaultValue({ name }));
     };
     const changeParam = (beforeParamIndex: number, afterParamName: string) => {
         _.pull(invalidParamsIndex.value, beforeParamIndex);
-        params.value[beforeParamIndex] = fillParamWithDefaultValue({ name: afterParamName });
+        params.value[beforeParamIndex] = fillParamDefaultValue({ name: afterParamName });
     };
     const deleteParam = (paramIndex: number) => {
         _.pull(invalidParamsIndex.value, paramIndex);
@@ -52,7 +54,7 @@ export default <
     const clearParamDefaultValue = <T extends UnknownParam>(param: UnknownParam): Partial<T | UnknownParam> | null => {
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
-        // remove subParam.not: false, which previously added by fillParamWithDefaultValue()
+        // remove subParam.not: false, which previously added by fillParamDefaultValue()
         if (defaultParam.subParam !== undefined) defaultParam.subParam.not ??= false;
         const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
         // number will consider as empty in isEmpty(), to prevent this we use complex short circuit evaluate expression
@@ -76,14 +78,18 @@ export default <
     const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
         _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;
+    const removeUndefinedFromPartialObjectValues = <T extends Partial<T>, R>(object: Partial<T>) =>
+        Object.values(object).filter(i => i !== undefined) as R[];
     const flattenParams = (): ObjUnknown[] => {
         const flattenParam = (param: Partial<UnknownParam>) => {
             const flatted: ObjUnknown = {};
             flatted[param.name ?? 'undef'] = param.value;
             return { ...flatted, ...param.subParam };
         };
+        const clearedUniqueParamsDefaultValueWithoutUndefined
+            = removeUndefinedFromPartialObjectValues<UniqueParams, UnknownParam>(clearedUniqueParamsDefaultValue());
         return [
-            ...Object.values(clearedUniqueParamsDefaultValue()).map(flattenParam),
+            ...clearedUniqueParamsDefaultValueWithoutUndefined.map(flattenParam),
             ...clearedParamsDefaultValue().map(flattenParam)
         ];
     };
@@ -118,7 +124,7 @@ export default <
                 });
                 return parsedParam as UnknownParam;
             })
-            .map(_.unary(fillParamWithDefaultValue))
+            .map(_.unary(fillParamDefaultValue))
             .each(param => {
                 const preprocessor = deps.paramsPreprocessor[param.name];
                 if (preprocessor !== undefined) {
@@ -138,7 +144,10 @@ export default <
         const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
         const subParamValue = (subParam?: UnknownParam['subParam']) =>
             _.map(subParam, (value, name) => `;${name}:${escapeParamValue(value)}`).join('');
-        const flatParams = [...Object.values(filteredUniqueParams) as Param[], ...filteredParams];
+        const flatParams = [
+            ...removeUndefinedFromPartialObjectValues<UniqueParams, UniqueParam>(filteredUniqueParams),
+            ...filteredParams
+        ];
         void router.push({
             path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param => `${param.name}:${paramValue(param.value)}${subParamValue(param.subParam)}`)
@@ -155,8 +164,8 @@ export default <
     }, { deep: true });
 
     onBeforeMount(() => {
-        uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamWithDefaultValue)) as UniqueParams;
-        params.value = params.value.map(_.unary(fillParamWithDefaultValue)) as typeof params.value;
+        uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as UniqueParams;
+        params.value = params.value.map(_.unary(fillParamDefaultValue)) as typeof params.value;
     });
 
     return {
@@ -166,7 +175,7 @@ export default <
         addParam,
         changeParam,
         deleteParam,
-        fillParamWithDefaultValue,
+        fillParamDefaultValue,
         clearParamDefaultValue,
         clearedParamsDefaultValue,
         clearedUniqueParamsDefaultValue,
