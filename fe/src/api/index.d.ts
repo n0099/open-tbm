@@ -53,7 +53,11 @@ export interface TiebaUserRecord extends LaravelEloquentRecordsCommonTimestampFi
     gender: TiebaUserGender,
     fansNickname: string | null,
     icon: ObjUnknown[] | null,
-    ipGeolocation: string | null
+    ipGeolocation: string | null,
+    currentForumModerator: {
+        discoveredAt: UnixTimestamp,
+        moderatorType: ForumModeratorType | ''
+    } | null
 }
 export interface ApiUsersQuery {
     pages: Pagination,
@@ -72,7 +76,7 @@ interface Agree {
     agreeCount: Int,
     disagreeCount: Int
 }
-export type AuthorManagerType = 'assist' | 'manager' | 'picadmin' | 'voiceadmin';
+export type ForumModeratorType = 'assist' | 'manager' | 'picadmin' | 'voiceadmin';
 export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 export interface ThreadRecord extends Post {
     threadType: UInt | 1024 | 1040,
@@ -93,7 +97,6 @@ export interface ReplyRecord extends Post {
     pid: Pid,
     floor: UInt,
     content: string, // original json convert to html string via be/app/resources/views/renderPostContent.blade.php
-    authorExpGrade: AuthorExpGrade,
     subReplyCount: UInt,
     isFold: UInt | 0 | 6,
     geolocation: ObjUnknown | null
@@ -101,8 +104,7 @@ export interface ReplyRecord extends Post {
 export interface SubReplyRecord extends Post {
     pid: Pid,
     spid: Spid,
-    content: string, // original json convert to html string via be/app/resources/views/renderPostContent.blade.php
-    authorExpGrade: AuthorExpGrade
+    content: string // original json convert to html string via be/app/resources/views/renderPostContent.blade.php
 }
 
 export type ApiPostsQuery = ApiUsersQuery & {

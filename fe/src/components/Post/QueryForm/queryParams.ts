@@ -1,5 +1,6 @@
 import type { NamelessUnknownParam, ParamPreprocessorOrWatcher, UnknownParam } from './useQueryForm';
 import useQueryForm from './useQueryForm';
+import type { ForumModeratorType } from '@/api';
 import type { DeepWritable, Fid, ObjEmpty, PostID, PostType } from '@/shared';
 import { boolStrToBool } from '@/shared';
 import _ from 'lodash';
@@ -72,7 +73,7 @@ interface NamelessParamDateTime { value: string, subParam: { range: undefined } 
 interface NamelessParamGender { value: '0' | '1' | '2' }
 interface NamelessParamsOther {
     threadProperties: { value: Array<'good' | 'sticky'> },
-    authorManagerType: { value: 'assist' | 'manager' | 'NULL' | 'voiceadmin' }
+    authorManagerType: { value: ForumModeratorType | 'NULL' }
 }
 
 export type AddNameToParam<Name, NamelessParam> = NamelessParam & { name: Name, value: unknown, subParam: ObjEmpty };

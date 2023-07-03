@@ -50,8 +50,8 @@
                             <span v-else class="fw-normal link-info">楼主及最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                         </RouterLink>
-                        <UserTag v-if="thread.authorManagerType !== null"
-                                 :user="{ managerType: thread.authorManagerType }" />
+                        <UserTag v-if="getUser(thread.authorUid).currentForumModerator !== null"
+                                 :user="getUser(thread.authorUid)" />
                         <template v-if="thread.latestReplierUid !== thread.authorUid">
                             <RouterLink :to="userRoute(thread.latestReplierUid)" target="_blank" class="ms-2">
                                 <span class="fw-normal link-secondary">最后回复：</span>
@@ -92,11 +92,7 @@
                             <p class="my-0">{{ author.name }}</p>
                             <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
                         </RouterLink>
-                        <UserTag :user="{
-                            uid: { current: reply.authorUid, thread: thread.authorUid },
-                            managerType: reply.authorManagerType,
-                            expGrade: reply.authorExpGrade
-                        }" />
+                        <UserTag :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
                     </div>
                     <div class="col me-2 px-1 border-start overflow-auto">
                         <div v-viewer.static class="p-2" v-html="reply.content" />
@@ -114,11 +110,9 @@
                                                         class="sub-reply-author text-wrap badge bg-light">
                                                 <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)" class="tieba-user-portrait-small lazy" />
                                                 <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
-                                                <UserTag :user="{
-                                                    uid: { current: subReply.authorUid, thread: thread.authorUid, reply: reply.authorUid },
-                                                    managerType: subReply.authorManagerType,
-                                                    expGrade: subReply.authorExpGrade
-                                                }" />
+                                                <UserTag :user="getUser(subReply.authorUid)"
+                                                         :threadAuthorUid="thread.authorUid"
+                                                         :replyAuthorUid="reply.authorUid" />
                                             </RouterLink>
                                             <div class="float-end badge bg-light">
                                                 <div class="d-inline" :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
@@ -186,7 +180,6 @@ const posts = computed(() => {
                     // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
                         && subReply.authorUid === previousSubReply.authorUid
-                        && subReply.authorManagerType === previousSubReply.authorManagerType
                         && subReply.authorExpGrade === previousSubReply.authorExpGrade
                     ) _.last(groupedSubReplies)?.push(subReply); // append to last group
                     else groupedSubReplies.push([subReply]); // new group

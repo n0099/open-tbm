@@ -9,6 +9,7 @@ use App\Http\PostsQuery\SearchQuery;
 use App\Eloquent\Model\ForumModel;
 use App\Eloquent\Model\UserModel;
 use Barryvdh\Debugbar\Facades\Debugbar;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
 
 class PostsQuery extends Controller
@@ -68,7 +69,8 @@ class PostsQuery extends Controller
                         Helper::POST_TYPES_PLURAL
                     ))
                     ->flatten()->unique()->toArray()
-            )->selectPublicFields()->get()->toArray()
+            )->with(['currentForumModerator' => fn (HasOne $q) => $q->where('fid', $result['fid'])])
+                ->selectPublicFields()->get()->toArray()
         ];
     }
 }

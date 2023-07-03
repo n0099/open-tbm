@@ -9,12 +9,12 @@
             <ThreadTag :thread="record" />
             <span>{{ record.title }}</span>
         </template>
-        <template #postAuthor="{ record: { authorUid, authorManagerType } }">
+        <template #postAuthor="{ record: { authorUid } }">
             <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
                 <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
             </a>
-            <UserTag :user="{ managerType: authorManagerType }" />
+            <UserTag :user="getUser(authorUid)" />
         </template>
         <template #postLatestReplier="{ record: { latestReplierUid } }">
             <a :href="toTiebaUserProfileUrl(getUser(latestReplierUid))" target="_blank">
@@ -26,16 +26,12 @@
             <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
                    :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
-                <template #postAuthor="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                <template #postAuthor="{ record: { authorUid } }">
                     <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
                         <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                     </a>
-                    <UserTag :user="{
-                        uid: { current: authorUid, thread: threadAuthorUid },
-                        managerType: authorManagerType,
-                        expGrade: authorExpGrade
-                    }" />
+                    <UserTag :user="getUser(authorUid)" :threadAuthorUid="threadAuthorUid" />
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
                     <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
@@ -43,16 +39,14 @@
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                            :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
-                        <template #postAuthor="{ record: { authorUid, authorManagerType, authorExpGrade } }">
+                        <template #postAuthor="{ record: { authorUid } }">
                             <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
                                 <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                             </a>
-                            <UserTag :user="{
-                                uid: { current: authorUid, thread: threadAuthorUid, reply: replyAuthorUid },
-                                managerType: authorManagerType,
-                                expGrade: authorExpGrade
-                            }" />
+                            <UserTag :user="getUser(authorUid)"
+                                     :threadAuthorUid="threadAuthorUid"
+                                     :replyAuthorUid="replyAuthorUid" />
                         </template>
                         <template #expandedRowRender="{ record: { content: subReplyContent } }">
                             <span v-viewer.static v-html="subReplyContent" />

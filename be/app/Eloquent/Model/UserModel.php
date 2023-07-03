@@ -5,11 +5,14 @@ namespace App\Eloquent\Model;
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 class UserModel extends Model
 {
     use ModelHasPublicField;
+
+    public static $snakeAttributes = false;
 
     protected $table = 'tbmc_user';
 
@@ -49,5 +52,13 @@ class UserModel extends Model
             return $query->whereIn('uid', $uid);
         }
         throw new \InvalidArgumentException('Uid must be int or array');
+    }
+
+    public function currentForumModerator(): HasOne
+    {
+        return $this
+            ->hasOne(ForumModeratorModel::class, 'portrait', 'portrait')
+            ->orderBy('discoveredAt', 'DESC')
+            ->selectPublicFields();
     }
 }
