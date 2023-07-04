@@ -1,6 +1,6 @@
 import type { NamelessUnknownParam, ParamPreprocessorOrWatcher, UnknownParam } from './useQueryForm';
 import useQueryForm from './useQueryForm';
-import type { ForumModeratorType } from '@/api';
+import type { ForumModeratorType } from '@/api/index.d';
 import type { DeepWritable, Fid, ObjEmpty, PostID, PostType } from '@/shared';
 import { boolStrToBool } from '@/shared';
 import _ from 'lodash';

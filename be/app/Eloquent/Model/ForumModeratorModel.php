@@ -11,11 +11,14 @@ class ForumModeratorModel extends Model
 
     protected $table = 'tbmcr_forumModerator';
 
+    protected $hidden = ['portrait']; // for relationship in UserModel::currentForumModerator()
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         $this->publicFields = [
             'discoveredAt',
+            'portrait',
             'moderatorType'
         ];
     }

@@ -52,6 +52,21 @@ class PostsQuery extends Controller
         $result = $query->fillWithParentPost();
         Debugbar::stopMeasure('fillWithParentPost');
 
+        Debugbar::startMeasure('queryUsers');
+        $users = UserModel::whereIn(
+            'uid',
+            $result['threads']
+                ->pluck('latestReplierUid')
+                ->concat(array_map(
+                    static fn (string $type) => $result[$type]->pluck('authorUid'),
+                    Helper::POST_TYPES_PLURAL
+                ))
+                ->flatten()->filter() // remove NULLs from column latestReplierUid
+                ->unique()->toArray()
+        )->with(['currentForumModerator' => fn (HasOne $q) => $q->where('fid', $result['fid'])])
+            ->selectPublicFields()->get()->toArray();
+        Debugbar::stopMeasure('queryUsers');
+
         return [
             'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
@@ -60,17 +75,7 @@ class PostsQuery extends Controller
             ],
             'forum' => ForumModel::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
-            'users' => UserModel::whereIn(
-                'uid',
-                $result['threads']
-                    ->pluck('latestReplierUid')
-                    ->concat(array_map(
-                        static fn (string $type) => $result[$type]->pluck('authorUid'),
-                        Helper::POST_TYPES_PLURAL
-                    ))
-                    ->flatten()->unique()->toArray()
-            )->with(['currentForumModerator' => fn (HasOne $q) => $q->where('fid', $result['fid'])])
-                ->selectPublicFields()->get()->toArray()
+            'users' => $users
         ];
     }
 }

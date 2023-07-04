@@ -56,7 +56,7 @@ export interface TiebaUserRecord extends LaravelEloquentRecordsCommonTimestampFi
     ipGeolocation: string | null,
     currentForumModerator: {
         discoveredAt: UnixTimestamp,
-        moderatorType: ForumModeratorType | ''
+        moderatorType: ForumModeratorType | '' | `${ForumModeratorType},${ForumModeratorType}`
     } | null
 }
 export interface ApiUsersQuery {
@@ -76,7 +76,8 @@ interface Agree {
     agreeCount: Int,
     disagreeCount: Int
 }
-export type ForumModeratorType = 'assist' | 'manager' | 'picadmin' | 'voiceadmin';
+export type ForumModeratorType = string | 'assist' | 'fourth_manager' | 'fourthmanager' | 'manager'
+| 'picadmin' | 'publication_editor' | 'publication' | 'videoadmin' | 'voiceadmin';
 export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 export interface ThreadRecord extends Post {
     threadType: UInt | 1024 | 1040,

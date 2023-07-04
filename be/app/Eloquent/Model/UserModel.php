@@ -12,7 +12,7 @@ class UserModel extends Model
 {
     use ModelHasPublicField;
 
-    public static $snakeAttributes = false;
+    public static $snakeAttributes = false; // for relationship attributes
 
     protected $table = 'tbmc_user';
 
@@ -56,9 +56,8 @@ class UserModel extends Model
 
     public function currentForumModerator(): HasOne
     {
-        return $this
+        return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
             ->hasOne(ForumModeratorModel::class, 'portrait', 'portrait')
-            ->orderBy('discoveredAt', 'DESC')
-            ->selectPublicFields();
+            ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
     }
 }
