@@ -76,7 +76,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                 Portrait = g.Key,
                 // user can serve as multiple moderators, so join these types with commas
                 // the https://en.wikipedia.org/wiki/Order_of_precedence is same with div.bawu_single_type in the response HTML
-                ModeratorType = string.Join(',', g.Select(t => t.Type))
+                ModeratorTypes = string.Join(',', g.Select(t => t.Type))
             }).ToList();
         var existingLatestRevisions = (
                 from rev in db.ForumModeratorRevisions.AsNoTracking()
@@ -84,14 +84,14 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                 select new
                 {
                     rev.Portrait,
-                    rev.ModeratorType,
+                    ModeratorType = rev.ModeratorTypes,
                     Rank = Sql.Ext.Rank().Over().PartitionBy(rev.Portrait).OrderByDesc(rev.DiscoveredAt).ToValue()
                 }).Where(e => e.Rank == 1)
             .ToLinqToDB().ToList();
 
         db.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
             existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorType)),
-            rev => (rev.Portrait, rev.ModeratorType)));
+            rev => (rev.Portrait, rev.ModeratorTypes)));
         db.ForumModeratorRevisions.AddRange(existingLatestRevisions
             .Where(e => e.ModeratorType != "") // filter out revisions that recorded someone who resigned from moderators
             .ExceptBy(revisions.Select(rev => rev.Portrait), e => e.Portrait)
@@ -100,7 +100,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                 DiscoveredAt = now,
                 Fid = fid,
                 Portrait = e.Portrait,
-                ModeratorType = "" // moderator only exists in DB means he is no longer a moderator
+                ModeratorTypes = "" // moderator only exists in DB means he is no longer a moderator
             }));
 
         _ = await db.SaveChangesAsync(stoppingToken);

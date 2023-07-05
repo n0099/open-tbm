@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Eloquent\Model;
+namespace App\Eloquent\Model\Revision;
 
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +19,7 @@ class ForumModeratorModel extends Model
         $this->publicFields = [
             'discoveredAt',
             'portrait',
-            'moderatorType'
+            'moderatorTypes'
         ];
     }
 }

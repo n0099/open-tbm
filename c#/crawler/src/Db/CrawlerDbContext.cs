@@ -72,7 +72,7 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFacto
         user.SplittingHasKeyAndName<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
 
         b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
-        b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator").HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorType});
+        b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator").HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorTypes});
         b.Entity<Forum>().ToTable("tbm_forum");
     }
 #pragma warning restore IDE0058 // Expression value is never used

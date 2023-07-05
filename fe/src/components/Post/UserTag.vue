@@ -4,12 +4,12 @@
                 type="button" class="badge btn btn-success">楼主</button>
         <button v-if="user.uid === replyAuthorUid"
                 type="button" class="badge btn btn-info">层主</button>
-        <template v-if="user.currentForumModerator !== null && user.currentForumModerator.moderatorType !== ''">
+        <template v-if="user.currentForumModerator !== null && user.currentForumModerator.moderatorTypes !== ''">
             <button v-for="moderator in Object.values(moderators)"
                     :key="moderator[0]" type="button"
                     :class="`badge btn btn-${moderator[1]}`">{{ moderator[0] }}</button>
             <button v-if="_.isEmpty(moderators)" type="button" class="badge btn btn-info">
-                {{ user.currentForumModerator.moderatorType }}
+                {{ user.currentForumModerator.moderatorTypes }}
             </button>
         </template>
         <button v-if="user.expGrade !== undefined"
@@ -29,7 +29,7 @@ const props = defineProps<{
     replyAuthorUid?: BaiduUserID
 }>();
 
-const moderatorTypes: { [P in ForumModeratorType]: [string, BootstrapColors] } = {
+const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColors] } = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     fourth_manager: ['第四吧主', 'danger'],
     fourthmanager: ['第四吧主', 'danger'],
@@ -43,5 +43,5 @@ const moderatorTypes: { [P in ForumModeratorType]: [string, BootstrapColors] } =
     publication: ['吧刊小编', 'secondary']
 };
 const moderators = computed(() =>
-    _.pick(moderatorTypes, props.user.currentForumModerator?.moderatorType.split(',') ?? []));
+    _.pick(knownModeratorTypes, props.user.currentForumModerator?.moderatorTypes.split(',') ?? []));
 </script>

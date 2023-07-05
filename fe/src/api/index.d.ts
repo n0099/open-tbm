@@ -56,7 +56,7 @@ export interface TiebaUserRecord extends LaravelEloquentRecordsCommonTimestampFi
     ipGeolocation: string | null,
     currentForumModerator: {
         discoveredAt: UnixTimestamp,
-        moderatorType: ForumModeratorType | '' | `${ForumModeratorType},${ForumModeratorType}`
+        moderatorTypes: ForumModeratorType | '' | `${ForumModeratorType},${ForumModeratorType}`
     } | null
 }
 export interface ApiUsersQuery {

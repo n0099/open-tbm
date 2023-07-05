@@ -2,6 +2,7 @@
 
 namespace App\Eloquent\Model;
 
+use App\Eloquent\Model\Revision\ForumModeratorModel;
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
