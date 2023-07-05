@@ -22,6 +22,9 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
         var outNullableUsers = new List<User?>();
         outPosts = ParsePostsInternal(inPosts, outNullableUsers)
             .ToDictionary(PostIdSelector, post => post);
+        if (outPosts.Values.Any(p => p.AuthorUid == 0))
+            throw new TiebaException(shouldRetry: true,
+                "Value of IPost.AuthorUid is the protoBuf default value 0.");
         outUsers.AddRange(outNullableUsers.OfType<User>()
             .Where(u => u.CalculateSize() != 0)); // remove empty users
     }

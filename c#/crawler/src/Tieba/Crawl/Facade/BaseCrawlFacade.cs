@@ -48,9 +48,6 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
-        if (Posts.Values.Any(p => p.AuthorUid == 0))
-            throw new TiebaException(shouldRetry: true,
-                "Value of IPost.AuthorUid is the protoBuf default value 0.");
         var db = _dbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 

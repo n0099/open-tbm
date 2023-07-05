@@ -6,7 +6,8 @@ public class ImageBatchProducingWorker : ErrorableWorker
     private readonly ILifetimeScope _scope0;
     private readonly ImageRequester _imageRequester;
     private readonly ChannelWriter<List<ImageWithBytes>> _writer;
-    private readonly int _batchSize;
+    private readonly int _produceImageBatchSize;
+    private readonly int _prefetchUnconsumedImagesFactor;
     private readonly int _interlaceBatchCount;
     private readonly int _interlaceBatchIndex;
     private readonly bool _startFromLatestSuccessful;
@@ -21,7 +22,8 @@ public class ImageBatchProducingWorker : ErrorableWorker
     {
         (_logger, _scope0, _imageRequester, _writer) = (logger, scope0, imageRequester, channel);
         var configSection = config.GetSection("ImageBatchProducer");
-        _batchSize = configSection.GetValue("BatchSize", 16);
+        _produceImageBatchSize = configSection.GetValue("ProduceImageBatchSize", 16);
+        _prefetchUnconsumedImagesFactor = configSection.GetValue("PrefetchUnconsumedImagesFactor", 16);
         _interlaceBatchCount = configSection.GetValue("InterlaceBatchCount", 1);
         _interlaceBatchIndex = configSection.GetValue("InterlaceBatchIndex", 0);
         _startFromLatestSuccessful = configSection.GetValue("StartFromLatestSuccessful", false);
@@ -29,9 +31,10 @@ public class ImageBatchProducingWorker : ErrorableWorker
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        foreach (var images in GetUnconsumedImages())
+        foreach (var imageBatch in GetUnconsumedImages()
+                     .SelectMany(imageBatch => imageBatch.Chunk(_produceImageBatchSize)))
         {
-            var imageWithBytesArray = await Task.WhenAll(images.Select(async image =>
+            var imagesWithBytes = await Task.WhenAll(imageBatch.Select(async image =>
             {
                 try
                 {
@@ -47,7 +50,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
                     return null;
                 }
             }));
-            await _writer.WriteAsync(new(imageWithBytesArray.OfType<ImageWithBytes>()), stoppingToken);
+            await _writer.WriteAsync(new(imagesWithBytes.OfType<ImageWithBytes>()), stoppingToken);
         }
         _writer.Complete();
         _logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.StartFromLatestSuccessful\""
@@ -78,7 +81,7 @@ public class ImageBatchProducingWorker : ErrorableWorker
                         : !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                     orderby image.ImageId
                     select image)
-                .Take(_batchSize * _interlaceBatchCount).ToList();
+                .Take(_produceImageBatchSize * _prefetchUnconsumedImagesFactor * _interlaceBatchCount).ToList();
             if (!interlaceBatches.Any()) yield break;
             lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;
             yield return interlaceBatches
