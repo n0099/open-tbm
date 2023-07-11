@@ -24,7 +24,8 @@ export const baseGetUser = (users: TiebaUserRecord[]) => (uid: BaiduUserID): Tie
     ipGeolocation: null,
     createdAt: 0,
     updatedAt: 0,
-    currentForumModerator: null
+    currentForumModerator: null,
+    currentAuthorExpGrade: null
 };
 export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUser>) => (uid: BaiduUserID) => {
     const { name, displayName } = injectedGetUser(uid);

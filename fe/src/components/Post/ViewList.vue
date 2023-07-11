@@ -174,13 +174,12 @@ const posts = computed(() => {
         thread.replies = thread.replies.map(reply => {
             reply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
                 (groupedSubReplies, subReply, index, subReplies) => {
-                    if (_.isArray(subReply)) return [subReply]; // useless since subReply will never be an array
+                    if (_.isArray(subReply)) return [subReply]; // useless guard since subReply will never be an array
                     // group sub replies item by continuous and same post author
                     const previousSubReply = subReplies[index - 1] as SubReplyRecord | undefined;
                     // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
                         && subReply.authorUid === previousSubReply.authorUid
-                        && subReply.authorExpGrade === previousSubReply.authorExpGrade
                     ) _.last(groupedSubReplies)?.push(subReply); // append to last group
                     else groupedSubReplies.push([subReply]); // new group
                     return groupedSubReplies;

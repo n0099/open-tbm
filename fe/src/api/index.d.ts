@@ -57,6 +57,10 @@ export interface TiebaUserRecord extends LaravelEloquentRecordsCommonTimestampFi
     currentForumModerator: {
         discoveredAt: UnixTimestamp,
         moderatorTypes: ForumModeratorType | '' | `${ForumModeratorType},${ForumModeratorType}`
+    } | null,
+    currentAuthorExpGrade: {
+        discoveredAt: UnixTimestamp,
+        authorExpGrade: AuthorExpGrade
     } | null
 }
 export interface ApiUsersQuery {

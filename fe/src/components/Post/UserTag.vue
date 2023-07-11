@@ -12,8 +12,8 @@
                 {{ user.currentForumModerator.moderatorTypes }}
             </button>
         </template>
-        <button v-if="user.expGrade !== undefined"
-                type="button" class="badge btn btn-primary">Lv{{ user.expGrade }}</button>
+        <button v-if="user.currentAuthorExpGrade !== null"
+                type="button" class="badge btn btn-primary">{{ user.currentAuthorExpGrade.authorExpGrade }}级</button>
     </div>
 </template>
 

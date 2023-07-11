@@ -53,6 +53,7 @@ class PostsQuery extends Controller
         Debugbar::stopMeasure('fillWithParentPost');
 
         Debugbar::startMeasure('queryUsers');
+        $whereCurrentFid = static fn (HasOne $q) => $q->where('fid', $result['fid']);
         $users = UserModel::whereIn(
             'uid',
             $result['threads']
@@ -63,7 +64,7 @@ class PostsQuery extends Controller
                 ))
                 ->flatten()->filter() // remove NULLs from column latestReplierUid
                 ->unique()->toArray()
-        )->with(['currentForumModerator' => fn (HasOne $q) => $q->where('fid', $result['fid'])])
+        )->with(['currentForumModerator' => $whereCurrentFid, 'currentAuthorExpGrade' => $whereCurrentFid])
             ->selectPublicFields()->get()->toArray();
         Debugbar::stopMeasure('queryUsers');
 

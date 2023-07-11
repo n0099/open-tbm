@@ -2,6 +2,7 @@
 
 namespace App\Eloquent\Model;
 
+use App\Eloquent\Model\Revision\AuthorExpGradeModel;
 use App\Eloquent\Model\Revision\ForumModeratorModel;
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,6 +60,13 @@ class UserModel extends Model
     {
         return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
             ->hasOne(ForumModeratorModel::class, 'portrait', 'portrait')
+            ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
+    }
+
+    public function currentAuthorExpGrade(): HasOne
+    {
+        return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
+            ->hasOne(AuthorExpGradeModel::class, 'uid', 'uid')
             ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
     }
 }
