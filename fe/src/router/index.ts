@@ -5,7 +5,7 @@ import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
 import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw, RouterScrollBehavior } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
-import NProgress from 'nprogress';
+import nprogress from 'nprogress';
 import _ from 'lodash';
 
 const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
@@ -25,14 +25,14 @@ export const routeNameWithPage = (name: string) => (_.endsWith(name, '+p') ? nam
 export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.params.page ?? 1);
 
 const lazyLoadRouteView = async (component: Promise<Component>) => {
-    NProgress.start();
+    nprogress.start();
     const loadingBlocksDom = document.getElementById('loadingBlocksRouteUpdate');
     const containersDom = ['.container', '.container-fluid:not(#nav)'].flatMap(i => [...document.querySelectorAll(i)]);
     loadingBlocksDom?.classList.remove('d-none');
     containersDom.forEach(i => { i.classList.add('d-none') });
     component.catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) });
     return component.finally(() => {
-        NProgress.done();
+        nprogress.done();
         loadingBlocksDom?.classList.add('d-none');
         containersDom.forEach(i => { i.classList.remove('d-none') });
     });

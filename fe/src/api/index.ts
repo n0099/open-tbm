@@ -1,7 +1,7 @@
 import type { ApiError, ApiForumList, ApiPostsQuery, ApiPostsQueryQueryParam, ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam, ApiStatus, ApiStatusQueryParam, ApiUsersQuery, ApiUsersQueryQueryParam } from '@/api/index.d';
 import { notyShow } from '@/shared';
-import NProgress from 'nprogress';
-import qs from 'qs';
+import nprogress from 'nprogress';
+import { stringify } from 'qs';
 import _ from 'lodash';
 
 export const isApiError = (response: ApiError | unknown): response is ApiError =>
@@ -12,13 +12,13 @@ export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TRes
 };
 export const getRequester = async <TResponse extends ApiError | unknown, TQueryParam>
 (endpoint: string, queryString?: TQueryParam & { reCAPTCHA?: string }): Promise<ApiError | TResponse> => {
-    NProgress.start();
+    nprogress.start();
     document.body.style.cursor = 'progress';
     let errorCode = 0;
     let errorMessage = `GET ${endpoint}<br />`;
     try {
         const response = await fetch(
-            import.meta.env.VITE_API_URL_PREFIX + endpoint + (_.isEmpty(queryString) ? '' : '?') + qs.stringify(queryString),
+            import.meta.env.VITE_API_URL_PREFIX + endpoint + (_.isEmpty(queryString) ? '' : '?') + stringify(queryString),
             { headers: { Accept: 'application/json' } }
         );
         errorCode = response.status;
@@ -46,7 +46,7 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
         }
         throw e;
     } finally {
-        NProgress.done();
+        nprogress.done();
         document.body.style.cursor = '';
     }
 };

@@ -39,6 +39,7 @@ import { onMounted, ref, watch } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
 import { useHead } from '@vueuse/head';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { Switch } from 'ant-design-vue';
 import _ from 'lodash';
 
 import * as echarts from 'echarts/core';

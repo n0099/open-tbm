@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts">
-import { ref } from 'vue';
+import { computed, nextTick, ref, watchEffect } from 'vue';
 
 export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 </script>
@@ -45,7 +45,6 @@ import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
 
-import { computed, nextTick, watchEffect } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';

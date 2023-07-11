@@ -20,7 +20,7 @@ import { RangePicker } from 'ant-design-vue';
 import type { DurationLike } from 'luxon';
 import { DateTime } from 'luxon';
 import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
+import dayjs, { unix } from 'dayjs';
 
 const props = withDefaults(defineProps<{
     id: () => string,
@@ -44,7 +44,7 @@ const timeRangeChanged = ([startTime, endTime]: [Dayjs, Dayjs]) => {
 };
 
 watchEffect(() => {
-    timeRange.value = [dayjs.unix(props.startTime), dayjs.unix(props.endTime)];
+    timeRange.value = [unix(props.startTime), unix(props.endTime)];
 });
 const initialRangeWithTimesAgo: [Dayjs, Dayjs] = [
     dayjs(DateTime.now().minus(props.timesAgo).startOf('minute').toISO()),

@@ -8,7 +8,7 @@ import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
-import NProgress from 'nprogress';
+import nprogress from 'nprogress';
 import 'nprogress/nprogress.css';
 import '@/shared/style.css';
 
@@ -16,7 +16,7 @@ import * as fontAwesomeIcons from '@/shared/fontAwesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 library.add(...Object.values(fontAwesomeIcons));
 
-NProgress.configure({ trickleSpeed: 200 });
+nprogress.configure({ trickleSpeed: 200 });
 
 if (import.meta.env.NODE_ENV === 'development') {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
