@@ -4,20 +4,24 @@
             <div class="col"><hr /></div>
             <div class="w-auto">
                 <picture>
-                    <source srcset="../../public/assets/icon-huaji-loading-spinner.avifs" type="image/avif" />
-                    <img src="../../public/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif" />
+                    <source :srcset="iconHuajiLoadingSpinnerAvifs" type="image/avif" />
+                    <img :src="iconHuajiLoadingSpinnerGif" />
                 </picture>
             </div>
         </template>
         <div class="col"><hr /></div>
         <div class="w-100" />
         <div class="col">
-            <img :class="{ animate: isLoading }" src="../../public/assets/tombstone-post-list.svg" />
+            <img :class="{ animate: isLoading }" :src="tombstonePostList" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import tombstonePostList from '/assets/tombstone-post-list.svg';
+import iconHuajiLoadingSpinnerAvifs from '/assets/icon-huaji-loading-spinner.avifs';
+import iconHuajiLoadingSpinnerGif from '/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif';
+
 defineProps<{ isLoading: boolean }>();
 </script>
 

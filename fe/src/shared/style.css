@@ -4,7 +4,7 @@
 
 .lazy.loading {
     opacity: .5;
-    background: #f7f7f7 url('../../public/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
+    background: #f7f7f7 url('/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }
 .lazy.loaded {
     opacity: 1;
@@ -12,7 +12,7 @@
 }
 
 .loading {
-    background: url('../../public/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
+    background: url('/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }
 
 a {

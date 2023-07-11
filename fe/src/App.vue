@@ -1,7 +1,7 @@
 <template>
     <GlobalNavBar />
     <HorizontalMobileMessage />
-    <img id="loadingBlocksRouteUpdate" src="../public/assets/icon-loading-blocks.svg" class="d-none" />
+    <img id="loadingBlocksRouteUpdate" :src="iconLoadingBlocks" class="d-none" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
             <RouterView />
@@ -23,8 +23,10 @@
 </template>
 
 <script setup lang="ts">
+import iconLoadingBlocks from '/assets/icon-loading-blocks.svg';
 import GlobalNavBar from '@/components/GlobalNavBar.vue';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
+
 import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
