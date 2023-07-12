@@ -23,9 +23,9 @@ abstract class BaseQuery
 {
     #[ArrayShape([
         'fid' => 'int',
-        'threads' => '?Collection<int, ThreadModel>',
-        'replies' => '?Collection<int, ReplyModel>',
-        'subReplies' => '?Collection<int, SubReplyModel>',
+        'threads' => '?Collection<int, Thread>',
+        'replies' => '?Collection<int, Reply>',
+        'subReplies' => '?Collection<int, SubReply>',
     ])] protected array $queryResult;
 
     private array $queryResultPages;
@@ -62,7 +62,7 @@ abstract class BaseQuery
 
         $addOrderByForBuilder = fn (Builder $qb, string $postType): Builder => $qb
             // we don't have to select the post ID
-            // since it's already selected by invokes of PostModel::scopeSelectCurrentAndParentPostID()
+            // since it's already selected by invokes of Post::scopeSelectCurrentAndParentPostID()
             ->addSelect($this->orderByField)
             ->orderBy($this->orderByField, $this->orderByDesc === true ? 'DESC' : 'ASC')
             // cursor paginator requires values of orderBy column are unique
@@ -88,7 +88,7 @@ abstract class BaseQuery
 
         /** @var Collection<string, Collection> $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $paginators
-            // cast paginator with queried posts to Collection<int, PostModel>
+            // cast paginator with queried posts to Collection<int, Post>
             ->map(static fn (CursorPaginator $paginator) => $paginator->collect())
             ->mapWithKeys(static fn (Collection $posts, string $type) =>
                 [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
@@ -112,9 +112,9 @@ abstract class BaseQuery
      * @param Collection<string, Post> $postsKeyByTypePluralName
      * @return string
      * @test-input collect([
-     *     'threads' => collect([new ThreadModel(['tid' => 1,'postedAt' => 0])]),
-     *     'replies' => collect([new ReplyModel(['pid' => 2,'postedAt' => -2147483649])]),
-     *     'subReplies' => collect([new SubReplyModel(['spid' => 3,'postedAt' => 'test'])])
+     *     'threads' => collect([new Thread(['tid' => 1,'postedAt' => 0])]),
+     *     'replies' => collect([new Reply(['pid' => 2,'postedAt' => -2147483649])]),
+     *     'subReplies' => collect([new SubReply(['spid' => 3,'postedAt' => 'test'])])
      * ])
      */
     private function encodeNextPageCursor(Collection $postsKeyByTypePluralName): string
@@ -240,9 +240,9 @@ abstract class BaseQuery
         'fid' => 'int',
         'matchQueryPostCount' => 'array{thread: int, reply: int, subReply: int}',
         'notMatchQueryParentPostCount' => 'array{thread: int, reply: int}',
-        'threads' => 'Collection<int, ThreadModel>',
-        'replies' => 'Collection<int, ReplyModel>',
-        'subReplies' => 'Collection<int, SubReplyModel>'
+        'threads' => 'Collection<int, Thread>',
+        'replies' => 'Collection<int, Reply>',
+        'subReplies' => 'Collection<int, SubReply>'
     ])] public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
@@ -274,7 +274,7 @@ abstract class BaseQuery
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<int, Thread> $threads */
         $threads = $postModels['thread']
-            // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
             ->selectPublicFields()->get()
             ->map(static fn (Thread $thread) => // mark threads that exists in the original $this->queryResult
@@ -285,7 +285,7 @@ abstract class BaseQuery
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = $postModels['reply']
-            // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
+            // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
             ->pid($parentRepliesID->concat($pids))
             ->selectPublicFields()->get()
             ->map(static fn (Reply $r) => // mark replies that exists in the original $this->queryResult
@@ -312,12 +312,12 @@ abstract class BaseQuery
 
     private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies): void
     {
-        $parseThenRenderContentModel = static function (PostContent $contentModel): ?string {
-            if ($contentModel->protoBufBytes === null) {
+        $parseThenRenderContent = static function (PostContent $content): ?string {
+            if ($content->protoBufBytes === null) {
                 return null;
             }
             $proto = new PostContentWrapper();
-            $proto->mergeFromString($contentModel->protoBufBytes);
+            $proto->mergeFromString($content->protoBufBytes);
             $renderedView = view('renderPostContent', ['content' => $proto->getValue()])->render();
             return str_replace("\n", '', trim($renderedView));
         };
@@ -337,7 +337,7 @@ abstract class BaseQuery
                 $replies->transform($appendParsedContent(
                     PostFactory::newReplyContent($fid)
                         ->pid($replies->pluck('pid'))->selectPublicFields()->get()
-                        ->keyBy('pid')->map($parseThenRenderContentModel),
+                        ->keyBy('pid')->map($parseThenRenderContent),
                     'pid'
                 )));
         }
@@ -346,7 +346,7 @@ abstract class BaseQuery
             $subReplies->transform($appendParsedContent(
                 PostFactory::newSubReplyContent($fid)
                     ->spid($subReplies->pluck('spid'))->selectPublicFields()->get()
-                    ->keyBy('spid')->map($parseThenRenderContentModel),
+                    ->keyBy('spid')->map($parseThenRenderContent),
                 'spid'
             )));
         }

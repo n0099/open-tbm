@@ -11,7 +11,7 @@ class ForumModerator extends Model
 
     protected $table = 'tbmcr_forumModerator';
 
-    protected $hidden = ['portrait']; // for relationship in UserModel::currentForumModerator()
+    protected $hidden = ['portrait']; // for relationship in User::currentForumModerator()
 
     public function __construct(array $attributes = [])
     {

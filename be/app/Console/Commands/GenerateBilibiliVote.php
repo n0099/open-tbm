@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Spatie\Regex\Regex;
 
-class BilibiliVote extends Command
+class GenerateBilibiliVote extends Command
 {
     protected $signature = 'tbm:bilibiliVote';
 
@@ -21,21 +21,21 @@ class BilibiliVote extends Command
         $voteTid = 6062186860;
         $voteStartTime = '2019-03-10T12:35:00'; // exactly 2019-03-10T12:38:17
         $voteEndTime = '2019-03-11T12:00:00';
-        $replyModel = PostFactory::newReply($bilibiliFid);
-        $voteResultModel = new BilibiliVote();
-        $replyModel::where('tid', $voteTid)
+        $reply = PostFactory::newReply($bilibiliFid);
+        $voteResult = new BilibiliVote();
+        $reply::where('tid', $voteTid)
             ->whereBetween('postTime', [$voteStartTime, $voteEndTime])
             // set a lower chunk size to minimize influence of ignoring previous valid vote
-            ->chunk(10, static function (Collection $voteReplies) use ($voteResultModel) {
+            ->chunk(10, static function (Collection $voteReplies) use ($voteResult) {
                 $voteResults = [];
                 $candidateIDRange = range(1, 1056);
-                $votersPreviousValidVoteCount = $voteResultModel::select('authorUid')
+                $votersPreviousValidVoteCount = $voteResult::select('authorUid')
                     ->selectRaw('COUNT(*)')
                     ->whereIn('authorUid', $voteReplies->pluck('authorUid'))
                     ->where('isValid', true)
                     ->groupBy('authorUid')
                     ->get();
-                // $votersUsername = UserModel::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
+                // $votersUsername = User::uid($voteReplies->pluck('authorUid'))->select('uid', 'name')->get();
                 foreach ($voteReplies as $voteReply) {
                     $voterUid = $voteReply['authorUid'];
                     $voteRegex = Regex::match(
@@ -60,7 +60,8 @@ class BilibiliVote extends Command
                         'postTime' => $voteReply['postTime']
                     ];
                 }
-                $voteResultModel->chunkInsertOnDuplicate($voteResults, ['authorExpGrade'], 2000); // never update isValid field to prevent covering wrong value
+                // never update isValid field to prevent covering wrong value
+                $voteResult->chunkInsertOnDuplicate($voteResults, ['authorExpGrade'], 2000);
             });
     }
 }

@@ -11,7 +11,7 @@ class AuthorExpGrade extends Model
 
     protected $table = 'tbmcr_authorExpGrade';
 
-    protected $hidden = ['fid', 'uid']; // for relationship in UserModel::currentForumModerator()
+    protected $hidden = ['fid', 'uid']; // for relationship in User::currentForumModerator()
 
     public function __construct(array $attributes = [])
     {

@@ -76,6 +76,6 @@ export const apiStatus = async (queryParam: ApiStatusQueryParam): Promise<ApiErr
 export const apiStatsForumsPostCount = async (queryParam: ApiStatsForumPostCountQueryParam): Promise<ApiError | ApiStatsForumPostCount> =>
     getRequesterWithReCAPTCHA('/stats/forums/postCount', queryParam);
 export const apiUsersQuery = async (queryParam: ApiUsersQueryQueryParam): Promise<ApiError | ApiUsersQuery> =>
-    getRequesterWithReCAPTCHA('/users/query', queryParam);
+    getRequesterWithReCAPTCHA('/users', queryParam);
 export const apiPostsQuery = async (queryParam: ApiPostsQueryQueryParam): Promise<ApiError | ApiPostsQuery> =>
-    getRequesterWithReCAPTCHA('/posts/query', queryParam);
+    getRequesterWithReCAPTCHA('/posts', queryParam);

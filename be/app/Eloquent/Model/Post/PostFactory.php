@@ -36,7 +36,7 @@ class PostFactory
 
     /**
      * @return (Reply|SubReply|Thread)[]
-     * @plasm-return array{thread: ThreadModel, reply: ReplyModel, subReply: SubReplyModel}
+     * @plasm-return array{thread: Thread, reply: Reply, subReply: SubReply}
      */
     #[ArrayShape([
         'thread' => Thread::class,
