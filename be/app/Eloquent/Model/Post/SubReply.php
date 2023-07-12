@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 
-class SubReplyModel extends PostModel
+class SubReply extends Post
 {
     protected $primaryKey = 'spid';
 
@@ -31,19 +31,19 @@ class SubReplyModel extends PostModel
     }
 
     /**
-     * @psalm-return BelongsTo<ThreadModel>
+     * @psalm-return BelongsTo<Thread>
      */
     public function thread(): BelongsTo
     {
-        return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
+        return $this->belongsTo(Thread::class, 'tid', 'tid');
     }
 
     /**
-     * @psalm-return BelongsTo<ReplyModel>
+     * @psalm-return BelongsTo<Reply>
      */
     public function reply(): BelongsTo
     {
-        return $this->belongsTo(ReplyModel::class, 'pid', 'pid');
+        return $this->belongsTo(Reply::class, 'pid', 'pid');
     }
 
     public function scopePid(Builder $query, Collection|array|int $pid): Builder

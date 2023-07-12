@@ -2,11 +2,11 @@
 
 namespace App\Eloquent\Model\Post\Content;
 
-use App\Eloquent\Model\Post\PostModel;
+use App\Eloquent\Model\Post\Post;
 
 /**
  * @property string $protoBufBytes
  */
-abstract class PostContentModel extends PostModel
+abstract class PostContent extends Post
 {
 }

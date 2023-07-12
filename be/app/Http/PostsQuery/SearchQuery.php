@@ -2,9 +2,9 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Eloquent\Model\Post\PostModel;
-use App\Eloquent\Model\Post\PostModelFactory;
-use App\Eloquent\Model\UserModel;
+use App\Eloquent\Model\Post\Post;
+use App\Eloquent\Model\Post\PostFactory;
+use App\Eloquent\Model\User;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -15,12 +15,12 @@ class SearchQuery extends BaseQuery
     {
         /** @var int $fid */
         $fid = $params->getUniqueParamValue('fid');
-        /** @var array<string, Collection<string, Builder<UserModel>>> $cachedUserQuery key by param name */
+        /** @var array<string, Collection<string, Builder<User>>> $cachedUserQuery key by param name */
         $cachedUserQuery = [];
-        /** @var Collection<string, Builder<PostModel>> $queries key by post type */
-        $queries = collect(PostModelFactory::getPostModelsByFid($fid))
+        /** @var Collection<string, Builder<Post>> $queries key by post type */
+        $queries = collect(PostFactory::getPostModelsByFid($fid))
             ->only($params->getUniqueParamValue('postTypes'))
-            ->map(function (PostModel $postModel) use ($params, &$cachedUserQuery): Builder {
+            ->map(function (Post $postModel) use ($params, &$cachedUserQuery): Builder {
                 $postQuery = $postModel->newQuery();
                 foreach ($params->omit() as $param) { // omit nothing to get all params
                     // even when $cachedUserQuery[$param->name] is null
@@ -115,7 +115,7 @@ class SearchQuery extends BaseQuery
                 $query->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
                     $getAndCacheUserQuery(self::applyTextMatchParamOnQuery(
-                        UserModel::select('uid'),
+                        User::select('uid'),
                         $fieldNameOfUserNameParams,
                         $value,
                         $sub
@@ -124,7 +124,7 @@ class SearchQuery extends BaseQuery
             'authorGender', 'latestReplierGender' =>
                 $query->{"where{$not}In"}(
                     "{$userTypeOfUserParams}Uid",
-                    $getAndCacheUserQuery(UserModel::select('uid')->where('gender', $value))
+                    $getAndCacheUserQuery(User::select('uid')->where('gender', $value))
                 ),
             'authorManagerType' =>
                 $value === 'NULL'

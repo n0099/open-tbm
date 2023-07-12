@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Eloquent\Model\ForumModel;
+use App\Eloquent\Model\Forum;
 use Illuminate\Console\Command;
 
 class BatchTableSQLGenerator extends Command
@@ -31,7 +31,7 @@ class BatchTableSQLGenerator extends Command
             '{t_subReply}' => 'tbmc_f{fid}_subReply'
         ];
         $outputSQLs = [];
-        foreach (ForumModel::select('fid')->get() as $forum) {
+        foreach (Forum::select('fid')->get() as $forum) {
             $placeholdersName = array_keys($placeholders);
             $replacedPlaceholders = str_replace('{fid}', $forum->fid, array_values($placeholders));
             $replacedInput = str_replace($placeholdersName, $replacedPlaceholders, $input);

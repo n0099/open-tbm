@@ -6,8 +6,8 @@ use App\Helper;
 use App\Http\PostsQuery\IndexQuery;
 use App\Http\PostsQuery\ParamsValidator;
 use App\Http\PostsQuery\SearchQuery;
-use App\Eloquent\Model\ForumModel;
-use App\Eloquent\Model\UserModel;
+use App\Eloquent\Model\Forum;
+use App\Eloquent\Model\User;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
@@ -54,7 +54,7 @@ class PostsQuery extends Controller
 
         Debugbar::startMeasure('queryUsers');
         $whereCurrentFid = static fn (HasOne $q) => $q->where('fid', $result['fid']);
-        $users = UserModel::whereIn(
+        $users = User::whereIn(
             'uid',
             $result['threads']
                 ->pluck('latestReplierUid')
@@ -74,7 +74,7 @@ class PostsQuery extends Controller
                 ...$query->getResultPages(),
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL])
             ],
-            'forum' => ForumModel::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
+            'forum' => Forum::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
             'users' => $users
         ];

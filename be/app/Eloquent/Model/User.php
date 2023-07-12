@@ -2,15 +2,15 @@
 
 namespace App\Eloquent\Model;
 
-use App\Eloquent\Model\Revision\AuthorExpGradeModel;
-use App\Eloquent\Model\Revision\ForumModeratorModel;
+use App\Eloquent\Model\Revision\AuthorExpGrade;
+use App\Eloquent\Model\Revision\ForumModerator;
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
-class UserModel extends Model
+class User extends Model
 {
     use ModelHasPublicField;
 
@@ -41,9 +41,9 @@ class UserModel extends Model
     }
 
     /**
-     * @param Builder<UserModel> $query
+     * @param Builder<User> $query
      * @param Collection<array-key, int>|list<int>|int $uid
-     * @return Builder<UserModel>
+     * @return Builder<User>
      */
     public function scopeUid(Builder $query, Collection|array|int $uid): Builder
     {
@@ -59,14 +59,14 @@ class UserModel extends Model
     public function currentForumModerator(): HasOne
     {
         return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
-            ->hasOne(ForumModeratorModel::class, 'portrait', 'portrait')
+            ->hasOne(ForumModerator::class, 'portrait', 'portrait')
             ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
     }
 
     public function currentAuthorExpGrade(): HasOne
     {
         return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
-            ->hasOne(AuthorExpGradeModel::class, 'uid', 'uid')
+            ->hasOne(AuthorExpGrade::class, 'uid', 'uid')
             ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-use App\Eloquent\Model\Post\PostModelFactory;
+use App\Eloquent\Model\Post\PostFactory;
 use App\Helper;
 use App\Http\Controllers\PostsQuery;
 use App\Http\Controllers\UsersQuery;
@@ -21,7 +21,7 @@ use Illuminate\Validation\Rule;
 |
 */
 
-Route::get('/forums', static fn () => \App\Eloquent\Model\ForumModel::all()->toJson());
+Route::get('/forums', static fn () => \App\Eloquent\Model\Forum::all()->toJson());
 
 Route::middleware(ReCAPTCHACheck::class)->group(static function () {
     Route::get('/posts/query', [PostsQuery::class, 'query']);
@@ -76,7 +76,7 @@ Route::middleware(ReCAPTCHACheck::class)->group(static function () {
         ]);
 
         $forumsPostCount = [];
-        foreach (PostModelFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
+        foreach (PostFactory::getPostModelsByFid($queryParams['fid']) as $postType => $forumPostModel) {
             /** @var \Illuminate\Database\Eloquent\Model $forumPostModel */
             $forumsPostCount[$postType] = $forumPostModel
                 ->selectRaw($groupByTimeGranularity[$queryParams['timeGranularity']])

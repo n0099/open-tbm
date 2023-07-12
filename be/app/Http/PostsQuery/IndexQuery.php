@@ -2,9 +2,9 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Eloquent\Model\ForumModel;
-use App\Eloquent\Model\Post\PostModel;
-use App\Eloquent\Model\Post\PostModelFactory;
+use App\Eloquent\Model\Forum;
+use App\Eloquent\Model\Post\Post;
+use App\Eloquent\Model\Post\PostFactory;
 use App\Helper;
 use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -34,17 +34,17 @@ class IndexQuery extends BaseQuery
 
         /**
          * @param int $fid
-         * @return Collection<string, PostModel> key by post type
+         * @return Collection<string, Post> key by post type
          */
         $getQueryBuilders = static fn (int $fid): Collection =>
-            collect(PostModelFactory::getPostModelsByFid($fid))
+            collect(PostFactory::getPostModelsByFid($fid))
                 ->only($postTypes)
-                ->transform(static fn (PostModel $model, string $type) => $model->selectCurrentAndParentPostID());
+                ->transform(static fn (Post $model, string $type) => $model->selectCurrentAndParentPostID());
         $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
-            $fids = ForumModel::get('fid')->pluck('fid')->toArray();
+            $fids = Forum::get('fid')->pluck('fid')->toArray();
             $counts = collect($fids)
                 ->map(static fn (int $fid) =>
-                    PostModelFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
+                    PostFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
                         ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
                 ->reduce(static fn (?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): BuilderContract =>
@@ -57,8 +57,8 @@ class IndexQuery extends BaseQuery
 
         if (\array_key_exists('fid', $flatParams)) {
             /** @var int $fid */ $fid = $flatParams['fid'];
-            if ((new ForumModel())->fid($fid)->exists()) {
-                /** @var Collection<string, EloquentBuilder<PostModel>> $queries key by post type */
+            if ((new Forum())->fid($fid)->exists()) {
+                /** @var Collection<string, EloquentBuilder<Post>> $queries key by post type */
                 $queries = $getQueryBuilders($fid);
             } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid
                 $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);

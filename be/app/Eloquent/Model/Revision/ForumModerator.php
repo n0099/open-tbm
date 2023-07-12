@@ -5,22 +5,21 @@ namespace App\Eloquent\Model\Revision;
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Model;
 
-class AuthorExpGradeModel extends Model
+class ForumModerator extends Model
 {
     use ModelHasPublicField;
 
-    protected $table = 'tbmcr_authorExpGrade';
+    protected $table = 'tbmcr_forumModerator';
 
-    protected $hidden = ['fid', 'uid']; // for relationship in UserModel::currentForumModerator()
+    protected $hidden = ['portrait']; // for relationship in UserModel::currentForumModerator()
 
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         $this->publicFields = [
             'discoveredAt',
-            'fid',
-            'uid',
-            'authorExpGrade'
+            'portrait',
+            'moderatorTypes'
         ];
     }
 }

@@ -2,12 +2,12 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Eloquent\Model\Post\Content\PostContentModel;
-use App\Eloquent\Model\Post\PostModel;
-use App\Eloquent\Model\Post\PostModelFactory;
-use App\Eloquent\Model\Post\ReplyModel;
-use App\Eloquent\Model\Post\SubReplyModel;
-use App\Eloquent\Model\Post\ThreadModel;
+use App\Eloquent\Model\Post\Content\PostContent;
+use App\Eloquent\Model\Post\Post;
+use App\Eloquent\Model\Post\PostFactory;
+use App\Eloquent\Model\Post\Reply;
+use App\Eloquent\Model\Post\SubReply;
+use App\Eloquent\Model\Post\Thread;
 use App\Helper;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Closure;
@@ -47,7 +47,7 @@ abstract class BaseQuery
 
     /**
      * @param int $fid
-     * @param Collection<string, Builder<PostModel>> $queries key by post type
+     * @param Collection<string, Builder<Post>> $queries key by post type
      * @param string|null $cursorParamValue
      * @param string|null $queryByPostIDParamName
      * @return void
@@ -109,7 +109,7 @@ abstract class BaseQuery
     }
 
     /**
-     * @param Collection<string, PostModel> $postsKeyByTypePluralName
+     * @param Collection<string, Post> $postsKeyByTypePluralName
      * @return string
      * @test-input collect([
      *     'threads' => collect([new ThreadModel(['tid' => 1,'postedAt' => 0])]),
@@ -124,7 +124,7 @@ abstract class BaseQuery
                 Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last() // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
             ->filter() // remove post types that have no posts
-            ->map(fn (PostModel $post, string $typePluralName) => [ // [postID, orderByField]
+            ->map(fn (Post $post, string $typePluralName) => [ // [postID, orderByField]
                 $post->getAttribute(Helper::POST_TYPE_TO_ID[$typePluralName]),
                 $post->getAttribute($this->orderByField)
             ])
@@ -249,12 +249,12 @@ abstract class BaseQuery
         /** @var Collection<int, int> $tids */
         /** @var Collection<int, int> $pids */
         /** @var Collection<int, int> $spids */
-        /** @var Collection<int, ReplyModel> $replies */
-        /** @var Collection<int, SubReplyModel> $subReplies */
+        /** @var Collection<int, Reply> $replies */
+        /** @var Collection<int, SubReply> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
             /**
              * @param string $postIDName
-             * @return array{0: Collection<int, PostModel>, 1: Collection<int, int>}
+             * @return array{0: Collection<int, Post>, 1: Collection<int, int>}
              */
             static function (string $postIDName) use ($result): array {
                 $postTypePluralName = Helper::POST_ID_TO_TYPE_PLURAL[$postIDName];
@@ -267,17 +267,17 @@ abstract class BaseQuery
 
         /** @var int $fid */
         $fid = $result['fid'];
-        $postModels = PostModelFactory::getPostModelsByFid($fid);
+        $postModels = PostFactory::getPostModelsByFid($fid);
 
         Debugbar::startMeasure('fillWithThreadsFields');
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
-        /** @var Collection<int, ThreadModel> $threads */
+        /** @var Collection<int, Thread> $threads */
         $threads = $postModels['thread']
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
             ->selectPublicFields()->get()
-            ->map(static fn (ThreadModel $thread) => // mark threads that exists in the original $this->queryResult
+            ->map(static fn (Thread $thread) => // mark threads that exists in the original $this->queryResult
                 $thread->setAttribute('isMatchQuery', $tids->contains($thread->tid)));
         Debugbar::stopMeasure('fillWithThreadsFields');
 
@@ -288,7 +288,7 @@ abstract class BaseQuery
             // from the original $this->queryResult, see PostModel::scopeSelectCurrentAndParentPostID()
             ->pid($parentRepliesID->concat($pids))
             ->selectPublicFields()->get()
-            ->map(static fn (ReplyModel $r) => // mark replies that exists in the original $this->queryResult
+            ->map(static fn (Reply $r) => // mark replies that exists in the original $this->queryResult
                 $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
         Debugbar::stopMeasure('fillWithRepliesFields');
 
@@ -312,7 +312,7 @@ abstract class BaseQuery
 
     private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies): void
     {
-        $parseThenRenderContentModel = static function (PostContentModel $contentModel): ?string {
+        $parseThenRenderContentModel = static function (PostContent $contentModel): ?string {
             if ($contentModel->protoBufBytes === null) {
                 return null;
             }
@@ -325,17 +325,17 @@ abstract class BaseQuery
          * @param Collection<int, ?string> $contents key by post ID
          * @param string $postIDName
          * @return Closure
-         * @psalm-return Closure(PostModel):PostModel
+         * @psalm-return Closure(Post):Post
          */
         $appendParsedContent = static fn (Collection $contents, string $postIDName): Closure =>
-            static function (PostModel $post) use ($contents, $postIDName): PostModel {
+            static function (Post $post) use ($contents, $postIDName): Post {
                 $post->content = $contents[$post[$postIDName]];
                 return $post;
             };
         if ($replies->isNotEmpty()) {
             Debugbar::measure('fillRepliesContent', static fn () =>
                 $replies->transform($appendParsedContent(
-                    PostModelFactory::newReplyContent($fid)
+                    PostFactory::newReplyContent($fid)
                         ->pid($replies->pluck('pid'))->selectPublicFields()->get()
                         ->keyBy('pid')->map($parseThenRenderContentModel),
                     'pid'
@@ -344,7 +344,7 @@ abstract class BaseQuery
         if ($subReplies->isNotEmpty()) {
             Debugbar::measure('fillSubRepliesContent', static fn () =>
             $subReplies->transform($appendParsedContent(
-                PostModelFactory::newSubReplyContent($fid)
+                PostFactory::newSubReplyContent($fid)
                     ->spid($subReplies->pluck('spid'))->selectPublicFields()->get()
                     ->keyBy('spid')->map($parseThenRenderContentModel),
                 'spid'
@@ -353,9 +353,9 @@ abstract class BaseQuery
     }
 
     /**
-     * @param Collection<int, ThreadModel> $threads
-     * @param Collection<int, ReplyModel> $replies
-     * @param Collection<int, SubReplyModel> $subReplies
+     * @param Collection<int, Thread> $threads
+     * @param Collection<int, Reply> $replies
+     * @param Collection<int, SubReply> $subReplies
      * @param mixed ...$_
      * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>>
      */
@@ -369,13 +369,13 @@ abstract class BaseQuery
 
         $replies = $replies->groupBy('tid');
         $subReplies = $subReplies->groupBy('pid');
-        $ret = $threads->map(fn (ThreadModel $thread) => collect([
+        $ret = $threads->map(fn (Thread $thread) => collect([
             ...$thread->toArray(),
             'replies' => $replies->get($thread->tid, collect())
-                ->map(fn (ReplyModel $reply) => collect([
+                ->map(fn (Reply $reply) => collect([
                     ...$reply->toArray(),
                     'subReplies' => $subReplies->get($reply->pid, collect())
-                        ->map(static fn (SubReplyModel $subReply) => collect($subReply->toArray()))
+                        ->map(static fn (SubReply $subReply) => collect($subReply->toArray()))
                 ]))
         ]));
 

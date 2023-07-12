@@ -5,7 +5,7 @@ namespace App\Eloquent\Model\Post\Content;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-class SubReplyContentModel extends PostContentModel
+class SubReplyContent extends PostContent
 {
     protected $primaryKey = 'spid';
 

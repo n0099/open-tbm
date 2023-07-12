@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Eloquent\Model\BilibiliVoteModel;
-use App\Eloquent\Model\Post\PostModelFactory;
+use App\Eloquent\Model\BilibiliVote;
+use App\Eloquent\Model\Post\PostFactory;
 use App\Helper;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -21,8 +21,8 @@ class BilibiliVote extends Command
         $voteTid = 6062186860;
         $voteStartTime = '2019-03-10T12:35:00'; // exactly 2019-03-10T12:38:17
         $voteEndTime = '2019-03-11T12:00:00';
-        $replyModel = PostModelFactory::newReply($bilibiliFid);
-        $voteResultModel = new BilibiliVoteModel();
+        $replyModel = PostFactory::newReply($bilibiliFid);
+        $voteResultModel = new BilibiliVote();
         $replyModel::where('tid', $voteTid)
             ->whereBetween('postTime', [$voteStartTime, $voteEndTime])
             // set a lower chunk size to minimize influence of ignoring previous valid vote

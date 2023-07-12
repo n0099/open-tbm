@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper;
-use App\Eloquent\Model\UserModel;
+use App\Eloquent\Model\User;
 
 class UsersQuery extends Controller
 {
@@ -19,7 +19,7 @@ class UsersQuery extends Controller
         ]);
         Helper::abortAPIIf(40402, empty($queryParams));
 
-        $queryBuilder = (new UserModel())->newQuery();
+        $queryBuilder = (new User())->newQuery();
 
         $nullableParams = ['name', 'displayName', 'gender'];
         foreach ($nullableParams as $nullableParamName) {

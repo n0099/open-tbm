@@ -5,7 +5,7 @@ namespace App\Eloquent\Model\Post\Content;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-class ReplyContentModel extends PostContentModel
+class ReplyContent extends PostContent
 {
     protected $primaryKey = 'pid';
 

@@ -14,7 +14,7 @@ use TbClient\Post\Common\Zan;
  *
  * @package App\Tieba\Eloquent
  */
-class ThreadModel extends PostModel
+class Thread extends Post
 {
     protected $primaryKey = 'tid';
 
@@ -64,10 +64,10 @@ class ThreadModel extends PostModel
     }
 
     /**
-     * @psalm-return HasMany<ReplyModel>
+     * @psalm-return HasMany<Reply>
      */
     public function replies(): HasMany
     {
-        return $this->hasMany(ReplyModel::class, 'tid', 'tid');
+        return $this->hasMany(Reply::class, 'tid', 'tid');
     }
 }

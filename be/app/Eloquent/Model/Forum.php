@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-class ForumModel extends Model
+class Forum extends Model
 {
     use ModelHasPublicField;
 

@@ -2,8 +2,8 @@
 
 namespace App\Eloquent\Model\Post;
 
-use App\Eloquent\Model\Post\Content\ReplyContentModel;
-use App\Eloquent\Model\Post\Content\SubReplyContentModel;
+use App\Eloquent\Model\Post\Content\ReplyContent;
+use App\Eloquent\Model\Post\Content\SubReplyContent;
 use App\Eloquent\ModelHasProtoBufAttribute;
 use App\Eloquent\ModelHasPublicField;
 use App\Eloquent\ModelWithTableNameSplitByFid;
@@ -11,7 +11,7 @@ use App\Helper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-abstract class PostModel extends ModelWithTableNameSplitByFid
+abstract class Post extends ModelWithTableNameSplitByFid
 {
     use ModelHasPublicField;
     use ModelHasProtoBufAttribute;
@@ -23,11 +23,11 @@ abstract class PostModel extends ModelWithTableNameSplitByFid
     ];
 
     private const MODEL_CLASS_TO_TABLE_NAME_SUFFIX = [
-        ThreadModel::class => 'thread',
-        ReplyModel::class => 'reply',
-        ReplyContentModel::class => 'reply_content',
-        SubReplyModel::class => 'subReply',
-        SubReplyContentModel::class => 'subReply_content'
+        Thread::class => 'thread',
+        Reply::class => 'reply',
+        ReplyContent::class => 'reply_content',
+        SubReply::class => 'subReply',
+        SubReplyContent::class => 'subReply_content'
     ];
 
     protected function getTableNameSuffix(): string
@@ -57,10 +57,10 @@ abstract class PostModel extends ModelWithTableNameSplitByFid
     }
 
     /**
-     * @param Builder<PostModel> $query
+     * @param Builder<Post> $query
      * @param string $postIDName
      * @param Collection<array-key, int>|list<int>|int $postID
-     * @return Builder<PostModel>
+     * @return Builder<Post>
      */
     protected function scopeIDType(Builder $query, string $postIDName, Collection|array|int $postID): Builder
     {

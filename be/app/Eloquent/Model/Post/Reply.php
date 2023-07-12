@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use TbClient\Post\Common\Lbs;
 
-class ReplyModel extends PostModel
+class Reply extends Post
 {
     protected $primaryKey = 'pid';
 
@@ -47,19 +47,19 @@ class ReplyModel extends PostModel
     }
 
     /**
-     * @psalm-return BelongsTo<ThreadModel>
+     * @psalm-return BelongsTo<Thread>
      */
     public function thread(): BelongsTo
     {
-        return $this->belongsTo(ThreadModel::class, 'tid', 'tid');
+        return $this->belongsTo(Thread::class, 'tid', 'tid');
     }
 
     /**
-     * @psalm-return HasMany<SubReplyModel>
+     * @psalm-return HasMany<SubReply>
      */
     public function subReplies(): HasMany
     {
-        return $this->hasMany(SubReplyModel::class, 'pid', 'pid');
+        return $this->hasMany(SubReply::class, 'pid', 'pid');
     }
 
     public function scopePid(Builder $query, Collection|array|int $pid): Builder
