@@ -13,7 +13,7 @@ import _ from 'lodash';
 
 const props = withDefaults(defineProps<{
     modelValue: string,
-    id: string,
+    id?: string,
     granularities: readonly string[]
 }>(), { id: 'queryTimeGranularity' });
 defineEmits({

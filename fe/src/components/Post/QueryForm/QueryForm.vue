@@ -303,7 +303,7 @@ const checkParams = () => {
     invalidParamsIndex.value = []; // reset to prevent duplicate indexes
     if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
         params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
-            if (param === null || param.name === undefined || param.value === undefined) {
+            if (param?.name === undefined || param.value === undefined) {
                 invalidParamsIndex.value.push(paramIndex);
             } else {
                 const required = paramsRequiredPostTypes[param.name];
@@ -327,7 +327,7 @@ const checkParams = () => {
     }
 
     // return false when there have at least one invalid params
-    return _.isEmpty(invalidParamsIndex) && !isOrderByInvalid.value && !isFidInvalid.value;
+    return _.isEmpty(invalidParamsIndex.value) && !isOrderByInvalid.value && !isFidInvalid.value;
 };
 
 const parseRoute = (route: RouteLocationNormalizedLoaded) => {

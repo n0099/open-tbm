@@ -23,9 +23,9 @@ import type { Dayjs } from 'dayjs';
 import dayjs, { unix } from 'dayjs';
 
 const props = withDefaults(defineProps<{
-    id: () => string,
-    startTime: number,
-    endTime: number,
+    id?: () => string,
+    startTime?: number,
+    endTime?: number,
     timesAgo: DurationLike
 }>(), {
     id: () => 'queryTimeRange',

@@ -107,7 +107,8 @@ const scrollStop = _.debounce(() => {
             ? { hash, name: removeEnd(route.name, '+p'), params: _.omit(route.params, 'page') }
             : { hash, name: routeNameWithPage(route.name), params: { ...route.params, page } });
     };
-    // is first reply belongs to first thread, true when first thread have no reply, so the first reply will belongs to other thread which comes after first thread in view
+    // is the first reply belonged to the first thread, true when the first thread has no reply,
+    // the first reply will belong to another thread that comes after the first thread in view
     if (_.chain(props.postPages)
         .map(i => i.threads)
         .flatten()

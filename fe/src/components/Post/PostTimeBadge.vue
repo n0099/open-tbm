@@ -11,7 +11,7 @@ import { DateTime } from 'luxon';
 
 withDefaults(defineProps<{
     time: UnixTimestamp,
-    tippyPrefix: string,
+    tippyPrefix?: string,
     badgeColor: BootstrapColors
 }>(), { tippyPrefix: '' });
 </script>
