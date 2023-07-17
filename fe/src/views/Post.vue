@@ -85,7 +85,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page =
         return false;
     }
     if (isNewQuery) postPages.value = [postsQuery];
-    else postPages.value = _.sortBy([...postPages.value, postsQuery], i => i.pages.currentPage);
+    else postPages.value.push(postsQuery); // todo: unshift when fetching previous page
 
     const forumName = `${postPages.value[0].forum.name}吧`;
     const threadTitle = postPages.value[0].threads[0].title;
@@ -101,7 +101,9 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page =
 
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
-    notyShow('success', `已加载第${postsQuery.pages.currentPage}页 ${postsQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+    const postCount = _.sum(Object.values(postsQuery.pages.matchQueryPostCount));
+    const renderTime = ((Date.now() - startTime - networkTime) / 1000).toFixed(2);
+    notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime}s 后端/网络耗时${networkTime}ms`);
     lazyLoadUpdate();
     return true;
 };

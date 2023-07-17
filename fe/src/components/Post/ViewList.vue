@@ -52,7 +52,10 @@
                         </RouterLink>
                         <UserTag v-if="getUser(thread.authorUid).currentForumModerator !== null"
                                  :user="getUser(thread.authorUid)" />
-                        <template v-if="thread.latestReplierUid !== thread.authorUid">
+                        <template v-if="thread.latestReplierUid === null">
+                            <span class="fw-normal link-secondary">最后回复：<span class="fw-bold link-dark">未知用户</span></span>
+                        </template>
+                        <template v-else-if="thread.latestReplierUid !== thread.authorUid">
                             <RouterLink :to="userRoute(thread.latestReplierUid)" target="_blank" class="ms-2">
                                 <span class="fw-normal link-secondary">最后回复：</span>
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>

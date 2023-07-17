@@ -2,7 +2,7 @@
 use Spatie\Regex\Regex;
 
 $replaceWithHttps = static fn (string $url) => str_replace('http://', 'https://', $url);
-$getImageUrl = static fn (string $hash) => "https://tiebapic.baidu.com/forum/pic/item/$hash.jpg";
+$getImageUrl = static fn (string $hash) => "https://imgsrc.baidu.com/forum/pic/item/$hash.jpg";
 
 /* @var array<\TbClient\Post\Common\Content> $content */
 try {
@@ -117,7 +117,10 @@ try {
                     }
                 --}}
                 @if ($item->getSrc() !== '')
-                    <video controls poster="{{ $item->getSrc() }}" src="{{ $item->getLink() }}"></video>
+                    {{--
+                    todo: fix anti hotlinking on domain https://tiebapic.baidu.com and http://tb-video.bdstatic.com/tieba-smallvideo-transcode
+                    <video controls poster="{{ $item->getSrc() }}" src="{{ $item->getLink() }}"></video>-->
+                    --}}
                     <a href="{{ $item->getText() }}" target="_blank">贴吧视频播放页</a>
                 @else
                     <a href="{{ $item->getText() }}" target="_blank">
