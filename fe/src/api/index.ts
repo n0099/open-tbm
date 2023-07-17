@@ -51,7 +51,7 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
     }
 };
 const reCAPTCHACheck = async (action = ''): Promise<{ reCAPTCHA?: string }> => new Promise((reslove, reject) => {
-    if (import.meta.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
         grecaptcha.ready(() => {
             grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action }).then(
                 reCAPTCHA => {

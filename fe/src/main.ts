@@ -18,7 +18,7 @@ library.add(...Object.values(fontAwesomeIcons));
 
 nprogress.configure({ trickleSpeed: 200 });
 
-if (import.meta.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore
     (await import('@/checkForUndefinedCSSClasses.js')).default();

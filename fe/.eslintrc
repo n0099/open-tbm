@@ -20,6 +20,7 @@
   ],
   "rules": {
     "import/no-unresolved": [2, { "ignore": ["\\.(svg|gif|avifs)$"] }],
+    "import/no-useless-path-segments": "error",
 
     // as of eslint 8.6.0
     "no-await-in-loop": "error",

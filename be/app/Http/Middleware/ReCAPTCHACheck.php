@@ -11,7 +11,7 @@ class ReCAPTCHACheck
     public function handle(\Illuminate\Http\Request $request, \Closure $next): mixed
     {
         if (\App::environment('production')) {
-            $reCAPTCHA = new ReCaptcha(env('reCAPTCHA_SECRET_KEY'), new CurlPost());
+            $reCAPTCHA = new ReCaptcha(config('services.recaptcha.secret'), new CurlPost());
             $requestReCAPTCHA = $request->input('reCAPTCHA');
             $isReCAPTCHAValid = \is_string($requestReCAPTCHA)
                 && $reCAPTCHA->verify($requestReCAPTCHA, $request->ip())->isSuccess();

@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { ViewList, ViewTable } from './';
+import { ViewList, ViewTable } from '.';
 import { PageNextButton, PagePrevButton, usePageRoutes } from '../usePageNextAndPrevButton';
 import type { PostViewRenderer } from '@/views/Post.vue';
 import type { ApiPostsQuery } from '@/api/index.d';
