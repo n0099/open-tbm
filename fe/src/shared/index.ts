@@ -1,4 +1,4 @@
-import type { TiebaUserRecord } from '@/api/index.d';
+import type { TiebaUser } from '@/api/user';
 import Noty from 'noty';
 import _ from 'lodash';
 
@@ -35,7 +35,7 @@ export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
     return `https://tieba.baidu.com/p/${tid}`;
 };
-export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUserRecord, 'name' | 'portrait'>>) =>
+export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUser, 'name' | 'portrait'>>) =>
     (user.portrait === ''
         ? `https://tieba.baidu.com/home/main?un=${user.name}`
         : `https://tieba.baidu.com/home/main?id=${user.portrait}`);

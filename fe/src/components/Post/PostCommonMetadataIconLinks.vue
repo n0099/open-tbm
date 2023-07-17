@@ -13,14 +13,14 @@
 </template>
 
 <script setup lang="ts">
-import type { ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { Pid, PostID, Spid, Tid, UnixTimestamp } from '@/shared';
 import { tiebaPostLink } from '@/shared';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
 defineProps<{
-    post: ReplyRecord | SubReplyRecord | ThreadRecord,
+    post: Reply | SubReply | Thread,
     postTypeID: PostID,
     postIDSelector: () => Pid | Spid | Tid
 }>();

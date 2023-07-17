@@ -18,13 +18,13 @@
 </template>
 
 <script setup lang="ts">
-import type { BaiduUserID, ForumModeratorType, TiebaUserRecord } from '@/api/index.d';
+import type { BaiduUserID, ForumModeratorType, TiebaUser } from '@/api/user';
 import type { BootstrapColors } from '@/shared';
 import { computed } from 'vue';
 import _ from 'lodash';
 
 const props = defineProps<{
-    user: TiebaUserRecord,
+    user: TiebaUser,
     threadAuthorUid?: BaiduUserID,
     replyAuthorUid?: BaiduUserID
 }>();

@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadRecord } from '@/api/index.d';
+import type { Thread } from '@/api/posts';
 
-defineProps<{ thread: ThreadRecord }>();
+defineProps<{ thread: Thread }>();
 </script>

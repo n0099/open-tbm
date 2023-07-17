@@ -61,7 +61,8 @@
 <script setup lang="ts">
 import { ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
-import type { ApiPostsQuery, SubReplyRecord } from '@/api/index.d';
+import type { ApiPostsQuery } from '@/api/index.d';
+import type { SubReply } from '@/api/posts';
 import type { Pid, Tid } from '@/shared';
 import { toTiebaUserPortraitImageUrl, toTiebaUserProfileUrl } from '@/shared';
 
@@ -74,7 +75,7 @@ import _ from 'lodash';
 const props = defineProps<{ posts: ApiPostsQuery }>();
 const threads = ref<ApiPostsQuery['threads']>();
 const threadsReply = ref<Record<Tid, ApiPostsQuery['threads'][number]['replies']>>([]);
-const repliesSubReply = ref<Record<Pid, SubReplyRecord[]>>([]);
+const repliesSubReply = ref<Record<Pid, SubReply[]>>([]);
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid', slots: { customRender: 'tid' } },
     { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },

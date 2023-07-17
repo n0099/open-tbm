@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './SelectTiebaUser.vue';
 import SelectTiebaUser, { selectTiebaUserBy } from './SelectTiebaUser.vue';
-import type { BaiduUserID, TiebaUserGenderQueryParam } from '@/api/index.d';
+import type { BaiduUserID, TiebaUserGenderQueryParam } from '@/api/user';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 
 import { ref, watchEffect } from 'vue';

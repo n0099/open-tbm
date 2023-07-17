@@ -21,7 +21,8 @@
 
 <script setup lang="ts">
 import { PageNextButton, PagePrevButton, usePageRoutes } from './usePageNextAndPrevButton';
-import type { ApiUsersQuery, TiebaUserGender } from '@/api/index.d';
+import type { TiebaUserGender } from '@/api/user';
+import type { ApiUsersQuery } from '@/api/index.d';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { watch } from 'vue';

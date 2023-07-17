@@ -40,7 +40,7 @@
 </template>
 
 <script lang="ts">
-import type { BaiduUserID } from '@/api/index.d';
+import type { BaiduUserID } from '@/api/user';
 import type { ObjValues } from '@/shared';
 
 export const selectTiebaUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;

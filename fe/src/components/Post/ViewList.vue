@@ -157,7 +157,9 @@ export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 import '@/shared/bootstrapCallout.css';
 import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
-import type { ApiPostsQuery, BaiduUserID, ReplyRecord, SubReplyRecord, ThreadRecord } from '@/api/index.d';
+import type { ApiPostsQuery } from '@/api/index.d';
+import type { Reply, SubReply, Thread } from '@/api/posts';
+import type { BaiduUserID } from '@/api/user';
 import type { Modify } from '@/shared';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
@@ -171,15 +173,15 @@ const hoveringSubReplyID = ref(0);
 
 const posts = computed(() => {
     const newPosts = props.initialPosts as Modify<ApiPostsQuery, { // https://github.com/microsoft/TypeScript/issues/33591
-        threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: Array<SubReplyRecord | SubReplyRecord[]> }> }>
+        threads: Array<Thread & { replies: Array<Reply & { subReplies: Array<SubReply | SubReply[]> }> }>
     }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {
-            reply.subReplies = reply.subReplies.reduce<SubReplyRecord[][]>(
+            reply.subReplies = reply.subReplies.reduce<SubReply[][]>(
                 (groupedSubReplies, subReply, index, subReplies) => {
                     if (_.isArray(subReply)) return [subReply]; // useless guard since subReply will never be an array
                     // group sub replies item by continuous and same post author
-                    const previousSubReply = subReplies[index - 1] as SubReplyRecord | undefined;
+                    const previousSubReply = subReplies[index - 1] as SubReply | undefined;
                     // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
                         && subReply.authorUid === previousSubReply.authorUid
@@ -194,7 +196,7 @@ const posts = computed(() => {
         return thread;
     });
     return newPosts as Modify<ApiPostsQuery, {
-        threads: Array<ThreadRecord & { replies: Array<ReplyRecord & { subReplies: SubReplyRecord[][] }> }>
+        threads: Array<Thread & { replies: Array<Reply & { subReplies: SubReply[][] }> }>
     }>;
 });
 const getUser = baseGetUser(props.initialPosts.users);
