@@ -44,18 +44,24 @@ public class ThreadCrawlFacade : BaseCrawlFacade<ThreadPost, BaseThreadRevision,
                 u.Name == u.NameShow ? null : u.NameShow))
             .ForEach(u => _latestRepliers[u.Uid] = u);
 
-    protected void FillDetailedGeolocation(IEnumerable<Thread> threads) =>
+    protected void FillFromRequestingWith602(IEnumerable<Thread> threads) =>
         (from inResponse in threads
-            where inResponse.Location != null
             join parsed in Posts.Values on (Tid)inResponse.Tid equals parsed.Tid
             select (inResponse, parsed))
-        // replace with more detailed location.name in the 6.0.2 response
-        .ForEach(t => t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location));
+        .ForEach(t =>
+        {
+            if (t.inResponse.Location != null)
+            { // replace with more detailed location.name in the 6.0.2 response
+                t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location);
+            }
+            // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
+            t.parsed.LatestReplierUid = t.inResponse.LastReplyer?.Uid;
+        });
 
     protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
     {
         var data = response.Data;
-        if (flag == CrawlRequestFlag.ThreadClientVersion602) FillDetailedGeolocation(data.ThreadList);
+        if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
         if (flag != CrawlRequestFlag.None) return;
         Users.ParseUsers(data.UserList);
         Users.ResetUsersIcon();

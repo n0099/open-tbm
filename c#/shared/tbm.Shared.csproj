@@ -9,13 +9,13 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.0" />
+        <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.1" />
         <PackageReference Include="EFCore.NamingConventions" Version="7.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.2" />
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
-        <PackageReference Include="SuperLinq" Version="5.1.0" />
+        <PackageReference Include="SuperLinq" Version="5.2.0" />
     </ItemGroup>
 </Project>

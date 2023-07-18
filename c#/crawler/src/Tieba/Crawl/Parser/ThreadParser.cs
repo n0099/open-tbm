@@ -25,8 +25,6 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
             o.AuthorUid = inPost.AuthorId;
             o.PostedAt = (uint)inPost.CreateTime;
             o.LatestReplyPostedAt = (uint)inPost.LastTimeInt;
-            // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
-            o.LatestReplierUid = inPost.LastReplyer?.Uid;
             o.ReplyCount = inPost.ReplyNum < 0 ? 0 : (uint?)inPost.ReplyNum.NullIfZero(); // rarely respond with -1
             o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
             o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();

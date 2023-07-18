@@ -84,16 +84,16 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
                 select new
                 {
                     rev.Portrait,
-                    ModeratorType = rev.ModeratorTypes,
+                    rev.ModeratorTypes,
                     Rank = Sql.Ext.Rank().Over().PartitionBy(rev.Portrait).OrderByDesc(rev.DiscoveredAt).ToValue()
                 }).Where(e => e.Rank == 1)
             .ToLinqToDB().ToList();
 
         db.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
-            existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorType)),
+            existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorTypes)),
             rev => (rev.Portrait, rev.ModeratorTypes)));
         db.ForumModeratorRevisions.AddRange(existingLatestRevisions
-            .Where(e => e.ModeratorType != "") // filter out revisions that recorded someone who resigned from moderators
+            .Where(e => e.ModeratorTypes != "") // filter out revisions that recorded someone who resigned from moderators
             .ExceptBy(revisions.Select(rev => rev.Portrait), e => e.Portrait)
             .Select(e => new ForumModeratorRevision
             {

@@ -17,7 +17,7 @@ public class ThreadArchiveCrawlFacade : ThreadCrawlFacade
         var data = response.Data;
         Users.ParseUsers(data.ThreadList.Select(th => th.Author));
         ParseLatestRepliers(data.ThreadList);
-        FillDetailedGeolocation(data.ThreadList);
+        FillFromRequestingWith602(data.ThreadList);
 
         // parsed author uid will be 0 when request with client version 6.0.2
         (from parsed in parsedPostsInResponse.Values

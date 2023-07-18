@@ -35,14 +35,8 @@ public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
 
     public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
     {
-        switch (response.Error.Errorno)
-        {
-            case 4 when flag == CrawlRequestFlag.ReplyShowOnlyFolded:
-                // silent exception and do not retry when error_no=4 and the response is request with is_fold_comment_req=1
-                throw new TiebaException(shouldRetry: false, shouldSilent: true);
-            case 4 or 350008:
-                throw new EmptyPostListException("Thread already deleted when crawling reply.");
-        }
+        if (response.Error.Errorno is 4 or 350008)
+            throw new EmptyPostListException("Thread already deleted when crawling reply.");
         ValidateOtherErrorCode(response);
 
         var ret = EnsureNonEmptyPostList(response,
