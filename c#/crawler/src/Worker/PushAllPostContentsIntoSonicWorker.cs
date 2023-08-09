@@ -2,28 +2,19 @@ using Dapper;
 
 namespace tbm.Crawler.Worker;
 
-public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
-{
-    private readonly ILogger<PushAllPostContentsIntoSonicWorker> _logger;
-    private readonly IConfiguration _config;
-    private readonly ILifetimeScope _scope0;
-    private readonly SonicPusher _pusher;
-
-    public PushAllPostContentsIntoSonicWorker(
+public class PushAllPostContentsIntoSonicWorker(
         ILogger<PushAllPostContentsIntoSonicWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
         ILifetimeScope scope0,
-        SonicPusher pusher
-    ) : base(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
-    {
-        (_logger, _scope0, _pusher) = (logger, scope0, pusher);
-        _config = config.GetSection("Sonic");
-    }
+        SonicPusher pusher)
+    : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
+{
+    private readonly IConfiguration _config = config.GetSection("Sonic");
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
+        await using var scope1 = scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         var forumPostCountsTuples = db.Database.GetDbConnection()
             .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
@@ -45,16 +36,16 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
                 // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure
                 "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
 
-            _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}replies_content", $"f{fid}");
+            _ = pusher.Ingest.FlushBucket($"{pusher.CollectionPrefix}replies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",
                 replyCount, totalPostCount, pushedPostCount, dbWithFid.ReplyContents.AsNoTracking(),
-                r => _pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.ProtoBufBytes)), stoppingToken);
+                r => pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.ProtoBufBytes)), stoppingToken);
             TriggerConsolidate();
 
-            _ = _pusher.Ingest.FlushBucket($"{_pusher.CollectionPrefix}subReplies_content", $"f{fid}");
+            _ = pusher.Ingest.FlushBucket($"{pusher.CollectionPrefix}subReplies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex, forumCount, "sub replies",
                 subReplyCount, totalPostCount, pushedPostCount, dbWithFid.SubReplyContents.AsNoTracking(),
-                sr => _pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
+                sr => pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
             TriggerConsolidate();
 
             void TriggerConsolidate() => NSonicFactory.Control(
@@ -76,7 +67,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
     {
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        _logger.LogInformation("Pushing all historical {}' content into sonic for fid {} started", postTypeInLog, fid);
+        logger.LogInformation("Pushing all historical {}' content into sonic for fid {} started", postTypeInLog, fid);
         var (pushedPostCount, durationCa) = postContents.Aggregate((Count: 0, DurationCa: 0f), (acc, post) =>
         {
             stoppingToken.ThrowIfCancellationRequested();
@@ -89,7 +80,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
                 static double GetPercentage(float current, float total, int digits = 2) => Math.Round(current / total * 100, digits);
                 var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
                 var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);
-                _logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
+                logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
                                        + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
                     postTypeInLog, fid,
                     pushedCount, postApproxCount, GetPercentage(pushedCount, postApproxCount),
@@ -104,7 +95,7 @@ public class PushAllPostContentsIntoSonicWorker : ErrorableWorker
             }
             return (pushedCount, ca);
         });
-        _logger.LogInformation("Pushing {} historical {}' content into sonic for fid {} finished after {} (total={}ms, cumulativeAvg={:F3}ms)",
+        logger.LogInformation("Pushing {} historical {}' content into sonic for fid {} finished after {} (total={}ms, cumulativeAvg={:F3}ms)",
             pushedPostCount, postTypeInLog, fid, stopwatch.Elapsed.Humanize(precision: 5, minUnit: TimeUnit.Second), stopwatch.ElapsedMilliseconds, durationCa);
         return pushedPostCount;
     }

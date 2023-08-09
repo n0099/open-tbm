@@ -3,25 +3,18 @@ using System.Text;
 
 namespace tbm.Crawler.Tieba;
 
-public class ClientRequester
+public class ClientRequester(
+    ILogger<ClientRequester> logger,
+    IConfiguration config,
+    IHttpClientFactory httpFactory,
+    ClientRequesterTcs requesterTcs)
 {
     // https://github.com/Starry-OvO/aiotieba/issues/123#issuecomment-1563314122
     public const string LegacyClientApiDomain = "http://c.tieba.baidu.com";
     public const string ClientApiDomain = "http://tiebac.baidu.com";
 
-    private readonly ILogger<ClientRequester> _logger;
-    private readonly IConfigurationSection _config;
-    private readonly IHttpClientFactory _httpFactory;
-    private readonly ClientRequesterTcs _requesterTcs;
+    private readonly IConfigurationSection _config = config.GetSection("ClientRequester");
     private static readonly Random Rand = new();
-
-    public ClientRequester(
-        ILogger<ClientRequester> logger, IConfiguration config,
-        IHttpClientFactory httpFactory, ClientRequesterTcs requesterTcs)
-    {
-        (_logger, _httpFactory, _requesterTcs) = (logger, httpFactory, requesterTcs);
-        _config = config.GetSection("ClientRequester");
-    }
 
     public async Task<JsonElement> RequestJson
         (string url, string clientVersion, Dictionary<string, string> postParam, CancellationToken stoppingToken = default) =>
@@ -99,7 +92,7 @@ public class ClientRequester
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
         return await Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData), stoppingToken),
-            () => _logger.LogTrace("POST {} {}", url, postParam), stoppingToken);
+            () => logger.LogTrace("POST {} {}", url, postParam), stoppingToken);
     }
 
     private async Task<HttpResponseMessage> PostProtoBuf<TRequest>(
@@ -128,7 +121,7 @@ public class ClientRequester
         request.Headers.Connection.Add("keep-alive");
 
         return await Post(http => http.SendAsync(request, stoppingToken),
-            () => _logger.LogTrace("POST {} {}", url, requestParam), stoppingToken);
+            () => logger.LogTrace("POST {} {}", url, requestParam), stoppingToken);
     }
 
     private async Task<HttpResponseMessage> Post(
@@ -136,14 +129,14 @@ public class ClientRequester
         Action logTraceAction,
         CancellationToken stoppingToken = default)
     {
-        var http = _httpFactory.CreateClient("tbClient");
-        await _requesterTcs.Wait(stoppingToken);
+        var http = httpFactory.CreateClient("tbClient");
+        await requesterTcs.Wait(stoppingToken);
         if (_config.GetValue("LogTrace", false)) logTraceAction();
         var ret = responseTaskFactory(http);
         _ = ret.ContinueWith(task =>
         {
-            if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) _requesterTcs.Increase();
-            else _requesterTcs.Decrease();
+            if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) requesterTcs.Increase();
+            else requesterTcs.Decrease();
         }, TaskContinuationOptions.ExecuteSynchronously);
         return await ret;
     }

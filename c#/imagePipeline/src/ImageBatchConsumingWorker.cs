@@ -5,19 +5,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace tbm.ImagePipeline;
 
-public class ImageBatchConsumingWorker : ErrorableWorker
-{
-    private readonly ILogger<ImageBatchConsumingWorker> _logger;
-    private readonly ILifetimeScope _scope0;
-    private readonly ChannelReader<List<ImageWithBytes>> _reader;
-
-    public ImageBatchConsumingWorker(
+public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         ILifetimeScope scope0,
-        Channel<List<ImageWithBytes>> channel
-    ) : base(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true) =>
-        (_logger, _scope0, _reader) = (logger, scope0, channel);
+        Channel<List<ImageWithBytes>> channel)
+    : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
+{
+    private readonly ChannelReader<List<ImageWithBytes>> _reader = channel;
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
@@ -25,7 +20,7 @@ public class ImageBatchConsumingWorker : ErrorableWorker
         {
             try
             {
-                await using var scope1 = _scope0.BeginLifetimeScope();
+                await using var scope1 = scope0.BeginLifetimeScope();
                 var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
                 await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
@@ -56,7 +51,7 @@ public class ImageBatchConsumingWorker : ErrorableWorker
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Exception");
+                logger.LogError(e, "Exception");
             }
         }
     }
@@ -95,7 +90,7 @@ public class ImageBatchConsumingWorker : ErrorableWorker
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
                 var ret = image.Frames.AsEnumerable().Select(DecodeFrame).ToList();
-                _logger.LogTrace("Spending {}ms to Extracted {} frames out of GIF image {}",
+                logger.LogTrace("Spending {}ms to Extracted {} frames out of GIF image {}",
                     stopwatch.ElapsedMilliseconds, image.Frames.Count, imageId);
                 return ret;
             }

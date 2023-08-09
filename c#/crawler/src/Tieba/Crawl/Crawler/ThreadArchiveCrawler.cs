@@ -1,10 +1,9 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ThreadArchiveCrawler : ThreadCrawler
+public class ThreadArchiveCrawler(ClientRequester requester, string forumName)
+    : ThreadCrawler(requester, forumName)
 {
     public new delegate ThreadArchiveCrawler New(string forumName);
-
-    public ThreadArchiveCrawler(ClientRequester requester, string forumName) : base(requester, forumName) { }
 
     protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default)
     {

@@ -2,21 +2,18 @@ namespace tbm.Crawler.Worker;
 
 using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPost>>;
 
-public class ArchiveCrawlWorker : ErrorableWorker
+public class ArchiveCrawlWorker(
+        ILogger<ArchiveCrawlWorker> logger,
+        IHostApplicationLifetime applicationLifetime,
+        ILifetimeScope scope0)
+    : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
 {
     // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
     // any request with page offset that larger than 10k threads will be respond with results from the first page
     // in May 2023, they enlarged the limit to 100k threads: https://github.com/Starry-OvO/aiotieba/issues/124
     private const int MaxCrawlablePage = 3334; // 100k threads / 30 per request (from Rn param) = 3333.3...
-    private readonly ILogger<ArchiveCrawlWorker> _logger;
-    private readonly ILifetimeScope _scope0;
     private readonly string _forumName = "";
     private readonly Fid _fid = 0;
-
-    public ArchiveCrawlWorker
-        (ILogger<ArchiveCrawlWorker> logger, IHostApplicationLifetime applicationLifetime, ILifetimeScope scope0) :
-        base(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true) =>
-        (_logger, _scope0) = (logger, scope0);
 
     // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
     public static float GetCumulativeAverage(float currentCa, float previousCa, int currentIndex) =>
@@ -57,22 +54,22 @@ public class ArchiveCrawlWorker : ErrorableWorker
             var savedThreads = await CrawlThreads((Page)page, _forumName, _fid, cancellationToken);
             if (savedThreads == null) return;
             var savedThreadCount = savedThreads.AllAfter.Count;
-            _logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
+            logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
                 savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
             _ = Interlocked.Add(ref totalSavedThreadCount, savedThreadCount);
 
             if (cancellationToken.IsCancellationRequested) return;
             var savedReplies = await CrawlReplies(savedThreads, _fid, cancellationToken);
             var savedReplyCount = savedReplies.Select(pair => pair.Value.AllAfter.Count).Sum();
-            _logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
+            logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                 savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
             _ = Interlocked.Add(ref totalSavedReplyCount, savedReplyCount);
 
             if (cancellationToken.IsCancellationRequested) return;
             var savedSubReplyCount = await CrawlSubReplies(savedReplies, _fid, cancellationToken);
-            _logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
+            logger.LogInformation("Archive for {} sub replies within {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                 savedSubReplyCount, savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
-            _logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
+            logger.LogInformation("Archive for a total of {} posts in the page {} of forum {} finished after {:F2}s",
                 savedSubReplyCount + savedReplyCount + savedThreadCount, page, _forumName, stopwatchTotal.Elapsed.TotalSeconds);
             _ = Interlocked.Add(ref totalSavedSubReplyCount, savedSubReplyCount);
 
@@ -84,7 +81,7 @@ public class ArchiveCrawlWorker : ErrorableWorker
             _ = Interlocked.Exchange(ref averageElapsed, ca);
 
             var (etaRelative, etaAt) = GetEta(totalPage, finishedPageCount, ca * 1000);
-            _logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={} ({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA: {} @ {}",
+            logger.LogInformation("Archive pages progress={}/{} totalSavedPosts={} ({} threads, {} replies, {} subReplies) lastIntervalBetweenPage={:F2}s cumulativeAvgInterval={:F2}s ETA: {} @ {}",
                 finishedPageCount, totalPage, totalSavedThreadCount + totalSavedReplyCount + totalSavedSubReplyCount,
                 totalSavedThreadCount, totalSavedReplyCount, totalSavedSubReplyCount, intervalBetweenPage, ca, etaRelative, etaAt);
             Console.Title = $"Archive progress: {finishedPageCount}/{totalPage} ETA: {etaRelative} @ {etaAt}";
@@ -94,21 +91,21 @@ public class ArchiveCrawlWorker : ErrorableWorker
         {
             await Parallel.ForEachAsync(pages, stoppingToken, ArchivePostsInPage);
         }
-        _logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
+        logger.LogInformation("Archive for {} posts({} threads, {} replies, {} subReplies) within all pages [1-{}] of forum {} finished",
             totalSavedThreadCount + totalSavedReplyCount + totalSavedSubReplyCount,
             totalSavedThreadCount, totalSavedReplyCount, totalSavedSubReplyCount, totalPage, _forumName);
     }
 
     private async Task<int> GetTotalPageForForum(CancellationToken stoppingToken = default)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
+        await using var scope1 = scope0.BeginLifetimeScope();
         return (await scope1.Resolve<ThreadArchiveCrawler.New>()(_forumName).CrawlSinglePage(1, stoppingToken))
             .Select(response => response.Result.Data.Page.TotalPage).Max();
     }
 
     private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
+        await using var scope1 = scope0.BeginLifetimeScope();
         var crawler = scope1.Resolve<ThreadArchiveCrawlFacade.New>()(fid, forumName);
         var savedThreads = (await crawler.CrawlPageRange(
             page, page, stoppingToken)).SaveCrawled(stoppingToken);
@@ -131,7 +128,7 @@ public class ArchiveCrawlWorker : ErrorableWorker
         await Task.WhenAll(savedThreads.AllAfter.Select(th => th.Tid).Distinct().Select(async tid =>
         {
             if (stoppingToken.IsCancellationRequested) return;
-            await using var scope1 = _scope0.BeginLifetimeScope();
+            await using var scope1 = scope0.BeginLifetimeScope();
             var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
             savedRepliesKeyByTid.SetIfNotNull(tid,
                 (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
@@ -157,7 +154,7 @@ public class ArchiveCrawlWorker : ErrorableWorker
         {
             if (stoppingToken.IsCancellationRequested) return;
             var (tid, pid) = t;
-            await using var scope1 = _scope0.BeginLifetimeScope();
+            await using var scope1 = scope0.BeginLifetimeScope();
             var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
                 .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
             if (saved == null) return;

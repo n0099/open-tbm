@@ -26,22 +26,16 @@ public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
             SplitEntities[typeof(TSplitEntity)] = entityFactory();
     }
 
-    public class ModelBuilderHelper
+    public class ModelBuilderHelper(ModelBuilder builder, string baseTableName)
     {
-        private readonly ModelBuilder _builder;
-        private readonly string _baseTableName;
-
-        public ModelBuilderHelper(ModelBuilder builder, string baseTableName) =>
-            (_builder, _baseTableName) = (builder, baseTableName);
-
         public void HasKey<TRevision>(Expression<Func<TRevision, object?>> keySelector)
             where TRevision : class, TBaseRevision =>
-            _builder.Entity<TRevision>().ToTable(_baseTableName).HasKey(keySelector);
+            builder.Entity<TRevision>().ToTable(baseTableName).HasKey(keySelector);
 
         public void SplittingHasKeyAndName<TRevisionWithSplitting>
             (string tableNameSuffix, Expression<Func<TRevisionWithSplitting, object?>> keySelector)
             where TRevisionWithSplitting : RevisionWithSplitting<TBaseRevision> =>
-            _builder.Entity<TRevisionWithSplitting>().Ignore(e => e.NullFieldsBitMask)
-                .ToTable($"{_baseTableName}_{tableNameSuffix}").HasKey(keySelector);
+            builder.Entity<TRevisionWithSplitting>().Ignore(e => e.NullFieldsBitMask)
+                .ToTable($"{baseTableName}_{tableNameSuffix}").HasKey(keySelector);
     }
 }

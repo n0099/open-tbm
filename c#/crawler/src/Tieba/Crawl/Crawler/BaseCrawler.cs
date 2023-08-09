@@ -1,15 +1,13 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public abstract class BaseCrawler<TResponse, TPostProtoBuf>
+public abstract class BaseCrawler<TResponse, TPostProtoBuf>(ClientRequester requester)
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
     protected record Request(Task<TResponse> Response, CrawlRequestFlag Flag = CrawlRequestFlag.None);
 
-    protected ClientRequester Requester { get; }
-
-    protected BaseCrawler(ClientRequester requester) => Requester = requester;
+    protected ClientRequester Requester { get; } = requester;
 
     public abstract Exception FillExceptionData(Exception e);
     protected abstract RepeatedField<TPostProtoBuf> GetResponsePostList(TResponse response);

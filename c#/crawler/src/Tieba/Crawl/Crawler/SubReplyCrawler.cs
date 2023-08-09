@@ -1,19 +1,14 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
+public class SubReplyCrawler(ClientRequester requester, Tid tid, Pid pid)
+    : BaseCrawler<SubReplyResponse, SubReply>(requester)
 {
-    private readonly Tid _tid;
-    private readonly Pid _pid;
-
     public delegate SubReplyCrawler New(Tid tid, Pid pid);
-
-    public SubReplyCrawler(ClientRequester requester, Tid tid, Pid pid) :
-        base(requester) => (_tid, _pid) = (tid, pid);
 
     public override Exception FillExceptionData(Exception e)
     {
-        e.Data["tid"] = _tid;
-        e.Data["pid"] = _pid;
+        e.Data["tid"] = tid;
+        e.Data["pid"] = pid;
         return e;
     }
 
@@ -26,8 +21,8 @@ public class SubReplyCrawler : BaseCrawler<SubReplyResponse, SubReply>
         new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
             new SubReplyRequest {Data = new()
             {
-                Kz = (long)_tid,
-                Pid = (long)_pid,
+                Kz = (long)tid,
+                Pid = (long)pid,
                 Pn = (int)page
             }},
             (req, common) => req.Data.Common = common,

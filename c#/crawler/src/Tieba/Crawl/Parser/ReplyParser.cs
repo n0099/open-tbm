@@ -1,14 +1,11 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser;
 
-public partial class ReplyParser : BaseParser<ReplyPost, Reply>
+public partial class ReplyParser(ILogger<ReplyParser> logger)
+    : BaseParser<ReplyPost, Reply>
 {
     // length with 24 char is only appeared in legacy replies
     [GeneratedRegex("^(?:[0-9a-f]{40}|[0-9a-f]{24})$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
     public static partial Regex ValidateContentImageFilenameRegex();
-
-    private readonly ILogger<ReplyParser> _logger;
-
-    public ReplyParser(ILogger<ReplyParser> logger) => _logger = logger;
 
     protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
@@ -37,7 +34,7 @@ public partial class ReplyParser : BaseParser<ReplyPost, Reply>
                     && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
                     c.OriginSrc = urlFilename;
                 else if (uri.Host is not "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
-                    _logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
+                    logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
                                            + " instead of common domains of tieba image hosting service, content={}",
                         o.Pid, c.OriginSrc, Helper.UnescapedJsonSerialize(c));
             }

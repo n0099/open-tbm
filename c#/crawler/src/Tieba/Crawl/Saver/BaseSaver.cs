@@ -2,13 +2,19 @@ using LinqKit;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevision>
+public abstract class BaseSaver<TPost, TBaseRevision>(
+        ILogger<BaseSaver<TPost, TBaseRevision>> logger,
+        ConcurrentDictionary<PostId, TPost> posts,
+        AuthorRevisionSaver.New authorRevisionSaverFactory,
+        string postType)
+    : CommonInSavers<TBaseRevision>(logger)
     where TPost : class, IPost
     where TBaseRevision : class, IRevision
 {
-    public string PostType { get; }
-    protected ConcurrentDictionary<ulong, TPost> Posts { get; }
-    protected AuthorRevisionSaver AuthorRevisionSaver { get; }
+    public string PostType { get; } = postType;
+    protected ConcurrentDictionary<ulong, TPost> Posts { get; } = posts;
+    protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);
+
     public virtual FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance =>
         throw new NotImplementedException();
 
@@ -17,18 +23,6 @@ public abstract class BaseSaver<TPost, TBaseRevision> : CommonInSavers<TBaseRevi
     protected delegate void PostSaveEventHandler();
     protected event PostSaveEventHandler PostSaveEvent = () => { };
     public void OnPostSaveEvent() => PostSaveEvent();
-
-    protected BaseSaver(
-        ILogger<BaseSaver<TPost, TBaseRevision>> logger,
-        ConcurrentDictionary<PostId, TPost> posts,
-        AuthorRevisionSaver.New authorRevisionSaverFactory,
-        string postType
-    ) : base(logger)
-    {
-        Posts = posts;
-        AuthorRevisionSaver = authorRevisionSaverFactory(postType);
-        PostType = postType;
-    }
 
     protected SaverChangeSet<TPost> SavePosts<TRevision>(
         CrawlerDbContext db,

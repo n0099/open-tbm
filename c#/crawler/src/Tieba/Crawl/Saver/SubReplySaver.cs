@@ -2,7 +2,11 @@ using LinqKit;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
+public class SubReplySaver(
+        ILogger<SubReplySaver> logger,
+        ConcurrentDictionary<PostId, SubReplyPost> posts,
+        AuthorRevisionSaver.New authorRevisionSaverFactory)
+    : BaseSaver<SubReplyPost, BaseSubReplyRevision>(logger, posts, authorRevisionSaverFactory, "subReply")
 {
     public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
@@ -34,12 +38,6 @@ public class SubReplySaver : BaseSaver<SubReplyPost, BaseSubReplyRevision>
     };
 
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
-
-    public SubReplySaver(
-        ILogger<SubReplySaver> logger,
-        ConcurrentDictionary<PostId, SubReplyPost> posts,
-        AuthorRevisionSaver.New authorRevisionSaverFactory
-    ) : base(logger, posts, authorRevisionSaverFactory, "subReply") { }
 
     public override SaverChangeSet<SubReplyPost> SavePosts(CrawlerDbContext db)
     {

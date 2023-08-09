@@ -10,26 +10,25 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Shared;
 
-public class TbmDbContext<TModelCacheKeyFactory> : DbContext where TModelCacheKeyFactory : class, IModelCacheKeyFactory
+public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
+    : DbContext
+    where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
-    private readonly IConfiguration _config;
     private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
-
-    public TbmDbContext(IConfiguration config) => _config = config;
 
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        var connectionStr = _config.GetConnectionString("Main");
+        var connectionStr = config.GetConnectionString("Main");
         options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr), OnConfiguringMysql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .AddInterceptors(SelectForUpdateCommandInterceptorInstance)
             .UseCamelCaseNamingConvention();
 
-        var dbSettings = _config.GetSection("DbSettings");
+        var dbSettings = config.GetSection("DbSettings");
         options.UseLoggerFactory(LoggerFactory.Create(builder =>
             builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})
                 .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(

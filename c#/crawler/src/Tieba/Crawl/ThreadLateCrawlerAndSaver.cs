@@ -1,35 +1,23 @@
 namespace tbm.Crawler.Tieba.Crawl;
 
-public class ThreadLateCrawlerAndSaver
+public class ThreadLateCrawlerAndSaver(
+    ILogger<ThreadLateCrawlerAndSaver> logger,
+    CrawlerDbContext.New dbContextFactory,
+    ClientRequester requester,
+    ClientRequesterTcs requesterTcs,
+    IIndex<string, CrawlerLocks> locks,
+    Fid fid)
 {
-    private readonly ILogger<ThreadLateCrawlerAndSaver> _logger;
-    private readonly CrawlerDbContext.New _dbContextFactory;
-    private readonly ClientRequester _requester;
-    private readonly Fid _fid;
-    private readonly ClientRequesterTcs _requesterTcs;
-    private readonly CrawlerLocks _locks; // singleton
+    private readonly CrawlerLocks _locks = locks["threadLate"]; // singleton
 
     public delegate ThreadLateCrawlerAndSaver New(Fid fid);
-
-    public ThreadLateCrawlerAndSaver(
-        ILogger<ThreadLateCrawlerAndSaver> logger,
-        CrawlerDbContext.New dbContextFactory,
-        ClientRequester requester,
-        ClientRequesterTcs requesterTcs,
-        IIndex<string, CrawlerLocks> locks,
-        Fid fid)
-    {
-        (_logger, _dbContextFactory, _requester, _fid, _requesterTcs) =
-            (logger, dbContextFactory, requester, fid, requesterTcs);
-        _locks = locks["threadLate"];
-    }
 
     public async Task CrawlThenSave(Dictionary<Tid, FailureCount> failureCountsKeyByTid, CancellationToken stoppingToken = default)
     {
         var threads = await Task.WhenAll(
             failureCountsKeyByTid.Select(pair => CrawlThread(pair.Key, pair.Value, stoppingToken)));
 
-        var db = _dbContextFactory(_fid);
+        var db = dbContextFactory(fid);
         await using var transaction = await db.Database.BeginTransactionAsync(stoppingToken);
 
         db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception
@@ -42,11 +30,11 @@ public class ThreadLateCrawlerAndSaver
 
     private async Task<ThreadPost?> CrawlThread(Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
     {
-        var crawlerLockId = new CrawlerLocks.LockId(_fid, tid);
+        var crawlerLockId = new CrawlerLocks.LockId(fid, tid);
         if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
         try
         {
-            var json = await _requester.RequestJson(
+            var json = await requester.RequestJson(
                 $"{ClientRequester.LegacyClientApiDomain}/c/f/pb/page", "8.8.8.8", new()
                 {
                     {"kz", tid.ToString()},
@@ -107,20 +95,20 @@ public class ThreadLateCrawlerAndSaver
         }
         catch (Exception e)
         { // below is similar with BaseCrawlFacade.SilenceException()
-            e.Data["fid"] = _fid;
+            e.Data["fid"] = fid;
             e.Data["tid"] = tid;
             e = e.ExtractInnerExceptionsData();
 
             if (e is TiebaException)
-                _logger.LogWarning("TiebaException: {} {}",
+                logger.LogWarning("TiebaException: {} {}",
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
                     Helper.UnescapedJsonSerialize(e.Data));
             else
-                _logger.LogError(e, "Exception");
+                logger.LogError(e, "Exception");
             if (e is not TiebaException {ShouldRetry: false})
             {
                 _locks.AcquireFailed(crawlerLockId, page: 1, failureCount);
-                _requesterTcs.Decrease();
+                requesterTcs.Decrease();
             }
             return null;
         }

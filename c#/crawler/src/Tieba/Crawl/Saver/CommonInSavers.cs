@@ -2,13 +2,10 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
+public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBaseRevision>> logger)
+    : StaticCommonInSavers
     where TBaseRevision : class, IRevision
 {
-    private readonly ILogger<CommonInSavers<TBaseRevision>> _logger;
-
-    protected CommonInSavers(ILogger<CommonInSavers<TBaseRevision>> logger) => _logger = logger;
-
     protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
 
     protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
@@ -64,7 +61,7 @@ public abstract class CommonInSavers<TBaseRevision> : StaticCommonInSavers
                 if (!RevisionPropertiesCache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                 {
                     object? ToHexWhenByteArray(object? value) => value is byte[] bytes ? $"0x{Convert.ToHexString(bytes).ToLowerInvariant()}" : value;
-                    _logger.LogWarning("Updating field {} is not existing in revision table, " +
+                    logger.LogWarning("Updating field {} is not existing in revision table, " +
                                        "newValue={}, oldValue={}, newObject={}, oldObject={}",
                         pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
                         Helper.UnescapedJsonSerialize(newPostOrUser), Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));

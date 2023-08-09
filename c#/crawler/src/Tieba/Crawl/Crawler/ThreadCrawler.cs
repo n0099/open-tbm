@@ -1,17 +1,13 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
+public class ThreadCrawler(ClientRequester requester, string forumName)
+    : BaseCrawler<ThreadResponse, Thread>(requester)
 {
-    private readonly string _forumName;
-
     public delegate ThreadCrawler New(string forumName);
-
-    public ThreadCrawler(ClientRequester requester, string forumName) :
-        base(requester) => _forumName = forumName;
 
     public override Exception FillExceptionData(Exception e)
     {
-        e.Data["forumName"] = _forumName;
+        e.Data["forumName"] = forumName;
         return e;
     }
 
@@ -26,7 +22,7 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
     protected ThreadRequest.Types.Data GetRequestDataForClientVersion602(Page page) =>
         new()
         {
-            Kw = _forumName,
+            Kw = forumName,
             Pn = (int)page,
             Rn = 30
         };
@@ -36,7 +32,7 @@ public class ThreadCrawler : BaseCrawler<ThreadResponse, Thread>
         var data602 = GetRequestDataForClientVersion602(page);
         var data = new ThreadRequest.Types.Data
         {
-            Kw = _forumName,
+            Kw = forumName,
             Pn = (int)page,
             Rn = 90,
             RnNeed = 30,

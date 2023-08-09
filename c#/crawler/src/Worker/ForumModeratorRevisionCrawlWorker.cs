@@ -5,22 +5,18 @@ using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace tbm.Crawler.Worker;
 
-public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
-{
-    private readonly ILifetimeScope _scope0;
-    private readonly IConfiguration _config;
-
-    public ForumModeratorRevisionCrawlWorker(
+public class ForumModeratorRevisionCrawlWorker(
         ILogger<ForumModeratorRevisionCrawlWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
-        ILifetimeScope scope0
-    ) : base(logger, applicationLifetime, config, shouldRunAtFirst: false) =>
-        (_config, _scope0) = (config.GetSection("CrawlForumModeratorRevision"), scope0);
+        ILifetimeScope scope0)
+    : CyclicCrawlWorker(logger, applicationLifetime, config, shouldRunAtFirst: false)
+{
+    private readonly IConfiguration _config = config.GetSection("CrawlForumModeratorRevision");
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
+        await using var scope1 = scope0.BeginLifetimeScope();
         var db0 = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         foreach (var forum in from e in db0.Forums.AsNoTracking() where e.IsCrawling select new {e.Fid, e.Name})
         {
@@ -62,7 +58,7 @@ public class ForumModeratorRevisionCrawlWorker : CyclicCrawlWorker
         IEnumerable<(string Type, string Portrait)> moderators,
         CancellationToken stoppingToken = default)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
+        await using var scope1 = scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 

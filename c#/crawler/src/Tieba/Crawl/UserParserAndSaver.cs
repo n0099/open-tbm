@@ -2,7 +2,8 @@ using Uid = System.Int64;
 
 namespace tbm.Crawler.Tieba.Crawl;
 
-public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
+public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
+    : CommonInSavers<BaseUserRevision>(logger)
 {
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
@@ -38,8 +39,6 @@ public partial class UserParserAndSaver : CommonInSavers<BaseUserRevision>
     private static readonly HashSet<Uid> UserIdLocks = new();
     private readonly List<Uid> _savedUsersId = new();
     private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
-
-    public UserParserAndSaver(ILogger<UserParserAndSaver> logger) : base(logger) { }
 
     public void ParseUsers(IEnumerable<User> users) =>
         users.Select(el =>

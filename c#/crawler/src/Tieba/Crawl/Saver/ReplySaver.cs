@@ -3,7 +3,11 @@ using PredicateBuilder = LinqKit.PredicateBuilder;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
+public class ReplySaver(
+        ILogger<ReplySaver> logger,
+        ConcurrentDictionary<PostId, ReplyPost> posts,
+        AuthorRevisionSaver.New authorRevisionSaverFactory)
+    : BaseSaver<ReplyPost, BaseReplyRevision>(logger, posts, authorRevisionSaverFactory, "reply")
 {
     public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
@@ -50,12 +54,6 @@ public class ReplySaver : BaseSaver<ReplyPost, BaseReplyRevision>
     private readonly List<UniqueSignature> _savedSignatures = new();
 
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
-
-    public ReplySaver(
-        ILogger<ReplySaver> logger,
-        ConcurrentDictionary<PostId, ReplyPost> posts,
-        AuthorRevisionSaver.New authorRevisionSaverFactory
-    ) : base(logger, posts, authorRevisionSaverFactory, "reply") { }
 
     public override SaverChangeSet<ReplyPost> SavePosts(CrawlerDbContext db)
     {

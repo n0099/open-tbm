@@ -1,17 +1,11 @@
 namespace tbm.Crawler.Worker;
 
-public class ResumeSuspendPostContentsPushingWorker : ErrorableWorker
-{
-    private readonly ILogger<ResumeSuspendPostContentsPushingWorker> _logger;
-    private readonly SonicPusher _pusher;
-
-    public ResumeSuspendPostContentsPushingWorker(
+public class ResumeSuspendPostContentsPushingWorker(
         ILogger<ResumeSuspendPostContentsPushingWorker> logger,
         IHostApplicationLifetime applicationLifetime,
-        SonicPusher pusher
-    ) : base(logger, applicationLifetime) =>
-        (_logger, _pusher) = (logger, pusher);
-
+        SonicPusher pusher)
+    : ErrorableWorker(logger, applicationLifetime)
+{
     public static string GetFilePath(string postType) =>
         Path.Combine(AppContext.BaseDirectory, $"suspendPostContentsPushIntoSonic.{postType}.csv");
 
@@ -24,10 +18,10 @@ public class ResumeSuspendPostContentsPushingWorker : ErrorableWorker
             var postTuples = File.ReadLines(path).Select(ParseLine)
                 .OfType<(Fid Fid, PostId Id, string Content)>().ToList();
             postTuples.GroupBy(t => t.Fid).ForEach(g =>
-                _pusher.PushPostWithCancellationToken(g.ToList(), g.Key, postType, t => t.Id,
+                pusher.PushPostWithCancellationToken(g.ToList(), g.Key, postType, t => t.Id,
                     t => Helper.ParseThenUnwrapPostContent(Convert.FromBase64String(t.Content)),
                     stoppingToken));
-            _logger.LogInformation("Resume for {} suspend {} contents push into sonic finished",
+            logger.LogInformation("Resume for {} suspend {} contents push into sonic finished",
                 postTuples.Count, postType);
             File.Delete(path);
         }
@@ -40,17 +34,17 @@ public class ResumeSuspendPostContentsPushingWorker : ErrorableWorker
         {
             if (!Fid.TryParse(fidStr, out var fid))
             {
-                _logger.LogWarning("Malformed fid {} when resume suspend post contents push into sonic, line={}", fidStr, line);
+                logger.LogWarning("Malformed fid {} when resume suspend post contents push into sonic, line={}", fidStr, line);
                 return null;
             }
             if (!PostId.TryParse(postIdStr, out var postId))
             {
-                _logger.LogWarning("Malformed post id {} when resume suspend post contents push into sonic, line={}", postIdStr, line);
+                logger.LogWarning("Malformed post id {} when resume suspend post contents push into sonic, line={}", postIdStr, line);
                 return null;
             }
             return (fid, postId, base64EncodedPostContent);
         }
-        _logger.LogWarning("Malformed line {} when resume suspend post contents push into sonic", line);
+        logger.LogWarning("Malformed line {} when resume suspend post contents push into sonic", line);
         return null;
     }
 }

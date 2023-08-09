@@ -1,18 +1,15 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
+public class ReplyCrawler(ClientRequester requester, Fid fid, Tid tid)
+    : BaseCrawler<ReplyResponse, Reply>(requester)
 {
-    private readonly Fid _fid;
-    private readonly Tid _tid;
+    private readonly Fid _fid = fid;
 
     public delegate ReplyCrawler New(Fid fid, Tid tid);
 
-    public ReplyCrawler(ClientRequester requester, Fid fid, Tid tid) :
-        base(requester) => (_fid, _tid) = (fid, tid);
-
     public override Exception FillExceptionData(Exception e)
     {
-        e.Data["tid"] = _tid;
+        e.Data["tid"] = tid;
         return e;
     }
 
@@ -25,7 +22,7 @@ public class ReplyCrawler : BaseCrawler<ReplyResponse, Reply>
         new Request(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.26.1.0",
             new ReplyRequest {Data = new()
             { // reverse order will be {"last", "1"}, {"r", "1"}
-                Kz = (long)_tid,
+                Kz = (long)tid,
                 Pn = (int)page,
                 Rn = 30
             }},
