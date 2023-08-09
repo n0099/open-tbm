@@ -49,7 +49,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
                 // https://stackoverflow.com/questions/67550415/in-place-rgb-bgr-color-conversion-is-slower-in-opencv
                 Cv2.CvtColor(mat, rgbaMat, ColorConversionCodes.BGRA2RGBA);
                 return rgbaMat.GetArray(out Vec4b[] pixels)
-                    ? ThumbHash.ThumbHash.RgbaToThumbHash(mat.Width, mat.Height,
+                    ? ThumbHashes.Utilities.RgbaToThumbHash(mat.Width, mat.Height,
                         pixels.Select(vec => new[] {vec.Item0, vec.Item1, vec.Item2, vec.Item3})
                             .SelectMany(i => i).ToArray())
                     : throw new("Failed to convert matrix into byte array.");

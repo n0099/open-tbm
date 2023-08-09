@@ -79,13 +79,12 @@ public class ImageBatchConsumingWorker : ErrorableWorker
             var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
             var stream = new MemoryStream();
             frameImage.SaveAsPng(stream);
-            if (stream.TryGetBuffer(out var buffer))
-            {
-                var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
-                if (frameMat.Empty()) throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
-                return new(imageId, (uint)frameIndex, frameMat);
-            }
-            throw new ObjectDisposedException(nameof(stream));
+            if (!stream.TryGetBuffer(out var buffer))
+                throw new ObjectDisposedException(nameof(stream));
+            var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
+            if (frameMat.Empty())
+                throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
+            return new(imageId, (uint)frameIndex, frameMat);
         }
 
         try

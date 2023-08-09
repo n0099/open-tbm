@@ -36,7 +36,7 @@ abstract class BaseQuery
 
     abstract public function query(QueryParams $params, ?string $cursor): self;
 
-    public function __construct(protected int $perPageItems = 200)
+    public function __construct(protected int $perPageItems = 50)
     {
     }
 
