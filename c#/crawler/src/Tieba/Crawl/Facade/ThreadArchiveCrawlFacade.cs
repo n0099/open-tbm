@@ -11,8 +11,9 @@ public class ThreadArchiveCrawlFacade(
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         string forumName)
-    : ThreadCrawlFacade(logger, dbContextFactory, crawler.Invoke, parser, saver, users,
-    requesterTcs, locks, fid, forumName)
+    : ThreadCrawlFacade(
+        logger, dbContextFactory, crawler.Invoke, parser, saver,
+        users, requesterTcs, locks, fid, forumName)
 {
     public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 

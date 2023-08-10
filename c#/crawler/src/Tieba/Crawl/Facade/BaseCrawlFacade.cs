@@ -30,14 +30,16 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
         UserParserAndSaver users,
         ClientRequesterTcs requesterTcs,
-        (CrawlerLocks, CrawlerLocks.LockId) lockAndId,
+        CrawlerLocks locks,
+        CrawlerLocks.LockId lockId,
         Fid fid)
     {
         (_logger, _dbContextFactory, _crawler, _parser) = (logger, dbContextFactory, crawler, parser);
         _saver = saverFactory(Posts);
         Users = users;
         _requesterTcs = requesterTcs;
-        (_locks, _lockId) = lockAndId;
+        _locks = locks;
+        _lockId = lockId;
         Fid = fid;
     }
 

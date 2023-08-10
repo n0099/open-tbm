@@ -3,8 +3,6 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler;
 public class ReplyCrawler(ClientRequester requester, Fid fid, Tid tid)
     : BaseCrawler<ReplyResponse, Reply>(requester)
 {
-    private readonly Fid _fid = fid;
-
     public delegate ReplyCrawler New(Fid fid, Tid tid);
 
     public override Exception FillExceptionData(Exception e)
@@ -38,10 +36,10 @@ public class ReplyCrawler(ClientRequester requester, Fid fid, Tid tid)
 
         var ret = EnsureNonEmptyPostList(response,
             "Reply list is empty, posts might already deleted from tieba.");
-        var fid = response.Data.Forum.Id;
-        if (fid != _fid) // fid will be the protoBuf default value 0 when reply list is empty, so we EnsureNonEmptyPostList() by first
+        var fidInResponse = response.Data.Forum.Id;
+        if (fidInResponse != fid) // fid will be the protoBuf default value 0 when reply list is empty, so we EnsureNonEmptyPostList() by first
             throw new TiebaException(shouldRetry: false,
-                $"Parent forum id within thread response: {fid} is not match with the param value of crawler ctor: {_fid}"
+                $"Parent forum id within thread response: {fidInResponse} is not match with the param value of crawler ctor: {fid}"
                 + ", this thread might be multi forum or \"livepost\" thread.");
         return ret;
     }

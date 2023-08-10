@@ -6,8 +6,11 @@ public class SubReplySaver(
         ILogger<SubReplySaver> logger,
         ConcurrentDictionary<PostId, SubReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BaseSaver<SubReplyPost, BaseSubReplyRevision>(logger, posts, authorRevisionSaverFactory, "subReply")
+    : BaseSaver<SubReplyPost, BaseSubReplyRevision>(
+        logger, posts, authorRevisionSaverFactory, "subReply")
 {
+    public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
+
     public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // always ignore updates on iconinfo due to some rare user will show some extra icons
@@ -36,8 +39,6 @@ public class SubReplySaver(
                     .UpsertRange(revisions.OfType<SubReplyRevision.SplitDisagreeCount>()).NoUpdate().Run()
         }
     };
-
-    public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
     public override SaverChangeSet<SubReplyPost> SavePosts(CrawlerDbContext db)
     {

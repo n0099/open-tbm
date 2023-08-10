@@ -4,12 +4,12 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class AuthorRevisionSaver(string triggeredByPostType)
 {
+    public delegate AuthorRevisionSaver New(string triggeredByPostType);
+
     // locks only using fid and uid field values from AuthorRevision
     // this prevents inserting multiple entities with similar time and other fields with the same values
     private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = new();
     private readonly List<(Fid Fid, long Uid)> _savedRevisions = new();
-
-    public delegate AuthorRevisionSaver New(string triggeredByPostType);
 
     private class LatestAuthorRevisionProjection<TValue>
     {

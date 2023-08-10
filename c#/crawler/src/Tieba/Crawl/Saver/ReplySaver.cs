@@ -7,8 +7,11 @@ public class ReplySaver(
         ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BaseSaver<ReplyPost, BaseReplyRevision>(logger, posts, authorRevisionSaverFactory, "reply")
+    : BaseSaver<ReplyPost, BaseReplyRevision>(
+        logger, posts, authorRevisionSaverFactory, "reply")
 {
+    public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
+
     public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // FansNickname in reply response will always be null
@@ -52,8 +55,6 @@ public class ReplySaver(
     private record UniqueSignature(uint Id, ulong XxHash3);
     private static readonly HashSet<UniqueSignature> SignatureLocks = new();
     private readonly List<UniqueSignature> _savedSignatures = new();
-
-    public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
     public override SaverChangeSet<ReplyPost> SavePosts(CrawlerDbContext db)
     {

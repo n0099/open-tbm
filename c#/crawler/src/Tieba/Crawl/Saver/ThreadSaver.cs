@@ -6,8 +6,11 @@ public class ThreadSaver(
         ILogger<ThreadSaver> logger,
         ConcurrentDictionary<Tid, ThreadPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BaseSaver<ThreadPost, BaseThreadRevision>(logger, posts, authorRevisionSaverFactory, "thread")
+    : BaseSaver<ThreadPost, BaseThreadRevision>(
+        logger, posts, authorRevisionSaverFactory, "thread")
 {
+    public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
+
     public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, _, _) => propName switch
         { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
@@ -40,8 +43,6 @@ public class ThreadSaver(
                     .UpsertRange(revisions.OfType<ThreadRevision.SplitViewCount>()).NoUpdate().Run()
         }
     };
-
-    public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
     public override SaverChangeSet<ThreadPost> SavePosts(CrawlerDbContext db) =>
         SavePosts(db, th => th.Tid,

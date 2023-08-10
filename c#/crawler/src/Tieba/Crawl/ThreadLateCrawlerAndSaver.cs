@@ -8,9 +8,9 @@ public class ThreadLateCrawlerAndSaver(
     IIndex<string, CrawlerLocks> locks,
     Fid fid)
 {
-    private readonly CrawlerLocks _locks = locks["threadLate"]; // singleton
-
     public delegate ThreadLateCrawlerAndSaver New(Fid fid);
+
+    private readonly CrawlerLocks _locks = locks["threadLate"]; // singleton
 
     public async Task CrawlThenSave(Dictionary<Tid, FailureCount> failureCountsKeyByTid, CancellationToken stoppingToken = default)
     {

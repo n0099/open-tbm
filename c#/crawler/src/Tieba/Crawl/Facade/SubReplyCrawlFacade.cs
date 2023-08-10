@@ -13,8 +13,9 @@ public class SubReplyCrawlFacade(
         Fid fid,
         Tid tid,
         Pid pid)
-    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>(logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke, users,
-    requesterTcs, (locks["subReply"], new(fid, tid, pid)), fid)
+    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>(
+        logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke,
+        users, requesterTcs, locks["subReply"], new(fid, tid, pid), fid)
 {
     public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 

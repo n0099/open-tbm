@@ -13,8 +13,9 @@ public class ReplyCrawlFacade(
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         Tid tid)
-    : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>(logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke, users,
-    requesterTcs, (locks["reply"], new(fid, tid)), fid)
+    : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>(
+        logger, parentDbContextFactory, crawler(fid, tid), parser, saver.Invoke,
+        users, requesterTcs, locks["reply"], new(fid, tid), fid)
 {
     public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
