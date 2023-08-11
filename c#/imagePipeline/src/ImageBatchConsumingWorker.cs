@@ -12,11 +12,9 @@ public class ImageBatchConsumingWorker(
         Channel<List<ImageWithBytes>> channel)
     : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
 {
-    private readonly ChannelReader<List<ImageWithBytes>> _reader = channel;
-
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await foreach (var imagesWithBytes in _reader.ReadAllAsync(stoppingToken))
+        await foreach (var imagesWithBytes in channel.Reader.ReadAllAsync(stoppingToken))
         {
             try
             {

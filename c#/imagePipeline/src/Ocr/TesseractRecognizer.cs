@@ -7,7 +7,10 @@ public class TesseractRecognizer(IConfiguration config, string script) : IDispos
     public delegate TesseractRecognizer New(string script);
 
     private readonly IConfigurationSection _config = config.GetSection("OcrConsumer:Tesseract");
-    private Lazy<OCRTesseract> TesseractInstanceHorizontal => new(script switch
+    private Lazy<OCRTesseract>? _tesseractInstanceHorizontal;
+    private Lazy<OCRTesseract>? _tesseractInstanceVertical;
+
+    private Lazy<OCRTesseract> TesseractInstanceHorizontal => _tesseractInstanceHorizontal ??= new(script switch
     {
         "zh-Hans" => CreateTesseract("best/chi_sim+best/eng"),
         "zh-Hant" => CreateTesseract("best/chi_tra+best/eng"),
@@ -15,7 +18,7 @@ public class TesseractRecognizer(IConfiguration config, string script) : IDispos
         "en" => CreateTesseract("best/eng"),
         _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
     });
-    private Lazy<OCRTesseract> TesseractInstanceVertical => new(script switch
+    private Lazy<OCRTesseract> TesseractInstanceVertical => _tesseractInstanceVertical ??= new(script switch
     {
         "zh-Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
         "zh-Hant" => CreateTesseract("best/chi_tra_vert", isVertical: true),

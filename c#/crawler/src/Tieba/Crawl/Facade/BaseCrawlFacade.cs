@@ -17,8 +17,9 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => new(saverFactory(Posts));
+    private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => _saver ??= new(saverFactory(Posts));
 
+    private Lazy<BaseSaver<TPost, TBaseRevision>>? _saver;
     private readonly HashSet<Page> _lockingPages = new();
     private ExceptionHandler _exceptionHandler = _ => { };
     public delegate void ExceptionHandler(Exception ex);

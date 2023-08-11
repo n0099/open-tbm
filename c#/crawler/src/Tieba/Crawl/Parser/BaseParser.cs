@@ -20,8 +20,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
             return;
         }
         var outNullableUsers = new List<User?>();
-        outPosts = ParsePostsInternal(inPosts, outNullableUsers)
-            .ToDictionary(PostIdSelector, post => post);
+        outPosts = ParsePostsInternal(inPosts, outNullableUsers).ToDictionary(PostIdSelector, post => post);
         if (outPosts.Values.Any(p => p.AuthorUid == 0))
             throw new TiebaException(shouldRetry: true,
                 "Value of IPost.AuthorUid is the protoBuf default value 0.");
