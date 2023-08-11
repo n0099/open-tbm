@@ -81,7 +81,7 @@ public class PushAllPostContentsIntoSonicWorker(
                 var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
                 var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);
                 logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
-                                       + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
+                                      + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
                     postTypeInLog, fid,
                     pushedCount, postApproxCount, GetPercentage(pushedCount, postApproxCount),
                     ca, currentForumEta.Relative, currentForumEta.At, currentForumIndex, forumCount,

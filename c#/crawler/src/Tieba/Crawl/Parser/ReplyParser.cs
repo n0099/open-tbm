@@ -35,7 +35,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                     c.OriginSrc = urlFilename;
                 else if (uri.Host is not "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
                     logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
-                                           + " instead of common domains of tieba image hosting service, content={}",
+                                          + " instead of common domains of tieba image hosting service, content={}",
                         o.Pid, c.OriginSrc, Helper.UnescapedJsonSerialize(c));
             }
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,

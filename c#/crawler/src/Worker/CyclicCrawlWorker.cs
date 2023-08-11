@@ -3,8 +3,8 @@ namespace tbm.Crawler.Worker;
 public abstract class CyclicCrawlWorker : ErrorableWorker
 {
     private readonly IConfiguration _config;
-    private int _interval; // in seconds
     private readonly bool _shouldRunAtFirst;
+    private int _interval; // in seconds
 
     protected CyclicCrawlWorker(
         ILogger<CyclicCrawlWorker> logger,

@@ -2,49 +2,40 @@ using OpenCvSharp.Text;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public class TesseractRecognizer : IDisposable
+public class TesseractRecognizer(IConfiguration config, string script) : IDisposable
 {
-    private readonly string _script;
-    private readonly OCRTesseract _tesseractInstanceHorizontal;
-    private readonly OCRTesseract _tesseractInstanceVertical;
-    private readonly int _confidenceThreshold;
-    private readonly float _aspectRatioThresholdToConsiderAsVertical;
-
     public delegate TesseractRecognizer New(string script);
 
-    public TesseractRecognizer(IConfiguration config, string script)
+    private readonly IConfigurationSection _config = config.GetSection("OcrConsumer:Tesseract");
+    private Lazy<OCRTesseract> TesseractInstanceHorizontal => new(script switch
     {
-        _script = script;
-        var configSection = config.GetSection("OcrConsumer:Tesseract");
-        var dataPath = configSection.GetValue("DataPath", "") ?? "";
-        OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
-            // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
-            // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-            OCRTesseract.Create(dataPath, scripts, charWhitelist: "", oem: 1, psmode: isVertical ? 5 : 7);
-        _tesseractInstanceHorizontal = script switch
-        {
-            "zh-Hans" => CreateTesseract("best/chi_sim+best/eng"),
-            "zh-Hant" => CreateTesseract("best/chi_tra+best/eng"),
-            "ja" => CreateTesseract("best/jpn"), // literal latin letters in japanese is replaced by katakana
-            "en" => CreateTesseract("best/eng"),
-            _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
-        };
-        _tesseractInstanceVertical = script switch
-        {
-            "zh-Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
-            "zh-Hant" => CreateTesseract("best/chi_tra_vert", isVertical: true),
-            "ja" => CreateTesseract("best/jpn_vert", isVertical: true),
-            "en" => _tesseractInstanceHorizontal, // fallback to best/eng since there's no best/eng_vert
-            _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
-        };
-        _confidenceThreshold = configSection.GetValue("ConfidenceThreshold", 20);
-        _aspectRatioThresholdToConsiderAsVertical = configSection.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
-    }
+        "zh-Hans" => CreateTesseract("best/chi_sim+best/eng"),
+        "zh-Hant" => CreateTesseract("best/chi_tra+best/eng"),
+        "ja" => CreateTesseract("best/jpn"), // literal latin letters in japanese is replaced by katakana
+        "en" => CreateTesseract("best/eng"),
+        _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
+    });
+    private Lazy<OCRTesseract> TesseractInstanceVertical => new(script switch
+    {
+        "zh-Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
+        "zh-Hant" => CreateTesseract("best/chi_tra_vert", isVertical: true),
+        "ja" => CreateTesseract("best/jpn_vert", isVertical: true),
+        "en" => TesseractInstanceHorizontal.Value, // fallback to best/eng since there's no best/eng_vert
+        _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
+    });
+    private int ConfidenceThreshold => _config.GetValue("ConfidenceThreshold", 20);
+    private float AspectRatioThresholdToConsiderAsVertical => _config.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
+
+    private OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
+        // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
+        // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
+        OCRTesseract.Create(_config.GetValue("DataPath", "") ?? "",
+            scripts, charWhitelist: "", oem: 1, psmode: isVertical ? 5 : 7);
 
     public void Dispose()
     {
-        _tesseractInstanceHorizontal.Dispose();
-        _tesseractInstanceVertical.Dispose();
+        TesseractInstanceHorizontal.Value.Dispose();
+        TesseractInstanceVertical.Value.Dispose();
     }
 
     public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
@@ -106,15 +97,15 @@ public class TesseractRecognizer : IDisposable
         stoppingToken.ThrowIfCancellationRequested();
         var (imageKey, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
-        var isVertical = (float)mat.Width / mat.Height < _aspectRatioThresholdToConsiderAsVertical;
-        if (isVertical && _script == "en") isVertical = false; // there's no vertical english
-        var tesseract = isVertical ? _tesseractInstanceVertical : _tesseractInstanceHorizontal;
-        tesseract.Run(mat, out _, out var rects, out var texts, out var confidences);
+        var isVertical = (float)mat.Width / mat.Height < AspectRatioThresholdToConsiderAsVertical;
+        if (isVertical && script == "en") isVertical = false; // there's no vertical english
+        var tesseract = isVertical ? TesseractInstanceVertical : TesseractInstanceHorizontal;
+        tesseract.Value.Run(mat, out _, out var rects, out var texts, out var confidences);
 
         var shouldFallbackToPaddleOcr = !rects.Any();
         var components = rects.EquiZip(texts, confidences)
             .Select(t => (Rect: t.Item1, Text: t.Item2, Confidence: t.Item3))
-            .Where(t => t.Confidence > _confidenceThreshold)
+            .Where(t => t.Confidence > ConfidenceThreshold)
             .ToList();
         var text = string.Join("", components.Select(t => t.Text)).Trim();
         if (text == "") shouldFallbackToPaddleOcr = true;

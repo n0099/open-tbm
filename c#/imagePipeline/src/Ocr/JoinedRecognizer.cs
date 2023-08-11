@@ -2,34 +2,29 @@ using System.Text;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public class JoinedRecognizer
+public class JoinedRecognizer(
+    IConfiguration config,
+    PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
+    TesseractRecognizer.New tesseractRecognizerFactory,
+    string script)
 {
-    private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector;
-    private readonly Lazy<TesseractRecognizer> _tesseractRecognizer;
-    private readonly int _gridSizeToMergeBoxesIntoSingleLine;
-    private readonly int _paddleOcrConfidenceThreshold;
-    private readonly (int ToConsiderAsSameTextBox, int ToConsiderAsNewTextBox) _intersectionAreaThresholds;
-
     public delegate JoinedRecognizer New(string script);
 
-    public JoinedRecognizer(
-        IConfiguration config,
-        PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
-        TesseractRecognizer.New tesseractRecognizerFactory,
-        string script)
+    private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
+    private readonly Lazy<TesseractRecognizer> _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));
+    private readonly IConfigurationSection _config = config.GetSection("OcrConsumer");
+    private int GridSizeToMergeBoxesIntoSingleLine => _config.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
+    private int PaddleOcrConfidenceThreshold => _config.GetValue("PaddleOcr:ConfidenceThreshold", 80);
+    private (int ToConsiderAsSameTextBox, int ToConsiderAsNewTextBox) IntersectionAreaThresholds
     {
-        _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
-        _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));
-        var configSection = config.GetSection("OcrConsumer");
-        _gridSizeToMergeBoxesIntoSingleLine =
-            configSection.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
-        _paddleOcrConfidenceThreshold =
-            configSection.GetValue("PaddleOcr:ConfidenceThreshold", 80);
-        var intersectionAreaThresholdConfigSection =
-            configSection.GetSection("Tesseract:IntersectionAreaThreshold");
-        _intersectionAreaThresholds = (
-            intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsSameTextBox", 90),
-            intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsNewTextBox", 10));
+        get
+        {
+            var intersectionAreaThresholdConfigSection =
+                _config.GetSection("Tesseract:IntersectionAreaThreshold");
+            return (
+                intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsSameTextBox", 90),
+                intersectionAreaThresholdConfigSection.GetValue("ToConsiderAsNewTextBox", 10));
+        }
     }
 
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
@@ -45,7 +40,7 @@ public class JoinedRecognizer
         var recognizedResultsViaTesseract = RecognizeMatricesViaTesseract(
             recognizedResultsViaPaddleOcr, detectedResults, matricesKeyByImageKey, stoppingToken).ToList();
         return recognizedResultsViaPaddleOcr
-            .Where<IRecognitionResult>(result => result.Confidence >= _paddleOcrConfidenceThreshold)
+            .Where<IRecognitionResult>(result => result.Confidence >= PaddleOcrConfidenceThreshold)
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
             .Concat(recognizedResultsViaPaddleOcr.IntersectBy(recognizedResultsViaTesseract
                 .Where(result => result.ShouldFallbackToPaddleOcr)
@@ -64,7 +59,7 @@ public class JoinedRecognizer
                     // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                     // which have similar but different values of y coordinates get rearranged in a wrong order
                     // https://github.com/sdcb/PaddleSharp/issues/55#issuecomment-1607067510
-                    var alignedY = (double)rect.Y / _gridSizeToMergeBoxesIntoSingleLine;
+                    var alignedY = (double)rect.Y / GridSizeToMergeBoxesIntoSingleLine;
                     // the bounding rect for a rotated rect might be outside the original image
                     // so the y-axis coordinate of its top-left point can be negative
                     return (result, rect.X, alignedY: alignedY < 0 ? 0 : alignedY.RoundToUshort());
@@ -114,7 +109,7 @@ public class JoinedRecognizer
         var recognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.RecognizedTextBox into g
-            select g.Where(pair => pair.PercentageOfIntersection > _intersectionAreaThresholds.ToConsiderAsSameTextBox)
+            select g.Where(pair => pair.PercentageOfIntersection > IntersectionAreaThresholds.ToConsiderAsSameTextBox)
                 .DefaultIfEmpty().MaxBy(pair => pair?.PercentageOfIntersection) into pair
             where pair != default
             select pair
@@ -122,12 +117,12 @@ public class JoinedRecognizer
         var unrecognizedDetectedTextBoxes = (
             from pair in correlatedTextBoxPairs
             group pair by pair.DetectedTextBox into g
-            where g.All(pair => pair.PercentageOfIntersection <= _intersectionAreaThresholds.ToConsiderAsNewTextBox)
+            where g.All(pair => pair.PercentageOfIntersection <= IntersectionAreaThresholds.ToConsiderAsNewTextBox)
             select g.MinBy(pair => pair.PercentageOfIntersection)
         ).ToLookup(pair => pair.ImageKey);
 
         return recognizedResultsViaPaddleOcr
-            .Where(result => result.Confidence < _paddleOcrConfidenceThreshold)
+            .Where(result => result.Confidence < PaddleOcrConfidenceThreshold)
             .GroupBy(result => result.ImageKey)
             .Select(g =>
             {

@@ -1,60 +1,44 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
-public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf> : IDisposable
-    where TPost : class, IPost
-    where TBaseRevision : class, IRevision
-    where TResponse : class, IMessage<TResponse>
-    where TPostProtoBuf : class, IMessage<TPostProtoBuf>
-{
-    private readonly ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> _logger;
-    private readonly CrawlerDbContext.New _dbContextFactory;
-    private readonly BaseCrawler<TResponse, TPostProtoBuf> _crawler;
-    private readonly BaseParser<TPost, TPostProtoBuf> _parser;
-    private readonly BaseSaver<TPost, TBaseRevision> _saver;
-    private readonly ClientRequesterTcs _requesterTcs;
-    private readonly CrawlerLocks _locks; // singleton for every derived class
-    private readonly CrawlerLocks.LockId _lockId;
-    private readonly HashSet<Page> _lockingPages = new();
-    private ExceptionHandler _exceptionHandler = _ => { };
-    public delegate void ExceptionHandler(Exception ex);
-
-    protected uint Fid { get; }
-    protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
-    protected UserParserAndSaver Users { get; }
-
-    protected BaseCrawlFacade(
+public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
         ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> logger,
         CrawlerDbContext.New dbContextFactory,
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
         BaseParser<TPost, TPostProtoBuf> parser,
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
         UserParserAndSaver users,
-        ClientRequesterTcs requesterTcs,
+        ClientRequesterTcs requesterTcs, // singleton for every derived class
         CrawlerLocks locks,
         CrawlerLocks.LockId lockId,
         Fid fid)
-    {
-        (_logger, _dbContextFactory, _crawler, _parser) = (logger, dbContextFactory, crawler, parser);
-        _saver = saverFactory(Posts);
-        Users = users;
-        _requesterTcs = requesterTcs;
-        _locks = locks;
-        _lockId = lockId;
-        Fid = fid;
-    }
+    : IDisposable
+    where TPost : class, IPost
+    where TBaseRevision : class, IRevision
+    where TResponse : class, IMessage<TResponse>
+    where TPostProtoBuf : class, IMessage<TPostProtoBuf>
+{
+    private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => new(saverFactory(Posts));
 
-    public void Dispose() => _locks.ReleaseRange(_lockId, _lockingPages);
+    private readonly HashSet<Page> _lockingPages = new();
+    private ExceptionHandler _exceptionHandler = _ => { };
+    public delegate void ExceptionHandler(Exception ex);
+
+    protected uint Fid { get; } = fid;
+    protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
+    protected UserParserAndSaver Users { get; } = users;
+
+    public void Dispose() => locks.ReleaseRange(lockId, _lockingPages);
 
     protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
     protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
 
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
-        var db = _dbContextFactory(Fid);
+        var db = dbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-
-        var savedPosts = Posts.IsEmpty ? null : _saver.SavePosts(db);
-        Users.SaveUsers(db, _saver.PostType, _saver.TiebaUserFieldChangeIgnorance);
+        var saver = Saver.Value;
+        var savedPosts = Posts.IsEmpty ? null : saver.SavePosts(db);
+        Users.SaveUsers(db, saver.PostType, saver.TiebaUserFieldChangeIgnorance);
         BeforeCommitSaveHook(db);
         try
         {
@@ -65,7 +49,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         }
         finally
         {
-            _saver.OnPostSaveEvent();
+            saver.OnPostSaveEvent();
             Users.PostSaveHook();
         }
         return savedPosts;
@@ -76,19 +60,19 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     { // cancel when startPage is already locked
         if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
             "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
-        var acquiredLocks = _locks.AcquireRange(_lockId, new[] {startPage});
-        if (!acquiredLocks.Any()) _logger.LogInformation(
+        var acquiredLocks = locks.AcquireRange(lockId, new[] {startPage});
+        if (!acquiredLocks.Any()) logger.LogInformation(
             "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked",
-            startPage, endPage, _locks.LockType, _lockId);
+            startPage, endPage, locks.LockType, lockId);
         _lockingPages.UnionWith(acquiredLocks);
 
         var isStartPageCrawlFailed = await LogException(async () =>
         {
-            var startPageResponse = await _crawler.CrawlSinglePage(startPage, stoppingToken);
+            var startPageResponse = await crawler.CrawlSinglePage(startPage, stoppingToken);
             startPageResponse.ForEach(ValidateThenParse);
 
             var maxPage = startPageResponse
-                .Select(response => _crawler.GetResponsePage(response.Result))
+                .Select(response => crawler.GetResponsePage(response.Result))
                 .Max(page => (Page?)page?.TotalPage);
             endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
         }, startPage, previousFailureCount: 0, stoppingToken);
@@ -107,7 +91,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     private async Task CrawlPages
         (IList<Page> pages, Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
     {
-        var acquiredLocks = _locks.AcquireRange(_lockId, pages);
+        var acquiredLocks = locks.AcquireRange(lockId, pages);
         if (!acquiredLocks.Any())
         {
             var pagesText = Enumerable
@@ -116,14 +100,14 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 .SequenceEqual(pages)
                 ? $"within the range [{pages[0]}-{pages[^1]}]"
                 : JsonSerializer.Serialize(pages);
-            _logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
-                pagesText, _locks.LockType, _lockId);
+            logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
+                pagesText, locks.LockType, lockId);
         }
         _lockingPages.UnionWith(acquiredLocks);
 
         _ = await Task.WhenAll(acquiredLocks.Shuffle()
             .Select(page => LogException(
-                async () => (await _crawler.CrawlSinglePage(page, stoppingToken)).ForEach(ValidateThenParse),
+                async () => (await crawler.CrawlSinglePage(page, stoppingToken)).ForEach(ValidateThenParse),
                 page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));
     }
 
@@ -152,20 +136,20 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         {
             e.Data["page"] = page;
             e.Data["fid"] = Fid;
-            e = _crawler.FillExceptionData(e).ExtractInnerExceptionsData();
+            e = crawler.FillExceptionData(e).ExtractInnerExceptionsData();
 
             if (e is TiebaException te)
             {
-                if (!te.ShouldSilent) _logger.LogWarning("TiebaException: {} {}",
+                if (!te.ShouldSilent) logger.LogWarning("TiebaException: {} {}",
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
                     Helper.UnescapedJsonSerialize(e.Data));
             }
-            else _logger.LogError(e, "Exception");
+            else logger.LogError(e, "Exception");
 
             if (e is not TiebaException {ShouldRetry: false})
             {
-                _locks.AcquireFailed(_lockId, page, (FailureCount)(previousFailureCount + 1));
-                _requesterTcs.Decrease();
+                locks.AcquireFailed(lockId, page, (FailureCount)(previousFailureCount + 1));
+                requesterTcs.Decrease();
             }
 
             try
@@ -174,7 +158,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception");
+                logger.LogError(ex, "Exception");
                 return true;
             }
             return true;
@@ -191,8 +175,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
     {
         var (response, flag) = responseTuple;
-        var postsInResponse = _crawler.GetValidPosts(response, flag);
-        _parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
+        var postsInResponse = crawler.GetValidPosts(response, flag);
+        parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
         parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
         if (flag == CrawlRequestFlag.None)
         {
