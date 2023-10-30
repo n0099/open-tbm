@@ -56,7 +56,7 @@ public class TesseractRecognizer(IConfiguration config, string script) : IDispos
         // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
         var mat = new Mat(originalMatrix, new Rect(new(), originalMatrix.Size()).Intersect(textBox.BoundingRect()));
 
-        Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
+        if (mat.Channels() != 1) Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
         // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
         // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
         _ = Cv2.Threshold(mat, mat, thresh: 0, maxval: 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);

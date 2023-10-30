@@ -1,3 +1,5 @@
+using Sdcb.PaddleOCR.Models;
+
 namespace tbm.ImagePipeline.Ocr;
 
 public interface IRecognitionResult
@@ -9,7 +11,8 @@ public interface IRecognitionResult
 }
 
 public record PaddleOcrRecognitionResult
-    (ImageKey ImageKey, RotatedRect TextBox, string Text, ushort Confidence)
+    (ImageKey ImageKey, RotatedRect TextBox, string Text, ushort Confidence,
+        ModelVersion ModelVersion)
     : IRecognitionResult;
 
 public record TesseractRecognitionResult

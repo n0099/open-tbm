@@ -156,9 +156,9 @@ public partial class MetadataConsumer
     {
         public static DateTime? ParseGpsDateTimeOrNull(Rational[]? timeStamp, string? dateStamp)
         {
-            if (timeStamp == null || dateStamp == null) return null;
+            if (timeStamp == null || dateStamp.NullIfEmpty() == null) return null;
 
-            var dateParts = dateStamp.Split(':', '-').Select(int.Parse).ToList();
+            var dateParts = dateStamp!.Split(':', '-').Select(int.Parse).ToList();
             if (dateParts is not [var year, var month, var day])
                 throw new ArgumentOutOfRangeException(nameof(dateStamp), dateStamp,
                 $"Unexpected \"{dateStamp}\", expecting three parts separated by ':' or '-'.");

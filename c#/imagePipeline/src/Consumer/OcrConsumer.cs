@@ -25,7 +25,6 @@ public class OcrConsumer(JoinedRecognizer.New recognizerFactory, string script)
                         Cv2.CvtColor(mat, mat, ColorConversionCodes.BGRA2BGR);
                     return mat;
                 }), stoppingToken).ToList();
-        var recognizedTextLinesKeyByImageKey = _recognizer.GetRecognizedTextLines(recognizedResults);
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
             ImageId = result.ImageKey.ImageId,
@@ -37,7 +36,7 @@ public class OcrConsumer(JoinedRecognizer.New recognizerFactory, string script)
             RotationDegrees = result.TextBox.Angle,
             Recognizer = result switch
             {
-                PaddleOcrRecognitionResult => "PaddleOCR",
+                PaddleOcrRecognitionResult r => "PaddleOCR" + Enum.GetName(r.ModelVersion)?.ToLower(),
                 TesseractRecognitionResult {IsVertical: false} => "TesseractHorizontal",
                 TesseractRecognitionResult {IsVertical: true} => "TesseractVertical",
                 _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)
@@ -45,6 +44,7 @@ public class OcrConsumer(JoinedRecognizer.New recognizerFactory, string script)
             Confidence = result.Confidence,
             Text = result.Text
         }));
+        var recognizedTextLinesKeyByImageKey = _recognizer.GetRecognizedTextLines(recognizedResults);
         db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageKey.Select(pair => new ImageOcrLine
         {
             ImageId = pair.Key.ImageId,

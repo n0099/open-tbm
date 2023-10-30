@@ -37,10 +37,10 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     public async Task Initialize(CancellationToken stoppingToken = default) =>
         _ocr ??= await (_script switch
         {
-            "zh-Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseV3),
+            "zh-Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseServerV4),
             "zh-Hant" => GetPaddleOcrFactory(OnlineFullModels.TraditionalChineseV3),
-            "ja" => GetPaddleOcrFactory(OnlineFullModels.JapanV3),
-            "en" => GetPaddleOcrFactory(OnlineFullModels.EnglishV3),
+            "ja" => GetPaddleOcrFactory(OnlineFullModels.JapanV4),
+            "en" => GetPaddleOcrFactory(OnlineFullModels.EnglishV4),
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
@@ -51,14 +51,12 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
         return matricesKeyByImageKey.SelectMany(pair =>
         {
             stoppingToken.ThrowIfCancellationRequested();
-            return CreateRecognitionResult(pair.Key, _script, _ocr.Run(pair.Value));
+            return _ocr.Run(pair.Value).Regions.Select(region => new PaddleOcrRecognitionResult(
+                pair.Key, region.Rect, region.Text,
+                (region.Score * 100).NanToZero().RoundToUshort(),
+                _ocr.Recognizer.Model.Version));
         });
     }
-
-    private static IEnumerable<PaddleOcrRecognitionResult> CreateRecognitionResult
-        (ImageKey imageKey, string script, PaddleOcrResult result) =>
-        result.Regions.Select(region => new PaddleOcrRecognitionResult(
-            imageKey, region.Rect, region.Text, (region.Score * 100).NanToZero().RoundToUshort()));
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 
