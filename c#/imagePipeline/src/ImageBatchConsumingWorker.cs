@@ -22,6 +22,9 @@ public class ImageBatchConsumingWorker(
                 var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
                 await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
+                logger.LogTrace("Start to consume {} image(s): [{}]",
+                    imagesWithBytes.Count,
+                    string.Join(",", imagesWithBytes.Select(i => i.ImageInReply.ImageId)));
                 var sw = new Stopwatch();
                 void LogStopwatch(string consumerType) =>
                     logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
@@ -46,7 +49,7 @@ public class ImageBatchConsumingWorker(
                     qrCodeConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
                     LogStopwatch("scan QRCode");
 
-                    _ = await db.SaveChangesAsync(stoppingToken);
+                    _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
                     await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
                         db.ForumScripts, imageKeysWithMatrix, stoppingToken);
                     await transaction.CommitAsync(stoppingToken);
@@ -64,7 +67,12 @@ public class ImageBatchConsumingWorker(
             {
                 logger.LogError(e, "Exception");
             }
+            if (!channel.Reader.TryPeek(out _)) // https://stackoverflow.com/questions/72972469/which-is-the-fastest-way-to-tell-if-a-channelt-is-empty
+                logger.LogWarning("Consumer is idle due to no image batch getting produced, configure \"ImageBatchProducer.MaxBufferedImageBatches\""
+                                  + " to a larger value then restart will allow more image batches to get downloaded before consume");
         }
+        logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.StartFromLatestSuccessful\""
+                              + " to false then restart will rerun all previous failed image batches from start");
     }
 
     private IEnumerable<ImageKeyWithMatrix> DecodeImageOrFramesBytes
@@ -127,12 +135,15 @@ public class ImageBatchConsumingWorker(
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(scriptsGroupByFid.Key, "");
             db.Database.SetDbConnection(parentConnection);
             _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
+            // try to know which fid owns current image batch
             var imagesInCurrentFid = imageKeysWithMatrix.IntersectBy(
-                db.ReplyContentImages.Where(replyContentImage => imageKeysWithMatrix
-                        .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                        .Contains(replyContentImage.ImageId))
-                    .Select(replyContentImage => replyContentImage.ImageId),
+                from replyContentImage in db.ReplyContentImages
+                where imageKeysWithMatrix
+                    .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                    .Contains(replyContentImage.ImageId)
+                select replyContentImage.ImageId,
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId).ToList();
+            if (imagesInCurrentFid.Count == 0) continue;
             foreach (var script in scriptsGroupByFid)
                 await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
         }

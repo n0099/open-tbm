@@ -40,8 +40,6 @@ public class ImageBatchProducingWorker(
             await writer.WriteAsync(new(imagesWithBytes.OfType<ImageWithBytes>()), stoppingToken);
         }
         writer.Complete();
-        logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.StartFromLatestSuccessful\""
-                              + " to false then restart will rerun all previous failed image batches from start");
     }
 
     private IEnumerable<IEnumerable<ImageInReply>> GetUnconsumedImages()
