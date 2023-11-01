@@ -22,16 +22,29 @@ public class ImageBatchConsumingWorker(
                 var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
                 await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
+                var sw = new Stopwatch();
+                void LogStopwatch(string consumerType) =>
+                    logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
+                        sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count,
+                        string.Join(",", imagesWithBytes.Select(i => i.ImageInReply.ImageId)));
+
                 var metadataConsumer = scope1.Resolve<MetadataConsumer>();
+                sw.Restart();
                 metadataConsumer.Consume(db, imagesWithBytes, stoppingToken);
+                LogStopwatch("extract metadata");
                 var imageKeysWithMatrix = imagesWithBytes
                     .SelectMany(imageWithBytes => DecodeImageOrFramesBytes(imageWithBytes, stoppingToken)).ToList();
                 try
                 {
                     var hashConsumer = scope1.Resolve<HashConsumer>();
+                    sw.Restart();
                     hashConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
+                    LogStopwatch("calculate hash");
+
                     var qrCodeConsumer = scope1.Resolve<QrCodeConsumer>();
+                    sw.Restart();
                     qrCodeConsumer.Consume(db, imageKeysWithMatrix, stoppingToken);
+                    LogStopwatch("scan QRCode");
 
                     _ = await db.SaveChangesAsync(stoppingToken);
                     await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
@@ -100,7 +113,7 @@ public class ImageBatchConsumingWorker(
         }
     }
 
-    private static async Task ConsumeOcrConsumer(
+    private async Task ConsumeOcrConsumer(
         ILifetimeScope scope,
         DbConnection parentConnection,
         DbTransaction parentTransaction,
@@ -123,7 +136,7 @@ public class ImageBatchConsumingWorker(
             foreach (var script in scriptsGroupByFid)
                 await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
         }
-        async Task ConsumeByFidAndScript(Fid fid, string script, IEnumerable<ImageKeyWithMatrix> imagesInCurrentFid)
+        async Task ConsumeByFidAndScript(Fid fid, string script, IReadOnlyCollection<ImageKeyWithMatrix> imagesInCurrentFid)
         {
             await using var scope1 = scope.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(fid, script);
@@ -133,7 +146,12 @@ public class ImageBatchConsumingWorker(
 
             var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
+            var sw = new Stopwatch();
+            sw.Start();
             ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
+            logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
+                sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
+                string.Join(",", imagesInCurrentFid.Select(i => i.ImageId)));
             _ = await db.SaveChangesAsync(stoppingToken);
         }
     }
