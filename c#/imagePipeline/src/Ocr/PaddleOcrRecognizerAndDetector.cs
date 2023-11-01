@@ -37,7 +37,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     public async Task Initialize(CancellationToken stoppingToken = default) =>
         _ocr ??= await (_script switch
         {
-            "zh-Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseServerV4),
+            "zh-Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseV4),
             "zh-Hant" => GetPaddleOcrFactory(OnlineFullModels.TraditionalChineseV3),
             "ja" => GetPaddleOcrFactory(OnlineFullModels.JapanV4),
             "en" => GetPaddleOcrFactory(OnlineFullModels.EnglishV4),

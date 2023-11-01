@@ -1,11 +1,11 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public class OcrConsumer(JoinedRecognizer.New recognizerFactory, string script)
+public class OcrConsumer(JointRecognizer.New recognizerFactory, string script)
     : MatrixConsumer
 {
     public delegate OcrConsumer New(string script);
 
-    private readonly JoinedRecognizer _recognizer = recognizerFactory(script);
+    private readonly JointRecognizer _recognizer = recognizerFactory(script);
 
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _recognizer.InitializePaddleOcr(stoppingToken);

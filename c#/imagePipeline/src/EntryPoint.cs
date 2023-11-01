@@ -50,7 +50,7 @@ public class EntryPoint : BaseEntryPoint
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
         builder.RegisterType<ImagePipelineDbContext>();
-        builder.RegisterType<JoinedRecognizer>();
+        builder.RegisterType<JointRecognizer>();
         builder.RegisterType<OcrConsumer>();
         builder.RegisterType<HashConsumer>();
         builder.RegisterType<QrCodeConsumer>();

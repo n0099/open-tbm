@@ -2,13 +2,13 @@ using System.Text;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public class JoinedRecognizer(
+public class JointRecognizer(
     IConfiguration config,
     PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
     TesseractRecognizer.New tesseractRecognizerFactory,
     string script)
 {
-    public delegate JoinedRecognizer New(string script);
+    public delegate JointRecognizer New(string script);
 
     private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
     private readonly Lazy<TesseractRecognizer> _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));

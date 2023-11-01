@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Hashing;
 using System.Text.RegularExpressions;
@@ -13,10 +12,12 @@ namespace tbm.ImagePipeline.Consumer;
 
 public partial class MetadataConsumer
 {
+    private readonly ILogger<MetadataConsumer> _logger;
     private readonly (ulong[] Exif, ulong[] Icc, ulong[] Iptc, ulong[] Xmp) _commonEmbeddedMetadataXxHash3ToIgnore;
 
-    public MetadataConsumer(IConfiguration config)
+    public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config)
     {
+        _logger = logger;
         var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
         ulong[] GetCommonXxHash3ToIgnore(string key) => section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
         _commonEmbeddedMetadataXxHash3ToIgnore = (
@@ -61,11 +62,11 @@ public partial class MetadataConsumer
                     : new() {DownloadedByteSize = (uint)imageBytes.Length},
                 EmbeddedExif = CreateEmbeddedExifFromProfile(meta.ExifProfile),
                 EmbeddedIcc = CreateEmbeddedFromProfile<IccProfile, ImageMetadata.Icc>
-                    (_commonEmbeddedMetadataXxHash3ToIgnore.Icc, meta.IccProfile, i => i?.ToByteArray()),
+                    (_commonEmbeddedMetadataXxHash3ToIgnore.Icc, meta.IccProfile, i => i.ToByteArray()),
                 EmbeddedIptc = CreateEmbeddedFromProfile<IptcProfile, ImageMetadata.Iptc>
-                    (_commonEmbeddedMetadataXxHash3ToIgnore.Iptc, meta.IptcProfile, i => i?.Data),
+                    (_commonEmbeddedMetadataXxHash3ToIgnore.Iptc, meta.IptcProfile, i => i.Data),
                 EmbeddedXmp = CreateEmbeddedFromProfile<XmpProfile, ImageMetadata.Xmp>
-                    (_commonEmbeddedMetadataXxHash3ToIgnore.Xmp, meta.XmpProfile, i => i?.ToByteArray()),
+                    (_commonEmbeddedMetadataXxHash3ToIgnore.Xmp, meta.XmpProfile, i => i.ToByteArray()),
                 JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
                 PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
                 GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
@@ -73,17 +74,21 @@ public partial class MetadataConsumer
             };
         }));
 
-    [return: NotNullIfNotNull(nameof(profile))]
-    private static TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
+    private TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
         IEnumerable<ulong> commonXxHash3ToIgnore,
         TImageSharpProfile? profile,
-        Func<TImageSharpProfile?, byte[]?> rawBytesSelector
+        Func<TImageSharpProfile, byte[]?> rawBytesSelector
     )
         where TEmbeddedMetadata : class, ImageMetadata.IEmbedded, new()
     {
+        if (profile == null) return null;
         var rawBytes = rawBytesSelector(profile); // will be null when param profile is null
+        if (rawBytes == null || rawBytes.Length == 0) return null;
+        if (rawBytes.Length > 65535)
+            _logger.LogWarning("Embedded {} in image contains {} bytes",
+                typeof(TEmbeddedMetadata).Name.ToUpper(), rawBytes.Length);
         var xxHash3 = XxHash3.HashToUInt64(rawBytes);
-        return profile == null ? null : new TEmbeddedMetadata
+        return new()
         {
             XxHash3 = xxHash3,
             RawBytes = commonXxHash3ToIgnore.Contains(xxHash3) ? null : rawBytes
@@ -98,7 +103,7 @@ public partial class MetadataConsumer
             exif.TryGetValue(tag, out var value) ? value.Value : null;
 
         var ret = CreateEmbeddedFromProfile<ExifProfile, ImageMetadata.Exif>
-            (_commonEmbeddedMetadataXxHash3ToIgnore.Exif, exif, i => i?.ToByteArray());
+            (_commonEmbeddedMetadataXxHash3ToIgnore.Exif, exif, i => i.ToByteArray());
         if (ret != null && exif != null)
         { // https://exiftool.org/TagNames/EXIF.html, https://exiv2.org/tags.html
             ret.Orientation = exif.TryGetValue(ExifTag.Orientation, out var orientation)
