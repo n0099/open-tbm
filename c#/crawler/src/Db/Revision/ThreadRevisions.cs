@@ -13,7 +13,7 @@ public class ThreadRevision : BaseThreadRevision
     public ulong? ThreadType { get; set; }
     public string? StickyType { get; set; }
     public string? TopicType { get; set; }
-    public ushort? IsGood { get; set; }
+    public byte? IsGood { get; set; }
     public uint? LatestReplyPostedAt { get; set; }
     public long? LatestReplierUid { get; set; }
     public uint? ReplyCount { get; set; }

@@ -72,7 +72,7 @@ public class JointRecognizer(
         });
 
     private record CorrelatedTextBoxPair(
-        ImageKey ImageKey, ushort PercentageOfIntersection,
+        ImageKey ImageKey, byte PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
     private IEnumerable<TesseractRecognitionResult> RecognizeMatricesViaTesseract(
@@ -81,7 +81,7 @@ public class JointRecognizer(
         IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
         CancellationToken stoppingToken = default)
     {
-        ushort GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
+        byte GetPercentageOfIntersectionArea(RotatedRect subject, RotatedRect clip)
         {
             stoppingToken.ThrowIfCancellationRequested();
             var intersectType = Cv2.RotatedRectangleIntersection(subject, clip, out var intersectingRegionPoints);
@@ -92,7 +92,7 @@ public class JointRecognizer(
                 intersectionArea / Cv2.ContourArea(subject.Points()),
                 intersectionArea / Cv2.ContourArea(clip.Points())
             };
-            return (areas.Where(area => !double.IsNaN(area)).Average() * 100).RoundToUshort();
+            return (areas.Where(area => !double.IsNaN(area)).Average() * 100).RoundToByte();
         }
         var uniqueRecognizedResults = recognizedResultsViaPaddleOcr
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image

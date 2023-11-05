@@ -12,7 +12,7 @@ public class SubReplyPost : IPost, IPostWithAuthorExpGrade
     [NotMapped]
     public required RepeatedField<Content> OriginalContents { get; set; }
     public long AuthorUid { get; set; }
-    [NotMapped] public ushort AuthorExpGrade { get; set; }
+    [NotMapped] public byte AuthorExpGrade { get; set; }
     public uint PostedAt { get; set; }
     public int? AgreeCount { get; set; }
     public int? DisagreeCount { get; set; }

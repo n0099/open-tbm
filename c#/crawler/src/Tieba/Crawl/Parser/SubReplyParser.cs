@@ -20,7 +20,7 @@ public class SubReplyParser : BaseParser<SubReplyPost, SubReply>
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => Helper.WrapPostContent(inPost.Content));
             o.AuthorUid = author.Uid;
-            o.AuthorExpGrade = (ushort)author.LevelId;
+            o.AuthorExpGrade = (byte)author.LevelId;
             o.PostedAt = inPost.Time;
             o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();
             o.DisagreeCount = (int?)inPost.Agree.DisagreeNum.NullIfZero();

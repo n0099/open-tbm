@@ -33,7 +33,7 @@ public class ReplyCrawlFacade(
             join user in users on reply.AuthorUid equals user.Uid
             select (reply, user))
         // fill the values for some field of reply from user list which is out of post list
-        .ForEach(t => t.reply.AuthorExpGrade = (ushort)t.user.LevelId);
+        .ForEach(t => t.reply.AuthorExpGrade = (byte)t.user.LevelId);
 
     private void SaveParentThreadTitle(IEnumerable<Reply> replies)
     {

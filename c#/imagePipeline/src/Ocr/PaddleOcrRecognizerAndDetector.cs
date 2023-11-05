@@ -53,7 +53,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             stoppingToken.ThrowIfCancellationRequested();
             return _ocr.Run(pair.Value).Regions.Select(region => new PaddleOcrRecognitionResult(
                 pair.Key, region.Rect, region.Text,
-                (region.Score * 100).NanToZero().RoundToUshort(),
+                (region.Score * 100).NanToZero().RoundToByte(),
                 _ocr.Recognizer.Model.Version));
         });
     }

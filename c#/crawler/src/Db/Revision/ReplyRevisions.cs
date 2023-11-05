@@ -26,7 +26,7 @@ public class ReplyRevision : BaseReplyRevision
             () => new() {TakenAt = TakenAt, Pid = Pid, SubReplyCount = value});
     }
 
-    public ushort? IsFold { get; set; }
+    public byte? IsFold { get; set; }
 
     [NotMapped]
     public int AgreeCount

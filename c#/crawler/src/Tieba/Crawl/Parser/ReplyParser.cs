@@ -45,7 +45,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
             // value of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
             o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
             o.PostedAt = inPost.Time;
-            o.IsFold = (ushort?)inPost.IsFold.NullIfZero();
+            o.IsFold = (byte?)inPost.IsFold.NullIfZero();
             o.AgreeCount = (int?)inPost.Agree.AgreeNum.NullIfZero();
             o.DisagreeCount = (int?)inPost.Agree.DisagreeNum.NullIfZero();
             o.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(inPost.LbsInfo);

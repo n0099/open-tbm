@@ -10,6 +10,6 @@ public class ImageOcrBox
     public short Height { get; set; }
     public short RotationDegrees { get; set; }
     public string Recognizer { get; set; } = "";
-    public ushort Confidence { get; set; }
+    public byte Confidence { get; set; }
     public string Text { get; set; } = "";
 }

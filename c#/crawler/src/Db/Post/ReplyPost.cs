@@ -12,10 +12,10 @@ public class ReplyPost : IPost, IPostWithAuthorExpGrade
     [NotMapped]
     public required RepeatedField<Content> OriginalContents { get; set; }
     public long AuthorUid { get; set; }
-    [NotMapped] public ushort AuthorExpGrade { get; set; }
+    [NotMapped] public byte AuthorExpGrade { get; set; }
     public uint? SubReplyCount { get; set; }
     public uint PostedAt { get; set; }
-    public ushort? IsFold { get; set; }
+    public byte? IsFold { get; set; }
     public int? AgreeCount { get; set; }
     public int? DisagreeCount { get; set; }
     public byte[]? Geolocation { get; set; }

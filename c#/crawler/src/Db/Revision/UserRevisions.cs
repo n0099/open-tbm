@@ -31,7 +31,7 @@ public class UserRevision : BaseUserRevision
             () => new() {TakenAt = TakenAt, Uid = Uid, TriggeredBy = TriggeredBy, PortraitUpdatedAt = value});
     }
 
-    public ushort? Gender { get; set; }
+    public byte? Gender { get; set; }
     public byte[]? Icon { get; set; }
 
     [NotMapped]

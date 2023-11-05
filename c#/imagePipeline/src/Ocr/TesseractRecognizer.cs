@@ -113,8 +113,8 @@ public class TesseractRecognizer(IConfiguration config, string script) : IDispos
         var text = string.Join("", components.Select(t => t.Text)).Trim();
         if (text == "") shouldFallbackToPaddleOcr = true;
         var averageConfidence = components.Any()
-            ? components.Select(c => c.Confidence).Average().RoundToUshort()
-            : (ushort)0;
+            ? components.Select(c => c.Confidence).Average().RoundToByte()
+            : (byte)0;
 
         return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);
     }

@@ -73,7 +73,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
                 u.DisplayName = name == nameShow ? null : nameShow;
                 u.Portrait = portrait;
                 u.PortraitUpdatedAt = portraitUpdatedAt;
-                u.Gender = (ushort)el.Gender; // 0 when he haven't explicitly set his gender
+                u.Gender = (byte)el.Gender; // 0 when he haven't explicitly set his gender
                 u.FansNickname = el.FansNickname.NullIfEmpty();
                 u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(el.Iconinfo,
                     () => new UserIconWrapper {Value = {el.Iconinfo}});
