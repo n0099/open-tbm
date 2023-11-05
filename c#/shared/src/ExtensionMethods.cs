@@ -11,7 +11,9 @@ public static class ExtensionMethods
     public static long? NullIfZero(this long num) => num == 0 ? null : num;
     public static float NanToZero(this float number) => float.IsNaN(number) ? 0 : number;
     public static float? NanToNull(this float number) => float.IsNaN(number) ? null : number;
-    public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number, 0);
-    public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number, 0);
+    public static short RoundToShort(this float number) => (short)Math.Round(number);
+    public static short RoundToShort(this double number) => (short)Math.Round(number);
+    public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number);
+    public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number);
     public static IQueryable<T> ForUpdate<T>(this IQueryable<T> query) => query.TagWith("ForUpdate");
 }

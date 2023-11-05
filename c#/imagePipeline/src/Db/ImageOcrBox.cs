@@ -4,11 +4,11 @@ public class ImageOcrBox
 {
     public uint ImageId { get; set; }
     public uint FrameIndex { get; set; }
-    public float CenterPointX { get; set; }
-    public float CenterPointY { get; set; }
-    public float Width { get; set; }
-    public float Height { get; set; }
-    public float RotationDegrees { get; set; }
+    public short CenterPointX { get; set; }
+    public short CenterPointY { get; set; }
+    public short Width { get; set; }
+    public short Height { get; set; }
+    public short RotationDegrees { get; set; }
     public string Recognizer { get; set; } = "";
     public ushort Confidence { get; set; }
     public string Text { get; set; } = "";

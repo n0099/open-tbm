@@ -36,14 +36,14 @@ public class QrCodeConsumer : MatrixConsumer, IDisposable
                 {
                     ImageId = imageKeyWithMatrix.ImageId,
                     FrameIndex = imageKeyWithMatrix.FrameIndex,
-                    Point1X = points[0][0],
-                    Point1Y = points[0][1],
-                    Point2X = points[1][0],
-                    Point2Y = points[1][1],
-                    Point3X = points[2][0],
-                    Point3Y = points[2][1],
-                    Point4X = points[3][0],
-                    Point4Y = points[3][1],
+                    Point1X = points[0][0].RoundToShort(),
+                    Point1Y = points[0][1].RoundToShort(),
+                    Point2X = points[1][0].RoundToShort(),
+                    Point2Y = points[1][1].RoundToShort(),
+                    Point3X = points[2][0].RoundToShort(),
+                    Point3Y = points[2][1].RoundToShort(),
+                    Point4X = points[3][0].RoundToShort(),
+                    Point4Y = points[3][1].RoundToShort(),
                     Text = result
                 };
             });

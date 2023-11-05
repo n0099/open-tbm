@@ -29,11 +29,11 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, string script)
         {
             ImageId = result.ImageKey.ImageId,
             FrameIndex = result.ImageKey.FrameIndex,
-            CenterPointX = result.TextBox.Center.X,
-            CenterPointY = result.TextBox.Center.Y,
-            Width = result.TextBox.Size.Width,
-            Height = result.TextBox.Size.Height,
-            RotationDegrees = result.TextBox.Angle,
+            CenterPointX = result.TextBox.Center.X.RoundToShort(),
+            CenterPointY = result.TextBox.Center.Y.RoundToShort(),
+            Width = result.TextBox.Size.Width.RoundToShort(),
+            Height = result.TextBox.Size.Height.RoundToShort(),
+            RotationDegrees = result.TextBox.Angle.RoundToShort(),
             Recognizer = result switch
             {
                 PaddleOcrRecognitionResult r => "PaddleOCR" + Enum.GetName(r.ModelVersion)?.ToLower(),
