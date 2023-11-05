@@ -62,7 +62,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
                 };
             }
 
-            // will be empty string when he haven't set username for his baidu account yet
+            // will be an empty string when the user hasn't set a username for their baidu account yet
             var name = el.Name.NullIfEmpty();
             var nameShow = el.NameShow.NullIfEmpty();
             var u = new TiebaUser();
@@ -73,7 +73,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
                 u.DisplayName = name == nameShow ? null : nameShow;
                 u.Portrait = portrait;
                 u.PortraitUpdatedAt = portraitUpdatedAt;
-                u.Gender = (byte)el.Gender; // 0 when he haven't explicitly set his gender
+                u.Gender = (byte)el.Gender; // 0 when the user hasn't explicitly set their gender
                 u.FansNickname = el.FansNickname.NullIfEmpty();
                 u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(el.Iconinfo,
                     () => new UserIconWrapper {Value = {el.Iconinfo}});

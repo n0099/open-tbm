@@ -96,7 +96,7 @@ public class ForumModeratorRevisionCrawlWorker(
                 DiscoveredAt = now,
                 Fid = fid,
                 Portrait = e.Portrait,
-                ModeratorTypes = "" // moderator only exists in DB means he is no longer a moderator
+                ModeratorTypes = "" // moderator only exists in DB means the user is no longer a moderator
             }));
 
         _ = await db.SaveChangesAsync(stoppingToken);
