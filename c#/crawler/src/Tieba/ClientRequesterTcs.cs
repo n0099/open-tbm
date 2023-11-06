@@ -8,9 +8,9 @@ public class ClientRequesterTcs : WithLogTrace
     private readonly Timer _timer = new() {Enabled = true};
     private double _maxRps;
     private readonly Stopwatch _stopwatch = new();
-    private int _requestCounter;
+    private uint _requestCounter;
 
-    private int QueueLength => _queue.Count;
+    private uint QueueLength => (uint)_queue.Count;
     private float AverageRps => _requestCounter / (float)_stopwatch.Elapsed.TotalSeconds;
     private double MaxRps
     {

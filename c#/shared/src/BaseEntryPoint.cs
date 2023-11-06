@@ -13,16 +13,16 @@ public abstract class BaseEntryPoint
     protected abstract void ConfigureServices(HostBuilderContext context, IServiceCollection service);
     protected abstract void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder);
 
-    public async Task Main()
+    public async Task Main(string[] args)
     {
         var logger = LogManager.GetCurrentClassLogger();
-        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
-            logger.Error((Exception)args.ExceptionObject, "AppDomain.UnhandledException:");
-        TaskScheduler.UnobservedTaskException += (_, args) =>
-            logger.Error(args.Exception, "TaskScheduler.UnobservedTaskException:");
+        AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+            logger.Error((Exception)eventArgs.ExceptionObject, "AppDomain.UnhandledException:");
+        TaskScheduler.UnobservedTaskException += (_, eventArgs) =>
+            logger.Error(eventArgs.Exception, "TaskScheduler.UnobservedTaskException:");
         try
         {
-            var host = Host.CreateDefaultBuilder()
+            var host = Host.CreateDefaultBuilder(args)
                 .ConfigureLogging((__, logging) =>
                 {
                     _ = logging.ClearProviders();

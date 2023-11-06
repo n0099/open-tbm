@@ -1,1 +1,1 @@
-await new tbm.Crawler.EntryPoint().Main();
+await new tbm.Crawler.EntryPoint().Main(args);
