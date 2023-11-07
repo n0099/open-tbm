@@ -141,7 +141,9 @@ public class JointRecognizer(
                         imageKey, matricesKeyByImageKey[imageKey], boxes, stoppingToken).ToList();
                 }))
             .Somes()
-            .Select(exceptionHandler.TryWithData<IEnumerable<TesseractRecognizer.PreprocessedTextBox>>(textBoxes => textBoxes.Select(b =>
-                _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken)));
+            .SelectMany(textBoxes => textBoxes.Select(
+                exceptionHandler.TryWithData<TesseractRecognizer.PreprocessedTextBox, TesseractRecognitionResult>(
+                    b => b.ImageKey.ImageId,
+                    b => _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken))).Somes());
     }
 }
