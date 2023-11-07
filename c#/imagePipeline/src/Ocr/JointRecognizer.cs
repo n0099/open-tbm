@@ -6,6 +6,7 @@ public class JointRecognizer(
     IConfiguration config,
     PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
     TesseractRecognizer.New tesseractRecognizerFactory,
+    ExceptionHandler exceptionHandler,
     string script)
 {
     public delegate JointRecognizer New(string script);
@@ -124,17 +125,23 @@ public class JointRecognizer(
         return recognizedResultsViaPaddleOcr
             .Where(result => result.Confidence < PaddleOcrConfidenceThreshold)
             .GroupBy(result => result.ImageKey)
-            .Select(g =>
-            {
-                var imageKey = g.Key;
-                var boxes = recognizedDetectedTextBoxes[imageKey]
-                    .IntersectBy(g.Select(result => result.TextBox), pair => pair.RecognizedTextBox)
-                    .Select(pair => pair.DetectedTextBox)
-                    .Concat(unrecognizedDetectedTextBoxes[imageKey].Select(pair => pair.DetectedTextBox));
-                return TesseractRecognizer.PreprocessTextBoxes(
-                    imageKey, matricesKeyByImageKey[imageKey], boxes, stoppingToken).ToList();
-            })
-            .SelectMany(textBoxes => textBoxes.Select(b =>
+            .Select(exceptionHandler.TryWithData<
+                IGrouping<ImageKey, PaddleOcrRecognitionResult>,
+                IEnumerable<TesseractRecognizer.PreprocessedTextBox>
+            >(
+                g => g.Key.ImageId,
+                g =>
+                {
+                    var imageKey = g.Key;
+                    var boxes = recognizedDetectedTextBoxes[imageKey]
+                        .IntersectBy(g.Select(result => result.TextBox), pair => pair.RecognizedTextBox)
+                        .Select(pair => pair.DetectedTextBox)
+                        .Concat(unrecognizedDetectedTextBoxes[imageKey].Select(pair => pair.DetectedTextBox));
+                    return TesseractRecognizer.PreprocessTextBoxes(
+                        imageKey, matricesKeyByImageKey[imageKey], boxes, stoppingToken).ToList();
+                }))
+            .Somes()
+            .Select(exceptionHandler.TryWithData<IEnumerable<TesseractRecognizer.PreprocessedTextBox>>(textBoxes => textBoxes.Select(b =>
                 _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken)));
     }
 }

@@ -10,6 +10,7 @@ global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 global using OpenCvSharp;
+global using LanguageExt;
 global using Polly;
 global using Polly.Extensions.Http;
 global using Polly.Registry;
