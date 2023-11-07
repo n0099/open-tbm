@@ -18,7 +18,8 @@ public class ImageBatchConsumingWorker(
         {
             try
             {
-                await using var scope1 = scope0.BeginLifetimeScope();
+                await using var scope1 = scope0.BeginLifetimeScope("ImageBatchConsumingWorker",
+                    b => b.Register(_ => stoppingToken).AsSelf());
                 var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
                 await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 

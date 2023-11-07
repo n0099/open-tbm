@@ -7,7 +7,7 @@ public abstract class MatrixConsumer
         IEnumerable<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
     {
-        // defensive clone to prevent any consumer mutate the original matrix in param
+        // defensive clone to prevent any consumer mutate the original matrix given in param
         var clonedImageKeysWithMatrix =
             imageKeysWithMatrix.Select(i => i with {Matrix = i.Matrix.Clone()}).ToList();
         try

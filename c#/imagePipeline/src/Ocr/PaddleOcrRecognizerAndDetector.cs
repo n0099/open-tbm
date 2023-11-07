@@ -59,8 +59,8 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
                         pair.Key, region.Rect, region.Text,
                         (region.Score * 100).NanToZero().RoundToByte(),
                         _ocr.Recognizer.Model.Version));
-                })
-        ).Somes().SelectMany(i => i);
+                }))
+            .Somes().SelectMany(i => i);
     }
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
@@ -76,7 +76,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
                 {
                     stoppingToken.ThrowIfCancellationRequested();
                     return _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect));
-                })
-        ).Somes().SelectMany(i => i);
+                }))
+            .Somes().SelectMany(i => i);
     }
 }

@@ -31,7 +31,8 @@ public class ImageRequester(
                 .ExecuteAsync(async (_, _) => await action(), CreatePollyContext(), stoppingToken);
 
         var http = httpFactory.CreateClient("tbImage");
-        var response = await ExecuteByPolly(async () => await http.GetAsync(urlFilename + ".jpg", stoppingToken));
+        var response = await ExecuteByPolly(async () =>
+            (await http.GetAsync(urlFilename + ".jpg", stoppingToken)).EnsureSuccessStatusCode());
         var contentLength = response.Content.Headers.ContentLength;
         var bytes = await ExecuteByPolly(async () => await response.Content.ReadAsByteArrayAsync(stoppingToken));
 

@@ -23,9 +23,9 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, ExceptionHandler
                     var mat = i.Matrix;
                     if (mat.Channels() == 4) // https://github.com/sdcb/PaddleSharp/blob/2.4.1.2/src/Sdcb.PaddleOCR/PaddleOcrDetector.cs#L62
                         Cv2.CvtColor(mat, mat, ColorConversionCodes.BGRA2BGR);
-                    return KeyValuePair.Create(new ImageKey(i.ImageId, i.FrameIndex), mat);
-                })
-            ).Somes().ToDictionary();
+                    return new(new(i.ImageId, i.FrameIndex), mat);
+                }))
+            .Somes().ToDictionary();
         var recognizedResults = _recognizer.RecognizeMatrices(matricesKeyByImageKey, stoppingToken).ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
