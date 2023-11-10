@@ -36,12 +36,12 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         geometryOverlay: GeometryOverlay.NG,
         coordinateEqualityComparer: new());
 
-    public Option<IEnumerable<ImageId>> Consume(
+    public IEnumerable<ImageId> Consume(
         ImagePipelineDbContext db,
         IEnumerable<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken = default)
     {
-        db.ImageMetadata.AddRange(imagesWithBytes.Select(_exceptionHandler.TryWithData<ImageWithBytes, ImageMetadata>(
+        db.ImageMetadata.AddRange(imagesWithBytes.Select(_exceptionHandler.Try<ImageWithBytes, ImageMetadata>(
             imageWithBytes => imageWithBytes.ImageInReply.ImageId,
             imageWithBytes =>
             {

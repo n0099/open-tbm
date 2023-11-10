@@ -50,7 +50,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     {
         Guard.IsNotNull(_ocr);
         return matricesKeyByImageKey.Select(
-            _exceptionHandler.TryWithData<KeyValuePair<ImageKey, Mat>, IEnumerable<PaddleOcrRecognitionResult>>(
+            _exceptionHandler.Try<KeyValuePair<ImageKey, Mat>, IEnumerable<PaddleOcrRecognitionResult>>(
                 pair => pair.Key.ImageId,
                 pair =>
                 {
@@ -70,7 +70,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
     {
         Guard.IsNotNull(_ocr);
         return matricesKeyByImageKey.Select(
-            _exceptionHandler.TryWithData<KeyValuePair<ImageKey, Mat>, IEnumerable<DetectionResult>>(
+            _exceptionHandler.Try<KeyValuePair<ImageKey, Mat>, IEnumerable<DetectionResult>>(
                 pair => pair.Key.ImageId,
                 pair =>
                 {

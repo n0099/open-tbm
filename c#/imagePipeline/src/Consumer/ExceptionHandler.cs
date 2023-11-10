@@ -4,8 +4,8 @@ public class ExceptionHandler(ILogger<ExceptionHandler> logger, CancellationToke
 {
     private Dictionary<ImageId, Exception> _exceptions = new();
 
-    public Func<TSource, Option<TResult>> TryWithData<TSource, TResult>
-        (Func<TSource, ImageId> imageKeySelector, Func<TSource, TResult> payload) => item =>
+    public Func<TSource, Either<TResult, ImageId>> Try<TSource, TResult>
+        (Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) => item =>
     {
         try
         {
@@ -18,8 +18,9 @@ public class ExceptionHandler(ILogger<ExceptionHandler> logger, CancellationToke
         catch (Exception e)
         {
             logger.LogError(e, "Exception: ");
-            _exceptions.Add(imageKeySelector(item), e);
-            return Prelude.None;
+            var imageId = imageIdSelector(item);
+            _exceptions.Add(imageId, e);
+            return imageId;
         }
     };
 

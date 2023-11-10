@@ -125,7 +125,7 @@ public class JointRecognizer(
         return recognizedResultsViaPaddleOcr
             .Where(result => result.Confidence < PaddleOcrConfidenceThreshold)
             .GroupBy(result => result.ImageKey)
-            .Select(exceptionHandler.TryWithData<
+            .Select(exceptionHandler.Try<
                 IGrouping<ImageKey, PaddleOcrRecognitionResult>,
                 IEnumerable<TesseractRecognizer.PreprocessedTextBox>
             >(
@@ -142,7 +142,7 @@ public class JointRecognizer(
                 }))
             .Somes()
             .SelectMany(textBoxes => textBoxes.Select(
-                exceptionHandler.TryWithData<TesseractRecognizer.PreprocessedTextBox, TesseractRecognitionResult>(
+                exceptionHandler.Try<TesseractRecognizer.PreprocessedTextBox, TesseractRecognitionResult>(
                     b => b.ImageKey.ImageId,
                     b => _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken))).Somes());
     }

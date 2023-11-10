@@ -22,7 +22,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
 
     public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
 
-    protected override Option<IEnumerable<ImageId>> ConsumeInternal(
+    protected override IEnumerable<ImageId> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
@@ -38,14 +38,14 @@ public class HashConsumer : MatrixConsumer, IDisposable
                 ThumbHash = Array.Empty<byte>()
             });
         imageKeysWithMatrix.Select(
-                _exceptionHandler.TryWithData<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>>(
+                _exceptionHandler.Try<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>>(
                     imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                     imageKeyWithMatrix => GetThumbHashForImage(imageKeyWithMatrix, stoppingToken)))
             .Somes().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
         _imageHashSettersKeyByAlgorithm.ForEach(hashPair =>
         {
             imageKeysWithMatrix.Select(
-                    _exceptionHandler.TryWithData<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>>(
+                    _exceptionHandler.Try<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>>(
                         imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                         imageKeyWithMatrix => GetImageHash(imageKeyWithMatrix, hashPair.Key, stoppingToken)))
                 .Somes().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));

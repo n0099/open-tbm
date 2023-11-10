@@ -10,13 +10,13 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, ExceptionHandler
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _recognizer.InitializePaddleOcr(stoppingToken);
 
-    protected override Option<IEnumerable<ImageId>> ConsumeInternal(
+    protected override IEnumerable<ImageId> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
     {
         var matricesKeyByImageKey = imageKeysWithMatrix.Select(
-            exceptionHandler.TryWithData<ImageKeyWithMatrix, KeyValuePair<ImageKey, Mat>>(
+            exceptionHandler.Try<ImageKeyWithMatrix, KeyValuePair<ImageKey, Mat>>(
                 i => i.ImageId,
                 i =>
                 {
