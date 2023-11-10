@@ -1,8 +1,8 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public abstract class MatrixConsumer
+public abstract class MatrixConsumer : IConsumer<ImageKeyWithMatrix>
 {
-    public void Consume(
+    public Option<IEnumerable<ImageId>> Consume(
         ImagePipelineDbContext db,
         IEnumerable<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
@@ -12,7 +12,7 @@ public abstract class MatrixConsumer
             imageKeysWithMatrix.Select(i => i with {Matrix = i.Matrix.Clone()}).ToList();
         try
         {
-            ConsumeInternal(db, clonedImageKeysWithMatrix, stoppingToken);
+            return ConsumeInternal(db, clonedImageKeysWithMatrix, stoppingToken);
         }
         finally
         {
@@ -20,7 +20,7 @@ public abstract class MatrixConsumer
         }
     }
 
-    protected abstract void ConsumeInternal(
+    protected abstract Option<IEnumerable<ImageId>> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default);

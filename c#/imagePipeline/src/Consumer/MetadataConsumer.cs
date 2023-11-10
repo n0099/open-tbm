@@ -10,7 +10,7 @@ using Point = NetTopologySuite.Geometries.Point;
 
 namespace tbm.ImagePipeline.Consumer;
 
-public partial class MetadataConsumer
+public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 {
     private readonly ILogger<MetadataConsumer> _logger;
     private readonly ExceptionHandler _exceptionHandler;
@@ -36,10 +36,11 @@ public partial class MetadataConsumer
         geometryOverlay: GeometryOverlay.NG,
         coordinateEqualityComparer: new());
 
-    public void Consume(
+    public Option<IEnumerable<ImageId>> Consume(
         ImagePipelineDbContext db,
         IEnumerable<ImageWithBytes> imagesWithBytes,
-        CancellationToken stoppingToken = default) =>
+        CancellationToken stoppingToken = default)
+    {
         db.ImageMetadata.AddRange(imagesWithBytes.Select(_exceptionHandler.TryWithData<ImageWithBytes, ImageMetadata>(
             imageWithBytes => imageWithBytes.ImageInReply.ImageId,
             imageWithBytes =>
@@ -76,6 +77,7 @@ public partial class MetadataConsumer
                     BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta)
                 };
             })).Somes());
+    }
 
     private TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
         IEnumerable<ulong> commonXxHash3ToIgnore,

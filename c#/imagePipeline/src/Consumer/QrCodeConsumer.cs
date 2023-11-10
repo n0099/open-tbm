@@ -19,7 +19,7 @@ public class QrCodeConsumer : MatrixConsumer, IDisposable
 
     public void Dispose() => _qrCode.Dispose();
 
-    protected override void ConsumeInternal(
+    protected override Option<IEnumerable<ImageId>> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)

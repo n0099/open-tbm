@@ -10,7 +10,7 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, ExceptionHandler
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _recognizer.InitializePaddleOcr(stoppingToken);
 
-    protected override void ConsumeInternal(
+    protected override Option<IEnumerable<ImageId>> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
