@@ -41,10 +41,13 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         IEnumerable<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken = default)
     {
-        db.ImageMetadata.AddRange(_failedImageHandler.TrySelect(imagesWithBytes,
+        var metadataEithers = _failedImageHandler
+            .TrySelect(imagesWithBytes,
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 imageWithBytes => GetImageMetaData(imageWithBytes, stoppingToken))
-            .Somes());
+            .ToList();
+        db.ImageMetadata.AddRange(metadataEithers.Lefts());
+        return metadataEithers.Rights();
     }
 
     private ImageMetadata GetImageMetaData(ImageWithBytes imageWithBytes, CancellationToken stoppingToken)

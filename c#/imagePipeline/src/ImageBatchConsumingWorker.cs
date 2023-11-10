@@ -39,27 +39,25 @@ public class ImageBatchConsumingWorker(
                     logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
                         sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
 
-                var metadataConsumer = scope1.Resolve<MetadataConsumer>();
-                sw.Restart();
-                UpdateImagesInReply(i => i.MetadataConsumed = false,
-                    metadataConsumer.Consume(db, imagesWithBytes, stoppingToken));
-                LogStopwatch("extract metadata");
+                void ConsumeConsumer<T>(IEnumerable<T> images, Action<ImageInReply> setter,
+                    IConsumer<T> consumer, string consumerType)
+                {
+                    sw.Restart();
+                    UpdateImagesInReply(setter, consumer.Consume(db, images, stoppingToken));
+                    LogStopwatch(consumerType);
+                }
+
+                ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = false,
+                    scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
                 var imageKeysWithMatrix = imagesWithBytes
                     .SelectMany(imageWithBytes => DecodeImageOrFramesBytes(imageWithBytes, stoppingToken)).ToList();
                 try
                 {
-                    var hashConsumer = scope1.Resolve<HashConsumer>();
-                    sw.Restart();
-                    UpdateImagesInReply(i => i.HashConsumed = false,
-                        hashConsumer.Consume(db, imageKeysWithMatrix, stoppingToken));
-                    LogStopwatch("calculate hash");
-
-                    var qrCodeConsumer = scope1.Resolve<QrCodeConsumer>();
-                    sw.Restart();
-                    UpdateImagesInReply(i => i.QrCodeConsumed = false,
-                        qrCodeConsumer.Consume(db, imageKeysWithMatrix, stoppingToken));
-                    LogStopwatch("scan QRCode");
+                    ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = false,
+                        scope1.Resolve<HashConsumer>(), "calculate hash");
+                    ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = false,
+                        scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
 
                     _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
                     await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),

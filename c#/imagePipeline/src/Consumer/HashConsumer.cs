@@ -37,18 +37,32 @@ public class HashConsumer : MatrixConsumer, IDisposable
                 MarrHildrethHash = Array.Empty<byte>(),
                 ThumbHash = Array.Empty<byte>()
             });
-        _failedImageHandler.TrySelect(imageKeysWithMatrix,
+
+        var thumbHashEithers = _failedImageHandler
+            .TrySelect(imageKeysWithMatrix,
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                 imageKeyWithMatrix => GetThumbHashForImage(imageKeyWithMatrix, stoppingToken))
-            .Somes().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
-        _imageHashSettersKeyByAlgorithm.ForEach(hashPair =>
+            .ToList();
+        thumbHashEithers.Lefts().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
+
+        var hashFailedImagesId = _imageHashSettersKeyByAlgorithm.SelectMany(hashPair =>
         {
-            _failedImageHandler.TrySelect(imageKeysWithMatrix,
+            var hashEithers = _failedImageHandler
+                .TrySelect(imageKeysWithMatrix,
                     imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                     imageKeyWithMatrix => GetImageHash(imageKeyWithMatrix, hashPair.Key, stoppingToken))
-                .Somes().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));
+                .ToList();
+            hashEithers.Lefts().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));
+            return hashEithers.Rights();
         });
-        db.ImageHashes.AddRange(hashesKeyByImageKey.Values);
+
+        var failedImagesId = thumbHashEithers.Rights().Concat(hashFailedImagesId).ToHashSet();
+        db.ImageHashes.AddRange(hashesKeyByImageKey
+            .IntersectBy( // only insert fully succeeded images id, i.e. all frames and all hashes are calculated
+                hashesKeyByImageKey.Keys.Select(i => i.ImageId).Except(failedImagesId),
+                pair => pair.Key.ImageId)
+            .Select(pair => pair.Value));
+        return failedImagesId;
     }
 
     private KeyValuePair<ImageKeyWithMatrix, byte[]> GetThumbHashForImage
