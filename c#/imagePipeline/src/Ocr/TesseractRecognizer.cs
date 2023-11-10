@@ -94,8 +94,8 @@ public class TesseractRecognizer(IConfiguration config, string script) : IDispos
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
     }
 
-    public TesseractRecognitionResult RecognizePreprocessedTextBox
-        (PreprocessedTextBox textBox, CancellationToken stoppingToken = default)
+    public Func<PreprocessedTextBox, TesseractRecognitionResult> RecognizePreprocessedTextBox
+        (CancellationToken stoppingToken = default) => textBox =>
     {
         stoppingToken.ThrowIfCancellationRequested();
         var (imageKey, box, preprocessedTextBoxMat) = textBox;
@@ -117,5 +117,5 @@ public class TesseractRecognizer(IConfiguration config, string script) : IDispos
             : (byte)0;
 
         return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);
-    }
+    };
 }

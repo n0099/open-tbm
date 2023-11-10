@@ -143,7 +143,7 @@ public class JointRecognizer(
             .Somes()
             .SelectMany(textBoxes => failedImageHandler.TrySelect(textBoxes,
                     b => b.ImageKey.ImageId,
-                    b => _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken))
+                    _tesseractRecognizer.Value.RecognizePreprocessedTextBox(stoppingToken))
                 .Somes());
     }
 }

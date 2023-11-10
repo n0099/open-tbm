@@ -51,7 +51,7 @@ public class ImageBatchConsumingWorker(
                     scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
                 var imageKeysWithMatrix = imagesWithBytes
-                    .SelectMany(imageWithBytes => DecodeImageOrFramesBytes(imageWithBytes, stoppingToken)).ToList();
+                    .SelectMany(DecodeImageOrFramesBytes(stoppingToken)).ToList();
                 try
                 {
                     ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = false,
@@ -85,8 +85,8 @@ public class ImageBatchConsumingWorker(
                               + " to false then restart will rerun all previous failed image batches from start");
     }
 
-    private IEnumerable<ImageKeyWithMatrix> DecodeImageOrFramesBytes
-        (ImageWithBytes imageWithBytes, CancellationToken stoppingToken = default)
+    private Func<ImageWithBytes, IEnumerable<ImageKeyWithMatrix>> DecodeImageOrFramesBytes
+        (CancellationToken stoppingToken = default) => imageWithBytes =>
     {
         var imageBytes = imageWithBytes.Bytes;
         var imageId = imageWithBytes.ImageInReply.ImageId;
@@ -129,7 +129,7 @@ public class ImageBatchConsumingWorker(
         {
             imageMat.Dispose();
         }
-    }
+    };
 
     private async Task ConsumeOcrConsumer(
         ILifetimeScope scope,

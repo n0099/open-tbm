@@ -44,13 +44,14 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         var metadataEithers = _failedImageHandler
             .TrySelect(imagesWithBytes,
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
-                imageWithBytes => GetImageMetaData(imageWithBytes, stoppingToken))
+                GetImageMetaData(stoppingToken))
             .ToList();
         db.ImageMetadata.AddRange(metadataEithers.Lefts());
         return metadataEithers.Rights();
     }
 
-    private ImageMetadata GetImageMetaData(ImageWithBytes imageWithBytes, CancellationToken stoppingToken)
+    private Func<ImageWithBytes, ImageMetadata> GetImageMetaData
+        (CancellationToken stoppingToken = default) => imageWithBytes =>
     {
         stoppingToken.ThrowIfCancellationRequested();
         var (image, imageBytes) = imageWithBytes;
@@ -83,7 +84,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
             BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta)
         };
-    }
+    };
 
     private TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
         IEnumerable<ulong> commonXxHash3ToIgnore,

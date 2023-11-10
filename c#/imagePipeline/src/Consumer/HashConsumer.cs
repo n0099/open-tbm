@@ -41,7 +41,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
         var thumbHashEithers = _failedImageHandler
             .TrySelect(imageKeysWithMatrix,
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
-                imageKeyWithMatrix => GetThumbHashForImage(imageKeyWithMatrix, stoppingToken))
+                GetThumbHashForImage(stoppingToken))
             .ToList();
         thumbHashEithers.Lefts().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
 
@@ -50,7 +50,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
             var hashEithers = _failedImageHandler
                 .TrySelect(imageKeysWithMatrix,
                     imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
-                    imageKeyWithMatrix => GetImageHash(imageKeyWithMatrix, hashPair.Key, stoppingToken))
+                    i => GetImageHash(i, hashPair.Key, stoppingToken))
                 .ToList();
             hashEithers.Lefts().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));
             return hashEithers.Rights();
@@ -65,8 +65,8 @@ public class HashConsumer : MatrixConsumer, IDisposable
         return failedImagesId;
     }
 
-    private KeyValuePair<ImageKeyWithMatrix, byte[]> GetThumbHashForImage
-        (ImageKeyWithMatrix imageKeyWithMatrix, CancellationToken stoppingToken)
+    private Func<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>> GetThumbHashForImage
+        (CancellationToken stoppingToken = default) => imageKeyWithMatrix =>
     {
         stoppingToken.ThrowIfCancellationRequested();
         var mat = imageKeyWithMatrix.Matrix;
@@ -88,10 +88,10 @@ public class HashConsumer : MatrixConsumer, IDisposable
                     .SelectMany(i => i).ToArray())
                 : throw new("Failed to convert matrix into byte array.");
         }
-    }
+    };
 
     private KeyValuePair<ImageKeyWithMatrix, byte[]> GetImageHash
-        (ImageKeyWithMatrix imageKeyWithMatrix, ImgHashBase hashAlgorithm, CancellationToken stoppingToken)
+        (ImageKeyWithMatrix imageKeyWithMatrix, ImgHashBase hashAlgorithm, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
         using var mat = new Mat();
