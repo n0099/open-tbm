@@ -7,16 +7,16 @@ namespace tbm.ImagePipeline.Ocr;
 public class PaddleOcrRecognizerAndDetector : IDisposable
 {
     private readonly IConfigurationSection _config;
-    private readonly ExceptionHandler _exceptionHandler;
+    private readonly FailedImageHandler _failedImageHandler;
     private readonly string _script;
     private PaddleOcrAll? _ocr;
 
     public delegate PaddleOcrRecognizerAndDetector New(string script);
 
-    public PaddleOcrRecognizerAndDetector(IConfiguration config, ExceptionHandler exceptionHandler, string script)
+    public PaddleOcrRecognizerAndDetector(IConfiguration config, FailedImageHandler failedImageHandler, string script)
     {
         _config = config.GetSection("OcrConsumer:PaddleOcr");
-        (_exceptionHandler, _script) = (exceptionHandler, script);
+        (_failedImageHandler, _script) = (failedImageHandler, script);
         Settings.GlobalModelDirectory =
             _config.GetValue("ModelPath", "./PaddleOcrModels") ?? "./PaddleOcrModels";
     }
@@ -49,8 +49,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
-        return matricesKeyByImageKey.Select(
-            _exceptionHandler.Try<KeyValuePair<ImageKey, Mat>, IEnumerable<PaddleOcrRecognitionResult>>(
+        return _failedImageHandler.TrySelect(matricesKeyByImageKey,
                 pair => pair.Key.ImageId,
                 pair =>
                 {
@@ -59,7 +58,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
                         pair.Key, region.Rect, region.Text,
                         (region.Score * 100).NanToZero().RoundToByte(),
                         _ocr.Recognizer.Model.Version));
-                }))
+                })
             .Somes().SelectMany(i => i);
     }
 
@@ -69,14 +68,13 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
-        return matricesKeyByImageKey.Select(
-            _exceptionHandler.Try<KeyValuePair<ImageKey, Mat>, IEnumerable<DetectionResult>>(
+        return _failedImageHandler.TrySelect(matricesKeyByImageKey,
                 pair => pair.Key.ImageId,
                 pair =>
                 {
                     stoppingToken.ThrowIfCancellationRequested();
                     return _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect));
-                }))
+                })
             .Somes().SelectMany(i => i);
     }
 }

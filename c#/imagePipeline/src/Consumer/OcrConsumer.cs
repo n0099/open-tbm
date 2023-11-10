@@ -1,6 +1,6 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public class OcrConsumer(JointRecognizer.New recognizerFactory, ExceptionHandler exceptionHandler, string script)
+public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandler failedImageHandler, string script)
     : MatrixConsumer
 {
     public delegate OcrConsumer New(string script);
@@ -15,16 +15,15 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, ExceptionHandler
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
     {
-        var matricesKeyByImageKey = imageKeysWithMatrix.Select(
-            exceptionHandler.Try<ImageKeyWithMatrix, KeyValuePair<ImageKey, Mat>>(
+        var matricesKeyByImageKey = failedImageHandler.TrySelect(imageKeysWithMatrix,
                 i => i.ImageId,
                 i =>
                 {
                     var mat = i.Matrix;
                     if (mat.Channels() == 4) // https://github.com/sdcb/PaddleSharp/blob/2.4.1.2/src/Sdcb.PaddleOCR/PaddleOcrDetector.cs#L62
                         Cv2.CvtColor(mat, mat, ColorConversionCodes.BGRA2BGR);
-                    return new(new(i.ImageId, i.FrameIndex), mat);
-                }))
+                    return KeyValuePair.Create(new ImageKey(i.ImageId, i.FrameIndex), mat);
+                })
             .Somes().ToDictionary();
         var recognizedResults = _recognizer.RecognizeMatrices(matricesKeyByImageKey, stoppingToken).ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox

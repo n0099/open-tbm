@@ -6,7 +6,7 @@ public class JointRecognizer(
     IConfiguration config,
     PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
     TesseractRecognizer.New tesseractRecognizerFactory,
-    ExceptionHandler exceptionHandler,
+    FailedImageHandler failedImageHandler,
     string script)
 {
     public delegate JointRecognizer New(string script);
@@ -125,7 +125,7 @@ public class JointRecognizer(
         return recognizedResultsViaPaddleOcr
             .Where(result => result.Confidence < PaddleOcrConfidenceThreshold)
             .GroupBy(result => result.ImageKey)
-            .Select(exceptionHandler.Try<
+            .Select(failedImageHandler.Try<
                 IGrouping<ImageKey, PaddleOcrRecognitionResult>,
                 IEnumerable<TesseractRecognizer.PreprocessedTextBox>
             >(
@@ -141,9 +141,9 @@ public class JointRecognizer(
                         imageKey, matricesKeyByImageKey[imageKey], boxes, stoppingToken).ToList();
                 }))
             .Somes()
-            .SelectMany(textBoxes => textBoxes.Select(
-                exceptionHandler.Try<TesseractRecognizer.PreprocessedTextBox, TesseractRecognitionResult>(
+            .SelectMany(textBoxes => failedImageHandler.TrySelect(textBoxes,
                     b => b.ImageKey.ImageId,
-                    b => _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken))).Somes());
+                    b => _tesseractRecognizer.Value.RecognizePreprocessedTextBox(b, stoppingToken))
+                .Somes());
     }
 }

@@ -1,8 +1,12 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public class ExceptionHandler(ILogger<ExceptionHandler> logger, CancellationToken stoppingToken)
+public class FailedImageHandler(ILogger<FailedImageHandler> logger, CancellationToken stoppingToken)
 {
     private Dictionary<ImageId, Exception> _exceptions = new();
+
+    public IEnumerable<Either<TResult, ImageId>> TrySelect<TSource, TResult>
+        (IEnumerable<TSource> source, Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) =>
+        source.Select(Try(imageIdSelector, payload));
 
     public Func<TSource, Either<TResult, ImageId>> Try<TSource, TResult>
         (Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) => item =>

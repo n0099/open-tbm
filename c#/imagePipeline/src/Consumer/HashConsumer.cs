@@ -5,12 +5,12 @@ namespace tbm.ImagePipeline.Consumer;
 
 public class HashConsumer : MatrixConsumer, IDisposable
 {
-    private readonly ExceptionHandler _exceptionHandler;
+    private readonly FailedImageHandler _failedImageHandler;
     private readonly Dictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;
 
-    public HashConsumer(ExceptionHandler exceptionHandler)
+    public HashConsumer(FailedImageHandler failedImageHandler)
     {
-        _exceptionHandler = exceptionHandler;
+        _failedImageHandler = failedImageHandler;
         _imageHashSettersKeyByAlgorithm = new()
         {
             {PHash.Create(), (image, bytes) => image.PHash = BitConverter.ToUInt64(bytes)},
@@ -37,17 +37,15 @@ public class HashConsumer : MatrixConsumer, IDisposable
                 MarrHildrethHash = Array.Empty<byte>(),
                 ThumbHash = Array.Empty<byte>()
             });
-        imageKeysWithMatrix.Select(
-                _exceptionHandler.Try<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>>(
-                    imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
-                    imageKeyWithMatrix => GetThumbHashForImage(imageKeyWithMatrix, stoppingToken)))
+        _failedImageHandler.TrySelect(imageKeysWithMatrix,
+                imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
+                imageKeyWithMatrix => GetThumbHashForImage(imageKeyWithMatrix, stoppingToken))
             .Somes().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
         _imageHashSettersKeyByAlgorithm.ForEach(hashPair =>
         {
-            imageKeysWithMatrix.Select(
-                    _exceptionHandler.Try<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>>(
-                        imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
-                        imageKeyWithMatrix => GetImageHash(imageKeyWithMatrix, hashPair.Key, stoppingToken)))
+            _failedImageHandler.TrySelect(imageKeysWithMatrix,
+                    imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
+                    imageKeyWithMatrix => GetImageHash(imageKeyWithMatrix, hashPair.Key, stoppingToken))
                 .Somes().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));
         });
         db.ImageHashes.AddRange(hashesKeyByImageKey.Values);

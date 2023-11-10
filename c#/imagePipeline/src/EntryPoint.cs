@@ -56,7 +56,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<QrCodeConsumer>();
         builder.RegisterType<MetadataConsumer>();
         builder.RegisterType<ImageRequester>();
-        builder.RegisterType<ExceptionHandler>().InstancePerMatchingLifetimeScope("ImageBatchConsumingWorker");
+        builder.RegisterType<FailedImageHandler>().InstancePerMatchingLifetimeScope("ImageBatchConsumingWorker");
 
         builder.Register(_ => Channel.CreateBounded<List<ImageWithBytes>>(
             new BoundedChannelOptions(context.Configuration

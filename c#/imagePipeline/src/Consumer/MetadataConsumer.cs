@@ -13,12 +13,12 @@ namespace tbm.ImagePipeline.Consumer;
 public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 {
     private readonly ILogger<MetadataConsumer> _logger;
-    private readonly ExceptionHandler _exceptionHandler;
+    private readonly FailedImageHandler _failedImageHandler;
     private readonly (ulong[] Exif, ulong[] Icc, ulong[] Iptc, ulong[] Xmp) _commonEmbeddedMetadataXxHash3ToIgnore;
 
-    public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config, ExceptionHandler exceptionHandler)
+    public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config, FailedImageHandler failedImageHandler)
     {
-        (_logger, _exceptionHandler) = (logger, exceptionHandler);
+        (_logger, _failedImageHandler) = (logger, failedImageHandler);
         var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
         ulong[] GetCommonXxHash3ToIgnore(string key) => section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
         _commonEmbeddedMetadataXxHash3ToIgnore = (
@@ -41,42 +41,45 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         IEnumerable<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken = default)
     {
-        db.ImageMetadata.AddRange(imagesWithBytes.Select(_exceptionHandler.Try<ImageWithBytes, ImageMetadata>(
-            imageWithBytes => imageWithBytes.ImageInReply.ImageId,
-            imageWithBytes =>
-            {
-                stoppingToken.ThrowIfCancellationRequested();
-                var (image, imageBytes) = imageWithBytes;
-                var info = Image.Identify(imageBytes);
-                var meta = info.Metadata;
-                if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat or BmpFormat))
-                    ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
+        db.ImageMetadata.AddRange(_failedImageHandler.TrySelect(imagesWithBytes,
+                imageWithBytes => imageWithBytes.ImageInReply.ImageId,
+                imageWithBytes => GetImageMetaData(imageWithBytes, stoppingToken))
+            .Somes());
+    }
 
-                return new()
-                {
-                    ImageId = image.ImageId,
-                    Format = meta.DecodedImageFormat?.Name,
-                    Width = (ushort)info.Width,
-                    Height = (ushort)info.Height,
-                    BitsPerPixel = (ushort)info.PixelType.BitsPerPixel,
-                    FrameCount = (uint)info.FrameMetadataCollection.Count,
-                    XxHash3 = XxHash3.HashToUInt64(imageBytes),
-                    DownloadedByteSize = image.ExpectedByteSize == imageBytes.Length
-                        ? null
-                        : new() {DownloadedByteSize = (uint)imageBytes.Length},
-                    EmbeddedExif = CreateEmbeddedExifFromProfile(meta.ExifProfile),
-                    EmbeddedIcc = CreateEmbeddedFromProfile<IccProfile, ImageMetadata.Icc>
-                        (_commonEmbeddedMetadataXxHash3ToIgnore.Icc, meta.IccProfile, i => i.ToByteArray()),
-                    EmbeddedIptc = CreateEmbeddedFromProfile<IptcProfile, ImageMetadata.Iptc>
-                        (_commonEmbeddedMetadataXxHash3ToIgnore.Iptc, meta.IptcProfile, i => i.Data),
-                    EmbeddedXmp = CreateEmbeddedFromProfile<XmpProfile, ImageMetadata.Xmp>
-                        (_commonEmbeddedMetadataXxHash3ToIgnore.Xmp, meta.XmpProfile, i => i.ToByteArray()),
-                    JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
-                    PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
-                    GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
-                    BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta)
-                };
-            })).Somes());
+    private ImageMetadata GetImageMetaData(ImageWithBytes imageWithBytes, CancellationToken stoppingToken)
+    {
+        stoppingToken.ThrowIfCancellationRequested();
+        var (image, imageBytes) = imageWithBytes;
+        var info = Image.Identify(imageBytes);
+        var meta = info.Metadata;
+        if (meta.DecodedImageFormat is not (JpegFormat or PngFormat or GifFormat or BmpFormat))
+            ThrowHelper.ThrowNotSupportedException($"Not supported image format {meta.DecodedImageFormat?.Name}.");
+
+        return new()
+        {
+            ImageId = image.ImageId,
+            Format = meta.DecodedImageFormat?.Name,
+            Width = (ushort)info.Width,
+            Height = (ushort)info.Height,
+            BitsPerPixel = (ushort)info.PixelType.BitsPerPixel,
+            FrameCount = (uint)info.FrameMetadataCollection.Count,
+            XxHash3 = XxHash3.HashToUInt64(imageBytes),
+            DownloadedByteSize = image.ExpectedByteSize == imageBytes.Length
+                ? null
+                : new() {DownloadedByteSize = (uint)imageBytes.Length},
+            EmbeddedExif = CreateEmbeddedExifFromProfile(meta.ExifProfile),
+            EmbeddedIcc = CreateEmbeddedFromProfile<IccProfile, ImageMetadata.Icc>
+                (_commonEmbeddedMetadataXxHash3ToIgnore.Icc, meta.IccProfile, i => i.ToByteArray()),
+            EmbeddedIptc = CreateEmbeddedFromProfile<IptcProfile, ImageMetadata.Iptc>
+                (_commonEmbeddedMetadataXxHash3ToIgnore.Iptc, meta.IptcProfile, i => i.Data),
+            EmbeddedXmp = CreateEmbeddedFromProfile<XmpProfile, ImageMetadata.Xmp>
+                (_commonEmbeddedMetadataXxHash3ToIgnore.Xmp, meta.XmpProfile, i => i.ToByteArray()),
+            JpgMetadata = ImageMetadata.Jpg.FromImageSharpMetadata(meta),
+            PngMetadata = ImageMetadata.Png.FromImageSharpMetadata(meta),
+            GifMetadata = ImageMetadata.Gif.FromImageSharpMetadata(meta),
+            BmpMetadata = ImageMetadata.Bmp.FromImageSharpMetadata(meta)
+        };
     }
 
     private TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
