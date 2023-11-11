@@ -83,10 +83,10 @@ public class ImageBatchConsumingWorker(
                 DecodeImageOrFramesBytes(stoppingToken))
             .ToList();
         var imageKeysWithMatrix =
-            imageKeyWithMatrixEithers.Lefts().SelectMany(i => i).ToList();
+            imageKeyWithMatrixEithers.Rights().SelectMany(i => i).ToList();
         UpdateImagesInReply(
             i => i.HashConsumed = i.QrCodeConsumed = i.OcrConsumed = false,
-            imageKeyWithMatrixEithers.Rights());
+            imageKeyWithMatrixEithers.Lefts());
 
         try
         {

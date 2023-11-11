@@ -46,8 +46,8 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 GetImageMetaData(stoppingToken))
             .ToList();
-        db.ImageMetadata.AddRange(metadataEithers.Lefts());
-        return metadataEithers.Rights();
+        db.ImageMetadata.AddRange(metadataEithers.Rights());
+        return metadataEithers.Lefts();
     }
 
     private Func<ImageWithBytes, ImageMetadata> GetImageMetaData

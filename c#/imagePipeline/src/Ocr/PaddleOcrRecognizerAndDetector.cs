@@ -45,7 +45,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
-    public IEnumerable<Either<IEnumerable<PaddleOcrRecognitionResult>, ImageId>> RecognizeMatrices
+    public IEnumerable<Either<ImageId, IEnumerable<PaddleOcrRecognitionResult>>> RecognizeMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
@@ -63,7 +63,7 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 
-    public IEnumerable<Either<IEnumerable<DetectionResult>, ImageId>> DetectMatrices
+    public IEnumerable<Either<ImageId, IEnumerable<DetectionResult>>> DetectMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);

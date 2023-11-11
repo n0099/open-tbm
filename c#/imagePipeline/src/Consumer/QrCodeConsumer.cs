@@ -29,8 +29,8 @@ public class QrCodeConsumer : MatrixConsumer, IDisposable
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                 ScanQrCodeInImage)
             .ToList();
-        db.ImageQrCodes.AddRange(imageQrCodes.Lefts().SelectMany(i => i));
-        return imageQrCodes.Rights();
+        db.ImageQrCodes.AddRange(imageQrCodes.Rights().SelectMany(i => i));
+        return imageQrCodes.Lefts();
     }
 
     private IEnumerable<ImageQrCode> ScanQrCodeInImage(ImageKeyWithMatrix imageKeyWithMatrix)

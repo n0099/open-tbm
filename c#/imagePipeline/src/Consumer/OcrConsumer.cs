@@ -25,9 +25,9 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
                 return KeyValuePair.Create(new ImageKey(i.ImageId, i.FrameIndex), mat);
             }).ToList();
         var recognizedEithers = _recognizer
-            .RecognizeMatrices(matricesKeyByImageKey.Lefts().ToDictionary(), stoppingToken)
+            .RecognizeMatrices(matricesKeyByImageKey.Rights().ToDictionary(), stoppingToken)
             .ToList();
-        var recognizedResults = recognizedEithers.Lefts().ToList();
+        var recognizedResults = recognizedEithers.Rights().ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
             ImageId = result.ImageKey.ImageId,
@@ -54,6 +54,6 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
             FrameIndex = pair.Key.FrameIndex,
             TextLines = pair.Value
         }));
-        return matricesKeyByImageKey.Rights().Concat(recognizedEithers.Rights()).Distinct();
+        return matricesKeyByImageKey.Lefts().Concat(recognizedEithers.Lefts()).Distinct();
     }
 }

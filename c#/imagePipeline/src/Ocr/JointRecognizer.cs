@@ -31,7 +31,7 @@ public class JointRecognizer(
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
-    public IEnumerable<Either<IRecognitionResult, ImageId>> RecognizeMatrices
+    public IEnumerable<Either<ImageId, IRecognitionResult>> RecognizeMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         var recognizedEithersViaPaddleOcr =
@@ -39,15 +39,15 @@ public class JointRecognizer(
         var detectedEithers =
             _paddleOcrRecognizerAndDetector.DetectMatrices(matricesKeyByImageKey, stoppingToken).ToList();
         var recognizedResultsViaPaddleOcr =
-            recognizedEithersViaPaddleOcr.Lefts().SelectMany(i => i).ToList();
+            recognizedEithersViaPaddleOcr.Rights().SelectMany(i => i).ToList();
         var recognizedEithersViaTesseract = RecognizeMatricesViaTesseract(
                 recognizedResultsViaPaddleOcr,
-                detectedEithers.Lefts().SelectMany(i => i).ToList(),
+                detectedEithers.Rights().SelectMany(i => i).ToList(),
                 matricesKeyByImageKey,
                 stoppingToken)
             .ToList();
         var recognizedResultsViaTesseract =
-            recognizedEithersViaTesseract.Lefts().ToList();
+            recognizedEithersViaTesseract.Rights().ToList();
         return recognizedResultsViaPaddleOcr
             .Where<IRecognitionResult>(result => result.Confidence >= PaddleOcrConfidenceThreshold)
             .Concat(recognizedResultsViaTesseract.Where(result => !result.ShouldFallbackToPaddleOcr))
@@ -55,12 +55,12 @@ public class JointRecognizer(
                     .Where(result => result.ShouldFallbackToPaddleOcr)
                     .Select(result => result.TextBox),
                 result => result.TextBox))
-            .Select(Either<IRecognitionResult, ImageId>.Left)
+            .Select(Either<ImageId, IRecognitionResult>.Right)
             .Concat(recognizedEithersViaPaddleOcr
-                .Rights()
-                .Concat(detectedEithers.Rights())
-                .Concat(recognizedEithersViaTesseract.Rights())
-                .Select(Either<IRecognitionResult, ImageId>.Right));
+                .Lefts()
+                .Concat(detectedEithers.Lefts())
+                .Concat(recognizedEithersViaTesseract.Lefts())
+                .Select(Either<ImageId, IRecognitionResult>.Left));
     }
 
     public Dictionary<ImageKey, string> GetRecognizedTextLines
@@ -91,7 +91,7 @@ public class JointRecognizer(
         ImageKey ImageKey, byte PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
-    private IEnumerable<Either<TesseractRecognitionResult, ImageId>> RecognizeMatricesViaTesseract(
+    private IEnumerable<Either<ImageId, TesseractRecognitionResult>> RecognizeMatricesViaTesseract(
         IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
         IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
         IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
@@ -157,17 +157,17 @@ public class JointRecognizer(
                 }))
             .ToList();
         var recognizedTextBoxEithers = preprocessedTextBoxEithers
-            .Lefts()
+            .Rights()
             .SelectMany(textBoxes => failedImageHandler.TrySelect(textBoxes,
                 b => b.ImageKey.ImageId,
                 _tesseractRecognizer.Value.RecognizePreprocessedTextBox(stoppingToken)))
             .ToList();
         return preprocessedTextBoxEithers
-            .Rights()
-            .Concat(recognizedTextBoxEithers.Rights())
-            .Select(Either<TesseractRecognitionResult, ImageId>.Right)
+            .Lefts()
+            .Concat(recognizedTextBoxEithers.Lefts())
+            .Select(Either<ImageId, TesseractRecognitionResult>.Left)
             .Concat(recognizedTextBoxEithers
-                .Lefts()
-                .Select(Either<TesseractRecognitionResult, ImageId>.Left));
+                .Rights()
+                .Select(Either<ImageId, TesseractRecognitionResult>.Right));
     }
 }

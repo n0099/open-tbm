@@ -43,7 +43,7 @@ public class HashConsumer : MatrixConsumer, IDisposable
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                 GetThumbHashForImage(stoppingToken))
             .ToList();
-        thumbHashEithers.Lefts().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
+        thumbHashEithers.Rights().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
 
         var hashFailedImagesId = _imageHashSettersKeyByAlgorithm.SelectMany(hashPair =>
         {
@@ -52,11 +52,11 @@ public class HashConsumer : MatrixConsumer, IDisposable
                     imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                     i => GetImageHash(i, hashPair.Key, stoppingToken))
                 .ToList();
-            hashEithers.Lefts().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));
-            return hashEithers.Rights();
+            hashEithers.Rights().ForEach(pair => hashPair.Value(hashesKeyByImageKey[pair.Key], pair.Value));
+            return hashEithers.Lefts();
         });
 
-        var failedImagesId = thumbHashEithers.Rights().Concat(hashFailedImagesId).ToHashSet();
+        var failedImagesId = thumbHashEithers.Lefts().Concat(hashFailedImagesId).ToHashSet();
         db.ImageHashes.AddRange(hashesKeyByImageKey
             .IntersectBy( // only insert fully succeeded images id, i.e. all frames and all hashes are calculated
                 hashesKeyByImageKey.Keys.Select(i => i.ImageId).Except(failedImagesId),

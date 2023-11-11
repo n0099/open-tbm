@@ -4,11 +4,11 @@ public class FailedImageHandler(ILogger<FailedImageHandler> logger, Cancellation
 {
     private Dictionary<ImageId, Exception> _exceptions = new();
 
-    public IEnumerable<Either<TResult, ImageId>> TrySelect<TSource, TResult>
+    public IEnumerable<Either<ImageId, TResult>> TrySelect<TSource, TResult>
         (IEnumerable<TSource> source, Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) =>
         source.Select(Try(imageIdSelector, payload));
 
-    public Func<TSource, Either<TResult, ImageId>> Try<TSource, TResult>
+    public Func<TSource, Either<ImageId, TResult>> Try<TSource, TResult>
         (Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) => item =>
     {
         try
