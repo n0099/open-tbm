@@ -45,36 +45,34 @@ public class PaddleOcrRecognizerAndDetector : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
-    public IEnumerable<PaddleOcrRecognitionResult> RecognizeMatrices
+    public IEnumerable<Either<IEnumerable<PaddleOcrRecognitionResult>, ImageId>> RecognizeMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
         return _failedImageHandler.TrySelect(matricesKeyByImageKey,
-                pair => pair.Key.ImageId,
-                pair =>
-                {
-                    stoppingToken.ThrowIfCancellationRequested();
-                    return _ocr.Run(pair.Value).Regions.Select(region => new PaddleOcrRecognitionResult(
-                        pair.Key, region.Rect, region.Text,
-                        (region.Score * 100).NanToZero().RoundToByte(),
-                        _ocr.Recognizer.Model.Version));
-                })
-            .Somes().SelectMany(i => i);
+            pair => pair.Key.ImageId,
+            pair =>
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                return _ocr.Run(pair.Value).Regions.Select(region => new PaddleOcrRecognitionResult(
+                    pair.Key, region.Rect, region.Text,
+                    (region.Score * 100).NanToZero().RoundToByte(),
+                    _ocr.Recognizer.Model.Version));
+            });
     }
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 
-    public IEnumerable<DetectionResult> DetectMatrices
+    public IEnumerable<Either<IEnumerable<DetectionResult>, ImageId>> DetectMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
         return _failedImageHandler.TrySelect(matricesKeyByImageKey,
-                pair => pair.Key.ImageId,
-                pair =>
-                {
-                    stoppingToken.ThrowIfCancellationRequested();
-                    return _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect));
-                })
-            .Somes().SelectMany(i => i);
+            pair => pair.Key.ImageId,
+            pair =>
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                return _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect));
+            });
     }
 }

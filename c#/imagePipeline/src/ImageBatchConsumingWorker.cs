@@ -18,56 +18,7 @@ public class ImageBatchConsumingWorker(
         {
             try
             {
-                await using var scope1 = scope0.BeginLifetimeScope("ImageBatchConsumingWorker",
-                    b => b.Register(_ => stoppingToken).AsSelf());
-                var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
-                await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
-
-                var imagesInReply = imagesWithBytes.Select(i => i.ImageInReply).ToList();
-                db.AttachRange(imagesInReply.Select(i =>
-                {
-                    i.MetadataConsumed = i.HashConsumed = i.QrCodeConsumed = i.OcrConsumed = true;
-                    return i; // mutated in place
-                }));
-                void UpdateImagesInReply(Action<ImageInReply> setter, IEnumerable<ImageId> imagesIdToChange) =>
-                    imagesInReply.IntersectBy(imagesIdToChange, i => i.ImageId).ForEach(setter);
-
-                var imagesId = string.Join(",", imagesInReply.Select(i => i.ImageId));
-                logger.LogTrace("Start to consume {} image(s): [{}]", imagesWithBytes.Count, imagesId);
-                var sw = new Stopwatch();
-                void LogStopwatch(string consumerType) =>
-                    logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
-                        sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
-
-                void ConsumeConsumer<T>(IEnumerable<T> images, Action<ImageInReply> setter,
-                    IConsumer<T> consumer, string consumerType)
-                {
-                    sw.Restart();
-                    UpdateImagesInReply(setter, consumer.Consume(db, images, stoppingToken));
-                    LogStopwatch(consumerType);
-                }
-
-                ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = false,
-                    scope1.Resolve<MetadataConsumer>(), "extract metadata");
-
-                var imageKeysWithMatrix = imagesWithBytes
-                    .SelectMany(DecodeImageOrFramesBytes(stoppingToken)).ToList();
-                try
-                {
-                    ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = false,
-                        scope1.Resolve<HashConsumer>(), "calculate hash");
-                    ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = false,
-                        scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
-
-                    _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
-                    await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
-                        db.ForumScripts, imageKeysWithMatrix, stoppingToken);
-                    await transaction.CommitAsync(stoppingToken);
-                }
-                finally
-                {
-                    imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
-                }
+                await Consume(imagesWithBytes, stoppingToken);
             }
             catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
             {
@@ -83,6 +34,60 @@ public class ImageBatchConsumingWorker(
         }
         logger.LogInformation("No more image batch to consume, configure \"ImageBatchProducer.StartFromLatestSuccessful\""
                               + " to false then restart will rerun all previous failed image batches from start");
+    }
+
+    private async Task Consume(IReadOnlyCollection<ImageWithBytes> imagesWithBytes, CancellationToken stoppingToken = default)
+    {
+        await using var scope1 = scope0.BeginLifetimeScope("ImageBatchConsumingWorker",
+            b => b.Register(_ => stoppingToken).AsSelf());
+        var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+
+        var imagesInReply = imagesWithBytes.Select(i => i.ImageInReply).ToList();
+        db.AttachRange(imagesInReply.Select(i =>
+        {
+            i.MetadataConsumed = i.HashConsumed = i.QrCodeConsumed = i.OcrConsumed = true;
+            return i; // mutated in place
+        }));
+        void UpdateImagesInReply(Action<ImageInReply> setter, IEnumerable<ImageId> imagesIdToChange) =>
+            imagesInReply.IntersectBy(imagesIdToChange, i => i.ImageId).ForEach(setter);
+
+        var imagesId = string.Join(",", imagesInReply.Select(i => i.ImageId));
+        logger.LogTrace("Start to consume {} image(s): [{}]", imagesWithBytes.Count, imagesId);
+        var sw = new Stopwatch();
+        void LogStopwatch(string consumerType) =>
+            logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
+                sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
+
+        void ConsumeConsumer<T>(IEnumerable<T> images, Action<ImageInReply> setter,
+            IConsumer<T> consumer, string consumerType)
+        {
+            sw.Restart();
+            UpdateImagesInReply(setter, consumer.Consume(db, images, stoppingToken));
+            LogStopwatch(consumerType);
+        }
+
+        ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = false,
+            scope1.Resolve<MetadataConsumer>(), "extract metadata");
+
+        var imageKeysWithMatrix = imagesWithBytes
+            .SelectMany(DecodeImageOrFramesBytes(stoppingToken)).ToList();
+        try
+        {
+            ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = false,
+                scope1.Resolve<HashConsumer>(), "calculate hash");
+            ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = false,
+                scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
+
+            _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
+            await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
+                db.ForumScripts, imageKeysWithMatrix, stoppingToken);
+            await transaction.CommitAsync(stoppingToken);
+        }
+        finally
+        {
+            imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
+        }
     }
 
     private Func<ImageWithBytes, IEnumerable<ImageKeyWithMatrix>> DecodeImageOrFramesBytes

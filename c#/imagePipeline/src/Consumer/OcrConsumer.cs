@@ -16,16 +16,18 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
         CancellationToken stoppingToken = default)
     {
         var matricesKeyByImageKey = failedImageHandler.TrySelect(imageKeysWithMatrix,
-                i => i.ImageId,
-                i =>
-                {
-                    var mat = i.Matrix;
-                    if (mat.Channels() == 4) // https://github.com/sdcb/PaddleSharp/blob/2.4.1.2/src/Sdcb.PaddleOCR/PaddleOcrDetector.cs#L62
-                        Cv2.CvtColor(mat, mat, ColorConversionCodes.BGRA2BGR);
-                    return KeyValuePair.Create(new ImageKey(i.ImageId, i.FrameIndex), mat);
-                })
-            .Somes().ToDictionary();
-        var recognizedResults = _recognizer.RecognizeMatrices(matricesKeyByImageKey, stoppingToken).ToList();
+            i => i.ImageId,
+            i =>
+            {
+                var mat = i.Matrix;
+                if (mat.Channels() == 4) // https://github.com/sdcb/PaddleSharp/blob/2.4.1.2/src/Sdcb.PaddleOCR/PaddleOcrDetector.cs#L62
+                    Cv2.CvtColor(mat, mat, ColorConversionCodes.BGRA2BGR);
+                return KeyValuePair.Create(new ImageKey(i.ImageId, i.FrameIndex), mat);
+            }).ToList();
+        var recognizedEithers = _recognizer
+            .RecognizeMatrices(matricesKeyByImageKey.Lefts().ToDictionary(), stoppingToken)
+            .ToList();
+        var recognizedResults = recognizedEithers.Lefts().ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
             ImageId = result.ImageKey.ImageId,
@@ -52,5 +54,6 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
             FrameIndex = pair.Key.FrameIndex,
             TextLines = pair.Value
         }));
+        return matricesKeyByImageKey.Rights().Concat(recognizedEithers.Rights()).Distinct();
     }
 }
