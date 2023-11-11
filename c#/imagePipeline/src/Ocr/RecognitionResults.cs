@@ -10,12 +10,12 @@ public interface IRecognitionResult
     public byte Confidence { get; }
 }
 
-public record PaddleOcrRecognitionResult
-    (ImageKey ImageKey, RotatedRect TextBox, string Text, byte Confidence,
+public record PaddleOcrRecognitionResult(
+        ImageKey ImageKey, RotatedRect TextBox, string Text, byte Confidence,
         ModelVersion ModelVersion)
     : IRecognitionResult;
 
-public record TesseractRecognitionResult
-    (ImageKey ImageKey, RotatedRect TextBox, string Text, byte Confidence,
+public record TesseractRecognitionResult(
+        ImageKey ImageKey, RotatedRect TextBox, string Text, byte Confidence,
         bool IsVertical, bool ShouldFallbackToPaddleOcr)
     : IRecognitionResult;

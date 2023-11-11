@@ -131,7 +131,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
         return savedRepliesKeyByTid;
     }
 
-    private static Action<Exception> SaveThreadMissingFirstReply(ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
+    private static Action<Exception> SaveThreadMissingFirstReply
+        (ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
     {
         if (ex is not EmptyPostListException) return;
         var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(th => th.Tid == tid)).FirstOrDefault();

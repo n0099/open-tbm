@@ -9,6 +9,7 @@ public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         ILifetimeScope scope0,
+        FailedImageHandler failedImageHandler,
         Channel<List<ImageWithBytes>> channel)
     : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
 {
@@ -59,19 +60,34 @@ public class ImageBatchConsumingWorker(
             logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
                 sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
 
-        void ConsumeConsumer<T>(IEnumerable<T> images, Action<ImageInReply> setter,
+        void ConsumeConsumer<T>(
+            IEnumerable<T> images, Action<ImageInReply> setter,
             IConsumer<T> consumer, string consumerType)
         {
             sw.Restart();
-            UpdateImagesInReply(setter, consumer.Consume(db, images, stoppingToken));
+            var failedImagesId = consumer.Consume(db, images, stoppingToken).ToList();
             LogStopwatch(consumerType);
+
+            if (!failedImagesId.Any()) return;
+            UpdateImagesInReply(setter, failedImagesId);
+            logger.LogWarning("Failed to {} for {} image(s): [{}]",
+                consumerType, failedImagesId.Count, string.Join(",", failedImagesId));
         }
 
         ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = false,
             scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
-        var imageKeysWithMatrix = imagesWithBytes
-            .SelectMany(DecodeImageOrFramesBytes(stoppingToken)).ToList();
+        var imageKeyWithMatrixEithers = failedImageHandler
+            .TrySelect(imagesWithBytes,
+                imageWithBytes => imageWithBytes.ImageInReply.ImageId,
+                DecodeImageOrFramesBytes(stoppingToken))
+            .ToList();
+        var imageKeysWithMatrix =
+            imageKeyWithMatrixEithers.Lefts().SelectMany(i => i).ToList();
+        UpdateImagesInReply(
+            i => i.HashConsumed = i.QrCodeConsumed = i.OcrConsumed = false,
+            imageKeyWithMatrixEithers.Rights());
+
         try
         {
             ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = false,
@@ -80,7 +96,9 @@ public class ImageBatchConsumingWorker(
                 scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
 
             _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
-            await ConsumeOcrConsumer(scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
+            await ConsumeOcrConsumer(failedImagesId =>
+                    UpdateImagesInReply(i => i.OcrConsumed = false, failedImagesId),
+                scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
                 db.ForumScripts, imageKeysWithMatrix, stoppingToken);
             await transaction.CommitAsync(stoppingToken);
         }
@@ -137,6 +155,7 @@ public class ImageBatchConsumingWorker(
     };
 
     private async Task ConsumeOcrConsumer(
+        Action<IEnumerable<ImageId>> updateImageInReplyAsFailed,
         ILifetimeScope scope,
         DbConnection parentConnection,
         DbTransaction parentTransaction,
@@ -151,13 +170,15 @@ public class ImageBatchConsumingWorker(
             db.Database.SetDbConnection(parentConnection);
             _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
             // try to know which fid owns current image batch
-            var imagesInCurrentFid = imageKeysWithMatrix.IntersectBy(
-                from replyContentImage in db.ReplyContentImages
-                where imageKeysWithMatrix
-                    .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                    .Contains(replyContentImage.ImageId)
-                select replyContentImage.ImageId,
-                imageKeyWithMatrix => imageKeyWithMatrix.ImageId).ToList();
+            var imagesInCurrentFid = imageKeysWithMatrix
+                .IntersectBy(
+                    from replyContentImage in db.ReplyContentImages
+                    where imageKeysWithMatrix
+                        .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                        .Contains(replyContentImage.ImageId)
+                    select replyContentImage.ImageId,
+                    imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                .ToList();
             if (imagesInCurrentFid.Count == 0) continue;
             foreach (var script in scriptsGroupByFid)
                 await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
@@ -174,7 +195,13 @@ public class ImageBatchConsumingWorker(
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
             var sw = new Stopwatch();
             sw.Start();
-            ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
+            var failedImagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken).ToList();
+            if (failedImagesId.Any())
+            {
+                updateImageInReplyAsFailed(failedImagesId);
+                logger.LogWarning("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
+                    script, fid, failedImagesId.Count, string.Join(",", failedImagesId));
+            }
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                 sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
                 string.Join(",", imagesInCurrentFid.Select(i => i.ImageId)));
