@@ -31,20 +31,6 @@ public class EntryPoint : BaseEntryPoint
 
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
-        builder.RegisterType<CrawlerDbContext>();
-        builder.RegisterType<ClientRequester>();
-        builder.RegisterType<ClientRequesterTcs>().SingleInstance();
-        CrawlerLocks.RegisteredCrawlerLocks.ForEach(type =>
-            builder.RegisterType<CrawlerLocks>()
-                .Keyed<CrawlerLocks>(type)
-                .SingleInstance()
-                .WithParameter("lockType", type));
-        builder.RegisterType<AuthorRevisionSaver>();
-        builder.RegisterType<UserParserAndSaver>();
-        builder.RegisterType<ThreadLateCrawlerAndSaver>();
-        builder.RegisterType<ThreadArchiveCrawler>();
-        builder.RegisterType<SonicPusher>();
-
         var baseClassOfClassesToBeRegistered = new[]
         {
             typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
@@ -53,5 +39,19 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
             .Where(type => baseClassOfClassesToBeRegistered.Any(baseType => baseType.IsSubTypeOfRawGeneric(type)))
             .AsSelf();
+
+        builder.RegisterType<CrawlerDbContext>();
+        builder.RegisterType<ClientRequester>();
+        builder.RegisterType<ClientRequesterTcs>().SingleInstance();
+        CrawlerLocks.RegisteredCrawlerLocks.ForEach(type =>
+            builder.RegisterType<CrawlerLocks>()
+                .Keyed<CrawlerLocks>(type)
+                .WithParameter("lockType", type)
+                .SingleInstance());
+        builder.RegisterType<AuthorRevisionSaver>();
+        builder.RegisterType<UserParserAndSaver>();
+        builder.RegisterType<ThreadLateCrawlerAndSaver>();
+        builder.RegisterType<ThreadArchiveCrawler>();
+        builder.RegisterType<SonicPusher>();
     }
 }
