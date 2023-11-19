@@ -27,7 +27,11 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
         var recognizedEithers = _recognizer
             .RecognizeMatrices(matricesKeyByImageKey.Rights().ToDictionary(), stoppingToken)
             .ToList();
-        var recognizedResults = recognizedEithers.Rights().ToList();
+        var recognizedFailedImagesId = recognizedEithers.Lefts().ToList();
+        var recognizedResults = recognizedEithers
+            .Rights() // only keeps fully succeeded images id, i.e. all frames and text boxes are successful recognized
+            .ExceptBy(recognizedFailedImagesId, i => i.ImageKey.ImageId)
+            .ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox
         {
             ImageId = result.ImageKey.ImageId,
@@ -54,6 +58,6 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
             FrameIndex = pair.Key.FrameIndex,
             TextLines = pair.Value
         }));
-        return matricesKeyByImageKey.Lefts().Concat(recognizedEithers.Lefts()).Distinct();
+        return matricesKeyByImageKey.Lefts().Concat(recognizedFailedImagesId).Distinct();
     }
 }

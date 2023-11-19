@@ -9,7 +9,6 @@ public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         ILifetimeScope scope0,
-        FailedImageHandler failedImageHandler,
         Channel<List<ImageWithBytes>> channel)
     : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
 {
@@ -77,6 +76,7 @@ public class ImageBatchConsumingWorker(
         ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = false,
             scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
+        var failedImageHandler = scope1.Resolve<FailedImageHandler>();
         var imageKeyWithMatrixEithers = failedImageHandler
             .TrySelect(imagesWithBytes,
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
@@ -94,18 +94,18 @@ public class ImageBatchConsumingWorker(
                 scope1.Resolve<HashConsumer>(), "calculate hash");
             ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = false,
                 scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
-
-            _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
             await ConsumeOcrConsumer(failedImagesId =>
                     UpdateImagesInReply(i => i.OcrConsumed = false, failedImagesId),
                 scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
                 db.ForumScripts, imageKeysWithMatrix, stoppingToken);
-            await transaction.CommitAsync(stoppingToken);
         }
         finally
         {
             imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
         }
+        failedImageHandler.SaveFailedImages(db);
+        _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
+        await transaction.CommitAsync(stoppingToken);
     }
 
     private Func<ImageWithBytes, IEnumerable<ImageKeyWithMatrix>> DecodeImageOrFramesBytes

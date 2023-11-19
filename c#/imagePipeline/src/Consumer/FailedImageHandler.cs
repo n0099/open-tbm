@@ -2,7 +2,7 @@ namespace tbm.ImagePipeline.Consumer;
 
 public class FailedImageHandler(ILogger<FailedImageHandler> logger, CancellationToken stoppingToken)
 {
-    private Dictionary<ImageId, Exception> _exceptions = new();
+    private readonly List<ImageFailed> _failedImages = new();
 
     public IEnumerable<Either<ImageId, TResult>> TrySelect<TSource, TResult>
         (IEnumerable<TSource> source, Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) =>
@@ -23,13 +23,10 @@ public class FailedImageHandler(ILogger<FailedImageHandler> logger, Cancellation
         {
             logger.LogError(e, "Exception: ");
             var imageId = imageIdSelector(item);
-            _exceptions.Add(imageId, e);
+            _failedImages.Add(new() {ImageId = imageId, Exception = e.ToString()});
             return imageId;
         }
     };
 
-    public void SaveFailedImages(DbContext db)
-    {
-
-    }
+    public void SaveFailedImages(ImagePipelineDbContext db) => db.ImageFailed.AddRange(_failedImages);
 }

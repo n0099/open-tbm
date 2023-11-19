@@ -23,6 +23,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
     public DbSet<ImageQrCode> ImageQrCodes => Set<ImageQrCode>();
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
+    public DbSet<ImageFailed> ImageFailed => Set<ImageFailed>();
 
     public delegate ImagePipelineDbContext NewDefault();
     public delegate ImagePipelineDbContext New(Fid fid, string script);
@@ -45,6 +46,7 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
         b.Entity<ImageQrCode>().ToTable("tbmi_qrCode").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.Point1X, e.Point1Y, e.Point2X, e.Point2Y, e.Point3X, e.Point3Y, e.Point4X, e.Point4Y});
         b.Entity<ImageMetadata>().ToTable("tbmi_metadata");
+        b.Entity<ImageFailed>().ToTable("tbmi_failed");
         b.Entity<ForumScript>().ToTable("tbmi_forum_script").HasKey(e => new {e.Fid, e.Script});
 
         void SplitImageMetadata<TRelatedEntity>
