@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace tbm.ImagePipeline;
@@ -28,7 +29,8 @@ public class ImageBatchConsumingWorker(
             {
                 logger.LogError(e, "Exception");
             }
-            if (!channel.Reader.TryPeek(out _)) // https://stackoverflow.com/questions/72972469/which-is-the-fastest-way-to-tell-if-a-channelt-is-empty
+            if (!(channel.Reader.Completion.IsCompleted || channel.Reader.TryPeek(out _)))
+                // https://stackoverflow.com/questions/72972469/which-is-the-fastest-way-to-tell-if-a-channelt-is-empty
                 logger.LogWarning("Consumer is idle due to no image batch getting produced, configure \"ImageBatchProducer.MaxBufferedImageBatches\""
                                   + " to a larger value then restart will allow more image batches to get downloaded before consume");
         }
@@ -46,8 +48,13 @@ public class ImageBatchConsumingWorker(
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
         var imagesInReply = imagesWithBytes.Select(i => i.ImageInReply).ToList();
-        void UpdateImagesInReply(Action<ImageInReply> setter, IEnumerable<ImageId> imagesIdToUpdate) =>
-            imagesInReply.IntersectBy(imagesIdToUpdate, i => i.ImageId).ForEach(setter);
+        db.AttachRange(imagesInReply);
+        void MarkImagesInReplyAsConsumed
+            (Expression<Func<ImageInReply, bool>> selector, IEnumerable<ImageId> imagesIdToUpdate) =>
+            db.ChangeTracker.Entries<ImageInReply>()
+                .IntersectBy(imagesInReply
+                    .IntersectBy(imagesIdToUpdate, i => i.ImageId), entry => entry.Entity)
+                .ForEach(entry => entry.Property(selector).CurrentValue = true);
 
         var imagesId = string.Join(",", imagesInReply.Select(i => i.ImageId));
         logger.LogTrace("Start to consume {} image(s): [{}]", imagesWithBytes.Count, imagesId);
@@ -57,21 +64,21 @@ public class ImageBatchConsumingWorker(
                 sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
 
         void ConsumeConsumer<T>(
-            Action<ImageInReply> consumedSetter, IEnumerable<T> images,
+            Expression<Func<ImageInReply, bool>> selector, IEnumerable<T> images,
             IConsumer<T> consumer, string consumerType)
         {
             sw.Restart();
-            var consumedImagesId = consumer.Consume(db, images, stoppingToken);
+            var (failed, consumed) = consumer.Consume(db, images, stoppingToken);
             LogStopwatch(consumerType);
-            UpdateImagesInReply(consumedSetter, consumedImagesId.Consumed);
+            MarkImagesInReplyAsConsumed(selector, consumed);
 
-            var failedImagesId = consumedImagesId.Failed.ToList();
+            var failedImagesId = failed.ToList();
             if (!failedImagesId.Any()) return;
             logger.LogError("Failed to {} for {} image(s): [{}]",
                 consumerType, failedImagesId.Count, string.Join(",", failedImagesId));
         }
 
-        ConsumeConsumer(i => i.MetadataConsumed = true,
+        ConsumeConsumer(i => i.MetadataConsumed,
             imagesWithBytes.Where(i => !i.ImageInReply.MetadataConsumed),
             scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
@@ -86,14 +93,14 @@ public class ImageBatchConsumingWorker(
                 (Func<ImageInReply, bool> selector) => imageKeysWithMatrix
                 .ExceptBy(imagesInReply.Where(selector)
                     .Select(i => i.ImageId), i => i.ImageId);
-            ConsumeConsumer(i => i.HashConsumed = true,
+            ConsumeConsumer(i => i.HashConsumed,
                 ExceptConsumed(i => i.HashConsumed),
                 scope1.Resolve<HashConsumer>(), "calculate hash");
-            ConsumeConsumer(i => i.QrCodeConsumed = true,
+            ConsumeConsumer(i => i.QrCodeConsumed,
                 ExceptConsumed(i => i.QrCodeConsumed),
                 scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
             await ConsumeOcrConsumer(consumedImagesId =>
-                    UpdateImagesInReply(i => i.OcrConsumed = true, consumedImagesId),
+                    MarkImagesInReplyAsConsumed(i => i.OcrConsumed, consumedImagesId),
                 ExceptConsumed(i => i.OcrConsumed).ToList(),
                 scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
         }
@@ -103,7 +110,6 @@ public class ImageBatchConsumingWorker(
         }
 
         failedImageHandler.SaveFailedImages(db);
-        db.UpdateRange(imagesInReply);
         _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
         await transaction.CommitAsync(stoppingToken);
     }
@@ -195,13 +201,13 @@ public class ImageBatchConsumingWorker(
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
             var sw = new Stopwatch();
             sw.Start();
-            var consumedImagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
+            var (failed, consumed) = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
             sw.Stop();
 
-            markImageInReplyAsConsumed(consumedImagesId.Consumed);
+            markImageInReplyAsConsumed(consumed);
             _ = await db.SaveChangesAsync(stoppingToken);
 
-            var failedImagesId = consumedImagesId.Failed.ToList();
+            var failedImagesId = failed.ToList();
             if (failedImagesId.Any())
                 logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                     script, fid, failedImagesId.Count, string.Join(",", failedImagesId));

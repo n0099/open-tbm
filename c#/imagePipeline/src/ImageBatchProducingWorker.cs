@@ -13,7 +13,7 @@ public class ImageBatchProducingWorker(
     private int PrefetchUnconsumedImagesFactor => _config.GetValue("PrefetchUnconsumedImagesFactor", 16);
     private int InterlaceBatchCount => _config.GetValue("InterlaceBatchCount", 1);
     private int InterlaceBatchIndex => _config.GetValue("InterlaceBatchIndex", 0);
-    private bool StartFromLatestSuccessful => _config.GetValue("StartFromLatestSuccessful", false);
+    private bool StartFromLatestSuccessful => _config.GetValue("StartFromLatestSuccessful", true);
     private bool AllowPartiallyConsumed => _config.GetValue("AllowPartiallyConsumed", false);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -58,17 +58,14 @@ public class ImageBatchProducingWorker(
             using var scope1 = scope0.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
             var interlaceBatches = (
-                    from image in db.ImageInReplies.AsNoTracking()
-                    where image.ImageId > lastImageIdInPreviousBatch
-                    where StartFromLatestSuccessful
-                        // fast path compare to WHERE imageId NOT IN (SELECT imageId FROM ...)
-                        ? image.ImageId > db.ImageMetadata.Max(e => e.ImageId)
-                        // only entity ImageMetadata is one-to-zeroOrOne mapping with entity ImageInReply
-                        : !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
-                    orderby image.ImageId
-                    select image)
-                .Where(i => AllowPartiallyConsumed
-                            || !(i.MetadataConsumed || i.HashConsumed || i.QrCodeConsumed || i.OcrConsumed))
+                    from i in db.ImageInReplies.AsNoTracking()
+                    where i.ImageId > lastImageIdInPreviousBatch
+                    where !StartFromLatestSuccessful
+                          || i.ImageId > db.ImageMetadata.Max(e => e.ImageId)
+                    where AllowPartiallyConsumed
+                          || !(i.MetadataConsumed || i.HashConsumed || i.QrCodeConsumed || i.OcrConsumed)
+                    orderby i.ImageId
+                    select i)
                 .Take(ProduceImageBatchSize * PrefetchUnconsumedImagesFactor * InterlaceBatchCount).ToList();
             if (!interlaceBatches.Any()) yield break;
             lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;
