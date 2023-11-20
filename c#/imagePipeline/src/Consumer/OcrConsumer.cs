@@ -10,7 +10,7 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _recognizer.InitializePaddleOcr(stoppingToken);
 
-    protected override IEnumerable<ImageId> ConsumeInternal(
+    protected override (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
@@ -58,6 +58,7 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
             FrameIndex = pair.Key.FrameIndex,
             TextLines = pair.Value
         }));
-        return matricesKeyByImageKey.Lefts().Concat(recognizedFailedImagesId).Distinct();
+        return (matricesKeyByImageKey.Lefts().Concat(recognizedFailedImagesId).Distinct(),
+            recognizedResults.Select(i => i.ImageKey.ImageId));
     }
 }

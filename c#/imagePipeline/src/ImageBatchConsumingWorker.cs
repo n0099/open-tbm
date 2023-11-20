@@ -46,11 +46,6 @@ public class ImageBatchConsumingWorker(
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
         var imagesInReply = imagesWithBytes.Select(i => i.ImageInReply).ToList();
-        db.AttachRange(imagesInReply.Select(i =>
-        {
-            i.MetadataConsumed = i.HashConsumed = i.QrCodeConsumed = i.OcrConsumed = true;
-            return i; // mutated in place
-        }));
         void UpdateImagesInReply(Action<ImageInReply> setter, IEnumerable<ImageId> imagesIdToChange) =>
             imagesInReply.IntersectBy(imagesIdToChange, i => i.ImageId).ForEach(setter);
 
@@ -66,38 +61,32 @@ public class ImageBatchConsumingWorker(
             IConsumer<T> consumer, string consumerType)
         {
             sw.Restart();
-            var failedImagesId = consumer.Consume(db, images, stoppingToken).ToList();
+            var consumedImagesId = consumer.Consume(db, images, stoppingToken);
             LogStopwatch(consumerType);
+            UpdateImagesInReply(setter, consumedImagesId.Consumed);
 
+            var failedImagesId = consumedImagesId.Failed.ToList();
             if (!failedImagesId.Any()) return;
-            UpdateImagesInReply(setter, failedImagesId);
             logger.LogError("Failed to {} for {} image(s): [{}]",
                 consumerType, failedImagesId.Count, string.Join(",", failedImagesId));
         }
 
-        ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = false,
+        ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = true,
             scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
         var failedImageHandler = scope1.Resolve<FailedImageHandler>();
-        var imageKeyWithMatrixEithers = failedImageHandler
-            .TrySelect(imagesWithBytes,
+        var imageKeysWithMatrix = failedImageHandler.TrySelect(imagesWithBytes,
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 DecodeImageOrFramesBytes(stoppingToken))
-            .ToList();
-        var imageKeysWithMatrix =
-            imageKeyWithMatrixEithers.Rights().SelectMany(i => i).ToList();
-        UpdateImagesInReply(
-            i => i.HashConsumed = i.QrCodeConsumed = i.OcrConsumed = false,
-            imageKeyWithMatrixEithers.Lefts());
-
+            .Rights().SelectMany(i => i).ToList();
         try
         {
-            ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = false,
+            ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = true,
                 scope1.Resolve<HashConsumer>(), "calculate hash");
-            ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = false,
+            ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = true,
                 scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
-            await ConsumeOcrConsumer(failedImagesId =>
-                    UpdateImagesInReply(i => i.OcrConsumed = false, failedImagesId),
+            await ConsumeOcrConsumer(consumedImagesId =>
+                    UpdateImagesInReply(i => i.OcrConsumed = true, consumedImagesId),
                 scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
                 db.ForumScripts, imageKeysWithMatrix, stoppingToken);
         }
@@ -106,6 +95,7 @@ public class ImageBatchConsumingWorker(
             imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
         }
         failedImageHandler.SaveFailedImages(db);
+        db.UpdateRange(imagesInReply);
         _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
         await transaction.CommitAsync(stoppingToken);
     }
@@ -157,7 +147,7 @@ public class ImageBatchConsumingWorker(
     };
 
     private async Task ConsumeOcrConsumer(
-        Action<IEnumerable<ImageId>> updateImageInReplyAsFailed,
+        Action<IEnumerable<ImageId>> markImageInReplyAsConsumed,
         ILifetimeScope scope,
         DbConnection parentConnection,
         DbTransaction parentTransaction,
@@ -197,17 +187,19 @@ public class ImageBatchConsumingWorker(
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
             var sw = new Stopwatch();
             sw.Start();
-            var failedImagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken).ToList();
+            var consumedImagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
+            sw.Stop();
+
+            markImageInReplyAsConsumed(consumedImagesId.Consumed);
+            _ = await db.SaveChangesAsync(stoppingToken);
+
+            var failedImagesId = consumedImagesId.Failed.ToList();
             if (failedImagesId.Any())
-            {
-                updateImageInReplyAsFailed(failedImagesId);
                 logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                     script, fid, failedImagesId.Count, string.Join(",", failedImagesId));
-            }
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                 sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
                 string.Join(",", imagesInCurrentFid.Select(i => i.ImageId)));
-            _ = await db.SaveChangesAsync(stoppingToken);
         }
     }
 }

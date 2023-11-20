@@ -2,7 +2,7 @@ namespace tbm.ImagePipeline.Consumer;
 
 public abstract class MatrixConsumer : IConsumer<ImageKeyWithMatrix>
 {
-    public IEnumerable<ImageId> Consume(
+    public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
         IEnumerable<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
@@ -20,7 +20,7 @@ public abstract class MatrixConsumer : IConsumer<ImageKeyWithMatrix>
         }
     }
 
-    protected abstract IEnumerable<ImageId> ConsumeInternal(
+    protected abstract (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default);

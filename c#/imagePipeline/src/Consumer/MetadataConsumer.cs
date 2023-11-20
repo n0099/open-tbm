@@ -36,7 +36,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         geometryOverlay: GeometryOverlay.NG,
         coordinateEqualityComparer: new());
 
-    public IEnumerable<ImageId> Consume(
+    public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
         IEnumerable<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken = default)
@@ -46,8 +46,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 GetImageMetaData(stoppingToken))
             .ToList();
-        db.ImageMetadata.AddRange(metadataEithers.Rights());
-        return metadataEithers.Lefts();
+        var metadataResults = metadataEithers.Rights().ToList();
+        db.ImageMetadata.AddRange(metadataResults);
+        return (metadataEithers.Lefts(), metadataResults.Select(i => i.ImageId));
     }
 
     private Func<ImageWithBytes, ImageMetadata> GetImageMetaData
