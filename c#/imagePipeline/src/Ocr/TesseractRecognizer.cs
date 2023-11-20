@@ -2,13 +2,13 @@ using OpenCvSharp.Text;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public sealed class TesseractRecognizer(IConfiguration config, string script) : IDisposable
+public sealed partial class TesseractRecognizer(IConfiguration config, string script) : IDisposable
 {
-    public delegate TesseractRecognizer New(string script);
-
     private readonly IConfigurationSection _config = config.GetSection("OcrConsumer:Tesseract");
     private Lazy<OCRTesseract>? _tesseractInstanceHorizontal;
     private Lazy<OCRTesseract>? _tesseractInstanceVertical;
+
+    public delegate TesseractRecognizer New(string script);
 
     private Lazy<OCRTesseract> TesseractInstanceHorizontal => _tesseractInstanceHorizontal ??= new(script switch
     {
@@ -18,6 +18,7 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
         "en" => CreateTesseract("best/eng"),
         _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
     });
+
     private Lazy<OCRTesseract> TesseractInstanceVertical => _tesseractInstanceVertical ??= new(script switch
     {
         "zh-Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
@@ -26,14 +27,9 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
         "en" => TesseractInstanceHorizontal.Value, // fallback to best/eng since there's no best/eng_vert
         _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
     });
+
     private int ConfidenceThreshold => _config.GetValue("ConfidenceThreshold", 20);
     private float AspectRatioThresholdToConsiderAsVertical => _config.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
-
-    // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
-    // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
-    private OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
-        OCRTesseract.Create(_config.GetValue("DataPath", "") ?? "",
-            scripts, charWhitelist: "", oem: 1, psmode: isVertical ? 5 : 7);
 
     public void Dispose()
     {
@@ -41,7 +37,38 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
         TesseractInstanceVertical.Value.Dispose();
     }
 
-    public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
+    // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
+    // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
+    private OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
+        OCRTesseract.Create(_config.GetValue("DataPath", "") ?? "",
+            scripts, charWhitelist: "", oem: 1, psmode: isVertical ? 5 : 7);
+}
+public sealed partial class TesseractRecognizer
+{
+    public Func<PreprocessedTextBox, TesseractRecognitionResult> RecognizePreprocessedTextBox
+        (CancellationToken stoppingToken = default) => textBox =>
+    {
+        stoppingToken.ThrowIfCancellationRequested();
+        var (imageKey, box, preprocessedTextBoxMat) = textBox;
+        using var mat = preprocessedTextBoxMat;
+        var isVertical = (float)mat.Width / mat.Height < AspectRatioThresholdToConsiderAsVertical;
+        if (isVertical && script == "en") isVertical = false; // there's no vertical english
+        var tesseract = isVertical ? TesseractInstanceVertical : TesseractInstanceHorizontal;
+        tesseract.Value.Run(mat, out _, out var rects, out var texts, out var confidences);
+
+        var shouldFallbackToPaddleOcr = !rects.Any();
+        var components = rects.EquiZip(texts, confidences)
+            .Select(t => (Rect: t.Item1, Text: t.Item2, Confidence: t.Item3))
+            .Where(t => t.Confidence > ConfidenceThreshold)
+            .ToList();
+        var text = string.Join("", components.Select(t => t.Text)).Trim();
+        if (text == "") shouldFallbackToPaddleOcr = true;
+        var averageConfidence = components.Any()
+            ? components.Select(c => c.Confidence).Average().RoundToByte()
+            : (byte)0;
+
+        return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);
+    };
 
     public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes(
         ImageKey imageKey,
@@ -98,28 +125,5 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
     }
 
-    public Func<PreprocessedTextBox, TesseractRecognitionResult> RecognizePreprocessedTextBox
-        (CancellationToken stoppingToken = default) => textBox =>
-    {
-        stoppingToken.ThrowIfCancellationRequested();
-        var (imageKey, box, preprocessedTextBoxMat) = textBox;
-        using var mat = preprocessedTextBoxMat;
-        var isVertical = (float)mat.Width / mat.Height < AspectRatioThresholdToConsiderAsVertical;
-        if (isVertical && script == "en") isVertical = false; // there's no vertical english
-        var tesseract = isVertical ? TesseractInstanceVertical : TesseractInstanceHorizontal;
-        tesseract.Value.Run(mat, out _, out var rects, out var texts, out var confidences);
-
-        var shouldFallbackToPaddleOcr = !rects.Any();
-        var components = rects.EquiZip(texts, confidences)
-            .Select(t => (Rect: t.Item1, Text: t.Item2, Confidence: t.Item3))
-            .Where(t => t.Confidence > ConfidenceThreshold)
-            .ToList();
-        var text = string.Join("", components.Select(t => t.Text)).Trim();
-        if (text == "") shouldFallbackToPaddleOcr = true;
-        var averageConfidence = components.Any()
-            ? components.Select(c => c.Confidence).Average().RoundToByte()
-            : (byte)0;
-
-        return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);
-    };
+    public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
 }

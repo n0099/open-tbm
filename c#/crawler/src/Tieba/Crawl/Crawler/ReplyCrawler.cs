@@ -11,23 +11,6 @@ public class ReplyCrawler(ClientRequester requester, Fid fid, Tid tid)
         return e;
     }
 
-    protected override RepeatedField<Reply> GetResponsePostList(ReplyResponse response) => response.Data.PostList;
-    protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
-    public override TbClient.Page GetResponsePage(ReplyResponse response) => response.Data.Page;
-
-    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
-    {
-        new Request(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.26.1.0",
-            new ReplyRequest {Data = new()
-            { // reverse order will be {"last", "1"}, {"r", "1"}
-                Kz = (long)tid,
-                Pn = (int)page,
-                Rn = 30
-            }},
-            (req, common) => req.Data.Common = common,
-            () => new ReplyResponse(), stoppingToken))
-    };
-
     public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
     {
         if (response.Error.Errorno is 4 or 350008)
@@ -43,4 +26,20 @@ public class ReplyCrawler(ClientRequester requester, Fid fid, Tid tid)
                 + ", this thread might be multi forum or \"livepost\" thread.");
         return ret;
     }
+
+    public override TbClient.Page GetResponsePage(ReplyResponse response) => response.Data.Page;
+    protected override RepeatedField<Reply> GetResponsePostList(ReplyResponse response) => response.Data.PostList;
+    protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
+    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
+    {
+        new Request(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.26.1.0",
+            new ReplyRequest {Data = new()
+            { // reverse order will be {"last", "1"}, {"r", "1"}
+                Kz = (long)tid,
+                Pn = (int)page,
+                Rn = 30
+            }},
+            (req, common) => req.Data.Common = common,
+            () => new ReplyResponse(), stoppingToken))
+    };
 }

@@ -10,6 +10,20 @@ public class ClientRequesterTcs : WithLogTrace
     private readonly Stopwatch _stopwatch = new();
     private uint _requestCounter;
 
+    public ClientRequesterTcs(ILogger<ClientRequesterTcs> logger, IConfiguration config)
+    {
+        _logger = logger;
+        _config = config.GetSection("ClientRequesterTcs");
+        InitLogTrace(_config);
+        MaxRps = _config.GetValue("InitialRps", 15);
+        _stopwatch.Start();
+
+        _timer.Elapsed += (_, _) =>
+        {
+            if (_queue.TryDequeue(out var tcs)) tcs.SetResult();
+        };
+    }
+
     private uint QueueLength => (uint)_queue.Count;
     private float AverageRps => _requestCounter / (float)_stopwatch.Elapsed.TotalSeconds;
     private double MaxRps
@@ -27,28 +41,6 @@ public class ClientRequesterTcs : WithLogTrace
         }
     }
 
-    public ClientRequesterTcs(ILogger<ClientRequesterTcs> logger, IConfiguration config)
-    {
-        _logger = logger;
-        _config = config.GetSection("ClientRequesterTcs");
-        InitLogTrace(_config);
-        MaxRps = _config.GetValue("InitialRps", 15);
-        _stopwatch.Start();
-
-        _timer.Elapsed += (_, _) =>
-        {
-            if (_queue.TryDequeue(out var tcs)) tcs.SetResult();
-        };
-    }
-
-    protected override void LogTrace()
-    {
-        if (!ShouldLogTrace()) return;
-        _logger.LogTrace("TCS: queueLen={} maxLimitRps={:F2} avgRps={:F2} elapsed={:F1}s",
-            QueueLength, MaxRps, AverageRps, _stopwatch.Elapsed.TotalSeconds);
-        if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
-    }
-
     public void Increase() => MaxRps = Math.Min(
         _config.GetValue("LimitRps:1", 1000),
         MaxRps + _config.GetValue("DeltaRps:0", 0.01));
@@ -62,6 +54,14 @@ public class ClientRequesterTcs : WithLogTrace
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _queue.Enqueue(tcs);
         await tcs.Task.WaitAsync(stoppingToken);
+    }
+
+    protected override void LogTrace()
+    {
+        if (!ShouldLogTrace()) return;
+        _logger.LogTrace("TCS: queueLen={} maxLimitRps={:F2} avgRps={:F2} elapsed={:F1}s",
+            QueueLength, MaxRps, AverageRps, _stopwatch.Elapsed.TotalSeconds);
+        if (_config.GetValue("LogTrace:ResetAfterLog", false)) ResetAverageRps();
     }
 
     private void ResetAverageRps()

@@ -2,7 +2,6 @@ namespace tbm.Crawler.Db.Post;
 
 public class ThreadPost : IPost
 {
-    public object Clone() => MemberwiseClone();
     [Key] public ulong Tid { get; set; }
     [NotMapped] public ulong? FirstReplyPid { get; set; }
 
@@ -29,4 +28,6 @@ public class ThreadPost : IPost
     public uint CreatedAt { get; set; }
     public uint? UpdatedAt { get; set; }
     public uint? LastSeenAt { get; set; }
+
+    public object Clone() => MemberwiseClone();
 }

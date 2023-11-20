@@ -25,8 +25,6 @@ public class SubReplySaver(
             _ => false
         }, (_, _, _, _) => false);
 
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => 0;
-
     protected override Dictionary<Type, RevisionUpsertDelegate>
         RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
     {
@@ -53,4 +51,6 @@ public class SubReplySaver(
 
         return changeSet;
     }
+
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => 0;
 }

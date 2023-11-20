@@ -3,7 +3,7 @@ using System.Text.Unicode;
 
 namespace tbm.Crawler;
 
-public abstract class Helper
+public abstract partial class Helper
 {
     public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf) =>
         protoBuf == null || protoBuf.CalculateSize() == 0 ? null : protoBuf.ToByteArray();
@@ -20,12 +20,13 @@ public abstract class Helper
     public static PostContentWrapper? WrapPostContent(RepeatedField<Content>? contents) =>
         contents == null ? null : new() {Value = {contents}};
 
-    private static readonly JsonSerializerOptions UnescapedSerializeOptions =
-        new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};
-
-    public static string UnescapedJsonSerialize<TValue>(TValue value) =>
-        JsonSerializer.Serialize(value, UnescapedSerializeOptions);
-
     public static void GetNowTimestamp(out Time now) => now = GetNowTimestamp();
     public static Time GetNowTimestamp() => (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
+}
+public abstract partial class Helper
+{
+    private static readonly JsonSerializerOptions UnescapedSerializeOptions =
+        new() {Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)};
+    public static string UnescapedJsonSerialize<TValue>(TValue value) =>
+        JsonSerializer.Serialize(value, UnescapedSerializeOptions);
 }

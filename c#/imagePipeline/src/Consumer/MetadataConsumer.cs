@@ -246,13 +246,6 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 
     private partial class ExifDateTimeTagValuesParser
     {
-        public record DateTimeAndOffset(DateTime DateTime, string? Offset);
-
-        [GeneratedRegex(
-            "^.*(?<dateTime>[0-9]{4}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(?!(上|下)午)?).*$",
-            RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
-        private static partial Regex ExtractCommonExifDateTimeWithLeadingOrTrailingCharsRegex();
-
         public static DateTimeAndOffset? ParseExifDateTimeOrNull(string? exifDateTime, string? exifFractionalSeconds)
         { // https://gist.github.com/thanatos/eee17100476a336a711e
             // tested inputs with valid results:
@@ -294,6 +287,11 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 DateTime = ret.DateTime.AddSeconds(fractionalSeconds / Math.Pow(10, CountDigits(fractionalSeconds)))
             };
         }
+
+        [GeneratedRegex(
+            "^.*(?<dateTime>[0-9]{4}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(?!(上|下)午)?).*$",
+            RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+        private static partial Regex ExtractCommonExifDateTimeWithLeadingOrTrailingCharsRegex();
 
         private static DateTimeAndOffset? ParseWithoutOffset(string exifDateTime)
         {
@@ -363,5 +361,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 return new(DateTimeOffset.FromUnixTimeSeconds(parsedUnixTimestamp).DateTime, "+00:00");
             return null;
         }
+
+        public record DateTimeAndOffset(DateTime DateTime, string? Offset);
     }
 }

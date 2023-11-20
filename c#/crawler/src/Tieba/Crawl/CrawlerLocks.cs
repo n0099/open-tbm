@@ -2,19 +2,12 @@ namespace tbm.Crawler.Tieba.Crawl;
 
 public class CrawlerLocks : WithLogTrace
 {
-    public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
-
-    public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
-    {
-        public override string ToString() => $"f{Fid}{(Tid == null ? "" : $" t{Tid}")}{(Pid == null ? "" : $" p{Pid}")}";
-    }
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
 
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
     private readonly ILogger<CrawlerLocks> _logger;
     private readonly IConfigurationSection _config;
-    public string LockType { get; }
 
     public CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
     {
@@ -23,19 +16,8 @@ public class CrawlerLocks : WithLogTrace
         InitLogTrace(_config);
     }
 
-    protected override void LogTrace()
-    {
-        if (!ShouldLogTrace()) return;
-        lock (_crawling)
-        lock (_failed)
-        {
-            _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
-                _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
-                Helper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
-                _failed.Count, _failed.Values.Select(d => d.Count).Sum(),
-                Helper.UnescapedJsonSerialize(_failed.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value)));
-        }
-    }
+    public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
+    public string LockType { get; }
 
     public HashSet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {
@@ -120,5 +102,24 @@ public class CrawlerLocks : WithLogTrace
             _failed.Clear();
             return deepCloneOfFailed;
         }
+    }
+
+    protected override void LogTrace()
+    {
+        if (!ShouldLogTrace()) return;
+        lock (_crawling)
+        lock (_failed)
+        {
+            _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
+                _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
+                Helper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
+                _failed.Count, _failed.Values.Select(d => d.Count).Sum(),
+                Helper.UnescapedJsonSerialize(_failed.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value)));
+        }
+    }
+
+    public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
+    {
+        public override string ToString() => $"f{Fid}{(Tid == null ? "" : $" t{Tid}")}{(Pid == null ? "" : $" p{Pid}")}";
     }
 }

@@ -3,7 +3,7 @@ using PredicateBuilder = LinqKit.PredicateBuilder;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class ReplySaver(
+public partial class ReplySaver(
         ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
@@ -23,14 +23,6 @@ public class ReplySaver(
             nameof(TiebaUser.Icon) when oldValue is null && newValue is not null => true,
             _ => false
         });
-
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
-    {
-        nameof(ReplyPost.IsFold)        => 1 << 2,
-        nameof(ReplyPost.DisagreeCount) => 1 << 4,
-        nameof(ReplyPost.Geolocation)   => 1 << 5,
-        _ => 0
-    };
 
     protected override Dictionary<Type, RevisionUpsertDelegate>
         RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
@@ -52,10 +44,6 @@ public class ReplySaver(
         }
     };
 
-    private record UniqueSignature(uint Id, ulong XxHash3);
-    private static readonly HashSet<UniqueSignature> SignatureLocks = new();
-    private readonly List<UniqueSignature> _savedSignatures = new();
-
     public override SaverChangeSet<ReplyPost> SavePosts(CrawlerDbContext db)
     {
         var changeSet = SavePosts(db, r => r.Pid,
@@ -70,6 +58,64 @@ public class ReplySaver(
 
         return changeSet;
     }
+
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
+    {
+        nameof(ReplyPost.IsFold)        => 1 << 2,
+        nameof(ReplyPost.DisagreeCount) => 1 << 4,
+        nameof(ReplyPost.Geolocation)   => 1 << 5,
+        _ => 0
+    };
+
+    private static void SaveReplyContentImages(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
+    {
+        var pidAndImageList = (
+                from r in replies
+                from c in r.OriginalContents
+                where c.Type == 3
+
+                // only save image filename without extension that extracted from url by ReplyParser.Convert()
+                where ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
+                select (r.Pid, Image: new ImageInReply
+                {
+                    UrlFilename = c.OriginSrc,
+                    ExpectedByteSize = c.OriginSize
+                }))
+            .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
+            .ToList();
+        if (!pidAndImageList.Any()) return;
+
+        var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
+            .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
+        var existingImages = (
+                from e in db.ImageInReplies
+                where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
+                select e)
+            .ForUpdate().ToDictionary(e => e.UrlFilename);
+        (from existing in existingImages.Values
+                where existing.ExpectedByteSize == 0 // randomly respond with 0
+                join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
+                select (existing, newInContent))
+            .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
+        db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
+        {
+            Pid = t.Pid,
+
+            // no need to manually invoke DbContent.AddRange(images) since EF Core will do these chore
+            // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
+            // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key
+            // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
+            // https://github.com/dotnet/efcore/issues/30236
+            ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)
+                ? e
+                : imagesKeyByUrlFilename[t.Image.UrlFilename]
+        }));
+    }
+}
+public partial class ReplySaver
+{
+    private static readonly HashSet<UniqueSignature> SignatureLocks = new();
+    private readonly List<UniqueSignature> _savedSignatures = new();
 
     private Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
@@ -121,48 +167,5 @@ public class ReplySaver(
         };
     }
 
-    private static void SaveReplyContentImages(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
-    {
-        var pidAndImageList = (
-                from r in replies
-                from c in r.OriginalContents
-                where c.Type == 3
-
-                // only save image filename without extension that extracted from url by ReplyParser.Convert()
-                where ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
-                select (r.Pid, Image: new ImageInReply
-                {
-                    UrlFilename = c.OriginSrc,
-                    ExpectedByteSize = c.OriginSize
-                }))
-            .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
-            .ToList();
-        if (!pidAndImageList.Any()) return;
-
-        var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
-            .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
-        var existingImages = (
-                from e in db.ImageInReplies
-                where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
-                select e)
-            .ForUpdate().ToDictionary(e => e.UrlFilename);
-        (from existing in existingImages.Values
-                where existing.ExpectedByteSize == 0 // randomly respond with 0
-                join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
-                select (existing, newInContent))
-            .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
-        db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
-        {
-            Pid = t.Pid,
-
-            // no need to manually invoke DbContent.AddRange(images) since EF Core will do these chore
-            // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
-            // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key
-            // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
-            // https://github.com/dotnet/efcore/issues/30236
-            ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)
-                ? e
-                : imagesKeyByUrlFilename[t.Image.UrlFilename]
-        }));
-    }
+    private record UniqueSignature(uint Id, ulong XxHash3);
 }

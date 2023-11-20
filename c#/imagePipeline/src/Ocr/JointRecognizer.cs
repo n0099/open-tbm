@@ -9,11 +9,12 @@ public class JointRecognizer(
     FailedImageHandler failedImageHandler,
     string script)
 {
-    public delegate JointRecognizer New(string script);
-
     private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
     private readonly Lazy<TesseractRecognizer> _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));
     private readonly IConfigurationSection _config = config.GetSection("OcrConsumer");
+
+    public delegate JointRecognizer New(string script);
+
     private int GridSizeToMergeBoxesIntoSingleLine => _config.GetValue("GridSizeToMergeBoxesIntoSingleLine", 10);
     private int PaddleOcrConfidenceThreshold => _config.GetValue("PaddleOcr:ConfidenceThreshold", 80);
     private (int ToConsiderAsSameTextBox, int ToConsiderAsNewTextBox) IntersectionAreaThresholds
@@ -88,10 +89,6 @@ public class JointRecognizer(
                     string.Join("\n", groupByLine.Select(result => result.Text.Trim())));
             return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
         });
-
-    private record CorrelatedTextBoxPair(
-        ImageKey ImageKey, byte PercentageOfIntersection,
-        RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 
     private IEnumerable<Either<ImageId, TesseractRecognitionResult>> RecognizeMatricesViaTesseract(
         IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
@@ -173,4 +170,8 @@ public class JointRecognizer(
                 .Rights()
                 .Select(Either<ImageId, TesseractRecognitionResult>.Right));
     }
+
+    private record CorrelatedTextBoxPair(
+        ImageKey ImageKey, byte PercentageOfIntersection,
+        RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 }

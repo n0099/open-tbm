@@ -43,6 +43,18 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
 
     public class Exif : IEmbedded
     {
+        public enum ExifOrientation
+        { // https://magnushoff.com/articles/jpeg-orientation/
+            Horizontal = 1,
+            MirrorHorizontal = 2,
+            Rotate180 = 3,
+            MirrorVertical = 4,
+            MirrorHorizontalRotate270Cw = 5,
+            Rotate90Cw = 6,
+            MirrorHorizontalRotate90Cw = 7,
+            Rotate270Cw = 8,
+        }
+
         [Key] public uint ImageId { get; set; }
         public string? Orientation { get; set; }
         public string? ImageDescription { get; set; }
@@ -80,18 +92,6 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         {
             public uint ImageId { get; set; }
             public required string Name { get; set; }
-        }
-
-        public enum ExifOrientation
-        { // https://magnushoff.com/articles/jpeg-orientation/
-            Horizontal = 1,
-            MirrorHorizontal = 2,
-            Rotate180 = 3,
-            MirrorVertical = 4,
-            MirrorHorizontalRotate270Cw = 5,
-            Rotate90Cw = 6,
-            MirrorHorizontalRotate90Cw = 7,
-            Rotate270Cw = 8,
         }
     }
 

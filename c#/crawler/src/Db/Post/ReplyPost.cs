@@ -2,7 +2,6 @@ namespace tbm.Crawler.Db.Post;
 
 public class ReplyPost : IPost, IPostWithAuthorExpGrade
 {
-    public object Clone() => MemberwiseClone();
     public ulong Tid { get; set; }
     [Key] public ulong Pid { get; set; }
     public uint Floor { get; set; }
@@ -24,4 +23,6 @@ public class ReplyPost : IPost, IPostWithAuthorExpGrade
     public uint CreatedAt { get; set; }
     public uint? UpdatedAt { get; set; }
     public uint? LastSeenAt { get; set; }
+
+    public object Clone() => MemberwiseClone();
 }

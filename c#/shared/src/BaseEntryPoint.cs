@@ -10,9 +10,6 @@ namespace tbm.Shared;
 
 public abstract class BaseEntryPoint
 {
-    protected abstract void ConfigureServices(HostBuilderContext context, IServiceCollection service);
-    protected abstract void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder);
-
     public async Task Main(string[] args)
     {
         var logger = LogManager.GetCurrentClassLogger();
@@ -43,4 +40,7 @@ public abstract class BaseEntryPoint
             LogManager.Shutdown();
         }
     }
+
+    protected abstract void ConfigureServices(HostBuilderContext context, IServiceCollection service);
+    protected abstract void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder);
 }

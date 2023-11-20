@@ -2,9 +2,6 @@ namespace tbm.Crawler;
 
 public sealed class SonicPusher : IDisposable
 {
-    public ISonicIngestConnection Ingest { get; }
-    public string CollectionPrefix { get; }
-
     private static readonly ReaderWriterLockSlim SuspendPushingFileLock = new();
     private readonly ILogger<SonicPusher> _logger;
     private readonly IConfigurationSection _config;
@@ -20,6 +17,9 @@ public sealed class SonicPusher : IDisposable
         );
         CollectionPrefix = _config.GetValue<string>("CollectionPrefix") ?? "tbm_";
     }
+
+    public ISonicIngestConnection Ingest { get; }
+    public string CollectionPrefix { get; }
 
     public void Dispose() => Ingest.Dispose();
 

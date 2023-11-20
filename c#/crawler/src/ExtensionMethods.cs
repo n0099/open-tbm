@@ -1,6 +1,6 @@
 namespace tbm.Crawler;
 
-public static class ExtensionMethods
+public static partial class ExtensionMethods
 {
     /// <summary>
     ///     Returns a random long from min (inclusive) to max (exclusive)
@@ -26,27 +26,6 @@ public static class ExtensionMethods
     }
 
     public static string GetStrProp(this JsonElement el, string propName) => el.GetProperty(propName).GetString() ?? "";
-
-    /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
-    private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)
-    {
-        while (toCheck != null && toCheck != typeof(object))
-        {
-            var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-            if (generic == cur) return true;
-            toCheck = toCheck.BaseType;
-        }
-
-        return false;
-    }
-
-    /// <see>https://stackoverflow.com/questions/4963160/how-to-determine-if-a-type-implements-an-interface-with-c-sharp-reflection/4963190#4963190</see>
-    private static bool IsImplementerOfRawGeneric(this Type generic, Type toCheck) =>
-        toCheck.GetInterfaces().Any(type => type.IsGenericType && type.GetGenericTypeDefinition() == generic);
-
-    /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/25937893#25937893</see>
-    public static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>
-        generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
 
     public static Exception ExtractInnerExceptionsData(this Exception e)
     {
@@ -79,4 +58,27 @@ public static class ExtensionMethods
     {
         if (value != null) dict[key] = value;
     }
+}
+public static partial class ExtensionMethods
+{
+    /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/25937893#25937893</see>
+    public static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>
+        generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
+
+    /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
+    private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)
+    {
+        while (toCheck != null && toCheck != typeof(object))
+        {
+            var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
+            if (generic == cur) return true;
+            toCheck = toCheck.BaseType;
+        }
+
+        return false;
+    }
+
+    /// <see>https://stackoverflow.com/questions/4963160/how-to-determine-if-a-type-implements-an-interface-with-c-sharp-reflection/4963190#4963190</see>
+    private static bool IsImplementerOfRawGeneric(this Type generic, Type toCheck) =>
+        toCheck.GetInterfaces().Any(type => type.IsGenericType && type.GetGenericTypeDefinition() == generic);
 }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Http;
 
 namespace tbm.ImagePipeline;
 
-public class EntryPoint : BaseEntryPoint
+public partial class EntryPoint : BaseEntryPoint
 {
     protected override void ConfigureServices(HostBuilderContext context, IServiceCollection service)
     {
@@ -68,12 +68,7 @@ public class EntryPoint : BaseEntryPoint
         {
             var limitRps = context.Configuration
                 .GetSection("ImageRequester").GetValue("LimitRps", 10);
-            return new FixedWindowRateLimiter(new()
-            {
-                PermitLimit = limitRps,
-                QueueLimit = limitRps,
-                Window = TimeSpan.FromSeconds(1)
-            });
+            return new FixedWindowRateLimiter(new() {PermitLimit = limitRps, QueueLimit = limitRps, Window = TimeSpan.FromSeconds(1)});
         }).SingleInstance();
 
         var config = context.Configuration.GetSection("OcrConsumer");
@@ -84,7 +79,9 @@ public class EntryPoint : BaseEntryPoint
         if (!config.GetSection("Tesseract").GetValue("DisposeAfterEachBatch", false))
             tesseract.SingleInstance();
     }
-
+}
+public partial class EntryPoint
+{
     private delegate void PolicyOnRetryLogDelegate<T>
         (ILogger<ImageRequester> logger, string imageUrlFilename, DelegateResult<T> outcome, int tryCount);
 

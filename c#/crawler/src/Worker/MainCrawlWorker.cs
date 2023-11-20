@@ -5,7 +5,7 @@ namespace tbm.Crawler.Worker;
 using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
 using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
-public class MainCrawlWorker : CyclicCrawlWorker
+public partial class MainCrawlWorker : CyclicCrawlWorker
 {
     private readonly ILifetimeScope _scope0;
 
@@ -29,7 +29,11 @@ public class MainCrawlWorker : CyclicCrawlWorker
         _ = locks["subReply"];
     }
 
-    private record FidAndName(Fid Fid, string Name);
+    protected override async Task DoWork(CancellationToken stoppingToken)
+    {
+        await foreach (var (fid, forumName) in ForumGenerator(stoppingToken))
+            await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid, stoppingToken), fid, stoppingToken), fid, stoppingToken);
+    }
 
     private async IAsyncEnumerable<FidAndName> ForumGenerator
         ([EnumeratorCancellation] CancellationToken stoppingToken = default)
@@ -44,12 +48,6 @@ public class MainCrawlWorker : CyclicCrawlWorker
             yield return fidAndName;
             await Task.Delay((yieldInterval * 1000).RoundToUshort(), stoppingToken);
         }
-    }
-
-    protected override async Task DoWork(CancellationToken stoppingToken)
-    {
-        await foreach (var (fid, forumName) in ForumGenerator(stoppingToken))
-            await CrawlSubReplies(await CrawlReplies(await CrawlThreads(forumName, fid, stoppingToken), fid, stoppingToken), fid, stoppingToken);
     }
 
     private async Task<SavedThreadsList> CrawlThreads(string forumName, Fid fid, CancellationToken stoppingToken = default)
@@ -100,40 +98,10 @@ public class MainCrawlWorker : CyclicCrawlWorker
         return savedThreads;
     }
 
-    private async Task<SavedRepliesKeyByTid> CrawlReplies
-        (SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
-        await CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
-
-    public static async Task<SavedRepliesKeyByTid> CrawlReplies(
-        SavedThreadsList savedThreads, Fid fid,
-        ILifetimeScope scope, CancellationToken stoppingToken = default)
-    {
-        stoppingToken.ThrowIfCancellationRequested();
-        var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
-        {
-            shouldCrawl.UnionWith(threads.NewlyAdded.Select(th => th.Tid));
-            shouldCrawl.UnionWith(threads.Existing.Where(t =>
-            {
-                var (before, after) = t;
-                return before.ReplyCount != after.ReplyCount
-                       || before.LatestReplyPostedAt != after.LatestReplyPostedAt
-                       || before.LatestReplierUid != after.LatestReplierUid;
-            }).Select(t => t.Before.Tid));
-            return shouldCrawl;
-        });
-        var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
-        await Task.WhenAll(shouldCrawlParentPosts.Select(async tid =>
-        {
-            if (stoppingToken.IsCancellationRequested) return;
-            await using var scope1 = scope.BeginLifetimeScope();
-            var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid)
-                .AddExceptionHandler(SaveThreadMissingFirstReply(scope1, fid, tid, savedThreads).Invoke);
-            savedRepliesKeyByTid.SetIfNotNull(tid,
-                (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
-        }));
-        return savedRepliesKeyByTid;
-    }
-
+    private record FidAndName(Fid Fid, string Name);
+}
+public partial class MainCrawlWorker
+{
     private static Action<Exception> SaveThreadMissingFirstReply
         (ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
     {
@@ -171,10 +139,42 @@ public class MainCrawlWorker : CyclicCrawlWorker
         transaction.Commit();
     };
 
-    private async Task CrawlSubReplies
-        (SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
-        await CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
+    public static async Task<SavedRepliesKeyByTid> CrawlReplies(
+        SavedThreadsList savedThreads, Fid fid,
+        ILifetimeScope scope, CancellationToken stoppingToken = default)
+    {
+        stoppingToken.ThrowIfCancellationRequested();
+        var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
+        {
+            shouldCrawl.UnionWith(threads.NewlyAdded.Select(th => th.Tid));
+            shouldCrawl.UnionWith(threads.Existing.Where(t =>
+            {
+                var (before, after) = t;
+                return before.ReplyCount != after.ReplyCount
+                       || before.LatestReplyPostedAt != after.LatestReplyPostedAt
+                       || before.LatestReplierUid != after.LatestReplierUid;
+            }).Select(t => t.Before.Tid));
+            return shouldCrawl;
+        });
+        var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
+        await Task.WhenAll(shouldCrawlParentPosts.Select(async tid =>
+        {
+            if (stoppingToken.IsCancellationRequested) return;
+            await using var scope1 = scope.BeginLifetimeScope();
+            var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid)
+                .AddExceptionHandler(SaveThreadMissingFirstReply(scope1, fid, tid, savedThreads).Invoke);
+            savedRepliesKeyByTid.SetIfNotNull(tid,
+                (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
+        }));
+        return savedRepliesKeyByTid;
+    }
 
+    private async Task<SavedRepliesKeyByTid> CrawlReplies
+        (SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
+        await CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
+}
+public partial class MainCrawlWorker
+{
     public static async Task CrawlSubReplies(
         IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid,
         ILifetimeScope scope, CancellationToken stoppingToken = default)
@@ -201,4 +201,8 @@ public class MainCrawlWorker : CyclicCrawlWorker
             _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
         }));
     }
+
+    private async Task CrawlSubReplies
+        (SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
+        await CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
 }

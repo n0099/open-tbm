@@ -8,14 +8,10 @@ namespace tbm.Crawler.Db;
 
 public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>
 {
-    public class ModelCacheKeyFactory : IModelCacheKeyFactory
-    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
-        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(DbContext context, bool designTime) =>
-            context is CrawlerDbContext dbContext
-                ? (context.GetType(), dbContext.Fid, designTime)
-                : context.GetType();
-    }
+    public CrawlerDbContext(IConfiguration config) : base(config) => Fid = 0;
+    public CrawlerDbContext(IConfiguration config, Fid fid) : base(config) => Fid = fid;
+    public delegate CrawlerDbContext NewDefault();
+    public delegate CrawlerDbContext New(Fid fid);
 
     public Fid Fid { get; }
     public DbSet<TiebaUser> Users => Set<TiebaUser>();
@@ -30,11 +26,38 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFacto
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
     public DbSet<Forum> Forums => Set<Forum>();
 
-    public delegate CrawlerDbContext NewDefault();
-    public delegate CrawlerDbContext New(Fid fid);
+    public void TimestampingEntities() =>
 
-    public CrawlerDbContext(IConfiguration config) : base(config) => Fid = 0;
-    public CrawlerDbContext(IConfiguration config, Fid fid) : base(config) => Fid = fid;
+        // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
+        ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
+        {
+            Helper.GetNowTimestamp(out var now);
+            var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
+            var createdAtProp = e.Property(ie => ie.CreatedAt);
+            var updatedAtProp = e.Property(ie => ie.UpdatedAt);
+            var lastSeenAtProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeenAt) : null;
+
+            switch (originalEntityState)
+            { // mutates Entry.CurrentValue will always update Entry.IsModified
+                // and value of corresponding field in entity class instance that ChangeTracker references to(aka Entry.Entity)
+                // while mutating Entry.Entity.Field requires (im|ex)plicitly invoking DetectChanges() to update Entry.CurrentValue and IsModified
+                case EntityState.Added:
+                    createdAtProp.CurrentValue = now;
+                    break;
+                case EntityState.Modified when createdAtProp.CurrentValue != now:
+                    updatedAtProp.CurrentValue = now;
+                    break;
+            }
+            if (lastSeenAtProp != null)
+            {
+                lastSeenAtProp.CurrentValue = originalEntityState switch
+                {
+                    EntityState.Unchanged => now, // updatedAt won't change when entity is unchanged
+                    EntityState.Modified => null, // null means it's same with updatedAt
+                    _ => lastSeenAtProp.CurrentValue
+                };
+            }
+        });
 
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnModelCreating(ModelBuilder b)
@@ -77,36 +100,12 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFacto
     }
 #pragma warning restore IDE0058 // Expression value is never used
 
-    public void TimestampingEntities() =>
-
-        // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-        ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
-        {
-            Helper.GetNowTimestamp(out var now);
-            var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
-            var createdAtProp = e.Property(ie => ie.CreatedAt);
-            var updatedAtProp = e.Property(ie => ie.UpdatedAt);
-            var lastSeenAtProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeenAt) : null;
-
-            switch (originalEntityState)
-            { // mutates Entry.CurrentValue will always update Entry.IsModified
-                // and value of corresponding field in entity class instance that ChangeTracker references to(aka Entry.Entity)
-                // while mutating Entry.Entity.Field requires (im|ex)plicitly invoking DetectChanges() to update Entry.CurrentValue and IsModified
-                case EntityState.Added:
-                    createdAtProp.CurrentValue = now;
-                    break;
-                case EntityState.Modified when createdAtProp.CurrentValue != now:
-                    updatedAtProp.CurrentValue = now;
-                    break;
-            }
-            if (lastSeenAtProp != null)
-            {
-                lastSeenAtProp.CurrentValue = originalEntityState switch
-                {
-                    EntityState.Unchanged => now, // updatedAt won't change when entity is unchanged
-                    EntityState.Modified => null, // null means it's same with updatedAt
-                    _ => lastSeenAtProp.CurrentValue
-                };
-            }
-        });
+    public class ModelCacheKeyFactory : IModelCacheKeyFactory
+    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
+        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
+        public object Create(DbContext context, bool designTime) =>
+            context is CrawlerDbContext dbContext
+                ? (context.GetType(), dbContext.Fid, designTime)
+                : context.GetType();
+    }
 }

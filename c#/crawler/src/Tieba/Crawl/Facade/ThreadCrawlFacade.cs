@@ -15,9 +15,9 @@ public class ThreadCrawlFacade(
         logger, dbContextFactory, crawler(forumName), parser, saver.Invoke,
         users, requesterTcs, locks["thread"], new(fid), fid)
 {
-    public delegate ThreadCrawlFacade New(Fid fid, string forumName);
-
     private readonly Dictionary<long, TiebaUser> _latestRepliers = new();
+
+    public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
     protected override void BeforeCommitSaveHook(CrawlerDbContext db)
     { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()

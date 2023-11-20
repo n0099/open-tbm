@@ -12,23 +12,6 @@ public class SubReplyCrawler(ClientRequester requester, Tid tid, Pid pid)
         return e;
     }
 
-    protected override RepeatedField<SubReply> GetResponsePostList(SubReplyResponse response) => response.Data.SubpostList;
-    protected override int GetResponseErrorCode(SubReplyResponse response) => response.Error.Errorno;
-    public override TbClient.Page GetResponsePage(SubReplyResponse response) => response.Data.Page;
-
-    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
-    {
-        new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
-            new SubReplyRequest {Data = new()
-            {
-                Kz = (long)tid,
-                Pid = (long)pid,
-                Pn = (int)page
-            }},
-            (req, common) => req.Data.Common = common,
-            () => new SubReplyResponse(), stoppingToken))
-    };
-
     public override IList<SubReply> GetValidPosts(SubReplyResponse response, CrawlRequestFlag flag)
     {
         switch (response.Error.Errorno)
@@ -45,4 +28,20 @@ public class SubReplyCrawler(ClientRequester requester, Tid tid, Pid pid)
                     "Sub reply list is empty, posts might already deleted from tieba.");
         }
     }
+
+    public override TbClient.Page GetResponsePage(SubReplyResponse response) => response.Data.Page;
+    protected override RepeatedField<SubReply> GetResponsePostList(SubReplyResponse response) => response.Data.SubpostList;
+    protected override int GetResponseErrorCode(SubReplyResponse response) => response.Error.Errorno;
+    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
+    {
+        new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
+            new SubReplyRequest {Data = new()
+            {
+                Kz = (long)tid,
+                Pid = (long)pid,
+                Pn = (int)page
+            }},
+            (req, common) => req.Data.Common = common,
+            () => new SubReplyResponse(), stoppingToken))
+    };
 }

@@ -17,25 +17,22 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => _saver ??= new(saverFactory(Posts));
-
-    private Lazy<BaseSaver<TPost, TBaseRevision>>? _saver;
     private readonly HashSet<Page> _lockingPages = new();
+    private Lazy<BaseSaver<TPost, TBaseRevision>>? _saver;
     private ExceptionHandler _exceptionHandler = _ => { };
+
     public delegate void ExceptionHandler(Exception ex);
 
     protected uint Fid { get; } = fid;
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
     protected UserParserAndSaver Users { get; } = users;
+    private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => _saver ??= new(saverFactory(Posts));
 
     public void Dispose()
     {
         GC.SuppressFinalize(this); // https://github.com/dotnet/roslyn-analyzers/issues/4745
         locks.ReleaseRange(lockId, _lockingPages);
     }
-
-    protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
-    protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
 
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
@@ -93,6 +90,41 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         return this;
     }
 
+    public async Task<SaverChangeSet<TPost>?> RetryThenSave
+        (IList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
+    {
+        if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
+            "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
+        await CrawlPages(pages, failureCountSelector, stoppingToken);
+        return SaveCrawled(stoppingToken);
+    }
+
+    public BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>
+        AddExceptionHandler(ExceptionHandler handler)
+    {
+        _exceptionHandler += handler;
+        return this;
+    }
+
+    protected virtual void ThrowIfEmptyUsersEmbedInPosts() { }
+    protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag, Dictionary<PostId, TPost> parsedPostsInResponse) { }
+    protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
+    protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
+
+    private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
+    {
+        var (response, flag) = responseTuple;
+        var postsInResponse = crawler.GetValidPosts(response, flag);
+        parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
+        parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
+        if (flag == CrawlRequestFlag.None)
+        {
+            if (!postsEmbeddedUsers.Any() && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
+            if (postsEmbeddedUsers.Any()) Users.ParseUsers(postsEmbeddedUsers);
+        }
+        PostParseHook(response, flag, parsedPostsInResponse);
+    }
+
     private async Task CrawlPages
         (IList<Page> pages, Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
     {
@@ -114,15 +146,6 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             .Select(page => LogException(
                 async () => (await crawler.CrawlSinglePage(page, stoppingToken)).ForEach(ValidateThenParse),
                 page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));
-    }
-
-    public async Task<SaverChangeSet<TPost>?> RetryThenSave
-        (IList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
-    {
-        if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
-            "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
-        await CrawlPages(pages, failureCountSelector, stoppingToken);
-        return SaveCrawled(stoppingToken);
     }
 
     private async Task<bool> LogException
@@ -169,29 +192,4 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             return true;
         }
     }
-
-    public BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>
-        AddExceptionHandler(ExceptionHandler handler)
-    {
-        _exceptionHandler += handler;
-        return this;
-    }
-
-    private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
-    {
-        var (response, flag) = responseTuple;
-        var postsInResponse = crawler.GetValidPosts(response, flag);
-        parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
-        parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
-        if (flag == CrawlRequestFlag.None)
-        {
-            if (!postsEmbeddedUsers.Any() && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
-            if (postsEmbeddedUsers.Any()) Users.ParseUsers(postsEmbeddedUsers);
-        }
-        PostParseHook(response, flag, parsedPostsInResponse);
-    }
-
-    protected virtual void ThrowIfEmptyUsersEmbedInPosts() { }
-
-    protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag, Dictionary<PostId, TPost> parsedPostsInResponse) { }
 }

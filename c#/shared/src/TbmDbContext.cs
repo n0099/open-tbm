@@ -14,10 +14,10 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
     : DbContext
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
+    private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
+
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
-
-    private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
 
 #pragma warning disable IDE0058 // Expression value is never used
     protected override void OnConfiguring(DbContextOptionsBuilder options)

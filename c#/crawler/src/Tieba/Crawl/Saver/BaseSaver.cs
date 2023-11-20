@@ -11,18 +11,17 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
     where TPost : class, IPost
     where TBaseRevision : class, IRevision
 {
+    protected delegate void PostSaveEventHandler();
+    protected event PostSaveEventHandler PostSaveEvent = () => { };
+
+    public virtual FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance =>
+        throw new NotImplementedException();
     public string PostType { get; } = postType;
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);
 
-    public virtual FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance =>
-        throw new NotImplementedException();
-
-    public abstract SaverChangeSet<TPost> SavePosts(CrawlerDbContext db);
-
-    protected delegate void PostSaveEventHandler();
-    protected event PostSaveEventHandler PostSaveEvent = () => { };
     public void OnPostSaveEvent() => PostSaveEvent();
+    public abstract SaverChangeSet<TPost> SavePosts(CrawlerDbContext db);
 
     protected SaverChangeSet<TPost> SavePosts<TRevision>(
         CrawlerDbContext db,

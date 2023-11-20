@@ -6,17 +6,12 @@ namespace tbm.ImagePipeline.Db;
 
 public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>
 {
-    public class ModelCacheKeyFactory : IModelCacheKeyFactory
-    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
-        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
-        public object Create(DbContext context, bool designTime) =>
-            context is ImagePipelineDbContext dbContext
-                ? (context.GetType(), dbContext.Fid, dbContext.Script, designTime)
-                : context.GetType();
-    }
+    public ImagePipelineDbContext(IConfiguration config) : base(config) => (Fid, Script) = (0, "");
+    public ImagePipelineDbContext(IConfiguration config, Fid fid, string script)
+        : base(config) => (Fid, Script) = (fid, script);
+    public delegate ImagePipelineDbContext NewDefault();
+    public delegate ImagePipelineDbContext New(Fid fid, string script);
 
-    private Fid Fid { get; }
-    private string Script { get; }
     public DbSet<ForumScript> ForumScripts => Set<ForumScript>();
     public DbSet<ImageOcrBox> ImageOcrBoxes => Set<ImageOcrBox>();
     public DbSet<ImageOcrLine> ImageOcrLines => Set<ImageOcrLine>();
@@ -24,13 +19,8 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
     public DbSet<ImageFailed> ImageFailed => Set<ImageFailed>();
-
-    public delegate ImagePipelineDbContext NewDefault();
-    public delegate ImagePipelineDbContext New(Fid fid, string script);
-
-    public ImagePipelineDbContext(IConfiguration config) : base(config) => (Fid, Script) = (0, "");
-    public ImagePipelineDbContext(IConfiguration config, Fid fid, string script)
-        : base(config) => (Fid, Script) = (fid, script);
+    private Fid Fid { get; }
+    private string Script { get; }
 
     protected override void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
 
@@ -69,4 +59,13 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
         SplitImageMetadata(e => e.BmpMetadata, "bmp");
     }
 #pragma warning restore IDE0058 // Expression value is never used
+
+    public class ModelCacheKeyFactory : IModelCacheKeyFactory
+    { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
+        // https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
+        public object Create(DbContext context, bool designTime) =>
+            context is ImagePipelineDbContext dbContext
+                ? (context.GetType(), dbContext.Fid, dbContext.Script, designTime)
+                : context.GetType();
+    }
 }

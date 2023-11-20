@@ -6,9 +6,8 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
     : StaticCommonInSavers
     where TBaseRevision : class, IRevision
 {
-    protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
-
     protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
+
     protected virtual Dictionary<Type, RevisionUpsertDelegate>
         RevisionUpsertDelegatesKeyBySplitEntityType => throw new NotImplementedException();
 
@@ -102,6 +101,8 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
             .GroupBy(pair => pair.Key, pair => pair.Value)
             .ForEach(g => RevisionUpsertDelegatesKeyBySplitEntityType[g.Key](db, g));
     }
+
+    protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
 
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)
     {

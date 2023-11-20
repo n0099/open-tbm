@@ -28,6 +28,10 @@ public class ReplyCrawlFacade(
         if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
     }
 
+    protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
+        pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
+            p => p.Pid, p => p.OriginalContents, stoppingToken);
+
     // fill the values for some field of reply from user list which is out of post list
     private static void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<ReplyPost> parsedReplies) =>
         (from reply in parsedReplies
@@ -56,8 +60,4 @@ public class ReplyCrawlFacade(
                 $"Parent thread title \"{newTitle}\" completion for tid {tid} has failed.");
         transaction.Commit();
     }
-
-    protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
-        pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
-            p => p.Pid, p => p.OriginalContents, stoppingToken);
 }

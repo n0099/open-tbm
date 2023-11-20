@@ -1,20 +1,22 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public abstract class BaseCrawler<TResponse, TPostProtoBuf>(ClientRequester requester)
+public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
+{
+    public abstract Exception FillExceptionData(Exception e);
+    public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
+    public abstract TbClient.Page? GetResponsePage(TResponse response);
+    protected abstract RepeatedField<TPostProtoBuf> GetResponsePostList(TResponse response);
+    protected abstract int GetResponseErrorCode(TResponse response);
+    protected abstract IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default);
+
+    public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
+    protected record Request(Task<TResponse> Response, CrawlRequestFlag Flag = CrawlRequestFlag.None);
+}
+public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>(ClientRequester requester)
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
-    protected record Request(Task<TResponse> Response, CrawlRequestFlag Flag = CrawlRequestFlag.None);
-
     protected ClientRequester Requester { get; } = requester;
-
-    public abstract Exception FillExceptionData(Exception e);
-    protected abstract RepeatedField<TPostProtoBuf> GetResponsePostList(TResponse response);
-    protected abstract int GetResponseErrorCode(TResponse response);
-    public abstract TbClient.Page? GetResponsePage(TResponse response);
-    protected abstract IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default);
-    public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
 
     public async Task<Response[]> CrawlSinglePage(Page page, CancellationToken stoppingToken = default) =>
         await Task.WhenAll(GetRequestsForPage(page, stoppingToken)

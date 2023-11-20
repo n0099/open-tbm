@@ -4,11 +4,6 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
     where TPost : class, IPost
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    protected abstract PostId PostIdSelector(TPost post);
-    protected abstract TPost Convert(TPostProtoBuf inPost);
-    protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<User?> outUsers);
-    protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
-
     public void ParsePosts(
         CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
         out Dictionary<PostId, TPost> outPosts, out List<User> outUsers)
@@ -27,4 +22,9 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
         outUsers.AddRange(outNullableUsers.OfType<User>()
             .Where(u => u.CalculateSize() != 0)); // remove empty users
     }
+
+    protected abstract PostId PostIdSelector(TPost post);
+    protected abstract TPost Convert(TPostProtoBuf inPost);
+    protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<User?> outUsers);
+    protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
 }

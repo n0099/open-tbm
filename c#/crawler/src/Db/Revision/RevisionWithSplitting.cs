@@ -5,9 +5,9 @@ public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
 {
     public uint TakenAt { get; set; }
     public ushort? NullFieldsBitMask { get; set; }
-    public virtual bool IsAllFieldsIsNullExceptSplit() => throw new NotImplementedException();
-
     public Dictionary<Type, TBaseRevision> SplitEntities { get; } = new();
+
+    public virtual bool IsAllFieldsIsNullExceptSplit() => throw new NotImplementedException();
 
     protected TValue? GetSplitEntityValue<TSplitEntity, TValue>
         (Func<TSplitEntity, TValue?> valueSelector)

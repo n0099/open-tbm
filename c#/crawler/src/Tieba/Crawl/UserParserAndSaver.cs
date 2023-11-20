@@ -2,17 +2,8 @@ using Uid = System.Int64;
 
 namespace tbm.Crawler.Tieba.Crawl;
 
-public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
-    : CommonInSavers<BaseUserRevision>(logger)
+public partial class UserParserAndSaver
 {
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
-    {
-        nameof(TiebaUser.Name)   => 1,
-        nameof(TiebaUser.Gender) => 1 << 3,
-        nameof(TiebaUser.Icon)   => 1 << 5,
-        _ => 0
-    };
-
     protected override Dictionary<Type, RevisionUpsertDelegate>
         RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
     {
@@ -33,9 +24,17 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
         }
     };
 
-    [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
-    private static partial Regex ExtractPortraitRegex();
-
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
+    {
+        nameof(TiebaUser.Name)   => 1,
+        nameof(TiebaUser.Gender) => 1 << 3,
+        nameof(TiebaUser.Icon)   => 1 << 5,
+        _ => 0
+    };
+}
+public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
+    : CommonInSavers<BaseUserRevision>(logger)
+{
     private static readonly HashSet<Uid> UserIdLocks = new();
     private readonly List<Uid> _savedUsersId = new();
     private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
@@ -130,4 +129,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
     {
         lock (UserIdLocks) if (_savedUsersId.Any()) UserIdLocks.ExceptWith(_savedUsersId);
     }
+
+    [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+    private static partial Regex ExtractPortraitRegex();
 }

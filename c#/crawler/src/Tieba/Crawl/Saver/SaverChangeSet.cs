@@ -4,10 +4,6 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class SaverChangeSet<TPost> where TPost : class, IPost
 {
-    public ReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }
-    public ReadOnlyCollection<TPost> NewlyAdded { get; }
-    public ReadOnlyCollection<TPost> AllAfter { get; }
-
     public SaverChangeSet(
         ICollection<TPost> existingBefore,
         ICollection<TPost> existingAfterAndNewlyAdded,
@@ -25,4 +21,8 @@ public class SaverChangeSet<TPost> where TPost : class, IPost
             .ToList());
         AllAfter = new(existingAfterAndNewlyAdded.ToList());
     }
+
+    public ReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }
+    public ReadOnlyCollection<TPost> NewlyAdded { get; }
+    public ReadOnlyCollection<TPost> AllAfter { get; }
 }

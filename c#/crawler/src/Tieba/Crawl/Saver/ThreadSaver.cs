@@ -20,20 +20,6 @@ public class ThreadSaver(
             _ => false
         }, (_, _, _, _) => false);
 
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
-    {
-        nameof(ThreadPost.StickyType)       => 1,
-        nameof(ThreadPost.TopicType)        => 1 << 1,
-        nameof(ThreadPost.IsGood)           => 1 << 2,
-        nameof(ThreadPost.LatestReplierUid) => 1 << 4,
-        nameof(ThreadPost.ReplyCount)       => 1 << 5,
-        nameof(ThreadPost.ShareCount)       => 1 << 7,
-        nameof(ThreadPost.AgreeCount)       => 1 << 8,
-        nameof(ThreadPost.DisagreeCount)    => 1 << 9,
-        nameof(ThreadPost.Geolocation)      => 1 << 10,
-        _ => 0
-    };
-
     protected override Dictionary<Type, RevisionUpsertDelegate>
         RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
     {
@@ -48,4 +34,18 @@ public class ThreadSaver(
         SavePosts(db, th => th.Tid,
             th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
             PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
+
+    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
+    {
+        nameof(ThreadPost.StickyType)       => 1,
+        nameof(ThreadPost.TopicType)        => 1 << 1,
+        nameof(ThreadPost.IsGood)           => 1 << 2,
+        nameof(ThreadPost.LatestReplierUid) => 1 << 4,
+        nameof(ThreadPost.ReplyCount)       => 1 << 5,
+        nameof(ThreadPost.ShareCount)       => 1 << 7,
+        nameof(ThreadPost.AgreeCount)       => 1 << 8,
+        nameof(ThreadPost.DisagreeCount)    => 1 << 9,
+        nameof(ThreadPost.Geolocation)      => 1 << 10,
+        _ => 0
+    };
 }
