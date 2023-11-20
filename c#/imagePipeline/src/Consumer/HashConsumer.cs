@@ -3,7 +3,7 @@ using Size = OpenCvSharp.Size;
 
 namespace tbm.ImagePipeline.Consumer;
 
-public class HashConsumer : MatrixConsumer, IDisposable
+public sealed class HashConsumer : MatrixConsumer, IDisposable
 {
     private readonly FailedImageHandler _failedImageHandler;
     private readonly Dictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;

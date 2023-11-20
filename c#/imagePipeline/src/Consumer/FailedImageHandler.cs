@@ -21,8 +21,8 @@ public class FailedImageHandler(ILogger<FailedImageHandler> logger, Cancellation
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Exception: ");
             var imageId = imageIdSelector(item);
+            logger.LogError(e, "Exception for image {}: ", imageId);
             _failedImages.Add(new() {ImageId = imageId, Exception = e.ToString()});
             return imageId;
         }

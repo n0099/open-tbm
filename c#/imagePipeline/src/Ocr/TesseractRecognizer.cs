@@ -2,7 +2,7 @@ using OpenCvSharp.Text;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public class TesseractRecognizer(IConfiguration config, string script) : IDisposable
+public sealed class TesseractRecognizer(IConfiguration config, string script) : IDisposable
 {
     public delegate TesseractRecognizer New(string script);
 

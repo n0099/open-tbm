@@ -28,7 +28,11 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
     protected UserParserAndSaver Users { get; } = users;
 
-    public void Dispose() => locks.ReleaseRange(lockId, _lockingPages);
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this); // https://github.com/dotnet/roslyn-analyzers/issues/4745
+        locks.ReleaseRange(lockId, _lockingPages);
+    }
 
     protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
     protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }

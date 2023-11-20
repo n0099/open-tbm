@@ -69,7 +69,7 @@ public class ImageBatchConsumingWorker(
 
             if (!failedImagesId.Any()) return;
             UpdateImagesInReply(setter, failedImagesId);
-            logger.LogWarning("Failed to {} for {} image(s): [{}]",
+            logger.LogError("Failed to {} for {} image(s): [{}]",
                 consumerType, failedImagesId.Count, string.Join(",", failedImagesId));
         }
 
@@ -199,7 +199,7 @@ public class ImageBatchConsumingWorker(
             if (failedImagesId.Any())
             {
                 updateImageInReplyAsFailed(failedImagesId);
-                logger.LogWarning("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
+                logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                     script, fid, failedImagesId.Count, string.Join(",", failedImagesId));
             }
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",

@@ -1,6 +1,6 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public class QrCodeConsumer : MatrixConsumer, IDisposable
+public sealed class QrCodeConsumer : MatrixConsumer, IDisposable
 {
     private readonly FailedImageHandler _failedImageHandler;
     private readonly WeChatQRCode _qrCode;

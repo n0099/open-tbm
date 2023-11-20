@@ -4,7 +4,7 @@ using Sdcb.PaddleOCR.Models.Online;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public class PaddleOcrRecognizerAndDetector : IDisposable
+public sealed class PaddleOcrRecognizerAndDetector : IDisposable
 {
     private readonly IConfigurationSection _config;
     private readonly FailedImageHandler _failedImageHandler;
