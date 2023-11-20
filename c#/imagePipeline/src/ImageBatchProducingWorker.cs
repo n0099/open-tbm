@@ -14,6 +14,7 @@ public class ImageBatchProducingWorker(
     private int InterlaceBatchCount => _config.GetValue("InterlaceBatchCount", 1);
     private int InterlaceBatchIndex => _config.GetValue("InterlaceBatchIndex", 0);
     private bool StartFromLatestSuccessful => _config.GetValue("StartFromLatestSuccessful", false);
+    private bool AllowPartiallyConsumed => _config.GetValue("AllowPartiallyConsumed", false);
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
@@ -66,6 +67,8 @@ public class ImageBatchProducingWorker(
                         : !db.ImageMetadata.Select(e => e.ImageId).Contains(image.ImageId)
                     orderby image.ImageId
                     select image)
+                .Where(i => AllowPartiallyConsumed
+                            || !(i.MetadataConsumed || i.HashConsumed || i.QrCodeConsumed || i.OcrConsumed))
                 .Take(ProduceImageBatchSize * PrefetchUnconsumedImagesFactor * InterlaceBatchCount).ToList();
             if (!interlaceBatches.Any()) yield break;
             lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;

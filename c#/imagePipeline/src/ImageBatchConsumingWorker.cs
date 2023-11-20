@@ -46,8 +46,8 @@ public class ImageBatchConsumingWorker(
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
         var imagesInReply = imagesWithBytes.Select(i => i.ImageInReply).ToList();
-        void UpdateImagesInReply(Action<ImageInReply> setter, IEnumerable<ImageId> imagesIdToChange) =>
-            imagesInReply.IntersectBy(imagesIdToChange, i => i.ImageId).ForEach(setter);
+        void UpdateImagesInReply(Action<ImageInReply> setter, IEnumerable<ImageId> imagesIdToUpdate) =>
+            imagesInReply.IntersectBy(imagesIdToUpdate, i => i.ImageId).ForEach(setter);
 
         var imagesId = string.Join(",", imagesInReply.Select(i => i.ImageId));
         logger.LogTrace("Start to consume {} image(s): [{}]", imagesWithBytes.Count, imagesId);
@@ -57,13 +57,13 @@ public class ImageBatchConsumingWorker(
                 sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
 
         void ConsumeConsumer<T>(
-            IEnumerable<T> images, Action<ImageInReply> setter,
+            Action<ImageInReply> consumedSetter, IEnumerable<T> images,
             IConsumer<T> consumer, string consumerType)
         {
             sw.Restart();
             var consumedImagesId = consumer.Consume(db, images, stoppingToken);
             LogStopwatch(consumerType);
-            UpdateImagesInReply(setter, consumedImagesId.Consumed);
+            UpdateImagesInReply(consumedSetter, consumedImagesId.Consumed);
 
             var failedImagesId = consumedImagesId.Failed.ToList();
             if (!failedImagesId.Any()) return;
@@ -71,7 +71,8 @@ public class ImageBatchConsumingWorker(
                 consumerType, failedImagesId.Count, string.Join(",", failedImagesId));
         }
 
-        ConsumeConsumer(imagesWithBytes, i => i.MetadataConsumed = true,
+        ConsumeConsumer(i => i.MetadataConsumed = true,
+            imagesWithBytes.Where(i => !i.ImageInReply.MetadataConsumed),
             scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
         var failedImageHandler = scope1.Resolve<FailedImageHandler>();
@@ -81,19 +82,26 @@ public class ImageBatchConsumingWorker(
             .Rights().SelectMany(i => i).ToList();
         try
         {
-            ConsumeConsumer(imageKeysWithMatrix, i => i.HashConsumed = true,
+            IEnumerable<ImageKeyWithMatrix> ExceptConsumed
+                (Func<ImageInReply, bool> selector) => imageKeysWithMatrix
+                .ExceptBy(imagesInReply.Where(selector)
+                    .Select(i => i.ImageId), i => i.ImageId);
+            ConsumeConsumer(i => i.HashConsumed = true,
+                ExceptConsumed(i => i.HashConsumed),
                 scope1.Resolve<HashConsumer>(), "calculate hash");
-            ConsumeConsumer(imageKeysWithMatrix, i => i.QrCodeConsumed = true,
+            ConsumeConsumer(i => i.QrCodeConsumed = true,
+                ExceptConsumed(i => i.QrCodeConsumed),
                 scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
             await ConsumeOcrConsumer(consumedImagesId =>
                     UpdateImagesInReply(i => i.OcrConsumed = true, consumedImagesId),
-                scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(),
-                db.ForumScripts, imageKeysWithMatrix, stoppingToken);
+                ExceptConsumed(i => i.OcrConsumed).ToList(),
+                scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
         }
         finally
         {
             imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
         }
+
         failedImageHandler.SaveFailedImages(db);
         db.UpdateRange(imagesInReply);
         _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
@@ -148,11 +156,11 @@ public class ImageBatchConsumingWorker(
 
     private async Task ConsumeOcrConsumer(
         Action<IEnumerable<ImageId>> markImageInReplyAsConsumed,
+        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         ILifetimeScope scope,
         DbConnection parentConnection,
         DbTransaction parentTransaction,
         IQueryable<ForumScript> forumScripts,
-        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
     {
         foreach (var scriptsGroupByFid in forumScripts.GroupBy(e => e.Fid, e => e.Script).ToList())
