@@ -171,7 +171,7 @@ public class JointRecognizer(
                 .Select(Either<ImageId, TesseractRecognitionResult>.Right));
     }
 
-    private record CorrelatedTextBoxPair(
+    private sealed record CorrelatedTextBoxPair(
         ImageKey ImageKey, byte PercentageOfIntersection,
         RotatedRect DetectedTextBox, RotatedRect RecognizedTextBox);
 }

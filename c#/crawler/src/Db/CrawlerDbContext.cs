@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using static tbm.Crawler.Db.Revision.ThreadRevision;
 using static tbm.Crawler.Db.Revision.ReplyRevision;
 using static tbm.Crawler.Db.Revision.SubReplyRevision;
+using static tbm.Crawler.Db.Revision.ThreadRevision;
 using static tbm.Crawler.Db.Revision.UserRevision;
 
 namespace tbm.Crawler.Db;

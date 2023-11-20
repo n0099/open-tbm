@@ -1,5 +1,5 @@
-using System.Data.Common;
 using System.Data;
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -50,7 +50,7 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
 
     protected virtual void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) { }
 
-    private class SelectForUpdateCommandInterceptor : DbCommandInterceptor
+    private sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
     { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
         public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
         {

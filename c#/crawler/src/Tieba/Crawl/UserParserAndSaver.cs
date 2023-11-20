@@ -24,6 +24,7 @@ public partial class UserParserAndSaver
         }
     };
 
+    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
         nameof(TiebaUser.Name)   => 1,

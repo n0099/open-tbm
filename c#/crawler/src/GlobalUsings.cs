@@ -1,8 +1,12 @@
+#pragma warning disable SA1209 // Using alias directives should be placed after other using directives
+#pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
+#pragma warning disable SA1211 // Using alias directives should be ordered alphabetically by alias name
 global using System.Collections.Concurrent;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Data;
 global using System.Diagnostics;
+global using System.Diagnostics.CodeAnalysis;
 global using System.Linq.Expressions;
 global using System.Reflection;
 global using System.Text.Json;

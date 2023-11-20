@@ -2,8 +2,11 @@ using System.Runtime.CompilerServices;
 
 namespace tbm.Crawler.Worker;
 
-using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
+#pragma warning disable IDE0065 // Misplaced using directive
+#pragma warning disable SA1135 // Using directives should be qualified
+#pragma warning disable SA1200 // Using directives should be placed correctly
 using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
+using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
 
 public partial class MainCrawlWorker : CyclicCrawlWorker
 {
@@ -98,7 +101,7 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
         return savedThreads;
     }
 
-    private record FidAndName(Fid Fid, string Name);
+    private sealed record FidAndName(Fid Fid, string Name);
 }
 public partial class MainCrawlWorker
 {

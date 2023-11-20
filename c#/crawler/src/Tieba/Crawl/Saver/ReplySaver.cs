@@ -59,6 +59,7 @@ public partial class ReplySaver(
         return changeSet;
     }
 
+    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
         nameof(ReplyPost.IsFold)        => 1 << 2,
@@ -167,5 +168,5 @@ public partial class ReplySaver
         };
     }
 
-    private record UniqueSignature(uint Id, ulong XxHash3);
+    private sealed record UniqueSignature(uint Id, ulong XxHash3);
 }

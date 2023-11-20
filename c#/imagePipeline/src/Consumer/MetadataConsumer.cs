@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Hashing;
 using System.Text.RegularExpressions;
@@ -170,7 +171,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         return ret;
     }
 
-    private class ExifGpsTagValuesParser
+    private sealed class ExifGpsTagValuesParser
     {
         public static DateTime? ParseGpsDateTimeOrNull(Rational[]? timeStamp, string? dateStamp)
         {
@@ -244,7 +245,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         }
     }
 
-    private partial class ExifDateTimeTagValuesParser
+    private sealed partial class ExifDateTimeTagValuesParser
     {
         public static DateTimeAndOffset? ParseExifDateTimeOrNull(string? exifDateTime, string? exifFractionalSeconds)
         { // https://gist.github.com/thanatos/eee17100476a336a711e
@@ -293,6 +294,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
         private static partial Regex ExtractCommonExifDateTimeWithLeadingOrTrailingCharsRegex();
 
+        [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
         private static DateTimeAndOffset? ParseWithoutOffset(string exifDateTime)
         {
             var culture = (DateTimeFormatInfo)CultureInfo.InvariantCulture.DateTimeFormat.Clone();

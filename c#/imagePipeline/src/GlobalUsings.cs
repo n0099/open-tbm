@@ -1,3 +1,4 @@
+#pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
 global using System.ComponentModel.DataAnnotations;
 global using System.Text.Json;
 global using System.Threading.Channels;
@@ -11,7 +12,6 @@ global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 global using OpenCvSharp;
 global using LanguageExt;
-global using LanguageExt.Common;
 global using Polly;
 global using Polly.Extensions.Http;
 global using Polly.Registry;
