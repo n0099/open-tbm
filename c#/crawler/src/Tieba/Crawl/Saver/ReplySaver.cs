@@ -127,6 +127,7 @@ public class ReplySaver(
                 from r in replies
                 from c in r.OriginalContents
                 where c.Type == 3
+
                 // only save image filename without extension that extracted from url by ReplyParser.Convert()
                 where ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
                 select (r.Pid, Image: new ImageInReply
@@ -153,6 +154,7 @@ public class ReplySaver(
         db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
         {
             Pid = t.Pid,
+
             // no need to manually invoke DbContent.AddRange(images) since EF Core will do these chore
             // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
             // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key

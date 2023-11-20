@@ -28,6 +28,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
             o.ReplyCount = inPost.ReplyNum < 0 ? 0 : (uint?)inPost.ReplyNum.NullIfZero(); // rarely respond with -1
             o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
             o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();
+
             // when the thread is livepost or Thread.AgreeNum == 0, the agree field will not exists
             o.AgreeCount = (int?)inPost.Agree?.AgreeNum.NullIfZero() ?? inPost.AgreeNum.NullIfZero();
             o.DisagreeCount = (int?)inPost.Agree?.DisagreeNum.NullIfZero();

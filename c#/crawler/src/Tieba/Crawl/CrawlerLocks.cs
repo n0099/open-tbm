@@ -9,6 +9,7 @@ public class CrawlerLocks : WithLogTrace
         public override string ToString() => $"f{Fid}{(Tid == null ? "" : $" t{Tid}")}{(Pid == null ? "" : $" p{Pid}")}";
     }
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
+
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
     private readonly ILogger<CrawlerLocks> _logger;
@@ -54,6 +55,7 @@ public class CrawlerLocks : WithLogTrace
                 foreach (var page in acquiredPages.ToList()) // iterate on a shallow copy to mutate the original acquiredPages
                 {
                     if (pagesLock.TryAdd(page, now)) continue;
+
                     // when page is locking
                     var lockTimeout = _config.GetValue<Time>("LockTimeoutSec", 300); // 5 minutes;
                     if (pagesLock[page] < now - lockTimeout)

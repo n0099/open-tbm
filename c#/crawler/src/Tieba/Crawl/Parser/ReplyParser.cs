@@ -29,6 +29,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                 c.ShowOriginalBtn = 0;
                 c.IsLongPic = 0;
                 var urlFilename = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
+
                 // only remains the image unique identity at the end of url as "filename", drops domain, path and file extension from url
                 if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com" or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
                     && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
@@ -40,8 +41,10 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
             }
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => Helper.WrapPostContent(inPost.Content));
+
             // AuthorId rarely respond with 0, Author should always be null but we can guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
+
             // value of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
             o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
             o.PostedAt = inPost.Time;

@@ -31,9 +31,9 @@ public class PushAllPostContentsIntoSonicWorker(
         {
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
             var dbWithFid = scope1.Resolve<CrawlerDbContext.New>()(fid);
+            // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
+            // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure
             _ = await dbWithFid.Database.ExecuteSqlRawAsync(
-                // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
-                // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure
                 "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
 
             _ = pusher.Ingest.FlushBucket($"{pusher.CollectionPrefix}replies_content", $"f{fid}");

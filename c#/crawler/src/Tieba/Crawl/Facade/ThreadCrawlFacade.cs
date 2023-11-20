@@ -28,7 +28,8 @@ public class ThreadCrawlFacade(
         var existingUsersId = db.ChangeTracker.Entries<TiebaUser>().Select(ee => ee.Entity.Uid);
         var newLatestRepliers = _latestRepliers
             .ExceptBy(existingUsersId, pair => pair.Key)
-            .Select(pair => pair.Value).ToList();
+            .Select(pair => pair.Value)
+            .ToList();
         if (!newLatestRepliers.Any()) return;
 
         var newlyLockedLatestRepliers = Users.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid));
@@ -60,6 +61,7 @@ public class ThreadCrawlFacade(
             { // replace with more detailed location.name in the 6.0.2 response
                 t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location);
             }
+
             // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
             t.parsed.LatestReplierUid = t.inResponse.LastReplyer?.Uid;
         });
@@ -72,6 +74,7 @@ public class ThreadCrawlFacade(
         Users.ParseUsers(data.UserList);
         Users.ResetUsersIcon();
         ParseLatestRepliers(data.ThreadList);
+
         // remove livepost threads since their real parent forum may not match with current crawling fid
         data.ThreadList.Where(th => th.LivePostType != "")
             .ForEach(th => Posts.TryRemove((Tid)th.Tid, out _));

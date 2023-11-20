@@ -75,6 +75,7 @@ public class AuthorRevisionSaver(string triggeredByPostType)
             .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
             .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
         var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
+
             // filter out revisions with the same DiscoveredAt to prevent duplicate keys
             // when some fields get updated more than one time in a second
             .Where(t => t.Existing.DiscoveredAt != t.NewInPost.DiscoveredAt

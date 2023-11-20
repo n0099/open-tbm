@@ -47,6 +47,7 @@ public abstract class StaticCommonInSavers
                     // its value generated from the first reply within response of reply crawler will be later set by ReplyCrawlFacade.SaveParentThreadTitle()
                     case nameof(ThreadPost.Title)
                         when newValue is ""
+
                              // prevent repeatedly update with different title due to the thread is a multi forum topic thread
                              // thus its title can be vary within the forum and within the thread
                              || (newValue is not "" && oldValue is not ""):
@@ -58,10 +59,12 @@ public abstract class StaticCommonInSavers
                         return true;
                 }
             }
+
             // possible randomly respond with null
             if (whichPostType == typeof(ReplyPost)
                 && propName == nameof(ReplyPost.SignatureId)
                 && newValue is null && oldValue is not null) return true;
+
             // possible rarely respond with the protoBuf default value 0
             if (propName == nameof(IPost.AuthorUid)
                 && newValue is (long)0 && oldValue is not null) return true;

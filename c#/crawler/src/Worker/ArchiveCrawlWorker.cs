@@ -121,6 +121,7 @@ public class ArchiveCrawlWorker(
     {
         var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
         if (savedThreads == null) return savedRepliesKeyByTid;
+
         // some rare thread will have replyNum=0, but contains reply and can be revealed by requesting
         // we choose TO crawl these rare thread's replies for archive since most thread will have replies
         // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
@@ -141,6 +142,7 @@ public class ArchiveCrawlWorker(
         var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
         {
             var (tid, replies) = pair;
+
             // some rare reply will have SubReplyCount=0, but contains sub reply and can be revealed by requesting
             // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
             // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:

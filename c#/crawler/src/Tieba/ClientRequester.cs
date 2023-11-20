@@ -47,6 +47,7 @@ public class ClientRequester(
                 if (!stream2.TryGetBuffer(out var buffer))
                     throw new ObjectDisposedException(nameof(stream2));
                 var responseBody = Encoding.UTF8.GetString(buffer);
+
                 // the invalid protoBuf bytes usually is just a plain html string
                 if (responseBody.Contains("为了保护您的账号安全和最佳的浏览体验，当前业务已经不支持IE8以下浏览器"))
                     throw new TiebaException(shouldRetry: true, shouldSilent: true);
@@ -110,6 +111,7 @@ public class ClientRequester(
         var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
         protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
         var content = new MultipartFormDataContent {protoBufFile};
+
         // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
         var boundary = content.Headers.ContentType?.Parameters.First(header => header.Name == "boundary");
         if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");

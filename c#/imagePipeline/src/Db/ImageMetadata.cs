@@ -71,6 +71,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public string? GpsImgDirectionRef { get; set; }
         public ulong XxHash3 { get; set; }
         public byte[]? RawBytes { get; set; }
+
         // workaround to work with MetadataConsumer.CreateEmbeddedFromProfile()
         // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
         public ICollection<TagName> TagNames { get; set; } = new List<TagName>();

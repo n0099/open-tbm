@@ -82,6 +82,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
         static byte[] GetThumbHashForMatrix(Mat mat)
         {
             using var rgbaMat = new Mat(new Size(mat.Width, mat.Height), MatType.CV_8UC4);
+
             // https://stackoverflow.com/questions/67550415/in-place-rgb-bgr-color-conversion-is-slower-in-opencv
             Cv2.CvtColor(mat, rgbaMat, ColorConversionCodes.BGRA2RGBA);
             return rgbaMat.GetArray(out Vec4b[] pixels)

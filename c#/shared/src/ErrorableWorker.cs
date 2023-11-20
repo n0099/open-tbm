@@ -20,6 +20,7 @@ public abstract class ErrorableWorker(
         {
             await Task.Yield(); // https://blog.stephencleary.com/2020/05/backgroundservice-gotcha-startup.html
             await DoWork(stoppingToken);
+
             // https://blog.stephencleary.com/2020/06/backgroundservice-gotcha-application-lifetime.html
             if (shouldExitOnFinish) applicationLifetime.StopApplication();
         }
@@ -31,6 +32,7 @@ public abstract class ErrorableWorker(
         catch (Exception e)
         {
             logger.LogError(e, "Exception");
+
             // https://stackoverflow.com/questions/68387710/exit-the-application-with-exit-code-from-async-thread
             Environment.ExitCode = 1;
             if (shouldExitOnException) applicationLifetime.StopApplication();

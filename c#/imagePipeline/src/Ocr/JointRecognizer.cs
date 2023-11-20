@@ -72,10 +72,12 @@ public class JointRecognizer(
                 .Select(result =>
                 {
                     var rect = result.TextBox.BoundingRect();
+
                     // align to a virtual grid to prevent a single line that splitting into multiple text boxes
                     // which have similar but different values of y coordinates get rearranged in a wrong order
                     // https://github.com/sdcb/PaddleSharp/issues/55#issuecomment-1607067510
                     var alignedY = (double)rect.Y / GridSizeToMergeBoxesIntoSingleLine;
+
                     // the bounding rect for a rotated rect might be outside the original image
                     // so the y-axis coordinate of its top-left point can be negative
                     return (result, rect.X, alignedY: alignedY < 0 ? 0 : alignedY.RoundToUshort());
@@ -111,6 +113,7 @@ public class JointRecognizer(
             return (areas.Where(area => !double.IsNaN(area)).Average() * 100).RoundToByte();
         }
         var uniqueRecognizedResults = recognizedResultsViaPaddleOcr
+
             // not grouping by result.Script and ImageId to remove duplicated text boxes across all scripts of an image
             .GroupBy(result => result.ImageKey)
             .SelectMany(g => g.DistinctBy(result => result.TextBox));

@@ -39,6 +39,7 @@ public class ThreadLateCrawlerAndSaver(
                 {
                     {"kz", tid.ToString()},
                     {"pn", "1"},
+
                     // rn have to be at least 2
                     // since response will always be error code 29 and msg "这个楼层可能已被删除啦，去看看其他贴子吧" with rn=1
                     {"rn", "2"}
@@ -84,8 +85,10 @@ public class ThreadLateCrawlerAndSaver(
                         }
                         : throw new TiebaException(shouldRetry: false,
                             "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
-                    : null; // silent fail without any retry since the field `json.thread.thread_info`
-                            // might not exists in current and upcoming responses
+
+                    // silent fail without any retry since the field `json.thread.thread_info`
+                    // might not exists in current and upcoming responses
+                    : null;
             }
             catch (Exception e) when (e is not TiebaException)
             {

@@ -28,11 +28,11 @@ public class ReplyCrawlFacade(
         if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
     }
 
+    // fill the values for some field of reply from user list which is out of post list
     private static void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<ReplyPost> parsedReplies) =>
         (from reply in parsedReplies
             join user in users on reply.AuthorUid equals user.Uid
             select (reply, user))
-        // fill the values for some field of reply from user list which is out of post list
         .ForEach(t => t.reply.AuthorExpGrade = (byte)t.user.LevelId);
 
     private void SaveParentThreadTitle(IEnumerable<Reply> replies)
@@ -43,6 +43,7 @@ public class ReplyCrawlFacade(
 
         var parentThreadTitle = (from t in db.Threads.AsNoTracking().ForUpdate()
             where t.Tid == tid select t.Title).SingleOrDefault();
+
         // thread title will be empty string as a fallback when the thread author haven't write title for this thread
         if (parentThreadTitle != "") return;
         var newTitle = replies.FirstOrDefault(r => r.Floor == 1)?.Title;

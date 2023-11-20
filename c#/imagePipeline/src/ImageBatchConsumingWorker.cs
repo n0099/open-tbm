@@ -30,6 +30,7 @@ public class ImageBatchConsumingWorker(
                 logger.LogError(e, "Exception");
             }
             if (!(channel.Reader.Completion.IsCompleted || channel.Reader.TryPeek(out _)))
+
                 // https://stackoverflow.com/questions/72972469/which-is-the-fastest-way-to-tell-if-a-channelt-is-empty
                 logger.LogWarning("Consumer is idle due to no image batch getting produced, configure \"ImageBatchProducer.MaxBufferedImageBatches\""
                                   + " to a larger value then restart will allow more image batches to get downloaded before consume");
@@ -119,6 +120,7 @@ public class ImageBatchConsumingWorker(
     {
         var imageBytes = imageWithBytes.Bytes;
         var imageId = imageWithBytes.ImageInReply.ImageId;
+
         // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
         var imageMat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
         if (!imageMat.Empty())
@@ -175,6 +177,7 @@ public class ImageBatchConsumingWorker(
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(scriptsGroupByFid.Key, "");
             db.Database.SetDbConnection(parentConnection);
             _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
+
             // try to know which fid owns current image batch
             var imagesInCurrentFid = imageKeysWithMatrix
                 .IntersectBy(
@@ -193,6 +196,7 @@ public class ImageBatchConsumingWorker(
         {
             await using var scope1 = scope.BeginLifetimeScope();
             var db = scope1.Resolve<ImagePipelineDbContext.New>()(fid, script);
+
             // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
             db.Database.SetDbConnection(parentConnection);
             _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);

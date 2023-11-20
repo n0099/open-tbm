@@ -29,9 +29,9 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
     private int ConfidenceThreshold => _config.GetValue("ConfidenceThreshold", 20);
     private float AspectRatioThresholdToConsiderAsVertical => _config.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
 
+    // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
+    // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
     private OCRTesseract CreateTesseract(string scripts, bool isVertical = false) =>
-        // https://github.com/shimat/opencvsharp/issues/873#issuecomment-1458868153
-        // https://pyimagesearch.com/2021/11/15/tesseract-page-segmentation-modes-psms-explained-how-to-improve-your-ocr-accuracy/
         OCRTesseract.Create(_config.GetValue("DataPath", "") ?? "",
             scripts, charWhitelist: "", oem: 1, psmode: isVertical ? 5 : 7);
 
@@ -51,12 +51,15 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
     ) => textBoxes.Select(textBox =>
     {
         stoppingToken.ThrowIfCancellationRequested();
+
         // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
         var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
+
         // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
         var mat = new Mat(originalMatrix, new Rect(new(), originalMatrix.Size()).Intersect(textBox.BoundingRect()));
 
         if (mat.Channels() != 1) Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
+
         // https://docs.opencv.org/4.7.0/d7/d4d/tutorial_py_thresholding.html
         // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
         _ = Cv2.Threshold(mat, mat, thresh: 0, maxval: 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
@@ -79,6 +82,7 @@ public sealed class TesseractRecognizer(IConfiguration config, string script) : 
             && bottomLeft.Y == bottomRight.Y) return 0;
         var xAxisDiff = bottomLeft.X - topLeft.X;
         var yAxisDiff = bottomLeft.Y - topLeft.Y;
+
         // https://www.calculator.net/triangle-calculator.html?vc=&vx=4&vy=&va=90&vz=1&vb=&angleunits=d&x=53&y=29
         return (float)(Math.Atan2(xAxisDiff, yAxisDiff) * 180 / Math.PI); // radians to degrees
     }

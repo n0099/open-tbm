@@ -333,11 +333,11 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
         private static partial Regex ExtractExifDateTimePartsRegex();
 
+        // https://stackoverflow.com/questions/5208607/parsing-times-above-24-hours-in-c-sharp/76483705#76483705
+        // https://en.wikipedia.org/wiki/Date_and_time_notation_in_Japan#Time
+        // https://ja.wikipedia.org/wiki/30%E6%99%82%E9%96%93%E5%88%B6
+        // e.g. 2019:04:26 24:08:02 or malformed 2019:04:30 11:04:95
         private static DateTimeAndOffset? ParseWithOverflowedTimeParts(string exifDateTime) =>
-            // https://stackoverflow.com/questions/5208607/parsing-times-above-24-hours-in-c-sharp/76483705#76483705
-            // https://en.wikipedia.org/wiki/Date_and_time_notation_in_Japan#Time
-            // https://ja.wikipedia.org/wiki/30%E6%99%82%E9%96%93%E5%88%B6
-            // e.g. 2019:04:26 24:08:02 or malformed 2019:04:30 11:04:95
             ExtractExifDateTimePartsRegex().Match(exifDateTime) is not {Success: true} m
                 ? null
                 : new(new DateTime(
@@ -353,9 +353,11 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         {
             if (!long.TryParse(exifDateTime, NumberStyles.Integer,
                     CultureInfo.InvariantCulture, out var parsedUnixTimestamp)) return null;
+
             // accepting from 1973-03-03 17:46:40.000 to 2286-11-21 01:46:39.999 when the input contains no leading zeros
             if (exifDateTime.Length is >= 12 and <= 13) // e.g. 1556068385188
                 return new(DateTimeOffset.FromUnixTimeMilliseconds(parsedUnixTimestamp).DateTime, "+00:00");
+
             // accepting from 1973-03-03 17:46:40 to 2286-11-21 01:46:39 when the input contains no leading zeros
             if (exifDateTime.Length is >= 9 and <= 10) // e.g. 1373363130
                 return new(DateTimeOffset.FromUnixTimeSeconds(parsedUnixTimestamp).DateTime, "+00:00");

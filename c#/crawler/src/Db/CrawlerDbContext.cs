@@ -78,6 +78,7 @@ public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFacto
 #pragma warning restore IDE0058 // Expression value is never used
 
     public void TimestampingEntities() =>
+
         // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
         ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
         {

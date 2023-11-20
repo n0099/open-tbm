@@ -35,6 +35,7 @@ public sealed class SonicPusher : IDisposable
                 .Where(c => c.Type != 2) // filter out alt text of emoticons
                 .Select(c => c.Text))
             .Trim()
+
             // https://github.com/spikensbror-dotnet/nsonic/pull/10
             .Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\"");
         if (contentTexts == "") return GetElapsedMs();

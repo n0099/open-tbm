@@ -16,8 +16,10 @@ public class SubReplySaver(
         { // always ignore updates on iconinfo due to some rare user will show some extra icons
             // compare to reply response in the response of sub reply
             nameof(TiebaUser.Icon) => true,
+
             // FansNickname in sub reply response will always be null
             nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,
+
             // DisplayName in users embedded in sub replies from response will be the legacy nick name
             nameof(TiebaUser.DisplayName) => true,
             _ => false

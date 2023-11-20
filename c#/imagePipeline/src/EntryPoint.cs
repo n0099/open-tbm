@@ -36,6 +36,7 @@ public class EntryPoint : BaseEntryPoint
                     "Fetch for image {} failed due to {} after {} retries, still trying...",
                     imageUrlFilename, failReason, tryCount);
             });
+
         // https://stackoverflow.com/questions/69749167/polly-handletransienthttperror-not-catching-httprequestexception/69750053#69750053
         AddPolicyToRegistry(registry, imageRequesterConfig,
             Policy<byte[]>.Handle<HttpRequestException>(),
@@ -105,6 +106,7 @@ public class EntryPoint : BaseEntryPoint
                         onRetryLogDelegate(logger, imageUrlFilename, outcome, tryCount);
                     }
                 }),
+
             // timeout for each retry, https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
             Policy.TimeoutAsync<T>(imageRequesterConfig.GetValue("TimeoutMs", 3000))));
 }

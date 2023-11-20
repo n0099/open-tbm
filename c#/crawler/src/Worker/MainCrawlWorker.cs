@@ -8,6 +8,7 @@ using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>
 public class MainCrawlWorker : CyclicCrawlWorker
 {
     private readonly ILifetimeScope _scope0;
+
     // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
     private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
 
@@ -20,6 +21,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
     ) : base(logger, applicationLifetime, config)
     {
         _scope0 = scope0;
+
         // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
         _ = locks["thread"];
         _ = locks["threadLate"];
@@ -58,6 +60,7 @@ public class MainCrawlWorker : CyclicCrawlWorker
         Page crawlingPage = 0;
         await using var scope1 = _scope0.BeginLifetimeScope();
         if (!_latestReplyPostedAtCheckpointCache.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
+
             // get the largest value of field latestReplyPostedAt in all stored threads of this forum
             // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
             // https://stackoverflow.com/questions/341264/max-or-default

@@ -70,6 +70,7 @@ public class ForumModeratorRevisionCrawlWorker(
                 DiscoveredAt = now,
                 Fid = fid,
                 Portrait = g.Key,
+
                 // user can serve as multiple moderators, so join these types with commas
                 // the https://en.wikipedia.org/wiki/Order_of_precedence is same with div.bawu_single_type in the response HTML
                 ModeratorTypes = string.Join(',', g.Select(t => t.Type))
