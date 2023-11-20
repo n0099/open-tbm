@@ -1,0 +1,14 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <PathMap>$(MSBuildProjectDirectory)=/</PathMap>
+    </PropertyGroup>
+    <ItemGroup>
+        <AdditionalFiles Include="$(MSBuildThisFileDirectory)\stylecop.json" />
+        <Compile Include="..\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
+    </ItemGroup>
+</Project>
