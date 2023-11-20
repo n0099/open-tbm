@@ -34,10 +34,10 @@ public class JointRecognizer(
     public IEnumerable<Either<ImageId, IRecognitionResult>> RecognizeMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
-        var recognizedEithersViaPaddleOcr =
-            _paddleOcrRecognizerAndDetector.RecognizeMatrices(matricesKeyByImageKey, stoppingToken).ToList();
-        var detectedEithers =
-            _paddleOcrRecognizerAndDetector.DetectMatrices(matricesKeyByImageKey, stoppingToken).ToList();
+        var recognizedEithersViaPaddleOcr = _paddleOcrRecognizerAndDetector
+            .RecognizeMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken).ToList();
+        var detectedEithers = _paddleOcrRecognizerAndDetector
+            .DetectMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken).ToList();
         var recognizedResultsViaPaddleOcr =
             recognizedEithersViaPaddleOcr.Rights().SelectMany(i => i).ToList();
         var recognizedEithersViaTesseract = RecognizeMatricesViaTesseract(

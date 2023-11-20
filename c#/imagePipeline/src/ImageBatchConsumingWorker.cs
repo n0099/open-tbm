@@ -38,8 +38,10 @@ public class ImageBatchConsumingWorker(
 
     private async Task Consume(IReadOnlyCollection<ImageWithBytes> imagesWithBytes, CancellationToken stoppingToken = default)
     {
-        await using var scope1 = scope0.BeginLifetimeScope("ImageBatchConsumingWorker",
-            b => b.Register(_ => stoppingToken).AsSelf());
+        await using var scope1 = scope0.BeginLifetimeScope(builder =>
+            builder.RegisterType<FailedImageHandler>()
+                .WithParameter(new NamedParameter("stoppingToken", stoppingToken))
+                .SingleInstance()); // only in this and nested scopes
         var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 

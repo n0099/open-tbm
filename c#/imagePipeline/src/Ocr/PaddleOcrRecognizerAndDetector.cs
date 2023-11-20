@@ -7,16 +7,15 @@ namespace tbm.ImagePipeline.Ocr;
 public sealed class PaddleOcrRecognizerAndDetector : IDisposable
 {
     private readonly IConfigurationSection _config;
-    private readonly FailedImageHandler _failedImageHandler;
     private readonly string _script;
     private PaddleOcrAll? _ocr;
 
     public delegate PaddleOcrRecognizerAndDetector New(string script);
 
-    public PaddleOcrRecognizerAndDetector(IConfiguration config, FailedImageHandler failedImageHandler, string script)
+    public PaddleOcrRecognizerAndDetector(IConfiguration config, string script)
     {
         _config = config.GetSection("OcrConsumer:PaddleOcr");
-        (_failedImageHandler, _script) = (failedImageHandler, script);
+        _script = script;
         Settings.GlobalModelDirectory =
             _config.GetValue("ModelPath", "./PaddleOcrModels") ?? "./PaddleOcrModels";
     }
@@ -45,11 +44,13 @@ public sealed class PaddleOcrRecognizerAndDetector : IDisposable
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 
-    public IEnumerable<Either<ImageId, IEnumerable<PaddleOcrRecognitionResult>>> RecognizeMatrices
-        (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
+    public IEnumerable<Either<ImageId, IEnumerable<PaddleOcrRecognitionResult>>> RecognizeMatrices(
+        Dictionary<ImageKey, Mat> matricesKeyByImageKey,
+        FailedImageHandler failedImageHandler,
+        CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
-        return _failedImageHandler.TrySelect(matricesKeyByImageKey,
+        return failedImageHandler.TrySelect(matricesKeyByImageKey,
             pair => pair.Key.ImageId,
             pair =>
             {
@@ -63,11 +64,13 @@ public sealed class PaddleOcrRecognizerAndDetector : IDisposable
 
     public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 
-    public IEnumerable<Either<ImageId, IEnumerable<DetectionResult>>> DetectMatrices
-        (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
+    public IEnumerable<Either<ImageId, IEnumerable<DetectionResult>>> DetectMatrices(
+        Dictionary<ImageKey, Mat> matricesKeyByImageKey,
+        FailedImageHandler failedImageHandler,
+        CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
-        return _failedImageHandler.TrySelect(matricesKeyByImageKey,
+        return failedImageHandler.TrySelect(matricesKeyByImageKey,
             pair => pair.Key.ImageId,
             pair =>
             {
