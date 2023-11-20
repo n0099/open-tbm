@@ -10,7 +10,7 @@ namespace tbm.Shared;
 
 public abstract class BaseEntryPoint
 {
-    public async Task Main(string[] args)
+    public async Task Run(string[] args)
     {
         var logger = LogManager.GetCurrentClassLogger();
         AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>

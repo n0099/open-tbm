@@ -74,9 +74,8 @@ public partial class ReplySaver(
                 from r in replies
                 from c in r.OriginalContents
                 where c.Type == 3
-
-                // only save image filename without extension that extracted from url by ReplyParser.Convert()
-                where ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
+                where // only save image filename without extension that extracted from url by ReplyParser.Convert()
+                    ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
                 select (r.Pid, Image: new ImageInReply
                 {
                     UrlFilename = c.OriginSrc,
@@ -136,7 +135,7 @@ public partial class ReplySaver
         if (!signatures.Any()) return () => { };
 
         var uniqueSignatures = signatures
-            .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList();
+            .ConvertAll(s => new UniqueSignature(s.SignatureId, s.XxHash3));
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking().ForUpdate()
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)

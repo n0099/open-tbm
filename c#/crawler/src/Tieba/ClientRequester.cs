@@ -13,8 +13,8 @@ public class ClientRequester(
     public const string LegacyClientApiDomain = "http://c.tieba.baidu.com";
     public const string ClientApiDomain = "http://tiebac.baidu.com";
 
-    private readonly IConfigurationSection _config = config.GetSection("ClientRequester");
     private static readonly Random Rand = new();
+    private readonly IConfigurationSection _config = config.GetSection("ClientRequester");
 
     public async Task<JsonElement> RequestJson
         (string url, string clientVersion, Dictionary<string, string> postParam, CancellationToken stoppingToken = default) =>

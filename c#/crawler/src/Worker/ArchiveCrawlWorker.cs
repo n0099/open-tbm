@@ -103,7 +103,7 @@ public class ArchiveCrawlWorker(
     {
         await using var scope1 = scope0.BeginLifetimeScope();
         return (await scope1.Resolve<ThreadArchiveCrawler.New>()(_forumName).CrawlSinglePage(1, stoppingToken))
-            .Select(response => response.Result.Data.Page.TotalPage).Max();
+            .Max(response => response.Result.Data.Page.TotalPage);
     }
 
     private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)

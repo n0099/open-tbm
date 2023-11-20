@@ -103,7 +103,6 @@ public partial class EntryPoint
                         onRetryLogDelegate(logger, imageUrlFilename, outcome, tryCount);
                     }
                 }),
-
-            // timeout for each retry, https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
-            Policy.TimeoutAsync<T>(imageRequesterConfig.GetValue("TimeoutMs", 3000))));
+            Policy.TimeoutAsync<T>(// timeout for each retry https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
+                imageRequesterConfig.GetValue("TimeoutMs", 3000))));
 }

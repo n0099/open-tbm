@@ -1,1 +1,1 @@
-await new tbm.ImagePipeline.EntryPoint().Main(args);
+await new tbm.ImagePipeline.EntryPoint().Run(args);

@@ -43,8 +43,10 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
     {
         await using var scope1 = _scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
-        var forums = (from f in db.Forums.AsNoTracking()
-            where f.IsCrawling select new FidAndName(f.Fid, f.Name)).ToList();
+        var forums = (
+            from f in db.Forums.AsNoTracking()
+            where f.IsCrawling
+            select new FidAndName(f.Fid, f.Name)).ToList();
         var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
         foreach (var fidAndName in forums)
         {
@@ -105,43 +107,6 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
 }
 public partial class MainCrawlWorker
 {
-    private static Action<Exception> SaveThreadMissingFirstReply
-        (ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
-    {
-        if (ex is not EmptyPostListException) return;
-        var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(th => th.Tid == tid)).FirstOrDefault();
-        if (parentThread == null) return;
-
-        var newEntity = new ThreadMissingFirstReply
-        {
-            Tid = tid,
-            Pid = parentThread.FirstReplyPid,
-            Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
-                () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
-            DiscoveredAt = Helper.GetNowTimestamp()
-        };
-        if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
-
-        var db = scope.Resolve<CrawlerDbContext.New>()(fid);
-        using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-        var firstReply = from r in db.Replies.AsNoTracking()
-            where r.Pid == parentThread.FirstReplyPid select r.Pid;
-        if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
-
-        var existingEntity = db.ThreadMissingFirstReplies.AsTracking().ForUpdate()
-            .SingleOrDefault(e => e.Tid == tid);
-        if (existingEntity == null) _ = db.ThreadMissingFirstReplies.Add(newEntity);
-        else
-        {
-            if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
-            if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
-            existingEntity.DiscoveredAt = newEntity.DiscoveredAt;
-        }
-
-        _ = db.SaveChanges();
-        transaction.Commit();
-    };
-
     public static async Task<SavedRepliesKeyByTid> CrawlReplies(
         SavedThreadsList savedThreads, Fid fid,
         ILifetimeScope scope, CancellationToken stoppingToken = default)
@@ -171,6 +136,46 @@ public partial class MainCrawlWorker
         }));
         return savedRepliesKeyByTid;
     }
+
+    private static Action<Exception> SaveThreadMissingFirstReply
+        (ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
+    {
+        if (ex is not EmptyPostListException) return;
+        var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(th => th.Tid == tid)).FirstOrDefault();
+        if (parentThread == null) return;
+
+        var newEntity = new ThreadMissingFirstReply
+        {
+            Tid = tid,
+            Pid = parentThread.FirstReplyPid,
+            Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
+                () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
+            DiscoveredAt = Helper.GetNowTimestamp()
+        };
+        if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
+
+        var db = scope.Resolve<CrawlerDbContext.New>()(fid);
+        using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+        var firstReply = from r in db.Replies.AsNoTracking()
+            where r.Pid == parentThread.FirstReplyPid select r.Pid;
+        if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
+
+        var existingEntity = db.ThreadMissingFirstReplies.AsTracking().ForUpdate()
+            .SingleOrDefault(e => e.Tid == tid);
+        if (existingEntity == null)
+        {
+            _ = db.ThreadMissingFirstReplies.Add(newEntity);
+        }
+        else
+        {
+            if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
+            if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
+            existingEntity.DiscoveredAt = newEntity.DiscoveredAt;
+        }
+
+        _ = db.SaveChanges();
+        transaction.Commit();
+    };
 
     private async Task<SavedRepliesKeyByTid> CrawlReplies
         (SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>

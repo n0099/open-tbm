@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -14,12 +15,14 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
     : DbContext
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
+    [SuppressMessage("Major Code Smell", "S2743:Static fields should not be used in generic types")]
     private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
 
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
 #pragma warning disable IDE0058 // Expression value is never used
+#pragma warning disable S927 // Parameter names should match base declaration and other partial definitions
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         var connectionStr = config.GetConnectionString("Main");
@@ -46,6 +49,7 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
 
     protected void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
         b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
+#pragma warning restore S927 // Parameter names should match base declaration and other partial definitions
 #pragma warning restore IDE0058 // Expression value is never used
 
     protected virtual void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) { }

@@ -33,11 +33,15 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                 // only remains the image unique identity at the end of url as "filename", drops domain, path and file extension from url
                 if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com" or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
                     && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
+                {
                     c.OriginSrc = urlFilename;
+                }
                 else if (uri.Host is not "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
+                {
                     logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
                                           + " instead of common domains of tieba image hosting service, content={}",
                         o.Pid, c.OriginSrc, Helper.UnescapedJsonSerialize(c));
+                }
             }
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => Helper.WrapPostContent(inPost.Content));

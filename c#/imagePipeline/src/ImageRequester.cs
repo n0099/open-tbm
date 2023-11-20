@@ -18,16 +18,20 @@ public class ImageRequester(
         if (_config.GetValue("LogTrace", false))
         {
             if (expectedByteSize == 0)
+            {
                 logger.LogTrace("Requesting image {} with id {} and not expecting determined byte size",
                     urlFilename, imageId);
+            }
             else
+            {
                 logger.LogTrace("Requesting image {} with id {} and expecting {} bytes of file size",
                     urlFilename, imageId, expectedByteSize);
+            }
         }
 
         Context CreatePollyContext() => new() {{"ILogger<ImageRequester>", logger}, {"imageUrlFilename", urlFilename}};
-        Task<T> ExecuteByPolly<T>(Func<Task<T>> action) =>
-            registry.Get<IAsyncPolicy<T>>($"tbImage<{typeof(T).Name}>")
+        async Task<T> ExecuteByPolly<T>(Func<Task<T>> action) =>
+            await registry.Get<IAsyncPolicy<T>>($"tbImage<{typeof(T).Name}>")
                 .ExecuteAsync(async (_, _) => await action(), CreatePollyContext(), stoppingToken);
 
         var http = httpFactory.CreateClient("tbImage");
@@ -40,12 +44,18 @@ public class ImageRequester(
             throw new($"Mismatch response body length {bytes.Length} with the value {contentLength} "
                       + $"in the Content-Length header for image {urlFilename} with id {imageId}.");
         if (expectedByteSize == 0) return bytes;
-        if (contentLength != expectedByteSize) logger.LogWarning(
-            "Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {} with id {}",
-            contentLength, expectedByteSize, urlFilename, imageId);
-        else if (bytes.Length != expectedByteSize) logger.LogWarning(
-            "Unexpected response body length {} bytes, expecting {} bytes for image {} with id {}",
-            bytes.Length, expectedByteSize, urlFilename, imageId);
+        if (contentLength != expectedByteSize)
+        {
+            logger.LogWarning(
+                "Unexpected response header Content-Length: {} bytes, expecting {} bytes for image {} with id {}",
+                contentLength, expectedByteSize, urlFilename, imageId);
+        }
+        else if (bytes.Length != expectedByteSize)
+        {
+            logger.LogWarning(
+                "Unexpected response body length {} bytes, expecting {} bytes for image {} with id {}",
+                bytes.Length, expectedByteSize, urlFilename, imageId);
+        }
 
         return bytes;
     }

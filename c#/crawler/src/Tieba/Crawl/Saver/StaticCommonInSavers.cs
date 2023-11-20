@@ -17,6 +17,7 @@ public abstract class StaticCommonInSavers
                 { // possible randomly respond with null
                     case nameof(TiebaUser.IpGeolocation) when newValue is null:
                     // possible clock drift across multiple response from tieba api, they should sync their servers with NTP
+#pragma warning disable S125 // Sections of code should not be commented out
                     /* following sql can track these drift
                     SELECT portraitUpdatedAtDiff, COUNT(*), MAX(uid), MIN(uid), MAX(portraitUpdatedAt), MIN(portraitUpdatedAt)
                     FROM (
@@ -27,6 +28,7 @@ public abstract class StaticCommonInSavers
                     WHERE portraitUpdatedAtDiff > -100 AND portraitUpdatedAtDiff < 100
                     GROUP BY portraitUpdatedAtDiff ORDER BY portraitUpdatedAtDiff;
                     */
+#pragma warning restore S125 // Sections of code should not be commented out
                     case nameof(TiebaUser.PortraitUpdatedAt)
                         when Math.Abs((newValue as int? ?? 0) - (oldValue as int? ?? 0)) <= 10:
                         return true;
@@ -66,7 +68,7 @@ public abstract class StaticCommonInSavers
 
             // possible rarely respond with the protoBuf default value 0
             if (propName == nameof(IPost.AuthorUid)
-                && newValue is (long)0 && oldValue is not null) return true;
+                && newValue is 0L && oldValue is not null) return true;
             return false;
         },
         Revision: (whichPostType, propName, oldValue, _) =>

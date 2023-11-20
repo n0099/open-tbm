@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Hashing;
 using System.Text.RegularExpressions;
@@ -17,6 +16,13 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
     private readonly FailedImageHandler _failedImageHandler;
     private readonly (ulong[] Exif, ulong[] Icc, ulong[] Iptc, ulong[] Xmp) _commonEmbeddedMetadataXxHash3ToIgnore;
 
+    static MetadataConsumer() => NetTopologySuite.NtsGeometryServices.Instance = new(
+        coordinateSequenceFactory: NetTopologySuite.Geometries.Implementation.CoordinateArraySequenceFactory.Instance,
+        precisionModel: new(1000d),
+        srid: 4326, // WGS84
+        geometryOverlay: GeometryOverlay.NG,
+        coordinateEqualityComparer: new());
+
     public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config, FailedImageHandler failedImageHandler)
     {
         (_logger, _failedImageHandler) = (logger, failedImageHandler);
@@ -29,13 +35,6 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             Xmp: GetCommonXxHash3ToIgnore("Xmp")
         );
     }
-
-    static MetadataConsumer() => NetTopologySuite.NtsGeometryServices.Instance = new(
-        coordinateSequenceFactory: NetTopologySuite.Geometries.Implementation.CoordinateArraySequenceFactory.Instance,
-        precisionModel: new(1000d),
-        srid: 4326, // WGS84
-        geometryOverlay: GeometryOverlay.NG,
-        coordinateEqualityComparer: new());
 
     public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
@@ -171,13 +170,15 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         return ret;
     }
 
-    private sealed class ExifGpsTagValuesParser
+    private static class ExifGpsTagValuesParser
     {
         public static DateTime? ParseGpsDateTimeOrNull(Rational[]? timeStamp, string? dateStamp)
         {
             if (timeStamp == null || dateStamp.NullIfEmpty() == null) return null;
 
+#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
             var dateParts = dateStamp!.Split(':', '-').Select(int.Parse).ToList();
+#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
             if (dateParts is not [var year, var month, var day])
                 throw new ArgumentOutOfRangeException(nameof(dateStamp), dateStamp,
                 $"Unexpected \"{dateStamp}\", expecting three parts separated by ':' or '-'.");
@@ -273,6 +274,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 exifDateTime = m.Groups["dateTime"].Value;
 
             // https://stackoverflow.com/questions/4483886/how-can-i-get-a-count-of-the-total-number-of-digits-in-a-number/51099524#51099524
+            [SuppressMessage("Major Code Smell", "S3358:Ternary operators should not be nested")]
             static int CountDigits(int n) => n == 0 ? 1 : (n > 0 ? 1 : 2) + (int)Math.Log10(Math.Abs((double)n));
             var hasFractionalSeconds = int.TryParse(exifFractionalSeconds, out var fractionalSeconds);
             fractionalSeconds = hasFractionalSeconds ? fractionalSeconds : 0;
@@ -320,8 +322,8 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         private static DateTimeAndOffset? ParseWithOffset(string exifDateTime)
         {
             var dateTimeOffset = DateTimeOffset.TryParseExact(exifDateTime,
-                "yyyy-MM-ddTHH':'mm':'sszzz" // 2019-04-09T02:14:04-12:00, 2019-04-09T02:14:04+09:00
-                , CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dto)
+                "yyyy-MM-ddTHH':'mm':'sszzz", // 2019-04-09T02:14:04-12:00, 2019-04-09T02:14:04+09:00
+                CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dto)
                 ? dto
                 : default;
             if (dateTimeOffset == default) return null;

@@ -1,5 +1,6 @@
 #pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
 global using System.ComponentModel.DataAnnotations;
+global using System.Diagnostics.CodeAnalysis;
 global using System.Text.Json;
 global using System.Threading.Channels;
 global using System.Threading.RateLimiting;

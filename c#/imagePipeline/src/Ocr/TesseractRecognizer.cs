@@ -61,15 +61,17 @@ public sealed partial class TesseractRecognizer
             .Select(t => (Rect: t.Item1, Text: t.Item2, Confidence: t.Item3))
             .Where(t => t.Confidence > ConfidenceThreshold)
             .ToList();
-        var text = string.Join("", components.Select(t => t.Text)).Trim();
-        if (text == "") shouldFallbackToPaddleOcr = true;
+        var text = string.Concat(components.Select(t => t.Text)).Trim();
+        if (text.Length == 0) shouldFallbackToPaddleOcr = true;
         var averageConfidence = components.Any()
             ? components.Select(c => c.Confidence).Average().RoundToByte()
             : (byte)0;
 
         return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);
     };
-
+}
+public sealed partial class TesseractRecognizer
+{
     public static IEnumerable<PreprocessedTextBox> PreprocessTextBoxes(
         ImageKey imageKey,
         Mat originalMatrix,
@@ -83,7 +85,7 @@ public sealed partial class TesseractRecognizer
         var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
 
         // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
-        var mat = new Mat(originalMatrix, new Rect(new(), originalMatrix.Size()).Intersect(textBox.BoundingRect()));
+        var mat = new Mat(originalMatrix, new Rect(default, originalMatrix.Size()).Intersect(textBox.BoundingRect()));
 
         if (mat.Channels() != 1) Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
 
@@ -119,7 +121,7 @@ public sealed partial class TesseractRecognizer
         degrees = -degrees; // counter-clockwise to clockwise
         var center = new Point2f((src.Width - 1) / 2f, (src.Height - 1) / 2f);
         using var rotationMat = Cv2.GetRotationMatrix2D(center, degrees, scale: 1);
-        var boundingRect = new RotatedRect(new(), new(src.Width, src.Height), degrees).BoundingRect();
+        var boundingRect = new RotatedRect(default, new(src.Width, src.Height), degrees).BoundingRect();
         rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
         rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
