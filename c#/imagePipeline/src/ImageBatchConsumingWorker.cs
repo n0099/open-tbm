@@ -84,7 +84,8 @@ public class ImageBatchConsumingWorker(
             scope1.Resolve<MetadataConsumer>(), "extract metadata");
 
         var failedImageHandler = scope1.Resolve<FailedImageHandler>();
-        var imageKeysWithMatrix = failedImageHandler.TrySelect(imagesWithBytes,
+        var imageKeysWithMatrix = failedImageHandler.TrySelect(imagesWithBytes
+                    .Where(i => i.ImageInReply is not {HashConsumed: true, QrCodeConsumed: true, OcrConsumed: true}),
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 DecodeImageOrFramesBytes(stoppingToken))
             .Rights().SelectMany(i => i).ToList();

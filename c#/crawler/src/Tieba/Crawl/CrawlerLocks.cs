@@ -1,23 +1,16 @@
 namespace tbm.Crawler.Tieba.Crawl;
 
-public class CrawlerLocks : WithLogTrace
+public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
+    : WithLogTrace(config, $"CrawlerLocks:{lockType}")
 {
+    private readonly IConfigurationSection _config = config.GetSection($"CrawlerLocks:{lockType}");
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, Time>> _crawling = new();
 
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
-    private readonly ILogger<CrawlerLocks> _logger;
-    private readonly IConfigurationSection _config;
-
-    public CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
-    {
-        (_logger, LockType) = (logger, lockType);
-        _config = config.GetSection($"CrawlerLocks:{lockType}");
-        InitLogTrace(_config);
-    }
 
     public static List<string> RegisteredCrawlerLocks { get; } = new() {"thread", "threadLate", "reply", "subReply"};
-    public string LockType { get; }
+    public string LockType { get; } = lockType;
 
     public HashSet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {
@@ -56,7 +49,7 @@ public class CrawlerLocks : WithLogTrace
         {
             if (!_crawling.TryGetValue(lockId, out var pagesLock))
             {
-                _logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once",
+                logger.LogWarning("Try to release a crawling page lock {} in {} id {} more than once",
                     pages, LockType, lockId);
                 return;
             }
@@ -73,7 +66,7 @@ public class CrawlerLocks : WithLogTrace
         var maxRetry = _config.GetValue<FailureCount>("MaxRetryTimes", 5);
         if (failureCount >= maxRetry)
         {
-            _logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}",
+            logger.LogInformation("Retry for previous failed crawling of page {} in {} id {} has been canceled since it's reaching the configured max retry times {}",
                 page, LockType, lockId, maxRetry);
             return;
         }
@@ -110,7 +103,7 @@ public class CrawlerLocks : WithLogTrace
         lock (_crawling)
         lock (_failed)
         {
-            _logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
+            logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
                 _crawling.Count, _crawling.Values.Select(d => d.Count).Sum(),
                 Helper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
                 _failed.Count, _failed.Values.Select(d => d.Count).Sum(),

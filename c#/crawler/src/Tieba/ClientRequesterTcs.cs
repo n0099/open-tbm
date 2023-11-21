@@ -11,10 +11,10 @@ public class ClientRequesterTcs : WithLogTrace
     private uint _requestCounter;
 
     public ClientRequesterTcs(ILogger<ClientRequesterTcs> logger, IConfiguration config)
+        : base(config, "ClientRequesterTcs")
     {
         _logger = logger;
         _config = config.GetSection("ClientRequesterTcs");
-        InitLogTrace(_config);
         MaxRps = _config.GetValue("InitialRps", 15);
         _stopwatch.Start();
 
