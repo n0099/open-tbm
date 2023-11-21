@@ -16,6 +16,7 @@ public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public required ClientRequester Requester { protected get; init; }
 
     public async Task<Response[]> CrawlSinglePage(Page page, CancellationToken stoppingToken = default) =>

@@ -2,13 +2,8 @@ namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 [SuppressMessage("Major Code Smell", "S3881:\"IDisposable\" should be implemented correctly")]
 public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
-        ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> logger,
-        CrawlerDbContext.New dbContextFactory,
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
-        BaseParser<TPost, TPostProtoBuf> parser,
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
-        UserParserAndSaver users,
-        ClientRequesterTcs requesterTcs, // singleton for every derived class
         CrawlerLocks locks,
         CrawlerLocks.LockId lockId,
         Fid fid)
@@ -24,9 +19,15 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
     public delegate void ExceptionHandler(Exception ex);
 
+    // ReSharper disable UnusedAutoPropertyAccessor.Global
+    public required ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> Logger { private get; init; }
+    public required CrawlerDbContext.New DbContextFactory { private get; init; }
+    public required BaseParser<TPost, TPostProtoBuf> Parser { private get; init; }
+    public required ClientRequesterTcs RequesterTcs { private get; init; }
+    public required UserParserAndSaver Users { protected get; init; }
+    // ReSharper restore UnusedAutoPropertyAccessor.Global
     protected uint Fid { get; } = fid;
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
-    protected UserParserAndSaver Users { get; } = users;
     private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => _saver ??= new(saverFactory(Posts));
 
     public virtual void Dispose()
@@ -37,7 +38,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
-        var db = dbContextFactory(Fid);
+        var db = DbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
         var saver = Saver.Value;
         var savedPosts = Posts.IsEmpty ? null : saver.SavePosts(db);
@@ -64,7 +65,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
             "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
         var acquiredLocks = locks.AcquireRange(lockId, new[] {startPage});
-        if (!acquiredLocks.Any()) logger.LogInformation(
+        if (!acquiredLocks.Any()) Logger.LogInformation(
             "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked",
             startPage, endPage, locks.LockType, lockId);
         _lockingPages.UnionWith(acquiredLocks);
@@ -116,7 +117,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     {
         var (response, flag) = responseTuple;
         var postsInResponse = crawler.GetValidPosts(response, flag);
-        parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
+        Parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
         parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
         if (flag == CrawlRequestFlag.None)
         {
@@ -138,7 +139,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 .SequenceEqual(pages)
                 ? $"within the range [{pages[0]}-{pages[^1]}]"
                 : JsonSerializer.Serialize(pages);
-            logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
+            Logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
                 pagesText, locks.LockType, lockId);
         }
         _lockingPages.UnionWith(acquiredLocks);
@@ -169,19 +170,19 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
 
             if (e is TiebaException te)
             {
-                if (!te.ShouldSilent) logger.LogWarning("TiebaException: {} {}",
+                if (!te.ShouldSilent) Logger.LogWarning("TiebaException: {} {}",
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
                     Helper.UnescapedJsonSerialize(e.Data));
             }
             else
             {
-                logger.LogError(e, "Exception");
+                Logger.LogError(e, "Exception");
             }
 
             if (e is not TiebaException {ShouldRetry: false})
             {
                 locks.AcquireFailed(lockId, page, (FailureCount)(previousFailureCount + 1));
-                requesterTcs.Decrease();
+                RequesterTcs.Decrease();
             }
 
             try
@@ -190,7 +191,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Exception");
+                Logger.LogError(ex, "Exception");
                 return true;
             }
             return true;

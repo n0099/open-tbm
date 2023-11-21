@@ -139,10 +139,10 @@ public class ImageBatchConsumingWorker(
 #pragma warning disable IDISP001 // Dispose created
             var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
 #pragma warning restore IDISP001 // Dispose created
-            if (frameMat.Empty())
-                throw new InvalidOperationException(
-                    $"Failed to decode frame {frameIndex} of image {imageId}.");
-            return new(imageId, (uint)frameIndex, frameMat);
+            return frameMat.Empty()
+                ? throw new InvalidOperationException(
+                    $"Failed to decode frame {frameIndex} of image {imageId}.")
+                : new(imageId, (uint)frameIndex, frameMat);
         }
 
         try

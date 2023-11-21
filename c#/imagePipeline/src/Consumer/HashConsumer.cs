@@ -67,7 +67,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
         return (failedImagesId, imageHashResults.Select(i => i.ImageId));
     }
 
-    private Func<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>> GetThumbHashForImage
+    private static Func<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>> GetThumbHashForImage
         (CancellationToken stoppingToken = default) => imageKeyWithMatrix =>
     {
         stoppingToken.ThrowIfCancellationRequested();
@@ -93,7 +93,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
         }
     };
 
-    private KeyValuePair<ImageKeyWithMatrix, byte[]> GetImageHash
+    private static KeyValuePair<ImageKeyWithMatrix, byte[]> GetImageHash
         (ImageKeyWithMatrix imageKeyWithMatrix, ImgHashBase hashAlgorithm, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();

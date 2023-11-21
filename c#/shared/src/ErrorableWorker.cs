@@ -6,8 +6,10 @@ namespace tbm.Shared;
 public abstract class ErrorableWorker(bool shouldExitOnException = false, bool shouldExitOnFinish = false)
     : BackgroundService
 {
+    // ReSharper disable UnusedAutoPropertyAccessor.Global
     public required ILogger<ErrorableWorker> Logger { private get; init; }
     public required IHostApplicationLifetime ApplicationLifetime { private get; init; }
+    // ReSharper restore UnusedAutoPropertyAccessor.Global
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken) => DoWorkWithExceptionLogging(stoppingToken);
     protected abstract Task DoWork(CancellationToken stoppingToken);

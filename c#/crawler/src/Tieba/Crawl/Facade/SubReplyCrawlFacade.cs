@@ -1,21 +1,15 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class SubReplyCrawlFacade(
-        ILogger<SubReplyCrawlFacade> logger,
-        CrawlerDbContext.New dbContextFactory,
         SubReplyCrawler.New crawler,
-        SubReplyParser parser,
         SubReplySaver.New saver,
-        UserParserAndSaver users,
         SonicPusher pusher,
-        ClientRequesterTcs requesterTcs,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         Tid tid,
         Pid pid)
-    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>(
-        logger, dbContextFactory, crawler(tid, pid), parser, saver.Invoke,
-        users, requesterTcs, locks["subReply"], new(fid, tid, pid), fid)
+    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>
+        (crawler(tid, pid), saver.Invoke, locks["subReply"], new(fid, tid, pid), fid)
 {
     public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 

@@ -50,6 +50,7 @@ public abstract class TbmDbContext : DbContext
 public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public required IConfiguration Config { private get; init; }
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();

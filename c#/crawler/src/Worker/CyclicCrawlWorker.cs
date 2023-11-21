@@ -11,6 +11,7 @@ public abstract class CyclicCrawlWorker : ErrorableWorker
         _ = SyncCrawlIntervalWithConfig();
     }
 
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public required IConfiguration Config { private get; init; }
 
     protected int SyncCrawlIntervalWithConfig()
