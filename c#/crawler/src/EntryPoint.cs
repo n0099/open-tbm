@@ -37,7 +37,7 @@ public class EntryPoint : BaseEntryPoint
             typeof(BaseParser<,>), typeof(BaseSaver<,>)
         };
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-            .Where(type => baseClassOfClassesToBeRegistered.Any(baseType => baseType.IsSubTypeOfRawGeneric(type)))
+            .Where(type => Array.Exists(baseClassOfClassesToBeRegistered, baseType => baseType.IsSubTypeOfRawGeneric(type)))
             .AsSelf();
 
         builder.RegisterType<CrawlerDbContext>();

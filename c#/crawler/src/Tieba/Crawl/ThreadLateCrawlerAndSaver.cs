@@ -31,7 +31,9 @@ public class ThreadLateCrawlerAndSaver(
     private async Task<ThreadPost?> CrawlThread(Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
     {
         var crawlerLockId = new CrawlerLocks.LockId(fid, tid);
+#pragma warning disable SA1003 // Symbols should be spaced correctly
         if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
+#pragma warning restore SA1003 // Symbols should be spaced correctly
         try
         {
             var json = await requester.RequestJson(
@@ -103,11 +105,16 @@ public class ThreadLateCrawlerAndSaver(
             e = e.ExtractInnerExceptionsData();
 
             if (e is TiebaException)
+            {
                 logger.LogWarning("TiebaException: {} {}",
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
                     Helper.UnescapedJsonSerialize(e.Data));
+            }
             else
+            {
                 logger.LogError(e, "Exception");
+            }
+
             if (e is not TiebaException {ShouldRetry: false})
             {
                 _locks.AcquireFailed(crawlerLockId, page: 1, failureCount);

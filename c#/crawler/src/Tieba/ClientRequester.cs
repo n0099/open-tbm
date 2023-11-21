@@ -139,7 +139,7 @@ public class ClientRequester(
         {
             if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) requesterTcs.Increase();
             else requesterTcs.Decrease();
-        }, TaskContinuationOptions.ExecuteSynchronously);
+        }, stoppingToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         return await ret;
     }
 }

@@ -93,7 +93,7 @@ public class AuthorRevisionSaver(string triggeredByPostType)
         lock (locks) locks.ExceptWith(_savedRevisions);
     }
 
-    private class LatestAuthorRevisionProjection<TValue>
+    private sealed class LatestAuthorRevisionProjection<TValue>
     {
         public Time DiscoveredAt { get; init; }
         public long Uid { get; init; }

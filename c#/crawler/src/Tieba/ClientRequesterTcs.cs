@@ -6,8 +6,8 @@ public class ClientRequesterTcs : WithLogTrace
     private readonly IConfigurationSection _config;
     private readonly ConcurrentQueue<TaskCompletionSource> _queue = new();
     private readonly Timer _timer = new() {Enabled = true};
-    private double _maxRps;
     private readonly Stopwatch _stopwatch = new();
+    private double _maxRps;
     private uint _requestCounter;
 
     public ClientRequesterTcs(ILogger<ClientRequesterTcs> logger, IConfiguration config)

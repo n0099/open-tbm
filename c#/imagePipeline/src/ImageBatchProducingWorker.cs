@@ -68,7 +68,7 @@ public class ImageBatchProducingWorker(
                     select i)
                 .Take(ProduceImageBatchSize * PrefetchUnconsumedImagesFactor * InterlaceBatchCount).ToList();
             if (!interlaceBatches.Any()) yield break;
-            lastImageIdInPreviousBatch = interlaceBatches.Last().ImageId;
+            lastImageIdInPreviousBatch = interlaceBatches[^1].ImageId;
             yield return interlaceBatches
                 .Where(image => image.ImageId % InterlaceBatchCount == InterlaceBatchIndex);
         }

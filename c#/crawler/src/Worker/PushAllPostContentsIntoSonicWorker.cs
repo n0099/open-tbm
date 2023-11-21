@@ -31,28 +31,29 @@ public class PushAllPostContentsIntoSonicWorker(
         {
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
             var dbWithFid = scope1.Resolve<CrawlerDbContext.New>()(fid);
+
             // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
             // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure
             _ = await dbWithFid.Database.ExecuteSqlRawAsync(
                 "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
 
-            _ = pusher.Ingest.FlushBucket($"{pusher.CollectionPrefix}replies_content", $"f{fid}");
+            _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}replies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",
                 replyCount, totalPostCount, pushedPostCount, dbWithFid.ReplyContents.AsNoTracking(),
                 r => pusher.PushPost(fid, "replies", r.Pid, Helper.ParseThenUnwrapPostContent(r.ProtoBufBytes)), stoppingToken);
-            TriggerConsolidate();
+            await TriggerConsolidate();
 
-            _ = pusher.Ingest.FlushBucket($"{pusher.CollectionPrefix}subReplies_content", $"f{fid}");
+            _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}subReplies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex, forumCount, "sub replies",
                 subReplyCount, totalPostCount, pushedPostCount, dbWithFid.SubReplyContents.AsNoTracking(),
                 sr => pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
-            TriggerConsolidate();
+            await TriggerConsolidate();
 
-            void TriggerConsolidate() => NSonicFactory.Control(
+            async Task TriggerConsolidate() => await NSonicFactory.Control(
                 _config.GetValue("Hostname", "localhost"),
                 _config.GetValue("Port", 1491),
                 _config.GetValue("Secret", "SecretPassword")
-            ).Trigger("consolidate");
+            ).TriggerAsync("consolidate");
         }
     }
 
@@ -78,8 +79,10 @@ public class PushAllPostContentsIntoSonicWorker(
             if (pushedCount % 1000 == 0)
             {
                 static double GetPercentage(float current, float total, int digits = 2) => Math.Round(current / total * 100, digits);
+#pragma warning disable IDE0042 // Deconstruct variable declaration
                 var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
                 var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);
+#pragma warning restore IDE0042 // Deconstruct variable declaration
                 logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
                                       + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
                     postTypeInLog, fid,

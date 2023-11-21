@@ -45,8 +45,10 @@ public class ReplyCrawlFacade(
         var db = dbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        var parentThreadTitle = (from t in db.Threads.AsNoTracking().ForUpdate()
-            where t.Tid == tid select t.Title).SingleOrDefault();
+        var parentThreadTitle = (
+            from t in db.Threads.AsNoTracking().ForUpdate()
+            where t.Tid == tid
+            select t.Title).SingleOrDefault();
 
         // thread title will be empty string as a fallback when the thread author haven't write title for this thread
         if (parentThreadTitle != "") return;

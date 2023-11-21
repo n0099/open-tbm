@@ -35,6 +35,7 @@ public class ThreadSaver(
             th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
             PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 
+    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
         nameof(ThreadPost.StickyType)       => 1,

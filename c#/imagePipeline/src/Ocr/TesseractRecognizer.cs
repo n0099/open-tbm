@@ -62,7 +62,7 @@ public sealed partial class TesseractRecognizer
             .Where(t => t.Confidence > ConfidenceThreshold)
             .ToList();
         var text = string.Concat(components.Select(t => t.Text)).Trim();
-        if (text.Length == 0) shouldFallbackToPaddleOcr = true;
+        if (text == "") shouldFallbackToPaddleOcr = true;
         var averageConfidence = components.Any()
             ? components.Select(c => c.Confidence).Average().RoundToByte()
             : (byte)0;

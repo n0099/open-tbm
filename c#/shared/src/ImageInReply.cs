@@ -11,5 +11,4 @@ public class ImageInReply
     public bool HashConsumed { get; set; }
     public bool QrCodeConsumed { get; set; }
     public bool OcrConsumed { get; set; }
-
 }

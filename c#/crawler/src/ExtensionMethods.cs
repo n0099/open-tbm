@@ -80,5 +80,5 @@ public static partial class ExtensionMethods
 
     /// <see>https://stackoverflow.com/questions/4963160/how-to-determine-if-a-type-implements-an-interface-with-c-sharp-reflection/4963190#4963190</see>
     private static bool IsImplementerOfRawGeneric(this Type generic, Type toCheck) =>
-        toCheck.GetInterfaces().Any(type => type.IsGenericType && type.GetGenericTypeDefinition() == generic);
+        Array.Exists(toCheck.GetInterfaces(), type => type.IsGenericType && type.GetGenericTypeDefinition() == generic);
 }

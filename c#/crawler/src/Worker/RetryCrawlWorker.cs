@@ -43,8 +43,10 @@ public class RetryCrawlWorker(
 
                 if (lockType == "thread")
                 {
-                    var forumName = (from f in db.Forums.AsNoTracking()
-                        where f.Fid == fid select f.Name).SingleOrDefault();
+                    var forumName = (
+                        from f in db.Forums.AsNoTracking()
+                        where f.Fid == fid
+                        select f.Name).SingleOrDefault();
                     if (forumName == null) return;
                     logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid={}, forumName={}",
                         failureCountsKeyByPage.Count, fid, forumName);

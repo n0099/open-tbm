@@ -2,8 +2,8 @@ namespace tbm.Crawler;
 
 public abstract class WithLogTrace
 {
-    private IConfigurationSection? _config;
     private readonly Timer _timerLogTrace = new() {Enabled = true};
+    private IConfigurationSection? _config;
 
     protected abstract void LogTrace();
 

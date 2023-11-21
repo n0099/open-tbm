@@ -85,7 +85,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                 (int)(startPage + 1),
                 (int)(endPage - startPage)).ToList();
             if (pagesAfterStart.Any())
-                await CrawlPages(pagesAfterStart.Select(page => (Page)page).ToList(), stoppingToken: stoppingToken);
+                await CrawlPages(pagesAfterStart.ConvertAll(page => (Page)page), stoppingToken: stoppingToken);
         }
         return this;
     }
@@ -172,7 +172,10 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
                     Helper.UnescapedJsonSerialize(e.Data));
             }
-            else logger.LogError(e, "Exception");
+            else
+            {
+                logger.LogError(e, "Exception");
+            }
 
             if (e is not TiebaException {ShouldRetry: false})
             {

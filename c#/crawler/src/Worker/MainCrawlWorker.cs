@@ -156,8 +156,10 @@ public partial class MainCrawlWorker
 
         var db = scope.Resolve<CrawlerDbContext.New>()(fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-        var firstReply = from r in db.Replies.AsNoTracking()
-            where r.Pid == parentThread.FirstReplyPid select r.Pid;
+        var firstReply =
+            from r in db.Replies.AsNoTracking()
+            where r.Pid == parentThread.FirstReplyPid
+            select r.Pid;
         if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
 
         var existingEntity = db.ThreadMissingFirstReplies.AsTracking().ForUpdate()

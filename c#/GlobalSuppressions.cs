@@ -1,8 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 
+[assembly: SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out")]
 [assembly: SuppressMessage("Minor Code Smell", "S3604:Member initializer values should not be redundant")]
 [assembly: SuppressMessage("Roslynator", "RCS1001:Add braces (when expression spans over multiple lines).")]
 [assembly: SuppressMessage("Roslynator", "RCS1139:Add summary element to documentation comment.")]
+[assembly: SuppressMessage("Roslynator", "RCS1156:Use string.Length instead of comparison with empty string.")]
 [assembly: SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
 
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented")]
@@ -25,12 +27,14 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1413:Use trailing comma in multi-line initializers")]
 [assembly: SuppressMessage("StyleCop.CSharp.NamingRules", "SA1309:Field names should not begin with underscore")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1101:Prefix local calls with this")]
+[assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1108:Block statements should not contain embedded comments")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1110:Opening parenthesis or bracket should be on declaration line")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1116:Split parameters should start on line after declaration")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1117:Parameters should be on same line or separate lines")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1121:Use built-in type alias")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1122:Use string.Empty for empty strings")]
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1134:Attributes should not share line")]
+[assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:Opening parenthesis should be spaced correctly")]
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:Closing parenthesis should be spaced correctly")]
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1012:Opening braces should be spaced correctly")]
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1013:Closing braces should be spaced correctly")]
