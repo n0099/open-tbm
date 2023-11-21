@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace tbm.Crawler.Tieba.Crawl.Parser;
 
 public partial class ReplyParser(ILogger<ReplyParser> logger)
@@ -64,7 +66,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
         {
             e.Data["parsed"] = o;
             e.Data["raw"] = inPost;
-            throw new("Reply parse error.", e);
+            throw new InvalidDataException("Reply parse error.", e);
         }
     }
 }

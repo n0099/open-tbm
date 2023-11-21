@@ -89,7 +89,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
                 ? ThumbHashes.Utilities.RgbaToThumbHash(mat.Width, mat.Height, pixels
                     .Select(vec => new[] {vec.Item0, vec.Item1, vec.Item2, vec.Item3})
                     .SelectMany(i => i).ToArray())
-                : throw new("Failed to convert matrix into byte array.");
+                : throw new InvalidOperationException("Failed to convert matrix into byte array.");
         }
     };
 
@@ -101,6 +101,6 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
         hashAlgorithm.Compute(imageKeyWithMatrix.Matrix, mat);
         return mat.GetArray(out byte[] bytes)
             ? new(imageKeyWithMatrix, bytes)
-            : throw new("Failed to convert matrix into byte array.");
+            : throw new InvalidOperationException("Failed to convert matrix into byte array.");
     }
 }

@@ -65,9 +65,8 @@ public abstract class StaticCommonInSavers
                 && newValue is null && oldValue is not null) return true;
 
             // possible rarely respond with the protoBuf default value 0
-            if (propName == nameof(IPost.AuthorUid)
-                && newValue is 0L && oldValue is not null) return true;
-            return false;
+            return propName == nameof(IPost.AuthorUid)
+                   && newValue is 0L && oldValue is not null;
         },
         Revision: (whichPostType, propName, oldValue, _) =>
         { // ignore revision that figures update existing old users that don't have ip geolocation

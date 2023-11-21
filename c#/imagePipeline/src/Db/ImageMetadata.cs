@@ -1,6 +1,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable UnusedMember.Global
+using System.ComponentModel;
 using Point = NetTopologySuite.Geometries.Point;
 
 namespace tbm.ImagePipeline.Db;
@@ -187,7 +188,8 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
             return new()
             {
                 RepeatCount = other.RepeatCount,
-                ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new IndexOutOfRangeException(),
+                ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new InvalidEnumArgumentException(
+                    nameof(other.ColorTableMode), (int)other.ColorTableMode, other.ColorTableMode.GetType()),
                 GlobalColorTableLength = other.GlobalColorTableLength,
                 Comments = other.Comments.Any() ? JsonSerializer.Serialize(other.Comments) : null
             };
@@ -206,8 +208,10 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
             var other = meta.GetBmpMetadata();
             return new()
             {
-                InfoHeaderType = Enum.GetName(other.InfoHeaderType) ?? throw new IndexOutOfRangeException(),
-                BitsPerPixel = Enum.GetName(other.BitsPerPixel) ?? throw new IndexOutOfRangeException()
+                InfoHeaderType = Enum.GetName(other.InfoHeaderType) ?? throw new InvalidEnumArgumentException(
+                    nameof(other.InfoHeaderType), (int)other.InfoHeaderType, other.InfoHeaderType.GetType()),
+                BitsPerPixel = Enum.GetName(other.BitsPerPixel) ?? throw new InvalidEnumArgumentException(
+                    nameof(other.BitsPerPixel), (int)other.BitsPerPixel, other.BitsPerPixel.GetType())
             };
         }
     }

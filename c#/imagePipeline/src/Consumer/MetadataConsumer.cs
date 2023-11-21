@@ -314,8 +314,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             }, culture, DateTimeStyles.AllowWhiteSpaces, out var dt)
                 ? dt
                 : default;
-            if (dateTime == default) return null;
-            return new(dateTime, Offset: null);
+            return dateTime == default ? null : new(dateTime, Offset: null);
         }
 
         private static DateTimeAndOffset? ParseWithOffset(string exifDateTime)
@@ -325,8 +324,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dto)
                 ? dto
                 : default;
-            if (dateTimeOffset == default) return null;
-            return new(dateTimeOffset.DateTime, dateTimeOffset.ToString("zzz"));
+            return dateTimeOffset == default
+                ? null
+                : new(dateTimeOffset.DateTime, dateTimeOffset.ToString("zzz"));
         }
 
         [GeneratedRegex(
@@ -350,20 +350,21 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                     .AddMinutes(int.Parse(m.Groups["minute"].ValueSpan))
                     .AddSeconds(int.Parse(m.Groups["second"].ValueSpan)), Offset: null);
 
-        private static DateTimeAndOffset? ParseAsUnixTimestamp(string exifDateTime)
-        {
-            if (!long.TryParse(exifDateTime, NumberStyles.Integer,
-                    CultureInfo.InvariantCulture, out var parsedUnixTimestamp)) return null;
+        private static DateTimeAndOffset? ParseAsUnixTimestamp(string exifDateTime) =>
+            long.TryParse(exifDateTime, NumberStyles.Integer,
+                CultureInfo.InvariantCulture, out var parsedUnixTimestamp)
+                ? exifDateTime.Length switch
+                {
+                    // accepting from 1973-03-03 17:46:40.000 to 2286-11-21 01:46:39.999 when the input contains no leading zeros
+                    // e.g. 1556068385188
+                    >= 12 and <= 13 => new(DateTimeOffset.FromUnixTimeMilliseconds(parsedUnixTimestamp).DateTime, "+00:00"),
 
-            // accepting from 1973-03-03 17:46:40.000 to 2286-11-21 01:46:39.999 when the input contains no leading zeros
-            if (exifDateTime.Length is >= 12 and <= 13) // e.g. 1556068385188
-                return new(DateTimeOffset.FromUnixTimeMilliseconds(parsedUnixTimestamp).DateTime, "+00:00");
-
-            // accepting from 1973-03-03 17:46:40 to 2286-11-21 01:46:39 when the input contains no leading zeros
-            if (exifDateTime.Length is >= 9 and <= 10) // e.g. 1373363130
-                return new(DateTimeOffset.FromUnixTimeSeconds(parsedUnixTimestamp).DateTime, "+00:00");
-            return null;
-        }
+                    // accepting from 1973-03-03 17:46:40 to 2286-11-21 01:46:39 when the input contains no leading zeros
+                    // e.g. 1373363130
+                    >= 9 and <= 10 => new(DateTimeOffset.FromUnixTimeSeconds(parsedUnixTimestamp).DateTime, "+00:00"),
+                    _ => null
+                }
+                : null;
 
         public record DateTimeAndOffset(DateTime DateTime, string? Offset);
     }

@@ -30,7 +30,7 @@ public class SubReplyParser : BaseParser<SubReplyPost, SubReply>
         {
             e.Data["parsed"] = o;
             e.Data["raw"] = inPost;
-            throw new("Sub reply parse error.", e);
+            throw new InvalidDataException("Sub reply parse error.", e);
         }
     }
 }

@@ -23,6 +23,7 @@ public sealed partial class PaddleOcrRecognizerAndDetector : IDisposable
     public void Dispose() => _ocr?.Dispose();
 
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1119:Statement should not use unnecessary parenthesis", Justification = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3730")]
+    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly")]
     public async Task Initialize(CancellationToken stoppingToken = default) =>
         _ocr ??= await (_script switch
         {

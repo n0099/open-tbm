@@ -42,7 +42,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
         {
             e.Data["parsed"] = o;
             e.Data["raw"] = inPost;
-            throw new("Thread parse error.", e);
+            throw new InvalidDataException("Thread parse error.", e);
         }
     }
 }

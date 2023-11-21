@@ -4,6 +4,7 @@
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
         <PackageReference Include="EFCore.NamingConventions" Version="7.0.2" />
         <PackageReference Include="IDisposableAnalyzers" Version="4.0.7" ExcludeAssets="compile" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" ExcludeAssets="compile" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />

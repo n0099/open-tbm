@@ -43,8 +43,8 @@ public class ImageRequester(
         var bytes = await ExecuteByPolly(async () => await response.Content.ReadAsByteArrayAsync(stoppingToken));
 
         if (contentLength != bytes.Length)
-            throw new($"Mismatch response body length {bytes.Length} with the value {contentLength} "
-                      + $"in the Content-Length header for image {urlFilename} with id {imageId}.");
+            throw new InvalidDataException($"Mismatch response body length {bytes.Length} with the value {contentLength}"
+                                           + $" in the Content-Length header for image {urlFilename} with id {imageId}.");
         if (expectedByteSize == 0) return bytes;
         if (contentLength != expectedByteSize)
         {

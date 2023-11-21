@@ -42,9 +42,10 @@ public sealed class QrCodeConsumer : MatrixConsumer, IDisposable
             {
                 var (boxMat, result) = t;
                 if (boxMat.Width != 2 || boxMat.Height != 4)
-                    throw new($"Unexpected matrix \"{boxMat}\" returned by WeChatQRCode.DetectAndDecode().");
+                    throw new InvalidOperationException(
+                        $"Unexpected matrix \"{boxMat}\" returned by WeChatQRCode.DetectAndDecode().");
                 if (!boxMat.GetArray(out float[] boxPoints))
-                    throw new("Failed to convert matrix into byte array.");
+                    throw new InvalidOperationException("Failed to convert matrix into byte array.");
                 var points = boxPoints.Chunk(2).ToList();
                 return new ImageQrCode
                 {

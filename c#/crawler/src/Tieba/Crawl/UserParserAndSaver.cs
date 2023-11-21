@@ -83,7 +83,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
             catch (Exception e)
             {
                 e.Data["raw"] = Helper.UnescapedJsonSerialize(el);
-                throw new("User parse error.", e);
+                throw new InvalidDataException("User parse error.", e);
             }
         }).OfType<TiebaUser>().ForEach(u => _users[u.Uid] = u);
 
