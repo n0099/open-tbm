@@ -41,7 +41,7 @@ public class ClientRequester(
             catch (InvalidProtocolBufferException e)
             {
                 _ = stream.Seek(0, SeekOrigin.Begin);
-                var stream2 = new MemoryStream((int)stream.Length);
+                using var stream2 = new MemoryStream((int)stream.Length);
                 stream.CopyTo(stream2);
                 if (!stream2.TryGetBuffer(out var buffer))
                     throw new ObjectDisposedException(nameof(stream2));
@@ -59,7 +59,9 @@ public class ClientRequester(
         try
         {
             using var response = await requester();
+#pragma warning disable IDISP001 // Dispose created
             var stream = await response.EnsureSuccessStatusCode().Content.ReadAsStreamAsync();
+#pragma warning restore IDISP001 // Dispose created
             return responseConsumer(stream);
         }
         catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
@@ -91,7 +93,11 @@ public class ClientRequester(
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
-        return await Post(http => http.PostAsync(url, new FormUrlEncodedContent(postData), stoppingToken),
+        return await Post(async http =>
+            {
+                using var content = new FormUrlEncodedContent(postData);
+                return await http.PostAsync(url, content, stoppingToken);
+            },
             () => logger.LogTrace("POST {} {}", url, postParam), stoppingToken);
     }
 
@@ -114,7 +120,8 @@ public class ClientRequester(
         var boundary = content.Headers.ContentType?.Parameters.First(header => header.Name == "boundary");
         if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
 
-        var request = new HttpRequestMessage(HttpMethod.Post, url) {Content = content};
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Content = content;
         _ = request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
         request.Headers.Add("x_bd_data_type", "protobuf");
         request.Headers.Accept.ParseAdd("*/*");
@@ -129,7 +136,9 @@ public class ClientRequester(
         Action logTraceAction,
         CancellationToken stoppingToken = default)
     {
+#pragma warning disable IDISP001 // Dispose created
         var http = httpFactory.CreateClient("tbClient");
+#pragma warning restore IDISP001 // Dispose created
         await requesterTcs.Wait(stoppingToken);
         if (_config.GetValue("LogTrace", false)) logTraceAction();
         var ret = responseTaskFactory(http);

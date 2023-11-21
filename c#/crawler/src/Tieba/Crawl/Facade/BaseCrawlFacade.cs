@@ -1,5 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
+[SuppressMessage("Major Code Smell", "S3881:\"IDisposable\" should be implemented correctly")]
 public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
         ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> logger,
         CrawlerDbContext.New dbContextFactory,
@@ -28,7 +29,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     protected UserParserAndSaver Users { get; } = users;
     private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => _saver ??= new(saverFactory(Posts));
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         GC.SuppressFinalize(this); // https://github.com/dotnet/roslyn-analyzers/issues/4745
         locks.ReleaseRange(lockId, _lockingPages);

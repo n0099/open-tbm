@@ -34,7 +34,9 @@ public class ImageRequester(
             await registry.Get<IAsyncPolicy<T>>($"tbImage<{typeof(T).Name}>")
                 .ExecuteAsync(async (_, _) => await action(), CreatePollyContext(), stoppingToken);
 
+#pragma warning disable IDISP001 // Dispose created
         var http = httpFactory.CreateClient("tbImage");
+#pragma warning restore IDISP001 // Dispose created
         var response = await ExecuteByPolly(async () =>
             (await http.GetAsync(urlFilename + ".jpg", stoppingToken)).EnsureSuccessStatusCode());
         var contentLength = response.Content.Headers.ContentLength;

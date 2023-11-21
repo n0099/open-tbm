@@ -132,12 +132,14 @@ public class ImageBatchConsumingWorker(
             stoppingToken.ThrowIfCancellationRequested();
             var frameBytes = new Rgb24[frame.Width * frame.Height];
             frame.CopyPixelDataTo(frameBytes);
-            var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
-            var stream = new MemoryStream();
+            using var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
+            using var stream = new MemoryStream();
             frameImage.SaveAsPng(stream);
             if (!stream.TryGetBuffer(out var buffer))
                 throw new ObjectDisposedException(nameof(stream));
+#pragma warning disable IDISP001 // Dispose created
             var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
+#pragma warning restore IDISP001 // Dispose created
             if (frameMat.Empty())
                 throw new($"Failed to decode frame {frameIndex} of image {imageId}.");
             return new(imageId, (uint)frameIndex, frameMat);
@@ -147,7 +149,7 @@ public class ImageBatchConsumingWorker(
         {
             if (Image.DetectFormat(imageBytes) is GifFormat)
             {
-                var image = Image.Load<Rgb24>(imageBytes);
+                using var image = Image.Load<Rgb24>(imageBytes);
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
                 var ret = image.Frames.AsEnumerable().Select(DecodeFrame).ToList();

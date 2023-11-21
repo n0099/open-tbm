@@ -16,7 +16,9 @@ public class PushAllPostContentsIntoSonicWorker(
     {
         await using var scope1 = scope0.BeginLifetimeScope();
         var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
         var forumPostCountsTuples = db.Database.GetDbConnection()
+#pragma warning restore IDISP004 // Don't ignore created IDisposable
             .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
                 string.Join(" UNION ALL ", (from f in db.Forums select f.Fid).AsEnumerable().Select(fid =>
                     $"SELECT {fid} AS Fid,"
@@ -49,11 +51,14 @@ public class PushAllPostContentsIntoSonicWorker(
                 sr => pusher.PushPost(fid, "subReplies", sr.Spid, Helper.ParseThenUnwrapPostContent(sr.ProtoBufBytes)), stoppingToken);
             await TriggerConsolidate();
 
-            async Task TriggerConsolidate() => await NSonicFactory.Control(
-                _config.GetValue("Hostname", "localhost"),
-                _config.GetValue("Port", 1491),
-                _config.GetValue("Secret", "SecretPassword")
-            ).TriggerAsync("consolidate");
+            async Task TriggerConsolidate()
+            {
+                using var control = NSonicFactory.Control(
+                    _config.GetValue("Hostname", "localhost"),
+                    _config.GetValue("Port", 1491),
+                    _config.GetValue("Secret", "SecretPassword"));
+                await control.TriggerAsync("consolidate");
+            }
         }
     }
 

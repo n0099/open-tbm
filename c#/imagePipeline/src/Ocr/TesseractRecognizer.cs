@@ -83,8 +83,10 @@ public sealed partial class TesseractRecognizer
         // not using RotatedRect.Angle directly since it's not based on a stable order of four vertices
         var degrees = GetRotationDegrees(textBox); // https://github.com/opencv/opencv/issues/23335
 
+#pragma warning disable IDISP001 // Dispose created
         // crop by circumscribed rectangle, intersect will prevent textBox outside originalMatrix
         var mat = new Mat(originalMatrix, new Rect(default, originalMatrix.Size()).Intersect(textBox.BoundingRect()));
+#pragma warning restore IDISP001 // Dispose created
 
         if (mat.Channels() != 1) Cv2.CvtColor(mat, mat, ColorConversionCodes.BGR2GRAY);
 

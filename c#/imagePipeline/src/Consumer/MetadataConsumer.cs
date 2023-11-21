@@ -188,7 +188,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 throw new ArgumentOutOfRangeException(nameof(timeStamp), timeStamp,
                     $"Unexpected \"{timeStamp}\", expecting three rationals.");
 
-            return new DateTime(year, month: month, day: day, hour, minute, second: 0)
+            return new DateTime(year, month: month, day: day, hour, minute, second: 0, DateTimeKind.Unspecified)
                 .AddSeconds(timeStamp[2].ToDouble()); // possible fractional seconds such as rational 5510/100
         }
 
@@ -345,7 +345,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                         int.Parse(m.Groups["year"].ValueSpan),
                         int.Parse(m.Groups["month"].ValueSpan),
                         int.Parse(m.Groups["day"].ValueSpan),
-                        hour: 0, minute: 0, second: 0)
+                        hour: 0, minute: 0, second: 0, DateTimeKind.Unspecified)
                     .AddHours(int.Parse(m.Groups["hour"].ValueSpan))
                     .AddMinutes(int.Parse(m.Groups["minute"].ValueSpan))
                     .AddSeconds(int.Parse(m.Groups["second"].ValueSpan)), Offset: null);

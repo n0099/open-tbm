@@ -32,9 +32,9 @@ public class ForumModeratorRevisionCrawlWorker(
         var requester = new DefaultHttpRequester(userAgent) {Headers = {
             {"Referrer", $"https://tieba.baidu.com/bawu2/platform/detailsInfo?word={HttpUtility.UrlEncode(forumName)}&ie=utf-8"}
         }};
-        var browsing = BrowsingContext.New(Configuration.Default.With(requester).WithDefaultLoader());
+        using var browsing = BrowsingContext.New(Configuration.Default.With(requester).WithDefaultLoader());
         var url = $"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forumName}";
-        var doc = await browsing.OpenAsync(url, stoppingToken);
+        using var doc = await browsing.OpenAsync(url, stoppingToken);
 
         return doc.QuerySelectorAll("div.bawu_single_type").Select(typeEl =>
         {

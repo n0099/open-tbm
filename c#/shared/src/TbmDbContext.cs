@@ -65,10 +65,12 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
             .UseCamelCaseNamingConvention();
 
         var dbSettings = config.GetSection("DbSettings");
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
         options.UseLoggerFactory(LoggerFactory.Create(builder =>
             builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})
                 .SetMinimumLevel((LogLevel)NLog.LogLevel.FromString(
                     dbSettings.GetValue("LogLevel", "Trace")).Ordinal)));
+#pragma warning restore IDISP004 // Don't ignore created IDisposable
         if (dbSettings.GetValue("EnableDetailedErrors", false)) options.EnableDetailedErrors();
         if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
     }
