@@ -4,11 +4,9 @@ namespace tbm.Crawler.Worker;
 
 public class RetryCrawlWorker(
         ILogger<RetryCrawlWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
-        IConfiguration config,
         ILifetimeScope scope0,
         IIndex<string, CrawlerLocks> registeredLocksLookup)
-    : CyclicCrawlWorker(logger, applicationLifetime, config)
+    : CyclicCrawlWorker
 {
     protected override async Task DoWork(CancellationToken stoppingToken)
     {

@@ -6,14 +6,13 @@ using static tbm.Crawler.Db.Revision.UserRevision;
 
 namespace tbm.Crawler.Db;
 
-public class CrawlerDbContext : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>
+public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>
 {
-    public CrawlerDbContext(IConfiguration config) : base(config) => Fid = 0;
-    public CrawlerDbContext(IConfiguration config, Fid fid) : base(config) => Fid = fid;
+    public CrawlerDbContext() : this(fid: 0) { }
     public delegate CrawlerDbContext NewDefault();
     public delegate CrawlerDbContext New(Fid fid);
 
-    public Fid Fid { get; }
+    public Fid Fid { get; } = fid;
     public DbSet<TiebaUser> Users => Set<TiebaUser>();
     public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
     public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();

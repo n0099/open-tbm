@@ -4,11 +4,10 @@ namespace tbm.Crawler.Worker;
 
 public class PushAllPostContentsIntoSonicWorker(
         ILogger<PushAllPostContentsIntoSonicWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
         ILifetimeScope scope0,
         SonicPusher pusher)
-    : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
+    : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     private readonly IConfiguration _config = config.GetSection("Sonic");
 

@@ -47,10 +47,10 @@ public abstract class TbmDbContext : DbContext
         }
     }
 }
-public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
-    : TbmDbContext
+public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
+    public required IConfiguration Config { private get; init; }
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
@@ -58,13 +58,13 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
 #pragma warning disable S927 // Parameter names should match base declaration and other partial definitions
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        var connectionStr = config.GetConnectionString("Main");
+        var connectionStr = Config.GetConnectionString("Main");
         options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr), OnConfiguringMysql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .AddInterceptors(SelectForUpdateCommandInterceptorInstance)
             .UseCamelCaseNamingConvention();
 
-        var dbSettings = config.GetSection("DbSettings");
+        var dbSettings = Config.GetSection("DbSettings");
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
         options.UseLoggerFactory(LoggerFactory.Create(builder =>
             builder.AddNLog(new NLogProviderOptions {RemoveLoggerFactoryFilter = false})

@@ -1,7 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ThreadArchiveCrawler(ClientRequester requester, string forumName)
-    : ThreadCrawler(requester, forumName)
+public class ThreadArchiveCrawler(string forumName) : ThreadCrawler(forumName)
 {
     public new delegate ThreadArchiveCrawler New(string forumName);
 

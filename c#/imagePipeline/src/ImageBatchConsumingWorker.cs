@@ -8,10 +8,9 @@ namespace tbm.ImagePipeline;
 
 public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
         ILifetimeScope scope0,
         Channel<List<ImageWithBytes>> channel)
-    : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
+    : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     protected override async Task DoWork(CancellationToken stoppingToken)
     {

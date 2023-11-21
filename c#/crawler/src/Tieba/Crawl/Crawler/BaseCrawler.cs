@@ -12,11 +12,11 @@ public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
     public record Response(TResponse Result, CrawlRequestFlag Flag = CrawlRequestFlag.None);
     protected record Request(Task<TResponse> Response, CrawlRequestFlag Flag = CrawlRequestFlag.None);
 }
-public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>(ClientRequester requester)
+public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    protected ClientRequester Requester { get; } = requester;
+    public required ClientRequester Requester { protected get; init; }
 
     public async Task<Response[]> CrawlSinglePage(Page page, CancellationToken stoppingToken = default) =>
         await Task.WhenAll(GetRequestsForPage(page, stoppingToken)

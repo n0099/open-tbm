@@ -1,7 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ThreadCrawler(ClientRequester requester, string forumName)
-    : BaseCrawler<ThreadResponse, Thread>(requester)
+public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Thread>
 {
     protected const string LegacyEndPointUrl = $"{ClientRequester.LegacyClientApiDomain}/{EndPointUrl}";
     private const string EndPointUrl = "c/f/frs/page?cmd=301001";

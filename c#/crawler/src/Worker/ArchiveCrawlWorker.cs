@@ -5,11 +5,8 @@ namespace tbm.Crawler.Worker;
 #pragma warning disable SA1200 // Using directives should be placed correctly
 using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPost>>;
 
-public class ArchiveCrawlWorker(
-        ILogger<ArchiveCrawlWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
-        ILifetimeScope scope0)
-    : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true, shouldExitOnFinish: true)
+public class ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0)
+    : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
     // any request with page offset that larger than 10k threads will be respond with results from the first page

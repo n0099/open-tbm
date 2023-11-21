@@ -4,11 +4,10 @@ using static tbm.ImagePipeline.Db.ImageMetadata;
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>
+public class ImagePipelineDbContext(Fid fid, string script)
+    : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>
 {
-    public ImagePipelineDbContext(IConfiguration config) : base(config) => (Fid, Script) = (0, "");
-    public ImagePipelineDbContext(IConfiguration config, Fid fid, string script)
-        : base(config) => (Fid, Script) = (fid, script);
+    public ImagePipelineDbContext() : this(fid: 0, script: "") { }
     public delegate ImagePipelineDbContext NewDefault();
     public delegate ImagePipelineDbContext New(Fid fid, string script);
 
@@ -19,8 +18,8 @@ public class ImagePipelineDbContext : TbmDbContext<ImagePipelineDbContext.ModelC
     public DbSet<ImageHash> ImageHashes => Set<ImageHash>();
     public DbSet<ImageMetadata> ImageMetadata => Set<ImageMetadata>();
     public DbSet<ImageFailed> ImageFailed => Set<ImageFailed>();
-    private Fid Fid { get; }
-    private string Script { get; }
+    private Fid Fid { get; } = fid;
+    private string Script { get; } = script;
 
     protected override void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
 

@@ -2,24 +2,20 @@ namespace tbm.Crawler.Worker;
 
 public abstract class CyclicCrawlWorker : ErrorableWorker
 {
-    private readonly IConfiguration _config;
     private readonly bool _shouldRunAtFirst;
     private int _interval; // in seconds
 
-    protected CyclicCrawlWorker(
-        ILogger<CyclicCrawlWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
-        IConfiguration config,
-        bool shouldRunAtFirst = true)
-        : base(logger, applicationLifetime)
+    protected CyclicCrawlWorker(bool shouldRunAtFirst = true)
     {
-        (_config, _shouldRunAtFirst) = (config, shouldRunAtFirst);
+        _shouldRunAtFirst = shouldRunAtFirst;
         _ = SyncCrawlIntervalWithConfig();
     }
 
+    public required IConfiguration Config { private get; init; }
+
     protected int SyncCrawlIntervalWithConfig()
     {
-        _interval = _config.GetValue("CrawlInterval", 60);
+        _interval = Config.GetValue("CrawlInterval", 60);
         return _interval;
     }
 

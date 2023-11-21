@@ -15,13 +15,7 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
     // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
     private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
 
-    public MainCrawlWorker(
-        ILogger<MainCrawlWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
-        IConfiguration config,
-        ILifetimeScope scope0,
-        IIndex<string, CrawlerLocks> locks)
-        : base(logger, applicationLifetime, config)
+    public MainCrawlWorker(ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks)
     {
         _scope0 = scope0;
 

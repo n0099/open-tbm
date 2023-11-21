@@ -1,12 +1,11 @@
 namespace tbm.ImagePipeline;
 
 public class ImageBatchProducingWorker(
-    ILogger<ImageBatchProducingWorker> logger,
-    IHostApplicationLifetime applicationLifetime,
-    IConfiguration config,
-    ILifetimeScope scope0, ImageRequester imageRequester,
-    Channel<List<ImageWithBytes>> channel
-) : ErrorableWorker(logger, applicationLifetime, shouldExitOnException: true)
+        ILogger<ImageBatchProducingWorker> logger,
+        IConfiguration config,
+        ILifetimeScope scope0, ImageRequester imageRequester,
+        Channel<List<ImageWithBytes>> channel)
+    : ErrorableWorker(shouldExitOnException: true)
 {
     private readonly IConfigurationSection _config = config.GetSection("ImageBatchProducer");
     private int ProduceImageBatchSize => _config.GetValue("ProduceImageBatchSize", 16);

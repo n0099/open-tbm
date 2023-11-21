@@ -2,9 +2,8 @@ namespace tbm.Crawler.Worker;
 
 public class ResumeSuspendPostContentsPushingWorker(
         ILogger<ResumeSuspendPostContentsPushingWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
         SonicPusher pusher)
-    : ErrorableWorker(logger, applicationLifetime)
+    : ErrorableWorker
 {
     public static string GetFilePath(string postType) =>
         Path.Combine(AppContext.BaseDirectory, $"suspendPostContentsPushIntoSonic.{postType}.csv");

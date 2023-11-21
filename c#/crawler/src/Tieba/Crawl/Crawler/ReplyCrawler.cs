@@ -1,7 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ReplyCrawler(ClientRequester requester, Fid fid, Tid tid)
-    : BaseCrawler<ReplyResponse, Reply>(requester)
+public class ReplyCrawler(Fid fid, Tid tid) : BaseCrawler<ReplyResponse, Reply>
 {
     public delegate ReplyCrawler New(Fid fid, Tid tid);
 

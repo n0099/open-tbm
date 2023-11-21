@@ -3,17 +3,14 @@ using Microsoft.Extensions.Logging;
 
 namespace tbm.Shared;
 
-public abstract class ErrorableWorker(
-        ILogger<ErrorableWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
-        bool shouldExitOnException = false,
-        bool shouldExitOnFinish = false)
+public abstract class ErrorableWorker(bool shouldExitOnException = false, bool shouldExitOnFinish = false)
     : BackgroundService
 {
+    public required ILogger<ErrorableWorker> Logger { private get; init; }
+    public required IHostApplicationLifetime ApplicationLifetime { private get; init; }
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken) => DoWorkWithExceptionLogging(stoppingToken);
-
     protected abstract Task DoWork(CancellationToken stoppingToken);
-
     protected async Task DoWorkWithExceptionLogging(CancellationToken stoppingToken)
     {
         try
@@ -22,20 +19,20 @@ public abstract class ErrorableWorker(
             await DoWork(stoppingToken);
 
             // https://blog.stephencleary.com/2020/06/backgroundservice-gotcha-application-lifetime.html
-            if (shouldExitOnFinish) applicationLifetime.StopApplication();
+            if (shouldExitOnFinish) ApplicationLifetime.StopApplication();
         }
         catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
         {
-            logger.LogInformation("{}: {} CancellationToken={}",
+            Logger.LogInformation("{}: {} CancellationToken={}",
                 e.GetType().FullName, e.Message, e.CancellationToken);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Exception");
+            Logger.LogError(e, "Exception");
 
             // https://stackoverflow.com/questions/68387710/exit-the-application-with-exit-code-from-async-thread
             Environment.ExitCode = 1;
-            if (shouldExitOnException) applicationLifetime.StopApplication();
+            if (shouldExitOnException) ApplicationLifetime.StopApplication();
         }
     }
 }

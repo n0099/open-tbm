@@ -5,12 +5,8 @@ using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace tbm.Crawler.Worker;
 
-public class ForumModeratorRevisionCrawlWorker(
-        ILogger<ForumModeratorRevisionCrawlWorker> logger,
-        IHostApplicationLifetime applicationLifetime,
-        IConfiguration config,
-        ILifetimeScope scope0)
-    : CyclicCrawlWorker(logger, applicationLifetime, config, shouldRunAtFirst: false)
+public class ForumModeratorRevisionCrawlWorker(IConfiguration config, ILifetimeScope scope0)
+    : CyclicCrawlWorker(shouldRunAtFirst: false)
 {
     private readonly IConfiguration _config = config.GetSection("CrawlForumModeratorRevision");
 
