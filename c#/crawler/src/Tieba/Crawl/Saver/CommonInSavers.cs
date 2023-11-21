@@ -16,8 +16,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
         FieldChangeIgnoranceDelegates userFieldChangeIgnorance,
         Func<TPostOrUser, TRevision> revisionFactory,
         ILookup<bool, TPostOrUser> existingOrNewLookup,
-        Func<TPostOrUser, TPostOrUser> existingSelector
-    )
+        Func<TPostOrUser, TPostOrUser> existingSelector)
         where TPostOrUser : class
         where TRevision : class, IRevision
     {

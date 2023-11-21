@@ -45,8 +45,7 @@ public class AuthorRevisionSaver(string triggeredByPostType)
         Func<TPost, TValue?> postAuthorFieldValueSelector,
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
         Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-        Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory
-    )
+        Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
         where TPost : class, IPost
         where TRevision : AuthorRevision
     {

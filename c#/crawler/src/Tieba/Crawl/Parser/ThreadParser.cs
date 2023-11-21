@@ -18,7 +18,9 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
             o.Tid = (Tid)inPost.Tid;
             o.FirstReplyExcerpt = inPost.Abstract;
             o.ThreadType = (ulong)inPost.ThreadTypes;
+#pragma warning disable S3358 // Ternary operators should not be nested
             o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
+#pragma warning restore S3358 // Ternary operators should not be nested
             o.IsGood = (byte?)inPost.IsGood.NullIfZero();
             o.TopicType = inPost.LivePostType.NullIfEmpty();
             o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.SaveParentThreadTitle()

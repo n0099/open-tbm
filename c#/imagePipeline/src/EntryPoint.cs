@@ -59,11 +59,11 @@ public partial class EntryPoint : BaseEntryPoint
         builder.RegisterType<ImageRequester>();
 
         builder.Register(_ => Channel.CreateBounded<List<ImageWithBytes>>(
-            new BoundedChannelOptions(context.Configuration
-                .GetSection("ImageBatchProducer")
-                .GetValue("MaxBufferedImageBatches", 8)
-            ) {SingleReader = true, SingleWriter = true})
-        ).SingleInstance();
+                new BoundedChannelOptions(context.Configuration
+                    .GetSection("ImageBatchProducer")
+                    .GetValue("MaxBufferedImageBatches", 8))
+                    {SingleReader = true, SingleWriter = true}))
+            .SingleInstance();
         builder.Register(_ =>
         {
             var limitRps = context.Configuration

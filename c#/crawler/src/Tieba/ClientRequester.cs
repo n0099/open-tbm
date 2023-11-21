@@ -28,8 +28,7 @@ public class ClientRequester(
     public async Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
         string url, string clientVersion,
         TRequest requestParam, Action<TRequest, Common> commonParamSetter,
-        Func<TResponse> responseFactory, CancellationToken stoppingToken = default
-    )
+        Func<TResponse> responseFactory, CancellationToken stoppingToken = default)
         where TRequest : class, IMessage<TRequest>
         where TResponse : class, IMessage<TResponse> =>
         await Request(() => PostProtoBuf(url, clientVersion, requestParam, commonParamSetter, stoppingToken), stream =>
@@ -99,8 +98,7 @@ public class ClientRequester(
     private async Task<HttpResponseMessage> PostProtoBuf<TRequest>(
         string url, string clientVersion,
         TRequest requestParam, Action<TRequest, Common> commonParamSetter,
-        CancellationToken stoppingToken = default
-    )
+        CancellationToken stoppingToken = default)
         where TRequest : class, IMessage<TRequest>
     {
         // https://github.com/Starry-OvO/aiotieba/issues/67#issuecomment-1376006123

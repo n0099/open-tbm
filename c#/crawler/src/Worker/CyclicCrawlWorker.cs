@@ -10,8 +10,8 @@ public abstract class CyclicCrawlWorker : ErrorableWorker
         ILogger<CyclicCrawlWorker> logger,
         IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
-        bool shouldRunAtFirst = true
-    ) : base(logger, applicationLifetime)
+        bool shouldRunAtFirst = true)
+        : base(logger, applicationLifetime)
     {
         (_config, _shouldRunAtFirst) = (config, shouldRunAtFirst);
         _ = SyncCrawlIntervalWithConfig();

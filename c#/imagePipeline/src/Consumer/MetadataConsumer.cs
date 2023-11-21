@@ -90,8 +90,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
     private TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
         IEnumerable<ulong> commonXxHash3ToIgnore,
         TImageSharpProfile? profile,
-        Func<TImageSharpProfile, byte[]?> rawBytesSelector
-    )
+        Func<TImageSharpProfile, byte[]?> rawBytesSelector)
         where TEmbeddedMetadata : class, ImageMetadata.IEmbedded, new()
     {
         if (profile == null) return null;

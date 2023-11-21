@@ -76,8 +76,7 @@ public sealed partial class TesseractRecognizer
         ImageKey imageKey,
         Mat originalMatrix,
         IEnumerable<RotatedRect> textBoxes,
-        CancellationToken stoppingToken = default
-    ) => textBoxes.Select(textBox =>
+        CancellationToken stoppingToken = default) => textBoxes.Select(textBox =>
     {
         stoppingToken.ThrowIfCancellationRequested();
 

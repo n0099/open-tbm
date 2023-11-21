@@ -13,8 +13,7 @@ public sealed class SonicPusher : IDisposable
         Ingest = NSonicFactory.Ingest(
             _config.GetValue("Hostname", "localhost"),
             _config.GetValue("Port", 1491),
-            _config.GetValue("Secret", "SecretPassword")
-        );
+            _config.GetValue("Secret", "SecretPassword"));
         CollectionPrefix = _config.GetValue<string>("CollectionPrefix") ?? "tbm_";
     }
 

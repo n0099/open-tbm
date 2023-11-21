@@ -27,8 +27,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
         CrawlerDbContext db,
         Func<TPost, ulong> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
-        ExpressionStarter<TPost> existingPostPredicate
-    )
+        ExpressionStarter<TPost> existingPostPredicate)
         where TRevision : class, IRevision
     {
         var dbSet = db.Set<TPost>().ForUpdate();

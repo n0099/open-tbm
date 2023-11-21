@@ -20,8 +20,8 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
         IHostApplicationLifetime applicationLifetime,
         IConfiguration config,
         ILifetimeScope scope0,
-        IIndex<string, CrawlerLocks> locks
-    ) : base(logger, applicationLifetime, config)
+        IIndex<string, CrawlerLocks> locks)
+        : base(logger, applicationLifetime, config)
     {
         _scope0 = scope0;
 

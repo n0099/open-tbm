@@ -78,6 +78,7 @@ public class ThreadLateCrawlerAndSaver(
                 }
 
                 var thread = json.GetProperty("thread");
+#pragma warning disable S3358 // Ternary operators should not be nested
                 return thread.TryGetProperty("thread_info", out var threadInfo)
                     ? threadInfo.TryGetProperty("phone_type", out var phoneType)
                         ? new ThreadPost
@@ -91,6 +92,7 @@ public class ThreadLateCrawlerAndSaver(
                     // silent fail without any retry since the field `json.thread.thread_info`
                     // might not exists in current and upcoming responses
                     : null;
+#pragma warning restore S3358 // Ternary operators should not be nested
             }
             catch (Exception e) when (e is not TiebaException)
             {

@@ -1,6 +1,5 @@
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -11,13 +10,47 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Shared;
 
+public abstract class TbmDbContext : DbContext
+{
+    protected static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
+
+    protected sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
+    { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
+        public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
+        {
+            ManipulateCommand(command);
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
+        {
+            ManipulateCommand(command);
+            return new(result);
+        }
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
+        {
+            ManipulateCommand(command);
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            ManipulateCommand(command);
+            return new(result);
+        }
+
+        private static void ManipulateCommand(IDbCommand command)
+        {
+            if (command.CommandText.StartsWith("-- ForUpdate", StringComparison.Ordinal))
+                command.CommandText += " FOR UPDATE";
+        }
+    }
+}
 public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
-    : DbContext
+    : TbmDbContext
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
-    [SuppressMessage("Major Code Smell", "S2743:Static fields should not be used in generic types")]
-    private static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
-
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
@@ -53,37 +86,4 @@ public class TbmDbContext<TModelCacheKeyFactory>(IConfiguration config)
 #pragma warning restore IDE0058 // Expression value is never used
 
     protected virtual void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) { }
-
-    private sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
-    { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
-        public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
-        {
-            ManipulateCommand(command);
-            return result;
-        }
-
-        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
-        {
-            ManipulateCommand(command);
-            return new(result);
-        }
-
-        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
-        {
-            ManipulateCommand(command);
-            return result;
-        }
-
-        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
-        {
-            ManipulateCommand(command);
-            return new(result);
-        }
-
-        private static void ManipulateCommand(IDbCommand command)
-        {
-            if (command.CommandText.StartsWith("-- ForUpdate", StringComparison.Ordinal))
-                command.CommandText += " FOR UPDATE";
-        }
-    }
 }
