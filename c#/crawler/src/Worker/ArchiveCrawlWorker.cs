@@ -5,7 +5,13 @@ namespace tbm.Crawler.Worker;
 #pragma warning disable SA1200 // Using directives should be placed correctly
 using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPost>>;
 
-public class ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeScope scope0)
+public class ArchiveCrawlWorker(
+        ILogger<ArchiveCrawlWorker> logger,
+        Func<Owned<ThreadLateCrawlerAndSaver.New>> threadLateCrawlerAndSaverFactory,
+        Func<Owned<ThreadArchiveCrawler.New>> threadArchiveCrawlerFactory,
+        Func<Owned<ThreadArchiveCrawlFacade.New>> threadArchiveCrawlFacadeFactory,
+        Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
+        Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
@@ -98,21 +104,22 @@ public class ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeSco
 
     private async Task<int> GetTotalPageForForum(CancellationToken stoppingToken = default)
     {
-        await using var scope1 = scope0.BeginLifetimeScope();
-        return (await scope1.Resolve<ThreadArchiveCrawler.New>()(_forumName).CrawlSinglePage(1, stoppingToken))
+        await using var crawlerFactory = threadArchiveCrawlerFactory();
+        return (await crawlerFactory.Value(_forumName).CrawlSinglePage(1, stoppingToken))
             .Max(response => response.Result.Data.Page.TotalPage);
     }
 
     private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
-        await using var scope1 = scope0.BeginLifetimeScope();
-        var crawler = scope1.Resolve<ThreadArchiveCrawlFacade.New>()(fid, forumName);
+        await using var facadeFactory = threadArchiveCrawlFacadeFactory();
+        var crawler = facadeFactory.Value(fid, forumName);
         var savedThreads = (await crawler.CrawlPageRange(
             page, page, stoppingToken)).SaveCrawled(stoppingToken);
         if (savedThreads != null)
         {
             var failureCountsKeyByTid = savedThreads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await scope1.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
+            await using var threadLate = threadLateCrawlerAndSaverFactory();
+            await threadLate.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }
         return savedThreads;
     }
@@ -129,8 +136,8 @@ public class ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeSco
         await Task.WhenAll(savedThreads.AllAfter.Select(th => th.Tid).Distinct().Select(async tid =>
         {
             if (stoppingToken.IsCancellationRequested) return;
-            await using var scope1 = scope0.BeginLifetimeScope();
-            var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid);
+            await using var facadeFactory = replyCrawlFacadeFactory();
+            var crawler = facadeFactory.Value(fid, tid);
             savedRepliesKeyByTid.SetIfNotNull(tid,
                 (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
         }));
@@ -156,8 +163,8 @@ public class ArchiveCrawlWorker(ILogger<ArchiveCrawlWorker> logger, ILifetimeSco
         {
             if (stoppingToken.IsCancellationRequested) return;
             var (tid, pid) = t;
-            await using var scope1 = scope0.BeginLifetimeScope();
-            var saved = (await scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid)
+            await using var facadeFactory = subReplyCrawlFacadeFactory();
+            var saved = (await facadeFactory.Value(fid, tid, pid)
                 .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
             if (saved == null) return;
             _ = Interlocked.Add(ref savedSubReplyCount, saved.AllAfter.Count);

@@ -16,6 +16,7 @@ global using Timer = System.Timers.Timer;
 
 global using Autofac;
 global using Autofac.Features.Indexed;
+global using Autofac.Features.OwnedInstances;
 global using CommunityToolkit.Diagnostics;
 global using Google.Protobuf;
 global using Google.Protobuf.Collections;

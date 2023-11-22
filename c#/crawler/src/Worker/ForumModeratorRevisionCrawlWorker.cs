@@ -5,16 +5,17 @@ using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 namespace tbm.Crawler.Worker;
 
-public class ForumModeratorRevisionCrawlWorker(IConfiguration config, ILifetimeScope scope0)
+public class ForumModeratorRevisionCrawlWorker
+    (IConfiguration config, Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory)
     : CyclicCrawlWorker(shouldRunAtFirst: false)
 {
     private readonly IConfiguration _config = config.GetSection("CrawlForumModeratorRevision");
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await using var scope1 = scope0.BeginLifetimeScope();
-        var db0 = scope1.Resolve<CrawlerDbContext.NewDefault>()();
-        foreach (var forum in from e in db0.Forums.AsNoTracking() where e.IsCrawling select new {e.Fid, e.Name})
+        await using var dbFactory = dbContextDefaultFactory();
+        foreach (var forum in from e in dbFactory.Value()
+                     .Forums.AsNoTracking() where e.IsCrawling select new {e.Fid, e.Name})
         {
             if (stoppingToken.IsCancellationRequested) return;
             await Save(forum.Fid, await Crawl(forum.Name, stoppingToken), stoppingToken);
@@ -54,8 +55,8 @@ public class ForumModeratorRevisionCrawlWorker(IConfiguration config, ILifetimeS
         IEnumerable<(string Type, string Portrait)> moderators,
         CancellationToken stoppingToken = default)
     {
-        await using var scope1 = scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
+        await using var dbFactory = dbContextDefaultFactory();
+        var db = dbFactory.Value();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
 
         Helper.GetNowTimestamp(out var now);

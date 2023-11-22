@@ -5,16 +5,17 @@ namespace tbm.Crawler.Worker;
 public class PushAllPostContentsIntoSonicWorker(
         ILogger<PushAllPostContentsIntoSonicWorker> logger,
         IConfiguration config,
-        ILifetimeScope scope0,
-        SonicPusher pusher)
+        SonicPusher pusher,
+        Func<Owned<CrawlerDbContext.New>> dbContextFactory,
+        Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     private readonly IConfiguration _config = config.GetSection("Sonic");
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        await using var scope1 = scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
+        await using var dbDefaultFactory = dbContextDefaultFactory();
+        var db = dbDefaultFactory.Value();
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
         var forumPostCountsTuples = db.Database.GetDbConnection()
 #pragma warning restore IDISP004 // Don't ignore created IDisposable
@@ -31,7 +32,8 @@ public class PushAllPostContentsIntoSonicWorker(
         foreach (var (index, (fid, replyCount, subReplyCount)) in forumPostCountsTuples.Index())
         {
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
-            var dbWithFid = scope1.Resolve<CrawlerDbContext.New>()(fid);
+            await using var dbFactory = dbContextFactory();
+            var dbWithFid = dbFactory.Value(fid);
 
             // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
             // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure

@@ -8,17 +8,17 @@ namespace tbm.Crawler.Worker;
 using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
 
-public partial class MainCrawlWorker : CyclicCrawlWorker
+public partial class MainCrawlWorker(
+    Func<Owned<CrawlerDbContext.New>> dbContextFactory,
+    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
+    Func<Owned<ThreadLateCrawlerAndSaver.New>> threadLateCrawlerAndSaverFactory,
+    Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
+    Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
+    Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
+    : CyclicCrawlWorker
 {
-    private readonly ILifetimeScope _scope0;
-
     // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
     private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
-
-    public MainCrawlWorker(ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks)
-    {
-        _scope0 = scope0;
-    }
 
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
@@ -29,10 +29,9 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
     private async IAsyncEnumerable<FidAndName> ForumGenerator
         ([EnumeratorCancellation] CancellationToken stoppingToken = default)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<CrawlerDbContext.NewDefault>()();
+        await using var dbFactory = dbContextDefaultFactory();
         var forums = (
-            from f in db.Forums.AsNoTracking()
+            from f in dbFactory.Value().Forums.AsNoTracking()
             where f.IsCrawling
             select new FidAndName(f.Fid, f.Name)).ToList();
         var yieldInterval = SyncCrawlIntervalWithConfig() / (float)forums.Count;
@@ -49,20 +48,20 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
         var savedThreads = new SavedThreadsList();
         Time minLatestReplyPostedAt;
         Page crawlingPage = 0;
-        await using var scope1 = _scope0.BeginLifetimeScope();
-        if (!_latestReplyPostedAtCheckpointCache.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
 
-            // get the largest value of field latestReplyPostedAt in all stored threads of this forum
+        if (!_latestReplyPostedAtCheckpointCache.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
+        { // get the largest value of field latestReplyPostedAt in all stored threads of this forum
             // this approach is not as accurate as extracting the last thread in the response list and needs a full table scan on db
             // https://stackoverflow.com/questions/341264/max-or-default
-            maxLatestReplyPostedAtOccurInPreviousCrawl =
-                scope1.Resolve<CrawlerDbContext.New>()(fid).Threads
-                    .Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
+            await using var dbFactory = dbContextFactory();
+            maxLatestReplyPostedAtOccurInPreviousCrawl = dbFactory.Value(fid)
+                .Threads.Max(th => (Time?)th.LatestReplyPostedAt) ?? Time.MaxValue;
+        }
         do
         {
             crawlingPage++;
-            await using var scope2 = scope1.BeginLifetimeScope();
-            var crawler = scope2.Resolve<ThreadCrawlFacade.New>()(fid, forumName);
+            await using var facadeFactory = threadCrawlFacadeFactory();
+            var crawler = facadeFactory.Value(fid, forumName);
             var currentPageChangeSet = (await crawler.CrawlPageRange(
                 crawlingPage, crawlingPage, stoppingToken)).SaveCrawled(stoppingToken);
             if (currentPageChangeSet != null)
@@ -83,9 +82,10 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
         await Task.WhenAll(savedThreads.Select(async threads =>
         {
             if (stoppingToken.IsCancellationRequested) return;
-            await using var scope3 = _scope0.BeginLifetimeScope();
-            var failureCountsKeyByTid = threads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await scope3.Resolve<ThreadLateCrawlerAndSaver.New>()(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
+            var failureCountsKeyByTid = threads.NewlyAdded
+                .ToDictionary(th => th.Tid, _ => (FailureCount)0);
+            await using var threadLateFactory = threadLateCrawlerAndSaverFactory();
+            await threadLateFactory.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }));
 
         return savedThreads;
@@ -96,8 +96,11 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
 public partial class MainCrawlWorker
 {
     public static async Task<SavedRepliesKeyByTid> CrawlReplies(
-        SavedThreadsList savedThreads, Fid fid,
-        ILifetimeScope scope, CancellationToken stoppingToken = default)
+        Func<Owned<CrawlerDbContext.New>> dbContextFactory,
+        Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
+        SavedThreadsList savedThreads,
+        Fid fid,
+        CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
         var shouldCrawlParentPosts = savedThreads.Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
@@ -116,17 +119,21 @@ public partial class MainCrawlWorker
         await Task.WhenAll(shouldCrawlParentPosts.Select(async tid =>
         {
             if (stoppingToken.IsCancellationRequested) return;
-            await using var scope1 = scope.BeginLifetimeScope();
-            var crawler = scope1.Resolve<ReplyCrawlFacade.New>()(fid, tid)
-                .AddExceptionHandler(SaveThreadMissingFirstReply(scope1, fid, tid, savedThreads).Invoke);
+            await using var facadeFactory = replyCrawlFacadeFactory();
+            var crawler = facadeFactory.Value(fid, tid)
+                .AddExceptionHandler(SaveThreadMissingFirstReply(dbContextFactory, fid, tid, savedThreads).Invoke);
             savedRepliesKeyByTid.SetIfNotNull(tid,
                 (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
         }));
         return savedRepliesKeyByTid;
     }
 
-    private static Action<Exception> SaveThreadMissingFirstReply
-        (ILifetimeScope scope, Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
+    private static Action<Exception> SaveThreadMissingFirstReply(
+        Func<Owned<CrawlerDbContext.New>> dbContextFactory,
+        Fid fid,
+        Tid tid,
+        SavedThreadsList savedThreads
+    ) => ex =>
     {
         if (ex is not EmptyPostListException) return;
         var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(th => th.Tid == tid)).FirstOrDefault();
@@ -142,7 +149,8 @@ public partial class MainCrawlWorker
         };
         if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
 
-        var db = scope.Resolve<CrawlerDbContext.New>()(fid);
+        using var dbFactory = dbContextFactory();
+        var db = dbFactory.Value(fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
         var firstReply =
             from r in db.Replies.AsNoTracking()
@@ -169,13 +177,15 @@ public partial class MainCrawlWorker
 
     private async Task<SavedRepliesKeyByTid> CrawlReplies
         (SavedThreadsList savedThreads, Fid fid, CancellationToken stoppingToken = default) =>
-        await CrawlReplies(savedThreads, fid, _scope0, stoppingToken);
+        await CrawlReplies(dbContextFactory, replyCrawlFacadeFactory, savedThreads, fid, stoppingToken);
 }
 public partial class MainCrawlWorker
 {
     public static async Task CrawlSubReplies(
-        IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid, Fid fid,
-        ILifetimeScope scope, CancellationToken stoppingToken = default)
+        Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory,
+        IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid,
+        Fid fid,
+        CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
         var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
@@ -194,13 +204,13 @@ public partial class MainCrawlWorker
         {
             if (stoppingToken.IsCancellationRequested) return;
             var (tid, pid) = t;
-            await using var scope1 = scope.BeginLifetimeScope();
-            var crawler = scope1.Resolve<SubReplyCrawlFacade.New>()(fid, tid, pid);
+            await using var facadeFactory = subReplyCrawlFacadeFactory();
+            var crawler = facadeFactory.Value(fid, tid, pid);
             _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
         }));
     }
 
     private async Task CrawlSubReplies
         (SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default) =>
-        await CrawlSubReplies(savedRepliesKeyByTid, fid, _scope0, stoppingToken);
+        await CrawlSubReplies(subReplyCrawlFacadeFactory, savedRepliesKeyByTid, fid, stoppingToken);
 }
