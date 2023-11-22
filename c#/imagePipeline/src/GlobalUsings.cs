@@ -6,6 +6,7 @@ global using System.Threading.Channels;
 global using System.Threading.RateLimiting;
 
 global using Autofac;
+global using Autofac.Features.OwnedInstances;
 global using CommunityToolkit.Diagnostics;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Configuration;

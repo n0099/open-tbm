@@ -101,7 +101,7 @@ public partial class ReplySaver(
         {
             Pid = t.Pid,
 
-            // no need to manually invoke DbContent.AddRange(images) since EF Core will do these chore
+            // no need to manually invoke DbContext.AddRange(images) since EF Core will do these chore
             // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
             // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key
             // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error

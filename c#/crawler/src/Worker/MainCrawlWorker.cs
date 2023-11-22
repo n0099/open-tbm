@@ -18,12 +18,6 @@ public partial class MainCrawlWorker : CyclicCrawlWorker
     public MainCrawlWorker(ILifetimeScope scope0, IIndex<string, CrawlerLocks> locks)
     {
         _scope0 = scope0;
-
-        // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
-        _ = locks["thread"];
-        _ = locks["threadLate"];
-        _ = locks["reply"];
-        _ = locks["subReply"];
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)

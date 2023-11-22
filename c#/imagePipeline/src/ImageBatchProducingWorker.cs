@@ -3,8 +3,9 @@ namespace tbm.ImagePipeline;
 public class ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger,
         IConfiguration config,
-        ILifetimeScope scope0, ImageRequester imageRequester,
-        Channel<List<ImageWithBytes>> channel)
+        ImageRequester imageRequester,
+        Channel<List<ImageWithBytes>> channel,
+        Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true)
 {
     private readonly IConfigurationSection _config = config.GetSection("ImageBatchProducer");
@@ -47,15 +48,15 @@ public class ImageBatchProducingWorker(
         ImageId lastImageIdInPreviousBatch = 0;
         if (StartFromLatestSuccessful)
         {
-            using var scope1 = scope0.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
-            lastImageIdInPreviousBatch = db.ImageMetadata.AsNoTracking().Max(image => image.ImageId);
+            using var dbFactory = dbContextDefaultFactory();
+            lastImageIdInPreviousBatch = dbFactory.Value()
+                .ImageMetadata.AsNoTracking().Max(image => image.ImageId);
         }
         while (true)
         {
-            // dispose db inside scope1 after returned to prevent long running idle connection
-            using var scope1 = scope0.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
+            // dispose the scope of Owned<DbContext> after yield to prevent long-life idle connection
+            using var dbFactory = dbContextDefaultFactory();
+            var db = dbFactory.Value();
             var interlaceBatches = (
                     from i in db.ImageInReplies.AsNoTracking()
                     where i.ImageId > lastImageIdInPreviousBatch

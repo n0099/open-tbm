@@ -9,7 +9,9 @@ namespace tbm.ImagePipeline;
 public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
         ILifetimeScope scope0,
-        Channel<List<ImageWithBytes>> channel)
+        Channel<List<ImageWithBytes>> channel,
+        Func<Owned<ImagePipelineDbContext.New>> dbContextFactory,
+        Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     protected override async Task DoWork(CancellationToken stoppingToken)
@@ -40,12 +42,23 @@ public class ImageBatchConsumingWorker(
 
     private async Task Consume(IReadOnlyCollection<ImageWithBytes> imagesWithBytes, CancellationToken stoppingToken = default)
     {
+        await using var dbFactory = dbContextDefaultFactory();
+        var db = dbFactory.Value();
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+
         await using var scope1 = scope0.BeginLifetimeScope(builder =>
             builder.RegisterType<FailedImageHandler>()
                 .WithParameter(new NamedParameter("stoppingToken", stoppingToken))
                 .SingleInstance()); // only in this and nested scopes
-        var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+        var failedImageHandler = scope1.Resolve<FailedImageHandler>();
+
+        // these components requiring the singleton of FailedImageHandler in current scope
+        // each Func<Owned<T>> representing a factory Func<> to create new scope Owned<> to resolve component T
+        // https://autofac.readthedocs.io/en/latest/advanced/owned-instances.html
+        var metadataConsumerFactory = scope1.Resolve<Func<Owned<MetadataConsumer>>>();
+        var hashConsumerFactory = scope1.Resolve<Func<Owned<HashConsumer>>>();
+        var qrCodeConsumerFactory = scope1.Resolve<Func<Owned<QrCodeConsumer>>>();
+        var ocrConsumerFactory = scope1.Resolve<Func<Owned<OcrConsumer.New>>>();
 
         var imagesInReply = imagesWithBytes.Select(i => i.ImageInReply).ToList();
         db.AttachRange(imagesInReply);
@@ -63,12 +76,14 @@ public class ImageBatchConsumingWorker(
             logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
                 sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
 
-        void ConsumeConsumer<T>(
-            Expression<Func<ImageInReply, bool>> selector, IEnumerable<T> images,
-            IConsumer<T> consumer, string consumerType)
+        void ConsumeConsumer<TImage, TConsumer>(
+            Expression<Func<ImageInReply, bool>> selector, IEnumerable<TImage> images,
+            Func<Owned<TConsumer>> consumerFactory, string consumerType)
+            where TConsumer : IConsumer<TImage>
         {
+            using var consumer = consumerFactory();
             sw.Restart();
-            var (failed, consumed) = consumer.Consume(db, images, stoppingToken);
+            var (failed, consumed) = consumer.Value.Consume(db, images, stoppingToken);
             LogStopwatch(consumerType);
             MarkImagesInReplyAsConsumed(selector, consumed);
 
@@ -80,9 +95,8 @@ public class ImageBatchConsumingWorker(
 
         ConsumeConsumer(i => i.MetadataConsumed,
             imagesWithBytes.Where(i => !i.ImageInReply.MetadataConsumed),
-            scope1.Resolve<MetadataConsumer>(), "extract metadata");
+            metadataConsumerFactory, "extract metadata");
 
-        var failedImageHandler = scope1.Resolve<FailedImageHandler>();
         var imageKeysWithMatrix = failedImageHandler.TrySelect(imagesWithBytes
                     .Where(i => i.ImageInReply is not {HashConsumed: true, QrCodeConsumed: true, OcrConsumed: true}),
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
@@ -96,14 +110,14 @@ public class ImageBatchConsumingWorker(
                     .Select(i => i.ImageId), i => i.ImageId);
             ConsumeConsumer(i => i.HashConsumed,
                 ExceptConsumed(i => i.HashConsumed),
-                scope1.Resolve<HashConsumer>(), "calculate hash");
+                hashConsumerFactory, "calculate hash");
             ConsumeConsumer(i => i.QrCodeConsumed,
                 ExceptConsumed(i => i.QrCodeConsumed),
-                scope1.Resolve<QrCodeConsumer>(), "scan QRCode");
+                qrCodeConsumerFactory, "scan QRCode");
             await ConsumeOcrConsumer(consumedImagesId =>
                     MarkImagesInReplyAsConsumed(i => i.OcrConsumed, consumedImagesId),
                 ExceptConsumed(i => i.OcrConsumed).ToList(),
-                scope1, db.Database.GetDbConnection(), transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
+                ocrConsumerFactory, db.Database.GetDbConnection(), transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
         }
         finally
         {
@@ -168,43 +182,50 @@ public class ImageBatchConsumingWorker(
     private async Task ConsumeOcrConsumer(
         Action<IEnumerable<ImageId>> markImageInReplyAsConsumed,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
-        ILifetimeScope scope,
+        Func<Owned<OcrConsumer.New>> ocrConsumerFactory,
         DbConnection parentConnection,
         DbTransaction parentTransaction,
         IQueryable<ForumScript> forumScripts,
         CancellationToken stoppingToken = default)
     {
-        foreach (var scriptsGroupByFid in forumScripts.GroupBy(e => e.Fid, e => e.Script).ToList())
+        foreach (var scriptsGroupByFid in forumScripts
+                     .GroupBy(e => e.Fid, e => e.Script).ToList())
         {
-            await using var scope1 = scope.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.New>()(scriptsGroupByFid.Key, "");
-            db.Database.SetDbConnection(parentConnection);
-            _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
+            List<ImageKeyWithMatrix> GetImagesInCurrentFid()
+            { // dispose the scope of Owned<DbContext> after return to prevent long-life idle connection
+                using var dbFactory = dbContextFactory();
+                var db = dbFactory.Value(scriptsGroupByFid.Key, "");
+                db.Database.SetDbConnection(parentConnection);
+                _ = db.Database.UseTransaction(parentTransaction);
 
-            // try to know which fid owns current image batch
-            var imagesInCurrentFid = imageKeysWithMatrix
-                .IntersectBy(
-                    from replyContentImage in db.ReplyContentImages
-                    where imageKeysWithMatrix
-                        .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                        .Contains(replyContentImage.ImageId)
-                    select replyContentImage.ImageId,
-                    imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                .ToList();
+                // try to know which fid owns current image batch
+                return imageKeysWithMatrix
+                    .IntersectBy(
+                        from replyContentImage in db.ReplyContentImages
+                        where imageKeysWithMatrix
+                            .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                            .Contains(replyContentImage.ImageId)
+                        select replyContentImage.ImageId,
+                        imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                    .ToList();
+            }
+
+            var imagesInCurrentFid = GetImagesInCurrentFid();
             if (imagesInCurrentFid.Count == 0) continue;
             foreach (var script in scriptsGroupByFid)
                 await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
         }
         async Task ConsumeByFidAndScript(Fid fid, string script, IReadOnlyCollection<ImageKeyWithMatrix> imagesInCurrentFid)
         {
-            await using var scope1 = scope.BeginLifetimeScope();
-            var db = scope1.Resolve<ImagePipelineDbContext.New>()(fid, script);
+            await using var dbFactory = dbContextFactory();
+            var db = dbFactory.Value(fid, script);
 
             // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
             db.Database.SetDbConnection(parentConnection);
             _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
 
-            var ocrConsumer = scope1.Resolve<OcrConsumer.New>()(script);
+            await using var consumerFactory = ocrConsumerFactory();
+            var ocrConsumer = consumerFactory.Value(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
             var sw = new Stopwatch();
             sw.Start();
