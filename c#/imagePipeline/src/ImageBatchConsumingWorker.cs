@@ -196,7 +196,9 @@ public class ImageBatchConsumingWorker(
                 using var dbFactory = dbContextFactory();
                 var db = dbFactory.Value(scriptsGroupByFid.Key, "");
                 db.Database.SetDbConnection(parentConnection);
+#pragma warning disable IDISP004 // Don't ignore created IDisposable
                 _ = db.Database.UseTransaction(parentTransaction);
+#pragma warning restore IDISP004 // Don't ignore created IDisposable
 
                 // try to know which fid owns current image batch
                 return imageKeysWithMatrix

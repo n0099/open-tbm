@@ -132,8 +132,7 @@ public partial class MainCrawlWorker
         Func<Owned<CrawlerDbContext.New>> dbContextFactory,
         Fid fid,
         Tid tid,
-        SavedThreadsList savedThreads
-    ) => ex =>
+        SavedThreadsList savedThreads) => ex =>
     {
         if (ex is not EmptyPostListException) return;
         var parentThread = savedThreads.SelectMany(c => c.AllAfter.Where(th => th.Tid == tid)).FirstOrDefault();

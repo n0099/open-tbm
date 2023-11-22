@@ -61,10 +61,9 @@ public class RetryCrawlWorker(
                     var crawler = crawlerFactory.Value(fid, forumName);
                     var savedThreads = await crawler.RetryThenSave(pages, FailureCountSelector, stoppingToken);
                     if (savedThreads == null) return;
-                    await CrawlSubReplies(subReplyCrawlFacadeFactory,
-                        await CrawlReplies(dbContextFactory, replyCrawlFacadeFactory, new() {savedThreads},
-                            fid, stoppingToken),
-                        fid, stoppingToken);
+                    var savedReplies = await CrawlReplies
+                        (dbContextFactory, replyCrawlFacadeFactory, new() {savedThreads}, fid, stoppingToken);
+                    await CrawlSubReplies(subReplyCrawlFacadeFactory, savedReplies, fid, stoppingToken);
                 }
                 else if (lockType == "reply" && tid != null)
                 {

@@ -14,8 +14,10 @@ public class ForumModeratorRevisionCrawlWorker
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
         await using var dbFactory = dbContextDefaultFactory();
-        foreach (var forum in from e in dbFactory.Value()
-                     .Forums.AsNoTracking() where e.IsCrawling select new {e.Fid, e.Name})
+        foreach (var forum in
+                 from e in dbFactory.Value().Forums.AsNoTracking()
+                 where e.IsCrawling
+                 select new {e.Fid, e.Name})
         {
             if (stoppingToken.IsCancellationRequested) return;
             await Save(forum.Fid, await Crawl(forum.Name, stoppingToken), stoppingToken);

@@ -49,6 +49,7 @@ public class EntryPoint : BaseEntryPoint
                 .WithParameter("lockType", type)
                 .SingleInstance()
                 .AsSelf()
+
                 // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
                 .AutoActivate());
         builder.RegisterType<AuthorRevisionSaver>();

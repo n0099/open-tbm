@@ -9,8 +9,8 @@ public abstract class ErrorableWorker(bool shouldExitOnException = false, bool s
     // ReSharper disable UnusedAutoPropertyAccessor.Global
     public required ILogger<ErrorableWorker> Logger { private get; init; }
     public required IHostApplicationLifetime ApplicationLifetime { private get; init; }
-    // ReSharper restore UnusedAutoPropertyAccessor.Global
 
+    // ReSharper restore UnusedAutoPropertyAccessor.Global
     protected override Task ExecuteAsync(CancellationToken stoppingToken) => DoWorkWithExceptionLogging(stoppingToken);
     protected abstract Task DoWork(CancellationToken stoppingToken);
     protected async Task DoWorkWithExceptionLogging(CancellationToken stoppingToken)
