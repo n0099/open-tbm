@@ -57,5 +57,6 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<ThreadLateCrawlerAndSaver>();
         builder.RegisterType<ThreadArchiveCrawler>();
         builder.RegisterType<SonicPusher>();
+        builder.RegisterType<CrawlPost>();
     }
 }
