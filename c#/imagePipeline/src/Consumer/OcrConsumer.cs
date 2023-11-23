@@ -1,11 +1,17 @@
 namespace tbm.ImagePipeline.Consumer;
 
-public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandler failedImageHandler, string script)
+public class OcrConsumer(
+        JointRecognizer.New recognizerFactory,
+        FailedImageHandler failedImageHandler,
+        string script)
     : MatrixConsumer
 {
     private readonly JointRecognizer _recognizer = recognizerFactory(script);
+    private readonly List<ImageOcrLine> _recognizedTextLines = new();
 
     public delegate OcrConsumer New(string script);
+
+    public IEnumerable<ImageOcrLine> RecognizedTextLines => _recognizedTextLines.AsReadOnly();
 
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _recognizer.InitializePaddleOcr(stoppingToken);
@@ -51,13 +57,16 @@ public class OcrConsumer(JointRecognizer.New recognizerFactory, FailedImageHandl
             Confidence = result.Confidence,
             Text = result.Text
         }));
-        var recognizedTextLinesKeyByImageKey = _recognizer.GetRecognizedTextLines(recognizedResults);
-        db.ImageOcrLines.AddRange(recognizedTextLinesKeyByImageKey.Select(pair => new ImageOcrLine
-        {
-            ImageId = pair.Key.ImageId,
-            FrameIndex = pair.Key.FrameIndex,
-            TextLines = pair.Value
-        }));
+        var recognizedTextLines = _recognizer.GetRecognizedTextLines(recognizedResults)
+            .Select(pair => new ImageOcrLine
+            {
+                ImageId = pair.Key.ImageId,
+                FrameIndex = pair.Key.FrameIndex,
+                TextLines = pair.Value
+            })
+            .ToList();
+        _recognizedTextLines.AddRange(recognizedTextLines);
+        db.ImageOcrLines.AddRange(recognizedTextLines);
         return (matricesKeyByImageKey.Lefts().Concat(recognizedFailedImagesId).Distinct(),
             recognizedResults.Select(i => i.ImageKey.ImageId));
     }

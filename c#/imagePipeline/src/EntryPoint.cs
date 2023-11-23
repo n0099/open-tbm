@@ -61,7 +61,7 @@ public partial class EntryPoint : BaseEntryPoint
         builder.Register(_ => Channel.CreateBounded<List<ImageWithBytes>>(
                 new BoundedChannelOptions(context.Configuration
                     .GetSection("ImageBatchProducer")
-                    .GetValue("MaxBufferedImageBatches", 8))
+                    .GetValue("MaxBufferedImageBatches", 4))
                     {SingleReader = true, SingleWriter = true}))
             .SingleInstance();
         builder.Register(_ =>

@@ -188,13 +188,19 @@ public class ImageBatchConsumingWorker(
         IQueryable<ForumScript> forumScripts,
         CancellationToken stoppingToken = default)
     {
-        foreach (var scriptsGroupByFid in forumScripts
-                     .GroupBy(e => e.Fid, e => e.Script).ToList())
+        var scriptGroupings = forumScripts
+            .GroupBy(e => e.Fid, e => e.Script).ToList();
+        var scripts = scriptGroupings.SelectMany(i => i).Distinct().ToList();
+        var recognizedTextLinesKeyByScript = new Dictionary<string, List<ImageOcrLine>>(scripts.Count);
+        scripts.ForEach(script => recognizedTextLinesKeyByScript[script] = new());
+
+        foreach (var scriptsGroupByFid in scriptGroupings)
         {
+            var fid = scriptsGroupByFid.Key;
             List<ImageKeyWithMatrix> GetImagesInCurrentFid()
             { // dispose the scope of Owned<DbContext> after return to prevent long-life idle connection
                 using var dbFactory = dbContextFactory();
-                var db = dbFactory.Value(scriptsGroupByFid.Key, "");
+                var db = dbFactory.Value(fid, "");
                 db.Database.SetDbConnection(parentConnection);
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
                 _ = db.Database.UseTransaction(parentTransaction);
@@ -215,27 +221,42 @@ public class ImageBatchConsumingWorker(
             var imagesInCurrentFid = GetImagesInCurrentFid();
             if (imagesInCurrentFid.Count == 0) continue;
             foreach (var script in scriptsGroupByFid)
-                await ConsumeByFidAndScript(scriptsGroupByFid.Key, script, imagesInCurrentFid);
+            {
+                await using var dbFactory = dbContextFactory();
+                var db = dbFactory.Value(fid, script);
+
+                // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
+                db.Database.SetDbConnection(parentConnection);
+                _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
+                var recognizedTextLines = recognizedTextLinesKeyByScript[script];
+
+                // exclude images have already been recognized for current script due to being referenced across multiple forums
+                var uniqueImagesInCurrentFid = imagesInCurrentFid
+                    .ExceptBy(recognizedTextLines.Select(i => i.ImageId), i => i.ImageId).ToList();
+
+                // insert their previously recognized lines into the table of current forum and script
+                db.ImageOcrLines.AddRange(recognizedTextLines.IntersectBy(
+                    imagesInCurrentFid.Except(uniqueImagesInCurrentFid).Select(i => i.ImageId),
+                    i => i.ImageId));
+                recognizedTextLines.AddRange(await ConsumeByFidAndScript(db, fid, script, uniqueImagesInCurrentFid));
+                _ = await db.SaveChangesAsync(stoppingToken);
+            }
         }
-        async Task ConsumeByFidAndScript(Fid fid, string script, IReadOnlyCollection<ImageKeyWithMatrix> imagesInCurrentFid)
+        async Task<IEnumerable<ImageOcrLine>> ConsumeByFidAndScript(
+            ImagePipelineDbContext db,
+            Fid fid,
+            string script,
+            IReadOnlyCollection<ImageKeyWithMatrix> imagesInCurrentFid)
         {
-            await using var dbFactory = dbContextFactory();
-            var db = dbFactory.Value(fid, script);
-
-            // https://learn.microsoft.com/en-us/ef/core/saving/transactions#share-connection-and-transaction
-            db.Database.SetDbConnection(parentConnection);
-            _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
-
             await using var consumerFactory = ocrConsumerFactory();
             var ocrConsumer = consumerFactory.Value(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
+
             var sw = new Stopwatch();
             sw.Start();
             var (failed, consumed) = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
             sw.Stop();
-
             markImageInReplyAsConsumed(consumed);
-            _ = await db.SaveChangesAsync(stoppingToken);
 
             var failedImagesId = failed.ToList();
             if (failedImagesId.Any())
@@ -244,6 +265,8 @@ public class ImageBatchConsumingWorker(
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                 sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
                 string.Join(",", imagesInCurrentFid.Select(i => i.ImageId)));
+
+            return ocrConsumer.RecognizedTextLines;
         }
     }
 }

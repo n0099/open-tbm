@@ -9,10 +9,10 @@ public class ImageBatchProducingWorker(
     : ErrorableWorker(shouldExitOnException: true)
 {
     private readonly IConfigurationSection _config = config.GetSection("ImageBatchProducer");
-    private int ProduceImageBatchSize => _config.GetValue("ProduceImageBatchSize", 16);
-    private int PrefetchUnconsumedImagesFactor => _config.GetValue("PrefetchUnconsumedImagesFactor", 16);
     private int InterlaceBatchCount => _config.GetValue("InterlaceBatchCount", 1);
     private int InterlaceBatchIndex => _config.GetValue("InterlaceBatchIndex", 0);
+    private int ProduceImageBatchSize => _config.GetValue("ProduceImageBatchSize", 32);
+    private int PrefetchUnconsumedImagesFactor => _config.GetValue("PrefetchUnconsumedImagesFactor", 32);
     private bool StartFromLatestSuccessful => _config.GetValue("StartFromLatestSuccessful", true);
     private bool AllowPartiallyConsumed => _config.GetValue("AllowPartiallyConsumed", false);
 
@@ -49,8 +49,14 @@ public class ImageBatchProducingWorker(
         if (StartFromLatestSuccessful)
         {
             using var dbFactory = dbContextDefaultFactory();
-            lastImageIdInPreviousBatch = dbFactory.Value()
-                .ImageMetadata.AsNoTracking().Max(image => image.ImageId);
+            lastImageIdInPreviousBatch = (
+                from i in dbFactory.Value().ImageMetadata.AsNoTracking()
+                orderby i.ImageId descending
+                select i.ImageId
+
+                // https://stackoverflow.com/questions/9947935/linq-maxordefault
+                // https://github.com/dotnet/efcore/issues/17783
+            ).Take(1).AsEnumerable().DefaultIfEmpty().Max();
         }
         while (true)
         {
