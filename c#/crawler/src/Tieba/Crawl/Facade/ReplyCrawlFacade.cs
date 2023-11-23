@@ -3,13 +3,14 @@ namespace tbm.Crawler.Tieba.Crawl.Facade;
 public class ReplyCrawlFacade(
         CrawlerDbContext.New dbContextFactory,
         ReplyCrawler.New crawler,
+        ReplyParser parser,
         ReplySaver.New saver,
         SonicPusher pusher,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         Tid tid)
     : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>
-        (crawler(fid, tid), saver.Invoke, locks["reply"], new(fid, tid), fid)
+        (crawler(fid, tid), parser, saver.Invoke, locks["reply"], new(fid, tid), fid)
 {
     public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 

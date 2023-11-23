@@ -3,6 +3,7 @@ namespace tbm.Crawler.Tieba.Crawl.Facade;
 [SuppressMessage("Major Code Smell", "S3881:\"IDisposable\" should be implemented correctly")]
 public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
+        BaseParser<TPost, TPostProtoBuf> parser,
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
         CrawlerLocks locks,
         CrawlerLocks.LockId lockId,
@@ -14,7 +15,6 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     private readonly HashSet<Page> _lockingPages = new();
-    private Lazy<BaseSaver<TPost, TBaseRevision>>? _saver;
     private ExceptionHandler _exceptionHandler = _ => { };
 
     public delegate void ExceptionHandler(Exception ex);
@@ -22,14 +22,12 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     // ReSharper disable UnusedAutoPropertyAccessor.Global
     public required ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> Logger { private get; init; }
     public required CrawlerDbContext.New DbContextFactory { private get; init; }
-    public required BaseParser<TPost, TPostProtoBuf> Parser { private get; init; }
     public required ClientRequesterTcs RequesterTcs { private get; init; }
     public required UserParserAndSaver Users { protected get; init; }
 
     // ReSharper restore UnusedAutoPropertyAccessor.Global
     protected uint Fid { get; } = fid;
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
-    private Lazy<BaseSaver<TPost, TBaseRevision>> Saver => _saver ??= new(saverFactory(Posts));
 
     public virtual void Dispose()
     {
@@ -41,7 +39,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     {
         var db = DbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-        var saver = Saver.Value;
+        var saver = saverFactory(Posts);
         var savedPosts = Posts.IsEmpty ? null : saver.SavePosts(db);
         Users.SaveUsers(db, saver.PostType, saver.TiebaUserFieldChangeIgnorance);
         BeforeCommitSaveHook(db);
@@ -118,7 +116,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     {
         var (response, flag) = responseTuple;
         var postsInResponse = crawler.GetValidPosts(response, flag);
-        Parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
+        parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
         parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
         if (flag == CrawlRequestFlag.None)
         {

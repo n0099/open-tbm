@@ -2,12 +2,13 @@ namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class ThreadCrawlFacade(
         ThreadCrawler.New crawler,
+        ThreadParser parser,
         ThreadSaver.New saver,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         string forumName)
     : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
-        (crawler(forumName), saver.Invoke, locks["thread"], new(fid), fid)
+        (crawler(forumName), parser, saver.Invoke, locks["thread"], new(fid), fid)
 {
     private readonly Dictionary<long, TiebaUser> _latestRepliers = new();
 
