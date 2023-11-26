@@ -38,7 +38,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 
     public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
-        IEnumerable<ImageWithBytes> imagesWithBytes,
+        IReadOnlyCollection<ImageWithBytes> imagesWithBytes,
         CancellationToken stoppingToken = default)
     {
         var metadataEithers = _failedImageHandler
@@ -46,9 +46,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 GetImageMetaData(stoppingToken))
             .ToList();
-        var metadataResults = metadataEithers.Rights().ToList();
-        db.ImageMetadata.AddRange(metadataResults);
-        return (metadataEithers.Lefts(), metadataResults.Select(i => i.ImageId));
+        db.ImageMetadata.AddRange(metadataEithers.Rights());
+        var failed = metadataEithers.Lefts().ToList();
+        return (failed, imagesWithBytes.Select(i => i.ImageInReply.ImageId).Except(failed));
     }
 
     private Func<ImageWithBytes, ImageMetadata> GetImageMetaData

@@ -4,6 +4,6 @@ public interface IConsumer<in T>
 {
     public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
-        IEnumerable<T> imageKeysWithMatrix,
+        IReadOnlyCollection<T> imageKeysWithMatrix,
         CancellationToken stoppingToken = default);
 }

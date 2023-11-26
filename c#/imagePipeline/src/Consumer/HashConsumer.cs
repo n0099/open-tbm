@@ -22,7 +22,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
 
     public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
 
-    protected override (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) ConsumeInternal(
+    protected override IEnumerable<ImageId> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
@@ -57,14 +57,12 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
         });
 
         var failedImagesId = thumbHashEithers.Lefts().Concat(hashFailedImagesId).ToHashSet();
-        var imageHashResults = hashesKeyByImageKey
+        db.ImageHashes.AddRange(hashesKeyByImageKey
             .IntersectBy( // only insert fully succeeded images id, i.e. all frames and all hashes are calculated
                 hashesKeyByImageKey.Keys.Select(i => i.ImageId).Except(failedImagesId),
                 pair => pair.Key.ImageId)
-            .Select(pair => pair.Value)
-            .ToList();
-        db.ImageHashes.AddRange(imageHashResults);
-        return (failedImagesId, imageHashResults.Select(i => i.ImageId));
+            .Select(pair => pair.Value));
+        return failedImagesId;
     }
 
     private static Func<ImageKeyWithMatrix, KeyValuePair<ImageKeyWithMatrix, byte[]>> GetThumbHashForImage

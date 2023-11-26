@@ -19,7 +19,7 @@ public sealed class QrCodeConsumer : MatrixConsumer, IDisposable
 
     public void Dispose() => _qrCode.Dispose();
 
-    protected override (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) ConsumeInternal(
+    protected override IEnumerable<ImageId> ConsumeInternal(
         ImagePipelineDbContext db,
         IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
         CancellationToken stoppingToken = default)
@@ -29,9 +29,8 @@ public sealed class QrCodeConsumer : MatrixConsumer, IDisposable
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                 ScanQrCodeInImage)
             .ToList();
-        var imageQrCodeResults = imageQrCodeEithers.Rights().SelectMany(i => i).ToList();
-        db.ImageQrCodes.AddRange(imageQrCodeResults);
-        return (imageQrCodeEithers.Lefts(), imageQrCodeResults.Select(i => i.ImageId));
+        db.ImageQrCodes.AddRange(imageQrCodeEithers.Rights().SelectMany(i => i));
+        return imageQrCodeEithers.Lefts();
     }
 
     private IEnumerable<ImageQrCode> ScanQrCodeInImage(ImageKeyWithMatrix imageKeyWithMatrix)

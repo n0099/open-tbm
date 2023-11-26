@@ -77,7 +77,7 @@ public class ImageBatchConsumingWorker(
                 sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
 
         void ConsumeConsumer<TImage, TConsumer>(
-            Expression<Func<ImageInReply, bool>> selector, IEnumerable<TImage> images,
+            Expression<Func<ImageInReply, bool>> selector, IReadOnlyCollection<TImage> images,
             Func<Owned<TConsumer>> consumerFactory, string consumerType)
             where TConsumer : IConsumer<TImage>
         {
@@ -94,7 +94,7 @@ public class ImageBatchConsumingWorker(
         }
 
         ConsumeConsumer(i => i.MetadataConsumed,
-            imagesWithBytes.Where(i => !i.ImageInReply.MetadataConsumed),
+            imagesWithBytes.Where(i => !i.ImageInReply.MetadataConsumed).ToList(),
             metadataConsumerFactory, "extract metadata");
 
         var imageKeysWithMatrix = failedImageHandler.TrySelect(imagesWithBytes
@@ -104,10 +104,11 @@ public class ImageBatchConsumingWorker(
             .Rights().SelectMany(i => i).ToList();
         try
         {
-            IEnumerable<ImageKeyWithMatrix> ExceptConsumed
+            IReadOnlyCollection<ImageKeyWithMatrix> ExceptConsumed
                 (Func<ImageInReply, bool> selector) => imageKeysWithMatrix
                 .ExceptBy(imagesInReply.Where(selector)
-                    .Select(i => i.ImageId), i => i.ImageId);
+                    .Select(i => i.ImageId), i => i.ImageId)
+                .ToList();
             ConsumeConsumer(i => i.HashConsumed,
                 ExceptConsumed(i => i.HashConsumed),
                 hashConsumerFactory, "calculate hash");
