@@ -69,12 +69,12 @@ public class ImageBatchConsumingWorker(
                     .IntersectBy(imagesIdToUpdate, i => i.ImageId), entry => entry.Entity)
                 .ForEach(entry => entry.Property(selector).CurrentValue = true);
 
-        var imagesId = string.Join(",", imagesInReply.Select(i => i.ImageId));
-        logger.LogTrace("Start to consume {} image(s): [{}]", imagesWithBytes.Count, imagesId);
+        logger.LogTrace("Start to consume {} image(s): [{}]",
+            imagesWithBytes.Count, string.Join(",", imagesInReply.Select(i => i.ImageId)));
         var sw = new Stopwatch();
-        void LogStopwatch(string consumerType) =>
+        void LogStopwatch(string consumerType, IReadOnlyCollection<ImageId> imagesId) =>
             logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
-                sw.ElapsedMilliseconds, consumerType, imagesWithBytes.Count, imagesId);
+                sw.ElapsedMilliseconds, consumerType, imagesId.Count, string.Join(",", imagesId));
 
         void ConsumeConsumer<TImage, TConsumer>(
             Expression<Func<ImageInReply, bool>> selector, IReadOnlyCollection<TImage> images,
@@ -83,14 +83,15 @@ public class ImageBatchConsumingWorker(
         {
             using var consumer = consumerFactory();
             sw.Restart();
-            var (failed, consumed) = consumer.Value.Consume(db, images, stoppingToken);
-            LogStopwatch(consumerType);
+            var imagesId = consumer.Value.Consume(db, images, stoppingToken);
+            var failed = imagesId.Failed.ToList();
+            var consumed = imagesId.Consumed.ToList();
+            LogStopwatch(consumerType, consumed.Concat(failed).ToList());
             MarkImagesInReplyAsConsumed(selector, consumed);
 
-            var failedImagesId = failed.ToList();
-            if (!failedImagesId.Any()) return;
+            if (!failed.Any()) return;
             logger.LogError("Failed to {} for {} image(s): [{}]",
-                consumerType, failedImagesId.Count, string.Join(",", failedImagesId));
+                consumerType, failed.Count, string.Join(",", failed));
         }
 
         ConsumeConsumer(i => i.MetadataConsumed,
@@ -255,14 +256,14 @@ public class ImageBatchConsumingWorker(
 
             var sw = new Stopwatch();
             sw.Start();
-            var (failed, consumed) = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
+            var imagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
             sw.Stop();
-            markImageInReplyAsConsumed(consumed);
+            markImageInReplyAsConsumed(imagesId.Consumed);
 
-            var failedImagesId = failed.ToList();
-            if (failedImagesId.Any())
+            var failed = imagesId.Failed.ToList();
+            if (failed.Any())
                 logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
-                    script, fid, failedImagesId.Count, string.Join(",", failedImagesId));
+                    script, fid, failed.Count, string.Join(",", failed));
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                 sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
                 string.Join(",", imagesInCurrentFid.Select(i => i.ImageId)));

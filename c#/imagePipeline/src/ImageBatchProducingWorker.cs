@@ -69,7 +69,10 @@ public class ImageBatchProducingWorker(
                     where !StartFromLatestSuccessful
                           || i.ImageId > db.ImageMetadata.Max(e => e.ImageId)
                     where AllowPartiallyConsumed
-                          || !(i.MetadataConsumed || i.HashConsumed || i.QrCodeConsumed || i.OcrConsumed)
+
+                        // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
+                        ? !(i.MetadataConsumed && i.HashConsumed && i.QrCodeConsumed && i.OcrConsumed)
+                        : (!i.MetadataConsumed && !i.HashConsumed && !i.QrCodeConsumed && !i.OcrConsumed)
                     orderby i.ImageId
                     select i)
                 .Take(ProduceImageBatchSize * PrefetchUnconsumedImagesFactor * InterlaceBatchCount).ToList();
