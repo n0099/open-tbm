@@ -4,23 +4,23 @@ namespace App\Eloquent\Model;
 
 use App\Eloquent\Model\Revision\AuthorExpGrade;
 use App\Eloquent\Model\Revision\ForumModerator;
+use App\Eloquent\ModelHasProtoBufAttribute;
 use App\Eloquent\ModelHasPublicField;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use TbClient\Wrapper\UserIconWrapper;
 
 class User extends Model
 {
     use ModelHasPublicField;
+    use ModelHasProtoBufAttribute;
 
     public static $snakeAttributes = false; // for relationship attributes
 
     protected $table = 'tbmc_user';
-
-    protected $casts = [
-        'icon' => 'array'
-    ];
 
     public function __construct(array $attributes = [])
     {
@@ -68,5 +68,10 @@ class User extends Model
         return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
             ->hasOne(AuthorExpGrade::class, 'uid', 'uid')
             ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
+    }
+
+    protected function icon(): Attribute
+    {
+        return self::makeProtoBufAttribute(UserIconWrapper::class);
     }
 }

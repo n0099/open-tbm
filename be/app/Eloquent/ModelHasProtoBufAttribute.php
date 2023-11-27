@@ -18,14 +18,20 @@ trait ModelHasProtoBufAttribute
      */
     protected static function makeProtoBufAttribute(string $protoBufClass)
     {
-        return Attribute::make(get: static function (?string $value) use ($protoBufClass): ?\stdClass {
-            if ($value === null) {
-                return null;
+        return Attribute::make(/**
+             * @param resource|null $value
+             * @return \stdClass|null
+             * @throws \JsonException
+             */
+            get: static function ($value) use ($protoBufClass): ?\stdClass {
+                if ($value === null) {
+                    return null;
+                }
+                /** @var Message $proto */
+                $proto = new $protoBufClass();
+                $proto->mergeFromString(stream_get_contents($value));
+                return Helper::jsonDecode($proto->serializeToJsonString(), false);
             }
-            /** @var Message $proto */
-            $proto = new $protoBufClass();
-            $proto->mergeFromString($value);
-            return Helper::jsonDecode($proto->serializeToJsonString(), false);
-        });
+        );
     }
 }
