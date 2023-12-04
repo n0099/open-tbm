@@ -267,6 +267,10 @@
         "format": ["camelCase", "PascalCase"] // vue component
       },
       {
+        "selector": "import",
+        "format": ["camelCase", "PascalCase"] // vue component
+      },
+      {
         "selector": "parameter",
         "format": ["camelCase"],
         "leadingUnderscore": "allow"

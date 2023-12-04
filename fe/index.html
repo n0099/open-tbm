@@ -15,13 +15,6 @@
             }
         </style>
         <title>open-tbm @ %VITE_INSTANCE_NAME%</title>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '%VITE_GA_MEASUREMENT_ID%');
-        </script>
     </head>
     <body>
         <noscript>
@@ -30,6 +23,5 @@
         <img id="loadingBlocksInitial" src="/assets/icon-loading-blocks.svg" />
         <div id="app"></div>
         <script type="module" src="/src/main.ts"></script>
-        <script src="https://www.recaptcha.net/recaptcha/api.js?render=%VITE_RECAPTCHA_SITE_KEY%"></script>
     </body>
 </html>

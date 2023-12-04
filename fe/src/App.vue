@@ -11,9 +11,14 @@
     <footer class="footer-outer text-light pt-4 mt-4">
         <div class="text-center">
             <p>
-                Google <a class="text-white" href="https://www.google.com/analytics/terms/cn.html" target="_blank">Analytics 服务条款</a> |
-                <a class="text-white" href="https://policies.google.com/terms" target="_blank">reCAPTCHA 服务条款</a> |
-                <a class="text-white" href="https://policies.google.com/privacy" target="_blank">隐私条款</a>
+                <span v-if="isGoogleAnalyticsEnabled">
+                    Google <a class="text-white"
+                              href="https://www.google.com/analytics/terms/cn.html" target="_blank">Analytics 服务条款</a> |
+                    <a class="text-white" href="https://policies.google.com/privacy" target="_blank">Analytics 隐私条款</a>
+                </span>
+                <span v-if="isReCAPTCHAEnabled && isGoogleAnalyticsEnabled"> | </span>
+                <a v-if="isReCAPTCHAEnabled" class="text-white"
+                   href="https://policies.google.com/terms" target="_blank">Google reCAPTCHA 服务条款</a>
             </p>
         </div>
         <footer class="footer-inner text-center p-3">
@@ -33,6 +38,8 @@ import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
+const isReCAPTCHAEnabled = import.meta.env.VITE_RECAPTCHA_SITE_KEY !== '';
+const isGoogleAnalyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT_ID !== '';
 onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
 </script>
 
