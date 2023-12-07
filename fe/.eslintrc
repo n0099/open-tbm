@@ -250,25 +250,25 @@
       "error",
       {
         "selector": "default",
-        "format": ["camelCase"],
-        "filter": { "regex": ":", "match": false } // vue event names in component.emit
+        "format": ["camelCase"]
       },
       {
         "selector": "objectLiteralProperty",
-        "format": ["camelCase", "PascalCase"], // vue component
-        "filter": { "regex": ":", "match": false } // vue event names in component.emit
-      },
-      {
-        "selector": "function",
         "format": ["camelCase", "PascalCase"] // vue component
       },
       {
-        "selector": "variable",
+        "selector": ["objectLiteralProperty", "objectLiteralMethod"],
+        "format": null,
+        "filter": { "regex": "^\\w+:\\w+$", "match": true } // vue event names in component.emit
+      },
+      {
+        "selector": ["function", "variable", "import"],
         "format": ["camelCase", "PascalCase"] // vue component
       },
       {
         "selector": "import",
-        "format": ["camelCase", "PascalCase"] // vue component
+        "format": null,
+        "filter": { "regex": "^_$", "match": true } // lodash
       },
       {
         "selector": "parameter",

@@ -36,7 +36,7 @@ export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     return `https://tieba.baidu.com/p/${tid}`;
 };
 export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUser, 'name' | 'portrait'>>) =>
-    (user.portrait === ''
+    (_.isEmpty(user.portrait)
         ? `https://tieba.baidu.com/home/main?un=${user.name}`
         : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
 

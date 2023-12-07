@@ -44,7 +44,7 @@
                         </span>
                     </div>
                     <div class="col-auto badge bg-light" role="group">
-                        <RouterLink :to="userRoute(thread.authorUid)" target="_blank">
+                        <RouterLink :to="userRoute(thread.authorUid)">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
                                   class="fw-normal link-success">楼主：</span>
                             <span v-else class="fw-normal link-info">楼主及最后回复：</span>
@@ -56,7 +56,7 @@
                             <span class="fw-normal link-secondary">最后回复：<span class="fw-bold link-dark">未知用户</span></span>
                         </template>
                         <template v-else-if="thread.latestReplierUid !== thread.authorUid">
-                            <RouterLink :to="userRoute(thread.latestReplierUid)" target="_blank" class="ms-2">
+                            <RouterLink :to="userRoute(thread.latestReplierUid)" class="ms-2">
                                 <span class="fw-normal link-secondary">最后回复：</span>
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </RouterLink>
@@ -89,7 +89,7 @@
                 <div class="reply row shadow-sm bs-callout bs-callout-info">
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                          class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
-                        <RouterLink :to="userRoute(author.uid)" target="_blank" class="d-block">
+                        <RouterLink :to="userRoute(author.uid)" class="d-block">
                             <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)"
                                  class="tieba-user-portrait-large lazy" />
                             <p class="my-0">{{ author.name }}</p>
@@ -109,7 +109,7 @@
                                         class="sub-reply-item list-group-item">
                                         <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                                             <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"
-                                                        :to="userRoute(author.uid)" target="_blank"
+                                                        :to="userRoute(author.uid)"
                                                         class="sub-reply-author text-wrap badge bg-light">
                                                 <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)" class="tieba-user-portrait-small lazy" />
                                                 <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
@@ -155,7 +155,7 @@ export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 
 <script setup lang="ts">
 import '@/shared/bootstrapCallout.css';
-import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from './';
+import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from '.';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';

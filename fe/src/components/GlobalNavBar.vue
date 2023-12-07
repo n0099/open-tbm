@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar navbar-expand-lg navbar-light shadow-sm bg-light">
+    <nav class="navbar navbar-expand-lg shadow-sm bg-light">
         <div id="nav" class="container-fluid">
             <RouterLink to="/" class="navbar-brand">open-tbm @ {{ envInstanceName }}</RouterLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"

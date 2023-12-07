@@ -27,7 +27,7 @@
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
                    :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
                 <template #postAuthor="{ record: { authorUid } }">
-                    <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
+                    <a :href="toTiebaUserProfileUrl(getUser(authorUid))">
                         <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                     </a>
@@ -40,7 +40,7 @@
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                            :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
                         <template #postAuthor="{ record: { authorUid } }">
-                            <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
+                            <a :href="toTiebaUserProfileUrl(getUser(authorUid))">
                                 <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
                                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
                             </a>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ThreadTag, UserTag } from './';
+import { ThreadTag, UserTag } from '.';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { SubReply } from '@/api/posts';

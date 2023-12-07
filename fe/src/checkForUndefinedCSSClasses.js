@@ -26,6 +26,7 @@ function detectUndefined(node) {
             'loading',
             'echarts',
             'bs-callout',
+            'statsjs',
             // own usage end
             'grecaptcha',
             'g-recaptcha',
@@ -43,11 +44,9 @@ function detectUndefined(node) {
             // fontawesome end
             // antd start
             'ant-',
-            'slide-up',
-            'anticon-',
-            'off',
-            'scroll-div-append-to-body',
-            'undefined-hide-scrollbar'
+            'anticon',
+            'data-ant-cssinjs-cache-path',
+            'css-dev-only-do-not-override-',
             // antd end
         ].filter(i => cl.startsWith(i)).length !== 0) continue;
         // Ignore defined and already-seen classes
