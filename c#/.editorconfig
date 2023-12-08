@@ -112,6 +112,7 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
 
 # ReSharper inspection severities
+# https://youtrack.jetbrains.com/issue/RSRP-463998
 resharper_arrange_constructor_or_destructor_body_highlighting = none
 resharper_arrange_method_or_operator_body_highlighting = none
 resharper_arrange_object_creation_when_type_not_evident_highlighting = suggestion
@@ -138,6 +139,7 @@ resharper_remove_redundant_braces_highlighting = warning
 resharper_suggest_var_or_type_built_in_types_highlighting = hint
 resharper_suggest_var_or_type_elsewhere_highlighting = hint
 resharper_suggest_var_or_type_simple_types_highlighting = hint
+resharper_entity_framework_model_validation_unlimited_string_length_highlighting = none
 
 ###############################
 # .NET Coding Conventions     #

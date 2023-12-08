@@ -2,6 +2,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable UnusedMember.Global
 using System.ComponentModel;
+using SixLabors.ImageSharp.PixelFormats;
 using Point = NetTopologySuite.Geometries.Point;
 
 namespace tbm.ImagePipeline.Db;
@@ -31,6 +32,8 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public Icc? EmbeddedIcc { get; set; }
     public Iptc? EmbeddedIptc { get; set; }
     public Xmp? EmbeddedXmp { get; set; }
+
+    // new CICP profile for PNG in 3.1.0: https://github.com/SixLabors/ImageSharp/pull/2592
     public Jpg? JpgMetadata { get; set; }
     public Png? PngMetadata { get; set; }
     public Gif? GifMetadata { get; set; }
@@ -149,25 +152,24 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public byte? TransparentR { get; set; }
         public byte? TransparentG { get; set; }
         public byte? TransparentB { get; set; }
-        public byte? TransparentL { get; set; }
-        public bool HasTransparency { get; set; }
         public string? TextData { get; set; }
 
+        // new prop ColorTable in 3.1.0: https://github.com/SixLabors/ImageSharp/pull/2485
+        // new prop RepeatCount for APNG in 3.1.0: https://github.com/SixLabors/ImageSharp/pull/2511
         public static Png? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
         {
             if (meta.DecodedImageFormat is not PngFormat) return null;
             var other = meta.GetPngMetadata();
+            Rgba32? transparent = other.TransparentColor == null ? null : (Rgba32)other.TransparentColor;
             return new()
             {
                 BitDepth = other.BitDepth == null ? null : Enum.GetName(other.BitDepth.Value),
                 ColorType = other.ColorType == null ? null : Enum.GetName(other.ColorType.Value),
                 InterlaceMethod = other.InterlaceMethod == null ? null : Enum.GetName(other.InterlaceMethod.Value),
                 Gamma = other.Gamma,
-                TransparentR = other.TransparentRgb24?.R,
-                TransparentG = other.TransparentRgb24?.G,
-                TransparentB = other.TransparentRgb24?.B,
-                TransparentL = other.TransparentL8?.PackedValue,
-                HasTransparency = other.HasTransparency,
+                TransparentR = transparent?.R,
+                TransparentG = transparent?.G,
+                TransparentB = transparent?.B,
                 TextData = other.TextData.Any() ? JsonSerializer.Serialize(other.TextData) : null
             };
         }
@@ -179,6 +181,8 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public ushort RepeatCount { get; set; }
         public required string ColorTableMode { get; set; }
         public int GlobalColorTableLength { get; set; }
+
+        // new prop BackgroundColorIndex in 3.1.0: https://github.com/SixLabors/ImageSharp/pull/2455#discussion_r1299208062
         public string? Comments { get; set; }
 
         public static Gif? FromImageSharpMetadata(SixLabors.ImageSharp.Metadata.ImageMetadata meta)
@@ -190,7 +194,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
                 RepeatCount = other.RepeatCount,
                 ColorTableMode = Enum.GetName(other.ColorTableMode) ?? throw new InvalidEnumArgumentException(
                     nameof(other.ColorTableMode), (int)other.ColorTableMode, other.ColorTableMode.GetType()),
-                GlobalColorTableLength = other.GlobalColorTableLength,
+                GlobalColorTableLength = other.GlobalColorTable?.Length ?? 0,
                 Comments = other.Comments.Any() ? JsonSerializer.Serialize(other.Comments) : null
             };
         }

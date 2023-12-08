@@ -183,13 +183,13 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 $"Unexpected \"{dateStamp}\", expecting three parts separated by ':' or '-'.");
             if (year == 0 || month == 0 || day == 0) return null;
 
-            var timeParts = timeStamp.Select(i => (int)i.ToDouble()).ToList();
+            var timeParts = timeStamp.Select(i => (int)i.ToSingle().NanToZero()).ToList();
             if (timeParts is not [var hour, var minute, _]) // discard matching seconds
                 throw new ArgumentOutOfRangeException(nameof(timeStamp), timeStamp,
                     $"Unexpected \"{timeStamp}\", expecting three rationals.");
 
             return new DateTime(year, month: month, day: day, hour, minute, second: 0, DateTimeKind.Unspecified)
-                .AddSeconds(timeStamp[2].ToDouble()); // possible fractional seconds such as rational 5510/100
+                .AddSeconds(timeStamp[2].ToSingle().NanToZero()); // possible fractional seconds such as rational 5510/100
         }
 
         public static Point? ParseGpsCoordinateOrNull(
@@ -278,6 +278,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             var hasFractionalSeconds = int.TryParse(exifFractionalSeconds, out var fractionalSeconds);
             fractionalSeconds = hasFractionalSeconds ? fractionalSeconds : 0;
 
+            if (exifDateTime == "00000" && fractionalSeconds == 0) return null;
             var ret = ParseWithoutOffset(exifDateTime)
                       ?? ParseWithOffset(exifDateTime)
                       ?? ParseWithOverflowedTimeParts(exifDateTime)

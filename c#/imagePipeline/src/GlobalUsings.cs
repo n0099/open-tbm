@@ -1,6 +1,7 @@
 #pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
 global using System.ComponentModel.DataAnnotations;
 global using System.Diagnostics.CodeAnalysis;
+global using System.Linq.Expressions;
 global using System.Text.Json;
 global using System.Threading.Channels;
 global using System.Threading.RateLimiting;
@@ -17,6 +18,7 @@ global using LanguageExt;
 global using Polly;
 global using Polly.Extensions.Http;
 global using Polly.Registry;
+global using SixLabors.ImageSharp;
 global using SixLabors.ImageSharp.Formats.Bmp;
 global using SixLabors.ImageSharp.Formats.Gif;
 global using SixLabors.ImageSharp.Formats.Jpeg;
