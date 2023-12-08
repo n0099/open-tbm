@@ -1,3 +1,4 @@
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace tbm.ImagePipeline.Db;

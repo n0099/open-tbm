@@ -1,3 +1,4 @@
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.ImagePipeline.Db;
 
 public class ImageOcrBox

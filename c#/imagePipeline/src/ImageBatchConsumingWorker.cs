@@ -83,7 +83,9 @@ public class ImageBatchConsumingWorker(
         {
             using var consumer = consumerFactory();
             sw.Restart();
+#pragma warning disable IDE0042 // Deconstruct variable declaration
             var imagesId = consumer.Value.Consume(db, images, stoppingToken);
+#pragma warning restore IDE0042 // Deconstruct variable declaration
             var failed = imagesId.Failed.ToList();
             var consumed = imagesId.Consumed.ToList();
             LogStopwatch(consumerType, consumed.Concat(failed).ToList());
@@ -256,7 +258,9 @@ public class ImageBatchConsumingWorker(
 
             var sw = new Stopwatch();
             sw.Start();
+#pragma warning disable IDE0042 // Deconstruct variable declaration
             var imagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
+#pragma warning restore IDE0042 // Deconstruct variable declaration
             sw.Stop();
             markImageInReplyAsConsumed(imagesId.Consumed);
 

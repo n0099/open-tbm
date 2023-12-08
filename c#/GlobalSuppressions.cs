@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out")]
-[assembly: SuppressMessage("Major Code Smell", "S3928:Parameter names used into ArgumentException constructors should match an existing one ", Justification = "https://github.com/SonarSource/sonar-dotnet/issues/8386")]
 [assembly: SuppressMessage("Minor Code Smell", "S3604:Member initializer values should not be redundant")]
 [assembly: SuppressMessage("Roslynator", "RCS1001:Add braces (when expression spans over multiple lines).")]
 [assembly: SuppressMessage("Roslynator", "RCS1139:Add summary element to documentation comment.")]

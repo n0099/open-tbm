@@ -22,6 +22,7 @@ public sealed partial class PaddleOcrRecognizerAndDetector : IDisposable
 
     public void Dispose() => _ocr?.Dispose();
 
+    [SuppressMessage("Major Code Smell", "S3928:Parameter names used into ArgumentException constructors should match an existing one ", Justification = "https://github.com/SonarSource/sonar-dotnet/issues/8386#issuecomment-1847872210")]
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1119:Statement should not use unnecessary parenthesis", Justification = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3730")]
     [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly")]
     public async Task Initialize(CancellationToken stoppingToken = default) =>

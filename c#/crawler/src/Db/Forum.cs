@@ -1,3 +1,4 @@
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db;
 
 public class Forum
