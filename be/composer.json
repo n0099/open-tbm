@@ -3,7 +3,7 @@
     "license": "AGPL-3.0-or-later",
     "type": "project",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "guzzlehttp/guzzle": "^7.7",
         "laravel/framework": "^10.13.1",
         "laravel/sanctum": "^3.2.5",
