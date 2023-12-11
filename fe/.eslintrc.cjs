@@ -1,40 +1,40 @@
 module.exports = {
-    "root": true,
-    'overrides': [{
+    root: true,
+    overrides: [{
         // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
-        'files': '.eslintrc.cjs',
-        'plugins': ['@stylistic', '@stylistic/migrate'],
-        'rules': {
+        files: '.eslintrc.cjs',
+        plugins: ['@stylistic', '@stylistic/migrate'],
+        rules: {
             '@stylistic/migrate/migrate-js': 'error',
             '@stylistic/migrate/migrate-ts': 'error',
             '@stylistic/quote-props': ['error', 'as-needed'],
-            '@stylistic/comma-dangle': ['error', 'always-multiline']
-        }
+            '@stylistic/comma-dangle': ['error', 'always-multiline'],
+        },
     }, {
-        'files': '*',
-        'excludedFiles': '.eslintrc.cjs',
-        'parserOptions': {
-            'parser': '@typescript-eslint/parser',
-            'project': './tsconfig.json'
+        files: '*',
+        excludedFiles: '.eslintrc.cjs',
+        parserOptions: {
+            parser: '@typescript-eslint/parser',
+            project: './tsconfig.json',
         },
-        'settings': {
+        settings: {
             'import/resolver': {
-                'typescript': true,
-                'node': true
-            }
+                typescript: true,
+                node: true,
+            },
         },
-        'plugins': ['@stylistic'],
-        'extends': [
+        plugins: ['@stylistic'],
+        extends: [
             'eslint:recommended',
             'plugin:vue/vue3-recommended',
             '@vue/typescript/recommended',
             'plugin:import/recommended',
-            'plugin:import/typescript'
+            'plugin:import/typescript',
             // https://github.com/vuejs/eslint-config-typescript/issues/29
             // "plugin:@typescript-eslint/recommended-requiring-type-checking"
         ],
-        'rules': {
-            'import/no-unresolved': [2, { 'ignore': ['\\.(svg|gif|avifs)$'] }],
+        rules: {
+            'import/no-unresolved': [2, { ignore: ['\\.(svg|gif|avifs)$'] }],
             'import/no-useless-path-segments': 'error',
 
             // as of eslint 8.6.0
@@ -47,12 +47,12 @@ module.exports = {
             'require-atomic-updates': 'error',
             'accessor-pairs': 'error',
             'array-callback-return': 'error',
-            'complexity': ['error', { 'max': 30 }],
+            complexity: ['error', { max: 30 }],
             'consistent-return': 'error',
-            'curly': ['error', 'multi-or-nest', 'consistent'],
+            curly: ['error', 'multi-or-nest', 'consistent'],
             'default-case-last': 'error',
             '@stylistic/dot-location': ['error', 'property'],
-            'eqeqeq': 'error',
+            eqeqeq: 'error',
             'grouped-accessor-pairs': ['error', 'getBeforeSet'],
             'guard-for-in': 'error',
             'max-classes-per-file': 'error',
@@ -87,13 +87,13 @@ module.exports = {
             'no-useless-escape': 'error',
             'no-useless-return': 'error',
             'prefer-promise-reject-errors': 'error',
-            'prefer-regex-literals': ['error', { 'disallowRedundantWrapping': true }],
-            'radix': ['error', 'as-needed'],
+            'prefer-regex-literals': ['error', { disallowRedundantWrapping: true }],
+            radix: ['error', 'as-needed'],
             'require-unicode-regexp': 'error',
             'vars-on-top': 'error',
             '@stylistic/wrap-iife': ['error', 'inside'],
-            'yoda': 'error',
-            'strict': 'error',
+            yoda: 'error',
+            strict: 'error',
             'no-undef-init': 'error',
             '@stylistic/array-bracket-newline': ['error', 'consistent'],
             '@stylistic/array-bracket-spacing': 'error',
@@ -109,12 +109,12 @@ module.exports = {
             '@stylistic/function-paren-newline': ['error', 'consistent'],
             '@stylistic/jsx-quotes': 'error',
             '@stylistic/key-spacing': ['error', {
-                'beforeColon': false,
-                'afterColon': true,
-                'mode': 'strict'
+                beforeColon: false,
+                afterColon: true,
+                mode: 'strict',
             }],
             '@stylistic/linebreak-style': 'error',
-            '@stylistic/max-statements-per-line': ['error', { 'max': 2 }],
+            '@stylistic/max-statements-per-line': ['error', { max: 2 }],
             'multiline-comment-style': ['error', 'separate-lines'],
             '@stylistic/multiline-ternary': ['error', 'always-multiline'],
             'new-cap': 'error',
@@ -136,10 +136,10 @@ module.exports = {
             '@stylistic/no-whitespace-before-property': 'error',
             '@stylistic/nonblock-statement-body-position': 'error',
             '@stylistic/object-curly-newline': ['error', {
-                'multiline': true,
-                'consistent': true
+                multiline: true,
+                consistent: true,
             }],
-            '@stylistic/object-property-newline': ['error', { 'allowAllPropertiesOnSameLine': true }],
+            '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
             'one-var': ['error', 'never'],
             'operator-assignment': 'error',
             '@stylistic/operator-linebreak': ['error', 'before'],
@@ -150,12 +150,12 @@ module.exports = {
             '@stylistic/semi-spacing': 'error',
             '@stylistic/semi-style': 'error',
             // "sort-keys": ["error", "asc", { "caseSensitive": false, "natural": true }],
-            'sort-vars': ['error', { 'ignoreCase': true }],
+            'sort-vars': ['error', { ignoreCase: true }],
             '@stylistic/space-before-blocks': 'error',
             '@stylistic/space-in-parens': 'error',
             '@stylistic/space-unary-ops': ['error', {
-                'words': true,
-                'nonwords': false
+                words: true,
+                nonwords: false,
             }],
             '@stylistic/spaced-comment': 'error',
             '@stylistic/switch-colon-spacing': 'error',
@@ -165,16 +165,16 @@ module.exports = {
             '@stylistic/arrow-parens': ['error', 'as-needed'],
             '@stylistic/arrow-spacing': 'error',
             '@stylistic/generator-star-spacing': ['error', {
-                'before': false,
-                'after': true,
-                'method': {
-                    'before': true,
-                    'after': false
-                }
+                before: false,
+                after: true,
+                method: {
+                    before: true,
+                    after: false,
+                },
             }],
             '@stylistic/no-confusing-arrow': 'error',
             'no-new-symbol': 'error',
-            'no-useless-computed-key': ['error', { 'enforceForClassMembers': true }],
+            'no-useless-computed-key': ['error', { enforceForClassMembers: true }],
             'no-useless-rename': 'error',
             'no-var': 'error',
             'object-shorthand': 'error',
@@ -186,7 +186,7 @@ module.exports = {
             'prefer-spread': 'error',
             'prefer-template': 'error',
             '@stylistic/rest-spread-spacing': 'error',
-            'sort-imports': ['error', { 'ignoreDeclarationSort': true }],
+            'sort-imports': ['error', { ignoreDeclarationSort: true }],
             'symbol-description': 'error',
             '@stylistic/template-curly-spacing': 'error',
             '@stylistic/yield-star-spacing': 'error',
@@ -196,7 +196,7 @@ module.exports = {
             '@typescript-eslint/no-empty-function': 'off',
 
             'no-void': 'off',
-            '@stylistic/brace-style': ['error', '1tbs', { 'allowSingleLine': true }],
+            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
             '@stylistic/comma-dangle': 'error',
             '@stylistic/comma-spacing': 'error',
             'default-param-last': 'off',
@@ -212,8 +212,8 @@ module.exports = {
             'no-dupe-class-members': 'off',
             '@typescript-eslint/no-dupe-class-members': 'error',
             '@stylistic/no-extra-parens': ['error', 'all', {
-                'ignoreJSX': 'multi-line',
-                'enforceForArrowConditionals': false
+                ignoreJSX: 'multi-line',
+                enforceForArrowConditionals: false,
             }],
             'no-invalid-this': 'off',
             '@typescript-eslint/no-invalid-this': 'error',
@@ -225,9 +225,9 @@ module.exports = {
             '@typescript-eslint/no-redeclare': 'error',
             'no-shadow': 'off',
             '@typescript-eslint/no-shadow': ['error', {
-                'builtinGlobals': true,
-                'hoist': 'all',
-                'allow': ['name']
+                builtinGlobals: true,
+                hoist: 'all',
+                allow: ['name'],
             }],
             'no-throw-literal': 'off',
             '@typescript-eslint/no-throw-literal': 'error',
@@ -238,23 +238,23 @@ module.exports = {
             'no-useless-constructor': 'off',
             '@typescript-eslint/no-useless-constructor': 'error',
             '@stylistic/object-curly-spacing': ['error', 'always'],
-            '@stylistic/quotes': ['error', 'single', { 'avoidEscape': true }],
+            '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
             'no-return-await': 'off',
             '@typescript-eslint/return-await': 'error',
-            '@stylistic/semi': ['error', 'always', { 'omitLastInOneLineBlock': true }],
+            '@stylistic/semi': ['error', 'always', { omitLastInOneLineBlock: true }],
             '@stylistic/space-before-function-paren': ['error', {
-                'anonymous': 'always',
-                'named': 'never',
-                'asyncArrow': 'always'
+                anonymous: 'always',
+                named: 'never',
+                asyncArrow: 'always',
             }],
-            '@stylistic/space-infix-ops': ['error', { 'int32Hint': false }],
+            '@stylistic/space-infix-ops': ['error', { int32Hint: false }],
             'require-await': 'off',
             '@typescript-eslint/require-await': 'error',
             '@stylistic/padding-line-between-statements': ['error'],
 
             '@typescript-eslint/array-type': ['error', {
-                'default': 'array-simple',
-                'readonly': 'array-simple'
+                default: 'array-simple',
+                readonly: 'array-simple',
             }],
             '@typescript-eslint/class-literal-property-style': 'error',
             '@typescript-eslint/consistent-indexed-object-style': 'error',
@@ -263,47 +263,47 @@ module.exports = {
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/explicit-member-accessibility': 'error',
             '@stylistic/member-delimiter-style': ['error', {
-                'multiline': {
-                    'delimiter': 'comma',
-                    'requireLast': false
+                multiline: {
+                    delimiter: 'comma',
+                    requireLast: false,
                 },
-                'singleline': {
-                    'delimiter': 'comma',
-                    'requireLast': false
-                }
+                singleline: {
+                    delimiter: 'comma',
+                    requireLast: false,
+                },
             }],
             '@typescript-eslint/member-ordering': 'error',
             '@typescript-eslint/method-signature-style': 'error',
-            'camelcase': 'off',
+            camelcase: 'off',
             '@typescript-eslint/naming-convention': ['error', {
-                'selector': 'default',
-                'format': ['camelCase']
+                selector: 'default',
+                format: ['camelCase'],
             }, {
-                'selector': 'objectLiteralProperty',
-                'format': ['camelCase', 'PascalCase'] // vue component
+                selector: 'objectLiteralProperty',
+                format: ['camelCase', 'PascalCase'], // vue component
             }, {
-                'selector': ['objectLiteralProperty', 'objectLiteralMethod'],
-                'format': null,
-                'filter': { 'regex': '^\\w+:\\w+$', 'match': true } // vue event names in component.emit
+                selector: ['objectLiteralProperty', 'objectLiteralMethod'],
+                format: null,
+                filter: { regex: '^\\w+:\\w+$', match: true }, // vue event names in component.emit
             }, {
-                'selector': ['function', 'variable', 'import'],
-                'format': ['camelCase', 'PascalCase'] // vue component
+                selector: ['function', 'variable', 'import'],
+                format: ['camelCase', 'PascalCase'], // vue component
             }, {
-                'selector': 'import',
-                'format': null,
-                'filter': { 'regex': '^_$', 'match': true } // lodash
+                selector: 'import',
+                format: null,
+                filter: { regex: '^_$', match: true }, // lodash
             }, {
-                'selector': 'parameter',
-                'format': ['camelCase'],
-                'leadingUnderscore': 'allow'
+                selector: 'parameter',
+                format: ['camelCase'],
+                leadingUnderscore: 'allow',
             }, {
-                'selector': 'memberLike',
-                'modifiers': ['private'],
-                'format': ['camelCase'],
-                'leadingUnderscore': 'require'
+                selector: 'memberLike',
+                modifiers: ['private'],
+                format: ['camelCase'],
+                leadingUnderscore: 'require',
             }, {
-                'selector': 'typeLike',
-                'format': ['PascalCase']
+                selector: 'typeLike',
+                format: ['PascalCase'],
             }],
             '@typescript-eslint/no-base-to-string': 'error',
             '@typescript-eslint/no-confusing-void-expression': 'error',
@@ -346,19 +346,19 @@ module.exports = {
             'vue/attribute-hyphenation': ['error', 'never'],
             'vue/singleline-html-element-content-newline': 'off',
             'vue/attributes-order': ['error', {
-                'order': ['DEFINITION', ['LIST_RENDERING', 'UNIQUE'], 'CONDITIONALS', 'TWO_WAY_BINDING', 'RENDER_MODIFIERS', 'SLOT', 'EVENTS', 'OTHER_DIRECTIVES', 'GLOBAL', 'OTHER_ATTR', 'CONTENT']
+                order: ['DEFINITION', ['LIST_RENDERING', 'UNIQUE'], 'CONDITIONALS', 'TWO_WAY_BINDING', 'RENDER_MODIFIERS', 'SLOT', 'EVENTS', 'OTHER_DIRECTIVES', 'GLOBAL', 'OTHER_ATTR', 'CONTENT'],
             }],
             'vue/multi-word-component-names': 'off',
             'vue/first-attribute-linebreak': ['error', {
-                'singleline': 'beside',
-                'multiline': 'beside'
+                singleline: 'beside',
+                multiline: 'beside',
             }],
             'vue/html-closing-bracket-newline': ['error', {
-                'singleline': 'never',
-                'multiline': 'never'
+                singleline: 'never',
+                multiline: 'never',
             }],
-            'vue/html-self-closing': ['error', { 'html': { 'void': 'always' } }],
-            'vue/v-on-event-hyphenation': ['error', 'never', { 'autofix': true }],
+            'vue/html-self-closing': ['error', { html: { void: 'always' } }],
+            'vue/v-on-event-hyphenation': ['error', 'never', { autofix: true }],
             'vue/require-default-prop': 'off',
             'vue/multiline-html-element-content-newline': 'off',
 
@@ -391,7 +391,7 @@ module.exports = {
             'vue/array-bracket-spacing': 'error',
             'vue/arrow-spacing': 'error',
             'vue/block-spacing': 'error',
-            'vue/brace-style': ['error', '1tbs', { 'allowSingleLine': true }],
+            'vue/brace-style': ['error', '1tbs', { allowSingleLine: true }],
             'vue/comma-dangle': 'error',
             'vue/comma-spacing': 'error',
             'vue/comma-style': 'error',
@@ -400,36 +400,36 @@ module.exports = {
             'vue/eqeqeq': 'error',
             'vue/func-call-spacing': 'error',
             'vue/key-spacing': ['error', {
-                'beforeColon': false,
-                'afterColon': true,
-                'mode': 'strict'
+                beforeColon: false,
+                afterColon: true,
+                mode: 'strict',
             }],
             'vue/keyword-spacing': 'error',
             'vue/no-constant-condition': 'error',
             'vue/no-empty-pattern': 'error',
             'vue/no-extra-parens': ['error', 'all', {
-                'ignoreJSX': 'multi-line',
-                'enforceForArrowConditionals': false
+                ignoreJSX: 'multi-line',
+                enforceForArrowConditionals: false,
             }],
             'vue/no-irregular-whitespace': 'error',
             'vue/no-loss-of-precision': 'error',
             'vue/no-sparse-arrays': 'error',
             'vue/no-useless-concat': 'error',
             'vue/object-curly-newline': ['error', {
-                'multiline': true,
-                'consistent': true
+                multiline: true,
+                consistent: true,
             }],
             'vue/object-curly-spacing': ['error', 'always'],
-            'vue/object-property-newline': ['error', { 'allowAllPropertiesOnSameLine': true }],
+            'vue/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
             'vue/operator-linebreak': ['error', 'before'],
             'vue/prefer-template': 'error',
             'vue/space-in-parens': 'error',
-            'vue/space-infix-ops': ['error', { 'int32Hint': false }],
+            'vue/space-infix-ops': ['error', { int32Hint: false }],
             'vue/space-unary-ops': ['error', {
-                'words': true,
-                'nonwords': false
+                words: true,
+                nonwords: false,
             }],
-            'vue/template-curly-spacing': 'error'
-        }
-    }]
+            'vue/template-curly-spacing': 'error',
+        },
+    }],
 };
