@@ -46,10 +46,12 @@
         <hr />
         <Table :columns="candidatesDetailColumns"
                :data-source="candidatesDetailData"
-               :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'], showSizeChanger: true }"
+               :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
                rowKey="candidateIndex">
-            <template #candidateName="{ text }">
-                <a :href="toTiebaUserProfileUrl({ name: text })">{{ text }}</a>
+            <template #bodyCell="{ column: { dataIndex: column }, value: name }">
+                <template v-if="column === 'candidateName'">
+                    <a :href="toTiebaUserProfileUrl({ name })">{{ name }}</a>
+                </template>
             </template>
         </Table>
     </div>
@@ -95,7 +97,6 @@ const candidatesDetailColumns: Array<ObjUnknown & {
 }, {
     title: '候选人',
     dataIndex: 'candidateName',
-    slots: { customRender: 'candidateName' },
     sorter: (a, b) => a.candidateName.localeCompare(b.candidateName)
 }, {
     title: '有效票数',

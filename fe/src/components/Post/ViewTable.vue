@@ -2,36 +2,51 @@
     <Table :columns="threadColumns" :dataSource="threads" :defaultExpandAllRows="true"
            :expandRowByClick="true" :pagination="false"
            rowKey="tid" size="middle" class="render-table-thread">
-        <template #tid="{ record: { tid } }">
-            <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
-        </template>
-        <template #titleWithTag="{ record }">
-            <ThreadTag :thread="record" />
-            <span>{{ record.title }}</span>
-        </template>
-        <template #postAuthor="{ record: { authorUid } }">
-            <a :href="toTiebaUserProfileUrl(getUser(authorUid))" target="_blank">
-                <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
-                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
-            </a>
-            <UserTag :user="getUser(authorUid)" />
-        </template>
-        <template #postLatestReplier="{ record: { latestReplierUid } }">
-            <a :href="toTiebaUserProfileUrl(getUser(latestReplierUid))" target="_blank">
-                <img :data-src="toTiebaUserPortraitImageUrl(getUser(latestReplierUid).portrait)"
-                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(latestReplierUid) }}
-            </a>
+        <template #bodyCell="{ column: { dataIndex: column }, record }">
+            <template v-if="column === 'tid'">
+                <Var v-slot="{ scope: { tid } }" :scope="{ tid: (record as Thread).tid }">
+                    <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
+                </Var>
+            </template>
+            <template v-else-if="column === 'titleWithTag'">
+                <Var v-slot="{ scope: { thread } }" :scope="{ thread: record as Thread }">
+                    <ThreadTag :thread="thread" />
+                    <span>{{ thread.title }}</span>
+                </Var>
+            </template>
+            <template v-else-if="column === 'author'">
+                <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as Thread).authorUid) }">
+                    <a :href="toTiebaUserProfileUrl(user)">
+                        <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
+                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                    </a>
+                    <UserTag :user="getUser(record.authorUid)" />
+                </Var>
+            </template>
+            <template v-else-if="column === 'latestReplier'">
+                <Var v-if="(record as Thread).latestReplierUid !== null"
+                     v-slot="{ scope: { user } }" :scope="{ user: getUser(record.latestReplierUid) }">
+                    <a :href="toTiebaUserProfileUrl(user)">
+                        <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
+                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                    </a>
+                </Var>
+            </template>
         </template>
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
             <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
                    :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
-                <template #postAuthor="{ record: { authorUid } }">
-                    <a :href="toTiebaUserProfileUrl(getUser(authorUid))">
-                        <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
-                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
-                    </a>
-                    <UserTag :user="getUser(authorUid)" :threadAuthorUid="threadAuthorUid" />
+                <template #bodyCell="{ column: { dataIndex: column }, record }">
+                    <template v-if="column === 'author'">
+                        <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as Reply).authorUid) }">
+                            <a :href="toTiebaUserProfileUrl(user)">
+                                <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
+                                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                            </a>
+                            <UserTag :user="user" :threadAuthorUid="threadAuthorUid" />
+                        </Var>
+                    </template>
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
                     <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
@@ -39,14 +54,18 @@
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
                            :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
-                        <template #postAuthor="{ record: { authorUid } }">
-                            <a :href="toTiebaUserProfileUrl(getUser(authorUid))">
-                                <img :data-src="toTiebaUserPortraitImageUrl(getUser(authorUid).portrait)"
-                                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(authorUid) }}
-                            </a>
-                            <UserTag :user="getUser(authorUid)"
-                                     :threadAuthorUid="threadAuthorUid"
-                                     :replyAuthorUid="replyAuthorUid" />
+                        <template #bodyCell="{ column: { dataIndex: column }, record }">
+                            <template v-if="column === 'author'">
+                                <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as SubReply).authorUid) }">
+                                    <a :href="toTiebaUserProfileUrl(user)">
+                                        <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
+                                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                                    </a>
+                                    <UserTag :user="user"
+                                             :threadAuthorUid="threadAuthorUid"
+                                             :replyAuthorUid="replyAuthorUid" />
+                                </Var>
+                            </template>
                         </template>
                         <template #expandedRowRender="{ record: { content: subReplyContent } }">
                             <span v-viewer.static v-html="subReplyContent" />
@@ -59,10 +78,11 @@
 </template>
 
 <script setup lang="ts">
+import Var from '@/components/Var.vue';
 import { ThreadTag, UserTag } from '.';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery } from '@/api/index.d';
-import type { SubReply } from '@/api/posts';
+import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { Pid, Tid } from '@/shared';
 import { toTiebaUserPortraitImageUrl, toTiebaUserProfileUrl } from '@/shared';
 
@@ -77,13 +97,13 @@ const threads = ref<ApiPostsQuery['threads']>();
 const threadsReply = ref<Record<Tid, ApiPostsQuery['threads'][number]['replies']>>([]);
 const repliesSubReply = ref<Record<Pid, SubReply[]>>([]);
 const threadColumns = ref<ColumnType[]>([
-    { title: 'tid', dataIndex: 'tid', slots: { customRender: 'tid' } },
-    { title: '标题', dataIndex: 'title', slots: { customRender: 'titleWithTag' } },
+    { title: 'tid', dataIndex: 'tid' },
+    { title: '标题', dataIndex: 'title' },
     { title: '回复量', dataIndex: 'replyCount' },
     { title: '浏览量', dataIndex: 'viewCount' },
-    { title: '发帖人', slots: { customRender: 'postAuthor' } },
+    { title: '发帖人', dataIndex: 'author' },
     { title: '发帖时间', dataIndex: 'postedAt' },
-    { title: '最后回复人', slots: { customRender: 'postLatestReplier' } },
+    { title: '最后回复人', dataIndex: 'latestReplier' },
     { title: '最后回复时间', dataIndex: 'latestReplyPostedAt' },
     { title: '发帖人UID', dataIndex: 'authorUid' },
     { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
@@ -99,7 +119,7 @@ const replyColumns = ref<ColumnType[]>([
     { title: 'pid', dataIndex: 'pid' },
     { title: '楼层', dataIndex: 'floor' },
     { title: '楼中楼回复量', dataIndex: 'subReplyCount' },
-    { title: '发帖人', slots: { customRender: 'postAuthor' } },
+    { title: '发帖人', dataIndex: 'author' },
     { title: '发帖人UID', dataIndex: 'authorUid' },
     { title: '发帖时间', dataIndex: 'postedAt' },
     { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
@@ -112,7 +132,7 @@ const replyColumns = ref<ColumnType[]>([
 ]);
 const subReplyColumns = ref<ColumnType[]>([
     { title: 'spid', dataIndex: 'spid' },
-    { title: '发帖人', slots: { customRender: 'postAuthor' } },
+    { title: '发帖人', dataIndex: 'author' },
     { title: '发帖人UID', dataIndex: 'authorUid' },
     { title: '发帖时间', dataIndex: 'postedAt' },
     { title: '首次收录时间', dataIndex: 'createdAt' },
