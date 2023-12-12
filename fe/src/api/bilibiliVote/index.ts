@@ -9,26 +9,16 @@ import top50CandidatesVoteCount from './top50CandidatesVoteCount.json';
 import top50CandidatesOfficialValidVoteCount from './top50CandidatesOfficialValidVoteCount.json';
 import type { BoolInt, Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 
-export const json: {
-    allCandidatesVoteCount: AllCandidatesVoteCount,
-    allVoteCountGroupByHour: AllVoteCountsGroupByTime,
-    allVoteCountGroupByMinute: AllVoteCountsGroupByTime,
-    candidateNames: CandidatesName,
-    top5CandidatesVoteCountGroupByHour: Top5CandidatesVoteCountGroupByTime,
-    top5CandidatesVoteCountGroupByMinute: Top5CandidatesVoteCountGroupByTime,
-    top10CandidatesTimeline: Top10CandidatesTimeline,
-    top50CandidatesVoteCount: Top50CandidatesVoteCount,
-    top50CandidatesOfficialValidVoteCount: Top50CandidatesOfficialValidVoteCount
-} = {
+export const json = {
     allCandidatesVoteCount: allCandidatesVoteCount as AllCandidatesVoteCount,
     allVoteCountGroupByHour: allVoteCountGroupByHour as AllVoteCountsGroupByTime,
     allVoteCountGroupByMinute: allVoteCountGroupByMinute as AllVoteCountsGroupByTime,
-    candidateNames,
+    candidateNames: candidateNames as CandidatesName,
     top5CandidatesVoteCountGroupByHour: top5CandidatesVoteCountGroupByHour as Top5CandidatesVoteCountGroupByTime,
     top5CandidatesVoteCountGroupByMinute: top5CandidatesVoteCountGroupByMinute as Top5CandidatesVoteCountGroupByTime,
     top10CandidatesTimeline: top10CandidatesTimeline as Top10CandidatesTimeline,
     top50CandidatesVoteCount: top50CandidatesVoteCount as Top50CandidatesVoteCount,
-    top50CandidatesOfficialValidVoteCount
+    top50CandidatesOfficialValidVoteCount: top50CandidatesOfficialValidVoteCount as Top50CandidatesOfficialValidVoteCount
 };
 
 export type IsValid = BoolInt;
