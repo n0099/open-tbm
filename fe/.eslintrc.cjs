@@ -15,7 +15,7 @@ module.exports = {
         excludedFiles: '.eslintrc.cjs',
         parserOptions: {
             parser: '@typescript-eslint/parser',
-            project: './tsconfig.json',
+            project: ['./tsconfig.json', './tsconfig.node.json'],
         },
         settings: {
             'import/resolver': {

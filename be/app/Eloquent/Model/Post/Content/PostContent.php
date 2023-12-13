@@ -18,6 +18,6 @@ abstract class PostContent extends Post
              * @return string
              */
             get: static fn ($value) => stream_get_contents($value)
-        );
+        )->shouldCache();
     }
 }

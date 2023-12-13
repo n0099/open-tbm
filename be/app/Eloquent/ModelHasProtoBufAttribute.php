@@ -32,6 +32,6 @@ trait ModelHasProtoBufAttribute
                 $proto->mergeFromString(stream_get_contents($value));
                 return Helper::jsonDecode($proto->serializeToJsonString(), false);
             }
-        );
+        )->shouldCache();
     }
 }
