@@ -5,13 +5,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
         <link rel="preload" href="/assets/icon-loading-blocks.svg" as="image">
         <style>
-            #loadingBlocksInitial, #loadingBlocksRouteUpdate {
-                display: block;
-                margin: auto;
-                padding: 15vh 0;
-            }
             .grecaptcha-badge {
                 visibility: hidden;
+            }
+            #loadingBlocks {
+                height: 200px;
+                margin: auto;
+            }
+            #app {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+            #app > .container {
+                flex-grow: 1;
+            }
+            body {
+                margin: 0;
             }
         </style>
         <title>open-tbm @ %VITE_INSTANCE_NAME%</title>
@@ -20,8 +30,9 @@
         <noscript>
             <strong>We're sorry but open-tbm @ %VITE_INSTANCE_NAME% doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
         </noscript>
-        <img id="loadingBlocksInitial" src="/assets/icon-loading-blocks.svg" />
-        <div id="app"></div>
+        <div id="app">
+            <img id="loadingBlocks" src="/assets/icon-loading-blocks.svg" />
+        </div>
         <script type="module" src="/src/main.ts"></script>
     </body>
 </html>

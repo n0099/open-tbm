@@ -1,7 +1,7 @@
 <template>
     <GlobalNavBar />
     <HorizontalMobileMessage />
-    <img id="loadingBlocksRouteUpdate" :src="iconLoadingBlocks" class="d-none" />
+    <img id="loadingBlocks" :src="iconLoadingBlocks" class="d-none" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
             <RouterView />
@@ -32,7 +32,6 @@ import iconLoadingBlocks from '/assets/icon-loading-blocks.svg';
 import GlobalNavBar from '@/components/GlobalNavBar.vue';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
 
-import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
@@ -40,7 +39,6 @@ import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
 const isReCAPTCHAEnabled = import.meta.env.VITE_RECAPTCHA_SITE_KEY !== '';
 const isGoogleAnalyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT_ID !== '';
-onMounted(() => { document.getElementById('loadingBlocksInitial')?.remove() });
 </script>
 
 <style scoped>
