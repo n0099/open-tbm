@@ -162,7 +162,7 @@ import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, us
 import type { ApiForumList } from '@/api/index.d';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
-import { assertRouteNameIsStr } from '@/router';
+import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 
 import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -334,7 +334,7 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     assertRouteNameIsStr(route.name);
     uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
     params.value = [];
-    const routeName = removeEnd(route.name, '+p');
+    const routeName = removeEnd(route.name, routeNameSuffix.page);
     // parse route path to params
     if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
         parseParamRoute(route.params.pathMatch); // omit the page param from route full path

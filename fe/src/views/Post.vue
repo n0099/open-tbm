@@ -36,7 +36,7 @@ export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 </script>
 
 <script setup lang="ts">
-import type { ApiError, ApiForumList, ApiPostsQuery } from '@/api/index.d';
+import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
 import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
 import { postListItemScrollPosition } from '@/components/Post/ViewList.vue';
@@ -65,7 +65,7 @@ const selectedRenderTypes = ref<[PostViewRenderer]>(['list']);
 const queryFormRef = ref<typeof QueryForm>();
 useHead({ title: computed(() => titleTemplate(title.value)) });
 
-const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page = 1) => {
+const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Cursor) => {
     const startTime = Date.now();
     lastFetchError.value = null;
     showPlaceholderPostList.value = true;
@@ -74,7 +74,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page =
 
     const postsQuery = await apiPostsQuery({
         query: JSON.stringify(queryParams),
-        page: isNewQuery ? 1 : page
+        cursor: isNewQuery ? undefined : cursor
     }).finally(() => {
         showPlaceholderPostList.value = false;
         isLoading.value = false;
@@ -92,10 +92,10 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page =
     switch (queryFormRef.value?.getCurrentQueryType()) {
         case 'fid':
         case 'search':
-            title.value = `第${page}页 - ${forumName} - 帖子查询`;
+            title.value = `${forumName} - 帖子查询`;
             break;
         case 'postID':
-            title.value = `第${page}页 - 【${forumName}】${threadTitle} - 帖子查询`;
+            title.value = `${threadTitle} - ${forumName} - 帖子查询`;
             break;
     }
 
@@ -107,13 +107,13 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, page =
     lazyLoadUpdate();
     return true;
 };
-const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, page: number) => {
+const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
     if (queryFormRef.value === undefined) return false;
     const flattenParams = queryFormRef.value.parseRouteToGetFlattenParams(_route);
     if (flattenParams === false) return false;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, page);
-    if (isFetchSuccess) {
+    const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
+    if (isFetchSuccess && renderType.value === 'list') {
         const scrollPosition = postListItemScrollPosition(_route);
         const el = document.querySelector(scrollPosition.el);
         if (el === null) return isFetchSuccess;

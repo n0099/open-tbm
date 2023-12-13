@@ -19,7 +19,7 @@ import UserQueryForm from '@/components/UserQueryForm.vue';
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
-import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
+import { compareRouteIsNewQuery, routeNameSuffix, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
 
 import { nextTick, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -71,7 +71,7 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
 fetchUsersData(route, true);
 
 watchEffect(() => {
-    selectUserBy.value = removeStart(removeEnd(String(route.name ?? ''), '+p'), 'user/') as SelectTiebaUserBy;
+    selectUserBy.value = removeStart(removeEnd(String(route.name ?? ''), routeNameSuffix.page), 'user/') as SelectTiebaUserBy;
     params.value = { ..._.omit(props, 'page'), uid: Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {

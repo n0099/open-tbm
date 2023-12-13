@@ -1,4 +1,4 @@
-import { assertRouteNameIsStr, routeNameWithPage } from '@/router';
+import { assertRouteNameIsStr, routeNameSuffix, routeNameWithPage } from '@/router';
 import { removeEnd } from '@/shared';
 import { computed } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
@@ -14,7 +14,7 @@ export const usePageRoutes = (currentPage: number) => computed<{ [P in 'next' | 
     const { query } = route;
     return {
         prev: currentPage - 1 === 1 // to prevent '/page/1' occurs in route path
-            ? { query, name: removeEnd(route.name, '+p'), params: _.omit(route.params, 'page') }
+            ? { query, name: removeEnd(route.name, routeNameSuffix.page), params: _.omit(route.params, 'page') }
             : { query, name, params: { ...route.params, page: currentPage - 1 } },
         next: { query, name, params: { ...route.params, page: currentPage + 1 } }
     };

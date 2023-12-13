@@ -36,7 +36,7 @@
 import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery } from '@/api/index.d';
-import { assertRouteNameIsStr, routeNameWithPage } from '@/router';
+import { assertRouteNameIsStr, routeNameSuffix, routeNameWithPage } from '@/router';
 import type { Pid, Tid } from '@/shared';
 import { removeEnd } from '@/shared';
 
@@ -104,7 +104,7 @@ const scrollStop = _.debounce(() => {
         assertRouteNameIsStr(route.name);
         const hash = `#${hashPrefix}${postID}`;
         router.replace(page === 1 // to prevent '/page/1' occurs in route path
-            ? { hash, name: removeEnd(route.name, '+p'), params: _.omit(route.params, 'page') }
+            ? { hash, name: removeEnd(route.name, routeNameSuffix.page), params: _.omit(route.params, 'page') }
             : { hash, name: routeNameWithPage(route.name), params: { ...route.params, page } });
     };
     // is the first reply belonged to the first thread, true when the first thread has no reply,

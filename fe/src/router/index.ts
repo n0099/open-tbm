@@ -3,7 +3,7 @@ import PlaceholderError from '@/components/PlaceholderError.vue';
 import { notyShow } from '@/shared';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
-import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordRaw, RouterScrollBehavior } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import nprogress from 'nprogress';
 import _ from 'lodash';
@@ -19,7 +19,9 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name'])
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
-export const routeNameWithPage = (name: string) => (_.endsWith(name, '+p') ? name : `${name}+p`);
+export const routeNameSuffix = { page: '+p', cursor: '+c' } as const;
+export const routeNameWithPage = (name: string) =>
+    (_.endsWith(name, routeNameSuffix.page) ? name : `${name}${routeNameSuffix.page}`);
 // https://github.com/vuejs/vue-router-next/issues/1184
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.params.page ?? 1);
@@ -37,13 +39,31 @@ const lazyLoadRouteView = async (component: Promise<Component>) => {
         containersDom.forEach(i => { i.classList.remove('d-none') });
     });
 };
-const withPageRoute = <T extends { components: Record<string, () => Promise<Component>> }
-| { component: () => Promise<Component> } & { props: boolean }>
-(routeName: string, restRoute: T): T & { children: RouteRecordRaw[] } =>
-    ({ ...restRoute, children: [{ ...restRoute, path: 'page/:page(\\d+)', name: `${routeName}+p` }] });
 
-const userRoute = { component: async () => lazyLoadRouteView(import('@/views/User.vue')), props: true };
-const postRoute = { components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) } };
+type ParentRoute = Omit<RouteRecordSingleView, 'path'> | Omit<RouteRecordMultipleViews, 'path'>;
+const withChildrenRoute = <T extends ParentRoute>(
+    routeName: string,
+    parentRoute: T,
+    childrenRoute: _RouteRecordBase
+): Omit<RouteRecordSingleViewWithChildren, 'path'> | Omit<RouteRecordMultipleViewsWithChildren, 'path'> =>
+    ({
+        name: routeName,
+        ...parentRoute,
+        children: [{ ...parentRoute, ...childrenRoute } as RouteRecordSingleView | RouteRecordMultipleViews]
+    });
+const withPageRoute = <T extends ParentRoute>(routeName: string, parentRoute: T): ReturnType<typeof withChildrenRoute> =>
+    withChildrenRoute(routeName, parentRoute, { path: 'page/:page(\\d+)', name: `${routeName}${routeNameSuffix.page}` });
+const withCursorRoute = <T extends ParentRoute>(routeName: string, parentRoute: T): ReturnType<typeof withChildrenRoute> =>
+    withChildrenRoute(routeName, parentRoute, { path: 'cursor/:cursor(\\d+)', name: `${routeName}${routeNameSuffix.cursor}` });
+
+const userRoute: ParentRoute = {
+    component: async () => lazyLoadRouteView(import('@/views/User.vue')),
+    props: true
+};
+const postRoute: ParentRoute = {
+    components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }
+};
+
 export default createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
@@ -54,30 +74,24 @@ export default createRouter({
             props: r => ({ error: { errorCode: 404, errorInfo: `${r.path}` } })
         },
         { path: '/', name: 'index', component: Index },
-        {
-            path: '/p',
-            name: 'post',
-            ...postRoute,
-            children: [
-                { path: 'page/:page(\\d+)', name: 'post+p', ...postRoute },
-                { path: 'f/:fid(\\d+)', name: 'post/fid', ...withPageRoute('post/fid', postRoute) },
-                { path: 't/:tid(\\d+)', name: 'post/tid', ...withPageRoute('post/tid', postRoute) },
-                { path: 'p/:pid(\\d+)', name: 'post/pid', ...withPageRoute('post/pid', postRoute) },
-                { path: 'sp/:spid(\\d+)', name: 'post/spid', ...withPageRoute('post/spid', postRoute) },
-                { path: ':pathMatch(.*)*', name: 'post/param', ...withPageRoute('post/param', postRoute) }
-            ]
-        },
-        {
-            path: '/u',
-            name: 'user',
-            ...userRoute,
-            children: [
-                { path: 'page/:page(\\d+)', name: 'user+p', ...userRoute },
-                { path: 'id/:uid(\\d+)', name: 'user/uid', ...withPageRoute('user/uid', userRoute) },
-                { path: 'n/:name', name: 'user/name', ...withPageRoute('user/name', userRoute) },
-                { path: 'dn/:displayName', name: 'user/displayName', ...withPageRoute('user/displayName', userRoute) }
-            ]
-        },
+        _.merge({ path: '/p', ...withCursorRoute('post', postRoute) },
+            {
+                children: [
+                    { path: 'f/:fid(\\d+)', ...withCursorRoute('post/fid', postRoute) },
+                    { path: 't/:tid(\\d+)', ...withCursorRoute('post/tid', postRoute) },
+                    { path: 'p/:pid(\\d+)', ...withCursorRoute('post/pid', postRoute) },
+                    { path: 'sp/:spid(\\d+)', ...withCursorRoute('post/spid', postRoute) },
+                    { path: ':pathMatch(.*)*', ...withCursorRoute('post/param', postRoute) }
+                ]
+            }),
+        _.merge({ path: '/u', ...withPageRoute('user', userRoute) },
+            {
+                children: [
+                    { path: 'id/:uid(\\d+)', ...withPageRoute('user/uid', userRoute) },
+                    { path: 'n/:name', ...withPageRoute('user/name', userRoute) },
+                    { path: 'dn/:displayName', ...withPageRoute('user/displayName', userRoute) }
+                ]
+            }),
         { path: '/status', name: 'status', component: async () => lazyLoadRouteView(import('@/views/Status.vue')) },
         { path: '/stats', name: 'stats', component: async () => lazyLoadRouteView(import('@/views/Stats.vue')) },
         { path: '/bilibiliVote', name: 'bilibiliVote', component: async () => lazyLoadRouteView(import('@/views/BilibiliVote.vue')) }

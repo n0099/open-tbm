@@ -7,7 +7,7 @@ import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
 
 export type ApiForumList = Array<{
-    id: number,
+    id: UInt,
     fid: Fid,
     name: string,
     isCrawling: BoolInt
@@ -41,23 +41,25 @@ export interface ApiStatsForumPostCountQueryParam {
     endTime: UnixTimestamp
 }
 
-export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemCount']: number };
-interface ApiQueryParamPagination { page?: number }
+export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemCount']: UInt };
+interface ApiQueryParamPagination { page?: UInt }
 export interface ApiUsersQuery {
     pages: Pagination,
     users: TiebaUser[]
 }
 export type ApiUsersQueryQueryParam = ApiQueryParamPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam };
 
+export type Cursor = string;
+export type JsonString = string;
 interface CursorPagination {
-    nextPageCursor: string,
+    nextPageCursor: Cursor,
     hasMorePages: boolean
 }
 export type ApiPostsQuery = Omit<ApiUsersQuery, 'pages'> & {
     type: 'index' | 'search',
     pages: CursorPagination & {
-        matchQueryPostCount: { [P in PostType]: number },
-        notMatchQueryParentPostCount: { [P in Omit<PostType, 'subRely'>]: number }
+        matchQueryPostCount: { [P in PostType]: UInt },
+        notMatchQueryParentPostCount: { [P in Omit<PostType, 'subRely'>]: UInt }
     },
     forum: Pick<ApiForumList[number], 'fid' | 'name'>,
     threads: Array<Thread & {
@@ -66,4 +68,4 @@ export type ApiPostsQuery = Omit<ApiUsersQuery, 'pages'> & {
         }>
     }>
 };
-export type ApiPostsQueryQueryParam = ApiQueryParamPagination & { query: string };
+export interface ApiPostsQueryQueryParam { cursor?: Cursor, query: JsonString }
