@@ -188,14 +188,13 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             if (year == 0 || month == 0 || day == 0) return null;
 
             var timeParts = timeStamp.Select(i => (int)i.ToSingle().NanToZero()).ToList();
-            if (timeParts is not [var hour, var minute, _]) // discard matching seconds
-                throw new ArgumentOutOfRangeException(nameof(timeStamp), timeStamp,
+            return timeParts is [var hour, var minute, _] // discard matching seconds
+                ? new DateTime(year, month: month, day: day, hour, minute, second: 0, DateTimeKind.Unspecified)
+
+                    // possible fractional seconds such as rational 5510/100
+                    .AddSeconds(timeStamp[2].ToSingle().NanToZero())
+                : throw new ArgumentOutOfRangeException(nameof(timeStamp), timeStamp,
                     $"Unexpected \"{timeStamp}\", expecting three rationals.");
-
-            return new DateTime(year, month: month, day: day, hour, minute, second: 0, DateTimeKind.Unspecified)
-
-                // possible fractional seconds such as rational 5510/100
-                .AddSeconds(timeStamp[2].ToSingle().NanToZero());
         }
 
         public static Point? ParseGpsCoordinateOrNull(

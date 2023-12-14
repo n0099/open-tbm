@@ -111,7 +111,9 @@ class BilibiliVote
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))]
         ]);
-        return self::sanitizeVoteForField(BilibiliVote::selectRaw($groupBytimeGranularity[$request->query()['timeGranularity']])
+        return self::sanitizeVoteForField(BilibiliVote::selectRaw(
+            $groupBytimeGranularity[$request->query()['timeGranularity']]
+        )
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->whereIn('voteFor', self::getCandidatesWithMostVotes(5))
