@@ -20,7 +20,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     public delegate void ExceptionHandler(Exception ex);
 
     // ReSharper disable UnusedAutoPropertyAccessor.Global
-    public required ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>> Logger { private get; init; }
+    public required ILogger<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>>
+        Logger { private get; init; }
     public required CrawlerDbContext.New DbContextFactory { private get; init; }
     public required ClientRequesterTcs RequesterTcs { private get; init; }
     public required UserParserAndSaver Users { protected get; init; }
@@ -108,9 +109,14 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     }
 
     protected virtual void ThrowIfEmptyUsersEmbedInPosts() { }
-    protected virtual void PostParseHook(TResponse response, CrawlRequestFlag flag, Dictionary<PostId, TPost> parsedPostsInResponse) { }
+    protected virtual void PostParseHook(
+        TResponse response,
+        CrawlRequestFlag flag,
+        Dictionary<PostId, TPost> parsedPostsInResponse) { }
     protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
-    protected virtual void PostCommitSaveHook(SaverChangeSet<TPost> savedPosts, CancellationToken stoppingToken = default) { }
+    protected virtual void PostCommitSaveHook(
+        SaverChangeSet<TPost> savedPosts,
+        CancellationToken stoppingToken = default) { }
 
     private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)
     {
@@ -126,8 +132,10 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         PostParseHook(response, flag, parsedPostsInResponse);
     }
 
-    private async Task CrawlPages
-        (IList<Page> pages, Func<Page, FailureCount>? previousFailureCountSelector = null, CancellationToken stoppingToken = default)
+    private async Task CrawlPages(
+        IList<Page> pages,
+        Func<Page, FailureCount>? previousFailureCountSelector = null,
+        CancellationToken stoppingToken = default)
     {
         var acquiredLocks = locks.AcquireRange(lockId, pages);
         if (!acquiredLocks.Any())

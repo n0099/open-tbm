@@ -41,7 +41,10 @@ public class ThreadCrawlFacade(
     protected void ParseLatestRepliers(IEnumerable<Thread> threads) =>
         threads.Select(th => th.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
             .OfType<User>() // filter out nulls
-            .Where(u => u.Uid != 0) // some rare deleted thread but still visible in 6.0.2 response will have a latest replier uid=0 name="" nameShow=".*"
+
+            // some rare deleted thread but still visible in 6.0.2 response
+            // will have a latest replier uid=0 name="" nameShow=".*"
+            .Where(u => u.Uid != 0)
             .Select(u => TiebaUser.CreateLatestReplier(u.Uid, u.Name.NullIfEmpty(),
                 u.Name == u.NameShow ? null : u.NameShow))
             .ForEach(u => _latestRepliers[u.Uid] = u);
@@ -61,7 +64,10 @@ public class ThreadCrawlFacade(
             t.parsed.LatestReplierUid = t.inResponse.LastReplyer?.Uid;
         });
 
-    protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
+    protected override void PostParseHook(
+        ThreadResponse response,
+        CrawlRequestFlag flag,
+        Dictionary<PostId, ThreadPost> parsedPostsInResponse)
     {
         var data = response.Data;
         if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);

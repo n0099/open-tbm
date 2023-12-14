@@ -29,7 +29,8 @@ public sealed partial class TesseractRecognizer(IConfiguration config, string sc
     });
 
     private int ConfidenceThreshold => _config.GetValue("ConfidenceThreshold", 20);
-    private float AspectRatioThresholdToConsiderAsVertical => _config.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
+    private float AspectRatioThresholdToConsiderAsVertical =>
+        _config.GetValue("AspectRatioThresholdToConsiderAsVertical", 0.8f);
 
     public void Dispose()
     {

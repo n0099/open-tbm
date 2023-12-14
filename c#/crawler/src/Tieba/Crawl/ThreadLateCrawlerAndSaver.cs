@@ -12,7 +12,9 @@ public class ThreadLateCrawlerAndSaver(
 
     public delegate ThreadLateCrawlerAndSaver New(Fid fid);
 
-    public async Task CrawlThenSave(Dictionary<Tid, FailureCount> failureCountsKeyByTid, CancellationToken stoppingToken = default)
+    public async Task CrawlThenSave(
+        Dictionary<Tid, FailureCount> failureCountsKeyByTid,
+        CancellationToken stoppingToken = default)
     {
         var threads = await Task.WhenAll(
             failureCountsKeyByTid.Select(pair => CrawlThread(pair.Key, pair.Value, stoppingToken)));
@@ -24,11 +26,13 @@ public class ThreadLateCrawlerAndSaver(
         db.ChangeTracker.Entries<ThreadPost>()
             .ForEach(ee => ee.Property(th => th.AuthorPhoneType).IsModified = true);
 
-        _ = await db.SaveChangesAsync(stoppingToken); // do not touch UpdateAt field for the accuracy of time field in thread revisions
+        // do not touch UpdateAt field for the accuracy of time field in thread revisions
+        _ = await db.SaveChangesAsync(stoppingToken);
         await transaction.CommitAsync(stoppingToken);
     }
 
-    private async Task<ThreadPost?> CrawlThread(Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
+    private async Task<ThreadPost?> CrawlThread
+        (Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
     {
         var crawlerLockId = new CrawlerLocks.LockId(fid, tid);
 #pragma warning disable SA1003 // Symbols should be spaced correctly

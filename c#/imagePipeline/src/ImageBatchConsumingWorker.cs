@@ -40,11 +40,14 @@ public class ImageBatchConsumingWorker(
                               + " to false then restart will rerun all previous failed image batches from start");
     }
 
-    private async Task Consume(IReadOnlyCollection<ImageWithBytes> imagesWithBytes, CancellationToken stoppingToken = default)
+    private async Task Consume(
+        IReadOnlyCollection<ImageWithBytes> imagesWithBytes,
+        CancellationToken stoppingToken = default)
     {
         await using var dbFactory = dbContextDefaultFactory();
         var db = dbFactory.Value();
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+        await using var transaction = await db.Database.BeginTransactionAsync
+            (IsolationLevel.ReadCommitted, stoppingToken);
 
         await using var scope1 = scope0.BeginLifetimeScope(builder =>
             builder.RegisterType<FailedImageHandler>()
@@ -121,7 +124,8 @@ public class ImageBatchConsumingWorker(
             await ConsumeOcrConsumer(consumedImagesId =>
                     MarkImagesInReplyAsConsumed(i => i.OcrConsumed, consumedImagesId),
                 ExceptConsumed(i => i.OcrConsumed).ToList(),
-                ocrConsumerFactory, db.Database.GetDbConnection(), transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
+                ocrConsumerFactory, db.Database.GetDbConnection(),
+                transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
         }
         finally
         {
@@ -234,7 +238,8 @@ public class ImageBatchConsumingWorker(
                 _ = await db.Database.UseTransactionAsync(parentTransaction, stoppingToken);
                 var recognizedTextLines = recognizedTextLinesKeyByScript[script];
 
-                // exclude images have already been recognized for current script due to being referenced across multiple forums
+                // exclude images have already been recognized for current script
+                // due to being referenced across multiple forums
                 var uniqueImagesInCurrentFid = imagesInCurrentFid
                     .ExceptBy(recognizedTextLines.Select(i => i.ImageId), i => i.ImageId).ToList();
 

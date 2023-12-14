@@ -109,7 +109,8 @@ public class ArchiveCrawlWorker(
             .Max(response => response.Result.Data.Page.TotalPage);
     }
 
-    private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads(Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
+    private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads
+        (Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
         await using var facadeFactory = threadArchiveCrawlFacadeFactory();
         var crawler = facadeFactory.Value(fid, forumName);
@@ -124,7 +125,8 @@ public class ArchiveCrawlWorker(
         return savedThreads;
     }
 
-    private async Task<SavedRepliesKeyByTid> CrawlReplies(SaverChangeSet<ThreadPost>? savedThreads, Fid fid, CancellationToken stoppingToken = default)
+    private async Task<SavedRepliesKeyByTid> CrawlReplies
+        (SaverChangeSet<ThreadPost>? savedThreads, Fid fid, CancellationToken stoppingToken = default)
     {
         var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
         if (savedThreads == null) return savedRepliesKeyByTid;
@@ -144,7 +146,8 @@ public class ArchiveCrawlWorker(
         return savedRepliesKeyByTid;
     }
 
-    private async Task<int> CrawlSubReplies(SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default)
+    private async Task<int> CrawlSubReplies
+        (SavedRepliesKeyByTid savedRepliesKeyByTid, Fid fid, CancellationToken stoppingToken = default)
     {
         var shouldCrawlParentPosts = savedRepliesKeyByTid.Aggregate(new HashSet<(Tid, Pid)>(), (shouldCrawl, pair) =>
         {

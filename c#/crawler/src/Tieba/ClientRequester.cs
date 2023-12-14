@@ -16,8 +16,11 @@ public class ClientRequester(
     private static readonly Random Rand = new();
     private readonly IConfigurationSection _config = config.GetSection("ClientRequester");
 
-    public async Task<JsonElement> RequestJson
-        (string url, string clientVersion, Dictionary<string, string> postParam, CancellationToken stoppingToken = default) =>
+    public async Task<JsonElement> RequestJson(
+        string url,
+        string clientVersion,
+        Dictionary<string, string> postParam,
+        CancellationToken stoppingToken = default) =>
         await Request(() => PostJson(url, postParam, clientVersion, stoppingToken), stream =>
         {
             stoppingToken.ThrowIfCancellationRequested();
@@ -26,9 +29,12 @@ public class ClientRequester(
         });
 
     public async Task<TResponse> RequestProtoBuf<TRequest, TResponse>(
-        string url, string clientVersion,
-        TRequest requestParam, Action<TRequest, Common> commonParamSetter,
-        Func<TResponse> responseFactory, CancellationToken stoppingToken = default)
+        string url,
+        string clientVersion,
+        TRequest requestParam,
+        Action<TRequest, Common> commonParamSetter,
+        Func<TResponse> responseFactory,
+        CancellationToken stoppingToken = default)
         where TRequest : class, IMessage<TRequest>
         where TResponse : class, IMessage<TResponse> =>
         await Request(() => PostProtoBuf(url, clientVersion, requestParam, commonParamSetter, stoppingToken), stream =>
@@ -54,7 +60,8 @@ public class ClientRequester(
             }
         });
 
-    private static async Task<T> Request<T>(Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)
+    private static async Task<T> Request<T>
+        (Func<Task<HttpResponseMessage>> requester, Func<Stream, T> responseConsumer)
     {
         try
         {
@@ -76,8 +83,11 @@ public class ClientRequester(
         }
     }
 
-    private async Task<HttpResponseMessage> PostJson
-        (string url, Dictionary<string, string> postParam, string clientVersion, CancellationToken stoppingToken = default)
+    private async Task<HttpResponseMessage> PostJson(
+        string url,
+        Dictionary<string, string> postParam,
+        string clientVersion,
+        CancellationToken stoppingToken = default)
     {
         var postData = new Dictionary<string, string>
         {
@@ -102,8 +112,10 @@ public class ClientRequester(
     }
 
     private async Task<HttpResponseMessage> PostProtoBuf<TRequest>(
-        string url, string clientVersion,
-        TRequest requestParam, Action<TRequest, Common> commonParamSetter,
+        string url,
+        string clientVersion,
+        TRequest requestParam,
+        Action<TRequest, Common> commonParamSetter,
         CancellationToken stoppingToken = default)
         where TRequest : class, IMessage<TRequest>
     {

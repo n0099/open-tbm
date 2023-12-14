@@ -17,7 +17,10 @@ public class SubReplyCrawlFacade(
     protected override void ThrowIfEmptyUsersEmbedInPosts() => throw new TiebaException(
         $"User list in the response of sub reply request for fid {Fid}, tid {tid}, pid {pid} is empty.");
 
-    protected override void PostParseHook(SubReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, SubReplyPost> parsedPostsInResponse)
+    protected override void PostParseHook(
+        SubReplyResponse response,
+        CrawlRequestFlag flag,
+        Dictionary<PostId, SubReplyPost> parsedPostsInResponse)
     {
         foreach (var sr in parsedPostsInResponse.Values)
         {
@@ -27,7 +30,9 @@ public class SubReplyCrawlFacade(
         Users.ResetUsersIcon();
     }
 
-    protected override void PostCommitSaveHook(SaverChangeSet<SubReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
+    protected override void PostCommitSaveHook(
+        SaverChangeSet<SubReplyPost> savedPosts,
+        CancellationToken stoppingToken = default) =>
         pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "subReplies",
             p => p.Spid, p => p.OriginalContents, stoppingToken);
 }

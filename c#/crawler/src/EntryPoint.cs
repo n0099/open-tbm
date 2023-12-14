@@ -20,10 +20,13 @@ public class EntryPoint : BaseEntryPoint
         service.AddHttpClient("tbClient", client =>
             {
                 client.BaseAddress = new(ClientRequester.ClientApiDomain);
-                client.Timeout = TimeSpan.FromMilliseconds(clientRequesterConfig.GetValue("TimeoutMs", 3000));
+                client.Timeout = TimeSpan.FromMilliseconds(
+                    clientRequesterConfig.GetValue("TimeoutMs", 3000));
             })
-            .SetHandlerLifetime(TimeSpan.FromSeconds(clientRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
+            .SetHandlerLifetime(TimeSpan.FromSeconds(
+                clientRequesterConfig.GetValue("HandlerLifetimeSec", 600))) // 10 mins
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip});
 
         // https://stackoverflow.com/questions/52889827/remove-http-client-logging-handler-in-asp-net-core/52970073#52970073
         service.RemoveAll<IHttpMessageHandlerBuilderFilter>();
@@ -37,7 +40,8 @@ public class EntryPoint : BaseEntryPoint
             typeof(BaseParser<,>), typeof(BaseSaver<,>)
         };
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-            .Where(type => Array.Exists(baseClassOfClassesToBeRegistered, baseType => baseType.IsSubTypeOfRawGeneric(type)))
+            .Where(type => Array.Exists(baseClassOfClassesToBeRegistered,
+                baseType => baseType.IsSubTypeOfRawGeneric(type)))
             .AsSelf();
 
         builder.RegisterType<CrawlerDbContext>();
@@ -50,7 +54,8 @@ public class EntryPoint : BaseEntryPoint
                 .SingleInstance()
                 .AsSelf()
 
-                // eager initial all keyed CrawlerLocks singleton instances, in order to sync their timer of WithLogTrace
+                // eager initial all keyed CrawlerLocks singleton instances
+                // in order to sync their timer of WithLogTrace
                 .AutoActivate());
         builder.RegisterType<AuthorRevisionSaver>();
         builder.RegisterType<UserParserAndSaver>();

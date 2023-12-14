@@ -84,7 +84,8 @@ public class PushAllPostContentsIntoSonicWorker(
             var ca = ArchiveCrawlWorker.GetCumulativeAverage(elapsedMs, acc.DurationCa, pushedCount);
             if (pushedCount % 1000 == 0)
             {
-                static double GetPercentage(float current, float total, int digits = 2) => Math.Round(current / total * 100, digits);
+                static double GetPercentage(float current, float total, int digits = 2) =>
+                    Math.Round(current / total * 100, digits);
 #pragma warning disable IDE0042 // Deconstruct variable declaration
                 var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
                 var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);

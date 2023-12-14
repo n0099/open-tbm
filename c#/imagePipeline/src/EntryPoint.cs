@@ -22,9 +22,12 @@ public partial class EntryPoint : BaseEntryPoint
                 client.DefaultRequestVersion = HttpVersion.Version20;
                 client.DefaultRequestHeaders.UserAgent.TryParseAdd(
                     imageRequesterConfig.GetValue("UserAgent", Strings.DefaultUserAgent));
-                client.DefaultRequestHeaders.Referrer = new("https://tieba.baidu.com/"); // https://github.com/w3c/webappsec/issues/382
+
+                // https://github.com/w3c/webappsec/issues/382
+                client.DefaultRequestHeaders.Referrer = new("https://tieba.baidu.com/");
             })
-            .SetHandlerLifetime(TimeSpan.FromSeconds(imageRequesterConfig.GetValue("HandlerLifetimeSec", 600))); // 10 mins
+            .SetHandlerLifetime(TimeSpan.FromSeconds(
+                imageRequesterConfig.GetValue("HandlerLifetimeSec", 600))); // 10 mins
 
         var registry = service.AddPolicyRegistry();
         AddPolicyToRegistry(registry, imageRequesterConfig,
@@ -68,7 +71,8 @@ public partial class EntryPoint : BaseEntryPoint
         {
             var limitRps = context.Configuration
                 .GetSection("ImageRequester").GetValue("LimitRps", 10);
-            return new FixedWindowRateLimiter(new() {PermitLimit = limitRps, QueueLimit = limitRps, Window = TimeSpan.FromSeconds(1)});
+            return new FixedWindowRateLimiter(new()
+                {PermitLimit = limitRps, QueueLimit = limitRps, Window = TimeSpan.FromSeconds(1)});
         }).SingleInstance();
 
         var config = context.Configuration.GetSection("OcrConsumer");
@@ -103,6 +107,6 @@ public partial class EntryPoint
                         onRetryLogDelegate(logger, imageUrlFilename, outcome, tryCount);
                     }
                 }),
-            Policy.TimeoutAsync<T>( // timeout for each retry https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
+            Policy.TimeoutAsync<T>( // timeout for each retry: https://github.com/App-vNext/Polly/wiki/Polly-and-HttpClientFactory/abbe6d767681098c957ee6b6bee656197b7d03b4#use-case-applying-timeouts
                 imageRequesterConfig.GetValue("TimeoutMs", 3000))));
 }

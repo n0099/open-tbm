@@ -26,8 +26,8 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
             }
             var pagesLock = _crawling[lockId];
             lock (pagesLock)
-            {
-                foreach (var page in acquiredPages.ToList()) // iterate on a shallow copy to mutate the original acquiredPages
+            { // iterate on a shallow copy to mutate the original acquiredPages
+                foreach (var page in acquiredPages.ToList())
                 {
                     if (pagesLock.TryAdd(page, now)) continue;
 
@@ -113,6 +113,7 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
 
     public record LockId(Fid Fid, Tid? Tid = null, Pid? Pid = null)
     {
-        public override string ToString() => $"f{Fid}{(Tid == null ? "" : $" t{Tid}")}{(Pid == null ? "" : $" p{Pid}")}";
+        public override string ToString() =>
+            $"f{Fid}{(Tid == null ? "" : $" t{Tid}")}{(Pid == null ? "" : $" p{Pid}")}";
     }
 }

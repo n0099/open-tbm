@@ -94,7 +94,8 @@ public partial class ReplySaver(
             .ForUpdate().ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
                 where existing.ExpectedByteSize == 0 // randomly respond with 0
-                join newInContent in imagesKeyByUrlFilename.Values on existing.UrlFilename equals newInContent.UrlFilename
+                join newInContent in imagesKeyByUrlFilename.Values
+                    on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
             .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
         db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
@@ -103,7 +104,8 @@ public partial class ReplySaver(
 
             // no need to manually invoke DbContext.AddRange(images) since EF Core will do these chore
             // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
-            // reuse the same instance from imagesKeyByUrlFilename will prevent assigning multiple different instances with the same key
+            // reuse the same instance from imagesKeyByUrlFilename
+            // will prevent assigning multiple different instances with the same key
             // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
             // https://github.com/dotnet/efcore/issues/30236
             ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)

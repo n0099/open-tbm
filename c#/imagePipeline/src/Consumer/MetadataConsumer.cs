@@ -23,11 +23,13 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         geometryOverlay: GeometryOverlay.NG,
         coordinateEqualityComparer: new());
 
-    public MetadataConsumer(ILogger<MetadataConsumer> logger, IConfiguration config, FailedImageHandler failedImageHandler)
+    public MetadataConsumer
+        (ILogger<MetadataConsumer> logger, IConfiguration config, FailedImageHandler failedImageHandler)
     {
         (_logger, _failedImageHandler) = (logger, failedImageHandler);
         var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
-        ulong[] GetCommonXxHash3ToIgnore(string key) => section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
+        ulong[] GetCommonXxHash3ToIgnore(string key) =>
+            section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
         _commonEmbeddedMetadataXxHash3ToIgnore = (
             Exif: GetCommonXxHash3ToIgnore("Exif"),
             Icc: GetCommonXxHash3ToIgnore("Icc"),
@@ -164,7 +166,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             ret.GpsImgDirectionRef = GetExifTagValueOrNull(ExifTag.GPSImgDirectionRef).NullIfEmpty();
 
             ret.TagNames = exif.Values.Select(i => new ImageMetadata.Exif.TagName {Name = i.Tag.ToString()})
-                .DistinctBy(tagName => tagName.Name).ToList(); // tags might be duplicated in EXIF with same or different values
+
+                // tags might be duplicated in EXIF with same or different values
+                .DistinctBy(tagName => tagName.Name).ToList();
         }
         return ret;
     }
@@ -189,7 +193,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                     $"Unexpected \"{timeStamp}\", expecting three rationals.");
 
             return new DateTime(year, month: month, day: day, hour, minute, second: 0, DateTimeKind.Unspecified)
-                .AddSeconds(timeStamp[2].ToSingle().NanToZero()); // possible fractional seconds such as rational 5510/100
+
+                // possible fractional seconds such as rational 5510/100
+                .AddSeconds(timeStamp[2].ToSingle().NanToZero());
         }
 
         public static Point? ParseGpsCoordinateOrNull(
@@ -356,13 +362,15 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 CultureInfo.InvariantCulture, out var parsedUnixTimestamp)
                 ? exifDateTime.Length switch
                 {
-                    // accepting from 1973-03-03 17:46:40.000 to 2286-11-21 01:46:39.999 when the input contains no leading zeros
-                    // e.g. 1556068385188
-                    >= 12 and <= 13 => new(DateTimeOffset.FromUnixTimeMilliseconds(parsedUnixTimestamp).DateTime, "+00:00"),
+                    // accepting from 1973-03-03 17:46:40.000 to 2286-11-21 01:46:39.999
+                    // when the input contains no leading zeros, e.g. 1556068385188
+                    >= 12 and <= 13 =>
+                        new(DateTimeOffset.FromUnixTimeMilliseconds(parsedUnixTimestamp).DateTime, "+00:00"),
 
-                    // accepting from 1973-03-03 17:46:40 to 2286-11-21 01:46:39 when the input contains no leading zeros
-                    // e.g. 1373363130
-                    >= 9 and <= 10 => new(DateTimeOffset.FromUnixTimeSeconds(parsedUnixTimestamp).DateTime, "+00:00"),
+                    // accepting from 1973-03-03 17:46:40 to 2286-11-21 01:46:39
+                    // when the input contains no leading zeros, e.g. 1373363130
+                    >= 9 and <= 10 =>
+                        new(DateTimeOffset.FromUnixTimeSeconds(parsedUnixTimestamp).DateTime, "+00:00"),
                     _ => null
                 }
                 : null;

@@ -9,8 +9,10 @@ public class JointRecognizer(
     FailedImageHandler failedImageHandler,
     string script)
 {
-    private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector = paddleOcrRecognizerAndDetectorFactory(script);
-    private readonly Lazy<TesseractRecognizer> _tesseractRecognizer = new(() => tesseractRecognizerFactory(script));
+    private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector =
+        paddleOcrRecognizerAndDetectorFactory(script);
+    private readonly Lazy<TesseractRecognizer> _tesseractRecognizer =
+        new(() => tesseractRecognizerFactory(script));
     private readonly IConfigurationSection _config = config.GetSection("OcrConsumer");
 
     public delegate JointRecognizer New(string script);
@@ -87,7 +89,9 @@ public class JointRecognizer(
                 .GroupBy(t => t.alignedY, t => t.result)
                 .Select(groupByLine =>
                     string.Join("\n", groupByLine.Select(result => result.Text.Trim())));
-            return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC); // https://unicode.org/reports/tr15/
+
+            // https://unicode.org/reports/tr15/
+            return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC);
         });
 
     private IEnumerable<Either<ImageId, TesseractRecognitionResult>> RecognizeMatricesViaTesseract(
@@ -116,8 +120,10 @@ public class JointRecognizer(
             .SelectMany(g => g.DistinctBy(result => result.TextBox));
         var correlatedTextBoxPairs = (
             from detectionResult in detectionResults
-            join recognitionResult in uniqueRecognizedResults on detectionResult.ImageKey equals recognitionResult.ImageKey
-            let percentageOfIntersection = GetPercentageOfIntersectionArea(detectionResult.TextBox, recognitionResult.TextBox)
+            join recognitionResult in uniqueRecognizedResults
+                on detectionResult.ImageKey equals recognitionResult.ImageKey
+            let percentageOfIntersection = GetPercentageOfIntersectionArea
+                (detectionResult.TextBox, recognitionResult.TextBox)
             select new CorrelatedTextBoxPair(detectionResult.ImageKey, percentageOfIntersection,
                 detectionResult.TextBox, recognitionResult.TextBox)
         ).ToList();

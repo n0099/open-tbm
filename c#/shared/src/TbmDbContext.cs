@@ -16,25 +16,35 @@ public abstract class TbmDbContext : DbContext
 
     protected sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
     { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
-        public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
+        public override InterceptionResult<object> ScalarExecuting
+            (DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
         {
             ManipulateCommand(command);
             return result;
         }
 
-        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
+        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<object> result,
+            CancellationToken cancellationToken = default)
         {
             ManipulateCommand(command);
             return new(result);
         }
 
-        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
+        public override InterceptionResult<DbDataReader> ReaderExecuting
+            (DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
         {
             ManipulateCommand(command);
             return result;
         }
 
-        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
         {
             ManipulateCommand(command);
             return new(result);

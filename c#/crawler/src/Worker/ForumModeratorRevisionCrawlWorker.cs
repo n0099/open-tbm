@@ -28,9 +28,10 @@ public class ForumModeratorRevisionCrawlWorker
         Crawl(string forumName, CancellationToken stoppingToken = default)
     {
         var userAgent = _config.GetValue("UserAgent", Strings.DefaultUserAgent);
-        var requester = new DefaultHttpRequester(userAgent) {Headers = {
-            {"Referrer", $"https://tieba.baidu.com/bawu2/platform/detailsInfo?word={HttpUtility.UrlEncode(forumName)}&ie=utf-8"}
-        }};
+        var requester = new DefaultHttpRequester(userAgent) {Headers = {{"Referrer",
+            "https://tieba.baidu.com/bawu2/platform/detailsInfo"
+            + $"?word={HttpUtility.UrlEncode(forumName)}&ie=utf-8"
+        }}};
         using var browsing = BrowsingContext.New(Configuration.Default.With(requester).WithDefaultLoader());
         var url = $"https://tieba.baidu.com/bawu2/platform/listBawuTeamInfo?ie=utf-8&word={forumName}";
         using var doc = await browsing.OpenAsync(url, stoppingToken);
@@ -59,7 +60,8 @@ public class ForumModeratorRevisionCrawlWorker
     {
         await using var dbFactory = dbContextDefaultFactory();
         var db = dbFactory.Value();
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, stoppingToken);
+        await using var transaction = await db.Database.BeginTransactionAsync
+            (IsolationLevel.ReadCommitted, stoppingToken);
 
         Helper.GetNowTimestamp(out var now);
         var revisions = moderators
@@ -71,7 +73,8 @@ public class ForumModeratorRevisionCrawlWorker
                 Portrait = g.Key,
 
                 // user can serve as multiple moderators, so join these types with commas
-                // the https://en.wikipedia.org/wiki/Order_of_precedence is same with div.bawu_single_type in the response HTML
+                // the https://en.wikipedia.org/wiki/Order_of_precedence
+                // is same with div.bawu_single_type in the response HTML
                 ModeratorTypes = string.Join(',', g.Select(t => t.Type))
             }).ToList();
         var existingLatestRevisions = (
@@ -89,7 +92,9 @@ public class ForumModeratorRevisionCrawlWorker
             existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorTypes)),
             rev => (rev.Portrait, rev.ModeratorTypes)));
         db.ForumModeratorRevisions.AddRange(existingLatestRevisions
-            .Where(e => e.ModeratorTypes != "") // filter out revisions that recorded someone who resigned from moderators
+
+            // filter out revisions that recorded someone who resigned from moderators
+            .Where(e => e.ModeratorTypes != "")
             .ExceptBy(revisions.Select(rev => rev.Portrait), e => e.Portrait)
             .Select(e => new ForumModeratorRevision
             {

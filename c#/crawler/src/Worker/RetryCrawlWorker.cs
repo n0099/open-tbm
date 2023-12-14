@@ -21,7 +21,9 @@ public class RetryCrawlWorker(
             if (lockType == "threadLate")
             {
                 await RetryThreadLate(failed, stoppingToken);
-                continue; // skip into next lock type since unable to distinguish between lockId of threadLate and thread
+
+                // skip into next lock type since unable to distinguish between lockId of threadLate and thread
+                continue;
             }
             await Task.WhenAll(failed.Select(RetryFailed(lockType, stoppingToken)));
         }
@@ -37,15 +39,18 @@ public class RetryCrawlWorker(
 
         if (lockType == "thread")
         {
-            await RetryThread(fid, pages, failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+            await RetryThread(fid, pages,
+                failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
         }
         else if (lockType == "reply" && tid != null)
         {
-            await RetryReply(fid, tid.Value, pages, failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+            await RetryReply(fid, tid.Value, pages,
+                failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
         }
         else if (lockType == "subReply" && tid != null && pid != null)
         {
-            await RetrySubReply(fid, tid.Value, pid.Value, pages, failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+            await RetrySubReply(fid, tid.Value, pid.Value, pages,
+                failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
         }
     };
 
@@ -59,7 +64,9 @@ public class RetryCrawlWorker(
         {
             var fid = tidGroupByFid.Key;
             FailureCount FailureCountSelector(Tid tid) =>
-                failureCountWithPagesKeyByLockId[new(fid, tid)].Single().Value; // it should always contains only one page which is 1
+
+                // it should always contains only one page which is 1
+                failureCountWithPagesKeyByLockId[new(fid, tid)].Single().Value;
             var failureCountsKeyByTid = tidGroupByFid
                 .Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
             logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",

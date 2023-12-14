@@ -13,7 +13,8 @@ public class ThreadSaver(
 
     public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, _, _) => propName switch
-        { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one, so we should mark it as null temporarily
+        { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one
+            // so we should mark it as null temporarily
             // note this will cause we can't record when did a user update its iconinfo to null
             // since these null values have been ignored in reply and sub reply saver
             nameof(TiebaUser.Icon) => true,

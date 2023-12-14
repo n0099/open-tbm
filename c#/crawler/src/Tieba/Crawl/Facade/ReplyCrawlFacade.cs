@@ -14,7 +14,10 @@ public class ReplyCrawlFacade(
 {
     public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
-    protected override void PostParseHook(ReplyResponse response, CrawlRequestFlag flag, Dictionary<PostId, ReplyPost> parsedPostsInResponse)
+    protected override void PostParseHook(
+        ReplyResponse response,
+        CrawlRequestFlag flag,
+        Dictionary<PostId, ReplyPost> parsedPostsInResponse)
     {
         parsedPostsInResponse.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
@@ -23,7 +26,9 @@ public class ReplyCrawlFacade(
         if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
     }
 
-    protected override void PostCommitSaveHook(SaverChangeSet<ReplyPost> savedPosts, CancellationToken stoppingToken = default) =>
+    protected override void PostCommitSaveHook(
+        SaverChangeSet<ReplyPost> savedPosts,
+        CancellationToken stoppingToken = default) =>
         pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
             p => p.Pid, p => p.OriginalContents, stoppingToken);
 

@@ -35,7 +35,9 @@ public class OcrConsumer(
             .ToList();
         var recognizedFailedImagesId = recognizedEithers.Lefts().ToList();
         var recognizedResults = recognizedEithers
-            .Rights() // only keeps fully succeeded images id, i.e. all frames and text boxes are successful recognized
+
+            // only keeps fully succeeded images id, i.e. all frames and text boxes are successful recognized
+            .Rights()
             .ExceptBy(recognizedFailedImagesId, i => i.ImageKey.ImageId)
             .ToList();
         db.ImageOcrBoxes.AddRange(recognizedResults.Select(result => new ImageOcrBox

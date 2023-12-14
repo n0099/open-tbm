@@ -30,8 +30,10 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                 c.IsLongPic = 0;
                 var urlFilename = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
 
-                // only remains the image unique identity at the end of url as "filename", drops domain, path and file extension from url
-                if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com" or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
+                // only remains the image unique identity at the end of url as "filename"
+                // drops domain, path and file extension from url
+                if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com"
+                        or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
                     && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
                 {
                     c.OriginSrc = urlFilename;

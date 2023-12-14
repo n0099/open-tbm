@@ -11,7 +11,10 @@ public class ThreadArchiveCrawlFacade(
 {
     public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 
-    protected override void PostParseHook(ThreadResponse response, CrawlRequestFlag flag, Dictionary<PostId, ThreadPost> parsedPostsInResponse)
+    protected override void PostParseHook(
+        ThreadResponse response,
+        CrawlRequestFlag flag,
+        Dictionary<PostId, ThreadPost> parsedPostsInResponse)
     { // the second respond with flag is as same as the first one so just skip it
         if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
         var data = response.Data;

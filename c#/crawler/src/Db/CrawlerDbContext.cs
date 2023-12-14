@@ -38,8 +38,10 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
 
             switch (originalEntityState)
             { // mutates Entry.CurrentValue will always update Entry.IsModified
-                // and value of corresponding field in entity class instance that ChangeTracker references to(aka Entry.Entity)
-                // while mutating Entry.Entity.Field requires (im|ex)plicitly invoking DetectChanges() to update Entry.CurrentValue and IsModified
+                // and the value of corresponding field in entity class instance
+                // that ChangeTracker references to, aka Entry.Entity
+                // while mutating Entry.Entity.Field requires (im|ex)plicitly
+                // invoking DetectChanges() to update Entry.CurrentValue and IsModified
                 case EntityState.Added:
                     createdAtProp.CurrentValue = now;
                     break;
@@ -93,8 +95,10 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
         user.SplittingHasKeyAndName<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
         user.SplittingHasKeyAndName<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
 
-        b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade").HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
-        b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator").HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorTypes});
+        b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade")
+            .HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
+        b.Entity<ForumModeratorRevision>().ToTable("tbmcr_forumModerator")
+            .HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorTypes});
         b.Entity<Forum>().ToTable("tbm_forum");
     }
 #pragma warning restore IDE0058 // Expression value is never used

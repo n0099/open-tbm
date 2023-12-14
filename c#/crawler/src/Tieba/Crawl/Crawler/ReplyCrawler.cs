@@ -19,8 +19,8 @@ public class ReplyCrawler(Fid fid, Tid tid) : BaseCrawler<ReplyResponse, Reply>
         var ret = EnsureNonEmptyPostList(response,
             "Reply list is empty, posts might already deleted from tieba.");
         var fidInResponse = response.Data.Forum.Id;
-        if (fidInResponse != fid) // fid will be the protoBuf default value 0 when reply list is empty, so we EnsureNonEmptyPostList() by first
-        {
+        if (fidInResponse != fid)
+        { // fid will be the protoBuf default value 0 when reply list is empty, so we EnsureNonEmptyPostList() by first
             var message = $"Parent forum id within thread response: {fidInResponse} is not match with the param value of"
                           + $" crawler ctor: {fid}, this thread might be multi forum or \"livepost\" thread.";
             throw new TiebaException(shouldRetry: false, message);

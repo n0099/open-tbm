@@ -4,7 +4,8 @@ namespace tbm.ImagePipeline;
 
 public static class ExtensionMethods
 {
-    public static (Point TopLeft, Point TopRight, Point BottomLeft, Point BottomRight) GetPoints(this RotatedRect rotatedRect)
+    public static (Point TopLeft, Point TopRight, Point BottomLeft, Point BottomRight)
+        GetPoints(this RotatedRect rotatedRect)
     {
         var points = rotatedRect.Points();
         var topPoints = points.OrderBy(p => p.Y).Take(2).ToList();

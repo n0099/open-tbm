@@ -29,7 +29,8 @@ public class ImageRequester(
             }
         }
 
-        Context CreatePollyContext() => new() {{"ILogger<ImageRequester>", logger}, {"imageUrlFilename", urlFilename}};
+        Context CreatePollyContext() => new()
+            {{"ILogger<ImageRequester>", logger}, {"imageUrlFilename", urlFilename}};
         async Task<T> ExecuteByPolly<T>(Func<Task<T>> action) =>
             await registry.Get<IAsyncPolicy<T>>($"tbImage<{typeof(T).Name}>")
                 .ExecuteAsync(async (_, _) => await action(), CreatePollyContext(), stoppingToken);

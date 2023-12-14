@@ -19,8 +19,9 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
         return EnsureNonEmptyPostList(response,
             "Forum threads list is empty, forum might doesn't existed.");
     }
-    public override TbClient.Page? GetResponsePage(ThreadResponse response) =>
-        response.Data?.Page; // response.Data.Page will be null when it's requested with CrawlRequestFlag.ThreadClientVersion8888
+
+    // response.Data.Page will be null when it's requested with CrawlRequestFlag.ThreadClientVersion8888
+    public override TbClient.Page? GetResponsePage(ThreadResponse response) => response.Data?.Page;
     protected override RepeatedField<Thread> GetResponsePostList(ThreadResponse response) => response.Data.ThreadList;
     protected override int GetResponseErrorCode(ThreadResponse response) => response.Error.Errorno;
     protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default)
