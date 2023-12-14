@@ -35,7 +35,9 @@ export const commonToolboxFeatures: echarts.ComposeOption<ToolboxComponentOption
         }
     }
 };
-export const extendCommonToolbox = (extend: echarts.ComposeOption<ToolboxComponentOption>): echarts.ComposeOption<ToolboxComponentOption> => _.merge(commonToolboxFeatures, extend);
+export const extendCommonToolbox
+    = (extend: echarts.ComposeOption<ToolboxComponentOption>): echarts.ComposeOption<ToolboxComponentOption> =>
+        _.merge(commonToolboxFeatures, extend);
 
 export const emptyChartSeriesData = (chart: echarts.ECharts) => {
     chart.setOption({
@@ -58,9 +60,16 @@ export const timeGranularityAxisType: { [P in TimeGranularities]: 'category' | '
     year: 'category'
 };
 export const timeGranularityAxisPointerLabelFormatter: { [P in TimeGranularities]: (params: { value: Date | number | string }) => string } = {
-    minute: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATETIME_SHORT) : ''),
-    hour: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString({ year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric' }) : ''),
-    day: ({ value }) => (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY) : ''),
+    minute: ({ value }) =>
+        (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATETIME_SHORT) : ''),
+    hour: ({ value }) =>
+        (_.isNumber(value)
+            ? DateTime.fromMillis(value).toLocaleString(
+                { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric' }
+            )
+            : ''),
+    day: ({ value }) =>
+        (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY) : ''),
     week: ({ value }) => (_.isString(value) ? value : ''),
     month: ({ value }) => (_.isString(value) ? value : ''),
     year: ({ value }) => (_.isString(value) ? value : '')

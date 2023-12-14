@@ -88,7 +88,11 @@ export type KnownTextParams = KnownParams[typeof paramsNameByType.text[number]];
 export interface KnownUniqueParams extends Record<string, UnknownParam> {
     fid: { name: 'fid', value: Fid, subParam: ObjEmpty },
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
-    orderBy: { name: 'orderBy', value: PostID | 'default' | 'postedAt', subParam: { direction: 'ASC' | 'default' | 'DESC' } }
+    orderBy: {
+        name: 'orderBy',
+        value: PostID | 'default' | 'postedAt',
+        subParam: { direction: 'ASC' | 'default' | 'DESC' }
+    }
 }
 
 const paramTypes: { [P in 'array' | 'dateTimeRange' | 'numeric' | 'textMatch']: {
@@ -158,7 +162,10 @@ export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDeps);
     ret.uniqueParams.value = {
         fid: { name: 'fid', ...paramsDefaultValue.fid },
-        postTypes: { name: 'postTypes', ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes> },
+        postTypes: {
+            name: 'postTypes',
+            ...paramsDefaultValue.postTypes as DeepWritable<typeof paramsDefaultValue.postTypes>
+        },
         orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
     };
     return ret;

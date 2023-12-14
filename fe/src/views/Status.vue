@@ -5,7 +5,9 @@
             <div class="col-5">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeRange v-model:startTime="query.startTime" v-model:endTime="query.endTime" :timesAgo="{ day: 1 }" />
+                    <QueryTimeRange v-model:startTime="query.startTime"
+                                    v-model:endTime="query.endTime"
+                                    :timesAgo="{ day: 1 }" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>

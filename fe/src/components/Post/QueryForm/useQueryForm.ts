@@ -32,7 +32,8 @@ export default <
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
-        if (!Object.keys(uniqueParams.value).includes(param.name)) defaultParam.subParam.not = false; // add subParam.not on every param
+        if (!Object.keys(uniqueParams.value).includes(param.name))
+            defaultParam.subParam.not = false; // add subParam.not on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
         if (resetToDefault) return _.defaultsDeep(defaultParam, param);
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
@@ -60,7 +61,8 @@ export default <
         // number will consider as empty in isEmpty(), to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
             || (_.isArray(newParam.value) && _.isArray(defaultParam.value)
-                ? _.isEqual(_.sortBy(newParam.value), _.sortBy(defaultParam.value)) // sort array type param value for comparing
+                // sort array type param value for comparing
+                ? _.isEqual(_.sortBy(newParam.value), _.sortBy(defaultParam.value))
                 : newParam.value === defaultParam.value)) delete newParam.value;
 
         _.each(defaultParam.subParam, (value, name) => {
@@ -74,7 +76,8 @@ export default <
         return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam; // return null for further filter()
     };
     const clearedParamsDefaultValue = (): Array<Partial<Param>> =>
-        _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<Param>>; // filter() will remove falsy values like null
+        // filter() will remove falsy values like null
+        _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<Param>>;
     const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
         // mapValues() return object which remains keys, pickBy() like filter() for objects
         _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;

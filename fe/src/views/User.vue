@@ -65,13 +65,17 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
     else userPages.value = _.sortBy([...userPages.value, usersQuery], i => i.pages.currentPage);
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
-    notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemCount}条记录 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+    notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemCount}条记录`
+        + ` 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
     return true;
 };
 fetchUsersData(route, true);
 
 watchEffect(() => {
-    selectUserBy.value = removeStart(removeEnd(String(route.name ?? ''), routeNameSuffix.page), 'user/') as SelectTiebaUserBy;
+    selectUserBy.value = removeStart(removeEnd(
+        String(route.name ?? ''),
+        routeNameSuffix.page
+    ), 'user/') as SelectTiebaUserBy;
     params.value = { ..._.omit(props, 'page'), uid: Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {

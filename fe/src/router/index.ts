@@ -29,7 +29,8 @@ export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.p
 const lazyLoadRouteView = async (component: Promise<Component>) => {
     nprogress.start();
     const loadingBlocksDom = document.getElementById('loadingBlocks');
-    const containersDom = ['.container', '.container-fluid:not(#nav)'].flatMap(i => [...document.querySelectorAll(i)]);
+    const containersDom = ['.container', '.container-fluid:not(#nav)']
+        .flatMap(i => [...document.querySelectorAll(i)]);
     loadingBlocksDom?.classList.remove('d-none');
     containersDom.forEach(i => { i.classList.add('d-none') });
     component.catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) });
@@ -102,7 +103,8 @@ export default createRouter({
         if ('href' in from && savedPosition !== null) return savedPosition;
 
         if (componentCustomScrollBehaviour.value !== undefined) {
-            const ret = componentCustomScrollBehaviour.value(to, from, savedPosition) as ReturnType<RouterScrollBehavior> | undefined;
+            const ret: ReturnType<RouterScrollBehavior> | undefined
+                = componentCustomScrollBehaviour.value(to, from, savedPosition);
             if (ret !== undefined) return ret;
         }
 

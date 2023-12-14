@@ -26,7 +26,8 @@ import type { LocationQueryValueRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
-type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>> & { gender?: TiebaUserGenderQueryParam };
+type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>>
+    & { gender?: TiebaUserGenderQueryParam };
 
 const router = useRouter();
 const props = defineProps<{
@@ -67,6 +68,9 @@ const submitQueryForm = () => {
 
 watchEffect(() => {
     gender.value = props.query.gender ?? defaultParamsValue.gender;
-    selectUser.value = { selectBy: props.selectUserBy, params: { ...props.params, ...boolStrPropToBool(props.query) } };
+    selectUser.value = {
+        selectBy: props.selectUserBy,
+        params: { ...props.params, ...boolStrPropToBool(props.query) }
+    };
 });
 </script>

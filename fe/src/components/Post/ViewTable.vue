@@ -36,7 +36,8 @@
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
             <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
-                   :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="pid" size="middle">
+                   :defaultExpandAllRows="true" :expandRowByClick="true"
+                   :pagination="false" rowKey="pid" size="middle">
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
                     <template v-if="column === 'author'">
                         <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as Reply).authorUid) }">
@@ -50,13 +51,16 @@
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
                     <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
-                    <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'" v-viewer.static v-html="content" />
+                    <component :is="repliesSubReply[pid] === undefined ? 'span' : 'p'"
+                               v-viewer.static v-html="content" />
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
-                           :defaultExpandAllRows="true" :expandRowByClick="true" :pagination="false" rowKey="spid" size="middle">
+                           :defaultExpandAllRows="true" :expandRowByClick="true"
+                           :pagination="false" rowKey="spid" size="middle">
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
                             <template v-if="column === 'author'">
-                                <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as SubReply).authorUid) }">
+                                <Var v-slot="{ scope: { user } }"
+                                     :scope="{ user: getUser((record as SubReply).authorUid) }">
                                     <a :href="toTiebaUserProfileUrl(user)">
                                         <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}

@@ -10,7 +10,8 @@
                     {{ thread.title }}
                     <div class="d-block btn-group p-1" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
-                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]" :key="String(isFirstReplyInView)"
+                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
+                                    :key="String(isFirstReplyInView)"
                                     @click="navigate(page, null, reply.pid)" :data-pid="reply.pid"
                                     :class="{
                                         'btn-info': isFirstReplyInView,
@@ -72,12 +73,13 @@ const selectThread: MenuClickEventHandler = ({ domEvent, key }) => {
 };
 
 const scrollStop = _.debounce(() => {
-    const reduceFindTopmostElementInView = (topOffset: number) => (result: { top: number, el: Element }, curEl: Element) => {
-        const elTop = curEl.getBoundingClientRect().top - topOffset;
-        // ignore element which its y coord is ahead of the top of viewport
-        if (elTop >= 0 && result.top > elTop) return { top: elTop, el: curEl };
-        return result;
-    };
+    const reduceFindTopmostElementInView = (topOffset: number) =>
+        (result: { top: number, el: Element }, curEl: Element) => {
+            const elTop = curEl.getBoundingClientRect().top - topOffset;
+            // ignore element which its y coord is ahead of the top of viewport
+            if (elTop >= 0 && result.top > elTop) return { top: elTop, el: curEl };
+            return result;
+        };
     const findFirstDomInView = (selector: string, topOffset = 0): Element =>
         [...document.querySelectorAll(selector)].reduce(
             reduceFindTopmostElementInView(topOffset),
@@ -86,11 +88,13 @@ const scrollStop = _.debounce(() => {
 
     const currentFirstPostInView = {
         t: findFirstDomInView('.thread-title'),
-        p: findFirstDomInView('.reply-title', 80) // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
+        // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
+        p: findFirstDomInView('.reply-title', 80)
     };
     const firstPostIDInView = _.mapValues(currentFirstPostInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
-    // when there's no thread or reply item in the viewport, currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
+    // when there's no thread or reply item in the viewport
+    // currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
         firstPostInView.value = { tid: 0, pid: 0, page: 0 };
         router.replace({ hash: '' }); // empty route hash
@@ -141,7 +145,8 @@ watchEffect(() => {
         isScrollTriggeredByNavigate = false;
         return;
     }
-    // scroll menu to the link to reply in <ViewList> which is the topmost one in the viewport (nearest to top border of viewport)
+    // scroll menu to the link to reply in <ViewList>
+    // which is the topmost one in the viewport (nearest to top border of viewport)
     const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
     const navMenuEl = replyEl?.closest('.posts-nav');
     if (replyEl !== null && navMenuEl

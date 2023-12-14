@@ -11,7 +11,8 @@
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
-                        <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" :postIDSelector="() => thread.tid" />
+                        <PostCommonMetadataIconLinks :post="thread"
+                                                     postTypeID="tid" :postIDSelector="() => thread.tid" />
                         <PostTimeBadge :time="thread.postedAt" tippyPrefix="发帖时间：" badgeColor="success" />
                     </div>
                 </div>
@@ -33,7 +34,8 @@
                         <span v-if="thread.zan !== null" :data-tippy-content="`
                             点赞量：${thread.zan.num}<br />
                             最后点赞时间：${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })}
-                            （${DateTime.fromSeconds(Number(thread.zan.last_time)).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
+                            （${DateTime.fromSeconds(Number(thread.zan.last_time))
+                        .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
                             近期点赞用户：${thread.zan.user_id_list}<br />`" class="badge bg-info">
                             <!-- todo: fetch users info in zan.user_id_list -->
                             <FontAwesomeIcon icon="thumbs-up" class="me-1" /> 旧版客户端赞
@@ -53,7 +55,8 @@
                         <UserTag v-if="getUser(thread.authorUid).currentForumModerator !== null"
                                  :user="getUser(thread.authorUid)" />
                         <template v-if="thread.latestReplierUid === null">
-                            <span class="fw-normal link-secondary">最后回复：<span class="fw-bold link-dark">未知用户</span></span>
+                            <span class="fw-normal link-secondary">最后回复：</span>
+                            <span class="fw-bold link-dark">未知用户</span>
                         </template>
                         <template v-else-if="thread.latestReplierUid !== thread.authorUid">
                             <RouterLink :to="userRoute(thread.latestReplierUid)" class="ms-2">
@@ -61,7 +64,8 @@
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </RouterLink>
                         </template>
-                        <PostTimeBadge :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" badgeColor="secondary" />
+                        <PostTimeBadge :time="thread.latestReplyPostedAt"
+                                       tippyPrefix="最后回复时间：" badgeColor="secondary" />
                     </div>
                 </div>
             </div>
@@ -82,7 +86,8 @@
                     <div class="float-end badge bg-light">
                         <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                                     class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
-                        <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" :postIDSelector="() => reply.pid" />
+                        <PostCommonMetadataIconLinks :post="reply"
+                                                     postTypeID="pid" :postIDSelector="() => reply.pid" />
                         <PostTimeBadge :time="reply.postedAt" badgeColor="primary" />
                     </div>
                 </div>
@@ -111,15 +116,21 @@
                                             <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"
                                                         :to="userRoute(author.uid)"
                                                         class="sub-reply-author text-wrap badge bg-light">
-                                                <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)" class="tieba-user-portrait-small lazy" />
-                                                <span class="mx-2 align-middle link-dark">{{ renderUsername(subReply.authorUid) }}</span>
+                                                <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)"
+                                                     class="tieba-user-portrait-small lazy" />
+                                                <span class="mx-2 align-middle link-dark">
+                                                    {{ renderUsername(subReply.authorUid) }}
+                                                </span>
                                                 <UserTag :user="getUser(subReply.authorUid)"
                                                          :threadAuthorUid="thread.authorUid"
                                                          :replyAuthorUid="reply.authorUid" />
                                             </RouterLink>
                                             <div class="float-end badge bg-light">
-                                                <div class="d-inline" :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
-                                                    <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" :postIDSelector="() => subReply.spid" />
+                                                <div class="d-inline"
+                                                     :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
+                                                    <PostCommonMetadataIconLinks :post="subReply"
+                                                                                 postTypeID="spid"
+                                                                                 :postIDSelector="() => subReply.spid" />
                                                 </div>
                                                 <PostTimeBadge :time="subReply.postedAt" badgeColor="info" />
                                             </div>

@@ -18,7 +18,8 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
     let errorMessage = `GET ${endpoint}<br />`;
     try {
         const response = await fetch(
-            import.meta.env.VITE_API_URL_PREFIX + endpoint + (_.isEmpty(queryString) ? '' : '?') + stringify(queryString),
+            `${import.meta.env.VITE_API_URL_PREFIX}${endpoint}`
+                + `${_.isEmpty(queryString) ? '' : '?'}${stringify(queryString)}`,
             { headers: { Accept: 'application/json' } }
         );
         errorCode = response.status;
@@ -67,7 +68,8 @@ const reCAPTCHACheck = async (action = ''): Promise<{ reCAPTCHA?: string }> => n
 });
 export const getRequesterWithReCAPTCHA = async <TResponse extends ApiError | unknown, TQueryParam>
 (endpoint: string, queryString?: TQueryParam, action = '') =>
-    getRequester<TResponse, TQueryParam>(endpoint, { ...queryString, ...await reCAPTCHACheck(action) } as TQueryParam & { reCAPTCHA?: string });
+    getRequester<TResponse, TQueryParam>(endpoint,
+        { ...queryString, ...await reCAPTCHACheck(action) } as TQueryParam & { reCAPTCHA?: string });
 
 export const apiForumList = async (): Promise<ApiError | ApiForumList> =>
     getRequester('/forums');

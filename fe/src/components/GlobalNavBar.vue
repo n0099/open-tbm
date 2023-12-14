@@ -10,11 +10,13 @@
                 <ul class="navbar-nav">
                     <template v-for="(nav, _k) in navs" :key="_k">
                         <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </a>
                             <div class="dropdown-menu">
-                                <RouterLink v-for="r in nav.routes" :key="r.route" :to="{ name: r.route }" class="nav-link">
+                                <RouterLink v-for="r in nav.routes" :key="r.route"
+                                            :to="{ name: r.route }" class="nav-link">
                                     <FontAwesomeIcon v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
                                 </RouterLink>
                             </div>

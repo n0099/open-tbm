@@ -59,7 +59,10 @@ const emit = defineEmits({
         && _.isBoolean(p.subParam.spaceSplit)
 });
 
-const emitModelChange = (name: keyof NamelessParamText['subParam'], value: ObjValues<NamelessParamText['subParam']>) => {
+const emitModelChange = (
+    name: keyof NamelessParamText['subParam'],
+    value: ObjValues<NamelessParamText['subParam']>
+) => {
     emit('update:modelValue', {
         ...props.modelValue,
         subParam: { ...props.modelValue.subParam, [name]: value }

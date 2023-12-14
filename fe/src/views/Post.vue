@@ -150,7 +150,8 @@ watchEffect(() => {
 }
 @media (max-width: 1200px) {
     .post-render-wrapper {
-        width: calc(100% - 15px); /* minus the width of .posts-nav-expanded in <NavSidebar> to prevent it warps new row */
+        /* minus the width of .posts-nav-expanded in <NavSidebar> to prevent it warps new row */
+        width: calc(100% - 15px);
     }
 }
 @media (min-width: 1200px) {
@@ -163,7 +164,8 @@ watchEffect(() => {
 }
 @media (min-width: 1400px) {
     .post-render-list-right-padding {
-        display: block !important; /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
+        /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
+        display: block !important;
     }
 }
 </style>

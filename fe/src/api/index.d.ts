@@ -47,7 +47,8 @@ export interface ApiUsersQuery {
     pages: Pagination,
     users: TiebaUser[]
 }
-export type ApiUsersQueryQueryParam = ApiQueryParamPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam };
+export type ApiUsersQueryQueryParam
+    = ApiQueryParamPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam };
 
 export type Cursor = string;
 export type JsonString = string;

@@ -8,7 +8,8 @@
                     <select v-model.number="uniqueParams.fid.value" id="paramFid"
                             :class="{ 'is-invalid': isFidInvalid }" class="form-select form-control">
                         <option value="0">未指定</option>
-                        <option v-for="forum in forumList" :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
+                        <option v-for="forum in forumList"
+                                :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
                 </div>
             </div>
@@ -48,7 +49,8 @@
                             <option value="spid">楼中楼spid</option>
                         </optgroup>
                     </select>
-                    <select v-show="uniqueParams.orderBy.value !== 'default'" v-model="uniqueParams.orderBy.subParam.direction"
+                    <select v-show="uniqueParams.orderBy.value !== 'default'"
+                            v-model="uniqueParams.orderBy.subParam.direction"
                             class="form-select form-control">
                         <option value="ASC">正序（从小到大，旧到新）</option>
                         <option value="DESC">倒序（从大到小，新到旧）</option>
@@ -58,7 +60,9 @@
         </div>
         <div class="query-params">
             <div v-for="(p, pI) in params" :key="pI" class="input-group">
-                <button @click="deleteParam(pI)" class="btn btn-link" type="button"><FontAwesomeIcon icon="times" /></button>
+                <button @click="deleteParam(pI)" class="btn btn-link" type="button">
+                    <FontAwesomeIcon icon="times" />
+                </button>
                 <SelectParam @paramChange="changeParam(pI, $event)" :currentParam="p.name"
                              class="select-param" :class="{
                                  'is-invalid': invalidParamsIndex.includes(pI)
@@ -82,7 +86,8 @@
                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="isTextParam(p)">
-                    <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)" type="text" class="form-control" required />
+                    <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
+                           type="text" class="form-control" required />
                     <InputTextMatchParam @update:modelValue="v => params[pI] = v"
                                          :modelValue="params[pI] as KnownTextParams"
                                          :paramIndex="pI" />
@@ -142,7 +147,9 @@
             </div>
         </div>
         <div class="row mt-2">
-            <button class="add-param-button col-auto btn btn-link disabled" type="button"><FontAwesomeIcon icon="plus" /></button>
+            <button class="add-param-button col-auto btn btn-link disabled" type="button">
+                <FontAwesomeIcon icon="plus" />
+            </button>
             <SelectParam @paramChange="addParam($event)" currentParam="add" />
         </div>
         <div class="row mt-3">
@@ -217,15 +224,20 @@ const getCurrentQueryType = () => {
     if (_.isEmpty(clearedParams)) { // is there no other params
         // ignore the post type param since index query (postID or fid) doesn't restrict them
         const clearedUniqueParams = _.omit(clearedUniqueParamsDefaultValue(), 'postTypes');
-        if (_.isEmpty(clearedUniqueParams)) { // only fill unique param postTypes and/or orderBy doesn't query anything
-            return 'empty';
+        if (_.isEmpty(clearedUniqueParams)) {
+            return 'empty'; // only fill unique param postTypes and/or orderBy doesn't query anything
         } else if (clearedUniqueParams.fid !== undefined) {
-            return 'fid'; // note when query with postTypes and/or orderBy param, the route will go params instead of fid
+            // note when query with postTypes and/or orderBy param, the route will go params instead of fid
+            return 'fid';
         }
     }
-    if (_.isEmpty(_.reject(clearedParams, isPostIDParam)) // is there no other params except post id params
-        && _.filter(clearedParams, isPostIDParam).length === 1 // is there only one post id param
-        && _.chain(clearedParams).map('subParam').filter().isEmpty().value()) { // is all post ID params doesn't own any sub param
+
+    // is there no other params except post id params
+    if (_.isEmpty(_.reject(clearedParams, isPostIDParam))
+        // is there only one post id param
+        && _.filter(clearedParams, isPostIDParam).length === 1
+        // is all post ID params doesn't own any sub param
+        && _.chain(clearedParams).map('subParam').filter().isEmpty().value()) {
         return 'postID';
     }
     return 'search';
@@ -302,14 +314,16 @@ const checkParams = () => {
     // check params required post types, index query doesn't restrict on post types
     invalidParamsIndex.value = []; // reset to prevent duplicate indexes
     if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
-        params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => { // we don't filter() here for post types validate
+        // we don't filter() here for post types validate
+        params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
             if (param?.name === undefined || param.value === undefined) {
                 invalidParamsIndex.value.push(paramIndex);
             } else {
                 const required = paramsRequiredPostTypes[param.name];
                 if (!isRequiredPostTypes(postTypes, required)) {
                     invalidParamsIndex.value.push(paramIndex);
-                    notyShow('warning', `第${paramIndex + 1}个${param.name}参数要求帖子类型为${requiredPostTypesToString(required)}`);
+                    notyShow('warning',
+                        `第${paramIndex + 1}个${param.name}参数要求帖子类型为${requiredPostTypesToString(required)}`);
                 }
             }
         });
@@ -347,11 +361,12 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
             fillParamDefaultValue({ name, value }));
     }
 };
-const parseRouteToGetFlattenParams = (route: RouteLocationNormalizedLoaded): ReturnType<typeof flattenParams> | false => {
-    parseRoute(route);
-    if (checkParams()) return flattenParams();
-    return false;
-};
+const parseRouteToGetFlattenParams
+    = (route: RouteLocationNormalizedLoaded): ReturnType<typeof flattenParams> | false => {
+        parseRoute(route);
+        if (checkParams()) return flattenParams();
+        return false;
+    };
 
 watch(() => uniqueParams.value.postTypes.value, (to, from) => {
     if (to.length === 0) uniqueParams.value.postTypes.value = from; // to prevent empty post types

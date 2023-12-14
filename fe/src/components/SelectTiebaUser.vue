@@ -15,13 +15,15 @@
                     <option>=</option>
                     <option>&gt;</option>
                 </select>
-                <input v-model="params.uid" type="number" placeholder="4000000000" aria-label="UID" class="form-control" required />
+                <input v-model="params.uid" type="number" placeholder="4000000000"
+                       aria-label="UID" class="form-control" required />
             </template>
             <template v-if="selectBy === 'name'">
                 <input v-model="params.name" type="text" aria-label="用户名" class="form-control" required />
                 <div class="input-group-text">
                     <div class="form-check">
-                        <input v-model="params.nameUseRegex" id="selectUserNameUseRegex" type="checkbox" class="form-check-input" />
+                        <input v-model="params.nameUseRegex" id="selectUserNameUseRegex"
+                               type="checkbox" class="form-check-input" />
                         <label class="form-check-label" for="selectUserNameUseRegex">正则</label>
                     </div>
                 </div>
@@ -30,7 +32,8 @@
                 <input v-model="params.displayName" type="text" aria-label="覆盖名" class="form-control" required />
                 <div class="input-group-text">
                     <div class="form-check">
-                        <input v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex" type="checkbox" class="form-check-input" />
+                        <input v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex"
+                               type="checkbox" class="form-check-input" />
                         <label class="form-check-label" for="selectUserDisplayNameUseRegex">正则</label>
                     </div>
                 </div>
@@ -54,9 +57,14 @@ export type SelectTiebaUserParams = Partial<{
     displayNameUseRegex: boolean
 }>;
 type SelectTiebaUserParamsValues = ObjValues<SelectTiebaUserParams>;
-const selectTiebaUserParamsNames = ['uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'] as const;
+const selectTiebaUserParamsNames = [
+    'uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'
+] as const;
 // widen type Record<string, SelectTiebaUserParamsValues> for compatible with props.paramsNameMap
-export interface SelectTiebaUserModel { selectBy: SelectTiebaUserBy, params: Record<string, SelectTiebaUserParamsValues> | SelectTiebaUserParams }
+export interface SelectTiebaUserModel {
+    selectBy: SelectTiebaUserBy,
+    params: Record<string, SelectTiebaUserParamsValues> | SelectTiebaUserParams
+}
 </script>
 
 <script setup lang="ts">
@@ -98,7 +106,8 @@ watch(() => props.modelValue, () => {
     if (params.value.displayName === 'NULL') selectBy.value = 'displayNameNULL';
 }, { immediate: true });
 onMounted(() => {
-    watch(() => selectBy.value, selectBy => { // defer listening to prevent watch triggered by assigning initial selectBy
+    // defer listening to prevent watch triggered by assigning initial selectBy
+    watch(() => selectBy.value, selectBy => {
         params.value = {}; // empty params to prevent old value remains after selectBy changed
         if (selectBy === 'uid') params.value.uidCompareBy = '='; // reset to default
         if (selectBy === 'nameNULL') params.value.name = 'NULL';

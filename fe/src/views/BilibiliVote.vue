@@ -28,7 +28,8 @@
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <QueryTimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
-                                          id="top5CandidateCountGroupByTimeGranularity" :granularities="['minute', 'hour']" />
+                                          id="top5CandidateCountGroupByTimeGranularity"
+                                          :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
@@ -40,7 +41,8 @@
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
                     <QueryTimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
-                                          id="allVoteCountGroupByTimeGranularity" :granularities="['minute', 'hour']" />
+                                          id="allVoteCountGroupByTimeGranularity"
+                                          :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
@@ -138,11 +140,19 @@ const charts: { [P in Charts]: echarts.ECharts | null } = {
 
 let top10CandidatesTimelineVotes: { [P in 'invalid' | 'valid']: Top10CandidatesTimeline } = { valid: [], invalid: [] };
 type Top10CandidatesTimelineDataset = Array<CandidateVoteCount & { voteFor: string }>;
-interface VoteCountSeriesLabelFormatterParams { data: OptionDataItem | Top10CandidatesTimelineDataset[0], name: string }
+interface VoteCountSeriesLabelFormatterParams {
+    data: OptionDataItem | Top10CandidatesTimelineDataset[0],
+    name: string
+}
 const isCandidatesDetailData = (p: unknown): p is Top10CandidatesTimelineDataset[0] =>
     _.isObject(p) && 'officialValidCount' in p && 'validCount' in p && 'invalidCount' in p && 'voteFor' in p;
-const voteCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, currentCount: number, candidateIndex: string) => {
-    const [timeline] = charts.top10CandidatesTimeline?.getOption()?.timeline as [{ data: number[], currentIndex: number }];
+const voteCountSeriesLabelFormatter= (
+    votesData: Top10CandidatesTimeline,
+    currentCount: number,
+    candidateIndex: string
+) => {
+    const [timeline] = charts.top10CandidatesTimeline?.getOption()
+        ?.timeline as [{ data: number[], currentIndex: number }];
     const previousTimelineValue = _.find(votesData, {
         endTime: timeline.data[timeline.currentIndex - 1],
         voteFor: Number(candidateIndex.substring(0, candidateIndex.indexOf('号'))) // trim trailing '号' in series name
@@ -151,7 +161,8 @@ const voteCountSeriesLabelFormatter = (votesData: Top10CandidatesTimeline, curre
 };
 
 const sourceAttribution = `来源：open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
-type ChartOptionTop10CandidatesTimeline = echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
+type ChartOptionTop10CandidatesTimeline
+    = echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {
     top50CandidateCount: echarts.ComposeOption<BarSeriesOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
     top10CandidatesTimeline: ChartOptionTop10CandidatesTimeline,
@@ -315,7 +326,11 @@ const chartsInitialOption: {
                     position: 'right',
                     color: '#999999',
                     formatter: (p: VoteCountSeriesLabelFormatterParams) => (isCandidatesDetailData(p.data)
-                        ? voteCountSeriesLabelFormatter(top10CandidatesTimelineVotes.invalid, p.data.invalidCount, p.name)
+                        ? voteCountSeriesLabelFormatter(
+                            top10CandidatesTimelineVotes.invalid,
+                            p.data.invalidCount,
+                            p.name
+                        )
                         : '')
                 },
                 z: 0,
@@ -424,7 +439,8 @@ const query = ref<{
 const candidatesDetailData = ref<CandidatesDetailData>([]);
 
 interface Coord { coord: [number, number] }
-type DiffWithPreviousMarkLineFormatter = Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
+type DiffWithPreviousMarkLineFormatter
+    = Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
 const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) =>
     _.find(votes, { isValid })?.count ?? 0;
 const formatCandidateNameByID = (id: number) => `${id}号\n${json.candidateNames[id - 1]}`;
@@ -434,7 +450,8 @@ const loadCharts = {
         // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
         const dataset = _.chain(json.top50CandidatesVoteCount)
             .groupBy('voteFor')
-            .sortBy(candidate => -_.sumBy(candidate, 'count')) // sort grouped candidate by its descending total votes count
+            // sort grouped candidate by its descending total votes count
+            .sortBy(candidate => -_.sumBy(candidate, 'count'))
             .map(candidateVotes => {
                 const validVotes = _.find(candidateVotes, { isValid: 1 });
                 const invalidVotes = _.find(candidateVotes, { isValid: 0 });
@@ -463,7 +480,7 @@ const loadCharts = {
         }, { coord: [index - 1, validCount[index - 1]] }]);
         validCountDiffWithPrevious.shift(); // first candidate doesn't need to exceed anyone
 
-        charts.top50CandidateCount?.setOption<echarts.ComposeOption<DatasetComponentOption | LineSeriesOption | MarkLineComponentOption>>({
+        charts.top50CandidateCount?.setOption({
             dataset: { source: dataset },
             series: [{
                 id: 'validCount',
@@ -473,7 +490,7 @@ const loadCharts = {
                     data: validCountDiffWithPrevious
                 }
             }]
-        });
+        } as echarts.ComposeOption<DatasetComponentOption | LineSeriesOption | MarkLineComponentOption>);
     },
     top10CandidatesTimeline: () => {
         top10CandidatesTimelineVotes = {
@@ -483,7 +500,7 @@ const loadCharts = {
 
         const options: ChartOptionTop10CandidatesTimeline[] = [];
         _.each(_.groupBy(json.top10CandidatesTimeline, 'endTime'), (timeGroup, time) => {
-            // [{ voteFor: formatCandidateNameByID(1), validCount: 1, invalidCount: 0, officialValidCount: null }, ... ]
+            // [{ voteFor: formatCandidateNameByID(1), validCount: 1, invalidCount: 0, officialValidCount: null },...]
             const dataset: Top10CandidatesTimelineDataset = _.chain(timeGroup)
                 .sortBy('count')
                 .groupBy('voteFor')
@@ -624,11 +641,11 @@ const loadCharts = {
                 data: _.filter(invalidVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
             });
         });
-        charts.top5CandidateCountGroupByTime?.setOption<echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>>({
+        charts.top5CandidateCountGroupByTime?.setOption({
             axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
             xAxis: Array(2).fill({ type: timeGranularityAxisType[timeGranularity] }),
             series
-        });
+        } as echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>);
     },
     allVoteCountGroupByTime: () => {
         const timeGranularity = query.value.allVoteCountGroupByTimeGranularity;
@@ -644,11 +661,11 @@ const loadCharts = {
                 invalidCount: findVoteCount(count, 0)
             }))
             .value();
-        charts.allVoteCountGroupByTime?.setOption<echarts.ComposeOption<DatasetComponentOption | GridComponentOption>>({
+        charts.allVoteCountGroupByTime?.setOption({
             axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
             xAxis: { type: timeGranularityAxisType[timeGranularity] },
             dataset: { source: dataset }
-        });
+        } as echarts.ComposeOption<DatasetComponentOption | GridComponentOption>);
     }
 };
 

@@ -1,16 +1,17 @@
 <template>
-    <RangePicker @change="(value, _) => timeRangeChanged(value as [Dayjs, Dayjs])" :id="id" :value="timeRange" :ranges="{
-        昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
-        今天: [dayjs().startOf('day'), dayjs().endOf('day')],
-        本周: [dayjs().startOf('week'), dayjs().endOf('week')],
-        最近7天: [dayjs().subtract(7, 'days'), dayjs()],
-        本月: [dayjs().startOf('month'), dayjs().endOf('month')],
-        最近30天: [dayjs().subtract(30, 'days'), dayjs()]
-    }" format="YYYY-MM-DD HH:mm" :showTime="{
-        format: 'HH:mm',
-        minuteStep: 5,
-        secondStep: 10
-    }" :allowClear="false" size="large" class="col" />
+    <RangePicker @change="(value, _) => timeRangeChanged(value as [Dayjs, Dayjs])"
+                 :id="id" :value="timeRange" :ranges="{
+                     昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
+                     今天: [dayjs().startOf('day'), dayjs().endOf('day')],
+                     本周: [dayjs().startOf('week'), dayjs().endOf('week')],
+                     最近7天: [dayjs().subtract(7, 'days'), dayjs()],
+                     本月: [dayjs().startOf('month'), dayjs().endOf('month')],
+                     最近30天: [dayjs().subtract(30, 'days'), dayjs()]
+                 }" format="YYYY-MM-DD HH:mm" :showTime="{
+                     format: 'HH:mm',
+                     minuteStep: 5,
+                     secondStep: 10
+                 }" :allowClear="false" size="large" class="col" />
 </template>
 
 <script setup lang="ts">
