@@ -84,10 +84,10 @@ watchEffect(() => {
 });
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);
-    if (!isNewQuery && !_.isEmpty(_.filter(
+    if (!(isNewQuery || _.isEmpty(_.filter(
         userPages.value,
         i => i.pages.currentPage === getRouteCursorParam(to)
-    )))
+    ))))
         return true;
     const isFetchSuccess = await fetchUsersData(to, isNewQuery);
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched

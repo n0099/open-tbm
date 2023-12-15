@@ -349,7 +349,7 @@ const checkParams = () => {
     }
 
     // return false when there have at least one invalid params
-    return _.isEmpty(invalidParamsIndex.value) && !isOrderByInvalid.value && !isFidInvalid.value;
+    return _.isEmpty(invalidParamsIndex.value) && !(isOrderByInvalid.value || isFidInvalid.value);
 };
 
 const parseRoute = (route: RouteLocationNormalizedLoaded) => {

@@ -4,33 +4,32 @@
            rowKey="tid" size="middle" class="render-table-thread">
         <template #bodyCell="{ column: { dataIndex: column }, record }">
             <template v-if="column === 'tid'">
-                <Var v-slot="{ scope: { tid } }" :scope="{ tid: (record as Thread).tid }">
+                <template v-for="tid in [(record as Thread).tid]" :key="tid">
                     <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
-                </Var>
+                </template>
             </template>
             <template v-else-if="column === 'titleWithTag'">
-                <Var v-slot="{ scope: { thread } }" :scope="{ thread: record as Thread }">
+                <template v-for="thread in [record as Thread]" :key="thread.tid">
                     <BadgeThread :thread="thread" />
                     <span>{{ thread.title }}</span>
-                </Var>
+                </template>
             </template>
             <template v-else-if="column === 'author'">
-                <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as Thread).authorUid) }">
+                <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
                     <a :href="toTiebaUserProfileUrl(user)">
                         <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
                     </a>
-                    <BadgeUser :user="getUser(record.authorUid)" />
-                </Var>
+                    <BadgeUser :user="user" />
+                </template>
             </template>
-            <template v-else-if="column === 'latestReplier'">
-                <Var v-if="(record as Thread).latestReplierUid !== null"
-                     v-slot="{ scope: { user } }" :scope="{ user: getUser(record.latestReplierUid) }">
+            <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
+                <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
                     <a :href="toTiebaUserProfileUrl(user)">
                         <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
                     </a>
-                </Var>
+                </template>
             </template>
         </template>
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
@@ -40,13 +39,13 @@
                    :pagination="false" rowKey="pid" size="middle">
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
                     <template v-if="column === 'author'">
-                        <Var v-slot="{ scope: { user } }" :scope="{ user: getUser((record as Reply).authorUid) }">
+                        <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
                             <a :href="toTiebaUserProfileUrl(user)">
                                 <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
                             </a>
                             <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
-                        </Var>
+                        </template>
                     </template>
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
@@ -59,8 +58,7 @@
                            :pagination="false" rowKey="spid" size="middle">
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
                             <template v-if="column === 'author'">
-                                <Var v-slot="{ scope: { user } }"
-                                     :scope="{ user: getUser((record as SubReply).authorUid) }">
+                                <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
                                     <a :href="toTiebaUserProfileUrl(user)">
                                         <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
@@ -68,7 +66,7 @@
                                     <BadgeUser :user="user"
                                                :threadAuthorUid="threadAuthorUid"
                                                :replyAuthorUid="replyAuthorUid" />
-                                </Var>
+                                </template>
                             </template>
                         </template>
                         <template #expandedRowRender="{ record: { content: subReplyContent } }">
@@ -82,7 +80,6 @@
 </template>
 
 <script setup lang="ts">
-import Var from '@/components/Var.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 
