@@ -16,7 +16,8 @@ export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
 };
 
 export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
-    if (!_.isString(name)) throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
+    if (!_.isString(name))
+        throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
@@ -117,20 +118,24 @@ export default createRouter({
     linkActiveClass: 'active',
     async scrollBehavior(to, from, savedPosition) {
         // 'href' property will not exist in from when user refresh page: https://next.router.vuejs.org/api/#resolve
-        if ('href' in from && savedPosition !== null) return savedPosition;
+        if ('href' in from && savedPosition !== null)
+            return savedPosition;
 
         if (componentCustomScrollBehaviour.value !== undefined) {
             const ret: ReturnType<RouterScrollBehavior> | undefined
                 = componentCustomScrollBehaviour.value(to, from, savedPosition);
-            if (ret !== undefined) return ret;
+            if (ret !== undefined)
+                return ret;
         }
 
-        if (to.hash) return { el: to.hash, top: 0 };
+        if (to.hash)
+            return { el: to.hash, top: 0 };
         if (from.name !== undefined) { // from.name will be undefined when user refresh page
             assertRouteNameIsStr(to.name);
             assertRouteNameIsStr(from.name);
             // scroll to top when the prefix of route name changed
-            if (to.name.split('/')[0] !== from.name.split('/')[0]) return { top: 0 };
+            if (to.name.split('/')[0] !== from.name.split('/')[0])
+                return { top: 0 };
         }
         return false;
     }

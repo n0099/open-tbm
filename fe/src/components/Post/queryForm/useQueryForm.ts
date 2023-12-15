@@ -30,12 +30,14 @@ export default <
     (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
-        if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
+        if (defaultParam === undefined)
+            throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
         if (!Object.keys(uniqueParams.value).includes(param.name))
             defaultParam.subParam.not = false; // add subParam.not on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
-        if (resetToDefault) return _.defaultsDeep(defaultParam, param);
+        if (resetToDefault)
+            return _.defaultsDeep(defaultParam, param);
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
     };
     const addParam = (name: string) => {
@@ -54,24 +56,31 @@ export default <
     };
     const clearParamDefaultValue = <T extends UnknownParam>(param: UnknownParam): Partial<T | UnknownParam> | null => {
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
-        if (defaultParam === undefined) throw Error(`Param ${param.name} not found in paramsDefaultValue`);
+        if (defaultParam === undefined)
+            throw Error(`Param ${param.name} not found in paramsDefaultValue`);
         // remove subParam.not: false, which previously added by fillParamDefaultValue()
-        if (defaultParam.subParam !== undefined) defaultParam.subParam.not ??= false;
+        if (defaultParam.subParam !== undefined)
+            defaultParam.subParam.not ??= false;
         const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
         // number will consider as empty in isEmpty(), to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
             || (_.isArray(newParam.value) && _.isArray(defaultParam.value)
                 // sort array type param value for comparing
                 ? _.isEqual(_.sortBy(newParam.value), _.sortBy(defaultParam.value))
-                : newParam.value === defaultParam.value)) delete newParam.value;
+                : newParam.value === defaultParam.value))
+            delete newParam.value;
 
         _.each(defaultParam.subParam, (value, name) => {
-            if (newParam.subParam === undefined) return;
+            if (newParam.subParam === undefined)
+                return;
             // undefined means this sub param must get deleted and merge into parent, as part of the parent param value
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            if (newParam.subParam[name] === value || value === undefined) delete newParam.subParam[name];
+            if (newParam.subParam[name] === value || value === undefined)
+                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                delete newParam.subParam[name];
         });
-        if (_.isEmpty(newParam.subParam)) delete newParam.subParam;
+        if (_.isEmpty(newParam.subParam))
+            delete newParam.subParam;
 
         return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam; // return null for further filter()
     };

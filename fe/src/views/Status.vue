@@ -174,7 +174,8 @@ const autoRefresh = ref<boolean>(false);
 const chartDom = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
-    if (chartDom.value === undefined) return;
+    if (chartDom.value === undefined)
+        return;
     chartDom.value.classList.add('loading');
     if (chart === null) {
         chart = echarts.init(chartDom.value);
@@ -197,8 +198,10 @@ const submitQueryForm = async () => {
 
 const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
 watch(() => autoRefresh.value, () => {
-    if (autoRefresh.value) resume();
-    else pause();
+    if (autoRefresh.value)
+        resume();
+    else
+        pause();
 });
 onMounted(submitQueryForm);
 </script>

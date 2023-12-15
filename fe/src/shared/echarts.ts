@@ -42,7 +42,8 @@ export const extendCommonToolbox
 export const emptyChartSeriesData = (chart: echarts.ECharts) => {
     chart.setOption({
         series: _.map(chart.getOption().series as BarSeriesOption | LineSeriesOption, series => {
-            if (typeof series === 'object' && 'data' in series) series.data = [];
+            if (typeof series === 'object' && 'data' in series)
+                series.data = [];
             return series;
         })
     });

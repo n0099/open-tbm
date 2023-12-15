@@ -95,23 +95,32 @@ const emitModelChange = () => {
 watch(() => params, emitModelChange, { deep: true });
 watch(() => props.modelValue, () => {
     // emit with default params value when parent haven't passing modelValue
-    if (_.isEmpty(props.modelValue)) emitModelChange();
-    else ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
+    if (_.isEmpty(props.modelValue))
+        emitModelChange();
+    else
+        ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
     // filter out unnecessary and undefined params
     params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), _.isUndefined);
     // reset to default selectBy if it's a invalid value
-    if (!selectTiebaUserBy.includes(selectBy.value)) selectBy.value = '';
-    if (selectBy.value === 'uid') params.value.uidCompareBy ??= '='; // set to default value if it's undefined
-    if (params.value.name === 'NULL') selectBy.value = 'nameNULL';
-    if (params.value.displayName === 'NULL') selectBy.value = 'displayNameNULL';
+    if (!selectTiebaUserBy.includes(selectBy.value))
+        selectBy.value = '';
+    if (selectBy.value === 'uid')
+        params.value.uidCompareBy ??= '='; // set to default value if it's undefined
+    if (params.value.name === 'NULL')
+        selectBy.value = 'nameNULL';
+    if (params.value.displayName === 'NULL')
+        selectBy.value = 'displayNameNULL';
 }, { immediate: true });
 onMounted(() => {
     // defer listening to prevent watch triggered by assigning initial selectBy
     watch(() => selectBy.value, selectBy => {
         params.value = {}; // empty params to prevent old value remains after selectBy changed
-        if (selectBy === 'uid') params.value.uidCompareBy = '='; // reset to default
-        if (selectBy === 'nameNULL') params.value.name = 'NULL';
-        if (selectBy === 'displayNameNULL') params.value.displayName = 'NULL';
+        if (selectBy === 'uid')
+            params.value.uidCompareBy = '='; // reset to default
+        if (selectBy === 'nameNULL')
+            params.value.name = 'NULL';
+        if (selectBy === 'displayNameNULL')
+            params.value.displayName = 'NULL';
         emitModelChange();
     });
 });

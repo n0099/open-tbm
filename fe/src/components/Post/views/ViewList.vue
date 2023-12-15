@@ -195,14 +195,16 @@ const posts = computed(() => {
         thread.replies = thread.replies.map(reply => {
             reply.subReplies = reply.subReplies.reduce<SubReply[][]>(
                 (groupedSubReplies, subReply, index, subReplies) => {
-                    if (_.isArray(subReply)) return [subReply]; // useless guard since subReply will never be an array
+                    if (_.isArray(subReply))
+                        return [subReply]; // useless guard since subReply will never be an array
                     // group sub replies item by continuous and same post author
                     const previousSubReply = subReplies[index - 1] as SubReply | undefined;
                     // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
-                        && subReply.authorUid === previousSubReply.authorUid
-                    ) _.last(groupedSubReplies)?.push(subReply); // append to last group
-                    else groupedSubReplies.push([subReply]); // new group
+                        && subReply.authorUid === previousSubReply.authorUid)
+                        _.last(groupedSubReplies)?.push(subReply); // append to last group
+                    else
+                        groupedSubReplies.push([subReply]); // new group
                     return groupedSubReplies;
                 },
                 []
@@ -225,7 +227,8 @@ setComponentCustomScrollBehaviour((to, from) => {
         isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
         return false;
     }
-    if (!compareRouteIsNewQuery(to, from)) return postListItemScrollPosition(to);
+    if (!compareRouteIsNewQuery(to, from))
+        return postListItemScrollPosition(to);
     return undefined;
 });
 </script>

@@ -7,7 +7,8 @@ import _ from 'lodash';
 export const isApiError = (response: ApiError | unknown): response is ApiError =>
     _.isObject(response) && 'errorCode' in response && 'errorInfo' in response;
 export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TResponse => {
-    if (isApiError(response)) throw Error(JSON.stringify(response));
+    if (isApiError(response))
+        throw Error(JSON.stringify(response));
     return response;
 };
 export const getRequester = async <TResponse extends ApiError | unknown, TQueryParam>
@@ -36,7 +37,8 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
             }
             throw Error();
         }
-        if (!response.ok) throw Error();
+        if (!response.ok)
+            throw Error();
         return json;
     } catch (e: unknown) {
         if (e instanceof Error) {

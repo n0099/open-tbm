@@ -240,16 +240,19 @@ const getCurrentQueryType = () => {
         // is there only one post id param
         && _.filter(clearedParams, isPostIDParam).length === 1
         // is all post ID params doesn't own any sub param
-        && _.chain(clearedParams).map('subParam').filter().isEmpty().value()
-    ) return 'postID';
+        && _.chain(clearedParams).map('subParam').filter().isEmpty().value())
+        return 'postID';
 
     return 'search';
 };
 const currentQueryTypeDesc = computed(() => {
     const currentQueryType = getCurrentQueryType();
-    if (currentQueryType === 'fid') return '按吧索引查询';
-    if (currentQueryType === 'postID') return '按帖索引查询';
-    if (currentQueryType === 'search') return '搜索查询';
+    if (currentQueryType === 'fid')
+        return '按吧索引查询';
+    if (currentQueryType === 'postID')
+        return '按帖索引查询';
+    if (currentQueryType === 'search')
+        return '搜索查询';
     return '空查询';
 });
 
@@ -305,9 +308,11 @@ const checkParams = () => {
     }
 
     const isRequiredPostTypes = (current: PostType[], required?: RequiredPostTypes[string]): required is undefined => {
-        if (required === undefined) return true; // not set means this param accepts any post types
+        if (required === undefined)
+            return true; // not set means this param accepts any post types
         required[1] = _.sortBy(required[1]);
-        if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1]))) return true;
+        if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1])))
+            return true;
         return required[0] === 'ALL' && _.isEqual(required[1], current);
     };
     const requiredPostTypesToString = (required: NonNullable<RequiredPostTypes[string]>) =>
@@ -367,12 +372,14 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
 const parseRouteToGetFlattenParams
     = (route: RouteLocationNormalizedLoaded): ReturnType<typeof flattenParams> | false => {
         parseRoute(route);
-        if (checkParams()) return flattenParams();
+        if (checkParams())
+            return flattenParams();
         return false;
     };
 
 watch(() => uniqueParams.value.postTypes.value, (to, from) => {
-    if (_.isEmpty(to)) uniqueParams.value.postTypes.value = from; // to prevent empty post types
+    if (_.isEmpty(to))
+        uniqueParams.value.postTypes.value = from; // to prevent empty post types
 });
 
 defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });

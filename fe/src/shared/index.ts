@@ -33,7 +33,8 @@ export type Spid = UInt;
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 5000, type, text }).show() };
 export const titleTemplate = (title: string) => `${title} - open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
 export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
-    if (pidOrSpid !== undefined) return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
+    if (pidOrSpid !== undefined)
+        return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
     return `https://tieba.baidu.com/p/${tid}`;
 };
 export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUser, 'name' | 'portrait'>>) =>

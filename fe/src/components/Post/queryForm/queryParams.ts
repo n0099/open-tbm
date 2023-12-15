@@ -102,7 +102,8 @@ const paramTypes: { [P in 'array' | 'dateTimeRange' | 'numeric' | 'textMatch']: 
 } } = { // mutating param object will sync changes
     array: {
         preprocessor: param => {
-            if (_.isString(param.value)) param.value = param.value.split(',');
+            if (_.isString(param.value))
+                param.value = param.value.split(',');
         }
     },
     numeric: { default: { subParam: { range: '=' } } },
@@ -112,13 +113,15 @@ const paramTypes: { [P in 'array' | 'dateTimeRange' | 'numeric' | 'textMatch']: 
             param.subParam.spaceSplit = boolStrToBool(param.subParam.spaceSplit);
         },
         watcher: param => {
-            if (param.subParam.matchBy === 'regex') param.subParam.spaceSplit = false;
+            if (param.subParam.matchBy === 'regex')
+                param.subParam.spaceSplit = false;
         }
     },
     dateTimeRange: {
         default: { subParam: { range: undefined } },
         preprocessor: param => {
-            if (!_.isString(param.value)) return;
+            if (!_.isString(param.value))
+                return;
             param.subParam.range = param.value.split(',');
         },
         watcher: param => {

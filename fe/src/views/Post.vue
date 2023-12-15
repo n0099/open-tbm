@@ -38,7 +38,7 @@ export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 <script setup lang="ts">
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
-import QueryForm from '@/components/Post/QueryForm/QueryForm.vue';
+import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
 import NavSidebar from '@/components/Post/NavSidebar.vue';
 import PostsPage from '@/components/Post/PostsPage.vue';
 import { postListItemScrollPosition } from '@/components/Post/views/ViewList.vue';
@@ -74,7 +74,8 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
     const startTime = Date.now();
     lastFetchError.value = null;
     showPlaceholderPostList.value = true;
-    if (isNewQuery) postPages.value = [];
+    if (isNewQuery)
+        postPages.value = [];
     isLoading.value = true;
 
     const postsQuery = await apiPostsQuery({
@@ -89,8 +90,10 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
         lastFetchError.value = postsQuery;
         return false;
     }
-    if (isNewQuery) postPages.value = [postsQuery];
-    else postPages.value.push(postsQuery); // todo: unshift when fetching previous page
+    if (isNewQuery)
+        postPages.value = [postsQuery];
+    else
+        postPages.value.push(postsQuery); // todo: unshift when fetching previous page
 
     const forumName = `${postPages.value[0].forum.name}吧`;
     const threadTitle = postPages.value[0].threads[0].title;
@@ -113,15 +116,18 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
     return true;
 };
 const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
-    if (queryFormRef.value === undefined) return false;
+    if (queryFormRef.value === undefined)
+        return false;
     const flattenParams = queryFormRef.value.parseRouteToGetFlattenParams(_route);
-    if (flattenParams === false) return false;
+    if (flattenParams === false)
+        return false;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
     if (isFetchSuccess && renderType.value === 'list') {
         const scrollPosition = postListItemScrollPosition(_route);
         const el = document.querySelector(scrollPosition.el);
-        if (el === null) return isFetchSuccess;
+        if (el === null)
+            return isFetchSuccess;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
     }
@@ -135,7 +141,8 @@ onBeforeRouteUpdate(async (to, from) => {
     if (!(isNewQuery || _.isEmpty(_.filter(
         postPages.value,
         i => i.pages.currentCursor === cursor
-    )))) return true;
+    ))))
+        return true;
     const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, cursor);
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });

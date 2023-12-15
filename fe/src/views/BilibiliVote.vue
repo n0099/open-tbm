@@ -567,7 +567,8 @@ const loadCharts = {
 
         // clone last timeline option then transform it to official votes count option
         const originalTimelineOptions = _.cloneDeep(options[options.length - 1]);
-        if (!_.isArray(originalTimelineOptions.series)) return;
+        if (!_.isArray(originalTimelineOptions.series))
+            return;
         _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
         options.push(_.merge(originalTimelineOptions, { // deep merge
             dataset: {
@@ -676,7 +677,8 @@ watch(() => query.value.allVoteCountGroupByTimeGranularity,
     () => { loadCharts.allVoteCountGroupByTime() });
 onMounted(() => {
     _.map(chartsDom, (i, k: Charts) => {
-        if (i.value === undefined) return;
+        if (i.value === undefined)
+            return;
         i.value.classList.add('loading');
         const chart = echarts.init(i.value, echarts4ColorThemeFallback);
         chart.setOption(chartsInitialOption[k]);
@@ -702,7 +704,8 @@ onMounted(() => {
         })), 'candidateIndex')
     ));
     _.map(charts, (chart, chartName: Charts) => {
-        if (chart === null) return;
+        if (chart === null)
+            return;
         loadCharts[chartName]();
         chartsDom[chartName].value?.classList.remove('loading');
     });

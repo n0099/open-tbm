@@ -118,7 +118,8 @@ const forumList = ref<ApiForumList>([]);
 const chartDom = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
-    if (chartDom.value === undefined) return;
+    if (chartDom.value === undefined)
+        return;
     chartDom.value.classList.add('loading');
     if (chart === null) {
         chart = echarts.init(chartDom.value);

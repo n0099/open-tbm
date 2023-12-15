@@ -78,7 +78,8 @@ const scrollStop = _.debounce(() => {
         (result: { top: number, el: Element }, curEl: Element) => {
             const elTop = curEl.getBoundingClientRect().top - topOffset;
             // ignore element which its y coord is ahead of the top of viewport
-            if (elTop >= 0 && result.top > elTop) return { top: elTop, el: curEl };
+            if (elTop >= 0 && result.top > elTop)
+                return { top: elTop, el: curEl };
             return result;
         };
     const findFirstDomInView = (selector: string, topOffset = 0): Element =>
@@ -135,8 +136,10 @@ const removeScrollEventListener = () => { document.removeEventListener('scroll',
 onUnmounted(removeScrollEventListener);
 
 watchEffect(() => {
-    if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
-    else document.addEventListener('scroll', scrollStop, { passive: true });
+    if (_.isEmpty(props.postPages) || isApiError(props.postPages))
+        removeScrollEventListener();
+    else
+        document.addEventListener('scroll', scrollStop, { passive: true });
     expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watchEffect(() => {
@@ -151,8 +154,8 @@ watchEffect(() => {
     const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
     const navMenuEl = replyEl?.closest('.posts-nav');
     if (replyEl !== null && navMenuEl
-        && navMenuEl.getBoundingClientRect().top === 0 // is navMenuEl sticking to the top border of viewport
-    ) navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
+        && navMenuEl.getBoundingClientRect().top === 0) // is navMenuEl sticking to the top border of viewport
+        navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
 });
 </script>
 

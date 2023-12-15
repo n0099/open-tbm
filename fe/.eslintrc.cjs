@@ -9,6 +9,7 @@ module.exports = {
             '@stylistic/migrate/migrate-ts': 'error',
             '@stylistic/quote-props': ['error', 'as-needed'],
             '@stylistic/comma-dangle': ['error', 'always-multiline'],
+            '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
         },
     }, {
         files: '*',
@@ -31,7 +32,7 @@ module.exports = {
             'plugin:import/recommended',
             'plugin:import/typescript',
             // https://github.com/vuejs/eslint-config-typescript/issues/29
-            // "plugin:@typescript-eslint/recommended-requiring-type-checking"
+            // 'plugin:@typescript-eslint/recommended-requiring-type-checking'
         ],
         rules: {
             'import/no-unresolved': [2, { ignore: ['\\.(svg|gif|avifs)$'] }],
@@ -60,7 +61,7 @@ module.exports = {
             'no-case-declarations': 'error',
             'no-constructor-return': 'error',
             'no-else-return': 'error',
-            // "no-empty-function": "error",
+            // 'no-empty-function': 'error',
             'no-eval': 'error',
             'no-extra-bind': 'error',
             '@stylistic/no-floating-decimal': 'error',
@@ -119,7 +120,7 @@ module.exports = {
             '@stylistic/multiline-ternary': ['error', 'always-multiline'],
             'new-cap': 'error',
             '@stylistic/new-parens': 'error',
-            // "newline-per-chained-call": ["error", { "ignoreChainWithDepth": 3 }],
+            // 'newline-per-chained-call': ['error', { 'ignoreChainWithDepth': 3 }],
             'no-array-constructor': 'error',
             'no-bitwise': 'error',
             'no-continue': 'error',
@@ -134,7 +135,7 @@ module.exports = {
             '@stylistic/no-trailing-spaces': 'error',
             'no-unneeded-ternary': 'error',
             '@stylistic/no-whitespace-before-property': 'error',
-            '@stylistic/nonblock-statement-body-position': 'error',
+            '@stylistic/nonblock-statement-body-position': ['error', 'below'],
             '@stylistic/object-curly-newline': ['error', {
                 multiline: true,
                 consistent: true,
@@ -149,7 +150,7 @@ module.exports = {
             '@stylistic/quote-props': ['error', 'as-needed'],
             '@stylistic/semi-spacing': 'error',
             '@stylistic/semi-style': 'error',
-            // "sort-keys": ["error", "asc", { "caseSensitive": false, "natural": true }],
+            // 'sort-keys': ['error', 'asc', { 'caseSensitive': false, 'natural': true }],
             'sort-vars': ['error', { ignoreCase: true }],
             '@stylistic/space-before-blocks': 'error',
             '@stylistic/space-in-parens': 'error',
@@ -157,7 +158,8 @@ module.exports = {
                 words: true,
                 nonwords: false,
             }],
-            '@stylistic/spaced-comment': 'error',
+            // https://github.com/typescript-eslint/typescript-eslint/issues/600#issuecomment-499979248
+            '@stylistic/spaced-comment': ['error', 'always', { markers: ['/'] }],
             '@stylistic/switch-colon-spacing': 'error',
             '@stylistic/template-tag-spacing': 'error',
             'unicode-bom': 'error',
@@ -383,8 +385,8 @@ module.exports = {
             'vue/prefer-separate-static-class': 'error',
             'vue/require-direct-export': 'error',
             'vue/require-emit-validator': 'error',
-            // "vue/require-expose": "error",
-            // "vue/static-class-names-order": "error",
+            // 'vue/require-expose': 'error',
+            // 'vue/static-class-names-order': 'error',
             'vue/v-for-delimiter-style': 'error',
             'vue/v-on-function-call': 'error',
             'vue/array-bracket-newline': ['error', 'consistent'],
