@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { PageNextButton, PagePrevButton, usePageRoutes } from './usePageNextAndPrevButton';
+import { PageNextButton, PagePrevButton, useNextPageRoute } from './usePageNextAndPrevButton';
 import type { TiebaUserGender } from '@/api/user';
 import type { ApiUsersQuery } from '@/api/index.d';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
@@ -32,7 +32,7 @@ const props = defineProps<{
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const pageRoutes = usePageRoutes(props.users.pages.currentPage);
+const pageRoutes = useNextPageRoute(props.users.pages.currentPage);
 
 const userGender = (gender: TiebaUserGender) => {
     const gendersList = {

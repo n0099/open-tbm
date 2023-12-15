@@ -95,6 +95,7 @@ abstract class BaseQuery
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
         $this->queryResultPages = [
+            'currentPageCursor' => $cursorParamValue ?? '',
             'nextPageCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
                 ? $postsKeyByTypePluralName
                 : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),

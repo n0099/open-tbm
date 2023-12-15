@@ -19,7 +19,7 @@ import UserQueryForm from '@/components/UserQueryForm.vue';
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
-import { compareRouteIsNewQuery, routeNameSuffix, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
+import { compareRouteIsNewQuery, routeNameSuffix, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
 
 import { nextTick, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -82,13 +82,13 @@ onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);
     if (!isNewQuery && !_.isEmpty(_.filter(
         userPages.value,
-        i => i.pages.currentPage === routePageParamNullSafe(to)
+        i => i.pages.currentPage === getRouteCursorParam(to)
     ))) return true;
     const isFetchSuccess = await fetchUsersData(to, isNewQuery);
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
 setComponentCustomScrollBehaviour((to, from) => {
-    if (!compareRouteIsNewQuery(to, from)) return { el: `#page${routePageParamNullSafe(to)}` };
+    if (!compareRouteIsNewQuery(to, from)) return { el: `#page${getRouteCursorParam(to)}` };
     return undefined;
 });
 </script>

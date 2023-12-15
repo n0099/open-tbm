@@ -1,5 +1,6 @@
 import Index from '@/views/Index.vue';
 import PlaceholderError from '@/components/PlaceholderError.vue';
+import type { Cursor } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
@@ -20,11 +21,11 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name'])
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
 export const routeNameSuffix = { page: '+p', cursor: '+c' } as const;
-export const routeNameWithPage = (name: string) =>
-    (_.endsWith(name, routeNameSuffix.page) ? name : `${name}${routeNameSuffix.page}`);
+export const routeNameWithCursor = (name: string) =>
+    (_.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`);
 // https://github.com/vuejs/vue-router-next/issues/1184
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-export const routePageParamNullSafe = (r: RouteLocationNormalized) => Number(r.params.page ?? 1);
+export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => String(r.params.cursor ?? '');
 
 const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
     nprogress.start();
@@ -67,7 +68,7 @@ const withCursorRoute = (parentRoute: ParentRoute, path: string, name: string): 
         path: 'cursor/:cursor(\\d+)',
         name: `${name}${routeNameSuffix.cursor}`
     });
-const withViewRoute = (lazyComponent: Promise<Component>, path: string) : RouteRecordSingleView => ({
+const withViewRoute = (lazyComponent: Promise<Component>, path: string): RouteRecordSingleView => ({
     path: `/${path}`,
     name: path,
     component: async () => lazyLoadRouteView(lazyComponent)

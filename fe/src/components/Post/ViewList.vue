@@ -1,5 +1,5 @@
 <template>
-    <div :data-page="posts.pages.currentPage" class="post-render-list pb-3">
+    <div :data-cursor="posts.pages.currentPageCursor" class="post-render-list pb-3">
         <div v-for="thread in posts.threads" :key="thread.tid"
              :id="`t${thread.tid}`" :data-post-id="thread.tid" class="mt-3 card">
             <div class="thread-title shadow-sm card-header sticky-top">
@@ -33,7 +33,8 @@
                         </span>
                         <span v-if="thread.zan !== null" :data-tippy-content="`
                             点赞量：${thread.zan.num}<br />
-                            最后点赞时间：${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })}
+                            最后点赞时间：${DateTime.fromSeconds(Number(thread.zan.last_time))
+                        .toRelative({ round: false })}
                             （${DateTime.fromSeconds(Number(thread.zan.last_time))
                         .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
                             近期点赞用户：${thread.zan.user_id_list}<br />`" class="badge bg-info">
@@ -148,7 +149,7 @@
 </template>
 
 <script lang="ts">
-import { compareRouteIsNewQuery, routePageParamNullSafe, setComponentCustomScrollBehaviour } from '@/router';
+import { compareRouteIsNewQuery, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { computed, onMounted, ref } from 'vue';
 import _ from 'lodash';
@@ -157,7 +158,7 @@ export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded)
     const hash = route.hash.substring(1);
     const idSelectorToHash = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
-        el: `.post-render-list[data-page='${routePageParamNullSafe(route)}']${idSelectorToHash}`,
+        el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}']${idSelectorToHash}`,
         top: 80 // .reply-title { top: 5rem; }
     };
 };

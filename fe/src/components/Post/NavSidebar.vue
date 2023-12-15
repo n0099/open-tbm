@@ -4,15 +4,15 @@
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
-            <SubMenu v-for="page in [posts.pages.currentPage]" :key="`page${page}`" :title="`第${page}页`">
-                <MenuItem v-for="thread in posts.threads" :key="`page${page}-t${thread.tid}`" :title="thread.title"
+            <SubMenu v-for="cursor in [posts.pages.currentPageCursor]" :key="`c${cursor}`" :title="`第${cursor}页`">
+                <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
                                     :key="String(isFirstReplyInView)"
-                                    @click="navigate(page, null, reply.pid)" :data-pid="reply.pid"
+                                    @click="navigate(cursor, null, reply.pid)" :data-pid="reply.pid"
                                     :class="{
                                         'btn-info': isFirstReplyInView,
                                         'text-white': isFirstReplyInView,
@@ -36,8 +36,8 @@
 <script setup lang="ts">
 import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './ViewList.vue';
 import { isApiError } from '@/api/index';
-import type { ApiPostsQuery } from '@/api/index.d';
-import { assertRouteNameIsStr, routeNameSuffix, routeNameWithPage } from '@/router';
+import type { ApiPostsQuery, Cursor } from '@/api/index.d';
+import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
 import type { Pid, Tid } from '@/shared';
 import { removeEnd } from '@/shared';
 
@@ -54,14 +54,15 @@ const router = useRouter();
 const props = defineProps<{ postPages: ApiPostsQuery[] }>();
 const expandedPages = ref<string[]>([]);
 const selectedThread = ref<string[]>([]);
-const firstPostInView = ref<{ page: number, pid: Pid, tid: Tid }>({ tid: 0, pid: 0, page: 0 });
+const firstPostInViewDefault = { cursor: '', tid: 0, pid: 0 };
+const firstPostInView = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(firstPostInViewDefault);
 const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
 
 let isScrollTriggeredByNavigate = false;
-const navigate = (page: number | string, tid: string | null, pid?: Pid | string) => {
+const navigate = (cursor: Cursor, tid: string | null, pid?: Pid | string) => {
     router.replace({
         hash: `#${pid ?? (tid === null ? '' : `t${tid}`)}`,
-        params: { ...route.params, page }
+        params: { ...route.params, cursor }
     });
     isScrollTriggeredByNavigate = true;
 };
@@ -96,20 +97,20 @@ const scrollStop = _.debounce(() => {
     // when there's no thread or reply item in the viewport
     // currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
-        firstPostInView.value = { tid: 0, pid: 0, page: 0 };
+        firstPostInView.value = firstPostInViewDefault;
         router.replace({ hash: '' }); // empty route hash
         isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
         return;
     }
-    const firstPostPageInView = _.mapValues(currentFirstPostInView, i =>
-        Number(i.closest('.post-render-list')?.getAttribute('data-page')));
+    const firstPostCursorInView = _.mapValues(currentFirstPostInView,
+        i => i.closest('.post-render-list')?.getAttribute('data-cursor') ?? '');
 
-    const replaceRouteHash = (page: number, postID: Pid | Tid, hashPrefix = '') => {
+    const replaceRouteHash = (cursor: Cursor, postID: Pid | Tid, hashPrefix = '') => {
         assertRouteNameIsStr(route.name);
         const hash = `#${hashPrefix}${postID}`;
-        router.replace(page === 1 // to prevent '/page/1' occurs in route path
-            ? { hash, name: removeEnd(route.name, routeNameSuffix.page), params: _.omit(route.params, 'page') }
-            : { hash, name: routeNameWithPage(route.name), params: { ...route.params, page } });
+        router.replace(cursor === '' // to prevent '/page/1' occurs in route path
+            ? { hash, name: removeEnd(route.name, routeNameSuffix.cursor), params: _.omit(route.params, 'cursor') }
+            : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } });
     };
     // is the first reply belonged to the first thread, true when the first thread has no reply,
     // the first reply will belong to another thread that comes after the first thread in view
@@ -122,11 +123,11 @@ const scrollStop = _.debounce(() => {
         .filter({ pid: firstPostIDInView.p })
         .isEmpty()
         .value()) {
-        firstPostInView.value = { tid: firstPostIDInView.t, pid: 0, page: firstPostPageInView.t };
-        replaceRouteHash(firstPostPageInView.t, firstPostIDInView.t, 't');
+        firstPostInView.value = { tid: firstPostIDInView.t, pid: 0, cursor: firstPostCursorInView.t };
+        replaceRouteHash(firstPostCursorInView.t, firstPostIDInView.t, 't');
     } else {
-        firstPostInView.value = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, page: firstPostPageInView.p };
-        replaceRouteHash(firstPostPageInView.p, firstPostIDInView.p);
+        firstPostInView.value = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, cursor: firstPostCursorInView.p };
+        replaceRouteHash(firstPostCursorInView.p, firstPostIDInView.p);
     }
     isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
 }, 200);
@@ -136,11 +137,11 @@ onUnmounted(removeScrollEventListener);
 watchEffect(() => {
     if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
     else document.addEventListener('scroll', scrollStop, { passive: true });
-    expandedPages.value = props.postPages.map(i => `page${i.pages.currentPage}`);
+    expandedPages.value = props.postPages.map(i => `c${i.pages.currentPageCursor}`);
 });
 watchEffect(() => {
-    const { page, tid, pid } = firstPostInView.value;
-    selectedThread.value = [`page${page}_t${tid}`];
+    const { cursor, tid, pid } = firstPostInView.value;
+    selectedThread.value = [`c${cursor}_t${tid}`];
     if (isScrollTriggeredByNavigate) {
         isScrollTriggeredByNavigate = false;
         return;

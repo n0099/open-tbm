@@ -1,20 +1,20 @@
 <template>
     <div class="container">
         <QueryForm ref="queryFormRef" :forumList="forumList" :isLoading="isLoading" />
-        <p>当前页数：{{ routePageParamNullSafe($route) }}</p>
-        <Menu v-show="postPages.length !== 0" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
+        <p>当前页数：{{ getRouteCursorParam($route) }}</p>
+        <Menu v-show="!_.isEmpty(postPages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
             <MenuItem key="table">表格视图</MenuItem>
         </Menu>
     </div>
-    <div v-show="postPages.length !== 0" class="container-fluid">
+    <div v-show="!_.isEmpty(postPages)" class="container-fluid">
         <div class="row justify-content-center">
             <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
             <div class="post-render-wrapper col" :class="{
                 'post-render-list-wrapper': renderType === 'list',
                 'col-xl-10': renderType === 'list'
             }">
-                <PostViewPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPage"
+                <PostViewPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPageCursor"
                               :renderType="renderType" :posts="posts"
                               :isLoadingNewPage="isLoading"
                               :isLastPageInPages="pageIndex === postPages.length - 1" />
@@ -40,7 +40,7 @@ import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
 import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
 import { postListItemScrollPosition } from '@/components/Post/ViewList.vue';
-import { compareRouteIsNewQuery, routePageParamNullSafe } from '@/router';
+import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
@@ -126,12 +126,12 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = isRouteUpdateTriggeredBySubmitQueryForm.value || compareRouteIsNewQuery(to, from);
     isRouteUpdateTriggeredBySubmitQueryForm.value = false;
-    const page = routePageParamNullSafe(to);
-    if (!isNewQuery && !_.isEmpty(_.filter(
+    const cursor = getRouteCursorParam(to);
+    if (!(isNewQuery || _.isEmpty(_.filter(
         postPages.value,
-        i => i.pages.currentPage === page
-    ))) return true;
-    const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, page);
+        i => i.pages.currentPageCursor === cursor
+    )))) return true;
+    const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, cursor);
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
 watchEffect(() => {
@@ -140,7 +140,7 @@ watchEffect(() => {
 
 (async () => {
     forumList.value = throwIfApiError(await apiForumList());
-    parseRouteThenFetch(route, true, routePageParamNullSafe(route));
+    parseRouteThenFetch(route, true, getRouteCursorParam(route));
 })();
 </script>
 

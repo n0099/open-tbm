@@ -369,7 +369,7 @@ const parseRouteToGetFlattenParams
     };
 
 watch(() => uniqueParams.value.postTypes.value, (to, from) => {
-    if (to.length === 0) uniqueParams.value.postTypes.value = from; // to prevent empty post types
+    if (_.isEmpty(to)) uniqueParams.value.postTypes.value = from; // to prevent empty post types
 });
 
 defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });

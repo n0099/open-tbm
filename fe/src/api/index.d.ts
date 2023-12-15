@@ -53,6 +53,7 @@ export type ApiUsersQueryQueryParam
 export type Cursor = string;
 export type JsonString = string;
 interface CursorPagination {
+    currentPageCursor: Cursor,
     nextPageCursor: Cursor,
     hasMorePages: boolean
 }
