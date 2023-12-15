@@ -10,7 +10,7 @@
             </template>
             <template v-else-if="column === 'titleWithTag'">
                 <Var v-slot="{ scope: { thread } }" :scope="{ thread: record as Thread }">
-                    <ThreadTag :thread="thread" />
+                    <BadgeThread :thread="thread" />
                     <span>{{ thread.title }}</span>
                 </Var>
             </template>
@@ -20,7 +20,7 @@
                         <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
                     </a>
-                    <UserTag :user="getUser(record.authorUid)" />
+                    <BadgeUser :user="getUser(record.authorUid)" />
                 </Var>
             </template>
             <template v-else-if="column === 'latestReplier'">
@@ -45,7 +45,7 @@
                                 <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                                      class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
                             </a>
-                            <UserTag :user="user" :threadAuthorUid="threadAuthorUid" />
+                            <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
                         </Var>
                     </template>
                 </template>
@@ -65,9 +65,9 @@
                                         <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                                              class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
                                     </a>
-                                    <UserTag :user="user"
-                                             :threadAuthorUid="threadAuthorUid"
-                                             :replyAuthorUid="replyAuthorUid" />
+                                    <BadgeUser :user="user"
+                                               :threadAuthorUid="threadAuthorUid"
+                                               :replyAuthorUid="replyAuthorUid" />
                                 </Var>
                             </template>
                         </template>
@@ -83,8 +83,10 @@
 
 <script setup lang="ts">
 import Var from '@/components/Var.vue';
-import { ThreadTag, UserTag } from '../badge';
-import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
+import BadgeThread from '../badges/BadgeThread.vue';
+import BadgeUser from '../badges/BadgeUser.vue';
+
+import { baseGetUser, baseRenderUsername } from './common';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { Pid, Tid } from '@/shared';

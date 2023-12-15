@@ -27,9 +27,9 @@
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
-                                          id="top5CandidateCountGroupByTimeGranularity"
-                                          :granularities="['minute', 'hour']" />
+                    <TimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
+                                     id="top5CandidateCountGroupByTimeGranularity"
+                                     :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
@@ -40,9 +40,9 @@
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <QueryTimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
-                                          id="allVoteCountGroupByTimeGranularity"
-                                          :granularities="['minute', 'hour']" />
+                    <TimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
+                                     id="allVoteCountGroupByTimeGranularity"
+                                     :granularities="['minute', 'hour']" />
                 </div>
             </div>
         </div>
@@ -62,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-import QueryTimeGranularity from '@/components/widgets/QueryTimeGranularity.vue';
+import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
+
 import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';

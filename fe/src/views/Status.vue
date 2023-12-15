@@ -5,16 +5,16 @@
             <div class="col-5">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeRange v-model:startTime="query.startTime"
-                                    v-model:endTime="query.endTime"
-                                    :timesAgo="{ day: 1 }" />
+                    <TimeRange v-model:startTime="query.startTime"
+                               v-model:endTime="query.endTime"
+                               :timesAgo="{ day: 1 }" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <QueryTimeGranularity v-model="query.timeGranularity" :granularities="['minute', 'hour', 'day']" />
+                    <TimeGranularity v-model="query.timeGranularity" :granularities="['minute', 'hour', 'day']" />
                 </div>
             </div>
         </div>
@@ -30,8 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import QueryTimeGranularity from '@/components/widgets/QueryTimeGranularity.vue';
-import QueryTimeRange from '@/components/widgets/QueryTimeRange.vue';
+import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
+import TimeRange from '@/components/widgets/TimeRange.vue';
+
 import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
 import { apiStatus, throwIfApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';

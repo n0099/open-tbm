@@ -162,8 +162,12 @@
 </template>
 
 <script setup lang="ts">
+import InputNumericParam from './widgets/InputNumericParam.vue';
+import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
+import SelectParam from './widgets/SelectParam.vue';
+import SelectRange from './widgets/SelectRange.vue';
+
 import { isRouteUpdateTriggeredBySubmitQueryForm } from '@/views/Post.vue';
-import { InputNumericParam, InputTextMatchParam, SelectParam, SelectRange, inputTextMatchParamPlaceholder } from '.';
 import type { AddNameToParam, KnownDateTimeParams, KnownNumericParams, KnownParams, KnownTextParams, KnownUniqueParams, NamelessParamNumeric, RequiredPostTypes } from './queryParams';
 import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';

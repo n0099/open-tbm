@@ -7,7 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import { ViewList, ViewTable } from '.';
+import ViewList from './views/ViewList.vue';
+import ViewTable from './views/ViewTable.vue';
+
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
 import type { PostViewRenderer } from '@/views/Post.vue';
 import type { ApiPostsQuery } from '@/api/index.d';

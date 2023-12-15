@@ -20,16 +20,16 @@
             <div class="col-5">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
-                    <QueryTimeRange v-model:startTime="query.startTime"
-                                    v-model:endTime="query.endTime"
-                                    :timesAgo="{ day: 14 }" />
+                    <TimeRange v-model:startTime="query.startTime"
+                               v-model:endTime="query.endTime"
+                               :timesAgo="{ day: 14 }" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <QueryTimeGranularity v-model="query.timeGranularity" :granularities="timeGranularities" />
+                    <TimeGranularity v-model="query.timeGranularity" :granularities="timeGranularities" />
                 </div>
             </div>
         </div>
@@ -38,8 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import QueryTimeGranularity from '@/components/widgets/QueryTimeGranularity.vue';
-import QueryTimeRange from '@/components/widgets/QueryTimeRange.vue';
+import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
+import TimeRange from '@/components/widgets/TimeRange.vue';
+
 import type { ApiForumList, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
 import { apiForumList, apiStatsForumsPostCount, throwIfApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';

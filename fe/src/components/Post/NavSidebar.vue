@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './view/ViewList.vue';
+import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './views/ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';

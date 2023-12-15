@@ -14,10 +14,10 @@
                 'post-render-list-wrapper': renderType === 'list',
                 'col-xl-10': renderType === 'list'
             }">
-                <PostViewPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
-                              :renderType="renderType" :posts="posts"
-                              :isLoadingNewPage="isLoading"
-                              :isLastPageInPages="pageIndex === postPages.length - 1" />
+                <PostsPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
+                           :renderType="renderType" :posts="posts"
+                           :isLoadingNewPage="isLoading"
+                           :isLastPageInPages="pageIndex === postPages.length - 1" />
             </div>
 
             <div v-show="renderType === 'list'" class="post-render-list-right-padding col-xl d-none p-0" />
@@ -36,10 +36,15 @@ export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 </script>
 
 <script setup lang="ts">
+import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
+import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
+import QueryForm from '@/components/Post/QueryForm/QueryForm.vue';
+import NavSidebar from '@/components/Post/NavSidebar.vue';
+import PostsPage from '@/components/Post/PostsPage.vue';
+import { postListItemScrollPosition } from '@/components/Post/views/ViewList.vue';
+
 import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
-import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
-import { postListItemScrollPosition } from '@/components/Post/view/ViewList.vue';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';

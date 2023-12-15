@@ -1,25 +1,26 @@
 <template>
     <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
-    <UserListPage v-for="(users, pageIndex) in userPages"
-                  :key="`page${users.pages.currentPage}`"
-                  :id="`page${users.pages.currentPage}`"
-                  :users="users"
-                  :isLoadingNewPage="isLoading"
-                  :isLastPageInPages="pageIndex === userPages.length - 1" />
+    <UsersPage v-for="(users, pageIndex) in userPages"
+               :key="`page${users.pages.currentPage}`"
+               :id="`page${users.pages.currentPage}`"
+               :users="users"
+               :isLoadingNewPage="isLoading"
+               :isLastPageInPages="pageIndex === userPages.length - 1" />
     <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
     <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
 </template>
 
 <script setup lang="ts">
-import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
-import UserListPage from '@/components/User/UserListPage.vue';
-import UserQueryForm from '@/components/User/UserQueryForm.vue';
+import UsersPage from '@/components/User/UsersPage.vue';
+import UserQueryForm from '@/components/User/QueryForm.vue';
+import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
+
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
-import { compareRouteIsNewQuery, routeNameSuffix, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
+import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
 
 import { nextTick, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';

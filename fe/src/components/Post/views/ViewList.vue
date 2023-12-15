@@ -5,7 +5,7 @@
             <div class="thread-title shadow-sm card-header sticky-top">
                 <div class="row justify-content-between">
                     <div class="col-auto">
-                        <ThreadTag :thread="thread" />
+                        <BadgeThread :thread="thread" />
                         <h6 class="d-inline">{{ thread.title }}</h6>
                     </div>
                     <div class="col-auto badge bg-light">
@@ -13,7 +13,7 @@
                                     class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
                         <PostCommonMetadataIconLinks :post="thread"
                                                      postTypeID="tid" :postIDSelector="() => thread.tid" />
-                        <PostTimeBadge :time="thread.postedAt" tippyPrefix="发帖时间：" badgeColor="success" />
+                        <BadgePostTime :time="thread.postedAt" tippyPrefix="发帖时间：" badgeColor="success" />
                     </div>
                 </div>
                 <div class="row justify-content-between mt-2">
@@ -53,8 +53,8 @@
                             <span v-else class="fw-normal link-info">楼主及最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                         </RouterLink>
-                        <UserTag v-if="getUser(thread.authorUid).currentForumModerator !== null"
-                                 :user="getUser(thread.authorUid)" />
+                        <BadgeUser v-if="getUser(thread.authorUid).currentForumModerator !== null"
+                                   :user="getUser(thread.authorUid)" />
                         <template v-if="thread.latestReplierUid === null">
                             <span class="fw-normal link-secondary">最后回复：</span>
                             <span class="fw-bold link-dark">未知用户</span>
@@ -65,7 +65,7 @@
                                 <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                             </RouterLink>
                         </template>
-                        <PostTimeBadge :time="thread.latestReplyPostedAt"
+                        <BadgePostTime :time="thread.latestReplyPostedAt"
                                        tippyPrefix="最后回复时间：" badgeColor="secondary" />
                     </div>
                 </div>
@@ -89,7 +89,7 @@
                                     class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
                         <PostCommonMetadataIconLinks :post="reply"
                                                      postTypeID="pid" :postIDSelector="() => reply.pid" />
-                        <PostTimeBadge :time="reply.postedAt" badgeColor="primary" />
+                        <BadgePostTime :time="reply.postedAt" badgeColor="primary" />
                     </div>
                 </div>
                 <div class="reply row shadow-sm bs-callout bs-callout-info">
@@ -101,7 +101,7 @@
                             <p class="my-0">{{ author.name }}</p>
                             <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
                         </RouterLink>
-                        <UserTag :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
+                        <BadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
                     </div>
                     <div class="col me-2 px-1 border-start overflow-auto">
                         <div v-viewer.static class="p-2" v-html="reply.content" />
@@ -122,9 +122,9 @@
                                                 <span class="mx-2 align-middle link-dark">
                                                     {{ renderUsername(subReply.authorUid) }}
                                                 </span>
-                                                <UserTag :user="getUser(subReply.authorUid)"
-                                                         :threadAuthorUid="thread.authorUid"
-                                                         :replyAuthorUid="reply.authorUid" />
+                                                <BadgeUser :user="getUser(subReply.authorUid)"
+                                                           :threadAuthorUid="thread.authorUid"
+                                                           :replyAuthorUid="reply.authorUid" />
                                             </RouterLink>
                                             <div class="float-end badge bg-light">
                                                 <div class="d-inline"
@@ -133,7 +133,7 @@
                                                                                  postTypeID="spid"
                                                                                  :postIDSelector="() => subReply.spid" />
                                                 </div>
-                                                <PostTimeBadge :time="subReply.postedAt" badgeColor="info" />
+                                                <BadgePostTime :time="subReply.postedAt" badgeColor="info" />
                                             </div>
                                         </template>
                                         <div v-viewer.static v-html="subReply.content" />
@@ -166,9 +166,13 @@ export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 </script>
 
 <script setup lang="ts">
-import '@/shared/bootstrapCallout.css';
-import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from '../badge';
-import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
+import '@/styles/bootstrapCallout.css';
+import PostCommonMetadataIconLinks from '../badges/PostCommonMetadataIconLinks.vue';
+import BadgePostTime from '../badges/BadgePostTime.vue';
+import BadgeThread from '../badges/BadgeThread.vue';
+import BadgeUser from '../badges/BadgeUser.vue';
+
+import { baseGetUser, baseRenderUsername } from './common';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { BaiduUserID } from '@/api/user';
