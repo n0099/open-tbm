@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../pagination/usePaginationButtons.ts';
+import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
 import type { TiebaUserGender } from '@/api/user';
 import type { ApiUsersQuery } from '@/api/index.d';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';

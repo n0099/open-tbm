@@ -231,15 +231,14 @@ const getCurrentQueryType = () => {
             return 'fid';
         }
     }
-
     // is there no other params except post id params
     if (_.isEmpty(_.reject(clearedParams, isPostIDParam))
         // is there only one post id param
         && _.filter(clearedParams, isPostIDParam).length === 1
         // is all post ID params doesn't own any sub param
-        && _.chain(clearedParams).map('subParam').filter().isEmpty().value()) {
-        return 'postID';
-    }
+        && _.chain(clearedParams).map('subParam').filter().isEmpty().value()
+    ) return 'postID';
+
     return 'search';
 };
 const currentQueryTypeDesc = computed(() => {

@@ -1,5 +1,5 @@
 import type { BaiduUserID, TiebaUser } from '@/api/user';
-import './tiebaPostElements.css';
+import '@/styles/tiebaPostElements.css';
 import 'viewerjs/dist/viewer.css';
 import viewer from 'v-viewer';
 import { app } from '@/main';
