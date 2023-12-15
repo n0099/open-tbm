@@ -7,7 +7,7 @@ use App\Eloquent\Model\User;
 
 class UsersQuery extends Controller
 {
-    private int $pagingPerPageItems = 200;
+    private int $perPageItems = 200;
 
     public function query(\Illuminate\Http\Request $request): array
     {
@@ -33,7 +33,7 @@ class UsersQuery extends Controller
             ->where($queryParams)
             ->orderBy('id', 'DESC')
             ->selectPublicFields()
-            ->simplePaginate($this->pagingPerPageItems);
+            ->simplePaginate($this->perPageItems);
         Helper::abortAPIIf(40402, $queriedInfo->isEmpty());
 
         return [

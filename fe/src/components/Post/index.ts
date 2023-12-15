@@ -1,7 +1,7 @@
 // import by files inside @/components/Post
-export { default as PostCommonMetadataIconLinks } from './PostCommonMetadataIconLinks.vue';
-export { default as PostTimeBadge } from './PostTimeBadge.vue';
-export { default as ThreadTag } from './ThreadTag.vue';
-export { default as UserTag } from './UserTag.vue';
-export { default as ViewList } from './ViewList.vue';
-export { default as ViewTable } from './ViewTable.vue';
+export { default as PostCommonMetadataIconLinks } from './badges/PostCommonMetadataIconLinks.vue';
+export { default as PostTimeBadge } from './badges/PostTimeBadge.vue';
+export { default as ThreadTag } from './badges/ThreadTag.vue';
+export { default as UserTag } from './badges/UserTag.vue';
+export { default as ViewList } from './views/ViewList.vue';
+export { default as ViewTable } from './views/ViewTable.vue';

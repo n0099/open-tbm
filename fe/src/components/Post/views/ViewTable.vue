@@ -83,7 +83,7 @@
 
 <script setup lang="ts">
 import Var from '@/components/Var.vue';
-import { ThreadTag, UserTag } from '.';
+import { ThreadTag, UserTag } from '../badge';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';

@@ -1,6 +1,6 @@
 import type { Reply, SubReply, Thread } from './posts';
 import type { TiebaUser, TiebaUserGenderQueryParam } from './user';
-import type { SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
+import type { SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
 import type { BoolInt, Fid, Float, PostType, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 
@@ -53,9 +53,9 @@ export type ApiUsersQueryQueryParam
 export type Cursor = string;
 export type JsonString = string;
 interface CursorPagination {
-    currentPageCursor: Cursor,
-    nextPageCursor: Cursor,
-    hasMorePages: boolean
+    currentCursor: Cursor,
+    nextCursor: Cursor,
+    hasMore: boolean
 }
 export type ApiPostsQuery = Omit<ApiUsersQuery, 'pages'> & {
     type: 'index' | 'search',

@@ -1,5 +1,5 @@
 <template>
-    <div :data-cursor="posts.pages.currentPageCursor" class="post-render-list pb-3">
+    <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
         <div v-for="thread in posts.threads" :key="thread.tid"
              :id="`t${thread.tid}`" :data-post-id="thread.tid" class="mt-3 card">
             <div class="thread-title shadow-sm card-header sticky-top">
@@ -167,7 +167,7 @@ export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 
 <script setup lang="ts">
 import '@/shared/bootstrapCallout.css';
-import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from '.';
+import { PostCommonMetadataIconLinks, PostTimeBadge, ThreadTag, UserTag } from '../badge';
 import { baseGetUser, baseRenderUsername } from './viewListAndTableCommon';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';

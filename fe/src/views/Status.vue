@@ -30,8 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
-import QueryTimeRange from '@/components/QueryTimeRange.vue';
+import QueryTimeGranularity from '@/components/widgets/QueryTimeGranularity.vue';
+import QueryTimeRange from '@/components/widgets/QueryTimeRange.vue';
 import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
 import { apiStatus, throwIfApiError } from '@/api';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';

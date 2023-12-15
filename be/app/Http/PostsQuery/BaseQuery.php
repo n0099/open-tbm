@@ -76,7 +76,7 @@ abstract class BaseQuery
         $queriesWithOrderBy = $queries->map($addOrderByForBuilder);
         $cursorsKeyByPostType = null;
         if ($cursorParamValue !== null) {
-            $cursorsKeyByPostType = $this->decodePageCursor($cursorParamValue);
+            $cursorsKeyByPostType = $this->decodeCursor($cursorParamValue);
             // remove queries for post types with encoded cursor ',,'
             $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorsKeyByPostType);
         }
@@ -95,11 +95,11 @@ abstract class BaseQuery
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
         $this->queryResultPages = [
-            'currentPageCursor' => $cursorParamValue ?? '',
-            'nextPageCursor' => $this->encodeNextPageCursor($queryByPostIDParamName === null
+            'currentCursor' => $cursorParamValue ?? '',
+            'nextCursor' => $this->encodeNextCursor($queryByPostIDParamName === null
                 ? $postsKeyByTypePluralName
                 : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
-            'hasMorePages' => self::unionPageStats(
+            'hasMore' => self::unionPageStats(
                 $paginators,
                 'hasMorePages',
                 static fn (Collection $v) => $v->filter()->count() !== 0
@@ -118,7 +118,7 @@ abstract class BaseQuery
      *     'subReplies' => collect([new SubReply(['spid' => 3,'postedAt' => 'test'])])
      * ])
      */
-    private function encodeNextPageCursor(Collection $postsKeyByTypePluralName): string
+    private function encodeNextCursor(Collection $postsKeyByTypePluralName): string
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
             ->mapWithKeys(static fn (Collection $posts, string $type) => [
@@ -175,7 +175,7 @@ abstract class BaseQuery
     /**
      * @psalm-return Collection<'reply'|'subReply'|'thread', Cursor>
      */
-    private function decodePageCursor(string $encodedCursors): Collection
+    private function decodeCursor(string $encodedCursors): Collection
     {
         return collect(Helper::POST_TYPES)
             ->combine(Str::of($encodedCursors)

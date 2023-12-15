@@ -11,11 +11,11 @@
 </template>
 
 <script setup lang="ts">
-import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/SelectTiebaUser.vue';
-import PlaceholderError from '@/components/PlaceholderError.vue';
-import PlaceholderPostList from '@/components/PlaceholderPostList.vue';
-import UserListPage from '@/components/UserListPage.vue';
-import UserQueryForm from '@/components/UserQueryForm.vue';
+import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
+import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
+import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
+import UserListPage from '@/components/User/UserListPage.vue';
+import UserQueryForm from '@/components/User/UserQueryForm.vue';
 import { apiUsersQuery, isApiError } from '@/api';
 import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';

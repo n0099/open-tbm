@@ -1,5 +1,5 @@
 <template>
-    <PagePrevButton :currentPageCursor="props.posts.pages.currentPageCursor" />
+    <PageCurrentButton :currentCursor="props.posts.pages.currentCursor" />
     <ViewList v-if="renderType === 'list'" :initialPosts="posts" />
     <ViewTable v-else-if="renderType === 'table'" :posts="posts" />
     <PageNextButton v-if="!isLoadingNewPage && isLastPageInPages" :nextPageRoute="nextPageRoute" />
@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { ViewList, ViewTable } from '.';
-import { PageNextButton, PagePrevButton, useNextPageRoute } from '../usePageNextAndPrevButton';
+import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../pagination/usePaginationButtons.ts';
 import type { PostViewRenderer } from '@/views/Post.vue';
 import type { ApiPostsQuery } from '@/api/index.d';
 
@@ -17,5 +17,5 @@ const props = defineProps<{
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const nextPageRoute = useNextPageRoute(props.posts.pages.currentPageCursor);
+const nextCursorRoute = useNextCursorRoute(props.posts.pages.currentCursor);
 </script>

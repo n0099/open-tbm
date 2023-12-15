@@ -14,7 +14,7 @@
                 'post-render-list-wrapper': renderType === 'list',
                 'col-xl-10': renderType === 'list'
             }">
-                <PostViewPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentPageCursor"
+                <PostViewPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
                               :renderType="renderType" :posts="posts"
                               :isLoadingNewPage="isLoading"
                               :isLastPageInPages="pageIndex === postPages.length - 1" />
@@ -39,7 +39,7 @@ export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
 import { NavSidebar, PlaceholderError, PlaceholderPostList, PostViewPage, QueryForm } from '@/components/Post/exports.vue';
-import { postListItemScrollPosition } from '@/components/Post/ViewList.vue';
+import { postListItemScrollPosition } from '@/components/Post/view/ViewList.vue';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
@@ -129,7 +129,7 @@ onBeforeRouteUpdate(async (to, from) => {
     const cursor = getRouteCursorParam(to);
     if (!(isNewQuery || _.isEmpty(_.filter(
         postPages.value,
-        i => i.pages.currentPageCursor === cursor
+        i => i.pages.currentCursor === cursor
     )))) return true;
     const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, cursor);
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched

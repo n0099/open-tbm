@@ -38,8 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
-import QueryTimeRange from '@/components/QueryTimeRange.vue';
+import QueryTimeGranularity from '@/components/widgets/QueryTimeGranularity.vue';
+import QueryTimeRange from '@/components/widgets/QueryTimeRange.vue';
 import type { ApiForumList, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
 import { apiForumList, apiStatsForumsPostCount, throwIfApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';

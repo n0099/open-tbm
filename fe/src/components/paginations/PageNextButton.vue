@@ -3,7 +3,7 @@
         <div class="row align-items-center">
             <div class="col"><hr /></div>
             <div class="w-auto">
-                <RouterLink :to="nextPageRoute" class="btn btn-secondary">
+                <RouterLink :to="nextCursorRoute" class="btn btn-secondary">
                     <span class="h4">下一页</span>
                 </RouterLink>
             </div>
@@ -16,5 +16,5 @@
 import type { RouteLocationRaw } from 'vue-router';
 import { RouterLink } from 'vue-router';
 
-defineProps<{ nextPageRoute: RouteLocationRaw }>();
+defineProps<{ nextCursorRoute: RouteLocationRaw }>();
 </script>

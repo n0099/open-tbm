@@ -1,6 +1,6 @@
 <template>
     <div>
-        <PagePrevButton :page="users.pages" :pageRoutes="pageRoutes" />
+        <PageCurrentButton :page="users.pages" :pageRoutes="pageRoutes" />
         <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="String(user.uid)" class="row">
             <div class="col-3">
                 <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { PageNextButton, PagePrevButton, useNextPageRoute } from './usePageNextAndPrevButton';
+import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../pagination/usePaginationButtons.ts';
 import type { TiebaUserGender } from '@/api/user';
 import type { ApiUsersQuery } from '@/api/index.d';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
@@ -32,7 +32,7 @@ const props = defineProps<{
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const pageRoutes = useNextPageRoute(props.users.pages.currentPage);
+const pageRoutes = useNextCursorRoute(props.users.pages.currentPage);
 
 const userGender = (gender: TiebaUserGender) => {
     const gendersList = {

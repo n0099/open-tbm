@@ -4,7 +4,7 @@
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
-            <SubMenu v-for="cursor in [posts.pages.currentPageCursor]" :key="`c${cursor}`" :title="`第${cursor}页`">
+            <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="`第${cursor}页`">
                 <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './ViewList.vue';
+import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './view/ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
@@ -137,7 +137,7 @@ onUnmounted(removeScrollEventListener);
 watchEffect(() => {
     if (_.isEmpty(props.postPages) || isApiError(props.postPages)) removeScrollEventListener();
     else document.addEventListener('scroll', scrollStop, { passive: true });
-    expandedPages.value = props.postPages.map(i => `c${i.pages.currentPageCursor}`);
+    expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watchEffect(() => {
     const { cursor, tid, pid } = firstPostInView.value;

@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import QueryTimeGranularity from '@/components/QueryTimeGranularity.vue';
+import QueryTimeGranularity from '@/components/widgets/QueryTimeGranularity.vue';
 import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
