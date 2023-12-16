@@ -8,7 +8,7 @@
            :placeholder="placeholders.BETWEEN" :aria-label="modelValue.name"
            type="text" class="col-3 form-control flex-grow-0" required pattern="\d+,\d+" />
     <input v-else @input="emitModelChange" :value="modelValue.value"
-           :placeholder="placeholders.single" :aria-label="modelValue.name"
+           :placeholder="placeholders.equals" :aria-label="modelValue.name"
            type="number" class="col-2 form-control flex-grow-0" required />
 </template>
 
@@ -17,18 +17,16 @@ import type { KnownNumericParams } from '../queryParams';
 import { numericParamSubParamRangeValues } from '../queryParams';
 import _ from 'lodash';
 
-const props = defineProps<{
-    modelValue: KnownNumericParams,
-    placeholders: { [P in 'BETWEEN' | 'IN' | 'single']: string }
-}>();
-const emit = defineEmits({
+defineProps<{ placeholders: { [P in 'BETWEEN' | 'IN' | 'equals']: string } }>();
+defineEmits({
     'update:modelValue': (p: KnownNumericParams) =>
         _.isString(p.name) && _.isString(p.value)
         && numericParamSubParamRangeValues.includes(p.subParam.range)
 });
+const modelValue = defineModel<KnownNumericParams>({ required: true });
 
 const emitModelChange = (e: Event) => {
-    emit('update:modelValue', { ...props.modelValue, value: (e.target as HTMLInputElement).value });
+    modelValue.value = { ...modelValue.value, value: (e.target as HTMLInputElement).value };
 };
 </script>
 

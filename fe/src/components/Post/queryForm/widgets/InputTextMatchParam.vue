@@ -43,34 +43,34 @@ export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
 </script>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { textParamSubParamMatchByValues } from '../queryParams';
 import type { KnownTextParams, NamelessParamText } from '../queryParams';
 import type { ObjValues } from '@/shared';
 import _ from 'lodash';
 
-const props = defineProps<{
-    modelValue: KnownTextParams,
-    paramIndex: number
-}>();
-const emit = defineEmits({
+const props = defineProps<{ paramIndex: number }>();
+defineEmits({
     'update:modelValue': (p: KnownTextParams) =>
         _.isString(p.name) && _.isString(p.value)
         && textParamSubParamMatchByValues.includes(p.subParam.matchBy)
         && _.isBoolean(p.subParam.spaceSplit)
 });
+const modelValue = defineModel<KnownTextParams>({ required: true });
 
 const emitModelChange = (
     name: keyof NamelessParamText['subParam'],
     value: ObjValues<NamelessParamText['subParam']>
 ) => {
-    emit('update:modelValue', {
-        ...props.modelValue,
-        subParam: { ...props.modelValue.subParam, [name]: value }
-    } as KnownTextParams);
+    modelValue.value = {
+        ...modelValue.value,
+        subParam: { ...modelValue.value.subParam, [name]: value }
+    } as KnownTextParams;
 };
 const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>
-    `param${_.upperFirst(props.modelValue.name)}${type}-${props.paramIndex}`;
-const inputName = `param${_.upperFirst(props.modelValue.name)}-${props.paramIndex}`;
+    `param${_.upperFirst(modelValue.value.name)}${type}-${props.paramIndex}`;
+const inputName = computed(() =>
+    `param${_.upperFirst(modelValue.value.name)}-${props.paramIndex}`);
 </script>
 
 <style scoped>

@@ -7,14 +7,16 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <TimeRange v-model:startTime="query.startTime"
                                v-model:endTime="query.endTime"
-                               :timesAgo="{ day: 1 }" />
+                               id="queryTimeRange" :timesAgo="{ day: 1 }" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <TimeGranularity v-model="query.timeGranularity" :granularities="['minute', 'hour', 'day']" />
+                    <TimeGranularity v-model="query.timeGranularity"
+                                     id="queryTimeGranularity"
+                                     :granularities="['minute', 'hour', 'day']" />
                 </div>
             </div>
         </div>

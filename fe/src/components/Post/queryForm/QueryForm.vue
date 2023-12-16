@@ -97,7 +97,7 @@
                     <InputNumericParam @update:modelValue="v => params[pI] = v"
                                        :modelValue="params[pI] as KnownNumericParams"
                                        :paramIndex="pI"
-                                       :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', single: '100' }" />
+                                       :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
                 </template>
                 <div v-if="p.name === 'threadProperties'">
                     <div class="param-input-group-text input-group-text">
@@ -142,7 +142,7 @@
                     <SelectRange v-model="p.subParam.range" />
                     <InputNumericParam @update:modelValue="v => params[pI] = v"
                                        :modelValue="params[pI] as KnownNumericParams"
-                                       :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', single: '18' }" />
+                                       :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
                 </template>
             </div>
         </div>
@@ -215,12 +215,12 @@ const isPostIDParam = (param: Param): param is AddNameToParam<PostID, NamelessPa
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',
     BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
-    single: p.name === 'tid' ? '5000000000' : '15000000000'
+    equals: p.name === 'tid' ? '5000000000' : '15000000000'
 });
 const uidParamPlaceholders = {
     IN: '4000000000,4000000001,4000000002,...',
     BETWEEN: '4000000000,5000000000',
-    single: '4000000000'
+    equals: '4000000000'
 };
 
 const getCurrentQueryType = () => {

@@ -52,5 +52,4 @@ export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<st
 export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'true';
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
-export const emitEventStrValidator = (p: string) => _.isString(p);
-export const emitEventNumValidator = (p: number) => _.isNumber(p);
+export const emitEventWithNumberValidator = (p: number) => _.isNumber(p);

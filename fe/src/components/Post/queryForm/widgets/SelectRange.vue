@@ -1,6 +1,5 @@
 <template>
-    <select @input="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)" :value="modelValue"
-            class="form-select form-control flex-grow-0">
+    <select v-model="modelValue" class="form-select form-control flex-grow-0">
         <option>&lt;</option>
         <option>=</option>
         <option>&gt;</option>
@@ -10,10 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { emitEventStrValidator } from '@/shared';
-
-withDefaults(defineProps<{ modelValue?: string }>(), { modelValue: '=' });
-defineEmits({ 'update:modelValue': emitEventStrValidator });
+const modelValue = defineModel({ default: '=' });
 </script>
 
 <style scoped>

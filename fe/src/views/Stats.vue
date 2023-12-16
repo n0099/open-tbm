@@ -22,14 +22,15 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <TimeRange v-model:startTime="query.startTime"
                                v-model:endTime="query.endTime"
-                               :timesAgo="{ day: 14 }" />
+                               id="queryTimeRange" :timesAgo="{ day: 14 }" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <TimeGranularity v-model="query.timeGranularity" :granularities="timeGranularities" />
+                    <TimeGranularity v-model="query.timeGranularity" id="queryTimeGranularity"
+                                     :granularities="timeGranularities as Writable<typeof timeGranularities>" />
                 </div>
             </div>
         </div>
@@ -45,6 +46,7 @@ import type { ApiForumList, ApiStatsForumPostCountQueryParam } from '@/api/index
 import { apiForumList, apiStatsForumsPostCount, throwIfApiError } from '@/api';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 import { titleTemplate } from '@/shared';
+import type { Writable } from '@/shared';
 
 import _ from 'lodash';
 import { ref } from 'vue';

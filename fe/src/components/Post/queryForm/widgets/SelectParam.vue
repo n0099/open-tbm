@@ -9,13 +9,7 @@
     </select>
 </template>
 
-<script setup  lang="ts">
-import { emitEventStrValidator } from '@/shared';
-import { ref, watchEffect } from 'vue';
-
-const props = defineProps<{ currentParam: string }>();
-defineEmits({ paramChange: emitEventStrValidator });
-
+<script lang="ts">
 const paramsGroup = {
     帖子ID: {
         tid: 'tid（主题帖ID）',
@@ -50,6 +44,14 @@ const paramsGroup = {
         authorExpGrade: '发帖人经验等级'
     }
 };
+</script>
+
+<script setup  lang="ts">
+import { ref, watchEffect } from 'vue';
+import _ from 'lodash';
+
+const props = defineProps<{ currentParam: string }>();
+defineEmits({ paramChange: p => _.includes(_.flatMap(paramsGroup, Object.keys), p) });
 
 const selected = ref('add');
 watchEffect(() => { selected.value = props.currentParam });

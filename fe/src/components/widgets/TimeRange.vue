@@ -1,6 +1,6 @@
 <template>
     <RangePicker @change="(value, _) => timeRangeChanged(value as [Dayjs, Dayjs])"
-                 :id="id" :value="timeRange" :ranges="{
+                 :value="timeRange" :ranges="{
                      昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
                      今天: [dayjs().startOf('day'), dayjs().endOf('day')],
                      本周: [dayjs().startOf('week'), dayjs().endOf('week')],
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { emitEventNumValidator } from '@/shared';
+import { emitEventWithNumberValidator } from '@/shared';
 import { ref, watchEffect } from 'vue';
 import { RangePicker } from 'ant-design-vue';
 import type { DurationLike } from 'luxon';
@@ -23,19 +23,18 @@ import { DateTime } from 'luxon';
 import type { Dayjs } from 'dayjs';
 import dayjs, { unix } from 'dayjs';
 
+defineOptions({ inheritAttrs: true });
 const props = withDefaults(defineProps<{
-    id?: () => string,
     startTime?: number,
     endTime?: number,
     timesAgo: DurationLike
 }>(), {
-    id: () => 'queryTimeRange',
     startTime: 0,
     endTime: 0
 });
 const emit = defineEmits({
-    'update:startTime': emitEventNumValidator,
-    'update:endTime': emitEventNumValidator
+    'update:startTime': emitEventWithNumberValidator,
+    'update:endTime': emitEventWithNumberValidator
 });
 
 const timeRange = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
