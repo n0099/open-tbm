@@ -48,7 +48,7 @@ import { titleTemplate } from '@/shared';
 
 import _ from 'lodash';
 import { ref } from 'vue';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 import * as echarts from 'echarts/core';

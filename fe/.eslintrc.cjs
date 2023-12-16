@@ -21,7 +21,8 @@ module.exports = {
         settings: {
             'import/resolver': {
                 typescript: true,
-                node: true,
+                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
+                vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
             },
         },
         plugins: ['@stylistic'],
@@ -35,8 +36,8 @@ module.exports = {
             // 'plugin:@typescript-eslint/recommended-requiring-type-checking'
         ],
         rules: {
-            'import/no-unresolved': [2, { ignore: ['\\.(svg|gif|avifs)$'] }],
             'import/no-useless-path-segments': 'error',
+            'import/extensions': ['error', 'always', { ts: 'never' }],
 
             // as of eslint 8.6.0
             'no-await-in-loop': 'error',

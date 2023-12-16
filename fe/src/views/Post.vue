@@ -52,7 +52,7 @@ import { notyShow, titleTemplate } from '@/shared';
 
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 

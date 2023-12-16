@@ -40,7 +40,7 @@ import { titleTemplate } from '@/shared';
 
 import { onMounted, ref, watch } from 'vue';
 import { useIntervalFn } from '@vueuse/core';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Switch } from 'ant-design-vue';
 import _ from 'lodash';

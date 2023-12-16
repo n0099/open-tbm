@@ -71,7 +71,7 @@ import { titleTemplate, toTiebaUserProfileUrl } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
 import { onMounted, ref, watch } from 'vue';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';

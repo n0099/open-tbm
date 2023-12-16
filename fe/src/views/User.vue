@@ -25,7 +25,7 @@ import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setCompon
 import { nextTick, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useHead } from '@vueuse/head';
+import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
 const route = useRoute();
