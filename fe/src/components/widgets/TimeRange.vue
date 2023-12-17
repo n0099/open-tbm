@@ -50,6 +50,7 @@ const initialRangeWithTimesAgo: [Dayjs, Dayjs] = [
     dayjs(DateTime.now().minus(props.timesAgo).startOf('minute').toISO()),
     dayjs(DateTime.now().startOf('minute').toISO())
 ];
+
 // timesAgo will overwrite first assign to timeRange with initial props value
 timeRange.value = initialRangeWithTimesAgo;
 timeRangeChanged(initialRangeWithTimesAgo);

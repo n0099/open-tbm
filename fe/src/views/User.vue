@@ -2,10 +2,10 @@
     <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
     <UsersPage v-for="(users, pageIndex) in userPages"
                :key="`page${users.pages.currentCursor}`"
-               :id="`page${users.pages.currentCursor}`"
                :users="users"
                :isLoadingNewPage="isLoading"
-               :isLastPageInPages="pageIndex === userPages.length - 1" />
+               :isLastPageInPages="pageIndex === userPages.length - 1"
+               :id="`page${users.pages.currentCursor}`" />
     <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
     <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
 </template>
@@ -28,14 +28,14 @@ import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
-const route = useRoute();
-useHead({ title: titleTemplate('用户查询') });
 const props = defineProps<{
     page: string,
     uid: string,
     name: string,
     displayName: string
 }>();
+const route = useRoute();
+useHead({ title: titleTemplate('用户查询') });
 const params = ref<Pick<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
 const selectUserBy = ref<SelectTiebaUserBy>('');
 const userPages = ref<ApiUsersQuery[]>([]);

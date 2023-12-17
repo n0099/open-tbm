@@ -11,9 +11,11 @@ export type BoolInt = 0 | 1;
 
 export type ObjUnknown = Record<string, unknown>;
 export type ObjEmpty = Record<string, never>;
+
 // https://github.com/microsoft/TypeScript/issues/35660
 export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
+
 // https://stackoverflow.com/questions/41285211/overriding-interface-property-type-defined-in-typescript-d-ts-file
 export type Modify<T, R> = Omit<T, keyof R> & R;
 export type ObjValues<T> = T[keyof T];

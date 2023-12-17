@@ -7,7 +7,7 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <TimeRange v-model:startTime="query.startTime"
                                v-model:endTime="query.endTime"
-                               id="queryTimeRange" :timesAgo="{ day: 1 }" />
+                               :timesAgo="{ day: 1 }" id="queryTimeRange" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
@@ -15,8 +15,8 @@
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
                     <TimeGranularity v-model="query.timeGranularity"
-                                     id="queryTimeGranularity"
-                                     :granularities="['minute', 'hour', 'day']" />
+                                     :granularities="['minute', 'hour', 'day']"
+                                     id="queryTimeGranularity" />
                 </div>
             </div>
         </div>
@@ -28,7 +28,7 @@
             <button type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
     </form>
-    <div ref="chartDom" id="statusChartDom" class="echarts mt-4" />
+    <div ref="chartDom" class="echarts mt-4" id="statusChartDom" />
 </template>
 
 <script setup lang="ts">
@@ -191,6 +191,7 @@ const submitQueryForm = async () => {
         .map('id')
         .map((seriesName: keyof ApiStatus[0]) => ({
             id: seriesName,
+
             // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds
             data: statusResult.map(i => [i.startTime * 1000, i[seriesName]])
         }))

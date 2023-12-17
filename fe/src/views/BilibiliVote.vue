@@ -1,5 +1,5 @@
 <template>
-    <div id="bilibiliVote" class="mt-2">
+    <div class="mt-2" id="bilibiliVote">
         <small>本页上所有时间均为UTC+8时间</small>
         <p>有效票定义：</p>
         <ul>
@@ -18,9 +18,9 @@
         <p><a href="https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
         <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
         <hr />
-        <div ref="top50CandidateCountRef" id="top50CandidateCount" class="echarts" />
+        <div ref="top50CandidateCountRef" class="echarts" id="top50CandidateCount" />
         <hr />
-        <div ref="top10CandidatesTimelineRef" id="top10CandidatesTimeline" class="echarts" />
+        <div ref="top10CandidatesTimelineRef" class="echarts" id="top10CandidatesTimeline" />
         <hr />
         <div class="row justify-content-end">
             <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
@@ -28,12 +28,12 @@
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <TimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
-                                     id="top5CandidateCountGroupByTimeGranularity"
-                                     :granularities="['minute', 'hour']" />
+                                     :granularities="['minute', 'hour']"
+                                     id="top5CandidateCountGroupByTimeGranularity" />
                 </div>
             </div>
         </div>
-        <div ref="top5CandidateCountGroupByTimeRef" id="top5CandidateCountGroupByTime" class="echarts" />
+        <div ref="top5CandidateCountGroupByTimeRef" class="echarts" id="top5CandidateCountGroupByTime" />
         <hr />
         <div class="row justify-content-end">
             <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
@@ -41,12 +41,12 @@
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
                     <TimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
-                                     id="allVoteCountGroupByTimeGranularity"
-                                     :granularities="['minute', 'hour']" />
+                                     :granularities="['minute', 'hour']"
+                                     id="allVoteCountGroupByTimeGranularity" />
                 </div>
             </div>
         </div>
-        <div ref="allVoteCountGroupByTimeRef" id="allVoteCountGroupByTime" class="echarts" />
+        <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
         <hr />
         <Table :columns="candidatesDetailColumns"
                :data-source="candidatesDetailData"
@@ -125,6 +125,7 @@ const chartsDom = {
     top5CandidateCountGroupByTime: ref<HTMLElement>(),
     allVoteCountGroupByTime: ref<HTMLElement>()
 };
+
 // template ref
 const {
     top50CandidateCount: top50CandidateCountRef,
@@ -451,6 +452,7 @@ const loadCharts = {
         // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
         const dataset = _.chain(json.top50CandidatesVoteCount)
             .groupBy('voteFor')
+
             // sort grouped candidate by its descending total votes count
             .sortBy(candidate => -_.sumBy(candidate, 'count'))
             .map(candidateVotes => {
@@ -654,6 +656,7 @@ const loadCharts = {
         const allVoteCountGroupByTime = timeGranularity === 'minute'
             ? json.allVoteCountGroupByMinute
             : json.allVoteCountGroupByHour;
+
         // [{ time: '2019-03-11 12:00', validCount: 1, invalidCount: 0 }, ... ]
         const dataset = _.chain(allVoteCountGroupByTime)
             .groupBy('time')

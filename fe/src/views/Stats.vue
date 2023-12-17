@@ -5,7 +5,7 @@
             <div class="col-3">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
-                    <select v-model.number="query.fid" id="queryFid" class="form-control">
+                    <select v-model.number="query.fid" class="form-control" id="queryFid">
                         <option disabled value="0">请选择</option>
                         <option v-for="forum in forumList"
                                 :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
@@ -22,20 +22,21 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <TimeRange v-model:startTime="query.startTime"
                                v-model:endTime="query.endTime"
-                               id="queryTimeRange" :timesAgo="{ day: 14 }" />
+                               :timesAgo="{ day: 14 }" id="queryTimeRange" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
-                    <TimeGranularity v-model="query.timeGranularity" id="queryTimeGranularity"
-                                     :granularities="timeGranularities as Writable<typeof timeGranularities>" />
+                    <TimeGranularity v-model="query.timeGranularity"
+                                     :granularities="timeGranularities as Writable<typeof timeGranularities>"
+                                     id="queryTimeGranularity" />
                 </div>
             </div>
         </div>
     </form>
-    <div ref="chartDom" id="statsChartDom" class="echarts mt-4" />
+    <div ref="chartDom" class="echarts mt-4" id="statsChartDom" />
 </template>
 
 <script setup lang="ts">

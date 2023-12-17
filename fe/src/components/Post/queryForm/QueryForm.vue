@@ -5,8 +5,8 @@
             <div class="col-3">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
-                    <select v-model.number="uniqueParams.fid.value" id="paramFid"
-                            :class="{ 'is-invalid': isFidInvalid }" class="form-select form-control">
+                    <select v-model.number="uniqueParams.fid.value" :class="{ 'is-invalid': isFidInvalid }"
+                            class="form-select form-control" id="paramFid">
                         <option value="0">未指定</option>
                         <option v-for="forum in forumList"
                                 :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
@@ -17,18 +17,18 @@
             <div class="col my-auto">
                 <div class="input-group">
                     <div class="form-check form-check-inline">
-                        <input v-model="uniqueParams.postTypes.value" id="paramPostTypesThread"
-                               type="checkbox" value="thread" class="form-check-input" />
+                        <input v-model="uniqueParams.postTypes.value" type="checkbox"
+                               value="thread" class="form-check-input" id="paramPostTypesThread" />
                         <label class="form-check-label" for="paramPostTypesThread">主题帖</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input v-model="uniqueParams.postTypes.value" id="paramPostTypesReply"
-                               type="checkbox" value="reply" class="form-check-input" />
+                        <input v-model="uniqueParams.postTypes.value" type="checkbox"
+                               value="reply" class="form-check-input" id="paramPostTypesReply" />
                         <label class="form-check-label" for="paramPostTypesReply">回复帖</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input v-model="uniqueParams.postTypes.value" id="paramPostTypesSubReply"
-                               type="checkbox" value="subReply" class="form-check-input" />
+                        <input v-model="uniqueParams.postTypes.value" type="checkbox"
+                               value="subReply" class="form-check-input" id="paramPostTypesSubReply" />
                         <label class="form-check-label" for="paramPostTypesSubReply">楼中楼</label>
                     </div>
                 </div>
@@ -36,7 +36,7 @@
         </div>
         <div class="row mt-2 mb-3">
             <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
-            <div id="paramOrder" class="col-8">
+            <div class="col-8" id="paramOrder">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="sort-amount-down" /></span>
                     <select v-model="uniqueParams.orderBy.value"
@@ -69,8 +69,8 @@
                              }" />
                 <div class="param-input-group-text input-group-text">
                     <div class="form-check">
-                        <input v-model="p.subParam.not" :id="`param${_.upperFirst(p.name)}Not-${pI}`"
-                               type="checkbox" value="good" class="form-check-input" />
+                        <input v-model="p.subParam.not" type="checkbox" value="good" class="form-check-input"
+                               :id="`param${_.upperFirst(p.name)}Not-${pI}`" />
                         <label :for="`param${_.upperFirst(p.name)}Not-${pI}`"
                                class="text-secondary fw-bold form-check-label">非</label>
                     </div>
@@ -102,16 +102,16 @@
                 <div v-if="p.name === 'threadProperties'">
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
-                            <input v-model="p.value" :id="`paramThreadPropertiesGood-${pI}`"
-                                   type="checkbox" value="good" class="form-check-input" />
+                            <input v-model="p.value" type="checkbox" value="good" class="form-check-input"
+                                   :id="`paramThreadPropertiesGood-${pI}`" />
                             <label :for="`paramThreadPropertiesGood-${pI}`"
                                    class="text-danger fw-normal form-check-label">精品</label>
                         </div>
                     </div>
                     <div class="param-input-group-text input-group-text">
                         <div class="form-check">
-                            <input v-model="p.value" :id="`paramThreadPropertiesSticky-${pI}`"
-                                   type="checkbox" value="sticky" class="form-check-input" />
+                            <input v-model="p.value" type="checkbox" value="sticky" class="form-check-input"
+                                   :id="`paramThreadPropertiesSticky-${pI}`" />
                             <label :for="`paramThreadPropertiesSticky-${pI}`"
                                    class="text-primary fw-normal form-check-label">置顶</label>
                         </div>
@@ -182,11 +182,11 @@ import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
-const router = useRouter();
 defineProps<{
     isLoading: boolean,
     forumList: ApiForumList
 }>();
+const router = useRouter();
 const {
     uniqueParams,
     params,
@@ -235,10 +235,13 @@ const getCurrentQueryType = () => {
             return 'fid';
         }
     }
+
     // is there no other params except post id params
     if (_.isEmpty(_.reject(clearedParams, isPostIDParam))
+
         // is there only one post id param
         && _.filter(clearedParams, isPostIDParam).length === 1
+
         // is all post ID params doesn't own any sub param
         && _.chain(clearedParams).map('subParam').filter().isEmpty().value())
         return 'postID';
@@ -357,6 +360,7 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
     params.value = [];
     const routeName = removeEnd(route.name, routeNameSuffix.page);
+
     // parse route path to params
     if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
         parseParamRoute(route.params.pathMatch); // omit the page param from route full path

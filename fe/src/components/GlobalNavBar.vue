@@ -1,12 +1,12 @@
 <template>
     <nav class="navbar navbar-expand-lg shadow-sm bg-light">
-        <div id="nav" class="container-fluid">
+        <div class="container-fluid" id="nav">
             <RouterLink to="/" class="navbar-brand">open-tbm @ {{ envInstanceName }}</RouterLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                     aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon" />
             </button>
-            <div id="navbar" class="navbar-collapse collapse">
+            <div class="navbar-collapse collapse" id="navbar">
                 <ul class="navbar-nav">
                     <template v-for="(nav, _k) in navs" :key="_k">
                         <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">

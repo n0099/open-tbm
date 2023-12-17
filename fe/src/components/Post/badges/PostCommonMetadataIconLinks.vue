@@ -1,5 +1,7 @@
 <template>
-    <a :href="tiebaPostLink(post.tid, postTypeID === 'tid' ? undefined : postIDSelector())"
+    <a :href="tiebaPostLink(post.tid, postTypeID === 'tid'
+           ? undefined
+           : postIDSelector())"
        target="_blank" class="badge bg-light rounded-pill link-dark">
         <FontAwesomeIcon icon="link" size="lg" class="align-bottom" />
     </a>

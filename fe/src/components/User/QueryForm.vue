@@ -3,7 +3,7 @@
         <SelectTiebaUser v-model="selectUser" />
         <label class="col-2 col-form-label text-end" for="queryGender">性别</label>
         <div class="col-3">
-            <select v-model="gender" id="queryGender" class="form-select">
+            <select v-model="gender" class="form-select" id="queryGender">
                 <option value="default">不限</option>
                 <option value="NULL">NULL</option>
                 <option value="0">未指定（显示为男）</option>
@@ -29,7 +29,6 @@ import _ from 'lodash';
 type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>>
     & { gender?: TiebaUserGenderQueryParam };
 
-const router = useRouter();
 const props = defineProps<{
     query: RouteQueryString,
     params: {
@@ -39,6 +38,7 @@ const props = defineProps<{
     },
     selectUserBy: SelectTiebaUserBy
 }>();
+const router = useRouter();
 const gender = ref<TiebaUserGenderQueryParam | 'default'>('default');
 const selectUser = ref<SelectTiebaUserModel>({ selectBy: '', params: {} });
 

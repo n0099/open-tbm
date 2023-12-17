@@ -22,8 +22,8 @@
                 <input v-model="params.name" type="text" aria-label="用户名" class="form-control" required />
                 <div class="input-group-text">
                     <div class="form-check">
-                        <input v-model="params.nameUseRegex" id="selectUserNameUseRegex"
-                               type="checkbox" class="form-check-input" />
+                        <input v-model="params.nameUseRegex" type="checkbox"
+                               class="form-check-input" id="selectUserNameUseRegex" />
                         <label class="form-check-label" for="selectUserNameUseRegex">正则</label>
                     </div>
                 </div>
@@ -32,8 +32,8 @@
                 <input v-model="params.displayName" type="text" aria-label="覆盖名" class="form-control" required />
                 <div class="input-group-text">
                     <div class="form-check">
-                        <input v-model="params.displayNameUseRegex" id="selectUserDisplayNameUseRegex"
-                               type="checkbox" class="form-check-input" />
+                        <input v-model="params.displayNameUseRegex" type="checkbox"
+                               class="form-check-input" id="selectUserDisplayNameUseRegex" />
                         <label class="form-check-label" for="selectUserDisplayNameUseRegex">正则</label>
                     </div>
                 </div>
@@ -60,6 +60,7 @@ type SelectTiebaUserParamsValues = ObjValues<SelectTiebaUserParams>;
 const selectTiebaUserParamsNames = [
     'uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'
 ] as const;
+
 // widen type Record<string, SelectTiebaUserParamsValues> for compatible with props.paramsNameMap
 export interface SelectTiebaUserModel {
     selectBy: SelectTiebaUserBy,
@@ -99,8 +100,10 @@ watch(() => props.modelValue, () => {
         emitModelChange();
     else
         ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
+
     // filter out unnecessary and undefined params
     params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), _.isUndefined);
+
     // reset to default selectBy if it's a invalid value
     if (!selectTiebaUserBy.includes(selectBy.value))
         selectBy.value = '';

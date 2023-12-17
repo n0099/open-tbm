@@ -1,7 +1,7 @@
 <template>
     <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
         <div v-for="thread in posts.threads" :key="thread.tid"
-             :id="`t${thread.tid}`" :data-post-id="thread.tid" class="mt-3 card">
+             :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
             <div class="thread-title shadow-sm card-header sticky-top">
                 <div class="row justify-content-between">
                     <div class="col-auto">
@@ -70,7 +70,7 @@
                     </div>
                 </div>
             </div>
-            <div v-for="reply in thread.replies" :key="reply.pid" :id="String(reply.pid)" :data-post-id="reply.pid">
+            <div v-for="reply in thread.replies" :key="reply.pid" :data-post-id="reply.pid" :id="reply.pid">
                 <div class="reply-title sticky-top card-header">
                     <div class="d-inline-flex gap-1 h5">
                         <span class="badge bg-secondary">{{ reply.floor }}楼</span>
@@ -128,7 +128,7 @@
                                             </RouterLink>
                                             <div class="float-end badge bg-light">
                                                 <div class="d-inline"
-                                                     :class="{ 'invisible': hoveringSubReplyID !== subReply.spid }">
+                                                     :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
                                                     <PostCommonMetadataIconLinks :post="subReply"
                                                                                  postTypeID="spid"
                                                                                  :postIDSelector="() => subReply.spid" />
@@ -199,6 +199,7 @@ const posts = computed(() => {
                         return [subReply]; // useless guard since subReply will never be an array
                     // group sub replies item by continuous and same post author
                     const previousSubReply = subReplies[index - 1] as SubReply | undefined;
+
                     // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
                         && subReply.authorUid === previousSubReply.authorUid)

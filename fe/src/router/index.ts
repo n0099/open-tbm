@@ -24,6 +24,7 @@ export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteL
 export const routeNameSuffix = { page: '+p', cursor: '+c' } as const;
 export const routeNameWithCursor = (name: string) =>
     (_.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`);
+
 // https://github.com/vuejs/vue-router-next/issues/1184
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => String(r.params.cursor ?? '');
@@ -133,6 +134,7 @@ export default createRouter({
         if (from.name !== undefined) { // from.name will be undefined when user refresh page
             assertRouteNameIsStr(to.name);
             assertRouteNameIsStr(from.name);
+
             // scroll to top when the prefix of route name changed
             if (to.name.split('/')[0] !== from.name.split('/')[0])
                 return { top: 0 };

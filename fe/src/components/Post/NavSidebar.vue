@@ -49,9 +49,9 @@ import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interfac
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';
 
+const props = defineProps<{ postPages: ApiPostsQuery[] }>();
 const route = useRoute();
 const router = useRouter();
-const props = defineProps<{ postPages: ApiPostsQuery[] }>();
 const expandedPages = ref<string[]>([]);
 const selectedThread = ref<string[]>([]);
 const firstPostInViewDefault = { cursor: '', tid: 0, pid: 0 };
@@ -77,6 +77,7 @@ const scrollStop = _.debounce(() => {
     const reduceFindTopmostElementInView = (topOffset: number) =>
         (result: { top: number, el: Element }, curEl: Element) => {
             const elTop = curEl.getBoundingClientRect().top - topOffset;
+
             // ignore element which its y coord is ahead of the top of viewport
             if (elTop >= 0 && result.top > elTop)
                 return { top: elTop, el: curEl };
@@ -90,11 +91,13 @@ const scrollStop = _.debounce(() => {
 
     const currentFirstPostInView = {
         t: findFirstDomInView('.thread-title'),
+
         // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
         p: findFirstDomInView('.reply-title', 80)
     };
     const firstPostIDInView = _.mapValues(currentFirstPostInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
+
     // when there's no thread or reply item in the viewport
     // currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
@@ -113,6 +116,7 @@ const scrollStop = _.debounce(() => {
             ? { hash, name: removeEnd(route.name, routeNameSuffix.cursor), params: _.omit(route.params, 'cursor') }
             : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } });
     };
+
     // is the first reply belonged to the first thread, true when the first thread has no reply,
     // the first reply will belong to another thread that comes after the first thread in view
     if (_.chain(props.postPages)
@@ -149,9 +153,10 @@ watchEffect(() => {
         isScrollTriggeredByNavigate = false;
         return;
     }
+
     // scroll menu to the link to reply in <ViewList>
     // which is the topmost one in the viewport (nearest to top border of viewport)
-    const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`) as HTMLElement | null;
+    const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`);
     const navMenuEl = replyEl?.closest('.posts-nav');
     if (replyEl !== null && navMenuEl
         && navMenuEl.getBoundingClientRect().top === 0) // is navMenuEl sticking to the top border of viewport

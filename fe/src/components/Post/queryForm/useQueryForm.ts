@@ -21,6 +21,7 @@ export default <
     type UniqueParam = ObjValues<UniqueParams>;
     type Param = ObjValues<Params>;
     const router = useRouter();
+
     // [{ name: '', value: '', subParam: { name: value } },...]
     const uniqueParams = ref<UniqueParams>({} as UniqueParams) as Ref<UniqueParams>;
     const params = ref<Param[]>([]) as Ref<Param[]>;
@@ -49,6 +50,7 @@ export default <
     };
     const deleteParam = (paramIndex: number) => {
         _.pull(invalidParamsIndex.value, paramIndex);
+
         // move forward index of all params, which after current
         invalidParamsIndex.value = invalidParamsIndex.value.map(invalidParamIndex =>
             (invalidParamIndex > paramIndex ? invalidParamIndex - 1 : invalidParamIndex));
@@ -58,6 +60,7 @@ export default <
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
             throw Error(`Param ${param.name} not found in paramsDefaultValue`);
+
         // remove subParam.not: false, which previously added by fillParamDefaultValue()
         if (defaultParam.subParam !== undefined)
             defaultParam.subParam.not ??= false;
@@ -65,6 +68,7 @@ export default <
         // number will consider as empty in isEmpty(), to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
             || (_.isArray(newParam.value) && _.isArray(defaultParam.value)
+
                 // sort array type param value for comparing
                 ? _.isEqual(_.sortBy(newParam.value), _.sortBy(defaultParam.value))
                 : newParam.value === defaultParam.value))
@@ -73,6 +77,7 @@ export default <
         _.each(defaultParam.subParam, (value, name) => {
             if (newParam.subParam === undefined)
                 return;
+
             // undefined means this sub param must get deleted and merge into parent, as part of the parent param value
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             if (newParam.subParam[name] === value || value === undefined)
@@ -85,9 +90,11 @@ export default <
         return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam; // return null for further filter()
     };
     const clearedParamsDefaultValue = (): Array<Partial<Param>> =>
+
         // filter() will remove falsy values like null
         _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<Param>>;
     const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
+
         // mapValues() return object which remains keys, pickBy() like filter() for objects
         _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;
     const removeUndefinedFromPartialObjectValues = <T extends Partial<T>, R>(object: Partial<T>) =>
@@ -147,7 +154,7 @@ export default <
                 if (isUniqueParam(param)) { // is unique param
                     uniqueParams.value[param.name as keyof UniqueParams] = param;
                 } else {
-                    params.value.push(param as Param);
+                    params.value.push(param);
                 }
             })
             .value();
