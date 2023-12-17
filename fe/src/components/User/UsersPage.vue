@@ -1,6 +1,6 @@
 <template>
     <div>
-        <PageCurrentButton :page="users.pages" :pageRoutes="pageRoutes" />
+        <PageCurrentButton :currentCursor="users.pages.currentCursor" />
         <div v-for="(user, userIndex) in users.users" :key="user.uid" :id="String(user.uid)" class="row">
             <div class="col-3">
                 <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
@@ -15,7 +15,7 @@
             </div>
             <div v-if="userIndex !== users.users.length - 1" class="w-100"><hr /></div>
         </div>
-        <PageNextButton v-if="!isLoadingNewPage && isLastPageInPages" :pageRoutes="pageRoutes" />
+        <PageNextButton v-if="!isLoadingNewPage && isLastPageInPages" :nextCursorRoute="nextCursorRoute" />
     </div>
 </template>
 
@@ -32,7 +32,7 @@ const props = defineProps<{
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const pageRoutes = useNextCursorRoute(props.users.pages.currentPage);
+const nextCursorRoute = useNextCursorRoute(props.users.pages.currentCursor);
 
 const userGender = (gender: TiebaUserGender) => {
     const gendersList = {

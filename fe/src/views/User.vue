@@ -1,8 +1,8 @@
 <template>
     <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
     <UsersPage v-for="(users, pageIndex) in userPages"
-               :key="`page${users.pages.currentPage}`"
-               :id="`page${users.pages.currentPage}`"
+               :key="`page${users.pages.currentCursor}`"
+               :id="`page${users.pages.currentCursor}`"
                :users="users"
                :isLoadingNewPage="isLoading"
                :isLastPageInPages="pageIndex === userPages.length - 1" />
@@ -66,10 +66,10 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
     if (isNewQuery)
         userPages.value = [usersQuery];
     else
-        userPages.value = _.sortBy([...userPages.value, usersQuery], i => i.pages.currentPage);
+        userPages.value = _.sortBy([...userPages.value, usersQuery], i => i.pages.currentCursor);
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
-    notyShow('success', `已加载第${usersQuery.pages.currentPage}页 ${usersQuery.pages.itemCount}条记录`
+    notyShow('success', `已加载第${usersQuery.pages.currentCursor}页`
         + ` 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
     return true;
 };
@@ -86,7 +86,7 @@ onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);
     if (!(isNewQuery || _.isEmpty(_.filter(
         userPages.value,
-        i => i.pages.currentPage === getRouteCursorParam(to)
+        i => i.pages.currentCursor === getRouteCursorParam(to)
     ))))
         return true;
     const isFetchSuccess = await fetchUsersData(to, isNewQuery);

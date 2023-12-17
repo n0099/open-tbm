@@ -14,9 +14,11 @@ module.exports = {
     }, {
         files: '*',
         excludedFiles: '.eslintrc.cjs',
+        parser: 'vue-eslint-parser',
         parserOptions: {
             parser: '@typescript-eslint/parser',
             project: ['./tsconfig.json', './tsconfig.node.json'],
+            tsconfigRootDir: __dirname,
         },
         settings: {
             'import/resolver': {
@@ -30,22 +32,20 @@ module.exports = {
             'eslint:recommended',
             'plugin:vue/vue3-recommended',
             '@vue/typescript/recommended',
+            'plugin:@typescript-eslint/strict-type-checked',
+            'plugin:@typescript-eslint/stylistic-type-checked',
             'plugin:import/recommended',
             'plugin:import/typescript',
-            // https://github.com/vuejs/eslint-config-typescript/issues/29
-            // 'plugin:@typescript-eslint/recommended-requiring-type-checking'
         ],
         rules: {
             'import/no-useless-path-segments': 'error',
             'import/extensions': ['error', 'always', { ts: 'never' }],
 
-            // as of eslint 8.6.0
+            // as of eslint@8.56.0
             'no-await-in-loop': 'error',
             'no-promise-executor-return': 'error',
             'no-template-curly-in-string': 'error',
             'no-unreachable-loop': 'error',
-            'no-unsafe-optional-chaining': 'error',
-            'no-useless-backreference': 'error',
             'require-atomic-updates': 'error',
             'accessor-pairs': 'error',
             'array-callback-return': 'error',
@@ -75,7 +75,6 @@ module.exports = {
             'no-new': 'error',
             'no-new-func': 'error',
             'no-new-wrappers': 'error',
-            'no-nonoctal-decimal-escape': 'error',
             'no-octal-escape': 'error',
             'no-param-reassign': 'error',
             'no-proto': 'error',
@@ -131,7 +130,7 @@ module.exports = {
             '@stylistic/no-multiple-empty-lines': 'error',
             'no-negated-condition': 'error',
             'no-nested-ternary': 'error',
-            'no-new-object': 'error',
+            'no-object-constructor': 'error',
             '@stylistic/no-tabs': 'error',
             '@stylistic/no-trailing-spaces': 'error',
             'no-unneeded-ternary': 'error',
@@ -183,7 +182,6 @@ module.exports = {
             'object-shorthand': 'error',
             'prefer-arrow-callback': 'error',
             'prefer-const': 'error',
-            'prefer-destructuring': 'error',
             'prefer-numeric-literals': 'error',
             'prefer-rest-params': 'error',
             'prefer-spread': 'error',
@@ -194,9 +192,21 @@ module.exports = {
             '@stylistic/template-curly-spacing': 'error',
             '@stylistic/yield-star-spacing': 'error',
             'prefer-object-has-own': 'error',
+            'no-constant-binary-expression': 'error',
+            'logical-assignment-operators': ['error', 'always', { enforceForIfStatements: true }],
+            'no-empty-static-block': 'error',
+            'no-new-native-nonconstructor': 'error',
+            '@stylistic/lines-around-comment': ['error', {
+                beforeBlockComment: true,
+                beforeLineComment: true,
+                allowBlockStart: true,
+                allowObjectStart: true,
+                allowArrayStart: true,
+                allowClassStart: true,
+            }],
 
-            // as of @typescript-eslint 5.9.0
-            '@typescript-eslint/no-empty-function': 'off',
+            // as of @typescript-eslint@6.14.0
+            '@typescript-eslint/no-empty-function': 'error',
 
             'no-void': 'off',
             '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
@@ -254,6 +264,10 @@ module.exports = {
             'require-await': 'off',
             '@typescript-eslint/require-await': 'error',
             '@stylistic/padding-line-between-statements': ['error'],
+            'class-methods-use-this': 'off',
+            '@typescript-eslint/class-methods-use-this': 'error',
+            'prefer-destructuring': 'off',
+            '@typescript-eslint/prefer-destructuring': 'error',
 
             '@typescript-eslint/array-type': ['error', {
                 default: 'array-simple',
@@ -341,16 +355,33 @@ module.exports = {
             '@typescript-eslint/prefer-return-this-type': 'error',
             '@typescript-eslint/no-non-null-asserted-nullish-coalescing': 'error',
             '@typescript-eslint/consistent-type-exports': 'error',
+            '@typescript-eslint/no-useless-empty-export': 'error',
+            '@typescript-eslint/no-redundant-type-constituents': 'error',
+            '@typescript-eslint/no-import-type-side-effects': 'error',
+            '@typescript-eslint/no-mixed-enums': 'error',
+            '@typescript-eslint/no-duplicate-type-constituents': ['error', { ignoreUnions: true }],
+            '@typescript-eslint/no-unsafe-enum-comparison': 'error',
+            '@typescript-eslint/no-unsafe-unary-minus': 'error',
 
-            // as of eslint-plugin-vue 8.2.0
+            // as of eslint-plugin-vue@9.19.2
             'vue/html-indent': ['error', 4],
             'vue/max-attributes-per-line': 'off',
             'vue/no-reserved-component-names': 'off', // for component in antdv
             'vue/attribute-hyphenation': ['error', 'never'],
             'vue/singleline-html-element-content-newline': 'off',
-            'vue/attributes-order': ['error', {
-                order: ['DEFINITION', ['LIST_RENDERING', 'UNIQUE'], 'CONDITIONALS', 'TWO_WAY_BINDING', 'RENDER_MODIFIERS', 'SLOT', 'EVENTS', 'OTHER_DIRECTIVES', 'GLOBAL', 'OTHER_ATTR', 'CONTENT'],
-            }],
+            'vue/attributes-order': ['error', { order: [
+                'DEFINITION',
+                ['LIST_RENDERING', 'UNIQUE'],
+                'CONDITIONALS',
+                'RENDER_MODIFIERS',
+                'TWO_WAY_BINDING',
+                'EVENTS',
+                'SLOT',
+                'OTHER_DIRECTIVES',
+                'OTHER_ATTR',
+                'GLOBAL',
+                'CONTENT',
+            ] }],
             'vue/multi-word-component-names': 'off',
             'vue/first-attribute-linebreak': ['error', {
                 singleline: 'beside',
@@ -372,10 +403,8 @@ module.exports = {
             'vue/custom-event-name-casing': ['error', 'camelCase'],
             'vue/html-comment-content-spacing': 'error',
             'vue/html-comment-indent': ['error', 4],
-            'vue/no-child-content': 'error',
             'vue/no-duplicate-attr-inheritance': 'error',
             'vue/no-empty-component-block': 'error',
-            'vue/no-expose-after-await': 'error',
             'vue/no-invalid-model-keys': 'error',
             'vue/no-multiple-objects-in-class': 'error',
             'vue/no-undef-components': 'error',
@@ -389,7 +418,6 @@ module.exports = {
             // 'vue/require-expose': 'error',
             // 'vue/static-class-names-order': 'error',
             'vue/v-for-delimiter-style': 'error',
-            'vue/v-on-function-call': 'error',
             'vue/array-bracket-newline': ['error', 'consistent'],
             'vue/array-bracket-spacing': 'error',
             'vue/arrow-spacing': 'error',
@@ -433,6 +461,33 @@ module.exports = {
                 nonwords: false,
             }],
             'vue/template-curly-spacing': 'error',
+            'vue/quote-props': ['error', 'as-needed'],
+            'vue/object-shorthand': 'error',
+            'vue/prefer-true-attribute-shorthand': 'error',
+            'vue/prefer-prop-type-boolean-first': 'error',
+            'vue/define-macros-order': ['error', { order: [
+                'defineOptions',
+                'defineProps',
+                'defineEmits',
+                // 'defineModel', https://github.com/vuejs/eslint-plugin-vue/issues/2130
+                'defineSlots',
+            ] }],
+            'vue/match-component-import-name': 'error',
+            'vue/define-props-declaration': 'error',
+            'vue/define-emits-declaration': 'error',
+            'vue/no-required-prop-with-default': 'error',
+            'vue/v-on-handler-style': ['error', ['method', 'inline']],
+            'vue/multiline-ternary': 'error',
+            'vue/array-element-newline': ['error', 'consistent'],
+            'vue/prefer-define-options': 'error',
+            'vue/valid-define-options': 'error',
+            'vue/require-macro-variable-name': 'error',
+            'vue/require-typed-ref': 'error',
+            'vue/no-deprecated-model-definition': 'error',
+            'vue/require-typed-object-prop': 'error',
+            'vue/no-use-v-else-with-v-for': 'error',
+            'vue/no-unused-emit-declarations': 'error',
+            'vue/no-ref-object-reactivity-loss': 'error',
         },
     }],
 };

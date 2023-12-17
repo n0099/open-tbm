@@ -41,10 +41,9 @@ export interface ApiStatsForumPostCountQueryParam {
     endTime: UnixTimestamp
 }
 
-export type Pagination = { [P in 'currentPage' | 'firstItem' | 'itemCount']: UInt };
 interface ApiQueryParamPagination { page?: UInt }
 export interface ApiUsersQuery {
-    pages: Pagination,
+    pages: CursorPagination,
     users: TiebaUser[]
 }
 export type ApiUsersQueryQueryParam
