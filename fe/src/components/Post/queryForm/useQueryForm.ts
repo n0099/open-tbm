@@ -159,7 +159,7 @@ export default <
             })
             .value();
     };
-    const submitParamRoute = (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<Param>>) => {
+    const submitParamRoute = async (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<Param>>) => {
         const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
         const subParamValue = (subParam?: UnknownParam['subParam']) =>
             _.map(subParam, (value, name) => `;${name}:${escapeParamValue(value)}`).join('');
@@ -167,9 +167,10 @@ export default <
             ...removeUndefinedFromPartialObjectValues<UniqueParams, UniqueParam>(filteredUniqueParams),
             ...filteredParams
         ];
-        void router.push({
+        return router.push({
             path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
-                .map(param => `${param.name}:${paramValue(param.value)}${subParamValue(param.subParam)}`)
+                .map(param =>
+                    `${param.name}:${paramValue(param.value)}${subParamValue(param.subParam)}`)
                 .join('/')}`
         });
     };

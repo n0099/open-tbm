@@ -259,7 +259,7 @@ const currentQueryTypeDesc = computed(() => {
     return '空查询';
 });
 
-const submitRoute = () => { // decide that route to go
+const submitRoute = async () => { // decide that route to go
     const clearedParams = clearedParamsDefaultValue();
     const clearedUniqueParams = clearedUniqueParamsDefaultValue();
     if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
@@ -268,24 +268,26 @@ const submitRoute = () => { // decide that route to go
             if (_.isEmpty(_.reject(clearedParams, p => p.name === postIDName)) // is there no other params
                 && postIDParam.length === 1 // is there only one post id param
                 && postIDParam[0]?.subParam === undefined) { // is range subParam not set
-                router.push({ name: `post/${postIDName}`, params: { [postIDName]: String(postIDParam[0].value) } });
-                return; // exit early to prevent pushing other route
+                // exit early to prevent pushing other route
+                return router.push({
+                    name: `post/${postIDName}`,
+                    params: { [postIDName]: String(postIDParam[0].value) }
+                });
             }
         }
     }
     if (clearedUniqueParams.fid !== undefined
         && _.isEmpty(clearedParams)
         && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
-        router.push({ name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } });
-        return;
+        return router.push({ name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } });
     }
-    submitParamRoute(clearedUniqueParams, clearedParams); // param route
+    return submitParamRoute(clearedUniqueParams, clearedParams); // param route
 };
-const queryFormSubmit = () => {
-    isRouteUpdateTriggeredBySubmitQueryForm.value = true;
-    submitRoute();
+const queryFormSubmit = async () => {
+    if (!await submitRoute())
+        isRouteUpdateTriggeredBySubmitQueryForm.value = true;
 };
-const checkParams = () => {
+const checkParams = async (): Promise<boolean> => {
     // check query type
     isFidInvalid.value = false;
     const clearedUniqueParams = clearedUniqueParamsDefaultValue();
@@ -298,7 +300,7 @@ const checkParams = () => {
             if (clearedUniqueParams.fid !== undefined) {
                 uniqueParams.value.fid.value = 0; // reset fid to default,
                 notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
-                submitRoute(); // update route to match new params without fid
+                await submitRoute(); // update route to match new params without fid
             }
             break;
         case 'search':
@@ -374,9 +376,9 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     }
 };
 const parseRouteToGetFlattenParams
-    = (route: RouteLocationNormalizedLoaded): ReturnType<typeof flattenParams> | false => {
+    = async (route: RouteLocationNormalizedLoaded): Promise<ReturnType<typeof flattenParams> | false> => {
         parseRoute(route);
-        if (checkParams())
+        if (await checkParams())
             return flattenParams();
         return false;
     };

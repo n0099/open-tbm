@@ -55,12 +55,10 @@ const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) =
     });
     return params;
 };
-const submitQueryForm = () => {
-    /* eslint-disable @typescript-eslint/no-unsafe-argument */
+const submitQueryForm = async () => {
     const params = boolPropToStr<LocationQueryValueRaw>(selectUser.value.params);
     const routeName = removeEnd(selectUser.value.selectBy, 'NULL');
-    /* eslint-enable @typescript-eslint/no-unsafe-argument */
-    router.push({
+    return router.push({
         name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
         query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: gender.value }),
         params: _.pick(params, selectTiebaUserBy)

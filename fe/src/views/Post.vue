@@ -118,7 +118,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
 const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
     if (queryFormRef.value === undefined)
         return false;
-    const flattenParams = queryFormRef.value.parseRouteToGetFlattenParams(_route);
+    const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(_route);
     if (flattenParams === false)
         return false;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

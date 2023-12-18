@@ -38,7 +38,7 @@ import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './views/ViewList.vu
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
-import type { Pid, Tid } from '@/shared';
+import type { Pid, Tid, ToPromise } from '@/shared';
 import { removeEnd } from '@/shared';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
@@ -59,17 +59,17 @@ const firstPostInView = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(firstPostInV
 const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
 
 let isScrollTriggeredByNavigate = false;
-const navigate = (cursor: Cursor, tid: string | null, pid?: Pid | string) => {
-    router.replace({
+const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) => {
+    if (!await router.replace({
         hash: `#${pid ?? (tid === null ? '' : `t${tid}`)}`,
         params: { ...route.params, cursor }
-    });
-    isScrollTriggeredByNavigate = true;
+    }))
+        isScrollTriggeredByNavigate = true;
 };
-const selectThread: MenuClickEventHandler = ({ domEvent, key }) => {
+const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if ((domEvent.target as Element).tagName !== 'BUTTON') { // ignore clicks on reply link
         const [, p, t] = /page(\d+)-t(\d+)/u.exec(String(key)) ?? [];
-        navigate(p, t);
+        await navigate(p, t);
     }
 };
 
@@ -102,19 +102,23 @@ const scrollStop = _.debounce(() => {
     // currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
         firstPostInView.value = firstPostInViewDefault;
-        router.replace({ hash: '' }); // empty route hash
-        isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
+        void router.replace({ hash: '' }) // empty route hash
+            .then(failed => {
+                if (!failed)
+                    isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
+            });
         return;
     }
     const firstPostCursorInView = _.mapValues(currentFirstPostInView,
         i => i.closest('.post-render-list')?.getAttribute('data-cursor') ?? '');
 
-    const replaceRouteHash = (cursor: Cursor, postID: Pid | Tid, hashPrefix = '') => {
+    const replaceRouteHash = async (cursor: Cursor, postID: Pid | Tid, hashPrefix = '') => {
         assertRouteNameIsStr(route.name);
         const hash = `#${hashPrefix}${postID}`;
-        router.replace(cursor === '' // to prevent '/page/1' occurs in route path
+        if (!await router.replace(cursor === '' // to prevent '/page/1' occurs in route path
             ? { hash, name: removeEnd(route.name, routeNameSuffix.cursor), params: _.omit(route.params, 'cursor') }
-            : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } });
+            : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } }))
+            isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
     };
 
     // is the first reply belonged to the first thread, true when the first thread has no reply,
@@ -129,12 +133,11 @@ const scrollStop = _.debounce(() => {
         .isEmpty()
         .value()) {
         firstPostInView.value = { tid: firstPostIDInView.t, pid: 0, cursor: firstPostCursorInView.t };
-        replaceRouteHash(firstPostCursorInView.t, firstPostIDInView.t, 't');
+        void replaceRouteHash(firstPostCursorInView.t, firstPostIDInView.t, 't');
     } else {
         firstPostInView.value = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, cursor: firstPostCursorInView.p };
-        replaceRouteHash(firstPostCursorInView.p, firstPostIDInView.p);
+        void replaceRouteHash(firstPostCursorInView.p, firstPostIDInView.p);
     }
-    isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
 }, 200);
 const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
 onUnmounted(removeScrollEventListener);

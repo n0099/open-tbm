@@ -19,6 +19,7 @@ export type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> };
 // https://stackoverflow.com/questions/41285211/overriding-interface-property-type-defined-in-typescript-d-ts-file
 export type Modify<T, R> = Omit<T, keyof R> & R;
 export type ObjValues<T> = T[keyof T];
+export type ToPromise<T> = T extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : never;
 
 export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type PostType = 'reply' | 'subReply' | 'thread';
