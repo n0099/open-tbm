@@ -38,7 +38,7 @@ export default <
             defaultParam.subParam.not = false; // add subParam.not on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
         if (resetToDefault)
-            return _.defaultsDeep(defaultParam, param);
+            return _.defaultsDeep(defaultParam, param) as T;
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
     };
     const addParam = (name: string) => {

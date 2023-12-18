@@ -20,6 +20,7 @@ nprogress.configure({ trickleSpeed: 200 });
 if (import.meta.env.DEV) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     (await import('@/checkForUndefinedCSSClasses.js')).default();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore

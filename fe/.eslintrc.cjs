@@ -1,31 +1,10 @@
 module.exports = {
     root: true,
     overrides: [{
-        // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
-        files: '.eslintrc.cjs',
-        plugins: ['@stylistic', '@stylistic/migrate'],
-        rules: {
-            '@stylistic/migrate/migrate-js': 'error',
-            '@stylistic/migrate/migrate-ts': 'error',
-            '@stylistic/quote-props': ['error', 'as-needed'],
-            '@stylistic/comma-dangle': ['error', 'always-multiline'],
-            '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
-        },
-    }, {
         files: '*',
-        excludedFiles: '.eslintrc.cjs',
-        parser: 'vue-eslint-parser',
         parserOptions: {
-            parser: '@typescript-eslint/parser',
             project: ['./tsconfig.json', './tsconfig.node.json'],
             tsconfigRootDir: __dirname,
-        },
-        settings: {
-            'import/resolver': {
-                typescript: true,
-                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
-                vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
-            },
         },
         plugins: ['@stylistic'],
         extends: [
@@ -488,6 +467,34 @@ module.exports = {
             'vue/no-use-v-else-with-v-for': 'error',
             'vue/no-unused-emit-declarations': 'error',
             'vue/no-ref-object-reactivity-loss': 'error',
+        },
+    }, { // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
+        files: '.eslintrc.cjs',
+        plugins: ['@stylistic', '@stylistic/migrate'],
+        rules: {
+            '@stylistic/migrate/migrate-js': 'error',
+            '@stylistic/migrate/migrate-ts': 'error',
+            '@stylistic/comma-dangle': ['error', 'always-multiline'],
+            '@typescript-eslint/naming-convention': 'off',
+        },
+    }, {
+        files: '*.ts',
+        parser: 'typescript-eslint-parser-for-extra-files',
+        settings: { 'import/resolver': { typescript: true } }
+    }, {
+        files: '*.vue',
+        parser: 'vue-eslint-parser',
+        parserOptions: {
+            parser: 'typescript-eslint-parser-for-extra-files',
+            project: ['./tsconfig.json', './tsconfig.node.json'],
+            tsconfigRootDir: __dirname,
+        },
+        settings: {
+            'import/resolver': {
+                typescript: true,
+                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
+                vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
+            },
         },
     }],
 };
