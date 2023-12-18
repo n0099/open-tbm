@@ -1,5 +1,5 @@
 <template>
-    <select v-model="selected" @change="$emit('paramChange', ($event.target as HTMLSelectElement).value)"
+    <select v-model="selected" @change="e => $emit('paramChange', (e.target as HTMLSelectElement).value)"
             class="form-select form-control flex-grow-0">
         <option value="add" disabled>New...</option>
         <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">

@@ -1,13 +1,13 @@
 <template>
     <input v-if="modelValue.subParam.range === 'IN'"
-           @input="emitModelChange" :value="modelValue.value"
+           @input="e => emitModelChange(e)" :value="modelValue.value"
            :placeholder="placeholders.IN" :aria-label="modelValue.name"
            type="text" class="form-control" required pattern="\d+(,\d+)+" />
     <input v-else-if="modelValue.subParam.range === 'BETWEEN'"
-           @input="emitModelChange" :value="modelValue.value"
+           @input="e => emitModelChange(e)" :value="modelValue.value"
            :placeholder="placeholders.BETWEEN" :aria-label="modelValue.name"
            type="text" class="col-3 form-control flex-grow-0" required pattern="\d+,\d+" />
-    <input v-else @input="emitModelChange" :value="modelValue.value"
+    <input v-else @input="e => emitModelChange(e)" :value="modelValue.value"
            :placeholder="placeholders.equals" :aria-label="modelValue.name"
            type="number" class="col-2 form-control flex-grow-0" required />
 </template>

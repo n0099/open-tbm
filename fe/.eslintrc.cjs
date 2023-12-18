@@ -476,7 +476,7 @@ module.exports = {
             'vue/define-props-declaration': 'error',
             'vue/define-emits-declaration': 'error',
             'vue/no-required-prop-with-default': 'error',
-            'vue/v-on-handler-style': ['error', ['method', 'inline']],
+            'vue/v-on-handler-style': ['error', 'inline-function'],
             'vue/multiline-ternary': 'error',
             'vue/array-element-newline': ['error', 'consistent'],
             'vue/prefer-define-options': 'error',

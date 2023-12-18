@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submitQueryForm" class="mt-3">
+    <form @submit.prevent="_ => submitQueryForm()" class="mt-3">
         <div class="row">
             <label class="col-3 col-form-label text-end" for="queryTimeRange">时间范围</label>
             <div class="col-5">

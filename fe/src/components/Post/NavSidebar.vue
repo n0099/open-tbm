@@ -1,5 +1,5 @@
 <template>
-    <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="selectThread"
+    <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
           forceSubMenuRender :inlineIndent="16" mode="inline"
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
@@ -12,7 +12,7 @@
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
                                     :key="String(isFirstReplyInView)"
-                                    @click="navigate(cursor, null, reply.pid)" :data-pid="reply.pid"
+                                    @click="_ => navigate(cursor, null, reply.pid)" :data-pid="reply.pid"
                                     :class="{
                                         'btn-info': isFirstReplyInView,
                                         'text-white': isFirstReplyInView,

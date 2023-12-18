@@ -110,8 +110,8 @@
                                  class="sub-reply-group bs-callout bs-callout-success">
                                 <ul class="list-group list-group-flush">
                                     <li v-for="(subReply, subReplyIndex) in subReplyGroup" :key="subReply.spid"
-                                        @mouseenter="hoveringSubReplyID = subReply.spid"
-                                        @mouseleave="hoveringSubReplyID = 0"
+                                        @mouseenter="() => { hoveringSubReplyID = subReply.spid }"
+                                        @mouseleave="() => { hoveringSubReplyID = 0 }"
                                         class="sub-reply-item list-group-item">
                                         <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                                             <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"

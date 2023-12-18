@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submitQueryForm" class="mt-3">
+    <form @submit.prevent="_ => submitQueryForm()" class="mt-3">
         <div class="row">
             <label class="col-2 col-form-label text-end" for="queryFid">贴吧</label>
             <div class="col-3">

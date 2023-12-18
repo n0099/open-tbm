@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="queryFormSubmit" class="mt-3">
+    <form @submit.prevent="_ => queryFormSubmit()" class="mt-3">
         <div class="row">
             <label class="col-1 col-form-label" for="paramFid">贴吧</label>
             <div class="col-3">
@@ -60,10 +60,10 @@
         </div>
         <div class="query-params">
             <div v-for="(p, pI) in params" :key="pI" class="input-group">
-                <button @click="deleteParam(pI)" class="btn btn-link" type="button">
+                <button @click="_ => deleteParam(pI)" class="btn btn-link" type="button">
                     <FontAwesomeIcon icon="times" />
                 </button>
-                <SelectParam @paramChange="changeParam(pI, $event)" :currentParam="p.name"
+                <SelectParam @paramChange="e => changeParam(pI, e)" :currentParam="p.name"
                              class="select-param" :class="{
                                  'is-invalid': invalidParamsIndex.includes(pI)
                              }" />
@@ -77,7 +77,7 @@
                 </div>
                 <template v-if="isPostIDParam(p)">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                    <InputNumericParam @update:modelValue="e => { params[pI] = e }"
                                        :modelValue="params[pI] as KnownNumericParams"
                                        :placeholders="getPostIDParamPlaceholders(p)" />
                 </template>
@@ -88,13 +88,13 @@
                 <template v-if="isTextParam(p)">
                     <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
                            type="text" class="form-control" required />
-                    <InputTextMatchParam @update:modelValue="v => params[pI] = v"
+                    <InputTextMatchParam @update:modelValue="e => { params[pI] = e }"
                                          :modelValue="params[pI] as KnownTextParams"
                                          :paramIndex="pI" />
                 </template>
                 <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                    <InputNumericParam @update:modelValue="e => { params[pI] = e }"
                                        :modelValue="params[pI] as KnownNumericParams"
                                        :paramIndex="pI"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
@@ -119,7 +119,7 @@
                 </div>
                 <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                    <InputNumericParam @update:modelValue="e => { params[pI] = e }"
                                        :modelValue="params[pI] as KnownNumericParams"
                                        :placeholders="uidParamPlaceholders" />
                 </template>
@@ -140,7 +140,7 @@
                 </template>
                 <template v-if="p.name === 'authorExpGrade'">
                     <SelectRange v-model="p.subParam.range" />
-                    <InputNumericParam @update:modelValue="v => params[pI] = v"
+                    <InputNumericParam @update:modelValue="e => { params[pI] = e }"
                                        :modelValue="params[pI] as KnownNumericParams"
                                        :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
                 </template>
@@ -150,7 +150,7 @@
             <button class="add-param-button col-auto btn btn-link disabled" type="button">
                 <FontAwesomeIcon icon="plus" />
             </button>
-            <SelectParam @paramChange="addParam($event)" currentParam="add" />
+            <SelectParam @paramChange="e => addParam(e)" currentParam="add" />
         </div>
         <div class="row mt-3">
             <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
