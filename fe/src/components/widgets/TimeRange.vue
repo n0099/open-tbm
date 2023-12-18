@@ -32,6 +32,7 @@ const props = withDefaults(defineProps<{
     startTime: 0,
     endTime: 0
 });
+// eslint-disable-next-line vue/define-emits-declaration
 const emit = defineEmits({
     'update:startTime': emitEventWithNumberValidator,
     'update:endTime': emitEventWithNumberValidator

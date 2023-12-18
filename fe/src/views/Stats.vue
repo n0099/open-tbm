@@ -50,7 +50,7 @@ import { titleTemplate } from '@/shared';
 import type { Writable } from '@/shared';
 
 import _ from 'lodash';
-import { ref } from 'vue';
+import { onBeforeMount, ref } from 'vue';
 import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
@@ -160,9 +160,9 @@ const submitQueryForm = async () => {
     });
 };
 
-(async () => {
+onBeforeMount(async () => {
     forumList.value = throwIfApiError(await apiForumList());
-})();
+});
 </script>
 
 <style scoped>

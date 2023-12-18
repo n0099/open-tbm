@@ -51,6 +51,7 @@ import { ref, watchEffect } from 'vue';
 import _ from 'lodash';
 
 const props = defineProps<{ currentParam: string }>();
+// eslint-disable-next-line vue/define-emits-declaration
 defineEmits({ paramChange: p => _.includes(_.flatMap(paramsGroup, Object.keys), p) });
 
 const selected = ref('add');

@@ -49,7 +49,9 @@ import type { ObjValues } from '@/shared';
 import _ from 'lodash';
 
 const props = defineProps<{ paramIndex: number }>();
+// eslint-disable-next-line vue/define-emits-declaration
 defineEmits({
+    // eslint-disable-next-line vue/no-unused-emit-declarations
     'update:modelValue': (p: KnownTextParams) =>
         _.isString(p.name) && _.isString(p.value)
         && textParamSubParamMatchByValues.includes(p.subParam.matchBy)

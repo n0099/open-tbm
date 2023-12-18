@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts">
-import { computed, nextTick, ref, watchEffect } from 'vue';
+import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
 
 export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 </script>
@@ -150,10 +150,10 @@ watchEffect(() => {
     [renderType.value] = selectedRenderTypes.value;
 });
 
-(async () => {
+onBeforeMount(async () => {
     forumList.value = throwIfApiError(await apiForumList());
-    parseRouteThenFetch(route, true, getRouteCursorParam(route));
-})();
+    await parseRouteThenFetch(route, true, getRouteCursorParam(route));
+});
 </script>
 
 <style scoped>

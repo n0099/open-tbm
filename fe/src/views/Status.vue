@@ -199,7 +199,7 @@ const submitQueryForm = async () => {
     chart.setOption<echarts.ComposeOption<LineSeriesOption>>({ series });
 };
 
-const { pause, resume } = useIntervalFn(submitQueryForm, 60000, { immediate: false }); // refresh data every minute
+const { pause, resume } = useIntervalFn(() => void submitQueryForm(), 60000, { immediate: false }); // refresh data every minute
 watch(() => autoRefresh.value, () => {
     if (autoRefresh.value)
         resume();

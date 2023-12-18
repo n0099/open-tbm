@@ -2,8 +2,7 @@ import type { TimestampFields } from './posts';
 import type { Int, ObjUnknown, UInt, UnixTimestamp } from '@/shared';
 
 export type BaiduUserID = Int;
-export type ForumModeratorType = string
-| 'assist'
+export type ForumModeratorType = 'assist'
 | 'fourth_manager'
 | 'fourthmanager'
 | 'manager'

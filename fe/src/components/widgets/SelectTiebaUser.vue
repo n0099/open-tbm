@@ -51,8 +51,10 @@ export type SelectTiebaUserBy = typeof selectTiebaUserBy[number];
 export type SelectTiebaUserParams = Partial<{
     uid: BaiduUserID,
     uidCompareBy: '<' | '=' | '>',
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     name: string | 'NULL',
     nameUseRegex: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     displayName: string | 'NULL',
     displayNameUseRegex: boolean
 }>;
@@ -76,6 +78,7 @@ const props = defineProps<{
     modelValue: SelectTiebaUserModel,
     paramsNameMap?: Record<keyof SelectTiebaUserParams, string>
 }>();
+// eslint-disable-next-line vue/define-emits-declaration
 const emit = defineEmits({
     'update:modelValue': (p: SelectTiebaUserModel) =>
         _.isObject(p)
@@ -102,6 +105,7 @@ watch(() => props.modelValue, () => {
         ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
 
     // filter out unnecessary and undefined params
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), _.isUndefined);
 
     // reset to default selectBy if it's a invalid value

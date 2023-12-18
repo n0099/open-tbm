@@ -112,20 +112,23 @@ export default <
             ...clearedParamsDefaultValue().map(flattenParam)
         ];
     };
-    const escapeParamValue = (value: string | unknown, shouldUnescape = false) => {
-        let ret = value;
-        if (_.isString(value)) {
-            _.each({ // we don't escape ',' since array type params is already known
-                /* eslint-disable @typescript-eslint/naming-convention */
-                '/': '%2F',
-                ';': '%3B'
-                /* eslint-enable @typescript-eslint/naming-convention */
-            }, (encode, char) => {
-                ret = value.replace(shouldUnescape ? encode : char, shouldUnescape ? char : encode);
-            });
-        }
-        return ret;
+    const escapeParamValueMapping = { // we don't escape ',' since array type params is already known
+        /* eslint-disable @typescript-eslint/naming-convention */
+        '/': '%2F',
+        ';': '%3B'
+        /* eslint-enable @typescript-eslint/naming-convention */
     };
+    const replaceEach = (
+        value: string,
+        mapping: Record<string, string>,
+        replacer: (acc: string, to: string, from: string) => string
+    ): string => _.reduce(mapping, replacer, value);
+    const unescapeParamValue = (value: string) => replaceEach(value,
+        _.invert(escapeParamValueMapping),
+        (acc, raw, escaped) => acc.replace(raw, escaped));
+    const escapeParamValue = (value: string) => replaceEach(value,
+        escapeParamValueMapping,
+        (acc, escaped, raw) => acc.replace(escaped, raw));
     const parseParamRoute = (routePath: string[]) => {
         _.chain(routePath)
             .map(paramWithSub => {
@@ -133,7 +136,7 @@ export default <
                 paramWithSub.split(';').forEach((paramNameAndValue, paramIndex) => { // split multiple params
                     const paramPair: [string, unknown] = [
                         paramNameAndValue.substring(0, paramNameAndValue.indexOf(':')),
-                        escapeParamValue(paramNameAndValue.substring(paramNameAndValue.indexOf(':') + 1), true)
+                        unescapeParamValue(paramNameAndValue.substring(paramNameAndValue.indexOf(':') + 1))
                     ]; // split kv pair by first colon, using substr to prevent split array type param value
                     if (paramIndex === 0) { // main param
                         [parsedParam.name, parsedParam.value] = paramPair;
@@ -160,9 +163,17 @@ export default <
             .value();
     };
     const submitParamRoute = async (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<Param>>) => {
-        const paramValue = (v: unknown) => escapeParamValue(_.isArray(v) ? v.join(',') : v);
-        const subParamValue = (subParam?: UnknownParam['subParam']) =>
-            _.map(subParam, (value, name) => `;${name}:${escapeParamValue(value)}`).join('');
+        const tryEscapeParamValue = <T>(v: T): string | T => {
+            if (_.isString(v))
+                return escapeParamValue(v);
+            if (_.isArray(v))
+                return escapeParamValue(v.join(','));
+            return v;
+        };
+        const tryEncodeSubParamValue = (subParam?: UnknownParam['subParam']) =>
+            _.map(subParam, (value, name) =>
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                `;${name}:${_.isString(value) ? escapeParamValue(value) : value}`).join('');
         const flatParams = [
             ...removeUndefinedFromPartialObjectValues<UniqueParams, UniqueParam>(filteredUniqueParams),
             ...filteredParams
@@ -170,7 +181,8 @@ export default <
         return router.push({
             path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param =>
-                    `${param.name}:${paramValue(param.value)}${subParamValue(param.subParam)}`)
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                    `${param.name}:${tryEscapeParamValue(param.value)}${tryEncodeSubParamValue(param.subParam)}`)
                 .join('/')}`
         });
     };

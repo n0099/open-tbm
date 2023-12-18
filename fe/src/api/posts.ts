@@ -17,6 +17,7 @@ interface Agree {
 }
 
 export interface Thread extends Post {
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     threadType: UInt | 1024 | 1040 | null,
     stickyType: 'membertop' | 'top' | null,
     topicType: '' | 'text' | null,
@@ -36,6 +37,7 @@ export interface Reply extends Post {
     floor: UInt,
     content: string, // original json convert to HTML string via be/app/resources/views/renderPostContent.blade.php
     subReplyCount: UInt,
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     isFold: UInt | 0 | 6,
     geolocation: ObjUnknown | null
 }

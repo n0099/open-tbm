@@ -4,6 +4,7 @@ import nprogress from 'nprogress';
 import { stringify } from 'qs';
 import _ from 'lodash';
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export const isApiError = (response: ApiError | unknown): response is ApiError =>
     _.isObject(response) && 'errorCode' in response && 'errorInfo' in response;
 export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TResponse => {
@@ -11,6 +12,7 @@ export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TRes
         throw Error(JSON.stringify(response));
     return response;
 };
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export const getRequester = async <TResponse extends ApiError | unknown, TQueryParam>
 (endpoint: string, queryString?: TQueryParam & { reCAPTCHA?: string }): Promise<ApiError | TResponse> => {
     nprogress.start();
@@ -68,6 +70,7 @@ const reCAPTCHACheck = async (action = ''): Promise<{ reCAPTCHA?: string }> => n
         reslove({});
     }
 });
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export const getRequesterWithReCAPTCHA = async <TResponse extends ApiError | unknown, TQueryParam>
 (endpoint: string, queryString?: TQueryParam, action = '') =>
     getRequester<TResponse, TQueryParam>(endpoint,

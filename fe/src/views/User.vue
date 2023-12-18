@@ -22,7 +22,7 @@ import type { ApiError, ApiUsersQuery } from '@/api/index.d';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
 
-import { nextTick, ref, watchEffect } from 'vue';
+import { nextTick, onBeforeMount, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@unhead/vue';
@@ -73,7 +73,7 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
         + ` 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
     return true;
 };
-fetchUsersData(route, true);
+onBeforeMount(async () => fetchUsersData(route, true));
 
 watchEffect(() => {
     selectUserBy.value = removeStart(removeEnd(

@@ -1,6 +1,6 @@
 <template>
-    <Table :columns="threadColumns" :dataSource="threads" :defaultExpandAllRows="true"
-           :expandRowByClick="true" :pagination="false"
+    <Table :columns="threadColumns" :dataSource="threads" defaultExpandAllRows
+           expandRowByClick :pagination="false"
            rowKey="tid" size="middle" class="render-table-thread">
         <template #bodyCell="{ column: { dataIndex: column }, record }">
             <template v-if="column === 'tid'">
@@ -35,7 +35,7 @@
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
             <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
             <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
-                   :defaultExpandAllRows="true" :expandRowByClick="true"
+                   defaultExpandAllRows expandRowByClick
                    :pagination="false" rowKey="pid" size="middle">
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
                     <template v-if="column === 'author'">
@@ -56,7 +56,7 @@
                                v-viewer.static v-html="content" />
                     <Table v-if="repliesSubReply[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
-                           :defaultExpandAllRows="true" :expandRowByClick="true"
+                           defaultExpandAllRows expandRowByClick
                            :pagination="false" rowKey="spid" size="middle">
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
                             <template v-if="column === 'author'">
@@ -151,6 +151,7 @@ onMounted(() => {
     threads.value = props.posts.threads;
     threadsReply.value = _.chain(threads.value)
         .map(i => i.replies)
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         .reject(_.isEmpty) // remove threads which have no reply
         .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
         .value();
@@ -158,6 +159,7 @@ onMounted(() => {
         .toArray() // cast tid keyed object to array
         .flatten() // flatten every thread's replies
         .map(i => i.subReplies)
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         .reject(_.isEmpty) // remove replies which have no sub reply
         .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which key by pid
         .value();

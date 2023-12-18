@@ -18,7 +18,9 @@ import { numericParamSubParamRangeValues } from '../queryParams';
 import _ from 'lodash';
 
 defineProps<{ placeholders: { [P in 'BETWEEN' | 'IN' | 'equals']: string } }>();
+// eslint-disable-next-line vue/define-emits-declaration
 defineEmits({
+    // eslint-disable-next-line vue/no-unused-emit-declarations
     'update:modelValue': (p: KnownNumericParams) =>
         _.isString(p.name) && _.isString(p.value)
         && numericParamSubParamRangeValues.includes(p.subParam.range)

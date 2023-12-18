@@ -1,6 +1,6 @@
 <template>
     <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="selectThread"
-          :forceSubMenuRender="true" :inlineIndent="16" mode="inline"
+          forceSubMenuRender :inlineIndent="16" mode="inline"
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
