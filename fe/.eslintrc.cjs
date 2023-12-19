@@ -1,7 +1,9 @@
+// eslint-disable-next-line no-undef
 module.exports = {
     root: true,
     parserOptions: {
         project: ['./tsconfig.json', './tsconfig.node.json'],
+        // eslint-disable-next-line no-undef
         tsconfigRootDir: __dirname,
     },
     overrides: [{ // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
@@ -14,6 +16,7 @@ module.exports = {
         parserOptions: {
             parser: 'typescript-eslint-parser-for-extra-files',
             project: ['./tsconfig.json', './tsconfig.node.json'],
+            // eslint-disable-next-line no-undef
             tsconfigRootDir: __dirname,
         },
         settings: {
@@ -21,6 +24,7 @@ module.exports = {
                 typescript: true,
 
                 // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-var-requires, no-undef
                 vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
             },
         },
@@ -43,6 +47,7 @@ module.exports = {
         'plugin:@typescript-eslint/stylistic-type-checked',
         'plugin:import/recommended',
         'plugin:import/typescript',
+        'plugin:unicorn/recommended',
     ],
     rules: {
         'import/no-useless-path-segments': 'error',
@@ -141,7 +146,10 @@ module.exports = {
             asyncArrow: 'always',
         }],
         '@stylistic/space-infix-ops': ['error', { int32Hint: false }],
-        '@stylistic/padding-line-between-statements': ['error'],
+        '@stylistic/padding-line-between-statements': [
+            'error',
+            { blankLine: 'always', prev: '*', next: 'return' },
+        ],
         '@stylistic/member-delimiter-style': ['error', {
             multiline: {
                 delimiter: 'comma',
@@ -155,6 +163,8 @@ module.exports = {
         '@stylistic/type-annotation-spacing': 'error',
 
         // as of eslint@8.56.0
+        camelcase: 'off',
+
         'no-await-in-loop': 'error',
         'no-promise-executor-return': 'error',
         'no-template-curly-in-string': 'error',
@@ -174,8 +184,7 @@ module.exports = {
         'no-case-declarations': 'error',
         'no-constructor-return': 'error',
         'no-else-return': 'error',
-
-        // 'no-empty-function': 'error',
+        'no-void': ['error', { allowAsStatement: true }],
         'no-eval': 'error',
         'no-extra-bind': 'error',
         'no-implicit-coercion': 'error',
@@ -249,8 +258,8 @@ module.exports = {
         'no-new-native-nonconstructor': 'error',
 
         // as of @typescript-eslint@6.14.0
+        'no-empty-function': 'off',
         '@typescript-eslint/no-empty-function': 'error',
-        'no-void': 'off',
         'default-param-last': 'off',
         '@typescript-eslint/default-param-last': 'error',
         'dot-notation': 'off',
@@ -302,7 +311,6 @@ module.exports = {
         '@typescript-eslint/explicit-member-accessibility': 'error',
         '@typescript-eslint/member-ordering': 'error',
         '@typescript-eslint/method-signature-style': 'error',
-        camelcase: 'off',
         '@typescript-eslint/naming-convention': ['error', {
             selector: 'default',
             format: ['camelCase'],
@@ -374,11 +382,15 @@ module.exports = {
         '@typescript-eslint/no-unsafe-unary-minus': 'error',
 
         // as of eslint-plugin-vue@9.19.2
-        'vue/html-indent': ['error', 4],
         'vue/max-attributes-per-line': 'off',
-        'vue/no-reserved-component-names': 'off', // for component in antdv
-        'vue/attribute-hyphenation': ['error', 'never'],
         'vue/singleline-html-element-content-newline': 'off',
+        'vue/no-reserved-component-names': 'off', // for component in antdv
+        'vue/multi-word-component-names': 'off',
+        'vue/require-default-prop': 'off',
+        'vue/multiline-html-element-content-newline': 'off',
+
+        'vue/html-indent': ['error', 4],
+        'vue/attribute-hyphenation': ['error', 'never'],
         'vue/attributes-order': ['error', {
             order: [
                 'DEFINITION',
@@ -394,7 +406,6 @@ module.exports = {
                 'CONTENT',
             ],
         }],
-        'vue/multi-word-component-names': 'off',
         'vue/first-attribute-linebreak': ['error', {
             singleline: 'beside',
             multiline: 'beside',
@@ -405,9 +416,6 @@ module.exports = {
         }],
         'vue/html-self-closing': ['error', { html: { void: 'always' } }],
         'vue/v-on-event-hyphenation': ['error', 'never', { autofix: true }],
-        'vue/require-default-prop': 'off',
-        'vue/multiline-html-element-content-newline': 'off',
-
         'vue/block-tag-newline': 'error',
         'vue/component-api-style': ['error', ['script-setup', 'composition']],
         'vue/component-name-in-template-casing': 'error',

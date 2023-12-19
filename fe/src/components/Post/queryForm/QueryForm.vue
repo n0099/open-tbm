@@ -256,6 +256,7 @@ const currentQueryTypeDesc = computed(() => {
         return '按帖索引查询';
     if (currentQueryType === 'search')
         return '搜索查询';
+
     return '空查询';
 });
 
@@ -318,6 +319,7 @@ const checkParams = async (): Promise<boolean> => {
         required[1] = _.sortBy(required[1]);
         if (required[0] === 'SUB' && _.isEmpty(_.difference(current, required[1])))
             return true;
+
         return required[0] === 'ALL' && _.isEqual(required[1], current);
     };
     const requiredPostTypesToString = (required: NonNullable<RequiredPostTypes[string]>) =>

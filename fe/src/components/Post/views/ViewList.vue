@@ -157,6 +157,7 @@ import _ from 'lodash';
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.substring(1);
     const idSelectorToHash = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
+
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
         el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}']${idSelectorToHash}`,
         top: 80 // .reply-title { top: 5rem; }
@@ -203,17 +204,21 @@ const posts = computed(() => {
                     // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
                         && subReply.authorUid === previousSubReply.authorUid)
-                        _.last(groupedSubReplies)?.push(subReply); // append to last group
+                        groupedSubReplies.at(-1)?.push(subReply); // append to last group
                     else
                         groupedSubReplies.push([subReply]); // new group
+
                     return groupedSubReplies;
                 },
                 []
             );
+
             return reply;
         });
+
         return thread;
     });
+
     return newPosts as Modify<ApiPostsQuery, {
         threads: Array<Thread & { replies: Array<Reply & { subReplies: SubReply[][] }> }>
     }>;
@@ -226,11 +231,11 @@ onMounted(initialTippy);
 setComponentCustomScrollBehaviour((to, from) => {
     if (isRouteUpdateTriggeredByPostsNavScrollEvent.value) {
         isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
+
         return false;
     }
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
-    return undefined;
 });
 </script>
 

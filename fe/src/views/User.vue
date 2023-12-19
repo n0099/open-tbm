@@ -52,6 +52,7 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
         userPages.value = [];
     if (_.isEmpty(queryString)) {
         notyShow('warning', '请输入用户查询参数');
+
         return false;
     }
     isLoading.value = true;
@@ -61,6 +62,7 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
     });
     if (isApiError(usersQuery)) {
         lastFetchError.value = usersQuery;
+
         return false;
     }
     if (isNewQuery)
@@ -71,6 +73,7 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
     await nextTick(); // wait for child components finish dom update
     notyShow('success', `已加载第${usersQuery.pages.currentCursor}页`
         + ` 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
+
     return true;
 };
 onBeforeMount(async () => fetchUsersData(route, true));
@@ -90,11 +93,11 @@ onBeforeRouteUpdate(async (to, from) => {
     ))))
         return true;
     const isFetchSuccess = await fetchUsersData(to, isNewQuery);
+
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
 setComponentCustomScrollBehaviour((to, from) => {
     if (!compareRouteIsNewQuery(to, from))
         return { el: `#page${getRouteCursorParam(to)}` };
-    return undefined;
 });
 </script>

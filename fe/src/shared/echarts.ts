@@ -44,6 +44,7 @@ export const emptyChartSeriesData = (chart: echarts.ECharts) => {
         series: _.map(chart.getOption().series as BarSeriesOption | LineSeriesOption, series => {
             if (typeof series === 'object' && 'data' in series)
                 series.data = [];
+
             return series;
         })
     });

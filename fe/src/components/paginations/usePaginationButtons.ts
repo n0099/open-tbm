@@ -11,5 +11,6 @@ export const useNextCursorRoute = (nextCursor: Cursor) => computed<RouteLocation
     assertRouteNameIsStr(route.name);
     const name = routeNameWithCursor(route.name);
     const { query } = route;
+
     return { query, name, params: { ...route.params, cursor: nextCursor } };
 });

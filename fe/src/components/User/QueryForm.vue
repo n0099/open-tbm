@@ -58,6 +58,7 @@ const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) =
 const submitQueryForm = async () => {
     const params = boolPropToStr<LocationQueryValueRaw>(selectUser.value.params);
     const routeName = removeEnd(selectUser.value.selectBy, 'NULL');
+
     return router.push({
         name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
         query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: gender.value }),

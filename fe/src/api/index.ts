@@ -9,7 +9,8 @@ export const isApiError = (response: ApiError | unknown): response is ApiError =
     _.isObject(response) && 'errorCode' in response && 'errorInfo' in response;
 export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TResponse => {
     if (isApiError(response))
-        throw Error(JSON.stringify(response));
+        throw new Error(JSON.stringify(response));
+
     return response;
 };
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -40,13 +41,15 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
             throw Error();
         }
         if (!response.ok)
-            throw Error();
+            throw new Error();
+
         return json;
     } catch (e: unknown) {
         if (e instanceof Error) {
             const { message: exceptionMessage } = e;
             const text = `${errorMessage}<br />${exceptionMessage}`;
             notyShow('error', text);
+
             return { errorCode, errorInfo: text.replaceAll('<br />', '\n') };
         }
         throw e;

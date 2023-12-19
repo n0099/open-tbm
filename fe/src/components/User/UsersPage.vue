@@ -42,6 +42,7 @@ const userGender = (gender: TiebaUserGender) => {
         2: '女 ♀'
         /* eslint-enable @typescript-eslint/naming-convention */
     } as const;
+
     return gender === null ? 'NULL' : gendersList[gender];
 };
 watch(() => props.users, lazyLoadUpdate);

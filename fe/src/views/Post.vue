@@ -88,6 +88,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
 
     if (isApiError(postsQuery)) {
         lastFetchError.value = postsQuery;
+
         return false;
     }
     if (isNewQuery)
@@ -99,12 +100,14 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
     const threadTitle = postPages.value[0].threads[0].title;
     switch (queryFormRef.value?.getCurrentQueryType()) {
         case 'fid':
-        case 'search':
+        case 'search': {
             title.value = `${forumName} - 帖子查询`;
             break;
-        case 'postID':
+        }
+        case 'postID': {
             title.value = `${threadTitle} - ${forumName} - 帖子查询`;
             break;
+        }
     }
 
     const networkTime = Date.now() - startTime;
@@ -113,6 +116,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
     const renderTime = ((Date.now() - startTime - networkTime) / 1000).toFixed(2);
     notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime}s 后端/网络耗时${networkTime}ms`);
     lazyLoadUpdate();
+
     return true;
 };
 const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
@@ -131,6 +135,7 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
     }
+
     return isFetchSuccess;
 };
 
@@ -144,6 +149,7 @@ onBeforeRouteUpdate(async (to, from) => {
     ))))
         return true;
     const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, cursor);
+
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
 watchEffect(() => {

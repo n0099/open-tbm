@@ -159,6 +159,7 @@ const voteCountSeriesLabelFormatter = (
         endTime: timeline.data[timeline.currentIndex - 1],
         voteFor: Number(candidateIndex.substring(0, candidateIndex.indexOf('号'))) // trim trailing '号' in series name
     });
+
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;
 };
 
@@ -461,6 +462,7 @@ const loadCharts = {
                 const officialValidCount = _.find(json.top50CandidatesOfficialValidVoteCount,
                     { voteFor: candidateVotes[0].voteFor })
                     ?.officialValidCount ?? 0;
+
                 return {
                     voteFor: formatCandidateNameByID(candidateVotes[0].voteFor),
                     validCount: validVotes?.count ?? 0,
@@ -568,7 +570,7 @@ const loadCharts = {
         });
 
         // clone last timeline option then transform it to official votes count option
-        const originalTimelineOptions = _.cloneDeep(options[options.length - 1]);
+        const originalTimelineOptions = _.cloneDeep(options.at(-1));
         if (!_.isArray(originalTimelineOptions.series))
             return;
         _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
@@ -583,13 +585,13 @@ const loadCharts = {
                     }))
                     .value()
             },
-            series: originalTimelineOptions.series.concat({
+            series: [...originalTimelineOptions.series, {
                 id: 'totalVotesValidation',
                 data: [
                     { name: '官方有效票', value: 12247 },
                     { name: '官方无效票', value: 473 }
                 ]
-            }),
+            }],
             graphic: {
                 style: {
                     fill: '#989898',
@@ -647,7 +649,7 @@ const loadCharts = {
         });
         charts.top5CandidateCountGroupByTime?.setOption({
             axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
-            xAxis: Array(2).fill({ type: timeGranularityAxisType[timeGranularity] }),
+            xAxis: Array.from({ length: 2 }).fill({ type: timeGranularityAxisType[timeGranularity] }),
             series
         } as echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>);
     },
@@ -691,6 +693,7 @@ onMounted(() => {
         ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
     candidatesDetailData.value = candidatesDetailData.value.map(candidate => {
         const candidateVotes = _.filter(json.allCandidatesVoteCount, { voteFor: candidate.candidateIndex });
+
         return {
             ...candidate,
             validCount: findVoteCount(candidateVotes, 1),

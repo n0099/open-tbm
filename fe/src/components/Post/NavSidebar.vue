@@ -107,6 +107,7 @@ const scrollStop = _.debounce(() => {
                 if (!failed)
                     isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
             });
+
         return;
     }
     const firstPostCursorInView = _.mapValues(currentFirstPostInView,
@@ -154,6 +155,7 @@ watchEffect(() => {
     selectedThread.value = [`c${cursor}_t${tid}`];
     if (isScrollTriggeredByNavigate) {
         isScrollTriggeredByNavigate = false;
+
         return;
     }
 

@@ -38,6 +38,7 @@ export const titleTemplate = (title: string) => `${title} - open-tbm @ ${import.
 export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined)
         return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
+
     return `https://tieba.baidu.com/p/${tid}`;
 };
 export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUser, 'name' | 'portrait'>>) =>

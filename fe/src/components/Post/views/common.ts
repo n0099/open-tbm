@@ -31,5 +31,6 @@ export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUse
     const { name, displayName } = injectedGetUser(uid);
     if (name === null)
         return displayName ?? `无用户名或覆盖名（UID：${uid}）`;
+
     return name + (displayName === null ? '' : `（${displayName}）`);
 };

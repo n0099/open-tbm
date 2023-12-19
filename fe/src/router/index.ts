@@ -17,7 +17,7 @@ export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
 
 export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
     if (!_.isString(name))
-        throw Error('https://github.com/vuejs/vue-router-next/issues/1185');
+        throw new Error('https://github.com/vuejs/vue-router-next/issues/1185');
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
@@ -139,6 +139,7 @@ export default createRouter({
             if (to.name.split('/')[0] !== from.name.split('/')[0])
                 return { top: 0 };
         }
+
         return false;
     }
 });
