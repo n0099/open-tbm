@@ -282,6 +282,7 @@ const submitRoute = async () => { // decide that route to go
         && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
         return router.push({ name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } });
     }
+
     return submitParamRoute(clearedUniqueParams, clearedParams); // param route
 };
 const queryFormSubmit = async () => {
@@ -296,6 +297,7 @@ const checkParams = async (): Promise<boolean> => {
     switch (currentQueryType) {
         case 'empty':
             notyShow('warning', '请选择贴吧或/并输入查询参数<br />勿只选择帖子类型参数');
+
             return false; // exit early
         case 'postID':
             if (clearedUniqueParams.fid !== undefined) {
@@ -382,6 +384,7 @@ const parseRouteToGetFlattenParams
         parseRoute(route);
         if (await checkParams())
             return flattenParams();
+
         return false;
     };
 

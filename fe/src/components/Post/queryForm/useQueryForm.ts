@@ -32,13 +32,14 @@ export default <
         // prevent defaultsDeep mutate origin paramsDefaultValue
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
-            throw Error(`Param ${param.name} not found in paramsDefaultValue`);
+            throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
         if (!Object.keys(uniqueParams.value).includes(param.name))
             defaultParam.subParam.not = false; // add subParam.not on every param
         // cloneDeep to prevent defaultsDeep mutates origin object
         if (resetToDefault)
             return _.defaultsDeep(defaultParam, param) as T;
+
         return _.defaultsDeep(_.cloneDeep(param), defaultParam);
     };
     const addParam = (name: string) => {
@@ -59,7 +60,7 @@ export default <
     const clearParamDefaultValue = <T extends UnknownParam>(param: UnknownParam): Partial<T | UnknownParam> | null => {
         const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
-            throw Error(`Param ${param.name} not found in paramsDefaultValue`);
+            throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
 
         // remove subParam.not: false, which previously added by fillParamDefaultValue()
         if (defaultParam.subParam !== undefined)
@@ -103,10 +104,12 @@ export default <
         const flattenParam = (param: Partial<UnknownParam>) => {
             const flatted: ObjUnknown = {};
             flatted[param.name ?? 'undef'] = param.value;
+
             return { ...flatted, ...param.subParam };
         };
         const clearedUniqueParamsDefaultValueWithoutUndefined
             = removeUndefinedFromPartialObjectValues<UniqueParams, UnknownParam>(clearedUniqueParamsDefaultValue());
+
         return [
             ...clearedUniqueParamsDefaultValueWithoutUndefined.map(flattenParam),
             ...clearedParamsDefaultValue().map(flattenParam)
@@ -135,8 +138,8 @@ export default <
                 const parsedParam: NamelessUnknownParam & { name: string } = { name: '', subParam: {} };
                 paramWithSub.split(';').forEach((paramNameAndValue, paramIndex) => { // split multiple params
                     const paramPair: [string, unknown] = [
-                        paramNameAndValue.substring(0, paramNameAndValue.indexOf(':')),
-                        unescapeParamValue(paramNameAndValue.substring(paramNameAndValue.indexOf(':') + 1))
+                        paramNameAndValue.slice(0, Math.max(0, paramNameAndValue.indexOf(':'))),
+                        unescapeParamValue(paramNameAndValue.slice(Math.max(0, paramNameAndValue.indexOf(':') + 1)))
                     ]; // split kv pair by first colon, using substr to prevent split array type param value
                     if (paramIndex === 0) { // main param
                         [parsedParam.name, parsedParam.value] = paramPair;
@@ -144,6 +147,7 @@ export default <
                         parsedParam.subParam = { ...parsedParam.subParam, [paramPair[0]]: paramPair[1] };
                     }
                 });
+
                 return parsedParam as UnknownParam;
             })
             .map(_.unary(fillParamDefaultValue))
@@ -168,6 +172,7 @@ export default <
                 return escapeParamValue(v);
             if (_.isArray(v))
                 return escapeParamValue(v.join(','));
+
             return v;
         };
         const tryEncodeSubParamValue = (subParam?: UnknownParam['subParam']) =>
@@ -178,6 +183,7 @@ export default <
             ...removeUndefinedFromPartialObjectValues<UniqueParams, UniqueParam>(filteredUniqueParams),
             ...filteredParams
         ];
+
         return router.push({
             path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param =>

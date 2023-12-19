@@ -172,5 +172,6 @@ export const useQueryFormWithUniqueParams = () => {
         },
         orderBy: { name: 'orderBy', ...paramsDefaultValue.orderBy }
     };
+
     return ret;
 };

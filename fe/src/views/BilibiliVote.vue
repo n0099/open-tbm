@@ -157,7 +157,7 @@ const voteCountSeriesLabelFormatter = (
         ?.timeline as [{ data: number[], currentIndex: number }];
     const previousTimelineValue = _.find(votesData, {
         endTime: timeline.data[timeline.currentIndex - 1],
-        voteFor: Number(candidateIndex.substring(0, candidateIndex.indexOf('号'))) // trim trailing '号' in series name
+        voteFor: Number(candidateIndex.slice(0, Math.max(0, candidateIndex.indexOf('号')))) // trim trailing '号' in series name
     });
 
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;

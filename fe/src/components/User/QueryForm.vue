@@ -53,6 +53,7 @@ const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) =
         if (params[param] === value || params[param] === undefined)
             Reflect.deleteProperty(params, param);
     });
+
     return params;
 };
 const submitQueryForm = async () => {

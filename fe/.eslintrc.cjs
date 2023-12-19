@@ -50,6 +50,18 @@ module.exports = {
         'plugin:unicorn/recommended',
     ],
     rules: {
+        'unicorn/no-null': 'off',
+        'unicorn/no-array-callback-reference': 'off',
+        'unicorn/no-array-for-each': 'off',
+        'unicorn/prefer-number-properties': 'off',
+        'unicorn/prevent-abbreviations': 'off',
+        'unicorn/consistent-function-scoping': 'off',
+        'unicorn/filename-case': 'off',
+
+        'unicorn/catch-error-name': ['error', { name: 'e' }],
+        'unicorn/numeric-separators-style': ['error', { onlyIfContainsSeparator: true }],
+        'unicorn/switch-case-braces': ['error', 'avoid'],
+
         'import/no-useless-path-segments': 'error',
         'import/extensions': ['error', 'always', { ts: 'never' }],
 

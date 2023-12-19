@@ -65,10 +65,9 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
 
         return false;
     }
-    if (isNewQuery)
-        userPages.value = [usersQuery];
-    else
-        userPages.value = _.sortBy([...userPages.value, usersQuery], i => i.pages.currentCursor);
+    userPages.value = isNewQuery
+        ? [usersQuery]
+        : _.sortBy([...userPages.value, usersQuery], i => i.pages.currentCursor);
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
     notyShow('success', `已加载第${usersQuery.pages.currentCursor}页`

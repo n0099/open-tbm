@@ -32,13 +32,11 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
         if (isApiError(json)) {
             ({ errorCode } = json);
             errorMessage += `错误码：${json.errorCode}<br />`;
-            if (_.isObject(json.errorInfo)) {
-                errorMessage += _.map(json.errorInfo, (info, paramName) =>
-                    `参数 ${paramName}：${info.join('<br />')}`).join('<br />');
-            } else {
-                errorMessage += json.errorInfo;
-            }
-            throw Error();
+            errorMessage += _.isObject(json.errorInfo)
+                ? _.map(json.errorInfo, (info, paramName) =>
+                    `参数 ${paramName}：${info.join('<br />')}`).join('<br />')
+                : json.errorInfo;
+            throw new Error();
         }
         if (!response.ok)
             throw new Error();

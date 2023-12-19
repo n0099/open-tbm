@@ -81,6 +81,7 @@ const scrollStop = _.debounce(() => {
             // ignore element which its y coord is ahead of the top of viewport
             if (elTop >= 0 && result.top > elTop)
                 return { top: elTop, el: curEl };
+
             return result;
         };
     const findFirstDomInView = (selector: string, topOffset = 0): Element =>

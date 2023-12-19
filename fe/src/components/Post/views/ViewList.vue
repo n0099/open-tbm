@@ -155,7 +155,7 @@ import { computed, onMounted, ref } from 'vue';
 import _ from 'lodash';
 
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
-    const hash = route.hash.substring(1);
+    const hash = route.hash.slice(1);
     const idSelectorToHash = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document

@@ -100,14 +100,12 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
     const threadTitle = postPages.value[0].threads[0].title;
     switch (queryFormRef.value?.getCurrentQueryType()) {
         case 'fid':
-        case 'search': {
+        case 'search':
             title.value = `${forumName} - 帖子查询`;
             break;
-        }
-        case 'postID': {
+        case 'postID':
             title.value = `${threadTitle} - ${forumName} - 帖子查询`;
             break;
-        }
     }
 
     const networkTime = Date.now() - startTime;
