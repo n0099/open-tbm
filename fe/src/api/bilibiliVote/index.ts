@@ -2,11 +2,11 @@ import allCandidatesVoteCount from './allCandidatesVoteCount.json';
 import allVoteCountGroupByHour from './allVoteCountGroupByHour.json';
 import allVoteCountGroupByMinute from './allVoteCountGroupByMinute.json';
 import candidateNames from './candidateNames.json';
+import top10CandidatesTimeline from './top10CandidatesTimeline.json';
+import top50CandidatesOfficialValidVoteCount from './top50CandidatesOfficialValidVoteCount.json';
+import top50CandidatesVoteCount from './top50CandidatesVoteCount.json';
 import top5CandidatesVoteCountGroupByHour from './top5CandidatesVoteCountGroupByHour.json';
 import top5CandidatesVoteCountGroupByMinute from './top5CandidatesVoteCountGroupByMinute.json';
-import top10CandidatesTimeline from './top10CandidatesTimeline.json';
-import top50CandidatesVoteCount from './top50CandidatesVoteCount.json';
-import top50CandidatesOfficialValidVoteCount from './top50CandidatesOfficialValidVoteCount.json';
 import type { BoolInt, Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/shared';
 
 export const json = {

@@ -43,8 +43,8 @@ import { removeEnd } from '@/shared';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
+import { useToggle } from '@vueuse/core';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import _ from 'lodash';

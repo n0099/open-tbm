@@ -151,8 +151,6 @@
 <script lang="ts">
 import { compareRouteIsNewQuery, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
 import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
-import { computed, onMounted, ref } from 'vue';
-import _ from 'lodash';
 
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.slice(1);
@@ -167,23 +165,24 @@ export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 </script>
 
 <script setup lang="ts">
-import '@/styles/bootstrapCallout.css';
-import PostCommonMetadataIconLinks from '../badges/PostCommonMetadataIconLinks.vue';
+import { baseGetUser, baseRenderUsername } from './common';
 import BadgePostTime from '../badges/BadgePostTime.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
-
-import { baseGetUser, baseRenderUsername } from './common';
+import PostCommonMetadataIconLinks from '../badges/PostCommonMetadataIconLinks.vue';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { BaiduUserID } from '@/api/user';
 import type { Modify } from '@/shared';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
+import '@/styles/bootstrapCallout.css';
 
+import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
+import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPostsQuery }>();
 const hoveringSubReplyID = ref(0);

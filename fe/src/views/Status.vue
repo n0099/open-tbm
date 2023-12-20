@@ -35,25 +35,25 @@
 import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import TimeRange from '@/components/widgets/TimeRange.vue';
 
-import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
 import { apiStatus, throwIfApiError } from '@/api';
-import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
+import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
 import { titleTemplate } from '@/shared';
+import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 
 import { onMounted, ref, watch } from 'vue';
-import { useIntervalFn } from '@vueuse/core';
-import { useHead } from '@unhead/vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Switch } from 'ant-design-vue';
+import { useIntervalFn } from '@vueuse/core';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
-import * as echarts from 'echarts/core';
 import type { LineSeriesOption } from 'echarts/charts';
 import { LineChart } from 'echarts/charts';
-import { CanvasRenderer } from 'echarts/renderers';
-import { UniversalTransition } from 'echarts/features';
 import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption, VisualMapComponentOption } from 'echarts/components';
 import { DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, ToolboxComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { UniversalTransition } from 'echarts/features';
+import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([TitleComponent, ToolboxComponent, TooltipComponent, GridComponent, VisualMapComponent, LegendComponent, DataZoomComponent, MarkLineComponent, LineChart, CanvasRenderer, UniversalTransition]);
 let chart: echarts.ECharts | null = null;

@@ -51,6 +51,7 @@ module.exports = {
         'plugin:unicorn/recommended',
     ],
     rules: {
+        // as of eslint-plugin-unicorn@49.0.0
         'unicorn/no-null': 'off',
         'unicorn/no-array-callback-reference': 'off',
         'unicorn/no-array-for-each': 'off',
@@ -64,9 +65,42 @@ module.exports = {
         'unicorn/numeric-separators-style': ['error', { onlyIfContainsSeparator: true }],
         'unicorn/switch-case-braces': ['error', 'avoid'],
 
-        'import/no-useless-path-segments': 'error',
-        'import/extensions': ['error', 'always', { ts: 'never' }],
+        // as of eslint-plugin-import@2.29.1
+        'import/namespace': 'off', // https://github.com/import-js/eslint-plugin-import/issues/2340
 
+        'import/no-empty-named-blocks': 'error',
+        'import/no-extraneous-dependencies': 'error',
+        'import/no-mutable-exports': 'error',
+        'import/no-self-import': 'error',
+        'import/no-useless-path-segments': 'error',
+        'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+        'import/extensions': ['error', 'always', { ts: 'never' }],
+        'import/newline-after-import': 'error',
+        'import/no-named-default': 'error',
+        'import/order': ['error', {
+            groups: ['type', 'object', 'index', 'sibling', 'parent', 'internal', 'external', 'builtin', 'unknown'],
+            pathGroups: [ // https://www.digitalocean.com/community/tools/glob
+                { pattern: '**/*.vue', group: 'internal', position: 'before' }, // vue SFC
+                { pattern: '@/**', group: 'internal', position: 'before' },
+                { pattern: 'vue*', group: 'external', position: 'before' }, // vue vue-router
+                { pattern: '*vue', group: 'external', position: 'before' }, // ant-design-vue
+                { pattern: '*vue*/**', group: 'external', position: 'before' }, // @vueuse/core
+                { pattern: '*/*vue*/**', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome
+                { pattern: '{lodash,lodash/**}', group: 'external', position: 'after' }, // lodash
+                { pattern: '{echarts,echarts/**}', group: 'external', position: 'after' },
+            ],
+            pathGroupsExcludedImportTypes: [],
+            distinctGroup: false,
+            alphabetize: { order: 'asc', orderImportKind: 'asc' },
+            warnOnUnassignedImports: true,
+        }],
+
+        // as of @stylistic/eslint-plugin-plus@1.5.1
+        // '@stylistic/indent-binary-ops': ['error', 4],
+        '@stylistic/type-generic-spacing': 'error',
+        '@stylistic/type-named-tuple-spacing': 'error',
+
+        // as of @stylistic/eslint-plugin-migrate@1.5.1
         '@stylistic/dot-location': ['error', 'property'],
         '@stylistic/no-floating-decimal': 'error',
         '@stylistic/no-multi-spaces': 'error',
@@ -91,7 +125,7 @@ module.exports = {
         '@stylistic/multiline-ternary': ['error', 'always-multiline'],
         '@stylistic/new-parens': 'error',
         '@stylistic/no-mixed-operators': 'error',
-        '@stylistic/no-multiple-empty-lines': 'error',
+        '@stylistic/no-multiple-empty-lines': ['error', { max: 1 }],
         '@stylistic/no-tabs': 'error',
         '@stylistic/no-trailing-spaces': 'error',
         '@stylistic/no-whitespace-before-property': 'error',
@@ -139,7 +173,6 @@ module.exports = {
             allowArrayStart: true,
             allowClassStart: true,
         }],
-
         '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: true }],
         '@stylistic/comma-dangle': 'error',
         '@stylistic/comma-spacing': 'error',
@@ -165,14 +198,8 @@ module.exports = {
             { blankLine: 'always', prev: '*', next: 'return' },
         ],
         '@stylistic/member-delimiter-style': ['error', {
-            multiline: {
-                delimiter: 'comma',
-                requireLast: false,
-            },
-            singleline: {
-                delimiter: 'comma',
-                requireLast: false,
-            },
+            multiline: { delimiter: 'comma', requireLast: false },
+            singleline: { delimiter: 'comma', requireLast: false },
         }],
         '@stylistic/type-annotation-spacing': 'error',
 

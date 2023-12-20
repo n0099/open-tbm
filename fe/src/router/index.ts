@@ -1,5 +1,5 @@
-import Index from '@/views/Index.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
+import Index from '@/views/Index.vue';
 import type { Cursor } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import type { Component } from 'vue';

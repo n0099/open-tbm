@@ -43,22 +43,22 @@
 import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import TimeRange from '@/components/widgets/TimeRange.vue';
 
-import type { ApiForumList, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
 import { apiForumList, apiStatsForumsPostCount, throwIfApiError } from '@/api';
-import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
-import { titleTemplate } from '@/shared';
+import type { ApiForumList, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
 import type { Writable } from '@/shared';
+import { titleTemplate } from '@/shared';
+import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
-import _ from 'lodash';
 import { onBeforeMount, ref } from 'vue';
-import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { useHead } from '@unhead/vue';
+import _ from 'lodash';
 
-import * as echarts from 'echarts/core';
-import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
-import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';
 import type { LineSeriesOption } from 'echarts/charts';
 import { BarChart, LineChart } from 'echarts/charts';
+import type { DataZoomComponentOption, GridComponentOption, LegendComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
+import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
 import { UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 

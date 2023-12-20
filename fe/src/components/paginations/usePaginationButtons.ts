@@ -1,5 +1,5 @@
-import { assertRouteNameIsStr, routeNameWithCursor } from '@/router';
 import type { Cursor } from '@/api/index.d';
+import { assertRouteNameIsStr, routeNameWithCursor } from '@/router';
 import { computed } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
 import { useRoute } from 'vue-router';

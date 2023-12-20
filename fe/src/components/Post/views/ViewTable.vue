@@ -82,10 +82,10 @@
 </template>
 
 <script setup lang="ts">
+import { baseGetUser, baseRenderUsername } from './common';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 
-import { baseGetUser, baseRenderUsername } from './common';
 import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { Pid, Tid } from '@/shared';
@@ -93,8 +93,8 @@ import { toTiebaUserPortraitImageUrl, toTiebaUserProfileUrl } from '@/shared';
 
 import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
-import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import { Table } from 'ant-design-vue';
+import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPostsQuery }>();

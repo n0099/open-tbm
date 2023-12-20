@@ -21,10 +21,10 @@
 
 <script setup lang="ts">
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
-import type { TiebaUserGender } from '@/api/user';
 import type { ApiUsersQuery } from '@/api/index.d';
-import { lazyLoadUpdate } from '@/shared/lazyLoad';
+import type { TiebaUserGender } from '@/api/user';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
+import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import { watch } from 'vue';
 
 const props = defineProps<{

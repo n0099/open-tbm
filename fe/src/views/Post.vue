@@ -36,24 +36,24 @@ export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
 </script>
 
 <script setup lang="ts">
-import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
-import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
-import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
 import NavSidebar from '@/components/Post/NavSidebar.vue';
 import PostsPage from '@/components/Post/PostsPage.vue';
+import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
 import { postListItemScrollPosition } from '@/components/Post/views/ViewList.vue';
+import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
+import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
-import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
 import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
+import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
-import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
+import { lazyLoadUpdate } from '@/shared/lazyLoad';
 
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useHead } from '@unhead/vue';
 import { Menu, MenuItem } from 'ant-design-vue';
+import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
 export type PostViewRenderer = 'list' | 'table';

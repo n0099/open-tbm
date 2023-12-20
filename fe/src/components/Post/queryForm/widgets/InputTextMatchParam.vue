@@ -42,10 +42,10 @@ export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { textParamSubParamMatchByValues } from '../queryParams';
 import type { KnownTextParams, NamelessParamText } from '../queryParams';
+import { textParamSubParamMatchByValues } from '../queryParams';
 import type { ObjValues } from '@/shared';
+import { computed } from 'vue';
 import _ from 'lodash';
 
 const props = defineProps<{ paramIndex: number }>();

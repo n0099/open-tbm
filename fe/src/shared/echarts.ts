@@ -1,9 +1,10 @@
+import { DateTime } from 'luxon';
+import _ from 'lodash';
+
 import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts';
 import type { ToolboxComponentOption } from 'echarts/components';
-import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types';
 import * as echarts from 'echarts/core';
-import _ from 'lodash';
-import { DateTime } from 'luxon';
+import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types';
 
 window.addEventListener('resize', _.throttle(() => {
     document.querySelectorAll<HTMLElement>('.echarts').forEach(echartsDom => {

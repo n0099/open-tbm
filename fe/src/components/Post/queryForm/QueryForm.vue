@@ -162,18 +162,18 @@
 </template>
 
 <script setup lang="ts">
+import type { AddNameToParam, KnownDateTimeParams, KnownNumericParams, KnownParams, KnownTextParams, KnownUniqueParams, NamelessParamNumeric, RequiredPostTypes } from './queryParams';
+import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import InputNumericParam from './widgets/InputNumericParam.vue';
 import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
 import { isRouteUpdateTriggeredBySubmitQueryForm } from '@/views/Post.vue';
-import type { AddNameToParam, KnownDateTimeParams, KnownNumericParams, KnownParams, KnownTextParams, KnownUniqueParams, NamelessParamNumeric, RequiredPostTypes } from './queryParams';
-import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
 import type { ApiForumList } from '@/api/index.d';
+import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
-import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 
 import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';

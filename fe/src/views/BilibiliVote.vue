@@ -71,21 +71,21 @@ import { titleTemplate, toTiebaUserProfileUrl } from '@/shared';
 import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
 import { onMounted, ref, watch } from 'vue';
-import { useHead } from '@unhead/vue';
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { useHead } from '@unhead/vue';
 import { DateTime } from 'luxon';
 import _ from 'lodash';
 
-import * as echarts from 'echarts/core';
-import type { OptionDataItem } from 'echarts/types/src/util/types';
-import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction';
 import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts/charts';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import type { AxisPointerComponentOption, DataZoomComponentOption, DatasetComponentOption, GraphicComponentOption, GridComponentOption, LegendComponentOption, MarkLineComponentOption, TimelineComponentOption, TitleComponentOption, ToolboxComponentOption, TooltipComponentOption } from 'echarts/components';
 import { DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
 import { LabelLayout } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
+import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction';
+import type { OptionDataItem } from 'echarts/types/src/util/types';
 
 echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent]);
 
