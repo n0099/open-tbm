@@ -1,7 +1,7 @@
 import tippy, { createSingleton } from 'tippy.js';
+import 'tippy.js/animations/perspective.css';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
-import 'tippy.js/animations/perspective.css';
 
 tippy.setDefaultProps({
     animation: 'perspective',

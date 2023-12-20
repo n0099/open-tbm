@@ -1,8 +1,8 @@
 import type { BaiduUserID, TiebaUser } from '@/api/user';
-import '@/styles/tiebaPostElements.css';
-import 'viewerjs/dist/viewer.css';
-import viewer from 'v-viewer';
 import { app } from '@/main';
+import '@/styles/tiebaPostElements.css';
+import viewer from 'v-viewer';
+import 'viewerjs/dist/viewer.css';
 import _ from 'lodash';
 
 app.use(viewer, {

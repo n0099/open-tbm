@@ -149,8 +149,12 @@
 </template>
 
 <script lang="ts">
+/* eslint-disable import/order */
 import { compareRouteIsNewQuery, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
+import { computed, onMounted, ref } from 'vue';
 import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
+import _ from 'lodash';
+/* eslint-enable import/order */
 
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.slice(1);
@@ -178,11 +182,9 @@ import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 import '@/styles/bootstrapCallout.css';
 
-import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
-import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPostsQuery }>();
 const hoveringSubReplyID = ref(0);

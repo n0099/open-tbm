@@ -30,6 +30,7 @@
 </template>
 
 <script lang="ts">
+// eslint-disable-next-line import/order
 import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
 
 export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);

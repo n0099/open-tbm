@@ -1,57 +1,5 @@
-// eslint-disable-next-line no-undef
-module.exports = {
-    root: true,
-    reportUnusedDisableDirectives: true,
-    parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.node.json'],
-        // eslint-disable-next-line no-undef
-        tsconfigRootDir: __dirname,
-    },
-    overrides: [{ // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
-        files: '*.ts',
-        parser: 'typescript-eslint-parser-for-extra-files',
-        settings: { 'import/resolver': { typescript: true } },
-    }, {
-        files: '*.vue',
-        parser: 'vue-eslint-parser',
-        parserOptions: {
-            parser: 'typescript-eslint-parser-for-extra-files',
-            project: ['./tsconfig.json', './tsconfig.node.json'],
-            // eslint-disable-next-line no-undef
-            tsconfigRootDir: __dirname,
-        },
-        settings: {
-            'import/resolver': {
-                typescript: true,
-
-                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-var-requires, no-undef
-                vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
-            },
-        },
-    }, {
-        files: '.eslintrc.cjs',
-        plugins: ['@stylistic', '@stylistic/migrate'],
-        rules: {
-            '@stylistic/migrate/migrate-js': 'error',
-            '@stylistic/migrate/migrate-ts': 'error',
-            '@stylistic/comma-dangle': ['error', 'always-multiline'],
-            '@typescript-eslint/naming-convention': 'off',
-        },
-    }],
-    plugins: ['@stylistic'],
-    extends: [
-        'eslint:recommended',
-        'plugin:vue/vue3-recommended',
-        '@vue/typescript/recommended',
-        'plugin:@typescript-eslint/strict-type-checked',
-        'plugin:@typescript-eslint/stylistic-type-checked',
-        'plugin:import/recommended',
-        'plugin:import/typescript',
-        'plugin:unicorn/recommended',
-    ],
-    rules: {
-        // as of eslint-plugin-unicorn@49.0.0
+const eslintPluginUnicorn = {// as of eslint-plugin-unicorn@49.0.0
+    optout: {
         'unicorn/no-null': 'off',
         'unicorn/no-array-callback-reference': 'off',
         'unicorn/no-array-for-each': 'off',
@@ -60,14 +8,18 @@ module.exports = {
         'unicorn/prevent-abbreviations': 'off',
         'unicorn/consistent-function-scoping': 'off',
         'unicorn/filename-case': 'off',
-
+    },
+    optin: {
         'unicorn/catch-error-name': ['error', { name: 'e' }],
         'unicorn/numeric-separators-style': ['error', { onlyIfContainsSeparator: true }],
         'unicorn/switch-case-braces': ['error', 'avoid'],
-
-        // as of eslint-plugin-import@2.29.1
-        'import/namespace': 'off', // https://github.com/import-js/eslint-plugin-import/issues/2340
-
+    }
+};
+const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
+    optout: {
+        'import/namespace': 'off' // https://github.com/import-js/eslint-plugin-import/issues/2340
+    },
+    optin: {
         'import/no-empty-named-blocks': 'error',
         'import/no-extraneous-dependencies': 'error',
         'import/no-mutable-exports': 'error',
@@ -93,14 +45,18 @@ module.exports = {
             distinctGroup: false,
             alphabetize: { order: 'asc', orderImportKind: 'asc' },
             warnOnUnassignedImports: true,
-        }],
-
-        // as of @stylistic/eslint-plugin-plus@1.5.1
+        }]
+    }
+};
+const stylisticPlus = { // as of @stylistic/eslint-plugin-plus@1.5.1
+    optin: {
         // '@stylistic/indent-binary-ops': ['error', 4],
         '@stylistic/type-generic-spacing': 'error',
         '@stylistic/type-named-tuple-spacing': 'error',
-
-        // as of @stylistic/eslint-plugin-migrate@1.5.1
+    }
+};
+const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
+    optin: {
         '@stylistic/dot-location': ['error', 'property'],
         '@stylistic/no-floating-decimal': 'error',
         '@stylistic/no-multi-spaces': 'error',
@@ -202,10 +158,13 @@ module.exports = {
             singleline: { delimiter: 'comma', requireLast: false },
         }],
         '@stylistic/type-annotation-spacing': 'error',
-
-        // as of eslint@8.56.0
+    }
+};
+const eslint = { // as of eslint@8.56.0
+    optout: {
         camelcase: 'off',
-
+    },
+    optin: {
         'no-await-in-loop': 'error',
         'no-promise-executor-return': 'error',
         'no-template-curly-in-string': 'error',
@@ -297,8 +256,10 @@ module.exports = {
         'logical-assignment-operators': ['error', 'always', { enforceForIfStatements: true }],
         'no-empty-static-block': 'error',
         'no-new-native-nonconstructor': 'error',
-
-        // as of @typescript-eslint@6.14.0
+    }
+};
+const typescriptESLint = { // as of @typescript-eslint@6.14.0
+    override: {
         'no-empty-function': 'off',
         '@typescript-eslint/no-empty-function': 'error',
         'default-param-last': 'off',
@@ -339,7 +300,8 @@ module.exports = {
         '@typescript-eslint/class-methods-use-this': 'error',
         'prefer-destructuring': 'off',
         '@typescript-eslint/prefer-destructuring': 'error',
-
+    },
+    optin: {
         '@typescript-eslint/array-type': ['error', {
             default: 'array-simple',
             readonly: 'array-simple',
@@ -421,15 +383,18 @@ module.exports = {
         '@typescript-eslint/no-duplicate-type-constituents': ['error', { ignoreUnions: true }],
         '@typescript-eslint/no-unsafe-enum-comparison': 'error',
         '@typescript-eslint/no-unsafe-unary-minus': 'error',
-
-        // as of eslint-plugin-vue@9.19.2
+    }
+};
+const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
+    optout: {
         'vue/max-attributes-per-line': 'off',
         'vue/singleline-html-element-content-newline': 'off',
         'vue/no-reserved-component-names': 'off', // for component in antdv
         'vue/multi-word-component-names': 'off',
         'vue/require-default-prop': 'off',
         'vue/multiline-html-element-content-newline': 'off',
-
+    },
+    optin: {
         'vue/html-indent': ['error', 4],
         'vue/attribute-hyphenation': ['error', 'never'],
         'vue/attributes-order': ['error', {
@@ -553,5 +518,73 @@ module.exports = {
         'vue/no-use-v-else-with-v-for': 'error',
         'vue/no-unused-emit-declarations': 'error',
         'vue/no-ref-object-reactivity-loss': 'error',
+    }
+};
+
+// eslint-disable-next-line no-undef
+module.exports = {
+    root: true,
+    reportUnusedDisableDirectives: true,
+    parserOptions: {
+        project: ['./tsconfig.json', './tsconfig.node.json'],
+        // eslint-disable-next-line no-undef
+        tsconfigRootDir: __dirname,
+    },
+    overrides: [{ // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
+        files: '*.ts',
+        parser: 'typescript-eslint-parser-for-extra-files',
+        settings: { 'import/resolver': { typescript: true } },
+    }, {
+        files: '*.vue',
+        parser: 'vue-eslint-parser',
+        parserOptions: {
+            parser: 'typescript-eslint-parser-for-extra-files',
+            project: ['./tsconfig.json', './tsconfig.node.json'],
+            // eslint-disable-next-line no-undef
+            tsconfigRootDir: __dirname,
+        },
+        settings: {
+            'import/resolver': {
+                typescript: true,
+
+                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-var-requires, no-undef
+                vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
+            },
+        },
+    }, {
+        files: '.eslintrc.cjs',
+        plugins: ['@stylistic', '@stylistic/migrate'],
+        rules: {
+            '@stylistic/migrate/migrate-js': 'error',
+            '@stylistic/migrate/migrate-ts': 'error',
+            '@stylistic/comma-dangle': ['error', 'always-multiline'],
+            '@typescript-eslint/naming-convention': 'off',
+        },
+    }],
+    plugins: ['@stylistic'],
+    extends: [
+        'eslint:recommended',
+        'plugin:vue/vue3-recommended',
+        '@vue/typescript/recommended',
+        'plugin:@typescript-eslint/strict-type-checked',
+        'plugin:@typescript-eslint/stylistic-type-checked',
+        'plugin:import/recommended',
+        'plugin:import/typescript',
+        'plugin:unicorn/recommended',
+    ],
+    rules: {
+        ...eslintPluginUnicorn.optout,
+        ...eslintPluginUnicorn.optin,
+        ...eslintPluginImport.optout,
+        ...eslintPluginImport.optin,
+        ...stylisticPlus.optin,
+        ...stylisticMigrate.optin,
+        ...eslint.optout,
+        ...eslint.optin,
+        ...typescriptESLint.override,
+        ...typescriptESLint.optin,
+        ...eslintPluginVue.optout,
+        ...eslintPluginVue.optin,
     },
 };
