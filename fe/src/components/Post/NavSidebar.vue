@@ -11,7 +11,7 @@
                     <div class="d-block btn-group p-1" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
-                                    :key="String(isFirstReplyInView)"
+                                    :key="isFirstReplyInView.toString()"
                                     @click="_ => navigate(cursor, null, reply.pid)" :data-pid="reply.pid"
                                     :class="{
                                         'btn-info': isFirstReplyInView,
@@ -68,7 +68,7 @@ const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) 
 };
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if ((domEvent.target as Element).tagName !== 'BUTTON') { // ignore clicks on reply link
-        const [, p, t] = /page(\d+)-t(\d+)/u.exec(String(key)) ?? [];
+        const [, p, t] = /page(\d+)-t(\d+)/u.exec(key.toString()) ?? [];
         await navigate(p, t);
     }
 };

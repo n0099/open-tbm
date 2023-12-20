@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-undef
 module.exports = {
     root: true,
+    reportUnusedDisableDirectives: true,
     parserOptions: {
         project: ['./tsconfig.json', './tsconfig.node.json'],
         // eslint-disable-next-line no-undef
@@ -53,6 +54,7 @@ module.exports = {
         'unicorn/no-null': 'off',
         'unicorn/no-array-callback-reference': 'off',
         'unicorn/no-array-for-each': 'off',
+        'unicorn/no-await-expression-member': 'off',
         'unicorn/prefer-number-properties': 'off',
         'unicorn/prevent-abbreviations': 'off',
         'unicorn/consistent-function-scoping': 'off',
@@ -183,7 +185,7 @@ module.exports = {
         'no-unreachable-loop': 'error',
         'require-atomic-updates': 'error',
         'accessor-pairs': 'error',
-        'array-callback-return': 'error',
+        'array-callback-return': ['error', { checkForEach: true }],
         complexity: ['error', { max: 30 }],
         'consistent-return': 'error',
         curly: ['error', 'multi-or-nest', 'consistent'],

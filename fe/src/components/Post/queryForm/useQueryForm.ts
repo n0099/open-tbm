@@ -40,7 +40,7 @@ export default <
         if (resetToDefault)
             return _.defaultsDeep(defaultParam, param) as T;
 
-        return _.defaultsDeep(_.cloneDeep(param), defaultParam);
+        return _.defaultsDeep(_.cloneDeep(param), defaultParam) as T;
     };
     const addParam = (name: string) => {
         params.value.push(fillParamDefaultValue({ name }));
@@ -80,10 +80,8 @@ export default <
                 return;
 
             // undefined means this sub param must get deleted and merge into parent, as part of the parent param value
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             if (newParam.subParam[name] === value || value === undefined)
-                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                delete newParam.subParam[name];
+                Reflect.deleteProperty(newParam.subParam, name);
         });
         if (_.isEmpty(newParam.subParam))
             delete newParam.subParam;

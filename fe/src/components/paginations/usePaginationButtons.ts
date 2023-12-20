@@ -10,7 +10,7 @@ export const useNextCursorRoute = (nextCursor: Cursor) => computed<RouteLocation
     const route = useRoute();
     assertRouteNameIsStr(route.name);
     const name = routeNameWithCursor(route.name);
-    const { query } = route;
+    const { query, params } = route;
 
-    return { query, name, params: { ...route.params, cursor: nextCursor } };
+    return { query, name, params: { ...params, cursor: nextCursor } };
 });

@@ -20,6 +20,7 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
     document.body.style.cursor = 'progress';
     let errorCode = 0;
     let errorMessage = `GET ${endpoint}<br />`;
+    const errorUUID = crypto.randomUUID();
     try {
         const response = await fetch(
             `${import.meta.env.VITE_API_URL_PREFIX}${endpoint}`
@@ -36,14 +37,14 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
                 ? _.map(json.errorInfo, (info, paramName) =>
                     `参数 ${paramName}：${info.join('<br />')}`).join('<br />')
                 : json.errorInfo;
-            throw new Error();
+            throw new Error(errorUUID);
         }
         if (!response.ok)
-            throw new Error();
+            throw new Error(errorUUID);
 
         return json;
     } catch (e: unknown) {
-        if (e instanceof Error) {
+        if (e instanceof Error && e.message === errorUUID) {
             const { message: exceptionMessage } = e;
             const text = `${errorMessage}<br />${exceptionMessage}`;
             notyShow('error', text);

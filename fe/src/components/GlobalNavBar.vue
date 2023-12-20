@@ -64,11 +64,10 @@ const navs = reactive<Array<DropDown | Route>>([
 ]);
 
 watch(() => route.name, () => {
-    navs.forEach(nav => ({ // we don't have to reassign navs since it's reactive
-        ...nav,
-        isActive: 'routes' in nav
+    navs.forEach(nav => {
+        nav.isActive = 'routes' in nav
             ? nav.routes.some(i => i.route === route.name)
-            : nav.route === route.name
-    }));
+            : nav.route === route.name;
+    });
 });
 </script>

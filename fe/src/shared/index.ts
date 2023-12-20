@@ -52,7 +52,7 @@ export const toTiebaUserPortraitImageUrl = (portrait: string) =>
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
 export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);
 export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<string, T | string> =>
-    _.mapValues(object, i => (_.isBoolean(i) ? String(i) : i));
+    _.mapValues(object, i => (_.isBoolean(i) ? i.toString() : i));
 export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'true';
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));

@@ -27,7 +27,7 @@ export const routeNameWithCursor = (name: string) =>
 
 // https://github.com/vuejs/vue-router-next/issues/1184
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => String(r.params.cursor ?? '');
+export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => r.params.cursor?.toString() ?? '';
 
 const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
     nprogress.start();
@@ -92,7 +92,7 @@ export default createRouter({
             path: '/:pathMatch(.*)*',
             name: '404',
             component: PlaceholderError,
-            props: r => ({ error: { errorCode: 404, errorInfo: `${r.path}` } })
+            props: r => ({ error: { errorCode: 404, errorInfo: r.path } })
         },
         { path: '/', name: 'index', component: Index },
         _.merge(withCursorRoute(postRoute, '/p', 'post'),

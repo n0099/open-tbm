@@ -479,7 +479,7 @@ const loadCharts = {
             label: {
                 show: true,
                 position: 'middle',
-                formatter: String(-(count - validCount[index - 1]))
+                formatter: (-(count - validCount[index - 1])).toString()
             },
             coord: [index, count]
         }, { coord: [index - 1, validCount[index - 1]] }]);
@@ -525,7 +525,7 @@ const loadCharts = {
                         label: {
                             show: true,
                             position: 'middle',
-                            formatter: String(-(count - validCount[index + 1]))
+                            formatter: (-(count - validCount[index + 1])).toString()
                         },
                         coord: [count, index]
                     }, { coord: [validCount[index + 1], index + 1] }
@@ -571,7 +571,7 @@ const loadCharts = {
 
         // clone last timeline option then transform it to official votes count option
         const originalTimelineOptions = _.cloneDeep(options.at(-1));
-        if (!_.isArray(originalTimelineOptions.series))
+        if (originalTimelineOptions === undefined || !_.isArray(originalTimelineOptions.series))
             return;
         _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
         options.push(_.merge(originalTimelineOptions, { // deep merge
@@ -636,8 +636,7 @@ const loadCharts = {
                 symbolSize: 2,
                 smooth: true,
                 data: _.filter(validVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
-            });
-            series.push({
+            }, {
                 name: `${candidateIndex}号无效票增量`,
                 type: 'line',
                 symbolSize: 2,

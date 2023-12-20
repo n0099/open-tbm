@@ -9,9 +9,9 @@ const style = document.createElement('style');
 
 // https://github.com/mrdoob/stats.js/issues/115
 style.textContent = '.statsjs canvas { display: block !important; }';
-container.appendChild(style);
-container.appendChild(stats.dom);
-document.body.appendChild(container);
+container.append(style);
+container.append(stats.dom);
+document.body.append(container);
 
 requestAnimationFrame(function updateStats() {
     stats.update();

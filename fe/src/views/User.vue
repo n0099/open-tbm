@@ -23,7 +23,7 @@ import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
 
 import { nextTick, onBeforeMount, ref, watchEffect } from 'vue';
-import type { RouteLocationNormalizedLoaded } from 'vue-router';
+import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@unhead/vue';
 import _ from 'lodash';
@@ -79,7 +79,7 @@ onBeforeMount(async () => fetchUsersData(route, true));
 
 watchEffect(() => {
     selectUserBy.value = removeStart(removeEnd(
-        String(route.name ?? ''),
+        route.name?.toString() ?? '',
         routeNameSuffix.page
     ), 'user/') as SelectTiebaUserBy;
     params.value = { ..._.omit(props, 'page'), uid: Number(props.uid) };
@@ -95,8 +95,10 @@ onBeforeRouteUpdate(async (to, from) => {
 
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
-setComponentCustomScrollBehaviour((to, from) => {
+setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
     if (!compareRouteIsNewQuery(to, from))
         return { el: `#page${getRouteCursorParam(to)}` };
+
+    return undefined;
 });
 </script>

@@ -123,14 +123,12 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(_route);
     if (flattenParams === false)
         return false;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
     if (isFetchSuccess && renderType.value === 'list') {
         const scrollPosition = postListItemScrollPosition(_route);
         const el = document.querySelector(scrollPosition.el);
         if (el === null)
             return isFetchSuccess;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
     }
 

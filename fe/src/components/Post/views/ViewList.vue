@@ -70,7 +70,7 @@
                     </div>
                 </div>
             </div>
-            <div v-for="reply in thread.replies" :key="reply.pid" :data-post-id="reply.pid" :id="reply.pid">
+            <div v-for="reply in thread.replies" :key="reply.pid" :data-post-id="reply.pid" :id="reply.pid.toString()">
                 <div class="reply-title sticky-top card-header">
                     <div class="d-inline-flex gap-1 h5">
                         <span class="badge bg-secondary">{{ reply.floor }}楼</span>
@@ -150,7 +150,7 @@
 
 <script lang="ts">
 import { compareRouteIsNewQuery, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
-import type { RouteLocationNormalizedLoaded } from 'vue-router';
+import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
 import { computed, onMounted, ref } from 'vue';
 import _ from 'lodash';
 
@@ -194,6 +194,7 @@ const posts = computed(() => {
     }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {
+            // eslint-disable-next-line unicorn/no-array-reduce
             reply.subReplies = reply.subReplies.reduce<SubReply[][]>(
                 (groupedSubReplies, subReply, index, subReplies) => {
                     if (_.isArray(subReply))
@@ -228,7 +229,7 @@ const renderUsername = baseRenderUsername(getUser);
 const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
 onMounted(initialTippy);
-setComponentCustomScrollBehaviour((to, from) => {
+setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
     if (isRouteUpdateTriggeredByPostsNavScrollEvent.value) {
         isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
 
@@ -236,6 +237,8 @@ setComponentCustomScrollBehaviour((to, from) => {
     }
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
+
+    return undefined;
 });
 </script>
 

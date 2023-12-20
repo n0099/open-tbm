@@ -272,7 +272,7 @@ const submitRoute = async () => { // decide that route to go
                 // exit early to prevent pushing other route
                 return router.push({
                     name: `post/${postIDName}`,
-                    params: { [postIDName]: String(postIDParam[0].value) }
+                    params: { [postIDName]: postIDParam[0].value?.toString() }
                 });
             }
         }
@@ -325,7 +325,7 @@ const checkParams = async (): Promise<boolean> => {
         return required[0] === 'ALL' && _.isEqual(required[1], current);
     };
     const requiredPostTypesToString = (required: NonNullable<RequiredPostTypes[string]>) =>
-        `${required[1].join(required[0] === 'SUB' ? ' | ' : ' & ')}`;
+        required[1].join(required[0] === 'SUB' ? ' | ' : ' & ');
     const postTypes = _.sortBy(uniqueParams.value.postTypes.value);
 
     // check params required post types, index query doesn't restrict on post types

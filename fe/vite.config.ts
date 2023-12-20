@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
@@ -8,7 +8,7 @@ export default defineConfig({
     build: { target: 'esnext' },
     resolve: {
         alias: [
-            { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) }
+            { find: '@', replacement: fileURLToPath(new URL('src', import.meta.url)) }
         ]
     },
     assetsInclude: ['**/*.avifs']

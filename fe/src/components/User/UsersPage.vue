@@ -1,7 +1,7 @@
 <template>
     <div>
         <PageCurrentButton :currentCursor="users.pages.currentCursor" />
-        <div v-for="(user, userIndex) in users.users" :key="user.uid" class="row" :id="String(user.uid)">
+        <div v-for="(user, userIndex) in users.users" :key="user.uid" class="row" :id="user.uid.toString()">
             <div class="col-3">
                 <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
                      class="lazy d-block mx-auto badge bg-light" width="110" height="110" />
