@@ -260,7 +260,7 @@ const currentQueryTypeDesc = computed(() => {
     return '空查询';
 });
 
-const submitRoute = async () => { // decide that route to go
+const submitRoute = async () => { // decide which route to go
     const clearedParams = clearedParamsDefaultValue();
     const clearedUniqueParams = clearedUniqueParamsDefaultValue();
     if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
@@ -375,7 +375,7 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
     } else { // post id routes
         uniqueParams.value = _.mapValues(uniqueParams.value, param =>
             fillParamDefaultValue(param, true)) as KnownUniqueParams; // reset to default
-        params.value = _.map(_.omit(route.params, 'pathMatch', 'page'), (value, name) =>
+        params.value = _.map(_.omit(route.params, 'pathMatch', 'cursor'), (value, name) =>
             fillParamDefaultValue({ name, value }));
     }
 };

@@ -30,12 +30,13 @@ function detectUndefined(node) {
             'noty_',
             'ls-is-cached', // lazysizes
             'tippy-',
+            'viewer-',
+            'statsjs',
 
             // own usages
             'loading',
             'echarts',
             'bs-callout',
-            'statsjs',
 
             // fontawesome
             'fa-',

@@ -20,5 +20,5 @@ const props = defineProps<{
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const nextCursorRoute = useNextCursorRoute(props.posts.pages.currentCursor);
+const nextCursorRoute = useNextCursorRoute(props.posts.pages.nextCursor);
 </script>

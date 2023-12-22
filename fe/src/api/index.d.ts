@@ -41,13 +41,13 @@ export interface ApiStatsForumPostCountQueryParam {
     endTime: UnixTimestamp
 }
 
-interface ApiQueryParamPagination { page?: UInt }
+interface ApiQueryParamCursorPagination { cursor?: Cursor }
 export interface ApiUsersQuery {
     pages: CursorPagination,
     users: TiebaUser[]
 }
 export type ApiUsersQueryQueryParam
-    = ApiQueryParamPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam };
+    = ApiQueryParamCursorPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam };
 
 export type Cursor = string;
 export type JsonString = string;
@@ -56,7 +56,7 @@ interface CursorPagination {
     nextCursor: Cursor,
     hasMore: boolean
 }
-export type ApiPostsQuery = Omit<ApiUsersQuery, 'pages'> & {
+export interface ApiPostsQuery {
     type: 'index' | 'search',
     pages: CursorPagination & {
         matchQueryPostCount: { [P in PostType]: UInt },
@@ -67,6 +67,7 @@ export type ApiPostsQuery = Omit<ApiUsersQuery, 'pages'> & {
         replies: Array<Reply & {
             subReplies: SubReply[]
         }>
-    }>
-};
-export interface ApiPostsQueryQueryParam { cursor?: Cursor, query: JsonString }
+    }>,
+    users: TiebaUser[]
+}
+export interface ApiPostsQueryQueryParam extends ApiQueryParamCursorPagination { query: JsonString }

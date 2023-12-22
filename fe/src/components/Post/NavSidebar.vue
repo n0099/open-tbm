@@ -8,7 +8,7 @@
                 <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
-                    <div class="d-block btn-group p-1" role="group">
+                    <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
                                     :key="isFirstReplyInView.toString()"
@@ -166,7 +166,7 @@ watchEffect(() => {
     const navMenuEl = replyEl?.closest('.posts-nav');
     if (replyEl !== null && navMenuEl
         && navMenuEl.getBoundingClientRect().top === 0) // is navMenuEl sticking to the top border of viewport
-        navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 100px offset to scroll down replyEl
+        navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 150px offset to scroll down replyEl
 });
 </script>
 

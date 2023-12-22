@@ -82,7 +82,7 @@ watchEffect(() => {
         route.name?.toString() ?? '',
         routeNameSuffix.page
     ), 'user/') as SelectTiebaUserBy;
-    params.value = { ..._.omit(props, 'page'), uid: Number(props.uid) };
+    params.value = { ..._.omit(props, 'cursor'), uid: Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);

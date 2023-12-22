@@ -32,7 +32,7 @@ const props = defineProps<{
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const nextCursorRoute = useNextCursorRoute(props.users.pages.currentCursor);
+const nextCursorRoute = useNextCursorRoute(props.users.pages.nextCursor);
 
 const userGender = (gender: TiebaUserGender) => {
     const gendersList = {

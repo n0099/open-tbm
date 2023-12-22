@@ -20,7 +20,7 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name'])
         throw new Error('https://github.com/vuejs/vue-router-next/issues/1185');
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
-    !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'page'), _.omit(from.params, 'page')));
+    !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'cursor'), _.omit(from.params, 'cursor')));
 export const routeNameSuffix = { page: '+p', cursor: '+c' } as const;
 export const routeNameWithCursor = (name: string) =>
     (_.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`);
@@ -61,11 +61,6 @@ const withChildrenRoute = (
             ...childrenBaseRoute
         } as RouteRecordSingleView | RouteRecordMultipleViews]
     });
-const withPageRoute = (parentRoute: ParentRoute, path: string, name: string): ReturnType<typeof withChildrenRoute> =>
-    withChildrenRoute(path, name, parentRoute, {
-        path: 'page/:page(\\d+)',
-        name: `${name}${routeNameSuffix.page}`
-    });
 const withCursorRoute = (parentRoute: ParentRoute, path: string, name: string): ReturnType<typeof withChildrenRoute> =>
     withChildrenRoute(path, name, parentRoute, {
         path: 'cursor/:cursor(\\d+)',
@@ -105,12 +100,12 @@ export default createRouter({
                     withCursorRoute(postRoute, ':pathMatch(.*)*', 'post/param')
                 ]
             }),
-        _.merge(withPageRoute(userRoute, '/u', 'user'),
+        _.merge(withCursorRoute(userRoute, '/u', 'user'),
             {
                 children: [
-                    withPageRoute(userRoute, 'id/:uid(\\d+)', 'user/uid'),
-                    withPageRoute(userRoute, 'n/:name', 'user/name'),
-                    withPageRoute(userRoute, 'dn/:displayName', 'user/displayName')
+                    withCursorRoute(userRoute, 'id/:uid(\\d+)', 'user/uid'),
+                    withCursorRoute(userRoute, 'n/:name', 'user/name'),
+                    withCursorRoute(userRoute, 'dn/:displayName', 'user/displayName')
                 ]
             }),
         withViewRoute(import('@/views/Status.vue'), 'status'),

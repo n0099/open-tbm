@@ -5,6 +5,7 @@ import '@/styles/style.css';
 import { createApp } from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { createHead } from '@unhead/vue';
+import { createPinia } from 'pinia';
 
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -46,5 +47,5 @@ if (googleAnalyticsMeasurementId !== '') {
     await import('@/gtag.js');
 }
 
-export const app = createApp(App).use(router).use(createHead());
+export const app = createApp(App).use(router).use(createHead()).use(createPinia());
 app.mount('#app');
