@@ -1,4 +1,4 @@
-const eslintPluginUnicorn = {// as of eslint-plugin-unicorn@49.0.0
+const eslintPluginUnicorn = {// as of eslint-plugin-unicorn@50.0.1
     optout: {
         'unicorn/no-null': 'off',
         'unicorn/no-array-callback-reference': 'off',
@@ -258,7 +258,7 @@ const eslint = { // as of eslint@8.56.0
         'no-new-native-nonconstructor': 'error',
     }
 };
-const typescriptESLint = { // as of @typescript-eslint@6.14.0
+const typescriptESLint = { // as of @typescript-eslint@6.15.0
     override: {
         'no-empty-function': 'off',
         '@typescript-eslint/no-empty-function': 'error',
