@@ -29,13 +29,6 @@
     </div>
 </template>
 
-<script lang="ts">
-// eslint-disable-next-line import/order
-import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
-
-export const isRouteUpdateTriggeredBySubmitQueryForm = ref(false);
-</script>
-
 <script setup lang="ts">
 import NavSidebar from '@/components/Post/NavSidebar.vue';
 import PostsPage from '@/components/Post/PostsPage.vue';
@@ -50,7 +43,9 @@ import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
 import { lazyLoadUpdate } from '@/shared/lazyLoad';
+import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
+import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
@@ -137,8 +132,8 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
 };
 
 onBeforeRouteUpdate(async (to, from) => {
-    const isNewQuery = isRouteUpdateTriggeredBySubmitQueryForm.value || compareRouteIsNewQuery(to, from);
-    isRouteUpdateTriggeredBySubmitQueryForm.value = false;
+    const isNewQuery = useTriggerRouteUpdateStore().isTriggeredBy('<QueryForm>@submit')
+        || compareRouteIsNewQuery(to, from);
     const cursor = getRouteCursorParam(to);
     if (!(isNewQuery || _.isEmpty(_.filter(
         postPages.value,

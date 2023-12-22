@@ -169,11 +169,11 @@ import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/I
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
-import { isRouteUpdateTriggeredBySubmitQueryForm } from '@/views/Post.vue';
 import type { ApiForumList } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
+import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -286,8 +286,9 @@ const submitRoute = async () => { // decide which route to go
     return submitParamRoute(clearedUniqueParams, clearedParams); // param route
 };
 const queryFormSubmit = async () => {
-    if (!await submitRoute())
-        isRouteUpdateTriggeredBySubmitQueryForm.value = true;
+    useTriggerRouteUpdateStore().trigger('<QueryForm>@submit');
+
+    return submitRoute();
 };
 const checkParams = async (): Promise<boolean> => {
     // check query type

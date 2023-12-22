@@ -165,7 +165,6 @@ export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded)
         top: 80 // .reply-title { top: 5rem; }
     };
 };
-export const isRouteUpdateTriggeredByPostsNavScrollEvent = ref(false);
 </script>
 
 <script setup lang="ts">
@@ -180,6 +179,7 @@ import type { BaiduUserID } from '@/api/user';
 import type { Modify } from '@/shared';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
+import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 import '@/styles/bootstrapCallout.css';
 
 import { RouterLink } from 'vue-router';
@@ -231,11 +231,11 @@ const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
 onMounted(initialTippy);
 setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
-    if (isRouteUpdateTriggeredByPostsNavScrollEvent.value) {
-        isRouteUpdateTriggeredByPostsNavScrollEvent.value = false;
-
+    if (to.fullPath === from.fullPath)
         return false;
-    }
+    const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
+    if (triggerRouteUpdateStore.isTriggeredBy('<NavSidebar>@scroll'))
+        return false;
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
 

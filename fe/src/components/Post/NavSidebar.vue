@@ -34,12 +34,12 @@
 </template>
 
 <script setup lang="ts">
-import { isRouteUpdateTriggeredByPostsNavScrollEvent } from './views/ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
 import type { Pid, Tid, ToPromise } from '@/shared';
 import { removeEnd } from '@/shared';
+import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -58,14 +58,11 @@ const firstPostInViewDefault = { cursor: '', tid: 0, pid: 0 };
 const firstPostInView = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(firstPostInViewDefault);
 const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
 
-let isScrollTriggeredByNavigate = false;
-const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) => {
-    if (!await router.replace({
+const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) =>
+    router.replace({
         hash: `#${pid ?? (tid === null ? '' : `t${tid}`)}`,
         params: { ...route.params, cursor }
-    }))
-        isScrollTriggeredByNavigate = true;
-};
+    });
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if ((domEvent.target as Element).tagName !== 'BUTTON') { // ignore clicks on reply link
         const [, p, t] = /page(\d+)-t(\d+)/u.exec(key.toString()) ?? [];
@@ -99,15 +96,14 @@ const scrollStop = _.debounce(() => {
     const firstPostIDInView = _.mapValues(currentFirstPostInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
 
+    const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
+    const replaceRoute = triggerRouteUpdateStore.replaceRoute('<NavSidebar>@scroll');
+
     // when there's no thread or reply item in the viewport
     // currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
     if (Number.isNaN(firstPostIDInView.t)) {
         firstPostInView.value = firstPostInViewDefault;
-        void router.replace({ hash: '' }) // empty route hash
-            .then(failed => {
-                if (!failed)
-                    isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
-            });
+        void replaceRoute({ hash: '' }); // empty route hash
 
         return;
     }
@@ -117,10 +113,10 @@ const scrollStop = _.debounce(() => {
     const replaceRouteHash = async (cursor: Cursor, postID: Pid | Tid, hashPrefix = '') => {
         assertRouteNameIsStr(route.name);
         const hash = `#${hashPrefix}${postID}`;
-        if (!await router.replace(cursor === '' // to prevent '/page/1' occurs in route path
+
+        return replaceRoute(cursor === ''
             ? { hash, name: removeEnd(route.name, routeNameSuffix.cursor), params: _.omit(route.params, 'cursor') }
-            : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } }))
-            isRouteUpdateTriggeredByPostsNavScrollEvent.value = true;
+            : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } });
     };
 
     // is the first reply belonged to the first thread, true when the first thread has no reply,
@@ -154,11 +150,6 @@ watchEffect(() => {
 watchEffect(() => {
     const { cursor, tid, pid } = firstPostInView.value;
     selectedThread.value = [`c${cursor}_t${tid}`];
-    if (isScrollTriggeredByNavigate) {
-        isScrollTriggeredByNavigate = false;
-
-        return;
-    }
 
     // scroll menu to the link to reply in <ViewList>
     // which is the topmost one in the viewport (nearest to top border of viewport)
