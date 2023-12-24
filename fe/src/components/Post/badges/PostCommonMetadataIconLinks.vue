@@ -29,7 +29,9 @@ defineProps<{
 
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
+    const relative = dateTime.toRelative({ round: false });
+    const fullWithLocale = dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
-    return `${dateTime.toRelative({ round: false })}（${dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）`;
+    return `${relative} ${fullWithLocale}`;
 };
 </script>

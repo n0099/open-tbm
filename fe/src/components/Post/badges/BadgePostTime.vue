@@ -1,7 +1,7 @@
 <template>
-    <span :data-tippy-content="tippyPrefix + time"
+    <span :data-tippy-content="tippyPrefix + dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)"
           :class="`ms-1 fw-normal badge rounded-pill bg-${badgeColor}`">
-        {{ DateTime.fromSeconds(time).toRelative({ round: false }) }}
+        {{ dateTime.toRelative({ round: false }) }}
     </span>
 </template>
 
@@ -9,11 +9,13 @@
 import type { BootstrapColors, UnixTimestamp } from '@/shared';
 import { DateTime } from 'luxon';
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
     time: UnixTimestamp,
     tippyPrefix?: string,
     badgeColor: BootstrapColors
 }>(), { tippyPrefix: '' });
+
+const dateTime = DateTime.fromSeconds(props.time);
 </script>
 
 <style scoped>

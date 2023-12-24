@@ -35,8 +35,8 @@
                             点赞量：${thread.zan.num}<br />
                             最后点赞时间：${DateTime.fromSeconds(Number(thread.zan.last_time))
                         .toRelative({ round: false })}
-                            （${DateTime.fromSeconds(Number(thread.zan.last_time))
-                        .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}）<br />
+                            ${DateTime.fromSeconds(Number(thread.zan.last_time))
+                        .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br />
                             近期点赞用户：${thread.zan.user_id_list}<br />`" class="badge bg-info">
                             <!-- todo: fetch users info in zan.user_id_list -->
                             <FontAwesomeIcon icon="thumbs-up" class="me-1" /> 旧版客户端赞
@@ -50,7 +50,7 @@
                         <RouterLink :to="userRoute(thread.authorUid)">
                             <span v-if="thread.latestReplierUid !== thread.authorUid"
                                   class="fw-normal link-success">楼主：</span>
-                            <span v-else class="fw-normal link-info">楼主及最后回复：</span>
+                            <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                         </RouterLink>
                         <BadgeUser v-if="getUser(thread.authorUid).currentForumModerator !== null"

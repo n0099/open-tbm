@@ -110,8 +110,8 @@ const threadColumns = ref<ColumnType[]>([
     { title: '发帖时间', dataIndex: 'postedAt' },
     { title: '最后回复人', dataIndex: 'latestReplier' },
     { title: '最后回复时间', dataIndex: 'latestReplyPostedAt' },
-    { title: '发帖人UID', dataIndex: 'authorUid' },
-    { title: '最后回复人UID', dataIndex: 'latestReplierUid' },
+    { title: '发帖人百度UID', dataIndex: 'authorUid' },
+    { title: '最后回复人百度UID', dataIndex: 'latestReplierUid' },
     { title: '主题帖类型', dataIndex: 'threadType' }, // todo: unknown value enum struct
     { title: '分享量', dataIndex: 'shareCount' },
     { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
@@ -125,7 +125,7 @@ const replyColumns = ref<ColumnType[]>([
     { title: '楼层', dataIndex: 'floor' },
     { title: '楼中楼回复量', dataIndex: 'subReplyCount' },
     { title: '发帖人', dataIndex: 'author' },
-    { title: '发帖人UID', dataIndex: 'authorUid' },
+    { title: '发帖人百度UID', dataIndex: 'authorUid' },
     { title: '发帖时间', dataIndex: 'postedAt' },
     { title: '是否折叠', dataIndex: 'isFold' }, // todo: unknown value enum struct
     { title: '赞踩量', dataIndex: 'agree' }, // todo: unknown json struct
@@ -138,7 +138,7 @@ const replyColumns = ref<ColumnType[]>([
 const subReplyColumns = ref<ColumnType[]>([
     { title: 'spid', dataIndex: 'spid' },
     { title: '发帖人', dataIndex: 'author' },
-    { title: '发帖人UID', dataIndex: 'authorUid' },
+    { title: '发帖人百度UID', dataIndex: 'authorUid' },
     { title: '发帖时间', dataIndex: 'postedAt' },
     { title: '首次收录时间', dataIndex: 'createdAt' },
     { title: '最后更新时间', dataIndex: 'updatedAt' }

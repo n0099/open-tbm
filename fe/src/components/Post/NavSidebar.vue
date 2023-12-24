@@ -162,7 +162,7 @@ watchEffect(() => {
 </script>
 
 <style>
-/* to override styles for dom under another component <MenuItem>, we have to declare in global scope */
+/* declare in global scope for overriding styles for dom under antdv component <MenuItem> */
 .posts-nav-thread-item {
     height: auto !important; /* to show reply nav buttons under thread menu items */
     margin-top: 0 !important;

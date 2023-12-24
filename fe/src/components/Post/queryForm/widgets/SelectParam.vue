@@ -18,7 +18,7 @@ const paramsGroup = {
     },
     所有帖子类型: {
         postedAt: '发帖时间',
-        authorUid: '发帖人UID',
+        authorUid: '发帖人百度UID',
         authorName: '发帖人用户名',
         authorDisplayName: '发帖人覆盖名',
         authorGender: '发帖人性别',
@@ -31,7 +31,7 @@ const paramsGroup = {
         threadShareCount: '主题帖分享量',
         threadReplyCount: '主题帖回复量',
         threadProperties: '主题帖属性',
-        latestReplierUid: '最后回复人UID',
+        latestReplierUid: '最后回复人百度UID',
         latestReplierName: '最后回复人用户名',
         latestReplierDisplayName: '最后回复人覆盖名',
         latestReplierGender: '最后回复人性别'

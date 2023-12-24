@@ -3,7 +3,7 @@
         <div class="input-group">
             <select v-model="selectBy" class="selectUserBy form-select">
                 <option value="">未选择</option>
-                <option value="uid">UID</option>
+                <option value="uid">百度UID</option>
                 <option value="name">用户名</option>
                 <option value="nameNULL">NULL用户名</option>
                 <option value="displayName">覆盖名</option>
@@ -16,7 +16,7 @@
                     <option>&gt;</option>
                 </select>
                 <input v-model="params.uid" type="number" placeholder="4000000000"
-                       aria-label="UID" class="form-control" required />
+                       aria-label="百度UID" class="form-control" required />
             </template>
             <template v-if="selectBy === 'name'">
                 <input v-model="params.name" type="text" aria-label="用户名" class="form-control" required />
