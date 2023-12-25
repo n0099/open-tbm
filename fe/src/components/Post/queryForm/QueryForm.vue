@@ -68,7 +68,7 @@
                              class="select-param" :class="{
                                  'is-invalid': invalidParamsIndex.includes(pI)
                              }" />
-                <div class="param-input-group-text input-group-text">
+                <div class="input-group-text">
                     <div class="form-check">
                         <input v-model="p.subParam.not" type="checkbox" value="good" class="form-check-input"
                                :id="`param${_.upperFirst(p.name)}Not-${pI}`" />
@@ -100,8 +100,8 @@
                                        :paramIndex="pI"
                                        :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
                 </template>
-                <div v-if="p.name === 'threadProperties'">
-                    <div class="param-input-group-text input-group-text">
+                <template v-if="p.name === 'threadProperties'">
+                    <div class="input-group-text">
                         <div class="form-check">
                             <input v-model="p.value" type="checkbox" value="good" class="form-check-input"
                                    :id="`paramThreadPropertiesGood-${pI}`" />
@@ -109,7 +109,7 @@
                                    class="text-danger fw-normal form-check-label">精品</label>
                         </div>
                     </div>
-                    <div class="param-input-group-text input-group-text">
+                    <div class="input-group-text">
                         <div class="form-check">
                             <input v-model="p.value" type="checkbox" value="sticky" class="form-check-input"
                                    :id="`paramThreadPropertiesSticky-${pI}`" />
@@ -117,7 +117,7 @@
                                    class="text-primary fw-normal form-check-label">置顶</label>
                         </div>
                     </div>
-                </div>
+                </template>
                 <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
                     <SelectRange v-model="p.subParam.range" />
                     <InputNumericParam @update:modelValue="e => { params[pI] = e }"
@@ -174,7 +174,8 @@ import type { ApiForumList } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
-import { RouteObjectRaw, useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
+import type { RouteObjectRaw} from '@/stores/triggerRouteUpdate';
+import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -395,22 +396,20 @@ watch(() => uniqueParams.value.postTypes.value, (to, from) => {
 defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });
 </script>
 
-<style>
-.input-group-text ~ * > .ant-input-lg {
+<style scoped>
+:deep(.input-group-text ~ * > .ant-input-lg) {
     height: unset; /* revert the effect in global style @/shared/style.css */
 }
 /* remove borders for <RangePicker> in the start, middle and end of .input-group */
-.input-group > :not(:first-child) .ant-calendar-picker-input {
+:deep(.input-group > :not(:first-child) .ant-calendar-picker-input) {
     border-bottom-left-radius: 0;
     border-top-left-radius: 0;
 }
-.input-group > :not(:last-child) .ant-calendar-picker-input {
+:deep(.input-group > :not(:last-child) .ant-calendar-picker-input) {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
 }
-</style>
 
-<style scoped>
 .query-params > * {
     margin-top: -1px;
 }
@@ -432,7 +431,7 @@ defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });
     border-top-right-radius: 0;
 }
 
-.param-input-group-text {
+.query-params .input-group-text {
     background-color: unset;
 }
 

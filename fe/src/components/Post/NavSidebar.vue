@@ -6,7 +6,7 @@
         <template v-for="posts in postPages">
             <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
                 <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
-                          class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
+                          class="posts-nav-thread pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
@@ -20,7 +20,7 @@
                                    'btn-light': !isFirstReplyInView,
                                    'text-white': isFirstReplyInView,
                                    'text-body-secondary': !isFirstReplyInView
-                               }" class="posts-nav-reply-link btn">{{ reply.floor }}L</a>
+                               }" class="posts-nav-reply btn">{{ reply.floor }}L</a>
                         </template>
                     </div>
                 </MenuItem>
@@ -41,7 +41,7 @@ import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
 import type { Pid, Tid, ToPromise } from '@/shared';
-import { cursorTemplate, removeEnd } from '@/shared';
+import { cursorTemplate, getScrollBarWidth, removeEnd } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
@@ -60,6 +60,7 @@ const selectedThread = ref<string[]>([]);
 const firstPostInViewDefault = { cursor: '', tid: 0, pid: 0 };
 const firstPostInView = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(firstPostInViewDefault);
 const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
+const scrollBarWidth = `${getScrollBarWidth()}px`;
 
 const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) =>
     router.replace({
@@ -67,7 +68,7 @@ const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) 
         params: { ...route.params, cursor }
     });
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
-    if (!(domEvent.target as Element).classList.contains('posts-nav-reply-link')) { // ignore clicks on reply link
+    if (!(domEvent.target as Element).classList.contains('posts-nav-reply')) { // ignore clicks on reply link
         const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
         await navigate(cursor, tid);
     }
@@ -161,23 +162,13 @@ watchEffect(() => {
 
     // scroll menu to the link to reply in <ViewList>
     // which is the topmost one in the viewport (nearest to top border of viewport)
-    const replyEl = document.querySelector(`.posts-nav-reply-link[data-pid='${pid}']`);
+    const replyEl = document.querySelector(`.posts-nav-reply[data-pid='${pid}']`);
     const navMenuEl = replyEl?.closest('.posts-nav');
     if (replyEl !== null && navMenuEl
         && navMenuEl.getBoundingClientRect().top === 0) // is navMenuEl sticking to the top border of viewport
         navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 150px offset to scroll down replyEl
 });
 </script>
-
-<style>
-/* declare in global scope for overriding styles for dom under antdv component <MenuItem> */
-.posts-nav-thread-item {
-    height: auto !important; /* to show reply nav buttons under thread menu items */
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    white-space: normal;
-}
-</style>
 
 <style scoped>
 .posts-nav-expanded {
@@ -187,7 +178,7 @@ watchEffect(() => {
 }
 
 .posts-nav {
-    padding: 0 10px 0 0; /* padding-right: 10px to match with the width of ::-webkit-scrollbar */
+    padding: 0 v-bind(scrollBarWidth) 0 0;
     overflow: hidden;
     max-height: 100vh;
     border-top: 1px solid #f0f0f0;
@@ -203,7 +194,13 @@ watchEffect(() => {
     }
 }
 
-.posts-nav-reply-link:hover {
+:deep(.posts-nav-thread) {
+    height: auto !important; /* to show reply nav buttons under thread menu items */
+    white-space: normal;
+    line-height: 2rem;
+}
+
+.posts-nav-reply:hover {
     border-radius: var(--bs-border-radius) !important;
 }
 </style>

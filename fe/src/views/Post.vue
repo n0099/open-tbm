@@ -123,7 +123,7 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
         const el = document.querySelector(scrollPosition.el);
         if (el === null)
             return isFetchSuccess;
-        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + scrollPosition.top);
+        el.scrollIntoView();
     }
 
     return isFetchSuccess;

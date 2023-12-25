@@ -166,24 +166,24 @@ onMounted(() => {
 });
 </script>
 
-<style>
-.render-table-thread .ant-table {
+<style scoped>
+:deep(.render-table-thread .ant-table) {
     width: fit-content; /* narrow the width of reply and sub reply table to prevent they stretch with thread table */
 }
 
-.render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table {
+:deep(.render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table) {
     /* select the outermost thread table, might change in further antd updates */
     width: auto;
     border: 1px solid #e8e8e8;
     border-radius: 4px 4px 0 0;
 }
 
-.render-table-thread .ant-table td, .render-table-thread .ant-table td > *, .render-table-thread .ant-table th {
+:deep(.render-table-thread .ant-table td, .render-table-thread .ant-table td > *, .render-table-thread .ant-table th) {
     white-space: nowrap;
     font-family: Consolas, Courier New, monospace;
 }
 
-.render-table-thread .ant-table-expand-icon-th, .render-table-thread .ant-table-row-expand-icon-cell {
+:deep(.render-table-thread .ant-table-expand-icon-th, .render-table-thread .ant-table-row-expand-icon-cell) {
     /* shrink the width of expanding child posts table button */
     width: auto;
     min-width: auto;

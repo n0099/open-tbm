@@ -8,7 +8,7 @@
         </div>
         <RouterView name="escapeContainer" />
     </ConfigProvider>
-    <footer class="footer-outer text-light pt-4 mt-4">
+    <footer class="footer-outer text-light pt-4 mt-auto">
         <div class="text-center">
             <p>
                 <span v-if="isGoogleAnalyticsEnabled">
@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import iconLoadingBlock from '/assets/icon-loading-blocks.svg';
+import iconLoadingBlock from '/assets/icon-loading-block.svg';
 import GlobalNavBar from '@/components/GlobalNavBar.vue';
 import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
 

@@ -1,6 +1,6 @@
 import type { ObjUnknown, ObjValues } from '@/shared';
 import { boolStrToBool } from '@/shared';
-import { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
+import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import type { Ref } from 'vue';
 import { onBeforeMount, ref, watch } from 'vue';
 import _ from 'lodash';
