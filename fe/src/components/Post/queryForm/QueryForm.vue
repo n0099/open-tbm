@@ -36,11 +36,12 @@
         </div>
         <div class="row mt-2 mb-3">
             <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
-            <div class="col-8" id="paramOrder">
+            <div class="col-8">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="sort-amount-down" /></span>
                     <select v-model="uniqueParams.orderBy.value"
-                            :class="{ 'is-invalid': isOrderByInvalid }" class="form-select form-control">
+                            :class="{ 'is-invalid': isOrderByInvalid }"
+                            class="form-select form-control" id="paramOrder">
                         <option value="default">默认（按帖索引查询按帖子ID正序，按吧索引/搜索查询按发帖时间倒序）</option>
                         <option value="postedAt">发帖时间</option>
                         <optgroup label="帖子ID">
@@ -51,7 +52,7 @@
                     </select>
                     <select v-show="uniqueParams.orderBy.value !== 'default'"
                             v-model="uniqueParams.orderBy.subParam.direction"
-                            class="form-select form-control">
+                            class="form-select form-control" id="paramOrderBy">
                         <option value="ASC">正序（从小到大，旧到新）</option>
                         <option value="DESC">倒序（从大到小，新到旧）</option>
                     </select>
@@ -173,7 +174,7 @@ import type { ApiForumList } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
-import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
+import { RouteObjectRaw, useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
@@ -200,7 +201,7 @@ const {
     clearedUniqueParamsDefaultValue,
     flattenParams,
     parseParamRoute,
-    submitParamRoute
+    generateParamRoute
 } = useQueryFormWithUniqueParams();
 const isOrderByInvalid = ref(false);
 const isFidInvalid = ref(false);
@@ -260,7 +261,7 @@ const currentQueryTypeDesc = computed(() => {
     return '空查询';
 });
 
-const submitRoute = async () => { // decide which route to go
+const generateRoute = (): RouteObjectRaw => { // decide which route to go
     const clearedParams = clearedParamsDefaultValue();
     const clearedUniqueParams = clearedUniqueParamsDefaultValue();
     if (_.isEmpty(clearedUniqueParams)) { // check whether query by post id or not
@@ -270,26 +271,23 @@ const submitRoute = async () => { // decide which route to go
                 && postIDParam.length === 1 // is there only one post id param
                 && postIDParam[0]?.subParam === undefined) { // is range subParam not set
                 // exit early to prevent pushing other route
-                return router.push({
+                return {
                     name: `post/${postIDName}`,
                     params: { [postIDName]: postIDParam[0].value?.toString() }
-                });
+                };
             }
         }
     }
     if (clearedUniqueParams.fid !== undefined
         && _.isEmpty(clearedParams)
         && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
-        return router.push({ name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } });
+        return { name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } };
     }
 
-    return submitParamRoute(clearedUniqueParams, clearedParams); // param route
+    return generateParamRoute(clearedUniqueParams, clearedParams); // param route
 };
-const queryFormSubmit = async () => {
-    useTriggerRouteUpdateStore().trigger('<QueryForm>@submit');
-
-    return submitRoute();
-};
+const queryFormSubmit = async () =>
+    useTriggerRouteUpdateStore().pushRoute('<QueryForm>@submit')(generateRoute());
 const checkParams = async (): Promise<boolean> => {
     // check query type
     isFidInvalid.value = false;
@@ -304,7 +302,7 @@ const checkParams = async (): Promise<boolean> => {
             if (clearedUniqueParams.fid !== undefined) {
                 uniqueParams.value.fid.value = 0; // reset fid to default,
                 notyShow('info', '已移除按帖索引查询所不需要的查询贴吧参数');
-                await submitRoute(); // update route to match new params without fid
+                await router.push(generateRoute()); // update route to match new params without fid
             }
             break;
         case 'search':

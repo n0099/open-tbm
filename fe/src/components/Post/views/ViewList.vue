@@ -151,18 +151,21 @@
 <script lang="ts">
 /* eslint-disable import/order */
 import { compareRouteIsNewQuery, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
+import { convertRemToPixels, toTiebaUserPortraitImageUrl } from '@/shared';
 import { computed, onMounted, ref } from 'vue';
 import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 /* eslint-enable import/order */
 
+export const getReplyTitleTopOffset = () =>
+    convertRemToPixels(5) - convertRemToPixels(0.625); // top and margin-top
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.slice(1);
-    const idSelectorToHash = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
+    const hashSelector = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
-        el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}']${idSelectorToHash}`,
-        top: 80 // .reply-title { top: 5rem; }
+        el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}']${hashSelector}`,
+        top: hash.startsWith('t') ? 0 : getReplyTitleTopOffset()
     };
 };
 </script>
@@ -177,7 +180,6 @@ import type { ApiPostsQuery } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { BaiduUserID } from '@/api/user';
 import type { Modify } from '@/shared';
-import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 import '@/styles/bootstrapCallout.css';
@@ -234,7 +236,7 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
     if (to.fullPath === from.fullPath)
         return false;
     const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
-    if (triggerRouteUpdateStore.isTriggeredBy('<NavSidebar>@scroll'))
+    if (triggerRouteUpdateStore.isTriggeredBy('<NavSidebar>@scroll', to))
         return false;
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
@@ -245,6 +247,7 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 
 <style scoped>
 .thread-title {
+    height: 5rem; /* sync with .reply-title:top */
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }

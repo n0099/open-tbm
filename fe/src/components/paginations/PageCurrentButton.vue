@@ -3,7 +3,7 @@
         <div class="col align-middle"><hr /></div>
         <div class="w-auto">
             <div class="p-2 badge bg-light text-dark">
-                <p class="h4">第 {{ currentCursor }} 页</p>
+                <p class="h4">{{ cursorTemplate(currentCursor) }}</p>
             </div>
         </div>
         <div class="col align-middle"><hr /></div>
@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import type { Cursor } from '@/api/index.d';
+import { cursorTemplate } from '@/shared';
 
 defineProps<{ currentCursor: Cursor }>();
 </script>

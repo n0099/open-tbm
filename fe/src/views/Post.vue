@@ -132,7 +132,7 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
 };
 
 onBeforeRouteUpdate(async (to, from) => {
-    const isNewQuery = useTriggerRouteUpdateStore().isTriggeredBy('<QueryForm>@submit')
+    const isNewQuery = useTriggerRouteUpdateStore().isTriggeredBy('<QueryForm>@submit', to)
         || compareRouteIsNewQuery(to, from);
     const cursor = getRouteCursorParam(to);
     if (!(isNewQuery || _.isEmpty(_.filter(

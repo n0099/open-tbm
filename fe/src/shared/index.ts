@@ -1,3 +1,4 @@
+import type { Cursor } from '@/api/index.d';
 import type { TiebaUser } from '@/api/user';
 import Noty from 'noty';
 import _ from 'lodash';
@@ -35,6 +36,8 @@ export type Spid = UInt;
 // due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 5000, type, text }).show() };
 export const titleTemplate = (title: string) => `${title} - open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
+export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
+
 export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
     if (pidOrSpid !== undefined)
         return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
@@ -45,7 +48,6 @@ export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUser, 'name' | 'po
     (_.isEmpty(user.portrait)
         ? `https://tieba.baidu.com/home/main?un=${user.name}`
         : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
-
 export const toTiebaUserPortraitImageUrl = (portrait: string) =>
     `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
 
@@ -57,3 +59,6 @@ export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'tru
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
 export const emitEventWithNumberValidator = (p: number) => _.isNumber(p);
+
+// https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683
+export const convertRemToPixels = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);

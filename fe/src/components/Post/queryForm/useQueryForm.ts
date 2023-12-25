@@ -1,8 +1,8 @@
 import type { ObjUnknown, ObjValues } from '@/shared';
 import { boolStrToBool } from '@/shared';
+import { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import type { Ref } from 'vue';
 import { onBeforeMount, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
 export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
@@ -20,7 +20,6 @@ export default <
 ) => {
     type UniqueParam = ObjValues<UniqueParams>;
     type Param = ObjValues<Params>;
-    const router = useRouter();
 
     // [{ name: '', value: '', subParam: { name: value } },...]
     const uniqueParams = ref<UniqueParams>({} as UniqueParams) as Ref<UniqueParams>;
@@ -164,7 +163,10 @@ export default <
             })
             .value();
     };
-    const submitParamRoute = async (filteredUniqueParams: Partial<UniqueParams>, filteredParams: Array<Partial<Param>>) => {
+    const generateParamRoute = (
+        filteredUniqueParams: Partial<UniqueParams>,
+        filteredParams: Array<Partial<Param>>
+    ): RouteObjectRaw => {
         const tryEscapeParamValue = <T>(v: T): string | T => {
             if (_.isString(v))
                 return escapeParamValue(v);
@@ -182,13 +184,13 @@ export default <
             ...filteredParams
         ];
 
-        return router.push({
+        return {
             path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param =>
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     `${param.name}:${tryEscapeParamValue(param.value)}${tryEncodeSubParamValue(param.subParam)}`)
                 .join('/')}`
-        });
+        };
     };
 
     watch([() => uniqueParams.value, () => params.value], newParamsArray => {
@@ -217,6 +219,6 @@ export default <
         clearedUniqueParamsDefaultValue,
         flattenParams,
         parseParamRoute,
-        submitParamRoute
+        generateParamRoute
     };
 };

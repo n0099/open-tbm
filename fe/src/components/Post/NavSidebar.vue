@@ -4,21 +4,23 @@
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
           class="posts-nav col-xl d-xl-block sticky-top">
         <template v-for="posts in postPages">
-            <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="`第${cursor}页`">
+            <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
                 <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread-item pb-2 border-bottom d-flex flex-wrap justify-content-between">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
-                            <button v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
-                                    :key="isFirstReplyInView.toString()"
-                                    @click="_ => navigate(cursor, null, reply.pid)" :data-pid="reply.pid"
-                                    :class="{
-                                        'btn-info': isFirstReplyInView,
-                                        'text-white': isFirstReplyInView,
-                                        'rounded-3': isFirstReplyInView,
-                                        'btn-light': !isFirstReplyInView
-                                    }" class="posts-nav-reply-link btn">{{ reply.floor }}L</button>
+                            <a v-for="isFirstReplyInView in [reply.pid === firstPostInView.pid]"
+                               :key="isFirstReplyInView.toString()"
+                               @click.prevent="_ => navigate(cursor, null, reply.pid)"
+                               :data-pid="reply.pid" :href="`#${reply.pid}`"
+                               :class="{
+                                   'rounded-3': isFirstReplyInView,
+                                   'btn-info': isFirstReplyInView,
+                                   'btn-light': !isFirstReplyInView,
+                                   'text-white': isFirstReplyInView,
+                                   'text-body-secondary': !isFirstReplyInView
+                               }" class="posts-nav-reply-link btn">{{ reply.floor }}L</a>
                         </template>
                     </div>
                 </MenuItem>
@@ -34,11 +36,12 @@
 </template>
 
 <script setup lang="ts">
+import { getReplyTitleTopOffset } from '@/components/Post/views/ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
 import type { Pid, Tid, ToPromise } from '@/shared';
-import { removeEnd } from '@/shared';
+import { cursorTemplate, removeEnd } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
@@ -64,9 +67,9 @@ const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) 
         params: { ...route.params, cursor }
     });
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
-    if ((domEvent.target as Element).tagName !== 'BUTTON') { // ignore clicks on reply link
-        const [, p, t] = /page(\d+)-t(\d+)/u.exec(key.toString()) ?? [];
-        await navigate(p, t);
+    if (!(domEvent.target as Element).classList.contains('posts-nav-reply-link')) { // ignore clicks on reply link
+        const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
+        await navigate(cursor, tid);
     }
 };
 
@@ -89,9 +92,7 @@ const scrollStop = _.debounce(() => {
 
     const currentFirstPostInView = {
         t: findFirstDomInView('.thread-title'),
-
-        // 80px (5rem) is the top offset of .reply-title, aka `.reply-title { top: 5rem; }`
-        p: findFirstDomInView('.reply-title', 80)
+        p: findFirstDomInView('.reply-title', getReplyTitleTopOffset())
     };
     const firstPostIDInView = _.mapValues(currentFirstPostInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
@@ -193,5 +194,9 @@ watchEffect(() => {
         width: fit-content;
         max-width: 35%;
     }
+}
+
+.posts-nav-reply-link:hover {
+    border-radius: var(--bs-border-radius) !important;
 }
 </style>

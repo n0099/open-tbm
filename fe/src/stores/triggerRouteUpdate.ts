@@ -2,22 +2,33 @@ import { ref } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { defineStore } from 'pinia';
+import _ from 'lodash';
 
+export type RouteObjectRaw = Exclude<RouteLocationRaw, string>;
 export const useTriggerRouteUpdateStore = defineStore('triggerRouteUpdate', () => {
     const router = useRouter();
-    const latestRouteUpdateBy = ref<Record<string, boolean>>({});
-    const trigger = (triggeredBy: string) => { latestRouteUpdateBy.value[triggeredBy] = true };
-    const replaceRoute = (triggeredBy: string) => async (to: RouteLocationRaw) => {
-        trigger(triggeredBy);
+    const latestRouteUpdateBy = ref<Record<string, RouteObjectRaw | undefined>>({});
+
+    const trigger = (triggeredBy: string, route: RouteObjectRaw) => {
+        latestRouteUpdateBy.value[triggeredBy] = route;
+    };
+    const pushRoute = (triggeredBy: string) => async (to: RouteObjectRaw) => {
+        trigger(triggeredBy, to);
+
+        return router.push(to);
+    };
+    const replaceRoute = (triggeredBy: string) => async (to: RouteObjectRaw) => {
+        trigger(triggeredBy, to);
 
         return router.replace(to);
     };
-    const isTriggeredBy = (triggeredBy: string) => {
-        const originValue = latestRouteUpdateBy.value[triggeredBy];
-        latestRouteUpdateBy.value[triggeredBy] = false;
+    const isTriggeredBy = (triggeredBy: string, route: RouteObjectRaw) => {
+        const originRoute = latestRouteUpdateBy.value[triggeredBy];
+        latestRouteUpdateBy.value[triggeredBy] = undefined;
 
-        return originValue;
+        // https://github.com/lodash/lodash/issues/3887 https://z.n0099.net/#narrow/near/83966
+        return originRoute !== undefined && _.isMatch(route, originRoute);
     };
 
-    return { latestRouteUpdateBy, trigger, replaceRoute, isTriggeredBy };
+    return { latestRouteUpdateBy, pushRoute, replaceRoute, isTriggeredBy };
 });
