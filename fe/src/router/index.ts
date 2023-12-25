@@ -31,17 +31,17 @@ export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => r.par
 
 const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
     nprogress.start();
-    const loadingBlocksDom = document.querySelector('#loadingBlocks');
-    const containersDom = ['.container', '.container-fluid:not(#nav)']
+    const loadingBlockEl = document.querySelector('#loadingBlock');
+    const containersEl = ['.container', '.container-fluid:not(#nav)']
         .flatMap(i => [...document.querySelectorAll(i)]);
-    loadingBlocksDom?.classList.remove('d-none');
-    containersDom.forEach(i => { i.classList.add('d-none') });
+    loadingBlockEl?.classList.remove('d-none');
+    containersEl.forEach(i => { i.classList.add('d-none') });
     lazyComponent.catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) });
 
     return lazyComponent.finally(() => {
         nprogress.done();
-        loadingBlocksDom?.classList.add('d-none');
-        containersDom.forEach(i => { i.classList.remove('d-none') });
+        loadingBlockEl?.classList.add('d-none');
+        containersEl.forEach(i => { i.classList.remove('d-none') });
     });
 };
 

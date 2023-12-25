@@ -36,7 +36,7 @@
             </div>
         </div>
     </form>
-    <div ref="chartDom" class="echarts mt-4" id="statsChartDom" />
+    <div ref="chartEl" class="echarts mt-4" id="statsChart" />
 </template>
 
 <script setup lang="ts">
@@ -118,14 +118,14 @@ const query = ref<ApiStatsForumPostCountQueryParam>({
     endTime: 0
 });
 const forumList = ref<ApiForumList>([]);
-const chartDom = ref<HTMLElement>();
+const chartEl = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
-    if (chartDom.value === undefined)
+    if (chartEl.value === undefined)
         return;
-    chartDom.value.classList.add('loading');
+    chartEl.value.classList.add('loading');
     if (chart === null) {
-        chart = echarts.init(chartDom.value);
+        chart = echarts.init(chartEl.value);
         chart.setOption(chartInitialOption);
     }
     emptyChartSeriesData(chart);
@@ -134,7 +134,7 @@ const submitQueryForm = async () => {
     );
 
     const statsResult = throwIfApiError(await apiStatsForumsPostCount(query.value)
-        .finally(() => { chartDom.value?.classList.remove('loading') }));
+        .finally(() => { chartEl.value?.classList.remove('loading') }));
     const series = _.map(statsResult, (dates, postType) => ({
         id: postType,
         data: _.map(dates, Object.values)
@@ -166,7 +166,7 @@ onBeforeMount(async () => {
 </script>
 
 <style scoped>
-#statsChartDom {
+#statsChart {
     height: 25rem;
 }
 </style>

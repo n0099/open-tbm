@@ -28,7 +28,7 @@
             <button type="submit" class="col-auto btn btn-primary">查询</button>
         </div>
     </form>
-    <div ref="chartDom" class="echarts mt-4" id="statusChartDom" />
+    <div ref="chartEl" class="echarts mt-4" id="statusChart" />
 </template>
 
 <script setup lang="ts">
@@ -173,20 +173,20 @@ const query = ref<ApiStatusQueryParam>({
     endTime: 0
 });
 const autoRefresh = ref<boolean>(false);
-const chartDom = ref<HTMLElement>();
+const chartEl = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
-    if (chartDom.value === undefined)
+    if (chartEl.value === undefined)
         return;
-    chartDom.value.classList.add('loading');
+    chartEl.value.classList.add('loading');
     if (chart === null) {
-        chart = echarts.init(chartDom.value);
+        chart = echarts.init(chartEl.value);
         chart.setOption(chartInitialOption);
     }
     emptyChartSeriesData(chart);
 
     const statusResult = throwIfApiError(await apiStatus(query.value)
-        .finally(() => { chartDom.value?.classList.remove('loading') }));
+        .finally(() => { chartEl.value?.classList.remove('loading') }));
     const series = _.chain(chartInitialOption.series)
         .map('id')
         .map((seriesName: keyof ApiStatus[0]) => ({
@@ -212,7 +212,7 @@ onMounted(submitQueryForm);
 </script>
 
 <style scoped>
-#statusChartDom {
+#statusChart {
     height: 40rem;
 }
 </style>

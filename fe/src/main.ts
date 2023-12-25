@@ -5,14 +5,13 @@ import '@/styles/style.css';
 import { createApp } from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { createHead } from '@unhead/vue';
-import { createPinia } from 'pinia';
-
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
 import nprogress from 'nprogress';
 import 'nprogress/nprogress.css';
+import { createPinia } from 'pinia';
 
 library.add(...Object.values(fontAwesomeIcons));
 

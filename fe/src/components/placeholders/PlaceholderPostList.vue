@@ -12,13 +12,13 @@
         <div class="col"><hr /></div>
         <div class="w-100" />
         <div class="col">
-            <img :class="{ animate: isLoading }" :src="tombstonePostList" />
+            <img :class="{ animate: isLoading }" :src="placeholderPostList" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import tombstonePostList from '/assets/tombstone-post-list.svg';
+import placeholderPostList from '/assets/placeholder-post-list.svg';
 import iconHuajiLoadingSpinnerAvifs from '/assets/icon-huaji-loading-spinner.avifs';
 import iconHuajiLoadingSpinnerGif from '/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif';
 
@@ -27,12 +27,12 @@ defineProps<{ isLoading: boolean }>();
 
 <style scoped>
 .animate {
-    animation-name: tombstone-post-list;
+    animation-name: placeholder-post-list;
     animation-play-state: running;
     animation-iteration-count: infinite;
     animation-duration: 1.5s;
 }
-@keyframes tombstone-post-list {
+@keyframes placeholder-post-list {
     0% {
         opacity: .5;
     }

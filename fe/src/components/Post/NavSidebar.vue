@@ -74,41 +74,40 @@ const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key })
 };
 
 const scrollStop = _.debounce(() => {
-    const reduceFindTopmostElementInView = (topOffset: number) =>
-        (result: { top: number, el: Element }, curEl: Element) => {
-            const elTop = curEl.getBoundingClientRect().top - topOffset;
-
-            // ignore element which its y coord is ahead of the top of viewport
-            if (elTop >= 0 && result.top > elTop)
-                return { top: elTop, el: curEl };
-
-            return result;
-        };
-    const findFirstDomInView = (selector: string, topOffset = 0): Element =>
+    const findFirstElementInView = (selector: string, topOffset = 0): Element =>
+        // eslint-disable-next-line unicorn/no-array-reduce
         [...document.querySelectorAll(selector)].reduce(
-            reduceFindTopmostElementInView(topOffset),
+            (acc: { top: number, el: Element }, el: Element) => {
+                const elTop = el.getBoundingClientRect().top - topOffset;
+
+                // ignore element which its y coord is ahead of the top of viewport
+                if (elTop >= 0 && acc.top > elTop)
+                    return { top: elTop, el };
+
+                return acc;
+            },
             { top: Infinity, el: document.createElement('null') }
         ).el;
 
-    const currentFirstPostInView = {
-        t: findFirstDomInView('.thread-title'),
-        p: findFirstDomInView('.reply-title', getReplyTitleTopOffset())
+    const firstPostElementInView = {
+        thread: findFirstElementInView('.thread-title'),
+        reply: findFirstElementInView('.reply-title', getReplyTitleTopOffset())
     };
-    const firstPostIDInView = _.mapValues(currentFirstPostInView, i =>
+    const firstPostIDInView = _.mapValues(firstPostElementInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
 
     const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
     const replaceRoute = triggerRouteUpdateStore.replaceRoute('<NavSidebar>@scroll');
 
     // when there's no thread or reply item in the viewport
-    // currentFirstPostInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
-    if (Number.isNaN(firstPostIDInView.t)) {
+    // firstPostElementInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
+    if (Number.isNaN(firstPostIDInView.thread)) {
         firstPostInView.value = firstPostInViewDefault;
         void replaceRoute({ hash: '' }); // empty route hash
 
         return;
     }
-    const firstPostCursorInView = _.mapValues(currentFirstPostInView,
+    const firstPostCursorInView = _.mapValues(firstPostElementInView,
         i => i.closest('.post-render-list')?.getAttribute('data-cursor') ?? '');
 
     const replaceRouteHash = async (cursor: Cursor, postID: Pid | Tid, hashPrefix = '') => {
@@ -125,17 +124,25 @@ const scrollStop = _.debounce(() => {
     if (_.chain(props.postPages)
         .map(i => i.threads)
         .flatten()
-        .filter({ tid: firstPostIDInView.t })
+        .filter({ tid: firstPostIDInView.thread })
         .map(i => i.replies)
         .flatten()
-        .filter({ pid: firstPostIDInView.p })
+        .filter({ pid: firstPostIDInView.reply })
         .isEmpty()
         .value()) {
-        firstPostInView.value = { tid: firstPostIDInView.t, pid: 0, cursor: firstPostCursorInView.t };
-        void replaceRouteHash(firstPostCursorInView.t, firstPostIDInView.t, 't');
+        firstPostInView.value = {
+            tid: firstPostIDInView.thread,
+            pid: 0,
+            cursor: firstPostCursorInView.thread
+        };
+        void replaceRouteHash(firstPostCursorInView.thread, firstPostIDInView.thread, 't');
     } else {
-        firstPostInView.value = { tid: firstPostIDInView.t, pid: firstPostIDInView.p, cursor: firstPostCursorInView.p };
-        void replaceRouteHash(firstPostCursorInView.p, firstPostIDInView.p);
+        firstPostInView.value = {
+            tid: firstPostIDInView.thread,
+            pid: firstPostIDInView.reply,
+            cursor: firstPostCursorInView.reply
+        };
+        void replaceRouteHash(firstPostCursorInView.reply, firstPostIDInView.reply);
     }
 }, 200);
 const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };

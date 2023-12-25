@@ -118,8 +118,8 @@ const candidatesDetailColumns: Array<ObjUnknown & {
     sorter: (a, b) => (a.officialValidCount ?? 0) - (b.officialValidCount ?? 0)
 }];
 
-type Charts = keyof typeof chartsDom;
-const chartsDom = {
+type Charts = keyof typeof chartElements;
+const chartElements = {
     top50CandidateCount: ref<HTMLElement>(),
     top10CandidatesTimeline: ref<HTMLElement>(),
     top5CandidateCountGroupByTime: ref<HTMLElement>(),
@@ -132,7 +132,7 @@ const {
     top10CandidatesTimeline: top10CandidatesTimelineRef,
     top5CandidateCountGroupByTime: top5CandidateCountGroupByTimeRef,
     allVoteCountGroupByTime: allVoteCountGroupByTimeRef
-} = chartsDom;
+} = chartElements;
 const charts: { [P in Charts]: echarts.ECharts | null } = {
     top50CandidateCount: null,
     top10CandidatesTimeline: null,
@@ -680,7 +680,7 @@ watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
     () => { loadCharts.allVoteCountGroupByTime() });
 onMounted(() => {
-    _.map(chartsDom, (i, k: Charts) => {
+    _.map(chartElements, (i, k: Charts) => {
         if (i.value === undefined)
             return;
         i.value.classList.add('loading');
@@ -712,7 +712,7 @@ onMounted(() => {
         if (chart === null)
             return;
         loadCharts[chartName]();
-        chartsDom[chartName].value?.classList.remove('loading');
+        chartElements[chartName].value?.classList.remove('loading');
     });
 });
 </script>
