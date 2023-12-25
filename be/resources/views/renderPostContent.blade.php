@@ -64,10 +64,11 @@ try {
                         ? $emoticonsIndex['image_emoticon>51']
                         : $emoticonsIndex[$emoticon['prefix']])
                 ];
-                $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticon['class']}/{$emoticon['prefix']}{$emoticon['index']}.{$emoticon['type']}";
+                $emoticonUrl = "https://tb2.bdstatic.com/tb/editor/images/{$emoticon['class']}/"
+                    . "{$emoticon['prefix']}{$emoticon['index']}.{$emoticon['type']}";
                 ?>
-                <img class="lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $emoticonUrl }}" alt="{{ $item->getC() }}" />
+                <img referrerpolicy="no-referrer" loading="lazy"
+                     src="{{ $emoticonUrl }}" alt="{{ $item->getC() }}" />
                 @break
             @case (3)
                 {{--图片
@@ -86,8 +87,8 @@ try {
                     }
                     http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
                 --}}
-                <img class="tieba-image lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $getImageUrl($item->getOriginSrc()) }}" />
+                <img class="tieba-image" referrerpolicy="no-referrer" loading="lazy"
+                     src="{{ $getImageUrl($item->getOriginSrc()) }}" />
                 @break
             @case (4) {{--@用户 {"uid": "12345", "text": "(@|)username", "type": "4"} --}}
                 <a href="http://tieba.baidu.com/home/main?un={{ ltrim($item->getText(), '@') }}" target="_blank">{{ $item->getText() }}</a>
@@ -160,8 +161,8 @@ try {
                         "packet_name": ""
                     }
                 --}}
-                <img class="d-block lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $replaceWithHttps($item->getDynamic()) }}" alt="{{ $item->getC() }}" />
+                <img class="d-block" referrerpolicy="no-referrer" loading="lazy"
+                     src="{{ $replaceWithHttps($item->getDynamic()) }}" alt="{{ $item->getC() }}" />
                 @break
             @case (16)
                 {{--涂鸦
@@ -179,8 +180,8 @@ try {
                         "big_cdn_src": "http://t.hiphotos.baidu.com/forum/w%3D960%3Bq%3D60/sign={unknown token}/{image hash id}.jpg"
                     }
                 --}}
-                <img class="tieba-image lazy" referrerpolicy="no-referrer"
-                     data-src="{{ $replaceWithHttps($item->getGraffitiInfo()->getUrl()) }}" alt="贴吧涂鸦" />
+                <img class="tieba-image" referrerpolicy="no-referrer" loading="lazy"
+                     src="{{ $replaceWithHttps($item->getGraffitiInfo()->getUrl()) }}" alt="贴吧涂鸦" />
                 @break
             @case (17) {{--活动 not found --}}
                 @break
@@ -205,8 +206,8 @@ try {
                     }
                 --}}
                 <a href="{{ $item->getMemeInfo()->getDetailLink() }}" target="_blank">
-                    <img class="tieba-image lazy" referrerpolicy="no-referrer"
-                         data-src="{{ $replaceWithHttps($item->getSrc()) }}" />
+                    <img class="tieba-image" referrerpolicy="no-referrer" loading="lazy"
+                         src="{{ $replaceWithHttps($item->getSrc()) }}" />
                 </a>
                 @break
             @default

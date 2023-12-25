@@ -17,8 +17,8 @@
             <template v-else-if="column === 'author'">
                 <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
                     <a :href="toTiebaUserProfileUrl(user)">
-                        <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
-                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                        <img :src="toTiebaUserPortraitImageUrl(user.portrait)" loading="lazy"
+                             class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                     </a>
                     <BadgeUser :user="user" />
                 </template>
@@ -26,8 +26,8 @@
             <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
                 <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
                     <a :href="toTiebaUserProfileUrl(user)">
-                        <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
-                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                        <img :src="toTiebaUserPortraitImageUrl(user.portrait)" loading="lazy"
+                             class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                     </a>
                 </template>
             </template>
@@ -41,8 +41,8 @@
                     <template v-if="column === 'author'">
                         <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
                             <a :href="toTiebaUserProfileUrl(user)">
-                                <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
-                                     class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                                <img :src="toTiebaUserPortraitImageUrl(user.portrait)" loading="lazy"
+                                     class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                             </a>
                             <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
                         </template>
@@ -62,8 +62,8 @@
                             <template v-if="column === 'author'">
                                 <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
                                     <a :href="toTiebaUserProfileUrl(user)">
-                                        <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
-                                             class="tieba-user-portrait-small lazy" /> {{ renderUsername(user.uid) }}
+                                        <img :src="toTiebaUserPortraitImageUrl(user.portrait)" loading="lazy"
+                                             class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                                     </a>
                                     <BadgeUser :user="user"
                                                :threadAuthorUid="threadAuthorUid"

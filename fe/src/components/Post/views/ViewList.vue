@@ -96,8 +96,8 @@
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                          class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
                         <RouterLink :to="userRoute(author.uid)" class="d-block">
-                            <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)"
-                                 class="tieba-user-portrait-large lazy" />
+                            <img :src="toTiebaUserPortraitImageUrl(author.portrait)"
+                                 loading="lazy" class="tieba-user-portrait-large" />
                             <p class="my-0">{{ author.name }}</p>
                             <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
                         </RouterLink>
@@ -117,8 +117,8 @@
                                             <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined"
                                                         :to="userRoute(author.uid)"
                                                         class="sub-reply-author text-wrap badge bg-light">
-                                                <img :data-src="toTiebaUserPortraitImageUrl(author.portrait)"
-                                                     class="tieba-user-portrait-small lazy" />
+                                                <img :src="toTiebaUserPortraitImageUrl(author.portrait)"
+                                                     loading="lazy" class="tieba-user-portrait-small" />
                                                 <span class="mx-2 align-middle link-dark">
                                                     {{ renderUsername(subReply.authorUid) }}
                                                 </span>

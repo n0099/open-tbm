@@ -42,7 +42,6 @@ import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, titleTemplate } from '@/shared';
-import { lazyLoadUpdate } from '@/shared/lazyLoad';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
@@ -109,7 +108,6 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
     const postCount = _.sum(Object.values(postsQuery.pages.matchQueryPostCount));
     const renderTime = ((Date.now() - startTime - networkTime) / 1000).toFixed(2);
     notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime}s 后端/网络耗时${networkTime}ms`);
-    lazyLoadUpdate();
 
     return true;
 };

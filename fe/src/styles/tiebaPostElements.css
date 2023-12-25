@@ -7,13 +7,6 @@
     height: 90px;
 }
 
-.tieba-image.lazy.loaded {
-    width: auto;
-    height: auto;
-    max-width: 300px;
-    max-height: 300px;
-    object-fit: contain;
-}
 .tieba-image {
     width: 150px; /* to prevent it shrink to 0x0px */
     height: 150px;

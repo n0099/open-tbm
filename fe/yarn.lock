@@ -4191,7 +4191,6 @@ __metadata:
     typescript: "npm:^5.3.3"
     typescript-eslint-parser-for-extra-files: "npm:^0.5.0"
     v-viewer: "npm:^3.0.11"
-    vanilla-lazyload: "npm:^17.8.5"
     viewerjs: "npm:^1.11.6"
     vite: "npm:^5.0.10"
     vue: "npm:^3.3.13"
@@ -4414,13 +4413,6 @@ __metadata:
     spdx-correct: "npm:^3.0.0"
     spdx-expression-parse: "npm:^3.0.0"
   checksum: 7b91e455a8de9a0beaa9fe961e536b677da7f48c9a493edf4d4d4a87fd80a7a10267d438723364e432c2fcd00b5650b5378275cded362383ef570276e6312f4f
-  languageName: node
-  linkType: hard
-
-"vanilla-lazyload@npm:^17.8.5":
-  version: 17.8.5
-  resolution: "vanilla-lazyload@npm:17.8.5"
-  checksum: ebb54f71d445c15ea4f0802b8a17a4654b81f547221c3290378270b9ea926a0650a6d3289de60f3250ebeb3843faf036417560b1febab010e08a2b5313465828
   languageName: node
   linkType: hard
 

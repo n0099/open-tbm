@@ -3,8 +3,8 @@
         <PageCurrentButton :currentCursor="users.pages.currentCursor" />
         <div v-for="(user, userIndex) in users.users" :key="user.uid" class="row" :id="user.uid.toString()">
             <div class="col-3">
-                <img :data-src="toTiebaUserPortraitImageUrl(user.portrait)"
-                     class="lazy d-block mx-auto badge bg-light" width="110" height="110" />
+                <img :src="toTiebaUserPortraitImageUrl(user.portrait)" loading="lazy"
+                     class="d-block mx-auto badge bg-light" width="110" height="110" />
             </div>
             <div class="col">
                 <p>百度UID：{{ user.uid }}</p>
@@ -24,8 +24,6 @@ import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../pagina
 import type { ApiUsersQuery } from '@/api/index.d';
 import type { TiebaUserGender } from '@/api/user';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
-import { lazyLoadUpdate } from '@/shared/lazyLoad';
-import { watch } from 'vue';
 
 const props = defineProps<{
     users: ApiUsersQuery,
@@ -45,5 +43,4 @@ const userGender = (gender: TiebaUserGender) => {
 
     return gender === null ? 'NULL' : gendersList[gender];
 };
-watch(() => props.users, lazyLoadUpdate);
 </script>

@@ -2,15 +2,6 @@
     height: 38px; /* adopt to bootstrap input group */
 }
 
-.lazy.loading {
-    opacity: .5;
-    background: #f7f7f7 url('/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
-}
-.lazy.loaded {
-    opacity: 1;
-    transition: opacity .5s;
-}
-
 .loading {
     background: url('/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif') no-repeat center;
 }

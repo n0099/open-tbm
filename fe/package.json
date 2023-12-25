@@ -29,7 +29,6 @@
         "qs": "^6.11.2",
         "tippy.js": "^6.3.7",
         "v-viewer": "^3.0.11",
-        "vanilla-lazyload": "^17.8.5",
         "viewerjs": "^1.11.6",
         "vue": "^3.3.13",
         "vue-router": "^4.2.5",
