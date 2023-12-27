@@ -20,9 +20,9 @@ defineProps<{ currentCursor: Cursor }>();
 <style scoped>
 .post-previous-page-button {
     position: relative;
-    top: -1.5rem;
-    margin-bottom: -1rem;
-    padding-bottom: .25rem;
-    padding-top: .25rem;
+    inset-block-start: -1.5rem;
+    margin-block-end: -1rem;
+    padding-block-end: .25rem;
+    padding-block-start: .25rem;
 }
 </style>

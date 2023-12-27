@@ -174,7 +174,7 @@ import type { ApiForumList } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
-import type { RouteObjectRaw} from '@/stores/triggerRouteUpdate';
+import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, ref, watch } from 'vue';
@@ -402,33 +402,33 @@ defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });
 }
 /* remove borders for <RangePicker> in the start, middle and end of .input-group */
 :deep(.input-group > :not(:first-child) .ant-calendar-picker-input) {
-    border-bottom-left-radius: 0;
-    border-top-left-radius: 0;
+    border-end-start-radius: 0;
+    border-start-start-radius: 0;
 }
 :deep(.input-group > :not(:last-child) .ant-calendar-picker-input) {
-    border-bottom-right-radius: 0;
-    border-top-right-radius: 0;
+    border-end-end-radius: 0;
+    border-start-end-radius: 0;
 }
 
 .query-params > * {
-    margin-top: -1px;
+    margin-block-start: -1px;
 }
 .query-params > :first-child > .select-param {
-    border-top-left-radius: .25rem !important;
+    border-start-start-radius: .25rem !important;
 }
 .query-params > :last-child > .select-param {
-    border-bottom-left-radius: .25rem !important;
+    border-end-start-radius: .25rem !important;
 }
 
 .query-params > :first-child:not(:only-child) > :last-child {
-    border-bottom-right-radius: 0;
+    border-end-end-radius: 0;
 }
 .query-params > :not(:first-child):not(:last-child) > :last-child {
-    border-bottom-right-radius: 0;
-    border-top-right-radius: 0;
+    border-end-end-radius: 0;
+    border-start-end-radius: 0;
 }
 .query-params > :last-child:not(:only-child) > :last-child {
-    border-top-right-radius: 0;
+    border-start-end-radius: 0;
 }
 
 .query-params .input-group-text {
@@ -436,7 +436,7 @@ defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });
 }
 
 .add-param-button { /* fa-plus is wider than fa-times 3px */
-    padding-left: 22px;
-    padding-right: 10px;
+    padding-inline-start: 22px;
+    padding-inline-end: 10px;
 }
 </style>

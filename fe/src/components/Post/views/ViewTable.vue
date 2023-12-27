@@ -187,7 +187,7 @@ onMounted(() => {
     /* shrink the width of expanding child posts table button */
     width: auto;
     min-width: auto;
-    padding-left: 5px !important;
-    padding-right: 0 !important;
+    padding-inline-start: 5px !important;
+    padding-inline-end: 0 !important;
 }
 </style>

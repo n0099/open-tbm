@@ -719,7 +719,7 @@ onMounted(() => {
 
 <style scoped>
 .echarts {
-    margin-top: .5rem;
+    margin-block-start: .5rem;
 }
 #top50CandidateCount {
     height: 32rem;

@@ -20,7 +20,7 @@ const dateTime = DateTime.fromSeconds(props.time);
 
 <style scoped>
 span {
-    padding-left: .75rem;
-    padding-right: .75rem;
+    padding-inline-start: .75rem;
+    padding-inline-end: .75rem;
 }
 </style>

@@ -79,6 +79,6 @@ const inputName = computed(() =>
     margin: 0;
 }
 .form-check-inline:not(:last-child) {
-    margin-right: .5rem;
+    margin-inline-end: .5rem;
 }
 </style>

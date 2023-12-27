@@ -218,19 +218,19 @@ watchEffect(() => {
     }
     .posts-nav[aria-expanded=true] + .posts-nav-expand {
         /* merge .posts-nav-expand into the scrollbar of .posts-nav */
-        left: min(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth) * 2, 100vw - v-bind(scrollBarWidth) * 2);
+        inset-inline-start: min(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth) * 2, 100vw - v-bind(scrollBarWidth) * 2);
     }
     .posts-nav[aria-expanded=true] + .posts-nav-expand {
         /* after merge narrow the height from 100vh to fit-content for interactive with the scrollbar */
         height: auto !important;
         /* https://stackoverflow.com/questions/28455100/how-to-center-div-vertically-inside-of-absolutely-positioned-parent-div/28456704#28456704 */
-        top: 50%;
+        inset-block-start: 50%;
         transform: translateY(-50%);
     }
 }
 
 :deep(.posts-nav-thread) {
-    height: auto !important; /* to show reply nav buttons under thread menu items */
+    height: auto !important; /* show reply nav buttons under thread menu items */
     white-space: normal;
     line-height: 2rem;
 }

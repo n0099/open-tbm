@@ -10,10 +10,7 @@
     <div v-show="!_.isEmpty(postPages)" class="container-fluid">
         <div class="row flex-nowrap">
             <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
-            <div class="post-render col mx-auto ps-0" :class="{
-                'post-render-list': renderType === 'list',
-                'col-xl-10': renderType === 'list'
-            }">
+            <div class="post-render col mx-auto ps-0" :class="{ 'post-render-list': renderType === 'list' }">
                 <PostsPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
                            :renderType="renderType" :posts="posts"
                            :isLoadingNewPage="isLoading"
@@ -158,11 +155,12 @@ onBeforeMount(async () => {
 }
 @media (max-width: 576px) {
     .post-render {
-        padding-right: 0;
+        padding-inline-end: 0;
     }
 }
-@media (min-width: 1200px) {
+@media (min-width: 1250px) {
     .post-render-list {
+        flex: 1 0 auto;
         max-width: 1000px;
     }
 }

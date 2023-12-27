@@ -1,6 +1,6 @@
 <template>
     <GlobalNavBar />
-    <HorizontalMobileMessage />
+    <MininiumResolutionWarning />
     <img :src="iconLoadingBlock" class="d-none" id="loadingBlock" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import iconLoadingBlock from '/assets/icon-loading-block.svg';
 import GlobalNavBar from '@/components/GlobalNavBar.vue';
-import HorizontalMobileMessage from '@/components/HorizontalMobileMessage.vue';
+import MininiumResolutionWarning from '@/components/MininiumResolutionWarning.vue';
 
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';

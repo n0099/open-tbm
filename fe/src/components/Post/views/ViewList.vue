@@ -3,10 +3,10 @@
         <div v-for="thread in posts.threads" :key="thread.tid"
              :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
             <div class="thread-title shadow-sm col card-header sticky-top">
-                <div class="thread-title-left row flex-nowrap">
-                    <div class="thread-title-left-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
+                <div class="thread-title-inline-start row flex-nowrap">
+                    <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                         <BadgeThread :thread="thread" />
-                        <h6 class="thread-title-left-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
+                        <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
                     </div>
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
@@ -158,7 +158,7 @@ import _ from 'lodash';
 /* eslint-enable import/order */
 
 export const getReplyTitleTopOffset = () =>
-    convertRemToPixels(5) - convertRemToPixels(0.625); // top and margin-top
+    convertRemToPixels(5) - convertRemToPixels(0.625); // inset-block-start and margin-block-start
 export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
     const hash = route.hash.slice(1);
     const hashSelector = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
@@ -251,13 +251,13 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }
-.thread-title-left {
+.thread-title-inline-start {
     max-height: 1.6rem;
 }
-.thread-title-left-title-wrapper {
-    padding-top: .2rem;
+.thread-title-inline-start-title-wrapper {
+    padding-block-start: .2rem;
 }
-.thread-title-left-title {
+.thread-title-inline-start-title {
     text-overflow: ellipsis;
     flex-basis: 100%;
     width: 0;
@@ -265,19 +265,19 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 
 .reply-title {
     z-index: 1019;
-    top: 5rem;
-    margin-top: .625rem;
-    border-top: 1px solid #ededed;
-    border-bottom: 0;
+    inset-block-start: 5rem;
+    margin-block-start: .625rem;
+    border-block-start: 1px solid #ededed;
+    border-block-end: 0;
     background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
 }
 .reply {
     padding: .625rem;
-    border-top: 0;
+    border-block-start: 0;
 }
 .reply-author {
     z-index: 1018;
-    top: 8rem;
+    inset-block-start: 8rem;
     padding: .25rem;
     font-size: 1rem;
     line-height: 150%;
