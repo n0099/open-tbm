@@ -1,11 +1,12 @@
 <template>
-    <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
+    <Menu v-model:selectedKeys="selectedThread" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
           forceSubMenuRender :inlineIndent="16" mode="inline"
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
-          class="posts-nav col sticky-top border-0">
+          class="posts-nav col p-0 vh-100 sticky-top border-0">
         <template v-for="posts in postPages">
             <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
-                <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
+                <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`"
+                          :data-key="`c${cursor}-t${thread.tid}`" :title="thread.title"
                           class="posts-nav-thread ps-2 ps-lg-3 pe-1 border-bottom">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
@@ -54,6 +55,7 @@ import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import { useToggle } from '@vueuse/core';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import scrollIntoView from 'scroll-into-view-if-needed';
 import _ from 'lodash';
 
 const props = defineProps<{ postPages: ApiPostsQuery[] }>();
@@ -63,7 +65,7 @@ const expandedPages = ref<string[]>([]);
 const selectedThread = ref<string[]>([]);
 const firstPostInViewDefault = { cursor: '', tid: 0, pid: 0 };
 const firstPostInView = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(firstPostInViewDefault);
-const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(true);
+const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(matchMedia('(min-width: 900px)').matches);
 
 const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) =>
     router.replace({
@@ -151,27 +153,22 @@ const scrollStop = _.debounce(() => {
 }, 200);
 const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
 onUnmounted(removeScrollEventListener);
-watchEffect(() => {
-    if (isPostsNavExpanded.value)
-        document.addEventListener('scroll', scrollStop, { passive: true });
-});
 
 watchEffect(() => {
     if (!isPostsNavExpanded.value || _.isEmpty(props.postPages) || isApiError(props.postPages))
         removeScrollEventListener();
+    else
+        document.addEventListener('scroll', scrollStop, { passive: true });
     expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watchEffect(() => {
-    const { cursor, tid, pid } = firstPostInView.value;
-    selectedThread.value = [`c${cursor}_t${tid}`];
+    const { cursor, tid } = firstPostInView.value;
+    const menuKey = `c${cursor}-t${tid}`;
+    selectedThread.value = [menuKey];
 
-    // scroll menu to the link to reply in <ViewList>
-    // which is the topmost one in the viewport (nearest to top border of viewport)
-    const replyEl = document.querySelector(`.posts-nav-reply[data-pid='${pid}']`);
-    const navMenuEl = replyEl?.closest('.posts-nav');
-    if (replyEl !== null && navMenuEl
-        && navMenuEl.getBoundingClientRect().top === 0) // is navMenuEl sticking to the top border of viewport
-        navMenuEl.scrollBy(0, replyEl.getBoundingClientRect().top - 150); // 150px offset to scroll down replyEl
+    const threadEl = document.querySelector(`.posts-nav-thread[data-key='${menuKey}']`);
+    if (threadEl !== null)
+        scrollIntoView(threadEl, { scrollMode: 'if-needed' });
 });
 </script>
 
@@ -183,19 +180,17 @@ watchEffect(() => {
 }
 
 .posts-nav {
-    padding: 0;
     overflow: hidden;
-    max-height: 100vh;
 }
 .posts-nav:hover {
     overflow-y: auto;
 }
-@media (min-width: 850px) {
+@media (min-width: 900px) {
     .posts-nav:hover + .posts-nav-expand {
         display: none !important;
     }
 }
-@media (min-width: 850px) and (max-width: 1250px) {
+@media (min-width: 900px) and (max-width: 1250px) {
     /* keeping .posts-nav:hover to replace .posts-nav-expand with scrollbar
        without shifting when the width of .posts-nav excess 30% */
     .posts-nav[aria-expanded=true] {
@@ -207,7 +202,7 @@ watchEffect(() => {
     }
 }
 
-@media (max-width: 850px) {
+@media (max-width: 900px) {
     .posts-nav[aria-expanded=true], .posts-nav[aria-expanded=true] + .posts-nav-expand {
         position: fixed;
         z-index: 1040;

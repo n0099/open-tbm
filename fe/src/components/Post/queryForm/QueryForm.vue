@@ -83,7 +83,7 @@
                                        :placeholders="getPostIDParamPlaceholders(p)" />
                 </template>
                 <template v-if="isDateTimeParam(p)">
-                    <RangePicker v-model="p.subParam.range" showTime
+                    <RangePicker v-model:value="p.subParam.range" showTime
                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="isTextParam(p)">

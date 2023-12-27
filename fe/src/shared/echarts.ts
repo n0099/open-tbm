@@ -6,7 +6,7 @@ import type { ToolboxComponentOption } from 'echarts/components';
 import * as echarts from 'echarts/core';
 import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types';
 
-window.addEventListener('resize', _.throttle(() => {
+addEventListener('resize', _.throttle(() => {
     document.querySelectorAll<HTMLElement>('.echarts').forEach(echartElements => {
         echarts.getInstanceByDom(echartElements)?.resize();
     });

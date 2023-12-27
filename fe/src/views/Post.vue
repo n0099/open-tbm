@@ -10,7 +10,7 @@
     <div v-show="!_.isEmpty(postPages)" class="container-fluid">
         <div class="row flex-nowrap">
             <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
-            <div class="post-render col mx-auto ps-0" :class="{ 'post-render-list': renderType === 'list' }">
+            <div class="posts-page col mx-auto ps-0" :class="{ 'posts-page-list': renderType === 'list' }">
                 <PostsPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
                            :renderType="renderType" :posts="posts"
                            :isLoadingNewPage="isLoading"
@@ -149,17 +149,17 @@ onBeforeMount(async () => {
 </script>
 
 <style scoped>
-.post-render {
+.posts-page {
     /* minus the width of .posts-nav-expand in <NavSidebar> to prevent overflow */
     width: calc(100% - v-bind(scrollBarWidth));
 }
-@media (max-width: 576px) {
-    .post-render {
+@media (max-width: 575.98px) {
+    .posts-page {
         padding-inline-end: 0;
     }
 }
 @media (min-width: 1250px) {
-    .post-render-list {
+    .posts-page-list {
         flex: 1 0 auto;
         max-width: 1000px;
     }
