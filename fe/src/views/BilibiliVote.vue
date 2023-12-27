@@ -351,7 +351,7 @@ const chartsInitialOption: {
                 type: 'text',
                 right: '10%',
                 bottom: '15%',
-                style: { fill: '#989898', align: 'right', font: '28px "Microsoft YaHei"' }
+                style: { fill: '#989898', align: 'right', font: '1.75rem "Microsoft YaHei"' }
             }
         }
     },
@@ -555,7 +555,7 @@ const loadCharts = {
                     style: {
                         fill: '#989898',
                         align: 'right',
-                        font: '28px "Microsoft YaHei"',
+                        font: '1.75rem "Microsoft YaHei"',
                         text: `共${getVotesTotalCount()}票\n${DateTime.fromSeconds(Number(time)).toLocaleString({
                             month: 'short',
                             day: '2-digit',
@@ -596,7 +596,7 @@ const loadCharts = {
                 style: {
                     fill: '#989898',
                     textAlign: 'right',
-                    font: '28px "Microsoft YaHei"',
+                    font: '1.75rem "Microsoft YaHei"',
                     text: '贴吧官方统计共12720票\n有效12247票 无效473票\n3月11日 18:26'
                 }
             }

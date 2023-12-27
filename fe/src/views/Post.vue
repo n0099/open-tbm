@@ -8,10 +8,10 @@
         </Menu>
     </div>
     <div v-show="!_.isEmpty(postPages)" class="container-fluid">
-        <div class="row justify-content-center">
+        <div class="row flex-nowrap">
             <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
-            <div class="post-render-wrapper col" :class="{
-                'post-render-list-wrapper': renderType === 'list',
+            <div class="post-render col mx-auto ps-0" :class="{
+                'post-render-list': renderType === 'list',
                 'col-xl-10': renderType === 'list'
             }">
                 <PostsPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
@@ -19,8 +19,7 @@
                            :isLoadingNewPage="isLoading"
                            :isLastPageInPages="pageIndex === postPages.length - 1" />
             </div>
-
-            <div v-show="renderType === 'list'" class="post-render-list-right-padding col-xl d-none p-0" />
+            <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
         </div>
     </div>
     <div class="container">
@@ -41,7 +40,7 @@ import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api'
 import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
-import { notyShow, titleTemplate } from '@/shared';
+import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
@@ -153,27 +152,18 @@ onBeforeMount(async () => {
 </script>
 
 <style scoped>
-.post-render-wrapper {
-    padding-left: 10px;
+.post-render {
+    /* minus the width of .posts-nav-expand in <NavSidebar> to prevent overflow */
+    width: calc(100% - v-bind(scrollBarWidth));
 }
-@media (max-width: 1200px) {
-    .post-render-wrapper {
-        /* minus the width of .posts-nav-expanded in <NavSidebar> to prevent it warps new row */
-        width: calc(100% - 15px);
+@media (max-width: 576px) {
+    .post-render {
+        padding-right: 0;
     }
 }
 @media (min-width: 1200px) {
-    .post-render-wrapper {
-        padding-left: 15px;
-    }
-    .post-render-list-wrapper {
+    .post-render-list {
         max-width: 1000px;
-    }
-}
-@media (min-width: 1400px) {
-    .post-render-list-right-padding {
-        /* only show right margin spaces when enough to prevent too narrow to display <posts-nav> */
-        display: block !important;
     }
 }
 </style>

@@ -2,11 +2,11 @@
     <Menu v-model="selectedThread" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
           forceSubMenuRender :inlineIndent="16" mode="inline"
           :class="{ 'd-none': !isPostsNavExpanded }" :aria-expanded="isPostsNavExpanded"
-          class="posts-nav col-xl d-xl-block sticky-top">
+          class="posts-nav col sticky-top border-0">
         <template v-for="posts in postPages">
             <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
                 <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`" :title="thread.title"
-                          class="posts-nav-thread pb-2 border-bottom d-flex flex-wrap justify-content-between">
+                          class="posts-nav-thread ps-2 ps-lg-3 pe-1 border-bottom">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
@@ -27,12 +27,16 @@
             </SubMenu>
         </template>
     </Menu>
-    <a @click="_ => togglePostsNavExpanded"
-       class="posts-nav-expanded col col-auto align-items-center d-flex d-xl-none shadow-sm vh-100 sticky-top">
-        <!-- https://github.com/FortAwesome/vue-fontawesome/issues/313 -->
-        <span v-show="isPostsNavExpanded"><FontAwesomeIcon icon="angle-left" /></span>
-        <span v-show="!isPostsNavExpanded"><FontAwesomeIcon icon="angle-right" /></span>
-    </a>
+    <div :class="{
+             'border-start': isPostsNavExpanded,
+             'border-end': !isPostsNavExpanded
+         }"
+         class="posts-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
+        <a @click="_ => togglePostsNavExpanded()" class="text-primary">
+            <FontAwesomeIcon v-show="isPostsNavExpanded" icon="angle-left" />
+            <FontAwesomeIcon v-show="!isPostsNavExpanded" icon="angle-right" />
+        </a>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -41,7 +45,7 @@ import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
 import type { Pid, Tid, ToPromise } from '@/shared';
-import { cursorTemplate, getScrollBarWidth, removeEnd } from '@/shared';
+import { cursorTemplate, removeEnd, scrollBarWidth } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
@@ -59,8 +63,7 @@ const expandedPages = ref<string[]>([]);
 const selectedThread = ref<string[]>([]);
 const firstPostInViewDefault = { cursor: '', tid: 0, pid: 0 };
 const firstPostInView = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(firstPostInViewDefault);
-const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(false);
-const scrollBarWidth = `${getScrollBarWidth()}px`;
+const [isPostsNavExpanded, togglePostsNavExpanded] = useToggle(true);
 
 const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) =>
     router.replace({
@@ -148,12 +151,14 @@ const scrollStop = _.debounce(() => {
 }, 200);
 const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
 onUnmounted(removeScrollEventListener);
+watchEffect(() => {
+    if (isPostsNavExpanded.value)
+        document.addEventListener('scroll', scrollStop, { passive: true });
+});
 
 watchEffect(() => {
-    if (_.isEmpty(props.postPages) || isApiError(props.postPages))
+    if (!isPostsNavExpanded.value || _.isEmpty(props.postPages) || isApiError(props.postPages))
         removeScrollEventListener();
-    else
-        document.addEventListener('scroll', scrollStop, { passive: true });
     expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watchEffect(() => {
@@ -171,26 +176,56 @@ watchEffect(() => {
 </script>
 
 <style scoped>
-.posts-nav-expanded {
-    padding: 2px;
+.posts-nav-expand {
+    width: v-bind(scrollBarWidth);
+    padding: .125rem;
     font-size: 1.3rem;
-    background-color: #f5f5f5;
 }
 
 .posts-nav {
-    padding: 0 v-bind(scrollBarWidth) 0 0;
+    padding: 0;
     overflow: hidden;
     max-height: 100vh;
-    border-top: 1px solid #f0f0f0;
 }
 .posts-nav:hover {
-    padding: 0;
     overflow-y: auto;
 }
-@media (max-width: 1200px) {
+@media (min-width: 850px) {
+    .posts-nav:hover + .posts-nav-expand {
+        display: none !important;
+    }
+}
+@media (min-width: 850px) and (max-width: 1250px) {
+    /* keeping .posts-nav:hover to replace .posts-nav-expand with scrollbar
+       without shifting when the width of .posts-nav excess 30% */
     .posts-nav[aria-expanded=true] {
-        width: fit-content;
-        max-width: 35%;
+        flex: 0 1 30%;
+        max-width: calc(30% + v-bind(scrollBarWidth));
+    }
+    .posts-nav:hover {
+        flex-grow: 1 !important;
+    }
+}
+
+@media (max-width: 850px) {
+    .posts-nav[aria-expanded=true], .posts-nav[aria-expanded=true] + .posts-nav-expand {
+        position: fixed;
+        z-index: 1040;
+    }
+    .posts-nav[aria-expanded=true] {
+        /* linear regression of vw,width: 456,456 768,384(50%) https://www.wolframalpha.com/input?i=y%3D-0.2308x%2B561.2 */
+        width: calc(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth));
+    }
+    .posts-nav[aria-expanded=true] + .posts-nav-expand {
+        /* merge .posts-nav-expand into the scrollbar of .posts-nav */
+        left: min(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth) * 2, 100vw - v-bind(scrollBarWidth) * 2);
+    }
+    .posts-nav[aria-expanded=true] + .posts-nav-expand {
+        /* after merge narrow the height from 100vh to fit-content for interactive with the scrollbar */
+        height: auto !important;
+        /* https://stackoverflow.com/questions/28455100/how-to-center-div-vertically-inside-of-absolutely-positioned-parent-div/28456704#28456704 */
+        top: 50%;
+        transform: translateY(-50%);
     }
 }
 

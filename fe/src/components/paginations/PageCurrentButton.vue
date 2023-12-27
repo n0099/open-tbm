@@ -22,7 +22,7 @@ defineProps<{ currentCursor: Cursor }>();
     position: relative;
     top: -1.5rem;
     margin-bottom: -1rem;
-    padding-bottom: 4px;
-    padding-top: 4px;
+    padding-bottom: .25rem;
+    padding-top: .25rem;
 }
 </style>

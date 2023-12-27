@@ -2,11 +2,11 @@
     <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
         <div v-for="thread in posts.threads" :key="thread.tid"
              :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
-            <div class="thread-title shadow-sm card-header sticky-top">
-                <div class="row justify-content-between">
-                    <div class="col-auto">
+            <div class="thread-title shadow-sm col card-header sticky-top">
+                <div class="thread-title-left row flex-nowrap">
+                    <div class="thread-title-left-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                         <BadgeThread :thread="thread" />
-                        <h6 class="d-inline">{{ thread.title }}</h6>
+                        <h6 class="thread-title-left-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
                     </div>
                     <div class="col-auto badge bg-light">
                         <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
@@ -251,6 +251,17 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }
+.thread-title-left {
+    max-height: 1.6rem;
+}
+.thread-title-left-title-wrapper {
+    padding-top: .2rem;
+}
+.thread-title-left-title {
+    text-overflow: ellipsis;
+    flex-basis: 100%;
+    width: 0;
+}
 
 .reply-title {
     z-index: 1019;
@@ -262,7 +273,6 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 }
 .reply {
     padding: .625rem;
-    margin: 0;
     border-top: 0;
 }
 .reply-author {

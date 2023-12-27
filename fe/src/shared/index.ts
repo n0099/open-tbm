@@ -1,5 +1,6 @@
 import type { Cursor } from '@/api/index.d';
 import type { TiebaUser } from '@/api/user';
+import { computed } from 'vue';
 import Noty from 'noty';
 import _ from 'lodash';
 
@@ -64,7 +65,7 @@ export const emitEventWithNumberValidator = (p: number) => _.isNumber(p);
 export const convertRemToPixels = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 // https://stackoverflow.com/questions/986937/how-can-i-get-the-browsers-scrollbar-sizes/986977#986977
-export const getScrollBarWidth = () => {
+export const scrollBarWidth = computed(() => {
     const inner = document.createElement('p');
     inner.style.width = '100%';
     inner.style.height = '200px';
@@ -87,5 +88,5 @@ export const getScrollBarWidth = () => {
         w2 = outer.clientWidth;
     outer.remove();
 
-    return w1 - w2;
-};
+    return `${w1 - w2}px`;
+});

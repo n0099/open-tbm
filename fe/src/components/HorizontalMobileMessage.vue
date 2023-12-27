@@ -1,23 +1,13 @@
 <template>
-    <div class="horizontal-mobile-message sticky-top p-2 bg-warning border-bottom text-center">
-        请将设备横屏显示以获得最佳体验
+    <div class="d-none p-2 bg-warning border-bottom text-center">
+        本站建议最低逻辑分辨率1280x720px
     </div>
 </template>
 
 <style scoped>
-.horizontal-mobile-message {
-    z-index: 1040;
-}
-
-@media screen and (orientation: portrait) {
-    .horizontal-mobile-message {
-        display: block
-    }
-}
-
-@media screen and (orientation: landscape) {
-    .horizontal-mobile-message {
-        display: none
+@media screen and (max-width: 720px) or (max-height: 1280px) {
+    div {
+        display: block !important;
     }
 }
 </style>
