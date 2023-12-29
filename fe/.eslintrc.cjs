@@ -91,7 +91,7 @@ const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
             consistent: true,
         }],
         '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
-        '@stylistic/operator-linebreak': ['error', 'before'],
+        '@stylistic/operator-linebreak': ['error', 'before', { overrides: { '=': 'after' } }],
         '@stylistic/padded-blocks': ['error', 'never'],
         '@stylistic/quote-props': ['error', 'as-needed'],
         '@stylistic/semi-spacing': 'error',
@@ -138,7 +138,8 @@ const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
         '@stylistic/lines-between-class-members': 'error',
         '@stylistic/no-extra-parens': ['error', 'all', {
             ignoreJSX: 'multi-line',
-            enforceForArrowConditionals: false,
+            enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
+            nestedBinaryExpressions: false, // https://github.com/eslint/eslint/issues/8891#issuecomment-313618753
         }],
         '@stylistic/object-curly-spacing': ['error', 'always'],
         '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
@@ -157,7 +158,9 @@ const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
             multiline: { delimiter: 'comma', requireLast: false },
             singleline: { delimiter: 'comma', requireLast: false },
         }],
-        '@stylistic/type-annotation-spacing': 'error',
+
+        // https://github.com/eslint-stylistic/eslint-stylistic/issues/249
+        // '@stylistic/type-annotation-spacing': 'error',
     }
 };
 const eslint = { // as of eslint@8.56.0
@@ -467,7 +470,8 @@ const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
         'vue/no-empty-pattern': 'error',
         'vue/no-extra-parens': ['error', 'all', {
             ignoreJSX: 'multi-line',
-            enforceForArrowConditionals: false,
+            enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
+            nestedBinaryExpressions: false, // https://github.com/eslint/eslint/issues/8891#issuecomment-313618753
         }],
         'vue/no-irregular-whitespace': 'error',
         'vue/no-loss-of-precision': 'error',
@@ -479,7 +483,7 @@ const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
         }],
         'vue/object-curly-spacing': ['error', 'always'],
         'vue/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
-        'vue/operator-linebreak': ['error', 'before'],
+        'vue/operator-linebreak': ['error', 'before', { overrides: { '=': 'after' } }],
         'vue/prefer-template': 'error',
         'vue/space-in-parens': 'error',
         'vue/space-infix-ops': ['error', { int32Hint: false }],

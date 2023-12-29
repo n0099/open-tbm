@@ -36,9 +36,9 @@ export const commonToolboxFeatures: echarts.ComposeOption<ToolboxComponentOption
         }
     }
 };
-export const extendCommonToolbox
-    = (extend: echarts.ComposeOption<ToolboxComponentOption>): echarts.ComposeOption<ToolboxComponentOption> =>
-        _.merge(commonToolboxFeatures, extend);
+export const extendCommonToolbox = (extend: echarts.ComposeOption<ToolboxComponentOption>)
+: echarts.ComposeOption<ToolboxComponentOption> =>
+    _.merge(commonToolboxFeatures, extend);
 
 export const emptyChartSeriesData = (chart: echarts.ECharts) => {
     chart.setOption({

@@ -181,7 +181,6 @@ import type { Reply, SubReply, Thread } from '@/api/posts';
 import type { BaiduUserID } from '@/api/user';
 import type { Modify } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
-import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 import '@/styles/bootstrapCallout.css';
 
 import { RouterLink } from 'vue-router';
@@ -232,12 +231,7 @@ const renderUsername = baseRenderUsername(getUser);
 const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
 onMounted(initialTippy);
-setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
-    if (to.fullPath === from.fullPath)
-        return false;
-    const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
-    if (triggerRouteUpdateStore.isTriggeredBy('<NavSidebar>@scroll', to))
-        return false;
+setComponentCustomScrollBehaviour((to, from) : ReturnType<RouterScrollBehavior> => {
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
 

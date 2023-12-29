@@ -104,8 +104,8 @@ export default <
 
             return { ...flatted, ...param.subParam };
         };
-        const clearedUniqueParamsDefaultValueWithoutUndefined
-            = removeUndefinedFromPartialObjectValues<UniqueParams, UnknownParam>(clearedUniqueParamsDefaultValue());
+        const clearedUniqueParamsDefaultValueWithoutUndefined =
+            removeUndefinedFromPartialObjectValues<UniqueParams, UnknownParam>(clearedUniqueParamsDefaultValue());
 
         return [
             ...clearedUniqueParamsDefaultValueWithoutUndefined.map(flattenParam),

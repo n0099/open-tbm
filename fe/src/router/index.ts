@@ -46,12 +46,8 @@ const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
 };
 
 type ParentRoute = Omit<RouteRecordSingleView, 'path'> | Omit<RouteRecordMultipleViews, 'path'>;
-const withChildrenRoute = (
-    path: string,
-    name: string,
-    parentRoute: ParentRoute,
-    childrenBaseRoute: _RouteRecordBase
-): RouteRecordSingleViewWithChildren | RouteRecordMultipleViewsWithChildren =>
+const withChildrenRoute = (path: string, name: string, parentRoute: ParentRoute, childrenBaseRoute: _RouteRecordBase)
+: RouteRecordSingleViewWithChildren | RouteRecordMultipleViewsWithChildren =>
     ({
         path,
         name,
@@ -119,8 +115,8 @@ export default createRouter({
             return savedPosition;
 
         if (componentCustomScrollBehaviour.value !== undefined) {
-            const ret: ReturnType<RouterScrollBehavior> | undefined
-                = componentCustomScrollBehaviour.value(to, from, savedPosition);
+            const ret: ReturnType<RouterScrollBehavior> | undefined =
+                componentCustomScrollBehaviour.value(to, from, savedPosition);
             if (ret !== undefined)
                 return ret;
         }

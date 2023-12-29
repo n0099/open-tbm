@@ -379,14 +379,14 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
             fillParamDefaultValue({ name, value }));
     }
 };
-const parseRouteToGetFlattenParams
-    = async (route: RouteLocationNormalizedLoaded): Promise<ReturnType<typeof flattenParams> | false> => {
-        parseRoute(route);
-        if (await checkParams())
-            return flattenParams();
+const parseRouteToGetFlattenParams = async (route: RouteLocationNormalizedLoaded)
+: Promise<ReturnType<typeof flattenParams> | false> => {
+    parseRoute(route);
+    if (await checkParams())
+        return flattenParams();
 
-        return false;
-    };
+    return false;
+};
 
 watch(() => uniqueParams.value.postTypes.value, (to, from) => {
     if (_.isEmpty(to))

@@ -164,8 +164,8 @@ const voteCountSeriesLabelFormatter = (
 };
 
 const sourceAttribution = `来源：open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
-type ChartOptionTop10CandidatesTimeline
-    = echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
+type ChartOptionTop10CandidatesTimeline =
+    echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {
     top50CandidateCount: echarts.ComposeOption<BarSeriesOption | DataZoomComponentOption | GridComponentOption | LegendComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>,
     top10CandidatesTimeline: ChartOptionTop10CandidatesTimeline,
@@ -442,8 +442,8 @@ const query = ref<{
 const candidatesDetailData = ref<CandidatesDetailData>([]);
 
 interface Coord { coord: [number, number] }
-type DiffWithPreviousMarkLineFormatter
-    = Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
+type DiffWithPreviousMarkLineFormatter =
+    Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
 const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) =>
     _.find(votes, { isValid })?.count ?? 0;
 const formatCandidateNameByID = (id: number) => `${id}号\n${json.candidateNames[id - 1]}`;
@@ -519,8 +519,8 @@ const loadCharts = {
                 .value();
 
             const validCount = _.map(dataset, 'validCount');
-            const validCountDiffWithPrevious: DiffWithPreviousMarkLineFormatter
-                = (validCount.map((count, index) => [
+            const validCountDiffWithPrevious: DiffWithPreviousMarkLineFormatter =
+                (validCount.map((count, index) => [
                     {
                         label: {
                             show: true,

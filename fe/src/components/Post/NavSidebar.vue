@@ -44,10 +44,8 @@
 import { getReplyTitleTopOffset } from '@/components/Post/views/ViewList.vue';
 import { isApiError } from '@/api/index';
 import type { ApiPostsQuery, Cursor } from '@/api/index.d';
-import { assertRouteNameIsStr, routeNameSuffix, routeNameWithCursor } from '@/router';
 import type { Pid, Tid, ToPromise } from '@/shared';
-import { cursorTemplate, removeEnd, scrollBarWidth } from '@/shared';
-import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
+import { cursorTemplate, scrollBarWidth } from '@/shared';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -102,54 +100,26 @@ const scrollStop = _.debounce(() => {
     const firstPostIDInView = _.mapValues(firstPostElementInView, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));
 
-    const triggerRouteUpdateStore = useTriggerRouteUpdateStore();
-    const replaceRoute = triggerRouteUpdateStore.replaceRoute('<NavSidebar>@scroll');
-
-    // when there's no thread or reply item in the viewport
-    // firstPostElementInView.* will be the initial <null> element and firstPostIDInView.* will be NaN
-    if (Number.isNaN(firstPostIDInView.thread)) {
-        firstPostInView.value = firstPostInViewDefault;
-        void replaceRoute({ hash: '' }); // empty route hash
-
-        return;
-    }
     const firstPostCursorInView = _.mapValues(firstPostElementInView,
         i => i.closest('.post-render-list')?.getAttribute('data-cursor') ?? '');
 
-    const replaceRouteHash = async (cursor: Cursor, postID: Pid | Tid, hashPrefix = '') => {
-        assertRouteNameIsStr(route.name);
-        const hash = `#${hashPrefix}${postID}`;
+    firstPostInView.value = {
+        tid: firstPostIDInView.thread,
 
-        return replaceRoute(cursor === ''
-            ? { hash, name: removeEnd(route.name, routeNameSuffix.cursor), params: _.omit(route.params, 'cursor') }
-            : { hash, name: routeNameWithCursor(route.name), params: { ...route.params, cursor } });
+        // is the first reply belonged to the first thread, true when the first thread has no reply,
+        // the first reply will belong to another thread that comes after the first thread in view
+        ..._.chain(props.postPages)
+            .map(i => i.threads)
+            .flatten()
+            .filter({ tid: firstPostIDInView.thread })
+            .map(i => i.replies)
+            .flatten()
+            .filter({ pid: firstPostIDInView.reply })
+            .isEmpty()
+            .value()
+            ? { pid: 0, cursor: firstPostCursorInView.thread }
+            : { pid: firstPostIDInView.reply, cursor: firstPostCursorInView.reply }
     };
-
-    // is the first reply belonged to the first thread, true when the first thread has no reply,
-    // the first reply will belong to another thread that comes after the first thread in view
-    if (_.chain(props.postPages)
-        .map(i => i.threads)
-        .flatten()
-        .filter({ tid: firstPostIDInView.thread })
-        .map(i => i.replies)
-        .flatten()
-        .filter({ pid: firstPostIDInView.reply })
-        .isEmpty()
-        .value()) {
-        firstPostInView.value = {
-            tid: firstPostIDInView.thread,
-            pid: 0,
-            cursor: firstPostCursorInView.thread
-        };
-        void replaceRouteHash(firstPostCursorInView.thread, firstPostIDInView.thread, 't');
-    } else {
-        firstPostInView.value = {
-            tid: firstPostIDInView.thread,
-            pid: firstPostIDInView.reply,
-            cursor: firstPostCursorInView.reply
-        };
-        void replaceRouteHash(firstPostCursorInView.reply, firstPostIDInView.reply);
-    }
 }, 200);
 const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
 onUnmounted(removeScrollEventListener);
