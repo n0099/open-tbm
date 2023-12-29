@@ -23,7 +23,7 @@ export type Modify<T, R> = Omit<T, keyof R> & R;
 export type ObjValues<T> = T[keyof T];
 export type ToPromise<T> = T extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : never;
 
-export type BootstrapColors = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
+export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type PostType = 'reply' | 'subReply' | 'thread';
 export type PostID = typeof postID[number];
 export const postID = ['tid', 'pid', 'spid'] as const;

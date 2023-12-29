@@ -1,4 +1,4 @@
-import type { ApiError, ApiForumList, ApiPostsQuery, ApiPostsQueryQueryParam, ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam, ApiStatus, ApiStatusQueryParam, ApiUsersQuery, ApiUsersQueryQueryParam } from '@/api/index.d';
+import type { ApiError, ApiForumList, ApiPosts, ApiPostsParam, ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam, ApiStatus, ApiStatusQueryParam, ApiUsers, ApiUsersParam } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';
@@ -85,7 +85,7 @@ export const apiStatus = async (queryParam: ApiStatusQueryParam): Promise<ApiErr
     getRequesterWithReCAPTCHA('/status', queryParam);
 export const apiStatsForumsPostCount = async (queryParam: ApiStatsForumPostCountQueryParam): Promise<ApiError | ApiStatsForumPostCount> =>
     getRequesterWithReCAPTCHA('/stats/forums/postCount', queryParam);
-export const apiUsersQuery = async (queryParam: ApiUsersQueryQueryParam): Promise<ApiError | ApiUsersQuery> =>
+export const apiUsers = async (queryParam: ApiUsersParam): Promise<ApiError | ApiUsers> =>
     getRequesterWithReCAPTCHA('/users', queryParam);
-export const apiPostsQuery = async (queryParam: ApiPostsQueryQueryParam): Promise<ApiError | ApiPostsQuery> =>
+export const apiPosts = async (queryParam: ApiPostsParam): Promise<ApiError | ApiPosts> =>
     getRequesterWithReCAPTCHA('/posts', queryParam);

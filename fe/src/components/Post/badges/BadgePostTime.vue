@@ -6,13 +6,13 @@
 </template>
 
 <script setup lang="ts">
-import type { BootstrapColors, UnixTimestamp } from '@/shared';
+import type { BootstrapColor, UnixTimestamp } from '@/shared';
 import { DateTime } from 'luxon';
 
 const props = withDefaults(defineProps<{
     time: UnixTimestamp,
     tippyPrefix?: string,
-    badgeColor: BootstrapColors
+    badgeColor: BootstrapColor
 }>(), { tippyPrefix: '' });
 
 const dateTime = DateTime.fromSeconds(props.time);

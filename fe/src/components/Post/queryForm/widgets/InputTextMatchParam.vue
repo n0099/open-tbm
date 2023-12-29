@@ -32,13 +32,13 @@
 </template>
 
 <script lang="ts">
-const matchByDesc = {
+const matchByDescription = {
     implicit: '模糊',
     explicit: '精确',
     regex: '正则'
 };
 export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
-    `${matchByDesc[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
+    `${matchByDescription[p.subParam.matchBy]}匹配 空格${p.subParam.spaceSplit ? '不能' : ''}分割关键词`;
 </script>
 
 <script setup lang="ts">

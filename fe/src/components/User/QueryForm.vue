@@ -42,14 +42,14 @@ const router = useRouter();
 const gender = ref<TiebaUserGenderQueryParam | 'default'>('default');
 const selectUser = ref<SelectTiebaUserModel>({ selectBy: '', params: {} });
 
-const defaultParamsValue = {
+const paramsDefaultValue = {
     gender: 'default',
     uidCompareBy: '=',
     nameUseRegex: 'false',
     displayNameUseRegex: 'false'
 } as const;
 const omitDefaultParamsValue = (params: Record<string, LocationQueryValueRaw>) => {
-    _.each(defaultParamsValue, (value, param) => {
+    _.each(paramsDefaultValue, (value, param) => {
         if (params[param] === value || params[param] === undefined)
             Reflect.deleteProperty(params, param);
     });
@@ -68,7 +68,7 @@ const submitQueryForm = async () => {
 };
 
 watchEffect(() => {
-    gender.value = props.query.gender ?? defaultParamsValue.gender;
+    gender.value = props.query.gender ?? paramsDefaultValue.gender;
     selectUser.value = {
         selectBy: props.selectUserBy,
         params: { ...props.params, ...boolStrPropToBool(props.query) }

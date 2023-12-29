@@ -9,12 +9,12 @@
     </div>
     <div v-show="!_.isEmpty(postPages)" class="container-fluid">
         <div class="row flex-nowrap">
-            <NavSidebar v-if="renderType === 'list'" :postPages="postPages" />
-            <div class="posts-page col mx-auto ps-0" :class="{ 'posts-page-list': renderType === 'list' }">
-                <PostsPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
-                           :renderType="renderType" :posts="posts"
-                           :isLoadingNewPage="isLoading"
-                           :isLastPageInPages="pageIndex === postPages.length - 1" />
+            <PostNav v-if="renderType === 'list'" :postPages="postPages" />
+            <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
+                <PostPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
+                          :renderType="renderType" :posts="posts"
+                          :isLoadingNewPage="isLoading"
+                          :isLastPageInPages="pageIndex === postPages.length - 1" />
             </div>
             <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
         </div>
@@ -26,15 +26,15 @@
 </template>
 
 <script setup lang="ts">
-import NavSidebar from '@/components/Post/NavSidebar.vue';
-import PostsPage from '@/components/Post/PostsPage.vue';
+import PostNav from '@/components/Post/PostNav.vue';
+import PostPage from '@/components/Post/PostPage.vue';
 import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
-import { getReplyTitleTopOffset, postListItemScrollPosition } from '@/components/Post/views/ViewList.vue';
+import { getReplyTitleTopOffset, postListItemScrollPosition } from '@/components/Post/renderers/RendererList.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
-import { apiForumList, apiPostsQuery, isApiError, throwIfApiError } from '@/api';
-import type { ApiError, ApiForumList, ApiPostsQuery, Cursor } from '@/api/index.d';
+import { apiForumList, apiPosts, isApiError, throwIfApiError } from '@/api';
+import type { ApiError, ApiForumList, ApiPosts, Cursor } from '@/api/index.d';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
@@ -47,17 +47,17 @@ import { Menu, MenuItem } from 'ant-design-vue';
 import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
-export type PostViewRenderer = 'list' | 'table';
+export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
 const title = ref<string>('帖子查询');
 const forumList = ref<ApiForumList>([]);
-const postPages = ref<ApiPostsQuery[]>([]);
+const postPages = ref<ApiPosts[]>([]);
 const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
 const showPlaceholderPostList = ref<boolean>(true);
-const renderType = ref<PostViewRenderer>('list');
-const selectedRenderTypes = ref<[PostViewRenderer]>(['list']);
+const renderType = ref<PostRenderer>('list');
+const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const queryFormRef = ref<typeof QueryForm>();
 useHead({ title: computed(() => titleTemplate(title.value)) });
 
@@ -69,7 +69,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
         postPages.value = [];
     isLoading.value = true;
 
-    const postsQuery = await apiPostsQuery({
+    const query = await apiPosts({
         query: JSON.stringify(queryParams),
         cursor: isNewQuery ? undefined : cursor
     }).finally(() => {
@@ -77,15 +77,15 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
         isLoading.value = false;
     });
 
-    if (isApiError(postsQuery)) {
-        lastFetchError.value = postsQuery;
+    if (isApiError(query)) {
+        lastFetchError.value = query;
 
         return false;
     }
     if (isNewQuery)
-        postPages.value = [postsQuery];
+        postPages.value = [query];
     else
-        postPages.value.push(postsQuery); // todo: unshift when fetching previous page
+        postPages.value.push(query); // todo: unshift when fetching previous page
 
     const forumName = `${postPages.value[0].forum.name}吧`;
     const threadTitle = postPages.value[0].threads[0].title;
@@ -101,7 +101,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
 
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
-    const postCount = _.sum(Object.values(postsQuery.pages.matchQueryPostCount));
+    const postCount = _.sum(Object.values(query.pages.matchQueryPostCount));
     const renderTime = ((Date.now() - startTime - networkTime) / 1000).toFixed(2);
     notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime}s 后端/网络耗时${networkTime}ms`);
 
@@ -170,17 +170,17 @@ onBeforeMount(async () => {
 </script>
 
 <style scoped>
-.posts-page {
-    /* minus the width of .posts-nav-expand in <NavSidebar> to prevent overflow */
+.post-page {
+    /* minus the width of .post-nav-expand in <PostNav> to prevent overflow */
     width: calc(100% - v-bind(scrollBarWidth));
 }
 @media (max-width: 575.98px) {
-    .posts-page {
+    .post-page {
         padding-inline-end: 0;
     }
 }
 @media (min-width: 1250px) {
-    .posts-page-list {
+    .renderer-list {
         flex: 1 0 auto;
         max-width: 1000px;
     }

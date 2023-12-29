@@ -58,15 +58,15 @@ export type SelectTiebaUserParams = Partial<{
     displayName: string | 'NULL',
     displayNameUseRegex: boolean
 }>;
-type SelectTiebaUserParamsValues = ObjValues<SelectTiebaUserParams>;
-const selectTiebaUserParamsNames = [
+type SelectTiebaUserParamsValue = ObjValues<SelectTiebaUserParams>;
+const selectTiebaUserParamsName = [
     'uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'
 ] as const;
 
-// widen type Record<string, SelectTiebaUserParamsValues> for compatible with props.paramsNameMap
+// widen type Record<string, SelectTiebaUserParamsValue> for compatible with props.paramsNameMap
 export interface SelectTiebaUserModel {
     selectBy: SelectTiebaUserBy,
-    params: Record<string, SelectTiebaUserParamsValues> | SelectTiebaUserParams
+    params: Record<string, SelectTiebaUserParamsValue> | SelectTiebaUserParams
 }
 </script>
 
@@ -106,7 +106,7 @@ watch(() => props.modelValue, () => {
 
     // filter out unnecessary and undefined params
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsNames), _.isUndefined);
+    params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsName), _.isUndefined);
 
     // reset to default selectBy if it's a invalid value
     if (!selectTiebaUserBy.includes(selectBy.value))

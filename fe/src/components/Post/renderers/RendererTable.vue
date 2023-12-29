@@ -33,8 +33,8 @@
             </template>
         </template>
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
-            <span v-if="threadsReply[tid] === undefined">无子回复帖</span>
-            <Table v-else :columns="replyColumns" :dataSource="threadsReply[tid]"
+            <span v-if="repliesKeyByTid[tid] === undefined">无子回复帖</span>
+            <Table v-else :columns="replyColumns" :dataSource="repliesKeyByTid[tid]"
                    defaultExpandAllRows expandRowByClick
                    :pagination="false" rowKey="pid" size="middle">
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
@@ -50,12 +50,12 @@
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
                     <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
-                    <component :is="repliesSubReply[pid] === undefined
+                    <component :is="subRepliesKeyByPid[pid] === undefined
                                    ? 'span'
                                    : 'p'"
                                v-viewer.static v-html="content" />
-                    <Table v-if="repliesSubReply[pid] !== undefined"
-                           :columns="subReplyColumns" :dataSource="repliesSubReply[pid]"
+                    <Table v-if="subRepliesKeyByPid[pid] !== undefined"
+                           :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
                            defaultExpandAllRows expandRowByClick
                            :pagination="false" rowKey="spid" size="middle">
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
@@ -86,8 +86,8 @@ import { baseGetUser, baseRenderUsername } from './common';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 
-import type { ApiPostsQuery } from '@/api/index.d';
-import type { Reply, SubReply, Thread } from '@/api/posts';
+import type { ApiPosts } from '@/api/index.d';
+import type { Reply, SubReply, Thread } from '@/api/post';
 import type { Pid, Tid } from '@/shared';
 import { toTiebaUserPortraitImageUrl, toTiebaUserProfileUrl } from '@/shared';
 
@@ -97,10 +97,10 @@ import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';
 
-const props = defineProps<{ posts: ApiPostsQuery }>();
-const threads = ref<ApiPostsQuery['threads']>();
-const threadsReply = ref<Record<Tid, ApiPostsQuery['threads'][number]['replies']>>([]);
-const repliesSubReply = ref<Record<Pid, SubReply[]>>([]);
+const props = defineProps<{ posts: ApiPosts }>();
+const threads = ref<ApiPosts['threads']>();
+const repliesKeyByTid = ref<Record<Tid, ApiPosts['threads'][number]['replies']>>([]);
+const subRepliesKeyByPid = ref<Record<Pid, SubReply[]>>([]);
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },
     { title: '标题', dataIndex: 'title' },
@@ -149,13 +149,13 @@ const renderUsername = baseRenderUsername(getUser);
 
 onMounted(() => {
     threads.value = props.posts.threads;
-    threadsReply.value = _.chain(threads.value)
+    repliesKeyByTid.value = _.chain(threads.value)
         .map(i => i.replies)
         // eslint-disable-next-line @typescript-eslint/unbound-method
         .reject(_.isEmpty) // remove threads which have no reply
         .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
         .value();
-    repliesSubReply.value = _.chain(threadsReply.value)
+    subRepliesKeyByPid.value = _.chain(repliesKeyByTid.value)
         .toArray() // cast tid keyed object to array
         .flatten() // flatten every thread's replies
         .map(i => i.subReplies)

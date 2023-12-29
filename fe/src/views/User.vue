@@ -1,24 +1,24 @@
 <template>
     <UserQueryForm :query="$route.query" :params="params" :selectUserBy="selectUserBy" class="my-4" />
-    <UsersPage v-for="(users, pageIndex) in userPages"
-               :key="`page${users.pages.currentCursor}`"
-               :users="users"
-               :isLoadingNewPage="isLoading"
-               :isLastPageInPages="pageIndex === userPages.length - 1"
-               :id="`page${users.pages.currentCursor}`" />
+    <UserPage v-for="(users, pageIndex) in userPages"
+              :key="`page${users.pages.currentCursor}`"
+              :users="users"
+              :isLoadingNewPage="isLoading"
+              :isLastPageInPages="pageIndex === userPages.length - 1"
+              :id="`page${users.pages.currentCursor}`" />
     <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
     <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isLoading" />
 </template>
 
 <script setup lang="ts">
 import UserQueryForm from '@/components/User/QueryForm.vue';
-import UsersPage from '@/components/User/UsersPage.vue';
+import UserPage from '@/components/User/UserPage.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
 
-import { apiUsersQuery, isApiError } from '@/api';
-import type { ApiError, ApiUsersQuery } from '@/api/index.d';
+import { apiUsers, isApiError } from '@/api';
+import type { ApiError, ApiUsers } from '@/api/index.d';
 import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 
@@ -38,12 +38,12 @@ const route = useRoute();
 useHead({ title: titleTemplate('用户查询') });
 const params = ref<Pick<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
 const selectUserBy = ref<SelectTiebaUserBy>('');
-const userPages = ref<ApiUsersQuery[]>([]);
+const userPages = ref<ApiUsers[]>([]);
 const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
 const showPlaceholderPostList = ref<boolean>(false);
 
-const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery: boolean) => {
+const fetchUsers = async (_route: RouteLocationNormalizedLoaded, isNewQuery: boolean) => {
     const startTime = Date.now();
     const queryString = { ..._route.params, ..._route.query };
     lastFetchError.value = null;
@@ -56,26 +56,26 @@ const fetchUsersData = async (_route: RouteLocationNormalizedLoaded, isNewQuery:
         return false;
     }
     isLoading.value = true;
-    const usersQuery = await apiUsersQuery(queryString).finally(() => {
+    const query = await apiUsers(queryString).finally(() => {
         showPlaceholderPostList.value = false;
         isLoading.value = false;
     });
-    if (isApiError(usersQuery)) {
-        lastFetchError.value = usersQuery;
+    if (isApiError(query)) {
+        lastFetchError.value = query;
 
         return false;
     }
     userPages.value = isNewQuery
-        ? [usersQuery]
-        : _.sortBy([...userPages.value, usersQuery], i => i.pages.currentCursor);
+        ? [query]
+        : _.sortBy([...userPages.value, query], i => i.pages.currentCursor);
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
-    notyShow('success', `已加载第${usersQuery.pages.currentCursor}页`
+    notyShow('success', `已加载第${query.pages.currentCursor}页`
         + ` 耗时${((Date.now() - startTime) / 1000).toFixed(2)}s 网络${networkTime}ms`);
 
     return true;
 };
-onBeforeMount(async () => fetchUsersData(route, true));
+onBeforeMount(async () => fetchUsers(route, true));
 
 watchEffect(() => {
     selectUserBy.value = removeStart(removeEnd(
@@ -91,7 +91,7 @@ onBeforeRouteUpdate(async (to, from) => {
         i => i.pages.currentCursor === getRouteCursorParam(to)
     ))))
         return true;
-    const isFetchSuccess = await fetchUsersData(to, isNewQuery);
+    const isFetchSuccess = await fetchUsers(to, isNewQuery);
 
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });

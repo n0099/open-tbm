@@ -1,4 +1,4 @@
-import type { Reply, SubReply, Thread } from './posts';
+import type { Reply, SubReply, Thread } from './post';
 import type { TiebaUser, TiebaUserGenderQueryParam } from './user';
 import type { SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
 import type { BoolInt, Fid, Float, PostType, UInt, UnixTimestamp } from '@/shared';
@@ -42,11 +42,11 @@ export interface ApiStatsForumPostCountQueryParam {
 }
 
 interface ApiQueryParamCursorPagination { cursor?: Cursor }
-export interface ApiUsersQuery {
+export interface ApiUsers {
     pages: CursorPagination,
     users: TiebaUser[]
 }
-export type ApiUsersQueryQueryParam =
+export type ApiUsersParam =
     ApiQueryParamCursorPagination & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam };
 
 export type Cursor = string;
@@ -56,7 +56,7 @@ interface CursorPagination {
     nextCursor: Cursor,
     hasMore: boolean
 }
-export interface ApiPostsQuery {
+export interface ApiPosts {
     type: 'index' | 'search',
     pages: CursorPagination & {
         matchQueryPostCount: { [P in PostType]: UInt },
@@ -70,4 +70,4 @@ export interface ApiPostsQuery {
     }>,
     users: TiebaUser[]
 }
-export interface ApiPostsQueryQueryParam extends ApiQueryParamCursorPagination { query: JsonString }
+export interface ApiPostsParam extends ApiQueryParamCursorPagination { query: JsonString }

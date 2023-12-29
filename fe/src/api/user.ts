@@ -1,4 +1,4 @@
-import type { TimestampFields } from './posts';
+import type { TimestampFields } from './post';
 import type { Int, ObjUnknown, UInt, UnixTimestamp } from '@/shared';
 
 export type BaiduUserID = Int;

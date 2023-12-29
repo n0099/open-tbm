@@ -27,7 +27,7 @@ defineOptions({ inheritAttrs: true });
 const props = withDefaults(defineProps<{
     startTime?: number,
     endTime?: number,
-    timesAgo: DurationLike
+    startBefore: DurationLike
 }>(), {
     startTime: 0,
     endTime: 0
@@ -47,12 +47,12 @@ const timeRangeChanged = ([startTime, endTime]: [Dayjs, Dayjs]) => {
 watchEffect(() => {
     timeRange.value = [unix(props.startTime), unix(props.endTime)];
 });
-const initialRangeWithTimesAgo: [Dayjs, Dayjs] = [
-    dayjs(DateTime.now().minus(props.timesAgo).startOf('minute').toISO()),
+const initialTimeRange: [Dayjs, Dayjs] = [
+    dayjs(DateTime.now().minus(props.startBefore).startOf('minute').toISO()),
     dayjs(DateTime.now().startOf('minute').toISO())
 ];
 
 // timesAgo will overwrite first assign to timeRange with initial props value
-timeRange.value = initialRangeWithTimesAgo;
-timeRangeChanged(initialRangeWithTimesAgo);
+timeRange.value = initialTimeRange;
+timeRangeChanged(initialTimeRange);
 </script>

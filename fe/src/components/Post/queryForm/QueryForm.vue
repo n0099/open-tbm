@@ -122,7 +122,7 @@
                     <SelectRange v-model="p.subParam.range" />
                     <InputNumericParam @update:modelValue="e => { params[pI] = e }"
                                        :modelValue="params[pI] as KnownNumericParams"
-                                       :placeholders="uidParamPlaceholders" />
+                                       :placeholders="uidParamsPlaceholder" />
                 </template>
                 <template v-if="p.name === 'authorManagerType'">
                     <select v-model="p.value" class="form-control flex-grow-0 w-25">
@@ -157,14 +157,14 @@
             <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
                 查询 <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" />
             </button>
-            <span class="col-auto ms-3 my-auto text-muted">{{ currentQueryTypeDesc }}</span>
+            <span class="col-auto ms-3 my-auto text-muted">{{ currentQueryTypeDescription }}</span>
         </div>
     </form>
 </template>
 
 <script setup lang="ts">
 import type { AddNameToParam, KnownDateTimeParams, KnownNumericParams, KnownParams, KnownTextParams, KnownUniqueParams, NamelessParamNumeric, RequiredPostTypes } from './queryParams';
-import { orderByRequiredPostTypes, paramsNameByType, paramsRequiredPostTypes, useQueryFormWithUniqueParams } from './queryParams';
+import { orderByRequiredPostTypes, paramsNameKeyByType, requiredPostTypesKeyByParam, useQueryFormWithUniqueParams } from './queryParams';
 import InputNumericParam from './widgets/InputNumericParam.vue';
 import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
 import SelectParam from './widgets/SelectParam.vue';
@@ -209,9 +209,9 @@ const isFidInvalid = ref(false);
 
 type Param = ObjValues<KnownParams>;
 const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
-    (paramsNameByType.dateTime as Writable<typeof paramsNameByType.dateTime> as string[]).includes(param.name);
+    (paramsNameKeyByType.dateTime as Writable<typeof paramsNameKeyByType.dateTime> as string[]).includes(param.name);
 const isTextParam = (param: Param): param is KnownTextParams =>
-    (paramsNameByType.text as Writable<typeof paramsNameByType.text> as string[]).includes(param.name);
+    (paramsNameKeyByType.text as Writable<typeof paramsNameKeyByType.text> as string[]).includes(param.name);
 const isPostIDParam = (param: Param): param is AddNameToParam<PostID, NamelessParamNumeric> =>
     (postID as Writable<typeof postID> as string[]).includes(param.name);
 const getPostIDParamPlaceholders = (p: Param) => ({
@@ -219,7 +219,7 @@ const getPostIDParamPlaceholders = (p: Param) => ({
     BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
     equals: p.name === 'tid' ? '5000000000' : '15000000000'
 });
-const uidParamPlaceholders = {
+const uidParamsPlaceholder = {
     IN: '4000000000,4000000001,4000000002,...',
     BETWEEN: '4000000000,5000000000',
     equals: '4000000000'
@@ -250,7 +250,7 @@ const getCurrentQueryType = () => {
 
     return 'search';
 };
-const currentQueryTypeDesc = computed(() => {
+const currentQueryTypeDescription = computed(() => {
     const currentQueryType = getCurrentQueryType();
     if (currentQueryType === 'fid')
         return '按吧索引查询';
@@ -336,7 +336,7 @@ const checkParams = async (): Promise<boolean> => {
             if (param?.name === undefined || param.value === undefined) {
                 invalidParamsIndex.value.push(paramIndex);
             } else {
-                const required = paramsRequiredPostTypes[param.name];
+                const required = requiredPostTypesKeyByParam[param.name];
                 if (!isRequiredPostTypes(postTypes, required)) {
                     invalidParamsIndex.value.push(paramIndex);
                     notyShow('warning',

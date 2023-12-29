@@ -12,7 +12,7 @@ addEventListener('resize', _.throttle(() => {
     });
 }, 200, { leading: false }));
 
-export const echarts4ColorThemeFallback: ColorPaletteOptionMixin = {
+export const echarts4ColorTheme: ColorPaletteOptionMixin = {
     color: [
         '#c23531',
         '#2f4554',
@@ -52,9 +52,9 @@ export const emptyChartSeriesData = (chart: echarts.ECharts) => {
 };
 
 export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'year'] as const;
-export type TimeGranularities = typeof timeGranularities[number];
-export type TimeGranularitiesStringMap = { [P in TimeGranularities]?: string };
-export const timeGranularityAxisType: { [P in TimeGranularities]: 'category' | 'time' } = {
+export type TimeGranularity = typeof timeGranularities[number];
+export type TimeGranularityStringMap = { [P in TimeGranularity]?: string };
+export const timeGranularityAxisType: { [P in TimeGranularity]: 'category' | 'time' } = {
     minute: 'time',
     hour: 'time',
     day: 'time',
@@ -62,7 +62,8 @@ export const timeGranularityAxisType: { [P in TimeGranularities]: 'category' | '
     month: 'category',
     year: 'category'
 };
-export const timeGranularityAxisPointerLabelFormatter: { [P in TimeGranularities]: (params: { value: Date | number | string }) => string } = {
+export const timeGranularityAxisPointerLabelFormatter
+: { [P in TimeGranularity]: (params: { value: Date | number | string }) => string } = {
     minute: ({ value }) =>
         (_.isNumber(value) ? DateTime.fromMillis(value).toLocaleString(DateTime.DATETIME_SHORT) : ''),
     hour: ({ value }) =>

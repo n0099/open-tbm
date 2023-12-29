@@ -68,7 +68,7 @@ import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
 import { titleTemplate, toTiebaUserProfileUrl } from '@/shared';
-import { echarts4ColorThemeFallback, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
+import { echarts4ColorTheme, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
 import { onMounted, ref, watch } from 'vue';
 import { Table } from 'ant-design-vue';
@@ -118,7 +118,7 @@ const candidatesDetailColumns: Array<ObjUnknown & {
     sorter: (a, b) => (a.officialValidCount ?? 0) - (b.officialValidCount ?? 0)
 }];
 
-type Charts = keyof typeof chartElements;
+type ChartName = keyof typeof chartElements;
 const chartElements = {
     top50CandidateCount: ref<HTMLElement>(),
     top10CandidatesTimeline: ref<HTMLElement>(),
@@ -133,7 +133,7 @@ const {
     top5CandidateCountGroupByTime: top5CandidateCountGroupByTimeRef,
     allVoteCountGroupByTime: allVoteCountGroupByTimeRef
 } = chartElements;
-const charts: { [P in Charts]: echarts.ECharts | null } = {
+const echartsInstances: { [P in ChartName]: echarts.ECharts | null } = {
     top50CandidateCount: null,
     top10CandidatesTimeline: null,
     top5CandidateCountGroupByTime: null,
@@ -153,7 +153,7 @@ const voteCountSeriesLabelFormatter = (
     currentCount: number,
     candidateIndex: string
 ) => {
-    const [timeline] = charts.top10CandidatesTimeline?.getOption()
+    const [timeline] = echartsInstances.top10CandidatesTimeline?.getOption()
         ?.timeline as [{ data: number[], currentIndex: number }];
     const previousTimelineValue = _.find(votesData, {
         endTime: timeline.data[timeline.currentIndex - 1],
@@ -446,7 +446,7 @@ type DiffWithPreviousMarkLineFormatter =
     Array<[Coord & { label: { show: true, position: 'middle', formatter: string } }, Coord]>;
 const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isValid: IsValid) =>
     _.find(votes, { isValid })?.count ?? 0;
-const formatCandidateNameByID = (id: number) => `${id}号\n${json.candidateNames[id - 1]}`;
+const formatCandidateName = (id: number) => `${id}号\n${json.candidateNames[id - 1]}`;
 
 const loadCharts = {
     top50CandidateCount: () => {
@@ -464,7 +464,7 @@ const loadCharts = {
                     ?.officialValidCount ?? 0;
 
                 return {
-                    voteFor: formatCandidateNameByID(candidateVotes[0].voteFor),
+                    voteFor: formatCandidateName(candidateVotes[0].voteFor),
                     validCount: validVotes?.count ?? 0,
                     validAvgGrade: validVotes?.voterAvgGrade ?? 0,
                     invalidCount: invalidVotes?.count ?? 0,
@@ -485,7 +485,7 @@ const loadCharts = {
         }, { coord: [index - 1, validCount[index - 1]] }]);
         validCountDiffWithPrevious.shift(); // first candidate doesn't need to exceed anyone
 
-        charts.top50CandidateCount?.setOption({
+        echartsInstances.top50CandidateCount?.setOption({
             dataset: { source: dataset },
             series: [{
                 id: 'validCount',
@@ -505,13 +505,13 @@ const loadCharts = {
 
         const options: ChartOptionTop10CandidatesTimeline[] = [];
         _.each(_.groupBy(json.top10CandidatesTimeline, 'endTime'), (timeGroup, time) => {
-            // [{ voteFor: formatCandidateNameByID(1), validCount: 1, invalidCount: 0, officialValidCount: null },...]
+            // [{ voteFor: formatCandidateName(1), validCount: 1, invalidCount: 0, officialValidCount: null },...]
             const dataset: Top10CandidatesTimelineDataset = _.chain(timeGroup)
                 .sortBy('count')
                 .groupBy('voteFor')
                 .sortBy(group => _.chain(group).map('count').sum().value())
                 .map(candidateVotes => ({
-                    voteFor: formatCandidateNameByID(candidateVotes[0].voteFor),
+                    voteFor: formatCandidateName(candidateVotes[0].voteFor),
                     validCount: findVoteCount(candidateVotes, 1),
                     invalidCount: findVoteCount(candidateVotes, 0),
                     officialValidCount: null
@@ -580,7 +580,7 @@ const loadCharts = {
                     .orderBy('officialValidCount')
                     .takeRight(10)
                     .map(({ voteFor, officialValidCount }) => ({
-                        voteFor: formatCandidateNameByID(voteFor),
+                        voteFor: formatCandidateName(voteFor),
                         officialValidCount
                     }))
                     .value()
@@ -604,14 +604,14 @@ const loadCharts = {
 
         const timelineRanges = _.chain(json.top10CandidatesTimeline).map('endTime').sort().sortedUniq().value();
         timelineRanges.push(1552292800); // 2019-03-11T18:26:40+08:00 is the showtime of official votes count
-        charts.top10CandidatesTimeline?.setOption<ChartOptionTop10CandidatesTimeline>({
+        echartsInstances.top10CandidatesTimeline?.setOption<ChartOptionTop10CandidatesTimeline>({
             baseOption: { timeline: { autoPlay: true, data: timelineRanges } },
             options
         });
 
         // only display official votes count legend when timeline arrive its showtime
-        charts.top10CandidatesTimeline?.on('timelinechanged', params => {
-            charts.top10CandidatesTimeline?.dispatchAction({
+        echartsInstances.top10CandidatesTimeline?.on('timelinechanged', params => {
+            echartsInstances.top10CandidatesTimeline?.dispatchAction({
                 type: (params as TimelineChangePayload).currentIndex + 1 === timelineRanges.length
                     ? 'legendSelect'
                     : 'legendUnSelect',
@@ -646,7 +646,7 @@ const loadCharts = {
                 data: _.filter(invalidVotes, { voteFor: candidateIndex }).map(i => [i.time, i.count])
             });
         });
-        charts.top5CandidateCountGroupByTime?.setOption({
+        echartsInstances.top5CandidateCountGroupByTime?.setOption({
             axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
             xAxis: Array.from({ length: 2 }).fill({ type: timeGranularityAxisType[timeGranularity] }),
             series
@@ -667,7 +667,7 @@ const loadCharts = {
                 invalidCount: findVoteCount(count, 0)
             }))
             .value();
-        charts.allVoteCountGroupByTime?.setOption({
+        echartsInstances.allVoteCountGroupByTime?.setOption({
             axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
             xAxis: { type: timeGranularityAxisType[timeGranularity] },
             dataset: { source: dataset }
@@ -680,13 +680,13 @@ watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
     () => { loadCharts.allVoteCountGroupByTime() });
 onMounted(() => {
-    _.map(chartElements, (i, k: Charts) => {
-        if (i.value === undefined)
+    _.map(chartElements, (elRef, chartName: ChartName) => {
+        if (elRef.value === undefined)
             return;
-        i.value.classList.add('loading');
-        const chart = echarts.init(i.value, echarts4ColorThemeFallback);
-        chart.setOption(chartsInitialOption[k]);
-        charts[k] = chart;
+        elRef.value.classList.add('loading');
+        const chart = echarts.init(elRef.value, echarts4ColorTheme);
+        chart.setOption(chartsInitialOption[chartName]);
+        echartsInstances[chartName] = chart;
     });
     candidatesDetailData.value = json.candidateNames.map((candidateName, index) =>
         ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
@@ -708,7 +708,7 @@ onMounted(() => {
             officialValidCount: candidate.officialValidCount
         })), 'candidateIndex')
     ));
-    _.map(charts, (chart, chartName: Charts) => {
+    _.map(echartsInstances, (chart, chartName: ChartName) => {
         if (chart === null)
             return;
         loadCharts[chartName]();

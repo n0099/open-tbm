@@ -1,22 +1,22 @@
 <template>
     <PageCurrentButton :currentCursor="props.posts.pages.currentCursor" />
-    <ViewList v-if="renderType === 'list'" :initialPosts="posts" />
-    <ViewTable v-else-if="renderType === 'table'" :posts="posts" />
+    <RendererList v-if="renderType === 'list'" :initialPosts="posts" />
+    <RendererTable v-else-if="renderType === 'table'" :posts="posts" />
     <PageNextButton v-if="!isLoadingNewPage && isLastPageInPages && props.posts.pages.hasMore"
                     :nextCursorRoute="nextCursorRoute" />
 </template>
 
 <script setup lang="ts">
-import ViewList from './views/ViewList.vue';
-import ViewTable from './views/ViewTable.vue';
+import RendererList from './renderers/RendererList.vue';
+import RendererTable from './renderers/RendererTable.vue';
 
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
-import type { PostViewRenderer } from '@/views/Post.vue';
-import type { ApiPostsQuery } from '@/api/index.d';
+import type { PostRenderer } from '@/views/Post.vue';
+import type { ApiPosts } from '@/api/index.d';
 
 const props = defineProps<{
-    posts: ApiPostsQuery,
-    renderType: PostViewRenderer,
+    posts: ApiPosts,
+    renderType: PostRenderer,
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();

@@ -21,19 +21,19 @@
 
 <script setup lang="ts">
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
-import type { ApiUsersQuery } from '@/api/index.d';
+import type { ApiUsers } from '@/api/index.d';
 import type { TiebaUserGender } from '@/api/user';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 
 const props = defineProps<{
-    users: ApiUsersQuery,
+    users: ApiUsers,
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
 const nextCursorRoute = useNextCursorRoute(props.users.pages.nextCursor);
 
 const userGender = (gender: TiebaUserGender) => {
-    const gendersList = {
+    const genderDescription = {
         /* eslint-disable @typescript-eslint/naming-convention */
         0: '未指定（显示为男）',
         1: '男 ♂',
@@ -41,6 +41,6 @@ const userGender = (gender: TiebaUserGender) => {
         /* eslint-enable @typescript-eslint/naming-convention */
     } as const;
 
-    return gender === null ? 'NULL' : gendersList[gender];
+    return gender === null ? 'NULL' : genderDescription[gender];
 };
 </script>

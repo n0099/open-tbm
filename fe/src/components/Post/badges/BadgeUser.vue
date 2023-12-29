@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import type { BaiduUserID, ForumModeratorType, TiebaUser } from '@/api/user';
-import type { BootstrapColors } from '@/shared';
+import type { BootstrapColor } from '@/shared';
 import { computed } from 'vue';
 import _ from 'lodash';
 
@@ -29,7 +29,7 @@ const props = defineProps<{
     replyAuthorUid?: BaiduUserID
 }>();
 
-const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColors] } = {
+const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColor] } = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     fourth_manager: ['第四吧主', 'danger'],
     fourthmanager: ['第四吧主', 'danger'],

@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Thread } from '@/api/posts';
+import type { Thread } from '@/api/post';
 
 defineProps<{ thread: Thread }>();
 </script>

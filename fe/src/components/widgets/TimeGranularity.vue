@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TimeGranularitiesStringMap } from '@/shared/echarts';
+import type { TimeGranularityStringMap } from '@/shared/echarts';
 import { ref } from 'vue';
 import _ from 'lodash';
 
@@ -13,7 +13,7 @@ defineOptions({ inheritAttrs: true });
 const props = defineProps<{ granularities: string[] }>();
 const modelValue = defineModel<string>();
 
-const defaultOptions: TimeGranularitiesStringMap = {
+const granularitiesDefaultOption: TimeGranularityStringMap = {
     minute: '分钟',
     hour: '小时',
     day: '天',
@@ -21,6 +21,7 @@ const defaultOptions: TimeGranularitiesStringMap = {
     month: '月',
     year: '年'
 };
-const options = ref<TimeGranularitiesStringMap>({});
-options.value = _.pick(defaultOptions, _.intersection(props.granularities, Object.keys(defaultOptions)));
+const options = ref<TimeGranularityStringMap>({});
+options.value = _.pick(granularitiesDefaultOption,
+    _.intersection(props.granularities, Object.keys(granularitiesDefaultOption)));
 </script>

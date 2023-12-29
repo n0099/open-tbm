@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Reply, SubReply, Thread } from '@/api/posts';
+import type { Reply, SubReply, Thread } from '@/api/post';
 import type { Pid, PostID, Spid, Tid, UnixTimestamp } from '@/shared';
 import { tiebaPostLink } from '@/shared';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';

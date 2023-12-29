@@ -22,7 +22,7 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
                     <TimeRange v-model:startTime="query.startTime"
                                v-model:endTime="query.endTime"
-                               :timesAgo="{ day: 14 }" id="queryTimeRange" />
+                               :startBefore="{ day: 14 }" id="queryTimeRange" />
                 </div>
             </div>
             <label class="col-1 col-form-label text-end" for="queryTimeGranularity">时间粒度</label>

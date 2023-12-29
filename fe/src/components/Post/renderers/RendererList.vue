@@ -176,8 +176,8 @@ import BadgePostTime from '../badges/BadgePostTime.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 import PostCommonMetadataIconLinks from '../badges/PostCommonMetadataIconLinks.vue';
-import type { ApiPostsQuery } from '@/api/index.d';
-import type { Reply, SubReply, Thread } from '@/api/posts';
+import type { ApiPosts } from '@/api/index.d';
+import type { Reply, SubReply, Thread } from '@/api/post';
 import type { BaiduUserID } from '@/api/user';
 import type { Modify } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
@@ -187,11 +187,11 @@ import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
-const props = defineProps<{ initialPosts: ApiPostsQuery }>();
+const props = defineProps<{ initialPosts: ApiPosts }>();
 const hoveringSubReplyID = ref(0);
 
 const posts = computed(() => {
-    const newPosts = props.initialPosts as Modify<ApiPostsQuery, { // https://github.com/microsoft/TypeScript/issues/33591
+    const newPosts = props.initialPosts as Modify<ApiPosts, { // https://github.com/microsoft/TypeScript/issues/33591
         threads: Array<Thread & { replies: Array<Reply & { subReplies: Array<SubReply | SubReply[]> }> }>
     }>;
     newPosts.threads = newPosts.threads.map(thread => {
@@ -222,7 +222,7 @@ const posts = computed(() => {
         return thread;
     });
 
-    return newPosts as Modify<ApiPostsQuery, {
+    return newPosts as Modify<ApiPosts, {
         threads: Array<Thread & { replies: Array<Reply & { subReplies: SubReply[][] }> }>
     }>;
 });
