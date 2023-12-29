@@ -10,8 +10,8 @@
 }
 
 .tieba-image {
-    width: 12.5rem;
-    height: 12.5rem;
+    max-width: 18.75rem;
+    max-height: 18.75rem;
     object-fit: contain;
     margin: .25rem;
     cursor: zoom-in;

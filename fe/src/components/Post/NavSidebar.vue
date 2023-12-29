@@ -19,9 +19,10 @@
                                    'rounded-3': isFirstReplyInView,
                                    'btn-info': isFirstReplyInView,
                                    'btn-light': !isFirstReplyInView,
+                                   'btn-outline-warning': !isFirstReplyInView && route.hash === `#${reply.pid}`,
                                    'text-white': isFirstReplyInView,
                                    'text-body-secondary': !isFirstReplyInView
-                               }" class="posts-nav-reply btn">{{ reply.floor }}L</a>
+                               }" class="posts-nav-reply btn ms-0 px-2">{{ reply.floor }}L</a>
                         </template>
                     </div>
                 </MenuItem>
@@ -138,7 +139,7 @@ watchEffect(() => {
 
     const threadEl = document.querySelector(`.posts-nav-thread[data-key='${menuKey}']`);
     if (threadEl !== null)
-        scrollIntoView(threadEl, { scrollMode: 'if-needed' });
+        scrollIntoView(threadEl, { scrollMode: 'if-needed', boundary: document.querySelector('.posts-nav') });
 });
 </script>
 
@@ -198,6 +199,8 @@ watchEffect(() => {
     height: auto !important; /* show reply nav buttons under thread menu items */
     white-space: normal;
     line-height: 2rem;
+    content-visibility: auto;
+    contain-intrinsic-height: auto 6rem;
 }
 
 .posts-nav-reply:hover {

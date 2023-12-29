@@ -62,6 +62,7 @@ export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record
 export const emitEventWithNumberValidator = (p: number) => _.isNumber(p);
 
 // https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683
+// https://gist.github.com/paulirish/5d52fb081b3570c81e3a#calling-getcomputedstyle
 export const convertRemToPixels = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 // https://stackoverflow.com/questions/986937/how-can-i-get-the-browsers-scrollbar-sizes/986977#986977

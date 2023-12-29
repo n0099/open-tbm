@@ -2,7 +2,7 @@
     <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
         <div v-for="thread in posts.threads" :key="thread.tid"
              :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
-            <div class="thread-title shadow-sm col card-header sticky-top">
+            <div class="thread-title shadow-sm card-header sticky-top">
                 <div class="thread-title-inline-start row flex-nowrap">
                     <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                         <BadgeThread :thread="thread" />
@@ -159,7 +159,7 @@ import _ from 'lodash';
 
 export const getReplyTitleTopOffset = () =>
     convertRemToPixels(5) - convertRemToPixels(0.625); // inset-block-start and margin-block-start
-export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): { el: string, top: number } => {
+export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): ScrollToOptions & { el: string } => {
     const hash = route.hash.slice(1);
     const hashSelector = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
 
@@ -240,8 +240,12 @@ setComponentCustomScrollBehaviour((to, from) : ReturnType<RouterScrollBehavior> 
 </script>
 
 <style scoped>
+.reply {
+    content-visibility: auto;
+    contain-intrinsic-height: auto 11rem;
+}
 .thread-title {
-    height: 5rem; /* sync with .reply-title:top */
+    height: 5rem; /* sync with .reply-title:inset-block-start */
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }
