@@ -18,13 +18,9 @@ library.add(...Object.values(fontAwesomeIcons));
 nprogress.configure({ trickleSpeed: 200 });
 
 if (import.meta.env.DEV) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-    (await import('@/checkForUndefinedCSSClasses.js')).default();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-    // @ts-ignore
+    // @ts-expect-error no .d.ts
     await import('@/stats.js');
+    await import('@/checkCSS');
 }
 
 const reCAPTCHASiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;

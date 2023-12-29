@@ -1705,6 +1705,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"checkcss@npm:^2.0.9":
+  version: 2.0.9
+  resolution: "checkcss@npm:2.0.9"
+  checksum: 0899492df85d9c8e3a7c3d8190114db50077705c34c7d1e570affe6e6a1fc14c5db7015d041c333496affee7fc7e9ec0ceee8406f77570a3b938c79a6d99e0f2
+  languageName: node
+  linkType: hard
+
 "chownr@npm:^2.0.0":
   version: 2.0.0
   resolution: "chownr@npm:2.0.0"
@@ -4187,6 +4194,7 @@ __metadata:
     "@vueuse/core": "npm:^10.7.0"
     ant-design-vue: "npm:^4.0.8"
     bootstrap: "npm:^5.3.2"
+    checkcss: "npm:^2.0.9"
     dayjs: "npm:^1.11.10"
     echarts: "npm:^5.4.3"
     eslint: "npm:^8.56.0"
