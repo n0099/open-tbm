@@ -261,7 +261,7 @@ const eslint = { // as of eslint@8.56.0
         'no-new-native-nonconstructor': 'error',
     }
 };
-const typescriptESLint = { // as of @typescript-eslint@6.15.0
+const typescriptESLint = { // as of @typescript-eslint@6.16.0
     override: {
         'no-empty-function': 'off',
         '@typescript-eslint/no-empty-function': 'error',

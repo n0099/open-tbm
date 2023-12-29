@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [vue({ script: { defineModel: true } })],
+    plugins: [vue()],
     build: { target: 'esnext' },
     resolve: {
         alias: [
