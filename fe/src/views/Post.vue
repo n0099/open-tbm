@@ -171,8 +171,8 @@ onBeforeMount(async () => {
 
 <style scoped>
 .post-page {
-    /* minus the width of .post-nav-expand in <PostNav> to prevent overflow */
-    width: calc(100% - v-bind(scrollBarWidth));
+    /* minus the inline-size of .post-nav-expand in <PostNav> to prevent overflow */
+    inline-size: calc(100% - v-bind(scrollBarWidth));
 }
 @media (max-width: 575.98px) {
     .post-page {
@@ -182,7 +182,7 @@ onBeforeMount(async () => {
 @media (min-width: 1250px) {
     .renderer-list {
         flex: 1 0 auto;
-        max-width: 1000px;
+        max-inline-size: 1000px;
     }
 }
 </style>

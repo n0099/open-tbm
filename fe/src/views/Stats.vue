@@ -167,6 +167,6 @@ onBeforeMount(async () => {
 
 <style scoped>
 #statsChart {
-    height: 25rem;
+    block-size: 25rem;
 }
 </style>

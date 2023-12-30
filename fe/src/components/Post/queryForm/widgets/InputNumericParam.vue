@@ -34,9 +34,9 @@ const emitModelChange = (e: Event) => {
 
 <style scoped>
 .col-2 {
-    width: 16% !important;
+    inline-size: 16% !important;
 }
 .col-3 {
-    width: 25% !important;
+    inline-size: 25% !important;
 }
 </style>

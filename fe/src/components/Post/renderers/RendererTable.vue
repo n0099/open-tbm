@@ -168,12 +168,13 @@ onMounted(() => {
 
 <style scoped>
 :deep(.render-table-thread .ant-table) {
-    width: fit-content; /* narrow the width of reply and sub reply table to prevent they stretch with thread table */
+    /* narrow the inline-size of reply and sub reply table to prevent they stretch with thread table */
+    inline-size: fit-content;
 }
 
 :deep(.render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table) {
     /* select the outermost thread table, might change in further antd updates */
-    width: auto;
+    inline-size: auto;
     border: 1px solid #e8e8e8;
     border-radius: 4px 4px 0 0;
 }
@@ -184,9 +185,9 @@ onMounted(() => {
 }
 
 :deep(.render-table-thread .ant-table-expand-icon-th, .render-table-thread .ant-table-row-expand-icon-cell) {
-    /* shrink the width of expanding child posts table button */
-    width: auto;
-    min-width: auto;
+    /* shrink the inline-size of expanding child posts table button */
+    inline-size: auto;
+    min-inline-size: auto;
     padding-inline-start: 5px !important;
     padding-inline-end: 0 !important;
 }

@@ -722,15 +722,15 @@ onMounted(() => {
     margin-block-start: .5rem;
 }
 #top50CandidateCount {
-    height: 32rem;
+    block-size: 32rem;
 }
 #top10CandidatesTimeline {
-    height: 40rem;
+    block-size: 40rem;
 }
 #top5CandidateCountGroupByTime {
-    height: 40rem;
+    block-size: 40rem;
 }
 #allVoteCountGroupByTime {
-    height: 20rem;
+    block-size: 20rem;
 }
 </style>

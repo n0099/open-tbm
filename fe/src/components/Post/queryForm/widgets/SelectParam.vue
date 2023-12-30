@@ -60,6 +60,6 @@ watchEffect(() => { selected.value = props.currentParam });
 
 <style scoped>
 select {
-    width: 20% !important;
+    inline-size: 20% !important;
 }
 </style>

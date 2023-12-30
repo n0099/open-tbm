@@ -1,5 +1,5 @@
 .input-group-text ~ * > .ant-input-lg {
-    height: 38px; /* adopt to bootstrap input group */
+    block-size: 38px; /* adopt to bootstrap input group */
 }
 
 .loading {
@@ -16,7 +16,7 @@ a {
 }
 
 @media (max-width: 991.98px) {
-    .container { /* let all .container be like .container-fluid when viewport width is less than md breakpoint */
-        max-width: 100%;
+    .container { /* let all .container be like .container-fluid when vw is less than md breakpoint */
+        max-inline-size: 100%;
     }
 }

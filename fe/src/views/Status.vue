@@ -213,6 +213,6 @@ onMounted(submitQueryForm);
 
 <style scoped>
 #statusChart {
-    height: 40rem;
+    block-size: 40rem;
 }
 </style>

@@ -1,17 +1,17 @@
 .tieba-user-portrait-small {
-    width: 1.6rem;
-    height: 1.6rem;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
     object-fit: contain;
 }
 .tieba-user-portrait-large {
-    width: 6rem;
-    height: 6rem;
+    inline-size: 6rem;
+    block-size: 6rem;
     object-fit: contain;
 }
 
 .tieba-image {
-    max-width: 18.75rem;
-    max-height: 18.75rem;
+    max-inline-size: 18.75rem;
+    max-block-size: 18.75rem;
     object-fit: contain;
     margin: .25rem;
     cursor: zoom-in;

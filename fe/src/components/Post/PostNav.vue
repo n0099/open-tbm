@@ -146,7 +146,7 @@ watchEffect(() => {
 
 <style scoped>
 .post-nav-expand {
-    width: v-bind(scrollBarWidth);
+    inline-size: v-bind(scrollBarWidth);
     padding: .125rem;
     font-size: 1.3rem;
 }
@@ -164,10 +164,10 @@ watchEffect(() => {
 }
 @media (min-width: 900px) and (max-width: 1250px) {
     /* keeping .post-nav:hover to replace .post-nav-expand with scrollbar
-       without shifting when the width of .post-nav excess 30% */
+       without shifting when the inline-size of .post-nav excess 30% */
     .post-nav[aria-expanded=true] {
         flex: 0 1 30%;
-        max-width: calc(30% + v-bind(scrollBarWidth));
+        max-inline-size: calc(30% + v-bind(scrollBarWidth));
     }
     .post-nav:hover {
         flex-grow: 1 !important;
@@ -180,16 +180,16 @@ watchEffect(() => {
         z-index: 1040;
     }
     .post-nav[aria-expanded=true] {
-        /* linear regression of vw,width: 456,456 768,384(50%) https://www.wolframalpha.com/input?i=y%3D-0.2308x%2B561.2 */
-        width: calc(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth));
+        /* linear regression of vw,inline-size: 456,456 768,384(50%) https://www.wolframalpha.com/input?i=y%3D-0.2308x%2B561.2 */
+        inline-size: calc(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth));
     }
     .post-nav[aria-expanded=true] + .post-nav-expand {
         /* merge .post-nav-expand into the scrollbar of .post-nav */
         inset-inline-start: min(-0.2308 * 100vw + 561.2px - v-bind(scrollBarWidth) * 2, 100vw - v-bind(scrollBarWidth) * 2);
     }
     .post-nav[aria-expanded=true] + .post-nav-expand {
-        /* after merge narrow the height from 100vh to fit-content for interactive with the scrollbar */
-        height: auto !important;
+        /* after merge narrow the block-size from 100vh to fit-content for interactive with the scrollbar */
+        block-size: auto !important;
         /* https://stackoverflow.com/questions/28455100/how-to-center-div-vertically-inside-of-absolutely-positioned-parent-div/28456704#28456704 */
         inset-block-start: 50%;
         transform: translateY(-50%);
@@ -197,11 +197,11 @@ watchEffect(() => {
 }
 
 :deep(.post-nav-thread) {
-    height: auto !important; /* show reply nav buttons under thread menu items */
+    block-size: auto !important; /* show reply nav buttons under thread menu items */
     white-space: normal;
     line-height: 2rem;
     content-visibility: auto;
-    contain-intrinsic-height: auto 6rem;
+    contain-intrinsic-block-size: auto 6rem;
 }
 
 .post-nav-reply:hover {

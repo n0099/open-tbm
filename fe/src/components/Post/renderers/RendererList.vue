@@ -229,17 +229,13 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 </script>
 
 <style scoped>
-.reply {
-    content-visibility: auto;
-    contain-intrinsic-height: auto 11rem;
-}
 .thread-title {
-    height: 5rem; /* sync with .reply-title:inset-block-start */
+    block-size: 5rem; /* sync with .reply-title:inset-block-start */
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }
 .thread-title-inline-start {
-    max-height: 1.6rem;
+    max-block-size: 1.6rem;
 }
 .thread-title-inline-start-title-wrapper {
     padding-block-start: .2rem;
@@ -247,7 +243,7 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 .thread-title-inline-start-title {
     text-overflow: ellipsis;
     flex-basis: 100%;
-    width: 0;
+    inline-size: 0;
 }
 
 .reply-title {
@@ -261,6 +257,8 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 .reply {
     padding: .625rem;
     border-block-start: 0;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 11rem;
 }
 .reply-author {
     z-index: 1018;

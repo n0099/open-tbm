@@ -14,6 +14,6 @@ const modelValue = defineModel({ default: '=' });
 
 <style scoped>
 select {
-    width: 7% !important;
+    inline-size: 7% !important;
 }
 </style>
