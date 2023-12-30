@@ -42,35 +42,9 @@
     </div>
 </template>
 
-<script lang="ts">
-import type { BaiduUserID } from '@/api/user';
-import type { ObjValues } from '@/shared';
-
-export const selectTiebaUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
-export type SelectTiebaUserBy = typeof selectTiebaUserBy[number];
-export type SelectTiebaUserParams = Partial<{
-    uid: BaiduUserID,
-    uidCompareBy: '<' | '=' | '>',
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-    name: string | 'NULL',
-    nameUseRegex: boolean,
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-    displayName: string | 'NULL',
-    displayNameUseRegex: boolean
-}>;
-type SelectTiebaUserParamsValue = ObjValues<SelectTiebaUserParams>;
-const selectTiebaUserParamsName = [
-    'uid', 'uidCompareBy', 'name', 'nameUseRegex', 'displayName', 'displayNameUseRegex'
-] as const;
-
-// widen type Record<string, SelectTiebaUserParamsValue> for compatible with props.paramsNameMap
-export interface SelectTiebaUserModel {
-    selectBy: SelectTiebaUserBy,
-    params: Record<string, SelectTiebaUserParamsValue> | SelectTiebaUserParams
-}
-</script>
-
 <script setup lang="ts">
+import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './selectTiebaUser';
+import { selectTiebaUserBy, selectTiebaUserParamsName } from './selectTiebaUser';
 import { onMounted, ref, watch } from 'vue';
 import _ from 'lodash';
 
@@ -120,13 +94,13 @@ watch(() => props.modelValue, () => {
 }, { immediate: true });
 onMounted(() => {
     // defer listening to prevent watch triggered by assigning initial selectBy
-    watch(() => selectBy.value, selectBy => {
+    watch(() => selectBy.value, value => {
         params.value = {}; // empty params to prevent old value remains after selectBy changed
-        if (selectBy === 'uid')
+        if (value === 'uid')
             params.value.uidCompareBy = '='; // reset to default
-        if (selectBy === 'nameNULL')
+        if (value === 'nameNULL')
             params.value.name = 'NULL';
-        if (selectBy === 'displayNameNULL')
+        if (value === 'displayNameNULL')
             params.value.displayName = 'NULL';
         emitModelChange();
     });

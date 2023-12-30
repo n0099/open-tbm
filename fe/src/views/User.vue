@@ -15,10 +15,10 @@ import UserQueryForm from '@/components/User/QueryForm.vue';
 import UserPage from '@/components/User/UserPage.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
-import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
 
 import { apiUsers, isApiError } from '@/api';
 import type { ApiError, ApiUsers } from '@/api/index.d';
+import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/selectTiebaUser';
 import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 

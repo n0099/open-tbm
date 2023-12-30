@@ -29,12 +29,12 @@
 import PostNav from '@/components/Post/PostNav.vue';
 import PostPage from '@/components/Post/PostPage.vue';
 import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
-import { getReplyTitleTopOffset, postListItemScrollPosition } from '@/components/Post/renderers/RendererList.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
 import { apiForumList, apiPosts, isApiError, throwIfApiError } from '@/api';
 import type { ApiError, ApiForumList, ApiPosts, Cursor } from '@/api/index.d';
+import { getReplyTitleTopOffset, postListItemScrollPosition } from '@/components/Post/renderers/rendererList';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';

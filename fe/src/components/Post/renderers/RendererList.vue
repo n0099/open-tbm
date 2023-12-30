@@ -148,44 +148,29 @@
     </div>
 </template>
 
-<script lang="ts">
-/* eslint-disable import/order */
-import { compareRouteIsNewQuery, getRouteCursorParam, setComponentCustomScrollBehaviour } from '@/router';
-import { convertRemToPixels, toTiebaUserPortraitImageUrl } from '@/shared';
-import { computed, onMounted, ref } from 'vue';
-import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
-import _ from 'lodash';
-/* eslint-enable import/order */
-
-export const getReplyTitleTopOffset = () =>
-    convertRemToPixels(5) - convertRemToPixels(0.625); // inset-block-start and margin-block-start
-export const postListItemScrollPosition = (route: RouteLocationNormalizedLoaded): ScrollToOptions & { el: string } => {
-    const hash = route.hash.slice(1);
-    const hashSelector = _.isEmpty(hash) ? '' : ` [id='${hash}']`;
-
-    return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
-        el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}']${hashSelector}`,
-        top: hash.startsWith('t') ? 0 : getReplyTitleTopOffset()
-    };
-};
-</script>
-
 <script setup lang="ts">
 import { baseGetUser, baseRenderUsername } from './common';
+import { postListItemScrollPosition } from './rendererList';
 import BadgePostTime from '../badges/BadgePostTime.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 import PostCommonMetadataIconLinks from '../badges/PostCommonMetadataIconLinks.vue';
+
 import type { ApiPosts } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/post';
 import type { BaiduUserID } from '@/api/user';
+import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { Modify } from '@/shared';
+import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 import '@/styles/bootstrapCallout.css';
 
+import { computed, onMounted, ref } from 'vue';
+import type { RouterScrollBehavior } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
+import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts }>();
 const hoveringSubReplyID = ref(0);

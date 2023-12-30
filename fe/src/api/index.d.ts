@@ -1,6 +1,6 @@
 import type { Reply, SubReply, Thread } from './post';
 import type { TiebaUser, TiebaUserGenderQueryParam } from './user';
-import type { SelectTiebaUserParams } from '@/components/widgets/SelectTiebaUser.vue';
+import type { SelectTiebaUserParams } from '@/components/widgets/selectTiebaUser';
 import type { BoolInt, Fid, Float, PostType, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 
