@@ -12,12 +12,12 @@ export const useTriggerRouteUpdateStore = defineStore('triggerRouteUpdate', () =
     const trigger = (triggeredBy: string, route: RouteObjectRaw) => {
         latestRouteUpdateBy.value[triggeredBy] = route;
     };
-    const pushRoute = (triggeredBy: string) => async (to: RouteObjectRaw) => {
+    const push = (triggeredBy: string) => async (to: RouteObjectRaw) => {
         trigger(triggeredBy, to);
 
         return router.push(to);
     };
-    const replaceRoute = (triggeredBy: string) => async (to: RouteObjectRaw) => {
+    const replace = (triggeredBy: string) => async (to: RouteObjectRaw) => {
         trigger(triggeredBy, to);
 
         return router.replace(to);
@@ -30,5 +30,5 @@ export const useTriggerRouteUpdateStore = defineStore('triggerRouteUpdate', () =
         return originRoute !== undefined && _.isMatch(route, originRoute);
     };
 
-    return { latestRouteUpdateBy, pushRoute, replaceRoute, isTriggeredBy };
+    return { latestRouteUpdateBy, push, replace, isTriggeredBy };
 });

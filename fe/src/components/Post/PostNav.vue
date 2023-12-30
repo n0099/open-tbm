@@ -47,6 +47,7 @@ import type { ApiPosts, Cursor } from '@/api/index.d';
 import { getReplyTitleTopOffset } from '@/components/Post/renderers/rendererList';
 import type { Pid, Tid, ToPromise } from '@/shared';
 import { cursorTemplate, scrollBarWidth } from '@/shared';
+import { useElementRefsStore } from '@/stores/elementRefs';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -60,6 +61,7 @@ import _ from 'lodash';
 const props = defineProps<{ postPages: ApiPosts[] }>();
 const route = useRoute();
 const router = useRouter();
+const elementRefsStore = useElementRefsStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const viewportTopmostPostDefault = { cursor: '', tid: 0, pid: 0 };
@@ -79,24 +81,23 @@ const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key })
 };
 
 const scrollStop = _.debounce(() => {
-    const findTopmostElement = (selector: string, topOffset = 0): Element =>
-        // eslint-disable-next-line unicorn/no-array-reduce
-        [...document.querySelectorAll(selector)].reduce(
-            (acc: { top: number, el: Element }, el: Element) => {
-                const elTop = el.getBoundingClientRect().top - topOffset;
+    // eslint-disable-next-line unicorn/no-array-reduce
+    const findTopmostElement = (elements: Element[], topOffset = 0): Element => elements.reduce(
+        (acc: { top: number, el: Element }, el: Element) => {
+            const elTop = el.getBoundingClientRect().top - topOffset;
 
-                // ignore element which its y coord is ahead of the top of viewport
-                if (elTop >= 0 && acc.top > elTop)
-                    return { top: elTop, el };
+            // ignore element which its y coord is ahead of the top of viewport
+            if (elTop >= 0 && acc.top > elTop)
+                return { top: elTop, el };
 
-                return acc;
-            },
-            { top: Infinity, el: document.createElement('null') }
-        ).el;
+            return acc;
+        },
+        { top: Infinity, el: document.createElement('null') }
+    ).el;
 
     const viewportTopmostPostElement = {
-        thread: findTopmostElement('.thread-title'),
-        reply: findTopmostElement('.reply-title', getReplyTitleTopOffset())
+        thread: findTopmostElement(elementRefsStore.get('<RendererList>.thread-title')),
+        reply: findTopmostElement(elementRefsStore.get('<RendererList>.reply-title'), getReplyTitleTopOffset())
     };
     const viewportTopmostPostID = _.mapValues(viewportTopmostPostElement, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));

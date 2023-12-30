@@ -2,7 +2,8 @@
     <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
         <div v-for="thread in posts.threads" :key="thread.tid"
              :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
-            <div class="thread-title shadow-sm card-header sticky-top">
+            <div :ref="el => elementRefsStore.pushOrClear('<RendererList>.thread-title', el as Element | null)"
+                 class="thread-title shadow-sm card-header sticky-top">
                 <div class="thread-title-inline-start row flex-nowrap">
                     <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
                         <BadgeThread :thread="thread" />
@@ -71,7 +72,8 @@
                 </div>
             </div>
             <div v-for="reply in thread.replies" :key="reply.pid" :data-post-id="reply.pid" :id="reply.pid.toString()">
-                <div class="reply-title sticky-top card-header">
+                <div :ref="el => elementRefsStore.pushOrClear('<RendererList>.reply-title', el as Element | null)"
+                     class="reply-title sticky-top card-header">
                     <div class="d-inline-flex gap-1 h5">
                         <span class="badge bg-secondary">{{ reply.floor }}楼</span>
                         <span v-if="reply.subReplyCount > 0" class="badge bg-info">
@@ -163,6 +165,7 @@ import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/rou
 import type { Modify } from '@/shared';
 import { toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
+import { useElementRefsStore } from '@/stores/elementRefs';
 import '@/styles/bootstrapCallout.css';
 
 import { computed, onMounted, ref } from 'vue';
@@ -174,6 +177,7 @@ import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts }>();
 const hoveringSubReplyID = ref(0);
+const elementRefsStore = useElementRefsStore();
 
 const posts = computed(() => {
     const newPosts = props.initialPosts as Modify<ApiPosts, { // https://github.com/microsoft/TypeScript/issues/33591
@@ -216,7 +220,7 @@ const renderUsername = baseRenderUsername(getUser);
 const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
 onMounted(initialTippy);
-setComponentCustomScrollBehaviour((to, from) : ReturnType<RouterScrollBehavior> => {
+setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
 

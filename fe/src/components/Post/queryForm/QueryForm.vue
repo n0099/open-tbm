@@ -288,7 +288,7 @@ const generateRoute = (): RouteObjectRaw => { // decide which route to go
     return generateParamRoute(clearedUniqueParams, clearedParams); // param route
 };
 const queryFormSubmit = async () =>
-    useTriggerRouteUpdateStore().pushRoute('<QueryForm>@submit')(generateRoute());
+    useTriggerRouteUpdateStore().push('<QueryForm>@submit')(generateRoute());
 const checkParams = async (): Promise<boolean> => {
     // check query type
     isFidInvalid.value = false;

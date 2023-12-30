@@ -7,9 +7,8 @@ import * as echarts from 'echarts/core';
 import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types';
 
 addEventListener('resize', _.throttle(() => {
-    document.querySelectorAll<HTMLElement>('.echarts').forEach(echartElements => {
-        echarts.getInstanceByDom(echartElements)?.resize();
-    });
+    document.querySelectorAll<HTMLElement>('.echarts')
+        .forEach(el => { echarts.getInstanceByDom(el)?.resize() });
 }, 200, { leading: false }));
 
 export const echarts4ColorTheme: ColorPaletteOptionMixin = {

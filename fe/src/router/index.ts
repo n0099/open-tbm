@@ -36,13 +36,14 @@ const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
         .flatMap(i => [...document.querySelectorAll(i)]);
     loadingBlockEl?.classList.remove('d-none');
     containersEl.forEach(i => { i.classList.add('d-none') });
-    lazyComponent.catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) });
 
-    return lazyComponent.finally(() => {
-        nprogress.done();
-        loadingBlockEl?.classList.add('d-none');
-        containersEl.forEach(i => { i.classList.remove('d-none') });
-    });
+    return lazyComponent
+        .catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) })
+        .finally(() => {
+            nprogress.done();
+            loadingBlockEl?.classList.add('d-none');
+            containersEl.forEach(i => { i.classList.remove('d-none') });
+        });
 };
 
 type ParentRoute = Omit<RouteRecordSingleView, 'path'> | Omit<RouteRecordMultipleViews, 'path'>;
