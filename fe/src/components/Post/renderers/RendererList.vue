@@ -173,7 +173,7 @@ import type { RouterScrollBehavior } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts }>();
 const hoveringSubReplyID = ref(0);

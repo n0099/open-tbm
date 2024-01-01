@@ -1,7 +1,7 @@
 import { getRouteCursorParam } from '@/router';
 import { convertRemToPixels } from '@/shared';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export const getReplyTitleTopOffset = () =>
     convertRemToPixels(5) - convertRemToPixels(0.625); // inset-block-start and margin-block-start

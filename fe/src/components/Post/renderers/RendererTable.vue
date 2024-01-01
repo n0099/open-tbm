@@ -95,7 +95,7 @@ import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts }>();
 const threads = ref<ApiPosts['threads']>();

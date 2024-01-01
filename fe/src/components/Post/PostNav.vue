@@ -56,7 +56,7 @@ import { useToggle } from '@vueuse/core';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import scrollIntoView from 'scroll-into-view-if-needed';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 const props = defineProps<{ postPages: ApiPosts[] }>();
 const route = useRoute();
@@ -131,6 +131,8 @@ watchEffect(() => {
         removeScrollEventListener();
     else
         document.addEventListener('scroll', scrollStop, { passive: true });
+    if (isPostNavExpanded.value)
+        scrollStop();
     expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watchEffect(() => {

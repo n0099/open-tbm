@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import type { ApiError } from '@/api/index.d';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 defineProps<{ error: ApiError | null }>();
 </script>

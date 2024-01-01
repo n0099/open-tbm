@@ -46,7 +46,7 @@
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './selectTiebaUser';
 import { selectTiebaUserBy, selectTiebaUserParamsName } from './selectTiebaUser';
 import { onMounted, ref, watch } from 'vue';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 const props = defineProps<{
     modelValue: SelectTiebaUserModel,

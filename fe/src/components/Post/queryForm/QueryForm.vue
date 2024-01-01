@@ -182,7 +182,7 @@ import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 defineProps<{
     isLoading: boolean,

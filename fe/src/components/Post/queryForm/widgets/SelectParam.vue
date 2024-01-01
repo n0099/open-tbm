@@ -48,7 +48,7 @@ const paramsGroup = {
 
 <script setup  lang="ts">
 import { ref, watchEffect } from 'vue';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 const props = defineProps<{ currentParam: string }>();
 // eslint-disable-next-line vue/define-emits-declaration

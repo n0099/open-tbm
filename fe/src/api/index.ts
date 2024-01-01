@@ -2,7 +2,7 @@ import type { ApiError, ApiForumList, ApiPosts, ApiPostsParam, ApiStatsForumPost
 import { notyShow } from '@/shared';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export const isApiError = (response: ApiError | unknown): response is ApiError =>

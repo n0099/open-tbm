@@ -52,7 +52,7 @@ import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranu
 import { onBeforeMount, ref } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { useHead } from '@unhead/vue';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 import type { LineSeriesOption } from 'echarts/charts';
 import { BarChart, LineChart } from 'echarts/charts';

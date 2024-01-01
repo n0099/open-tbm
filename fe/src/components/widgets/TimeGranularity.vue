@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import type { TimeGranularityStringMap } from '@/shared/echarts';
 import { ref } from 'vue';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 defineOptions({ inheritAttrs: true });
 const props = defineProps<{ granularities: string[] }>();

@@ -75,7 +75,7 @@ import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { useHead } from '@unhead/vue';
 import { DateTime } from 'luxon';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts/charts';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';

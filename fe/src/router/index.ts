@@ -7,7 +7,7 @@ import { onUnmounted, ref } from 'vue';
 import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import nprogress from 'nprogress';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
 export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
@@ -33,7 +33,7 @@ const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
     nprogress.start();
     const loadingBlockEl = document.querySelector('#loadingBlock');
     const containersEl = ['.container', '.container-fluid:not(#nav)']
-        .flatMap(i => [...document.querySelectorAll(i)]);
+        .flatMap(i => _.toArray<Element>(document.querySelectorAll(i)));
     loadingBlockEl?.classList.remove('d-none');
     containersEl.forEach(i => { i.classList.add('d-none') });
 
