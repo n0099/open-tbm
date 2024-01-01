@@ -94,7 +94,8 @@
                         <BadgePostTime :time="reply.postedAt" badgeColor="primary" />
                     </div>
                 </div>
-                <div class="reply row shadow-sm bs-callout bs-callout-info">
+                <div :ref="el => el !== null && replyElements.push(el as HTMLElement)"
+                     class="reply row shadow-sm bs-callout bs-callout-info">
                     <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                          class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
                         <RouterLink :to="userRoute(author.uid)" class="d-block">
@@ -106,7 +107,7 @@
                         <BadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
                     </div>
                     <div class="col me-2 px-1 border-start overflow-auto">
-                        <div v-viewer.static class="p-2" v-html="reply.content" />
+                        <div v-viewer.static class="reply-content p-2" v-html="reply.content" />
                         <template v-if="reply.subReplies.length > 0">
                             <div v-for="(subReplyGroup, _k) in reply.subReplies" :key="_k"
                                  class="sub-reply-group bs-callout bs-callout-success">
@@ -138,7 +139,7 @@
                                                 <BadgePostTime :time="subReply.postedAt" badgeColor="info" />
                                             </div>
                                         </template>
-                                        <div v-viewer.static v-html="subReply.content" />
+                                        <div v-viewer.static class="sub-reply-content" v-html="subReply.content" />
                                     </li>
                                 </ul>
                             </div>
@@ -163,12 +164,12 @@ import type { Reply, SubReply, Thread } from '@/api/post';
 import type { BaiduUserID } from '@/api/user';
 import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { Modify } from '@/shared';
-import { toTiebaUserPortraitImageUrl } from '@/shared';
+import { convertRemToPixels, isElementNode, toTiebaUserPortraitImageUrl } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 import { useElementRefsStore } from '@/stores/elementRefs';
 import '@/styles/bootstrapCallout.css';
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import type { RouterScrollBehavior } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -176,9 +177,12 @@ import { DateTime } from 'luxon';
 import * as _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts }>();
-const hoveringSubReplyID = ref(0);
 const elementRefsStore = useElementRefsStore();
-
+const replyElements = ref<HTMLElement[]>([]);
+const hoveringSubReplyID = ref(0);
+const getUser = baseGetUser(props.initialPosts.users);
+const renderUsername = baseRenderUsername(getUser);
+const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 const posts = computed(() => {
     const newPosts = props.initialPosts as Modify<ApiPosts, { // https://github.com/microsoft/TypeScript/issues/33591
         threads: Array<Thread & { replies: Array<Reply & { subReplies: Array<SubReply | SubReply[]> }> }>
@@ -215,11 +219,91 @@ const posts = computed(() => {
         threads: Array<Thread & { replies: Array<Reply & { subReplies: SubReply[][] }> }>
     }>;
 });
-const getUser = baseGetUser(props.initialPosts.users);
-const renderUsername = baseRenderUsername(getUser);
-const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 
 onMounted(initialTippy);
+onMounted(async () => {
+    await nextTick();
+    const imageWidth = convertRemToPixels(18.75); // match with .tieba-image:max-inline-size in shread/tieba.css
+
+    // block-size of .reply-content should be similar when author usernames are also similar, so only takes the first element
+    const contentEl = document.querySelector<HTMLElement>('.reply-content');
+    if (contentEl === null)
+        return;
+
+    const getCSSPropertyInPixels = (el: HTMLElement, property: string) =>
+        (el.computedStyleMap().get(property) as CSSNumericValue).to('px').value;
+    const getInnerWidth = (el: HTMLElement | null) => (el === null
+        ? 0
+        : el.clientWidth - getCSSPropertyInPixels(el, 'padding-left')
+            - getCSSPropertyInPixels(el, 'padding-right'));
+    const contentWidth = getInnerWidth(contentEl);
+    const subReplyContentWidth = getInnerWidth(document.querySelector('.sub-reply-content'));
+
+    const contentLineHeightUnitValue = contentEl.computedStyleMap().get('line-height') as CSSUnitValue;
+    const contentLineHeight = contentLineHeightUnitValue.unit === 'number'
+        ? convertRemToPixels(contentLineHeightUnitValue.value)
+        : contentLineHeightUnitValue.to('px').value;
+
+    // regex based wcwidth(3)
+    // https://en.wikipedia.org/wiki/Duospaced_font also try https://github.com/sindresorhus/get-east-asian-width
+    // or https://github.com/tc39/proposal-regexp-unicode-property-escapes/issues/28 when available in the future
+    const scriptRegex: Record<string, [number, RegExp]> = { // https://en.wikipedia.org/wiki/Template:ISO_15924_script_codes_and_related_Unicode_data
+
+        // range U+0021-U+007E https://www.compart.com/en/unicode/block/U+0000 aka ASCII
+        latin: [0.5, /([\u0021-\u007E]|\p{Script=Latn})+/gu],
+
+        // block U+3000-U+303F https://www.compart.com/en/unicode/block/U+3000 contains codepoints with \p{Script=Zyyy}
+        // block U+FF01-U+FF60 U+FFE0-U+FFE6 https://codepoints.net/halfwidth_and_fullwidth_forms contains many scripts
+        // including \p{Script=Latn} so sum up all scripts may count some code point more than once due to CP range overlaps
+        CJK: [1, /([\u3000-\u303F]|[\uFF01-\uFF60]|[\uFFE0-\uFFE6]|\p{Script=Hani}|\p{Script=Hang}|\p{Script=Hira}|\p{Script=Kana})+/gu]
+    };
+    const calcColumnWidth = (source: string, column: number, regex: RegExp) =>
+        _.sumBy([...source.matchAll(regex)].map(matches => matches[0]), 'length') * convertRemToPixels(column);
+
+    type StringArrayTree = Array<string | StringArrayTree>;
+    const elementTreeTextContentLines = (el: ChildNode): StringArrayTree =>
+        // eslint-disable-next-line unicorn/no-array-reduce
+        _.toArray(el.childNodes).reduce<StringArrayTree>((acc, cur) => {
+            const getTextContent = () => (isElementNode(cur) && cur.tagName === 'BR' ? '\n' : cur.textContent ?? '');
+            acc.push(cur.childNodes.length > 0 ? elementTreeTextContentLines(cur) : getTextContent());
+
+            return acc;
+        }, []);
+    const predictPostContentHeight = (containerWidth: number) => (el: HTMLElement | null): number => {
+        if (el === null)
+            return 0;
+        const lineCount = _.chain(elementTreeTextContentLines(el).flat())
+            .filter() // remove empty strings from elements with no content like <img>
+            .join('') // single line text split by inline elements like <span>
+            .split('\n') // from <br>
+            .sumBy(line => Math.ceil((calcColumnWidth(line, ...scriptRegex.latin)
+                + calcColumnWidth(line, ...scriptRegex.CJK)) / containerWidth))
+            .value();
+
+        return Math.round(Math.ceil(lineCount) * contentLineHeight);
+    };
+    replyElements.value.forEach(el => {
+        el.attributeStyleMap.set('--sub-reply-group-count', el.querySelectorAll('.sub-reply-group').length);
+
+        const imageLineCount = (el.querySelectorAll('.tieba-image').length * imageWidth) / contentWidth;
+        el.attributeStyleMap.set('--predicted-image-height', `${Math.ceil(imageLineCount) * imageWidth}px`);
+
+        const replyContentHeight = predictPostContentHeight(contentWidth)(el.querySelector('.reply-content'));
+        el.attributeStyleMap.set('--predicted-reply-content-height', `${replyContentHeight}px`);
+
+        const subReplyContentHeight = _.sum(
+            _.toArray(el.querySelectorAll<HTMLElement>('.sub-reply-content'))
+                .map(predictPostContentHeight(subReplyContentWidth))
+        );
+        el.attributeStyleMap.set('--predicted-sub-reply-content-height', `${subReplyContentHeight}px`);
+    });
+
+    // show diff between predicted height and actual height of each .reply after completely scroll over whole page
+    // document.querySelectorAll('.reply').forEach(el => {
+    //     console.log(el, el.clientHeight - /auto (\d+)px/u
+    //         .exec(el.computedStyleMap().get('contain-intrinsic-block-size').toString())[1]);
+    // });
+});
 setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
@@ -258,7 +342,12 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
     padding: .625rem;
     border-block-start: 0;
     content-visibility: auto;
-    contain-intrinsic-block-size: auto 11rem;
+    --sub-reply-group-count: 0;
+    --predicted-image-height: 0px;
+    --predicted-reply-content-height: 0px;
+    --predicted-sub-reply-content-height: 0px;
+    contain-intrinsic-block-size: auto max(11rem, (var(--sub-reply-group-count) * 4rem) + var(--predicted-image-height)
+        + var(--predicted-reply-content-height) + var(--predicted-sub-reply-content-height));
 }
 .reply-author {
     z-index: 1018;
@@ -269,7 +358,8 @@ setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> =
 }
 
 .sub-reply-group {
-    margin: .5rem 0 .25rem .5rem;
+    margin-block-start: .5rem;
+    margin-inline-start: .5rem;
     padding: .25rem;
 }
 .sub-reply-item {

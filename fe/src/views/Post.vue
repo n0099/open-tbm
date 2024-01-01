@@ -107,6 +107,30 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
 
     return true;
 };
+
+const scrollToPostListItem = (el: Element) => {
+    // simply invoke el.scrollIntoView() for only once will scroll the element to the top of the viewport
+    // and then some other elements above it such as img[loading='lazy'] may change its box size
+    // that would lead to reflow resulting in the element being pushed down or up out of viewport
+    // due to document.scrollingElement.scrollTop changed a lot
+    const tryScroll = () => {
+        // not using a passive callback by IntersectionObserverto to prevent getBoundingClientRect() caused force reflow
+        // due to it will only emit once the configured thresholds are reached
+        // thus the top offset might be far from 0 that is top aligned with viewport when the callback is called
+        // since the element is still near the bottom of viewport at that point of time
+        // even if the thresholds steps by each percentage like [0.01, 0.02, ..., 1] to let triggers callback more often
+        // 1% of a very high element is still a big number that may not emit when scrolling ends
+        // and the element reached the top of viewport
+        const elTop = el.getBoundingClientRect().top;
+        const replyTitleTopOffset = getReplyTitleTopOffset();
+        if (Math.abs(elTop) < replyTitleTopOffset + (window.innerHeight * 0.05)) // at most 5dvh tolerance
+            removeEventListener('scrollend', tryScroll);
+        else
+            document.documentElement.scrollBy({ top: elTop - replyTitleTopOffset });
+    };
+    tryScroll();
+    addEventListener('scrollend', tryScroll);
+};
 const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
     if (queryFormRef.value === undefined)
         return false;
@@ -117,29 +141,12 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
     if (isFetchSuccess && renderType.value === 'list') {
         const el = document.querySelector(postListItemScrollPosition(_route).el);
         if (el !== null) {
-            // simply invoke el.scrollIntoView() for only once will scroll the element to the top of the viewport
-            // and then some other elements above it such as img[loading='lazy'] may change its box size
-            // that would lead to reflow resulting in the element being pushed down or up out of viewport
-            // due to document.scrollingElement.scrollTop changed a lot
-            const tryScroll = () => {
-                // not using a passive callback by IntersectionObserverto
-                // to prevent getBoundingClientRect() caused force reflow
-                // due to it will only emit once the configured thresholds are reached
-                // thus the top offset might be far from 0 that is top aligned with viewport when the callback is called
-                // since the element is still near the bottom of viewport at that point of time
-                // even if the thresholds steps by each percentage like [0.01, 0.02, ..., 1]
-                // to let triggers callback more often
-                // 1% of a very high element is still a big number that may not emit when scrolling ends
-                // and the element reached the top of viewport
-                const elTop = el.getBoundingClientRect().top;
-                const replyTitleTopOffset = getReplyTitleTopOffset();
-                if (Math.abs(elTop) < replyTitleTopOffset + (window.innerHeight * 0.05)) // at most 5dvh tolerance
-                    removeEventListener('scrollend', tryScroll);
+            requestIdleCallback(function retry(deadline) {
+                if (deadline.timeRemaining() > 0)
+                    scrollToPostListItem(el);
                 else
-                    document.documentElement.scrollBy({ top: elTop - replyTitleTopOffset });
-            };
-            tryScroll();
-            addEventListener('scrollend', tryScroll);
+                    requestIdleCallback(retry);
+            });
         }
     }
 
