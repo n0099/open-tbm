@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net7.0": {
+      "Google.Protobuf": {
+        "type": "Direct",
+        "requested": "[3.25.1, )",
+        "resolved": "3.25.1",
+        "contentHash": "Sw9bq4hOD+AaS3RrnmP5IT25cyZ/T1qpM0e8+G+23Nojhv7+ScJFPEAQo1m4EFQWhXoI4FRZDrK+wjHCPw9yxg=="
+      }
+    },
+    "net7.0/linux-x64": {}
+  }
+}
