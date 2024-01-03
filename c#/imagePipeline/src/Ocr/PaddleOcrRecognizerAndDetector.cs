@@ -27,11 +27,11 @@ public sealed partial class PaddleOcrRecognizerAndDetector : IDisposable
     [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly")]
     public async Task Initialize(CancellationToken stoppingToken = default) =>
         _ocr ??= await (_script switch
-        {
-            "zh-Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseV4),
-            "zh-Hant" => GetPaddleOcrFactory(OnlineFullModels.TraditionalChineseV3),
-            "ja" => GetPaddleOcrFactory(OnlineFullModels.JapanV4),
-            "en" => GetPaddleOcrFactory(OnlineFullModels.EnglishV4),
+        { // https://en.wikipedia.org/wiki/Template:ISO_15924_script_codes_and_related_Unicode_data
+            "Hans" => GetPaddleOcrFactory(OnlineFullModels.ChineseV4),
+            "Hant" => GetPaddleOcrFactory(OnlineFullModels.TraditionalChineseV3),
+            "Jpan" => GetPaddleOcrFactory(OnlineFullModels.JapanV4),
+            "Latn" => GetPaddleOcrFactory(OnlineFullModels.EnglishV4),
             _ => throw new ArgumentOutOfRangeException(nameof(_script), _script, "Unsupported script.")
         })(stoppingToken);
 

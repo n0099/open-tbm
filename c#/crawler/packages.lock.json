@@ -13,9 +13,9 @@
       },
       "Dapper": {
         "type": "Direct",
-        "requested": "[2.1.24, )",
-        "resolved": "2.1.24",
-        "contentHash": "/2t2vsdJyZRsk13AsWigZpsuFvEwK+o3v862cEULXoww905gyKhJFSuwmZI/4Ui9COX9ZCFCI09UHyH4wVYl3A=="
+        "requested": "[2.1.28, )",
+        "resolved": "2.1.28",
+        "contentHash": "ha49pzOEDmCPkMxwfPSR/wxa/6RD3r42TESIgpzpi7FXq/gNVUuJVEO+wtUzntNRhtmq3BKCl0s0aAlSZLkBUA=="
       },
       "FlexLabs.EntityFrameworkCore.Upsert": {
         "type": "Direct",

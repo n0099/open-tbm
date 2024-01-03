@@ -11,20 +11,20 @@ public sealed partial class TesseractRecognizer(IConfiguration config, string sc
     public delegate TesseractRecognizer New(string script);
 
     private Lazy<OCRTesseract> TesseractInstanceHorizontal => _tesseractInstanceHorizontal ??= new(script switch
-    {
-        "zh-Hans" => CreateTesseract("best/chi_sim+best/eng"),
-        "zh-Hant" => CreateTesseract("best/chi_tra+best/eng"),
-        "ja" => CreateTesseract("best/jpn"), // literal latin letters in japanese is replaced by katakana
-        "en" => CreateTesseract("best/eng"),
+    { // https://en.wikipedia.org/wiki/Template:ISO_15924_script_codes_and_related_Unicode_data
+        "Hans" => CreateTesseract("best/chi_sim+best/eng"),
+        "Hant" => CreateTesseract("best/chi_tra+best/eng"),
+        "Jpan" => CreateTesseract("best/jpn"), // literal latin letters in japanese is replaced by katakana
+        "Latn" => CreateTesseract("best/eng"),
         _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
     });
 
     private Lazy<OCRTesseract> TesseractInstanceVertical => _tesseractInstanceVertical ??= new(script switch
     {
-        "zh-Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
-        "zh-Hant" => CreateTesseract("best/chi_tra_vert", isVertical: true),
-        "ja" => CreateTesseract("best/jpn_vert", isVertical: true),
-        "en" => TesseractInstanceHorizontal.Value, // fallback to best/eng since there's no best/eng_vert
+        "Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
+        "Hant" => CreateTesseract("best/chi_tra_vert", isVertical: true),
+        "Jpan" => CreateTesseract("best/jpn_vert", isVertical: true),
+        "Latn" => TesseractInstanceHorizontal.Value, // fallback to best/eng since there's no best/eng_vert
         _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
     });
 
@@ -53,7 +53,7 @@ public sealed partial class TesseractRecognizer
         var (imageKey, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < AspectRatioThresholdToConsiderAsVertical;
-        if (isVertical && script == "en") isVertical = false; // there's no vertical english
+        if (isVertical && script == "Latn") isVertical = false; // there's no vertical latin
         var tesseract = isVertical ? TesseractInstanceVertical : TesseractInstanceHorizontal;
         tesseract.Value.Run(mat, out _, out var rects, out var texts, out var confidences);
 
