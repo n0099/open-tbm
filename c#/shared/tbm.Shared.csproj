@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <PackageReference Include="Autofac" Version="7.1.0" />
-        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="Autofac" Version="8.0.0" />
+        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
         <PackageReference Include="EFCore.NamingConventions" Version="7.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.14" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />

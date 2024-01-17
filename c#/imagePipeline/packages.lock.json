@@ -22,9 +22,9 @@
       },
       "Microsoft.Extensions.Http.Polly": {
         "type": "Direct",
-        "requested": "[8.0.0, )",
-        "resolved": "8.0.0",
-        "contentHash": "UbZJib/wukyGVTvX7ZLS988su5XLrDoHDBSXp00Jxre0ONB1XW7e1zTk7vQbJq1PzmD5x7CBqdZQlH2OWte+Uw==",
+        "requested": "[8.0.1, )",
+        "resolved": "8.0.1",
+        "contentHash": "UOX9uZLKQsJ6COAHT65jXU2P7Az+6283DxvOO2/+JIjeX6HafgbO8b7U4Ms2bQi2ztp/gIQ1MnNlVWPdJlOOaw==",
         "dependencies": {
           "Microsoft.Extensions.Http": "8.0.0",
           "Polly": "7.2.4",
@@ -43,9 +43,9 @@
       },
       "OpenCvSharp4.runtime.win": {
         "type": "Direct",
-        "requested": "[4.8.0.20230708, )",
-        "resolved": "4.8.0.20230708",
-        "contentHash": "V9zbVQXazSSoEG04nF1KEkxfY62WMQAcKAlDe7xgkNErY7WQZzEcj8dMEuHXQMaDr45jPvrJi50SQroi+w4wNw=="
+        "requested": "[4.9.0.20240103, )",
+        "resolved": "4.9.0.20240103",
+        "contentHash": "PkV3ge6rE//gj0OlG4TRXzmcLVDoKsJx0lYN1ogx9gZhqUPHlzrnWqKk2hAFK+nU8T0chRhrwHL0U2hSMyoCWw=="
       },
       "Pomelo.EntityFrameworkCore.MySql.NetTopologySuite": {
         "type": "Direct",
@@ -69,6 +69,16 @@
           "Sdcb.Mkldnn.runtime.win64": "0.19.0",
           "Sdcb.Onnx.runtime.win64": "1.11.22.423",
           "Sdcb.Paddle2Onnx.runtime.win64": "1.0.0.2"
+        }
+      },
+      "Sdcb.PaddleOCR": {
+        "type": "Direct",
+        "requested": "[2.7.0.1, )",
+        "resolved": "2.7.0.1",
+        "contentHash": "G6pi36+uRutsGZeqyhebupCaV19dpO353IilOnzG2B0ODuwf4RkXNDOPwfAJuX9TmHW8qU6UnQN2FJ+vcED9lw==",
+        "dependencies": {
+          "OpenCvSharp4": "4.9.0.20240103",
+          "Sdcb.PaddleInference": "2.5.0.1"
         }
       },
       "Sdcb.PaddleOCR.Models.Online": {
@@ -108,19 +118,19 @@
       },
       "Autofac": {
         "type": "Transitive",
-        "resolved": "7.1.0",
-        "contentHash": "XCXmpxhOnuztTTRkzG+8B8KU8SR8WjBYwSntndjlsFR5lM3K/g43r9hUwewIPDBJwDrmZU3TjmNdH6s8IF3VFQ==",
+        "resolved": "8.0.0",
+        "contentHash": "qxVqJcl3fixxa5aZc9TmIuYTwooI9GCL5RzfUiTZtTlbAF3NcWz7bPeEyJEAyS/0qGhSyGnXeku2eiu/7L+3qw==",
         "dependencies": {
-          "System.Diagnostics.DiagnosticSource": "4.7.1"
+          "System.Diagnostics.DiagnosticSource": "7.0.2"
         }
       },
       "Autofac.Extensions.DependencyInjection": {
         "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "nGrXNpQX2FiZpIBydK9cxZnnoqP/cUd3k/53uRERYEqLtWzKtE15R6L+j5q5ax5Rv/+3wAIkOaPePkahfqrwjg==",
+        "resolved": "9.0.0",
+        "contentHash": "tf+//4MBola256qaaVQqQ6tx2R57S8A8BFekRWNpHkpSFzRBPkU+/fEDUSrCjqldK/B2zRoDbsMcQmYy3PYGWg==",
         "dependencies": {
-          "Autofac": "6.4.0",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+          "Autofac": "8.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
         }
       },
       "CommunityToolkit.Diagnostics": {
@@ -150,11 +160,11 @@
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",
-        "resolved": "7.0.14",
-        "contentHash": "0KYkAemPygW6yzifciFlmMzkO4sI4Dw69xLgwg3ui5rXJS5XvzuAWVvfdrKJciqeCbCnVS/ZbOWpcwWgqce5bQ==",
+        "resolved": "7.0.15",
+        "contentHash": "grjnH94+hXgTqRFdfl88otvlqHTG1QEtlLm6ADI3vtZ1h+C8xNhvKRLNNw1RMD7CKADpoEEPNgqTXKCg+Ki8OQ==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Abstractions": "7.0.14",
-          "Microsoft.EntityFrameworkCore.Analyzers": "7.0.14",
+          "Microsoft.EntityFrameworkCore.Abstractions": "7.0.15",
+          "Microsoft.EntityFrameworkCore.Analyzers": "7.0.15",
           "Microsoft.Extensions.Caching.Memory": "7.0.0",
           "Microsoft.Extensions.DependencyInjection": "7.0.0",
           "Microsoft.Extensions.Logging": "7.0.0"
@@ -162,13 +172,13 @@
       },
       "Microsoft.EntityFrameworkCore.Abstractions": {
         "type": "Transitive",
-        "resolved": "7.0.14",
-        "contentHash": "aEcXDSYpDdD5wdIRKTqcS44f3W4capqQ1BWVRPJgacATfHkO62RX9Nnh0hUFg+rei9OLuJp0Y4zsy1fNeOXv5g=="
+        "resolved": "7.0.15",
+        "contentHash": "YZYw1g0EGGkWdC+ymHRccQryerGyh7XlcL8nRo3r7kkPurPJgVCCtC+PK5pBwJGPDdwCYMrwHSoAtfEWcqqQjQ=="
       },
       "Microsoft.EntityFrameworkCore.Analyzers": {
         "type": "Transitive",
-        "resolved": "7.0.14",
-        "contentHash": "esI4RF6mix4DDFBhWB9k1vJxAL8GouSf5ZV8oFJoVsIQ9d2J3MPgC1VL2qM9Vw5cH7Vg7TzRyKNpCRXFVkWs9w=="
+        "resolved": "7.0.15",
+        "contentHash": "zscMrRQQR1O4U5PhZ98ASBNdU/mAsSpqTwkE8RrguZEox31jYBK65LWTlFPPBWycEiC6U9feBZZ3bkkrmpWtbQ=="
       },
       "Microsoft.EntityFrameworkCore.Relational": {
         "type": "Transitive",
@@ -573,15 +583,6 @@
         "resolved": "2.5.0.1",
         "contentHash": "mhTFsVo5U06agc31pA0Wb5kX0H328Dqe9985G6D4aGbU0GXzET4ZUyzFgt8jGD1drFezMY4PdZH63lhMTzpnpQ=="
       },
-      "Sdcb.PaddleOCR": {
-        "type": "Transitive",
-        "resolved": "2.7.0",
-        "contentHash": "/1fQi6hmeVScV+yMMQJ06jonk9bdXqQXAcavdExDoU+uhLM3mYO3/KlHGu8iXDJ7FAE92ctF5DhaYJrYIQ/8SA==",
-        "dependencies": {
-          "OpenCvSharp4": "4.8.0.20230708",
-          "Sdcb.PaddleInference": "2.5.0.1"
-        }
-      },
       "Sdcb.PaddleOCR.Models.Shared": {
         "type": "Transitive",
         "resolved": "2.7.0",
@@ -878,11 +879,11 @@
       "tbm.shared": {
         "type": "Project",
         "dependencies": {
-          "Autofac": "[7.1.0, )",
-          "Autofac.Extensions.DependencyInjection": "[8.0.0, )",
+          "Autofac": "[8.0.0, )",
+          "Autofac.Extensions.DependencyInjection": "[9.0.0, )",
           "CommunityToolkit.Diagnostics": "[8.2.2, )",
           "EFCore.NamingConventions": "[7.0.2, )",
-          "Microsoft.EntityFrameworkCore": "[7.0.14, )",
+          "Microsoft.EntityFrameworkCore": "[7.0.15, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
           "NLog.Extensions.Logging": "[5.3.8, )",
           "Pomelo.EntityFrameworkCore.MySql": "[7.0.0, )",
@@ -893,9 +894,9 @@
     "net7.0/linux-x64": {
       "OpenCvSharp4.runtime.win": {
         "type": "Direct",
-        "requested": "[4.8.0.20230708, )",
-        "resolved": "4.8.0.20230708",
-        "contentHash": "V9zbVQXazSSoEG04nF1KEkxfY62WMQAcKAlDe7xgkNErY7WQZzEcj8dMEuHXQMaDr45jPvrJi50SQroi+w4wNw=="
+        "requested": "[4.9.0.20240103, )",
+        "resolved": "4.9.0.20240103",
+        "contentHash": "PkV3ge6rE//gj0OlG4TRXzmcLVDoKsJx0lYN1ogx9gZhqUPHlzrnWqKk2hAFK+nU8T0chRhrwHL0U2hSMyoCWw=="
       },
       "Sdcb.PaddleInference.runtime.win64.mkl": {
         "type": "Direct",
