@@ -139,15 +139,20 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
         return false;
     const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
     if (isFetchSuccess && renderType.value === 'list') {
-        const el = document.querySelector(postListItemScrollPosition(_route).el);
-        if (el !== null) {
+        (() => {
+            const scrollPosition = postListItemScrollPosition(_route);
+            if (scrollPosition === false)
+                return;
+            const el = document.querySelector(scrollPosition.el);
+            if (el === null)
+                return;
             requestIdleCallback(function retry(deadline) {
                 if (deadline.timeRemaining() > 0)
                     scrollToPostListItem(el);
                 else
                     requestIdleCallback(retry);
             });
-        }
+        })();
     }
 
     return isFetchSuccess;

@@ -16,6 +16,9 @@ checkcss.onClassnameDetected = className =>
         'loading',
         'echarts',
         'bs-callout',
+        'post-render-list',
+        'reply-content',
+        'sub-reply-content',
 
         // fontawesome
         'fa-',

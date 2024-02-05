@@ -298,7 +298,7 @@ onMounted(async () => {
         el.attributeStyleMap.set('--predicted-sub-reply-content-height', `${subReplyContentHeight}px`);
     });
 
-    // show diff between predicted height and actual height of each .reply after completely scroll over whole page
+    // show diff between predicted height and actual height of each `.reply` after complete scroll over whole page
     // document.querySelectorAll('.reply').forEach(el => {
     //     console.log(el, el.clientHeight - /auto (\d+)px/u
     //         .exec(el.computedStyleMap().get('contain-intrinsic-block-size').toString())[1]);
