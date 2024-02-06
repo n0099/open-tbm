@@ -5,6 +5,8 @@ import '@/styles/style.css';
 import { createApp } from 'vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { createHead } from '@unhead/vue';
+import { VueQueryPlugin } from '@tanstack/vue-query';
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
@@ -42,5 +44,5 @@ if (googleAnalyticsMeasurementId !== '') {
     await import('@/gtag.js');
 }
 
-export const app = createApp(App).use(router).use(createHead()).use(createPinia());
+export const app = createApp(App).use(router).use(createHead()).use(createPinia()).use(VueQueryPlugin);
 app.mount('#app');

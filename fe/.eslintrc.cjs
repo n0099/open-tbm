@@ -576,6 +576,7 @@ module.exports = {
         'plugin:import/recommended',
         'plugin:import/typescript',
         'plugin:unicorn/recommended',
+        'plugin:@tanstack/eslint-plugin-query/recommended',
     ],
     rules: {
         ...eslintPluginUnicorn.optout,
