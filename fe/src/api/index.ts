@@ -5,8 +5,9 @@ import { stringify } from 'qs';
 import * as _ from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export const isApiError = (response: ApiError | unknown): response is ApiError =>
-    _.isObject(response) && 'errorCode' in response && 'errorInfo' in response;
+export const isApiError = (response: ApiError | unknown): response is ApiError => _.isObject(response)
+    && 'errorCode' in response && _.isNumber(response.errorCode)
+    && 'errorInfo' in response && (_.isObject(response.errorInfo) || _.isString(response.errorInfo));
 export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TResponse => {
     if (isApiError(response))
         throw new Error(JSON.stringify(response));
@@ -44,12 +45,12 @@ export const getRequester = async <TResponse extends ApiError | unknown, TQueryP
 
         return json;
     } catch (e: unknown) {
-        if (e instanceof Error && e.message === errorUUID) {
-            const { message: exceptionMessage } = e;
-            const text = `${errorMessage}<br />${exceptionMessage}`;
-            notyShow('error', text);
+        if (e instanceof Error) {
+            const { message } = e;
+            const messages = message === errorUUID ? errorMessage : `${errorMessage}<br />${message}`;
+            notyShow('error', messages);
 
-            return { errorCode, errorInfo: text.replaceAll('<br />', '\n') };
+            return { errorCode, errorInfo: messages.replaceAll('<br />', '\n') };
         }
         throw e;
     } finally {

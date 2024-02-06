@@ -1,12 +1,10 @@
 import type { Cursor } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameWithCursor } from '@/router';
-import type { RouteLocationRaw } from 'vue-router';
-import { useRoute } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
 
 export { default as PageCurrentButton } from './PageCurrentButton.vue';
 export { default as PageNextButton } from './PageNextButton.vue';
-export const useNextCursorRoute = (nextCursor: Cursor): RouteLocationRaw => {
-    const route = useRoute();
+export const useNextCursorRoute = (route: RouteLocationNormalized, nextCursor: Cursor): RouteLocationRaw => {
     assertRouteNameIsStr(route.name);
     const name = routeNameWithCursor(route.name);
     const { query, params } = route;

@@ -282,13 +282,13 @@ const generateRoute = (): RouteObjectRaw => { // decide which route to go
     if (clearedUniqueParams.fid !== undefined
         && _.isEmpty(clearedParams)
         && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
-        return { name: 'post/fid', params: { fid: clearedUniqueParams.fid.value } };
+        return { name: 'post/fid', params: { fid: clearedUniqueParams.fid.value.toString() } };
     }
 
     return generateParamRoute(clearedUniqueParams, clearedParams); // param route
 };
-const queryFormSubmit = async () =>
-    useTriggerRouteUpdateStore().push('<QueryForm>@submit')(generateRoute());
+const queryFormSubmit = async () => useTriggerRouteUpdateStore()
+    .push('<QueryForm>@submit')({ ...generateRoute(), force: true });
 const checkParams = async (): Promise<boolean> => {
     // check query type
     isFidInvalid.value = false;

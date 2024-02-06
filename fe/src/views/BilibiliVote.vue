@@ -146,8 +146,11 @@ interface VoteCountSeriesLabelFormatterParams {
     data: OptionDataItem | Top10CandidatesTimelineDataset[0],
     name: string
 }
-const isCandidatesDetailData = (p: unknown): p is Top10CandidatesTimelineDataset[0] =>
-    _.isObject(p) && 'officialValidCount' in p && 'validCount' in p && 'invalidCount' in p && 'voteFor' in p;
+const isCandidatesDetailData = (p: unknown): p is Top10CandidatesTimelineDataset[0] => _.isObject(p)
+    && 'officialValidCount' in p && (_.isNumber(p.officialValidCount) || p.officialValidCount === null)
+    && 'validCount' in p && _.isNumber(p.validCount)
+    && 'invalidCount' in p && _.isNumber(p.invalidCount)
+    && 'voteFor' in p && _.isString(p.voteFor);
 const voteCountSeriesLabelFormatter = (
     votesData: Top10CandidatesTimeline,
     currentCount: number,

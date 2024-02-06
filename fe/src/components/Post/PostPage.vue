@@ -13,12 +13,14 @@ import RendererTable from './renderers/RendererTable.vue';
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
 import type { PostRenderer } from '@/views/Post.vue';
 import type { ApiPosts } from '@/api/index.d';
+import type { RouteLocationNormalized } from 'vue-router';
 
 const props = defineProps<{
     posts: ApiPosts,
     renderType: PostRenderer,
+    currentRoute: RouteLocationNormalized,
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const nextCursorRoute = useNextCursorRoute(props.posts.pages.nextCursor);
+const nextCursorRoute = useNextCursorRoute(props.currentRoute, props.posts.pages.nextCursor);
 </script>

@@ -13,7 +13,7 @@
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
                           :renderType="renderType" :posts="posts"
-                          :isLoadingNewPage="isLoading"
+                          :currentRoute="currentRoute" :isLoadingNewPage="isLoading"
                           :isLastPageInPages="pageIndex === postPages.length - 1" />
             </div>
             <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
@@ -59,6 +59,7 @@ const showPlaceholderPostList = ref<boolean>(true);
 const renderType = ref<PostRenderer>('list');
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const queryFormRef = ref<typeof QueryForm>();
+const currentRoute = ref<RouteLocationNormalized>(route);
 useHead({ title: computed(() => titleTemplate(title.value)) });
 
 const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Cursor) => {
@@ -131,16 +132,17 @@ const scrollToPostListItem = (el: Element) => {
     tryScroll();
     addEventListener('scrollend', tryScroll);
 };
-const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
+const parseRouteThenFetch = async (newRoute: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
     if (queryFormRef.value === undefined)
         return false;
-    const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(_route);
+    const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
         return false;
+    currentRoute.value = newRoute;
     const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
     if (isFetchSuccess && renderType.value === 'list') {
         (() => {
-            const scrollPosition = postListItemScrollPosition(_route);
+            const scrollPosition = postListItemScrollPosition(newRoute);
             if (scrollPosition === false)
                 return;
             const el = document.querySelector(scrollPosition.el);
@@ -159,7 +161,8 @@ const parseRouteThenFetch = async (_route: RouteLocationNormalized, isNewQuery: 
 };
 
 onBeforeRouteUpdate(async (to, from) => {
-    const isNewQuery = useTriggerRouteUpdateStore().isTriggeredBy('<QueryForm>@submit', to)
+    const isNewQuery = useTriggerRouteUpdateStore()
+        .isTriggeredBy('<QueryForm>@submit', { ...to, force: true })
         || compareRouteIsNewQuery(to, from);
     const cursor = getRouteCursorParam(to);
     if (!(isNewQuery || _.isEmpty(_.filter(
