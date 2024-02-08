@@ -6,6 +6,7 @@ checkcss.onClassnameDetected = className =>
         'grecaptcha',
         'g-recaptcha',
         'router-link-exact', // vue-router
+        'tsqd-', // @tanstack/vue-query-devtools
         'nprogress',
         'noty_',
         'tippy-',
@@ -31,6 +32,10 @@ checkcss.onClassnameDetected = className =>
         'ant-',
         'anticon',
         'data-ant-cssinjs-cache-path',
-        'css-dev-only-do-not-override-'
+        'css-dev-only-do-not-override-',
+
+        // vue <Transition>
+        'v-enter-',
+        'v-leave-'
     ].some(i => className.startsWith(i));
 checkcss.scan().watch();

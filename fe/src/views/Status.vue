@@ -40,7 +40,7 @@ import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
 import { titleTemplate } from '@/shared';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watchEffect } from 'vue';
 import { Switch } from 'ant-design-vue';
 import { useIntervalFn } from '@vueuse/core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -202,7 +202,7 @@ const submitQueryForm = async () => {
 const { pause, resume } = useIntervalFn(() => { void submitQueryForm() },
     60000, // refresh data every minute
     { immediate: false });
-watch(() => autoRefresh.value, () => {
+watchEffect(() => {
     if (autoRefresh.value)
         resume();
     else

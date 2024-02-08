@@ -40,7 +40,7 @@ import type { ObjUnknown } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
-import { computed, nextTick, onBeforeMount, ref, watchEffect } from 'vue';
+import { computed, nextTick, onBeforeMount, ref } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
@@ -56,8 +56,8 @@ const postPages = ref<ApiPosts[]>([]);
 const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
 const showPlaceholderPostList = ref<boolean>(true);
-const renderType = ref<PostRenderer>('list');
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
+const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormRef = ref<typeof QueryForm>();
 const currentRoute = ref<RouteLocationNormalized>(route);
 useHead({ title: computed(() => titleTemplate(title.value)) });
@@ -173,9 +173,6 @@ onBeforeRouteUpdate(async (to, from) => {
     const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, cursor);
 
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
-});
-watchEffect(() => {
-    [renderType.value] = selectedRenderTypes.value;
 });
 
 onBeforeMount(async () => {

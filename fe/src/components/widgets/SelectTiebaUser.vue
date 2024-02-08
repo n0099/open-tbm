@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './selectTiebaUser';
 import { selectTiebaUserBy, selectTiebaUserParamsName } from './selectTiebaUser';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, watchEffect } from 'vue';
 import * as _ from 'lodash';
 
 const props = defineProps<{
@@ -70,7 +70,7 @@ const emitModelChange = () => {
     emit('update:modelValue', { selectBy: selectBy.value, params: params.value });
 };
 
-watch(() => params, emitModelChange, { deep: true });
+watch(params, emitModelChange, { deep: true });
 watch(() => props.modelValue, () => {
     // emit with default params value when parent haven't passing modelValue
     if (_.isEmpty(props.modelValue))
@@ -94,13 +94,13 @@ watch(() => props.modelValue, () => {
 }, { immediate: true });
 onMounted(() => {
     // defer listening to prevent watch triggered by assigning initial selectBy
-    watch(() => selectBy.value, value => {
+    watchEffect(() => {
         params.value = {}; // empty params to prevent old value remains after selectBy changed
-        if (value === 'uid')
+        if (selectBy.value === 'uid')
             params.value.uidCompareBy = '='; // reset to default
-        if (value === 'nameNULL')
+        if (selectBy.value === 'nameNULL')
             params.value.name = 'NULL';
-        if (value === 'displayNameNULL')
+        if (selectBy.value === 'displayNameNULL')
             params.value.displayName = 'NULL';
         emitModelChange();
     });

@@ -1,4 +1,5 @@
 <template>
+    <VueQueryDevtools />
     <GlobalNavBar />
     <MininiumResolutionWarning />
     <img :src="iconLoadingBlock" class="d-none" id="loadingBlock" />
@@ -37,6 +38,7 @@ import MininiumResolutionWarning from '@/components/MininiumResolutionWarning.vu
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 
 const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
 const isReCAPTCHAEnabled = import.meta.env.VITE_RECAPTCHA_SITE_KEY !== '';

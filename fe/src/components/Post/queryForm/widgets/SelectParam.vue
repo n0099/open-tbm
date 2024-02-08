@@ -1,5 +1,5 @@
 <template>
-    <select v-model="selected" @change="e => $emit('paramChange', (e.target as HTMLSelectElement).value)"
+    <select @change="e => emitParamChange((e.target as HTMLSelectElement).value)" :value="selected"
             class="form-select form-control flex-grow-0" id="newParam">
         <option value="add" disabled>New...</option>
         <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
@@ -47,15 +47,24 @@ const paramsGroup = {
 </script>
 
 <script setup  lang="ts">
-import { ref, watchEffect } from 'vue';
+import { ref, watch } from 'vue';
 import * as _ from 'lodash';
 
-const props = defineProps<{ currentParam: string }>();
+const props = defineProps<{ currentParam?: string }>();
 // eslint-disable-next-line vue/define-emits-declaration
-defineEmits({ paramChange: p => _.includes(_.flatMap(paramsGroup, Object.keys), p) });
+const emit = defineEmits({ paramChange: p => _.includes(_.flatMap(paramsGroup, Object.keys), p) });
+const selected = ref(props.currentParam);
+const emitParamChange = (value: string) => {
+    if (value === 'add')
+        return;
+    selected.value = value;
+    emit('paramChange', value);
+};
 
-const selected = ref('add');
-watchEffect(() => { selected.value = props.currentParam });
+watch(selected, () => {
+    if (props.currentParam === undefined)
+        selected.value = 'add';
+}, { immediate: true });
 </script>
 
 <style scoped>

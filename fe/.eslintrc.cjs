@@ -1,4 +1,4 @@
-const eslintPluginUnicorn = {// as of eslint-plugin-unicorn@50.0.1
+const eslintPluginUnicorn = { // as of eslint-plugin-unicorn@50.0.1
     optout: {
         'unicorn/no-null': 'off',
         'unicorn/no-array-callback-reference': 'off',
@@ -13,11 +13,11 @@ const eslintPluginUnicorn = {// as of eslint-plugin-unicorn@50.0.1
         'unicorn/catch-error-name': ['error', { name: 'e' }],
         'unicorn/numeric-separators-style': ['error', { onlyIfContainsSeparator: true }],
         'unicorn/switch-case-braces': ['error', 'avoid'],
-    }
+    },
 };
 const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
     optout: {
-        'import/namespace': 'off' // https://github.com/import-js/eslint-plugin-import/issues/2340
+        'import/namespace': 'off', // https://github.com/import-js/eslint-plugin-import/issues/2340
     },
     optin: {
         'import/no-empty-named-blocks': 'error',
@@ -45,15 +45,15 @@ const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
             distinctGroup: false,
             alphabetize: { order: 'asc', orderImportKind: 'asc' },
             warnOnUnassignedImports: true,
-        }]
-    }
+        }],
+    },
 };
 const stylisticPlus = { // as of @stylistic/eslint-plugin-plus@1.5.1
     optin: {
         // '@stylistic/indent-binary-ops': ['error', 4],
         '@stylistic/type-generic-spacing': 'error',
         '@stylistic/type-named-tuple-spacing': 'error',
-    }
+    },
 };
 const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
     optin: {
@@ -161,7 +161,7 @@ const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
 
         // https://github.com/eslint-stylistic/eslint-stylistic/issues/249
         // '@stylistic/type-annotation-spacing': 'error',
-    }
+    },
 };
 const eslint = { // as of eslint@8.56.0
     optout: {
@@ -259,7 +259,7 @@ const eslint = { // as of eslint@8.56.0
         'logical-assignment-operators': ['error', 'always', { enforceForIfStatements: true }],
         'no-empty-static-block': 'error',
         'no-new-native-nonconstructor': 'error',
-    }
+    },
 };
 const typescriptESLint = { // as of @typescript-eslint@6.16.0
     override: {
@@ -386,7 +386,7 @@ const typescriptESLint = { // as of @typescript-eslint@6.16.0
         '@typescript-eslint/no-duplicate-type-constituents': ['error', { ignoreUnions: true }],
         '@typescript-eslint/no-unsafe-enum-comparison': 'error',
         '@typescript-eslint/no-unsafe-unary-minus': 'error',
-    }
+    },
 };
 const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
     optout: {
@@ -522,7 +522,7 @@ const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
         'vue/no-use-v-else-with-v-for': 'error',
         'vue/no-unused-emit-declarations': 'error',
         'vue/no-ref-object-reactivity-loss': 'error',
-    }
+    },
 };
 
 // eslint-disable-next-line no-undef

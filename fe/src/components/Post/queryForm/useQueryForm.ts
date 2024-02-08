@@ -155,11 +155,10 @@ export default <
                     param.subParam.not = boolStrToBool(param.subParam.not);
                 }
                 const isUniqueParam = (p: UnknownParam): p is UniqueParam => p.name in uniqueParams.value;
-                if (isUniqueParam(param)) {
+                if (isUniqueParam(param))
                     uniqueParams.value[param.name as keyof UniqueParams] = param;
-                } else {
+                else
                     params.value.push(param);
-                }
             })
             .value();
     };
@@ -193,7 +192,7 @@ export default <
         };
     };
 
-    watch([() => uniqueParams.value, () => params.value], newParamsArray => {
+    watch([uniqueParams, params], newParamsArray => {
         const [newUniqueParams, newParams] = newParamsArray;
         _.chain([...Object.values(newUniqueParams), ...newParams])
             .filter(param => param.name in deps.paramsWatcher)

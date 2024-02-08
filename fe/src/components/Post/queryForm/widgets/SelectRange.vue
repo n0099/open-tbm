@@ -9,7 +9,9 @@
 </template>
 
 <script setup lang="ts">
-const modelValue = defineModel({ default: '=' });
+import type { numericParamSubParamRangeValues } from '@/components/Post/queryForm/queryParams';
+
+const modelValue = defineModel<typeof numericParamSubParamRangeValues[number]>({ default: '=' });
 </script>
 
 <style scoped>
