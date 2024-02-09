@@ -8,7 +8,7 @@
                     <select v-model.number="uniqueParams.fid.value" :class="{ 'is-invalid': isFidInvalid }"
                             class="form-select form-control" id="paramFid">
                         <option value="0">未指定</option>
-                        <option v-for="forum in forumList"
+                        <option v-for="forum in forums"
                                 :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
                 </div>
@@ -170,7 +170,7 @@ import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/I
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
-import type { ApiForumList } from '@/api/index.d';
+import type { ApiForums } from '@/api/index.d';
 import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
@@ -186,7 +186,7 @@ import * as _ from 'lodash-es';
 
 defineProps<{
     isLoading: boolean,
-    forumList: ApiForumList
+    forums: ApiForums
 }>();
 const router = useRouter();
 const {

@@ -6,7 +6,7 @@ import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
 
-export type ApiForumList = Array<{
+export type ApiForums = Array<{
     id: UInt,
     fid: Fid,
     name: string,
@@ -62,7 +62,7 @@ export interface ApiPosts {
         matchQueryPostCount: { [P in PostType]: UInt },
         notMatchQueryParentPostCount: { [P in Omit<PostType, 'subRely'>]: UInt }
     },
-    forum: Pick<ApiForumList[number], 'fid' | 'name'>,
+    forum: Pick<ApiForums[number], 'fid' | 'name'>,
     threads: Array<Thread & {
         replies: Array<Reply & {
             subReplies: SubReply[]

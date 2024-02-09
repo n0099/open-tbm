@@ -7,7 +7,7 @@
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
                     <select v-model.number="query.fid" class="form-control" id="queryFid">
                         <option disabled value="0">请选择</option>
-                        <option v-for="forum in forumList"
+                        <option v-for="forum in forums"
                                 :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
                     </select>
                 </div>
@@ -43,8 +43,8 @@
 import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import TimeRange from '@/components/widgets/TimeRange.vue';
 
-import { apiForumList, apiStatsForumsPostCount, throwIfApiError } from '@/api';
-import type { ApiForumList, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
+import { apiForums, apiStatsForumsPostCount, throwIfApiError } from '@/api';
+import type { ApiForums, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
 import type { Writable } from '@/shared';
 import { titleTemplate } from '@/shared';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
@@ -117,7 +117,7 @@ const query = ref<ApiStatsForumPostCountQueryParam>({
     startTime: 0,
     endTime: 0
 });
-const forumList = ref<ApiForumList>([]);
+const forums = ref<ApiForums>([]);
 const chartEl = ref<HTMLElement>();
 
 const submitQueryForm = async () => {
@@ -130,7 +130,7 @@ const submitQueryForm = async () => {
     }
     emptyChartSeriesData(chart);
     chart.setOption<echarts.ComposeOption<TitleComponentOption>>(
-        { title: { text: `${_.find(forumList.value, { fid: query.value.fid })?.name}吧帖量统计` } }
+        { title: { text: `${_.find(forums.value, { fid: query.value.fid })?.name}吧帖量统计` } }
     );
 
     const statsResult = throwIfApiError(await apiStatsForumsPostCount(query.value)
@@ -161,7 +161,7 @@ const submitQueryForm = async () => {
 };
 
 onBeforeMount(async () => {
-    forumList.value = throwIfApiError(await apiForumList());
+    forums.value = throwIfApiError(await apiForums());
 });
 </script>
 

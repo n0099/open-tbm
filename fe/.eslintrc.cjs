@@ -135,7 +135,6 @@ const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
         '@stylistic/func-call-spacing': 'error',
         '@stylistic/indent': 'error',
         '@stylistic/keyword-spacing': 'error',
-        '@stylistic/lines-between-class-members': 'error',
         '@stylistic/no-extra-parens': ['error', 'all', {
             ignoreJSX: 'multi-line',
             enforceForArrowConditionals: false, // https://github.com/eslint/eslint/issues/6196#issuecomment-333344466
@@ -182,7 +181,6 @@ const eslint = { // as of eslint@8.56.0
         eqeqeq: 'error',
         'grouped-accessor-pairs': ['error', 'getBeforeSet'],
         'guard-for-in': 'error',
-        'max-classes-per-file': 'error',
         'no-alert': 'error',
         'no-case-declarations': 'error',
         'no-constructor-return': 'error',
@@ -386,6 +384,7 @@ const typescriptESLint = { // as of @typescript-eslint@6.16.0
         '@typescript-eslint/no-duplicate-type-constituents': ['error', { ignoreUnions: true }],
         '@typescript-eslint/no-unsafe-enum-comparison': 'error',
         '@typescript-eslint/no-unsafe-unary-minus': 'error',
+        '@typescript-eslint/parameter-properties': ['error', { prefer: 'parameter-property' }],
     },
 };
 const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
