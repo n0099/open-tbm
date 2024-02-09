@@ -7,7 +7,7 @@ import { onUnmounted, ref } from 'vue';
 import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import nprogress from 'nprogress';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
 export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {

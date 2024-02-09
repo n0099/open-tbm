@@ -95,7 +95,7 @@ import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const props = defineProps<{ posts: ApiPosts }>();
 const threads = ref<ApiPosts['threads']>();
@@ -151,7 +151,6 @@ onMounted(() => {
     threads.value = props.posts.threads;
     repliesKeyByTid.value = _.chain(threads.value)
         .map(i => i.replies)
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         .reject(_.isEmpty) // remove threads which have no reply
         .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
         .value();
@@ -159,7 +158,6 @@ onMounted(() => {
         .toArray() // cast tid keyed object to array
         .flatten() // flatten every thread's replies
         .map(i => i.subReplies)
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         .reject(_.isEmpty) // remove replies which have no sub reply
         .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which key by pid
         .value();

@@ -21,7 +21,7 @@
 import type { BaiduUserID, ForumModeratorType, TiebaUser } from '@/api/user';
 import type { BootstrapColor } from '@/shared';
 import { computed } from 'vue';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const props = defineProps<{
     user: TiebaUser,

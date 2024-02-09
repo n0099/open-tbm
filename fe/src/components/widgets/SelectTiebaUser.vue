@@ -46,7 +46,7 @@
 import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './selectTiebaUser';
 import { selectTiebaUserBy, selectTiebaUserParamsName } from './selectTiebaUser';
 import { onMounted, ref, watch, watchEffect } from 'vue';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const props = defineProps<{
     modelValue: SelectTiebaUserModel,
@@ -79,7 +79,6 @@ watch(() => props.modelValue, () => {
         ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
 
     // filter out unnecessary and undefined params
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsName), _.isUndefined);
 
     // reset to default selectBy if it's a invalid value

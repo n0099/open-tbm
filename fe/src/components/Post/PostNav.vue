@@ -56,7 +56,7 @@ import { useToggle } from '@vueuse/core';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import scrollIntoView from 'scroll-into-view-if-needed';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const props = defineProps<{ postPages: ApiPosts[] }>();
 const route = useRoute();

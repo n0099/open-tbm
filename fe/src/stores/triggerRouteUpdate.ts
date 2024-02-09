@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { defineStore } from 'pinia';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export type RouteObjectRaw = Exclude<RouteLocationRaw, string>;
 export const useTriggerRouteUpdateStore = defineStore('triggerRouteUpdate', () => {

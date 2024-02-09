@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import type { KnownNumericParams } from '../queryParams';
 import { numericParamSubParamRangeValues } from '../queryParams';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 defineProps<{ placeholders: { [P in 'BETWEEN' | 'IN' | 'equals']: string } }>();
 // eslint-disable-next-line vue/define-emits-declaration

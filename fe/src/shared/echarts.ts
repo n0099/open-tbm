@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts';
 import type { ToolboxComponentOption } from 'echarts/components';

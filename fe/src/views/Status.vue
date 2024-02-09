@@ -45,7 +45,7 @@ import { Switch } from 'ant-design-vue';
 import { useIntervalFn } from '@vueuse/core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { useHead } from '@unhead/vue';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import type { LineSeriesOption } from 'echarts/charts';
 import { LineChart } from 'echarts/charts';

@@ -25,7 +25,7 @@ import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 import { ref, watchEffect } from 'vue';
 import type { LocationQueryValueRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>>
     & { gender?: TiebaUserGenderQueryParam };

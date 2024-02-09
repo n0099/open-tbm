@@ -174,7 +174,7 @@ import type { RouterScrollBehavior } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const props = defineProps<{ initialPosts: ApiPosts }>();
 const elementRefsStore = useElementRefsStore();

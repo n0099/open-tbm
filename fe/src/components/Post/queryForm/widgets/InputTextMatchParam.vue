@@ -46,7 +46,7 @@ import type { KnownTextParams, NamelessParamText } from '../queryParams';
 import { textParamSubParamMatchByValues } from '../queryParams';
 import type { ObjValues } from '@/shared';
 import { computed } from 'vue';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 const props = defineProps<{ paramIndex: number }>();
 // eslint-disable-next-line vue/define-emits-declaration

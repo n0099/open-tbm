@@ -45,7 +45,7 @@ import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import { useHead } from '@unhead/vue';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export type PostRenderer = 'list' | 'table';
 

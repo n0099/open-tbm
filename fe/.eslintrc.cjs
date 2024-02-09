@@ -38,7 +38,7 @@ const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
                 { pattern: '*vue', group: 'external', position: 'before' }, // ant-design-vue
                 { pattern: '*vue*/**', group: 'external', position: 'before' }, // @vueuse/core
                 { pattern: '*/*vue*/**', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome
-                { pattern: '{lodash,lodash/**}', group: 'external', position: 'after' }, // lodash
+                { pattern: '{lodash{,-{es,fp}},lodash{,-{es,fp}}/**}', group: 'external', position: 'after' }, // lodash
                 { pattern: '{echarts,echarts/**}', group: 'external', position: 'after' },
             ],
             pathGroupsExcludedImportTypes: [],

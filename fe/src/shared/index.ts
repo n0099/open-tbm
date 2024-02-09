@@ -2,7 +2,7 @@ import type { Cursor } from '@/api/index.d';
 import type { TiebaUser } from '@/api/user';
 import { computed } from 'vue';
 import Noty from 'noty';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export type SqlDateTimeUtcPlus8 = string; // '2020-10-10 00:11:22'
 export type UnixTimestamp = number;
