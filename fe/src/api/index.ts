@@ -1,4 +1,6 @@
+import type { QueryFunctionContext } from '@tanstack/vue-query';
 import type { ApiError, ApiForums, ApiPosts, ApiPostsParam, ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam, ApiStatus, ApiStatusQueryParam, ApiUsers, ApiUsersParam } from '@/api/index.d';
+import { useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';
 import * as _ from 'lodash-es';
@@ -26,29 +28,28 @@ export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TRes
 
     return response;
 };
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export const getRequester = async <TResponse extends ApiError | unknown, TQueryParam>
-(endpoint: string, queryString?: TQueryParam): Promise<ApiError | TResponse> => {
-    nprogress.start();
-    document.body.style.cursor = 'progress';
-    try {
-        const response = await fetch(
-            `${import.meta.env.VITE_API_URL_PREFIX}${endpoint}`
-                + `${_.isEmpty(queryString) ? '' : '?'}${stringify(queryString)}`,
-            { headers: { Accept: 'application/json' } }
-        );
-        const json = await response.json() as TResponse;
-        if (!response.ok)
-            throw new FetchResponseError(response);
-        if (isApiError(json))
-            throw new ApiResponseError(json.errorCode, json.errorInfo);
+export const getRequester = <TResponse, TQueryParam>(endpoint: string, queryParam?: TQueryParam) =>
+    async (queryContext: QueryFunctionContext): Promise<TResponse> => {
+        nprogress.start();
+        document.body.style.cursor = 'progress';
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL_PREFIX}${endpoint}`
+                    + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
+                { headers: { Accept: 'application/json' }, signal: queryContext.signal }
+            );
+            const json = await response.json() as TResponse;
+            if (!response.ok)
+                throw new FetchResponseError(response);
+            if (isApiError(json))
+                throw new ApiResponseError(json.errorCode, json.errorInfo);
 
-        return json;
-    } finally {
-        nprogress.done();
-        document.body.style.cursor = '';
-    }
-};
+            return json;
+        } finally {
+            nprogress.done();
+            document.body.style.cursor = '';
+        }
+    };
 const reCAPTCHACheck = async (action = '') =>
     new Promise<{ reCAPTCHA?: string }>((reslove, reject) => {
         if (import.meta.env.VITE_RECAPTCHA_SITE_KEY === '') {
@@ -65,19 +66,33 @@ const reCAPTCHACheck = async (action = '') =>
             });
         }
     });
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-const getRequesterWithReCAPTCHA = async <TResponse extends ApiError | unknown, TQueryParam>
-(endpoint: string, queryString?: TQueryParam, action = '') =>
-    getRequester<TResponse, TQueryParam & { reCAPTCHA?: string }>(endpoint,
-        { ...queryString as TQueryParam, ...await reCAPTCHACheck(action) });
+const getRequesterWithReCAPTCHA = <TResponse, TQueryParam>
+(endpoint: string, queryParam?: TQueryParam, action = '') =>
+    async (queryContext: QueryFunctionContext): Promise<TResponse> =>
+        getRequester<TResponse, TQueryParam & { reCAPTCHA?: string }>(
+            endpoint,
+            { ...queryParam as TQueryParam, ...await reCAPTCHACheck(action) }
+        )(queryContext);
 
-export const apiForums = async (): Promise<ApiError | ApiForums> =>
-    getRequester('/forums');
-export const apiStatus = async (queryParam: ApiStatusQueryParam): Promise<ApiError | ApiStatus> =>
+type ApiErrorClass = ApiResponseError | FetchResponseError;
+export const useApiForums = () => useQuery<ApiForums, ApiErrorClass>({
+    queryKey: ['forums'],
+    queryFn: getRequester<ApiForums, never>('/forums')
+});
+const useApiWithReCAPTCHA = <TApi, TApiQueryParam>(endpoint: string) => (queryParam: TApiQueryParam) =>
+    useQuery<TApi, ApiErrorClass>({
+        queryKey: [endpoint, queryParam],
+        queryFn: getRequesterWithReCAPTCHA<TApi, TApiQueryParam>(`/${endpoint}`, queryParam)
+    });
+export const useApiStatus = useApiWithReCAPTCHA<ApiStatus, ApiStatusQueryParam>('status');
+export const useApiStatsForumsPostCount = useApiWithReCAPTCHA<ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam>('stats/forums/postCount');
+export const useApiUsers = useApiWithReCAPTCHA<ApiUsers, ApiUsersParam>('users');
+export const useApiPosts = useApiWithReCAPTCHA<ApiPosts, ApiPostsParam>('posts');
+export const apiStatus = async (queryParam: ApiStatusQueryParam): Promise<ApiStatus> =>
     getRequesterWithReCAPTCHA('/status', queryParam);
-export const apiStatsForumsPostCount = async (queryParam: ApiStatsForumPostCountQueryParam): Promise<ApiError | ApiStatsForumPostCount> =>
+export const apiStatsForumsPostCount = async (queryParam: ApiStatsForumPostCountQueryParam): Promise<ApiStatsForumPostCount> =>
     getRequesterWithReCAPTCHA('/stats/forums/postCount', queryParam);
-export const apiUsers = async (queryParam: ApiUsersParam): Promise<ApiError | ApiUsers> =>
+export const apiUsers = async (queryParam: ApiUsersParam): Promise<ApiUsers> =>
     getRequesterWithReCAPTCHA('/users', queryParam);
-export const apiPosts = async (queryParam: ApiPostsParam): Promise<ApiError | ApiPosts> =>
+export const apiPosts = async (queryParam: ApiPostsParam): Promise<ApiPosts> =>
     getRequesterWithReCAPTCHA('/posts', queryParam);

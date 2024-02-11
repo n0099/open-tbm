@@ -43,5 +43,6 @@ if (googleAnalyticsMeasurementId !== '') {
     await import('@/gtag.js');
 }
 
-export const app = createApp(App).use(router).use(createHead()).use(createPinia()).use(VueQueryPlugin);
+export const app = createApp(App).use(router).use(createHead()).use(createPinia())
+    .use(VueQueryPlugin, { queryClientConfig: { defaultOptions: { queries: { refetchOnWindowFocus: false } } } });
 app.mount('#app');

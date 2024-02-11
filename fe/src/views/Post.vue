@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm ref="queryFormRef" :forums="forums" :isLoading="isLoading" />
+        <QueryForm ref="queryFormRef" :isLoading="isLoading" />
         <p>当前页数：{{ getRouteCursorParam($route) }}</p>
         <Menu v-show="!_.isEmpty(postPages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
@@ -32,8 +32,8 @@ import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
-import { apiForums, apiPosts, isApiError, throwIfApiError } from '@/api';
-import type { ApiError, ApiForums, ApiPosts, Cursor } from '@/api/index.d';
+import { apiPosts, isApiError } from '@/api';
+import type { ApiError, ApiPosts, Cursor } from '@/api/index.d';
 import { getReplyTitleTopOffset, postListItemScrollPosition } from '@/components/Post/renderers/rendererList';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
@@ -51,7 +51,6 @@ export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
 const title = ref<string>('帖子查询');
-const forums = ref<ApiForums>([]);
 const postPages = ref<ApiPosts[]>([]);
 const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
@@ -176,7 +175,6 @@ onBeforeRouteUpdate(async (to, from) => {
 });
 
 onBeforeMount(async () => {
-    forums.value = throwIfApiError(await apiForums());
     await parseRouteThenFetch(route, true, getRouteCursorParam(route));
 });
 </script>

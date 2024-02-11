@@ -5,12 +5,12 @@
             <div class="col-3">
                 <div class="input-group">
                     <span class="input-group-text"><FontAwesomeIcon icon="filter" /></span>
-                    <select v-model.number="uniqueParams.fid.value" :class="{ 'is-invalid': isFidInvalid }"
-                            class="form-select form-control" id="paramFid">
-                        <option value="0">未指定</option>
-                        <option v-for="forum in forums"
-                                :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
-                    </select>
+                    <SelectForum v-model.number="uniqueParams.fid.value"
+                                 :class="{ 'is-invalid': isFidInvalid }" id="paramFid">
+                        <template #indicators="{ renderer }">
+                            <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
+                        </template>
+                    </SelectForum>
                 </div>
             </div>
             <label class="col-1 col-form-label text-center">帖子类型</label>
@@ -170,7 +170,8 @@ import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/I
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
-import type { ApiForums } from '@/api/index.d';
+import SelectForum from '@/components/widgets/SelectForum.vue';
+import RenderFunction from '@/components/RenderFunction';
 import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
 import type { ObjValues, PostID, PostType, Writable } from '@/shared';
 import { notyShow, postID, removeEnd } from '@/shared';
@@ -184,10 +185,7 @@ import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import * as _ from 'lodash-es';
 
-defineProps<{
-    isLoading: boolean,
-    forums: ApiForums
-}>();
+defineProps<{ isLoading: boolean }>();
 const router = useRouter();
 const {
     uniqueParams,
