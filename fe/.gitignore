@@ -1,3 +1,4 @@
+# https://github.com/vitejs/vite/blob/main/packages/create-vite/template-vue-ts/_gitignore
 # Logs
 logs
 *.log
@@ -24,10 +25,10 @@ dist-ssr
 *.sw?
 
 # https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.pnp.*
 .yarn/*
 !.yarn/patches
-!.yarn/releases
 !.yarn/plugins
+!.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-.pnp.*
