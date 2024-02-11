@@ -35,13 +35,13 @@ const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
                 { pattern: '**/*.vue', group: 'internal', position: 'before' }, // vue SFC
                 { pattern: '@/**', group: 'internal', position: 'before' },
                 { pattern: 'vue*', group: 'external', position: 'before' }, // vue vue-router
-                { pattern: '*vue', group: 'external', position: 'before' }, // ant-design-vue
-                { pattern: '*vue*/**', group: 'external', position: 'before' }, // @vueuse/core
-                { pattern: '*/*vue*/**', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome
-                { pattern: '{lodash{,-{es,fp}},lodash{,-{es,fp}}/**}', group: 'external', position: 'after' }, // lodash
-                { pattern: '{echarts,echarts/**}', group: 'external', position: 'after' },
+                { pattern: 'pinia', group: 'external', position: 'before' },
+                { pattern: '*vue*{,/**}', group: 'external', position: 'before' }, // ant-design-vue @vueuse/core
+                { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome
+                { pattern: 'lodash{,-{es,fp}}{,/**}', group: 'external', position: 'after' }, // lodash
+                { pattern: 'echarts{,/**}', group: 'external', position: 'after' },
             ],
-            pathGroupsExcludedImportTypes: [],
+            pathGroupsExcludedImportTypes: [], // https://github.com/import-js/eslint-plugin-import/issues/2897
             distinctGroup: false,
             alphabetize: { order: 'asc', orderImportKind: 'asc' },
             warnOnUnassignedImports: true,

@@ -1,5 +1,5 @@
-import type { QueryFunctionContext } from '@tanstack/vue-query';
 import type { ApiError, ApiForums, ApiPosts, ApiPostsParam, ApiStatsForumPostCount, ApiStatsForumPostCountQueryParam, ApiStatus, ApiStatusQueryParam, ApiUsers, ApiUsersParam } from '@/api/index.d';
+import type { QueryFunctionContext } from '@tanstack/vue-query';
 import { useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';

@@ -41,8 +41,8 @@ import { titleTemplate } from '@/shared';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 
 import { onMounted, ref, watchEffect } from 'vue';
-import { Switch } from 'ant-design-vue';
 import { useIntervalFn } from '@vueuse/core';
+import { Switch } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { useHead } from '@unhead/vue';
 import * as _ from 'lodash-es';

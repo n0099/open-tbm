@@ -51,8 +51,8 @@ import { useElementRefsStore } from '@/stores/elementRefs';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import { useToggle } from '@vueuse/core';
+import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import scrollIntoView from 'scroll-into-view-if-needed';
