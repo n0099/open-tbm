@@ -5,9 +5,10 @@ runs:
   steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
-      with:
+      with: # https://github.com/actions/setup-node/tree/v4
         node-version: lts/*
         cache: yarn
+        # https://github.com/actions/setup-node/issues/624#issuecomment-1328681525
         cache-dependency-path: ${{ github.workspace }}/fe/yarn.lock
     - name: install
       run: yarn install --immutable

@@ -14,5 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/c#
-      - name: build
-        run: dotnet build --no-restore -c Debug ${{ matrix.project }}
+      - run: dotnet build --no-restore -c Debug ${{ matrix.project }}

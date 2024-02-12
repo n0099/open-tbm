@@ -7,9 +7,10 @@ runs:
       with:
         submodules: true
     - uses: actions/setup-dotnet@v4
-      with:
+      with: # https://github.com/actions/setup-dotnet/tree/v4
         dotnet-version: 7
         cache: true
+        # https://github.com/actions/setup-node/issues/624#issuecomment-1328681525
         cache-dependency-path: ${{ github.workspace }}/c#/*/packages.lock.json
     - run: dotnet new globaljson --sdk-version 7.0.405
       working-directory: c#

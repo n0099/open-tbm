@@ -1,0 +1,33 @@
+name: be/init
+description: be/init
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        tools: cs2pr
+        # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#jit-configuration
+        coverage: none
+        ini-values: opcache.enable_cli=1
+      env: # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#force-update-setup
+        update: 'true'
+    # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#cache-composer-dependencies
+    - run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+      working-directory: be
+      shell: bash
+    - id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      working-directory: be
+      shell: bash
+    - uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('be/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+    - run: composer install --prefer-dist
+      working-directory: be
+      shell: bash
