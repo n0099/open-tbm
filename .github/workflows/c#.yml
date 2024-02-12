@@ -1,0 +1,18 @@
+name: c#
+on:
+  push:
+    paths: [c#/**]
+defaults:
+  run:
+    working-directory: c#
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [crawler, imagePipeline, shared, tbClient]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/c#
+      - name: build
+        run: dotnet build --no-restore -c Debug ${{ matrix.project }}

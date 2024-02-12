@@ -1,0 +1,19 @@
+name: c#/init
+description: c#/init
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 7
+        cache: true
+        cache-dependency-path: ${{ github.workspace }}/c#/*/packages.lock.json
+    - run: dotnet new globaljson --sdk-version 7.0.405
+      working-directory: c#
+      shell: bash
+    - run: dotnet restore
+      working-directory: c#
+      shell: bash

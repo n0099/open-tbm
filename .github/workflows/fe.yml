@@ -1,0 +1,30 @@
+name: fe
+on:
+  push:
+    paths: [fe/**]
+defaults:
+  run:
+    working-directory: fe
+jobs:
+  tsc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/fe
+      - run: yarn run vue-tsc
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/fe
+      - run: yarn run eslint src
+  codechecks:
+    runs-on: ubuntu-latest
+    steps: # contains CVE that triggers Dependabot
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/fe
+      - run: |
+          yarn add -D typecov @codechecks/client
+          yarn run codechecks ../.github/codechecks.yml
+        env:
+          CC_SECRET: ${{ secrets.CC_SECRET }}
