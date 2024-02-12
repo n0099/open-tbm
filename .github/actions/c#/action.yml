@@ -9,12 +9,27 @@ runs:
     - uses: actions/setup-dotnet@v4
       with: # https://github.com/actions/setup-dotnet/tree/v4
         dotnet-version: 7
-        cache: true
-        # https://github.com/actions/setup-node/issues/624#issuecomment-1328681525
-        cache-dependency-path: ${{ github.workspace }}/c#/*/packages.lock.json
+        # cache: true
+        # # https://github.com/actions/setup-node/issues/624#issuecomment-1328681525
+        # cache-dependency-path: ${{ github.workspace }}/c#/*/packages.lock.json
+        # in favor of https://github.com/actions/cache/blob/a2ed59d39b352305bdd2f628719a53b2cc4f9613/examples.md#c---nuget
+        # to allow saving cache even jobs failed
+    - id: cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: ${{ runner.os }}-nuget-
     - run: dotnet new globaljson --sdk-version 7.0.405
       working-directory: c#
       shell: bash
     - run: dotnet restore
       working-directory: c#
       shell: bash
+    # https://github.com/actions/runner/issues/1478
+    # https://github.com/actions/setup-node/issues/410#issuecomment-1939482965
+    - uses: actions/cache/save@v4
+      if: ${{ steps.cache-restore.outputs.cache-hit != 'true' }}
+      with:
+        path: ~/.nuget/packages
+        key: ${{ steps.cache-restore.outputs.cache-primary-key }}

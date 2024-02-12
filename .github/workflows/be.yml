@@ -1,7 +1,7 @@
 name: be
 on:
   push:
-    #paths: [be/**]
+    paths: [be/**]
 defaults:
   run:
     working-directory: be
