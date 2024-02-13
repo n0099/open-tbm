@@ -4,9 +4,9 @@
     "net7.0": {
       "LanguageExt.Core": {
         "type": "Direct",
-        "requested": "[4.4.7, )",
-        "resolved": "4.4.7",
-        "contentHash": "dZVtfDw22sbiSXsMMgytlv+ggE2q3mf6fvLp4YNoksNkNLk2inXCe/TM6UcdXNj9tOhn3mUTtXealIxkG1gGzA==",
+        "requested": "[4.4.8, )",
+        "resolved": "4.4.8",
+        "contentHash": "zd3+mICicbTvf17OuOaruTpluiA5qEl9e28rXSokkI/rK9vdtZzpigYN6+D6Yx9jTkkVDZlvoYUg28RtQqtGiw==",
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "7.0.0",
           "Microsoft.CSharp": "4.7.0",

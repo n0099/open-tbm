@@ -50,6 +50,7 @@ global using TbClient.Post;
 global using TbClient.Post.Common;
 global using TbClient.Wrapper;
 global using Thread = TbClient.Post.Thread;
+global using User = tbm.Crawler.Db.User;
 
 global using Fid = System.UInt32;
 global using PostId = System.UInt64;

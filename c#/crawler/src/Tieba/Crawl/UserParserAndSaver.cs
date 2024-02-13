@@ -40,7 +40,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
     private readonly List<Uid> _savedUsersId = new();
     private readonly ConcurrentDictionary<Uid, User> _users = new();
 
-    public void ParseUsers(IEnumerable<User> users) =>
+    public void ParseUsers(IEnumerable<TbClient.User> users) =>
         users.Select(el =>
         {
             static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>

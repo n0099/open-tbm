@@ -33,7 +33,7 @@ public class ReplyCrawlFacade(
             p => p.Pid, p => p.OriginalContents, stoppingToken);
 
     // fill the values for some field of reply from user list which is out of post list
-    private static void FillAuthorInfoBackToReply(IEnumerable<User> users, IEnumerable<ReplyPost> parsedReplies) =>
+    private static void FillAuthorInfoBackToReply(IEnumerable<TbClient.User> users, IEnumerable<ReplyPost> parsedReplies) =>
         (from reply in parsedReplies
             join user in users on reply.AuthorUid equals user.Uid
             select (reply, user))

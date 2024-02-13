@@ -40,7 +40,7 @@ public class ThreadCrawlFacade(
 
     protected void ParseLatestRepliers(IEnumerable<Thread> threads) =>
         threads.Select(th => th.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
-            .OfType<User>() // filter out nulls
+            .OfType<TbClient.User>() // filter out nulls
 
             // some rare deleted thread but still visible in 6.0.2 response
             // will have a latest replier uid=0 name="" nameShow=".*"

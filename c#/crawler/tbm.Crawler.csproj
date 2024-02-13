@@ -7,7 +7,7 @@
         <ProjectReference Include="..\shared\tbm.Shared.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AngleSharp" Version="1.0.7" />
+        <PackageReference Include="AngleSharp" Version="1.1.0" />
         <PackageReference Include="Dapper" Version="2.1.28" />
         <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="7.0.0" />
         <PackageReference Include="Humanizer.Core.zh-Hans" Version="2.14.1" />
