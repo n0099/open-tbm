@@ -15,7 +15,6 @@ import { useApiForums } from '@/api/index';
 import RenderFunction from '@/components/RenderFunction';
 import type { VNode } from 'vue';
 import { computed } from 'vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ indicators: (props: { renderer: VNode }) => unknown }>();
@@ -25,7 +24,13 @@ const indicatorsRenderer = computed(() => (<>
     {isFetching.value && <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>}
-    {isError.value && <FontAwesomeIcon title={JSON.stringify(error)}
-        class="text-danger fa-2x" icon="times" />}
+    {isError.value && <span title={JSON.stringify(error)} class="text-danger fw-bold">Error</span>}
 </>));
 </script>
+
+<style scoped>
+.spinner-border {
+    height: 1.5rem;
+    width: 1.5rem;
+}
+</style>
