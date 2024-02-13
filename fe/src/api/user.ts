@@ -12,16 +12,16 @@ export type ForumModeratorType = 'assist'
 | 'videoadmin'
 | 'voiceadmin';
 export type AuthorExpGrade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
-export type TiebaUserGender = 0 | 1 | 2 | null;
-export type TiebaUserGenderQueryParam = '0' | '1' | '2' | 'NULL';
+export type UserGender = 0 | 1 | 2 | null;
+export type UserGenderQueryParam = '0' | '1' | '2' | 'NULL';
 
-export interface TiebaUser extends TimestampFields {
+export interface User extends TimestampFields {
     uid: BaiduUserID,
     name: string | null,
     displayName: string | null,
     portrait: string,
     portraitUpdatedAt: UInt | null,
-    gender: TiebaUserGender,
+    gender: UserGender,
     fansNickname: string | null,
     icon: ObjUnknown[] | null,
     ipGeolocation: string | null,

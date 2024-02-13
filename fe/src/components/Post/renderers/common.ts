@@ -1,4 +1,4 @@
-import type { BaiduUserID, TiebaUser } from '@/api/user';
+import type { BaiduUserID, User } from '@/api/user';
 import { app } from '@/main';
 import '@/styles/tieba.css';
 import viewer from 'v-viewer';
@@ -12,7 +12,7 @@ app.use(viewer, {
     }
 });
 
-export const baseGetUser = (users: TiebaUser[]) => (uid: BaiduUserID): TiebaUser => _.find(users, { uid }) ?? {
+export const baseGetUser = (users: User[]) => (uid: BaiduUserID): User => _.find(users, { uid }) ?? {
     uid: 0,
     name: '未知用户',
     displayName: null,

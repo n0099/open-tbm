@@ -12,15 +12,15 @@ public partial class ReplySaver(
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-    public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
+    public override FieldChangeIgnoranceDelegates UserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // FansNickname in reply response will always be null
-            nameof(TiebaUser.FansNickname) when oldValue is not null && newValue is null => true,
+            nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
             _ => false
         },
         Revision: (_, propName, oldValue, newValue) => propName switch
         { // user icon will be null after UserParserAndSaver.ResetUsersIcon() get invoked
-            nameof(TiebaUser.Icon) when oldValue is null && newValue is not null => true,
+            nameof(User.Icon) when oldValue is null && newValue is not null => true,
             _ => false
         });
 

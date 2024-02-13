@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db;
 
-public class TiebaUser : ITimestampingEntity
+public class User : ITimestampingEntity
 {
     [Key] public long Uid { get; set; }
     public string? Name { get; set; }
@@ -14,6 +14,6 @@ public class TiebaUser : ITimestampingEntity
     public uint CreatedAt { get; set; }
     public uint? UpdatedAt { get; set; }
 
-    public static TiebaUser CreateLatestReplier(long uid, string? name, string? displayName) =>
+    public static User CreateLatestReplier(long uid, string? name, string? displayName) =>
         new() {Uid = uid, Name = name, DisplayName = displayName};
 }

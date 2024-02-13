@@ -54,7 +54,7 @@
                rowKey="candidateIndex">
             <template #bodyCell="{ column: { dataIndex: column }, value: name }">
                 <template v-if="column === 'candidateName'">
-                    <a :href="toTiebaUserProfileUrl({ name })">{{ name }}</a>
+                    <a :href="toUserProfileUrl({ name })">{{ name }}</a>
                 </template>
             </template>
         </Table>
@@ -67,7 +67,7 @@ import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
 import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/shared';
-import { titleTemplate, toTiebaUserProfileUrl } from '@/shared';
+import { titleTemplate, toUserProfileUrl } from '@/shared';
 import { echarts4ColorTheme, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
 
 import { onMounted, ref, watch } from 'vue';

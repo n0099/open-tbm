@@ -14,7 +14,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
     protected delegate void PostSaveEventHandler();
     protected event PostSaveEventHandler PostSaveEvent = () => { };
 
-    public virtual FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance =>
+    public virtual FieldChangeIgnoranceDelegates UserFieldChangeIgnorance =>
         throw new NotImplementedException();
     public string PostType { get; } = postType;
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = posts;
@@ -37,7 +37,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
         // deep copy before entities get mutated by CommonInSavers.SavePostsOrUsers()
         var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
-        SavePostsOrUsers(db, TiebaUserFieldChangeIgnorance, revisionFactory,
+        SavePostsOrUsers(db, UserFieldChangeIgnorance, revisionFactory,
             Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
             p => existingPostsKeyById[postIdSelector(p)]);
         return new(existingBeforeMerge, Posts.Values, postIdSelector);

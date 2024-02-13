@@ -11,13 +11,13 @@ public class ThreadSaver(
 {
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-    public override FieldChangeIgnoranceDelegates TiebaUserFieldChangeIgnorance { get; } = new(
+    public override FieldChangeIgnoranceDelegates UserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, _, _) => propName switch
         { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one
             // so we should mark it as null temporarily
             // note this will cause we can't record when did a user update its iconinfo to null
             // since these null values have been ignored in reply and sub reply saver
-            nameof(TiebaUser.Icon) => true,
+            nameof(User.Icon) => true,
             _ => false
         }, (_, _, _, _) => false);
 

@@ -42,7 +42,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
         var saver = saverFactory(Posts);
         var savedPosts = Posts.IsEmpty ? null : saver.SavePosts(db);
-        Users.SaveUsers(db, saver.PostType, saver.TiebaUserFieldChangeIgnorance);
+        Users.SaveUsers(db, saver.PostType, saver.UserFieldChangeIgnorance);
         BeforeCommitSaveHook(db);
         try
         {

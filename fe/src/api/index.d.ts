@@ -1,6 +1,6 @@
 import type { Reply, SubReply, Thread } from './post';
-import type { TiebaUser, TiebaUserGenderQueryParam } from './user';
-import type { SelectTiebaUserParams } from '@/components/widgets/selectTiebaUser';
+import type { User, UserGenderQueryParam } from './user';
+import type { SelectUserParams } from '@/components/widgets/selectUser';
 import type { BoolInt, Fid, Float, PostType, UInt, UnixTimestamp } from '@/shared';
 import type { Mix } from '@/shared/groupBytimeGranularityUtcPlus8';
 
@@ -54,8 +54,8 @@ interface CursorPagination {
 }
 
 export type ApiUsers = Api<
-    CursorPagination & { users: TiebaUser[] },
-    CursorPaginationQueryParam & SelectTiebaUserParams & { gender?: TiebaUserGenderQueryParam }
+    CursorPagination & { users: User[] },
+    CursorPaginationQueryParam & SelectUserParams & { gender?: UserGenderQueryParam }
 >;
 
 export type JsonString = string;
@@ -70,5 +70,5 @@ export type ApiPosts = Api<CursorPagination<{
             subReplies: SubReply[]
         }>
     }>,
-    users: TiebaUser[]
+    users: User[]
 }, CursorPaginationQueryParam & { query: JsonString }>;

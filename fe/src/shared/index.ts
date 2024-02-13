@@ -1,5 +1,5 @@
 import type { Cursor } from '@/api/index.d';
-import type { TiebaUser } from '@/api/user';
+import type { User } from '@/api/user';
 import { computed } from 'vue';
 import Noty from 'noty';
 import * as _ from 'lodash-es';
@@ -45,11 +45,11 @@ export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
 
     return `https://tieba.baidu.com/p/${tid}`;
 };
-export const toTiebaUserProfileUrl = (user: Partial<Pick<TiebaUser, 'name' | 'portrait'>>) =>
+export const toUserProfileUrl = (user: Partial<Pick<User, 'name' | 'portrait'>>) =>
     (_.isEmpty(user.portrait)
         ? `https://tieba.baidu.com/home/main?un=${user.name}`
         : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
-export const toTiebaUserPortraitImageUrl = (portrait: string) =>
+export const toUserPortraitImageUrl = (portrait: string) =>
     `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
 
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);

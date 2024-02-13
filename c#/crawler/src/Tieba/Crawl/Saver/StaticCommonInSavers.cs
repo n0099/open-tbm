@@ -12,11 +12,11 @@ public abstract class StaticCommonInSavers
     protected static FieldChangeIgnoranceDelegates GlobalFieldChangeIgnorance { get; } = new(
         Update: (whichPostType, propName, oldValue, newValue) =>
         {
-            if (whichPostType == typeof(TiebaUser))
+            if (whichPostType == typeof(User))
             {
                 switch (propName)
                 { // possible randomly respond with null
-                    case nameof(TiebaUser.IpGeolocation) when newValue is null:
+                    case nameof(User.IpGeolocation) when newValue is null:
                     // possible clock drift across multiple response from tieba api
                     // they should sync their servers with NTP
                     /* following sql can track these drift
@@ -29,7 +29,7 @@ public abstract class StaticCommonInSavers
                     WHERE portraitUpdatedAtDiff > -100 AND portraitUpdatedAtDiff < 100
                     GROUP BY portraitUpdatedAtDiff ORDER BY portraitUpdatedAtDiff;
                     */
-                    case nameof(TiebaUser.PortraitUpdatedAt)
+                    case nameof(User.PortraitUpdatedAt)
                         when Math.Abs((newValue as int? ?? 0) - (oldValue as int? ?? 0)) <= 10:
                         return true;
                 }
@@ -74,8 +74,8 @@ public abstract class StaticCommonInSavers
         },
         Revision: (whichPostType, propName, oldValue, _) =>
         { // ignore revision that figures update existing old users that don't have ip geolocation
-            if (whichPostType == typeof(TiebaUser)
-                && propName == nameof(TiebaUser.IpGeolocation) && oldValue is null) return true;
+            if (whichPostType == typeof(User)
+                && propName == nameof(User.IpGeolocation) && oldValue is null) return true;
             if (whichPostType == typeof(ThreadPost))
             {
                 switch (propName)

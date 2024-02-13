@@ -27,9 +27,9 @@ public partial class UserParserAndSaver
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
     protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
-        nameof(TiebaUser.Name)   => 1,
-        nameof(TiebaUser.Gender) => 1 << 3,
-        nameof(TiebaUser.Icon)   => 1 << 5,
+        nameof(User.Name)   => 1,
+        nameof(User.Gender) => 1 << 3,
+        nameof(User.Icon)   => 1 << 5,
         _ => 0
     };
 }
@@ -38,7 +38,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
 {
     private static readonly HashSet<Uid> UserIdLocks = new();
     private readonly List<Uid> _savedUsersId = new();
-    private readonly ConcurrentDictionary<Uid, TiebaUser> _users = new();
+    private readonly ConcurrentDictionary<Uid, User> _users = new();
 
     public void ParseUsers(IEnumerable<User> users) =>
         users.Select(el =>
@@ -65,7 +65,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
             // will be an empty string when the user hasn't set a username for their baidu account yet
             var name = el.Name.NullIfEmpty();
             var nameShow = el.NameShow.NullIfEmpty();
-            var u = new TiebaUser();
+            var u = new User();
             try
             {
                 u.Uid = uid;
@@ -85,17 +85,17 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
                 e.Data["raw"] = Helper.UnescapedJsonSerialize(el);
                 throw new InvalidDataException("User parse error.", e);
             }
-        }).OfType<TiebaUser>().ForEach(u => _users[u.Uid] = u);
+        }).OfType<User>().ForEach(u => _users[u.Uid] = u);
 
     public void ResetUsersIcon() => _users.Values.ForEach(u => u.Icon = null);
 
     public void SaveUsers
-        (CrawlerDbContext db, string postType, FieldChangeIgnoranceDelegates tiebaUserFieldChangeIgnorance)
+        (CrawlerDbContext db, string postType, FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
     {
         if (_users.IsEmpty) return;
         lock (UserIdLocks)
         {
-            var usersExceptLocked = new Dictionary<Uid, TiebaUser>(_users.ExceptBy(UserIdLocks, pair => pair.Key));
+            var usersExceptLocked = new Dictionary<Uid, User>(_users.ExceptBy(UserIdLocks, pair => pair.Key));
             if (!usersExceptLocked.Any()) return;
             _savedUsersId.AddRange(usersExceptLocked.Keys);
             UserIdLocks.UnionWith(_savedUsersId);
@@ -103,7 +103,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
             var existingUsersKeyByUid = (from user in db.Users.AsTracking().ForUpdate()
                 where usersExceptLocked.Keys.Contains(user.Uid)
                 select user).ToDictionary(u => u.Uid);
-            SavePostsOrUsers(db, tiebaUserFieldChangeIgnorance,
+            SavePostsOrUsers(db, userFieldChangeIgnorance,
                 u => new UserRevision
                 {
                     TakenAt = u.UpdatedAt ?? u.CreatedAt,

@@ -10,7 +10,7 @@ public class ThreadCrawlFacade(
     : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
         (crawler(forumName), parser, saver.Invoke, locks["thread"], new(fid), fid)
 {
-    private readonly Dictionary<long, TiebaUser> _latestRepliers = new();
+    private readonly Dictionary<long, User> _latestRepliers = new();
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
@@ -20,7 +20,7 @@ public class ThreadCrawlFacade(
         // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
 
         // users has already been added into DbContext and tracking
-        var existingUsersId = db.ChangeTracker.Entries<TiebaUser>().Select(ee => ee.Entity.Uid);
+        var existingUsersId = db.ChangeTracker.Entries<User>().Select(ee => ee.Entity.Uid);
         var newLatestRepliers = _latestRepliers
             .ExceptBy(existingUsersId, pair => pair.Key)
             .Select(pair => pair.Value)
@@ -45,7 +45,7 @@ public class ThreadCrawlFacade(
             // some rare deleted thread but still visible in 6.0.2 response
             // will have a latest replier uid=0 name="" nameShow=".*"
             .Where(u => u.Uid != 0)
-            .Select(u => TiebaUser.CreateLatestReplier(u.Uid, u.Name.NullIfEmpty(),
+            .Select(u => User.CreateLatestReplier(u.Uid, u.Name.NullIfEmpty(),
                 u.Name == u.NameShow ? null : u.NameShow))
             .ForEach(u => _latestRepliers[u.Uid] = u);
 

@@ -3,7 +3,7 @@
         <PageCurrentButton :currentCursor="users.pages.currentCursor" />
         <div v-for="(user, userIndex) in users.users" :key="user.uid" class="row" :id="user.uid.toString()">
             <div class="col-3">
-                <img :src="toTiebaUserPortraitImageUrl(user.portrait)" loading="lazy"
+                <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                      class="d-block mx-auto badge bg-light" width="110" height="110" />
             </div>
             <div class="col">
@@ -22,8 +22,8 @@
 <script setup lang="ts">
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
 import type { ApiUsers } from '@/api/index.d';
-import type { TiebaUserGender } from '@/api/user';
-import { toTiebaUserPortraitImageUrl } from '@/shared';
+import type { UserGender } from '@/api/user';
+import { toUserPortraitImageUrl } from '@/shared';
 
 const props = defineProps<{
     users: ApiUsers,
@@ -32,7 +32,7 @@ const props = defineProps<{
 }>();
 const nextCursorRoute = useNextCursorRoute(props.users.pages.nextCursor);
 
-const userGender = (gender: TiebaUserGender) => {
+const userGender = (gender: UserGender) => {
     const genderDescription = {
         /* eslint-disable @typescript-eslint/naming-convention */
         0: '未指定（显示为男）',

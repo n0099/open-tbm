@@ -18,7 +18,7 @@ import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.v
 
 import { apiUsers, isApiError } from '@/api';
 import type { ApiError, ApiUsers } from '@/api/index.d';
-import type { SelectTiebaUserBy, SelectTiebaUserParams } from '@/components/widgets/selectTiebaUser';
+import type { SelectUserBy, SelectUserParams } from '@/components/widgets/selectUser';
 import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 
@@ -36,8 +36,8 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 useHead({ title: titleTemplate('用户查询') });
-const params = ref<Pick<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
-const selectUserBy = ref<SelectTiebaUserBy>('');
+const params = ref<Pick<SelectUserParams, Exclude<SelectUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
+const selectUserBy = ref<SelectUserBy>('');
 const userPages = ref<ApiUsers[]>([]);
 const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
@@ -81,7 +81,7 @@ watchEffect(() => {
     selectUserBy.value = removeStart(removeEnd(
         route.name?.toString() ?? '',
         routeNameSuffix.page
-    ), 'user/') as SelectTiebaUserBy;
+    ), 'user/') as SelectUserBy;
     params.value = { ..._.omit(props, 'cursor'), uid: Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {

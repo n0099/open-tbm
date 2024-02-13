@@ -13,7 +13,7 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
     public delegate CrawlerDbContext New(Fid fid);
 
     public Fid Fid { get; } = fid;
-    public DbSet<TiebaUser> Users => Set<TiebaUser>();
+    public DbSet<User> Users => Set<User>();
     public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
     public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();
     public DbSet<ThreadPost> Threads => Set<ThreadPost>();
@@ -65,7 +65,7 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
     {
         base.OnModelCreating(b);
         OnModelCreatingWithFid(b, Fid);
-        b.Entity<TiebaUser>().ToTable("tbmc_user");
+        b.Entity<User>().ToTable("tbmc_user");
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");

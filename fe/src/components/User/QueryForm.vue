@@ -1,6 +1,6 @@
 <template>
     <form @submit.prevent="_ => submitQueryForm()" class="row">
-        <SelectTiebaUser v-model="selectUser" />
+        <SelectUser v-model="selectUser" />
         <label class="col-2 col-form-label text-end" for="queryGender">性别</label>
         <div class="col-3">
             <select v-model="gender" class="form-select" id="queryGender">
@@ -16,10 +16,10 @@
 </template>
 
 <script setup lang="ts">
-import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from '../widgets/selectTiebaUser';
-import SelectTiebaUser from '../widgets/SelectTiebaUser.vue';
-import { selectTiebaUserBy } from '../widgets/selectTiebaUser';
-import type { BaiduUserID, TiebaUserGenderQueryParam } from '@/api/user';
+import type { SelectUserBy, SelectUserModel, SelectUserParams } from '../widgets/selectUser';
+import SelectUser from '../widgets/SelectUser.vue';
+import { selectUserBy } from '../widgets/selectUser';
+import type { BaiduUserID, UserGenderQueryParam } from '@/api/user';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 
 import { ref, watchEffect } from 'vue';
@@ -27,8 +27,8 @@ import type { LocationQueryValueRaw } from 'vue-router';
 import { useRouter } from 'vue-router';
 import * as _ from 'lodash-es';
 
-type RouteQueryString = Omit<SelectTiebaUserParams, Exclude<SelectTiebaUserBy, ''>>
-    & { gender?: TiebaUserGenderQueryParam };
+type RouteQueryString = Omit<SelectUserParams, Exclude<SelectUserBy, ''>>
+    & { gender?: UserGenderQueryParam };
 
 const props = defineProps<{
     query: RouteQueryString,
@@ -37,11 +37,11 @@ const props = defineProps<{
         name?: string,
         displayName?: string
     },
-    selectUserBy: SelectTiebaUserBy
+    selectUserBy: SelectUserBy
 }>();
 const router = useRouter();
-const gender = ref<TiebaUserGenderQueryParam | 'default'>('default');
-const selectUser = ref<SelectTiebaUserModel>({ selectBy: '', params: {} });
+const gender = ref<UserGenderQueryParam | 'default'>('default');
+const selectUser = ref<SelectUserModel>({ selectBy: '', params: {} });
 
 const paramsDefaultValue = {
     gender: 'default',
@@ -63,8 +63,8 @@ const submitQueryForm = async () => {
 
     return router.push({
         name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
-        query: omitDefaultParamsValue({ ..._.omit(params, selectTiebaUserBy), gender: gender.value }),
-        params: _.pick(params, selectTiebaUserBy)
+        query: omitDefaultParamsValue({ ..._.omit(params, selectUserBy), gender: gender.value }),
+        params: _.pick(params, selectUserBy)
     });
 };
 

@@ -43,24 +43,24 @@
 </template>
 
 <script setup lang="ts">
-import type { SelectTiebaUserBy, SelectTiebaUserModel, SelectTiebaUserParams } from './selectTiebaUser';
-import { selectTiebaUserBy, selectTiebaUserParamsName } from './selectTiebaUser';
+import type { SelectUserBy, SelectUserModel, SelectUserParams } from './selectUser';
+import { selectUserBy, selectUserParamsName } from './selectUser';
 import { onMounted, ref, watch, watchEffect } from 'vue';
 import * as _ from 'lodash-es';
 
 const props = defineProps<{
-    modelValue: SelectTiebaUserModel,
-    paramsNameMap?: Record<keyof SelectTiebaUserParams, string>
+    modelValue: SelectUserModel,
+    paramsNameMap?: Record<keyof SelectUserParams, string>
 }>();
 // eslint-disable-next-line vue/define-emits-declaration
 const emit = defineEmits({
-    'update:modelValue': (p: SelectTiebaUserModel) =>
+    'update:modelValue': (p: SelectUserModel) =>
         _.isObject(p)
-        && selectTiebaUserBy.includes(p.selectBy)
+        && selectUserBy.includes(p.selectBy)
         && _.isObject(p.params) // todo: check p.params against props.paramsNameMap
 });
-const selectBy = ref<SelectTiebaUserBy | 'displayNameNULL' | 'nameNULL'>('');
-const params = ref<SelectTiebaUserParams>({});
+const selectBy = ref<SelectUserBy | 'displayNameNULL' | 'nameNULL'>('');
+const params = ref<SelectUserParams>({});
 
 const emitModelChange = () => {
     if (props.paramsNameMap !== undefined) {
@@ -79,10 +79,10 @@ watch(() => props.modelValue, () => {
         ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
 
     // filter out unnecessary and undefined params
-    params.value = _.omitBy(_.pick(params.value, selectTiebaUserParamsName), _.isUndefined);
+    params.value = _.omitBy(_.pick(params.value, selectUserParamsName), _.isUndefined);
 
     // reset to default selectBy if it's a invalid value
-    if (!selectTiebaUserBy.includes(selectBy.value))
+    if (!selectUserBy.includes(selectBy.value))
         selectBy.value = '';
     if (selectBy.value === 'uid')
         params.value.uidCompareBy ??= '='; // set to default value if it's undefined
