@@ -4,6 +4,8 @@ runs:
   using: composite
   steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: true
     - uses: actions/setup-node@v4
       with: # https://github.com/actions/setup-node/tree/v4
         node-version: lts/*
@@ -12,6 +14,7 @@ runs:
         # cache-dependency-path: ${{ github.workspace }}/fe/yarn.lock
         # in favor of https://github.com/actions/cache/blob/a2ed59d39b352305bdd2f628719a53b2cc4f9613/examples.md#node---yarn-2
         # to allow saving cache even jobs failed
+
     - id: get-yarn-cache-dir
       run: echo "path=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
       working-directory: fe
@@ -22,9 +25,11 @@ runs:
         path: ${{ steps.get-yarn-cache-dir.outputs.path }}
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: ${{ runner.os }}-yarn-
+
     - run: yarn install --immutable
       working-directory: fe
       shell: bash
+
     # https://github.com/actions/runner/issues/1478
     # https://github.com/actions/setup-node/issues/410#issuecomment-1939482965
     - uses: actions/cache/save@v4

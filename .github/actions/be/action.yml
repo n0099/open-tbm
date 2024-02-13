@@ -6,6 +6,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+
     - uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
@@ -19,6 +20,7 @@ runs:
     - run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       working-directory: be
       shell: bash
+
     # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#cache-composer-dependencies
     # https://github.com/actions/cache/blob/a2ed59d39b352305bdd2f628719a53b2cc4f9613/examples.md#php---composer
     - id: get-composer-cache-dir
@@ -31,9 +33,11 @@ runs:
         path: ${{ steps.get-composer-cache-dir.outputs.path }}
         key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
         restore-keys: ${{ runner.os }}-composer-
-    - run: composer install --prefer-dist
+
+    - run: composer install --no-interaction --no-progress --classmap-authoritative
       working-directory: be
       shell: bash
+
     # https://github.com/actions/runner/issues/1478
     # https://github.com/actions/setup-node/issues/410#issuecomment-1939482965
     - uses: actions/cache/save@v4
