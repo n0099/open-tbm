@@ -5,7 +5,7 @@ import nprogress from 'nprogress';
 import { stringify } from 'qs';
 import * as _ from 'lodash-es';
 
-class ApiResponseError extends Error {
+export class ApiResponseError extends Error {
     public constructor(
         public readonly errorCode: number,
         public readonly errorInfo: Record<string, unknown[]> | string
@@ -13,7 +13,7 @@ class ApiResponseError extends Error {
         super(JSON.stringify({ errorCode, errorInfo }));
     }
 }
-class FetchResponseError extends Error {
+export class FetchResponseError extends Error {
     public constructor(public readonly response: Response) {
         super(JSON.stringify(response));
     }
@@ -74,7 +74,7 @@ const getRequesterWithReCAPTCHA = <TResponse, TQueryParam>
             { ...queryParam as TQueryParam, ...await reCAPTCHACheck(action) }
         )(queryContext);
 
-type ApiErrorClass = ApiResponseError | FetchResponseError;
+export type ApiErrorClass = ApiResponseError | FetchResponseError;
 type ReqesuterGetter = typeof getRequester | typeof getRequesterWithReCAPTCHA;
 const useApi = <
     TApi extends Api<TResponse, TQueryParam>,

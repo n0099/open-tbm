@@ -26,7 +26,7 @@ import type { UserGender } from '@/api/user';
 import { toUserPortraitImageUrl } from '@/shared';
 
 const props = defineProps<{
-    users: ApiUsers,
+    users: ApiUsers['response'],
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();

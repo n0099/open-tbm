@@ -154,8 +154,8 @@
             <SelectParam @paramChange="e => addParam(e)" />
         </div>
         <div class="row mt-3">
-            <button :disabled="isFetchingPosts" class="col-auto btn btn-primary" type="submit">
-                查询 <span v-show="isFetchingPosts" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" />
+            <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
+                查询 <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" />
             </button>
             <span class="col-auto ms-3 my-auto text-muted">{{ currentQueryTypeDescription }}</span>
         </div>
@@ -185,7 +185,7 @@ import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import * as _ from 'lodash-es';
 
-defineProps<{ isFetchingPosts: boolean }>();
+defineProps<{ isLoading: boolean }>();
 const router = useRouter();
 const {
     uniqueParams,

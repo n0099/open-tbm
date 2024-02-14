@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <QueryForm ref="queryFormRef" :isFetchingPosts="isFetching" />
+        <QueryForm ref="queryFormRef" :isLoading="isFetching" />
         <p>当前页数：{{ getRouteCursorParam(route) }}</p>
         <Menu v-show="!_.isEmpty(postPages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>

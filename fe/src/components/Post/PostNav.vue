@@ -58,7 +58,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import scrollIntoView from 'scroll-into-view-if-needed';
 import * as _ from 'lodash-es';
 
-const props = defineProps<{ postPages: ApiPosts[] }>();
+const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
 const route = useRoute();
 const router = useRouter();
 const elementRefsStore = useElementRefsStore();

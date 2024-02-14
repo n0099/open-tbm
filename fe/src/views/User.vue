@@ -38,7 +38,7 @@ const route = useRoute();
 useHead({ title: titleTemplate('用户查询') });
 const params = ref<Pick<SelectUserParams, Exclude<SelectUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
 const selectUserBy = ref<SelectUserBy>('');
-const userPages = ref<ApiUsers[]>([]);
+const userPages = ref<Array<ApiUsers['response']>>([]);
 const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
 const showPlaceholderPostList = ref<boolean>(false);

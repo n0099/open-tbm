@@ -16,7 +16,7 @@ import type { ApiPosts } from '@/api/index.d';
 import type { RouteLocationNormalized } from 'vue-router';
 
 const props = defineProps<{
-    posts: ApiPosts,
+    posts: ApiPosts['response'],
     renderType: PostRenderer,
     currentRoute: RouteLocationNormalized,
     isLoadingNewPage: boolean,

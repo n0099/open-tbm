@@ -176,7 +176,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 import * as _ from 'lodash-es';
 
-const props = defineProps<{ initialPosts: ApiPosts }>();
+const props = defineProps<{ initialPosts: ApiPosts['response'] }>();
 const elementRefsStore = useElementRefsStore();
 const replyElements = ref<HTMLElement[]>([]);
 const hoveringSubReplyID = ref(0);
@@ -184,7 +184,7 @@ const getUser = baseGetUser(props.initialPosts.users);
 const renderUsername = baseRenderUsername(getUser);
 const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 const posts = computed(() => {
-    const newPosts = props.initialPosts as Modify<ApiPosts, { // https://github.com/microsoft/TypeScript/issues/33591
+    const newPosts = props.initialPosts as Modify<ApiPosts['response'], { // https://github.com/microsoft/TypeScript/issues/33591
         threads: Array<Thread & { replies: Array<Reply & { subReplies: Array<SubReply | SubReply[]> }> }>
     }>;
     newPosts.threads = newPosts.threads.map(thread => {
@@ -215,7 +215,7 @@ const posts = computed(() => {
         return thread;
     });
 
-    return newPosts as Modify<ApiPosts, {
+    return newPosts as Modify<ApiPosts['response'], {
         threads: Array<Thread & { replies: Array<Reply & { subReplies: SubReply[][] }> }>
     }>;
 });

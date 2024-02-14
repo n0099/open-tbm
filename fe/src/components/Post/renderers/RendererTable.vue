@@ -97,9 +97,9 @@ import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import * as _ from 'lodash-es';
 
-const props = defineProps<{ posts: ApiPosts }>();
-const threads = ref<ApiPosts['threads']>();
-const repliesKeyByTid = ref<Record<Tid, ApiPosts['threads'][number]['replies']>>([]);
+const props = defineProps<{ posts: ApiPosts['response'] }>();
+const threads = ref<ApiPosts['response']['threads']>();
+const repliesKeyByTid = ref<Record<Tid, ApiPosts['response']['threads'][number]['replies']>>([]);
 const subRepliesKeyByPid = ref<Record<Pid, SubReply[]>>([]);
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },

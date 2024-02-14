@@ -44,7 +44,7 @@ import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import TimeRange from '@/components/widgets/TimeRange.vue';
 
 import { apiForums, apiStatsForumsPostCount, throwIfApiError } from '@/api';
-import type { ApiForums, ApiStatsForumPostCountQueryParam } from '@/api/index.d';
+import type { ApiForums, ApiStatsForumPostCount } from '@/api/index.d';
 import type { Writable } from '@/shared';
 import { titleTemplate } from '@/shared';
 import { emptyChartSeriesData, extendCommonToolbox, timeGranularities, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
@@ -111,7 +111,7 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 useHead({ title: titleTemplate('统计') });
-const query = ref<ApiStatsForumPostCountQueryParam>({
+const query = ref<ApiStatsForumPostCount['queryParam']>({
     fid: 0,
     timeGranularity: 'day',
     startTime: 0,

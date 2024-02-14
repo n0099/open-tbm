@@ -36,7 +36,7 @@ import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import TimeRange from '@/components/widgets/TimeRange.vue';
 
 import { apiStatus, throwIfApiError } from '@/api';
-import type { ApiStatus, ApiStatusQueryParam } from '@/api/index.d';
+import type { ApiStatus, ApiStatus } from '@/api/index.d';
 import { titleTemplate } from '@/shared';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';
 
@@ -167,7 +167,7 @@ const chartInitialOption: echarts.ComposeOption<DataZoomComponentOption | GridCo
 };
 
 useHead({ title: titleTemplate('状态') });
-const query = ref<ApiStatusQueryParam>({
+const query = ref<ApiStatus['queryParam']>({
     timeGranularity: 'minute',
     startTime: 0,
     endTime: 0
@@ -189,7 +189,7 @@ const submitQueryForm = async () => {
         .finally(() => { chartEl.value?.classList.remove('loading') }));
     const series = _.chain(chartInitialOption.series)
         .map('id')
-        .map((seriesName: keyof ApiStatus[0]) => ({
+        .map((seriesName: keyof ApiStatus['response'][0]) => ({
             id: seriesName,
 
             // select column from status, UnixTimestamp * 1000 since echarts only accepts milliseconds

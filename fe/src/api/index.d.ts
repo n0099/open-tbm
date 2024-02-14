@@ -59,10 +59,11 @@ export type ApiUsers = Api<
 >;
 
 export type JsonString = string;
-export type ApiPosts = Api<CursorPagination<{
-    matchQueryPostCount: { [P in PostType]: UInt },
-    notMatchQueryParentPostCount: { [P in Omit<PostType, 'subRely'>]: UInt }
-}> & {
+export type ApiPosts = Api<CursorPagination & {
+    pages: {
+        matchQueryPostCount: { [P in PostType]: UInt },
+        notMatchQueryParentPostCount: { [P in Omit<PostType, 'subRely'>]: UInt }
+    },
     type: 'index' | 'search',
     forum: Pick<ApiForums[number], 'fid' | 'name'>,
     threads: Array<Thread & {
