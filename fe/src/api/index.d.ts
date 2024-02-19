@@ -26,10 +26,10 @@ export type ApiStatus = Api<Array<{
     parsedPostTimes: UInt,
     parsedUserTimes: UInt
 }>, {
-    timeGranularity: 'day' | 'hour' | 'minute',
-    startTime: UnixTimestamp,
-    endTime: UnixTimestamp
-}>;
+        timeGranularity: 'day' | 'hour' | 'minute',
+        startTime: UnixTimestamp,
+        endTime: UnixTimestamp
+    }>;
 
 interface TimeCountPair { time: Mix, count: UInt }
 export type ApiStatsForumPostCount = Api<{
@@ -37,11 +37,11 @@ export type ApiStatsForumPostCount = Api<{
     reply: TimeCountPair[],
     subReply: TimeCountPair[]
 }, {
-    fid: Fid,
-    timeGranularity: 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year',
-    startTime: UnixTimestamp,
-    endTime: UnixTimestamp
-}>;
+        fid: Fid,
+        timeGranularity: 'day' | 'hour' | 'minute' | 'month' | 'week' | 'year',
+        startTime: UnixTimestamp,
+        endTime: UnixTimestamp
+    }>;
 
 export type Cursor = string;
 interface CursorPaginationQueryParam { cursor?: Cursor }

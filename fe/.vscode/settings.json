@@ -3,6 +3,11 @@
     "**/.yarn": true,
     "**/.pnp.*": true
   },
+  "eslint.validate": [ // https://github.com/microsoft/vscode-eslint/issues/864
+    "javascript",
+    "typescript",
+    "typescriptreact"
+  ],
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "eslint.nodePath": ".yarn/sdks"
