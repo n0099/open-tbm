@@ -2,26 +2,26 @@
     <div class="container">
         <QueryForm ref="queryFormRef" :isLoading="isFetching" />
         <p>当前页数：{{ getRouteCursorParam(route) }}</p>
-        <Menu v-show="!_.isEmpty(postPages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
+        <Menu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
             <MenuItem key="table">表格视图</MenuItem>
         </Menu>
     </div>
-    <div v-show="!_.isEmpty(postPages)" class="container-fluid">
+    <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
         <div class="row flex-nowrap">
-            <PostNav v-if="renderType === 'list'" :postPages="postPages" />
+            <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
-                <PostPage v-for="(posts, pageIndex) in postPages" :key="posts.pages.currentCursor"
-                          :renderType="renderType" :posts="posts"
-                          :currentRoute="currentRoute" :isLoadingNewPage="isFetching"
-                          :isLastPageInPages="pageIndex === postPages.length - 1" />
+                <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
+                          :renderType="renderType" :posts="page"
+                          :currentRoute="lastFetchingRoute" :isLoadingNewPage="isFetching"
+                          :isLastPageInPages="pageIndex === data.pages.length - 1" />
             </div>
             <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
         </div>
     </div>
     <div class="container">
-        <PlaceholderError v-if="lastFetchError !== null" :error="lastFetchError" class="border-top" />
-        <PlaceholderPostList v-show="showPlaceholderPostList" :isLoading="isFetching" />
+        <PlaceholderError :error="error" class="border-top" />
+        <PlaceholderPostList :isLoading="isFetching" />
     </div>
 </template>
 
@@ -32,17 +32,18 @@ import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
-import { apiPosts, isApiError } from '@/api';
-import type { ApiError, ApiPosts, Cursor } from '@/api/index.d';
+import { useApiPosts } from '@/api';
+import type { ApiPosts, Cursor } from '@/api/index.d';
 import { getReplyTitleTopOffset, postListItemScrollPosition } from '@/components/Post/renderers/rendererList';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { watchOnce } from '@vueuse/core';
 import { Menu, MenuItem } from 'ant-design-vue';
 import { useHead } from '@unhead/vue';
 import * as _ from 'lodash-es';
@@ -50,57 +51,47 @@ import * as _ from 'lodash-es';
 export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
-const title = ref<string>('帖子查询');
-const postPages = ref<ApiPosts[]>([]);
-const isFetching = ref<boolean>(false);
-const lastFetchError = ref<ApiError | null>(null);
-const showPlaceholderPostList = ref<boolean>(true);
+const queryParam = ref<ApiPosts['queryParam']>();
+const shouldFetch = ref<boolean>(false);
+const { data, error, isFetching, isFetchedAfterMount } = useApiPosts(queryParam, shouldFetch);
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-const currentRoute = ref<RouteLocationNormalized>(route);
-useHead({ title: computed(() => titleTemplate(title.value)) });
+const lastFetchingRoute = ref<RouteLocationNormalized>(route);
+useHead({
+    title: computed(() => titleTemplate((() => {
+        const firstPostPage = data.value?.pages[0];
+        if (firstPostPage === undefined)
+            return '帖子查询';
+
+        const forumName = `${firstPostPage.forum.name}吧`;
+        const threadTitle = firstPostPage.threads[0].title;
+        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
+        switch (queryFormRef.value?.getCurrentQueryType()) {
+            case 'fid':
+            case 'search':
+                return `${forumName} - 帖子查询`;
+            case 'postID':
+                return `${threadTitle} - ${forumName} - 帖子查询`;
+        }
+
+        return '帖子查询';
+    })()))
+});
 
 const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Cursor) => {
     const startTime = Date.now();
-    lastFetchError.value = null;
-    showPlaceholderPostList.value = true;
-    if (isNewQuery)
-        postPages.value = [];
-    isFetching.value = true;
-
-    const query = await apiPosts({
+    queryParam.value = {
         query: JSON.stringify(queryParams),
         cursor: isNewQuery ? undefined : cursor
-    }).finally(() => {
-        showPlaceholderPostList.value = false;
-        isFetching.value = false;
+    };
+    shouldFetch.value = true;
+    watchOnce(isFetchedAfterMount, value => {
+        if (value)
+            shouldFetch.value = false;
     });
-
-    if (isApiError(query)) {
-        lastFetchError.value = query;
-
+    if (error.value !== null)
         return false;
-    }
-    if (isNewQuery)
-        postPages.value = [query];
-    else
-        postPages.value.push(query); // todo: unshift when fetching previous page
-
-    const forumName = `${postPages.value[0].forum.name}吧`;
-    const threadTitle = postPages.value[0].threads[0].title;
-    switch (queryFormRef.value?.getCurrentQueryType()) {
-        case 'fid':
-        case 'search':
-            title.value = `${forumName} - 帖子查询`;
-            break;
-        case 'postID':
-            title.value = `${threadTitle} - ${forumName} - 帖子查询`;
-            break;
-        case 'empty':
-        case undefined:
-            throw new Error(queryFormRef.value?.getCurrentQueryType());
-    }
 
     const networkTime = Date.now() - startTime;
     await nextTick(); // wait for child components finish dom update
@@ -110,6 +101,7 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
 
     return true;
 };
+
 const scrollToPostListItem = (el: Element) => {
     // simply invoke el.scrollIntoView() for only once will scroll the element to the top of the viewport
     // and then some other elements above it such as img[loading='lazy'] may change its box size
@@ -133,41 +125,41 @@ const scrollToPostListItem = (el: Element) => {
     tryScroll();
     addEventListener('scrollend', tryScroll);
 };
+watchEffect(() => {
+    if (isFetchedAfterMount.value && renderType.value === 'list') {
+        const scrollPosition = postListItemScrollPosition(lastFetchingRoute.value);
+        if (scrollPosition === false)
+            return;
+        const el = document.querySelector(scrollPosition.el);
+        if (el === null)
+            return;
+        requestIdleCallback(function retry(deadline) {
+            if (deadline.timeRemaining() > 0)
+                scrollToPostListItem(el);
+            else
+                requestIdleCallback(retry);
+        });
+    }
+});
+
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
     if (queryFormRef.value === undefined)
         return false;
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
         return false;
-    currentRoute.value = newRoute;
+    lastFetchingRoute.value = newRoute;
     const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
-    if (isFetchSuccess && renderType.value === 'list') {
-        (() => {
-            const scrollPosition = postListItemScrollPosition(newRoute);
-            if (scrollPosition === false)
-                return;
-            const el = document.querySelector(scrollPosition.el);
-            if (el === null)
-                return;
-            requestIdleCallback(function retry(deadline) {
-                if (deadline.timeRemaining() > 0)
-                    scrollToPostListItem(el);
-                else
-                    requestIdleCallback(retry);
-            });
-        })();
-    }
 
     return isFetchSuccess;
 };
-
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = useTriggerRouteUpdateStore()
         .isTriggeredBy('<QueryForm>@submit', { ...to, force: true })
         || compareRouteIsNewQuery(to, from);
     const cursor = getRouteCursorParam(to);
     if (!(isNewQuery || _.isEmpty(_.filter(
-        postPages.value,
+        data.value?.pages,
         i => i.pages.currentCursor === cursor
     ))))
         return true;

@@ -1,4 +1,5 @@
 import type { Api, ApiError, ApiForums, ApiPosts, ApiStatsForumPostCount, ApiStatus, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
+import type { MaybeRefOrGetter, Ref } from 'vue';
 import type { InfiniteData, QueryFunctionContext, QueryKey } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
@@ -80,22 +81,26 @@ const useApi = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'],
     TQueryParam = TApi['queryParam']>
-(endpoint: string, requesterGetter: ReqesuterGetter) => (queryParam?: TQueryParam) =>
-    useQuery<TResponse, ApiErrorClass, TResponse>({
-        queryKey: [endpoint, queryParam],
-        queryFn: requesterGetter<TResponse, TQueryParam>(`/${endpoint}`, queryParam)
-    });
+(endpoint: string, requesterGetter: ReqesuterGetter) =>
+    (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
+        useQuery<TResponse, ApiErrorClass, TResponse>({
+            queryKey: [endpoint, queryParam],
+            queryFn: requesterGetter<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            enabled
+        });
 const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'] & CursorPagination,
     TQueryParam = TApi['queryParam']>
-(endpoint: string, requesterGetter: ReqesuterGetter) => (queryParam?: TQueryParam) =>
-    useInfiniteQuery<TResponse & CursorPagination, ApiErrorClass, InfiniteData<TResponse & CursorPagination, Cursor>, QueryKey, Cursor>({
-        queryKey: [endpoint, queryParam],
-        queryFn: requesterGetter<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam),
-        initialPageParam: '',
-        getNextPageParam: lastPage => lastPage.pages.nextCursor
-    });
+(endpoint: string, requesterGetter: ReqesuterGetter) =>
+    (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
+        useInfiniteQuery<TResponse & CursorPagination, ApiErrorClass, InfiniteData<TResponse & CursorPagination, Cursor>, QueryKey, Cursor>({
+            queryKey: [endpoint, queryParam],
+            queryFn: requesterGetter<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            initialPageParam: '',
+            getNextPageParam: lastPage => lastPage.pages.nextCursor,
+            enabled
+        });
 
 export const useApiForums = () => useApi<ApiForums>('forums', getRequester)();
 export const useApiStatus = useApi<ApiStatus>('status', getRequesterWithReCAPTCHA);
