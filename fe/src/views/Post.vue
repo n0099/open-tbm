@@ -53,7 +53,7 @@ export type PostRenderer = 'list' | 'table';
 const route = useRoute();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref<boolean>(false);
-const { data, error, isFetching, isFetchedAfterMount } = useApiPosts(queryParam, shouldFetch);
+const { data, error, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt } = useApiPosts(queryParam, shouldFetch);
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormRef = ref<InstanceType<typeof QueryForm>>();
@@ -79,8 +79,8 @@ useHead({
     })()))
 });
 
-const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Cursor) => {
-    const startTime = Date.now();
+const fetchPosts = (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Cursor) => {
+    const startTime = Date.now() / 1000;
     queryParam.value = {
         query: JSON.stringify(queryParams),
         cursor: isNewQuery ? undefined : cursor
@@ -90,16 +90,14 @@ const fetchPosts = async (queryParams: ObjUnknown[], isNewQuery: boolean, cursor
         if (value)
             shouldFetch.value = false;
     });
-    if (error.value !== null)
-        return false;
-
-    const networkTime = Date.now() - startTime;
-    await nextTick(); // wait for child components finish dom update
-    const postCount = _.sum(Object.values(query.pages.matchQueryPostCount));
-    const renderTime = ((Date.now() - startTime - networkTime) / 1000).toFixed(2);
-    notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime}s 后端+网络耗时${networkTime}ms`);
-
-    return true;
+    watchOnce([dataUpdatedAt, errorUpdatedAt], async updatedAt => {
+        const networkTime = _.max(updatedAt) ?? 0 - startTime;
+        await nextTick(); // wait for child components finish dom update
+        const fetchedPage = data.value?.pages.find(i => i.pages.currentCursor === cursor);
+        const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
+        const renderTime = (Date.now() / 1000) - startTime - networkTime;
+        notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime.toFixed(2)}s 后端+网络耗时${networkTime}ms`);
+    });
 };
 
 const scrollToPostListItem = (el: Element) => {
@@ -144,28 +142,23 @@ watchEffect(() => {
 
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
     if (queryFormRef.value === undefined)
-        return false;
+        return;
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
-        return false;
+        return;
     lastFetchingRoute.value = newRoute;
-    const isFetchSuccess = await fetchPosts(flattenParams, isNewQuery, cursor);
-
-    return isFetchSuccess;
+    fetchPosts(flattenParams, isNewQuery, cursor);
 };
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = useTriggerRouteUpdateStore()
         .isTriggeredBy('<QueryForm>@submit', { ...to, force: true })
         || compareRouteIsNewQuery(to, from);
     const cursor = getRouteCursorParam(to);
-    if (!(isNewQuery || _.isEmpty(_.filter(
+    if (isNewQuery || _.isEmpty(_.filter(
         data.value?.pages,
         i => i.pages.currentCursor === cursor
-    ))))
-        return true;
-    const isFetchSuccess = await parseRouteThenFetch(to, isNewQuery, cursor);
-
-    return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
+    )))
+        await parseRouteThenFetch(to, isNewQuery, cursor);
 });
 onMounted(async () => {
     await parseRouteThenFetch(route, true, getRouteCursorParam(route));

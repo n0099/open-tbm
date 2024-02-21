@@ -29,7 +29,7 @@ export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TRes
 
     return response;
 };
-export const getRequester = <TResponse, TQueryParam>(endpoint: string, queryParam?: TQueryParam) =>
+export const queryFunction = <TResponse, TQueryParam>(endpoint: string, queryParam?: TQueryParam) =>
     async (queryContext: QueryFunctionContext): Promise<TResponse> => {
         nprogress.start();
         document.body.style.cursor = 'progress';
@@ -51,7 +51,7 @@ export const getRequester = <TResponse, TQueryParam>(endpoint: string, queryPara
             document.body.style.cursor = '';
         }
     };
-const reCAPTCHACheck = async (action = '') =>
+const checkReCAPTCHA = async (action = '') =>
     new Promise<{ reCAPTCHA?: string }>((reslove, reject) => {
         if (import.meta.env.VITE_RECAPTCHA_SITE_KEY === '') {
             reslove({});
@@ -67,43 +67,47 @@ const reCAPTCHACheck = async (action = '') =>
             });
         }
     });
-const getRequesterWithReCAPTCHA = <TResponse, TQueryParam>
+const queryFunctionWithReCAPTCHA = <TResponse, TQueryParam>
 (endpoint: string, queryParam?: TQueryParam, action = '') =>
     async (queryContext: QueryFunctionContext): Promise<TResponse> =>
-        getRequester<TResponse, TQueryParam & { reCAPTCHA?: string }>(
+        queryFunction<TResponse, TQueryParam & { reCAPTCHA?: string }>(
             endpoint,
-            { ...queryParam as TQueryParam, ...await reCAPTCHACheck(action) }
+            { ...queryParam as TQueryParam, ...await checkReCAPTCHA(action) }
         )(queryContext);
 
 export type ApiErrorClass = ApiResponseError | FetchResponseError;
-type ReqesuterGetter = typeof getRequester | typeof getRequesterWithReCAPTCHA;
+type QueryFunctions = typeof queryFunction | typeof queryFunctionWithReCAPTCHA;
 const useApi = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'],
     TQueryParam = TApi['queryParam']>
-(endpoint: string, requesterGetter: ReqesuterGetter) =>
+(endpoint: string, queryFn: QueryFunctions) =>
     (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
-        useQuery<TResponse, ApiErrorClass, TResponse>({
+        useQuery<TResponse, ApiErrorClass>({
             queryKey: [endpoint, queryParam],
-            queryFn: requesterGetter<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            queryFn: queryFn<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
             enabled
         });
 const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'] & CursorPagination,
     TQueryParam = TApi['queryParam']>
-(endpoint: string, requesterGetter: ReqesuterGetter) =>
+(endpoint: string, queryFn: QueryFunctions) =>
     (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
-        useInfiniteQuery<TResponse & CursorPagination, ApiErrorClass, InfiniteData<TResponse & CursorPagination, Cursor>, QueryKey, Cursor>({
+        useInfiniteQuery<
+            TResponse & CursorPagination, ApiErrorClass,
+            InfiniteData<TResponse & CursorPagination, Cursor>,
+            QueryKey, Cursor
+        >({
             queryKey: [endpoint, queryParam],
-            queryFn: requesterGetter<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            queryFn: queryFn<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam?.value),
             initialPageParam: '',
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
             enabled
         });
 
-export const useApiForums = () => useApi<ApiForums>('forums', getRequester)();
-export const useApiStatus = useApi<ApiStatus>('status', getRequesterWithReCAPTCHA);
-export const useApiStatsForumsPostCount = useApi<ApiStatsForumPostCount>('stats/forums/postCount', getRequesterWithReCAPTCHA);
-export const useApiUsers = useApi<ApiUsers>('users', getRequesterWithReCAPTCHA);
-export const useApiPosts = useApiWithCursor<ApiPosts>('posts', getRequesterWithReCAPTCHA);
+export const useApiForums = () => useApi<ApiForums>('forums', queryFunction)();
+export const useApiStatus = useApi<ApiStatus>('status', queryFunctionWithReCAPTCHA);
+export const useApiStatsForumsPostCount = useApi<ApiStatsForumPostCount>('stats/forums/postCount', queryFunctionWithReCAPTCHA);
+export const useApiUsers = useApi<ApiUsers>('users', queryFunctionWithReCAPTCHA);
+export const useApiPosts = useApiWithCursor<ApiPosts>('posts', queryFunctionWithReCAPTCHA);
