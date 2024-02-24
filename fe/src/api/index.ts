@@ -15,8 +15,8 @@ export class ApiResponseError extends Error {
     }
 }
 export class FetchResponseError extends Error {
-    public constructor(public readonly response: Response) {
-        super(JSON.stringify(response));
+    public constructor(public readonly bodyText: string) {
+        super(bodyText);
     }
 }
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -39,11 +39,14 @@ export const queryFunction = <TResponse, TQueryParam>(endpoint: string, queryPar
                     + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
                 { headers: { Accept: 'application/json' }, signal: queryContext.signal }
             );
+
+            // must before any Response.text|json() to prevent `Failed to execute 'clone' on 'Response': Response body is already used`
+            const response2 = response.clone();
             const json = await response.json() as TResponse;
-            if (!response.ok)
-                throw new FetchResponseError(response);
             if (isApiError(json))
                 throw new ApiResponseError(json.errorCode, json.errorInfo);
+            if (!response.ok)
+                throw new FetchResponseError(await response2.text());
 
             return json;
         } finally {

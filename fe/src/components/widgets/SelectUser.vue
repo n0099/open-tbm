@@ -1,7 +1,7 @@
 <template>
     <div class="col-5">
         <div class="input-group">
-            <select v-model="selectBy" class="selectUserBy form-select">
+            <select v-model="selectBy" class="select-user-by form-select">
                 <option value="">未选择</option>
                 <option value="uid">百度UID</option>
                 <option value="name">用户名</option>
@@ -10,7 +10,7 @@
                 <option value="displayNameNULL">NULL覆盖名</option>
             </select>
             <template v-if="selectBy === 'uid'">
-                <select v-model="params.uidCompareBy" class="uidCompareBy form-select">
+                <select v-model="params.uidCompareBy" class="uid-compare-by form-select">
                     <option>&lt;</option>
                     <option>=</option>
                     <option>&gt;</option>
@@ -107,10 +107,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.selectUserBy {
+.select-user-by {
     flex-grow: .3;
 }
-.uidCompareBy {
+.uid-compare-by {
     flex-grow: .1;
 }
 </style>

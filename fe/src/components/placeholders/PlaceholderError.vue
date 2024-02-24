@@ -1,23 +1,23 @@
 <template>
     <div class="text-center">
-        <template v-if="error === null">
-            <span class="errorCode text-muted">error</span>
-        </template>
-        <template v-else-if="error instanceof FetchResponseError">
-            <p class="errorCode text-muted">{{ error.response }}</p>
+        <template v-if="error instanceof FetchResponseError">
+            <p class="error-code text-muted">{{ error.bodyText }}</p>
         </template>
         <template v-else-if="error instanceof ApiResponseError">
-            <p class="errorCode text-muted">{{ error.errorCode }}</p>
+            <p class="error-code text-muted">{{ error.errorCode }}</p>
             <template v-if="_.isString(error.errorInfo)">
                 <p v-for="(info, _k) in error.errorInfo.split('\n')" :key="_k">{{ info }}</p>
             </template>
             <template v-else-if="_.isObject(error.errorInfo)">
-                <p v-for="(lines, paramName) in error.errorInfo" :key="paramName">
+                <p v-for="(paramError, paramName) in error.errorInfo" :key="paramName">
                     参数 {{ paramName }}：
-                    <template v-if="_.isString(lines)">
-                        <p v-for="(info, _k) in lines.split('\n')" :key="_k">{{ info }}</p>
+                    <template v-if="_.isString(paramError)">
+                        <p v-for="(line, _k) in paramError.split('\n')" :key="_k">{{ line }}</p>
                     </template>
-                    <template v-else>{{ lines }}</template>
+                    <template v-else-if="_.isArray(paramError) && paramError.length > 1">
+                        <p v-for="(item, _k) in paramError" :key="_k">{{ item }}</p>
+                    </template>
+                    <template v-else>{{ paramError }}</template>
                 </p>
             </template>
         </template>
@@ -33,7 +33,7 @@ defineProps<{ error: ApiErrorClass | null }>();
 </script>
 
 <style scoped>
-.errorCode {
+.error-code {
     font-size: 6rem;
 }
 </style>
