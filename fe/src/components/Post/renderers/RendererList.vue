@@ -184,7 +184,7 @@ const getUser = baseGetUser(props.initialPosts.users);
 const renderUsername = baseRenderUsername(getUser);
 const userRoute = (uid: BaiduUserID) => ({ name: 'user/uid', params: { uid } });
 const posts = computed(() => {
-    const newPosts = props.initialPosts as Modify<ApiPosts['response'], { // https://github.com/microsoft/TypeScript/issues/33591
+    const newPosts = _.cloneDeep(props.initialPosts) as Modify<ApiPosts['response'], { // https://github.com/microsoft/TypeScript/issues/33591
         threads: Array<Thread & { replies: Array<Reply & { subReplies: Array<SubReply | SubReply[]> }> }>
     }>;
     newPosts.threads = newPosts.threads.map(thread => {
@@ -193,11 +193,11 @@ const posts = computed(() => {
             reply.subReplies = reply.subReplies.reduce<SubReply[][]>(
                 (groupedSubReplies, subReply, index, subReplies) => {
                     if (_.isArray(subReply))
-                        return [subReply]; // useless guard since subReply will never be an array
+                        return [subReply]; // useless guard since subReply will never be an array at first
                     // group sub replies item by continuous and same post author
+                    // https://github.com/microsoft/TypeScript/issues/13778
                     const previousSubReply = subReplies[index - 1] as SubReply | undefined;
 
-                    // https://github.com/microsoft/TypeScript/issues/13778
                     if (previousSubReply !== undefined
                         && subReply.authorUid === previousSubReply.authorUid)
                         groupedSubReplies.at(-1)?.push(subReply); // append to last group

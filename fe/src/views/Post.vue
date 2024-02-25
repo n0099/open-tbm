@@ -79,11 +79,11 @@ useHead({
     })()))
 });
 
-const fetchPosts = (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Cursor) => {
-    const startTime = Date.now() / 1000;
+const fetchPosts = (queryParams: ObjUnknown[], cursor: Cursor) => {
+    const startTime = Date.now();
     queryParam.value = {
         query: JSON.stringify(queryParams),
-        cursor: isNewQuery ? undefined : cursor
+        cursor: cursor === '' ? undefined : cursor
     };
     shouldFetch.value = true;
     watchOnce(isFetchedAfterMount, value => {
@@ -91,12 +91,14 @@ const fetchPosts = (queryParams: ObjUnknown[], isNewQuery: boolean, cursor: Curs
             shouldFetch.value = false;
     });
     watchOnce([dataUpdatedAt, errorUpdatedAt], async updatedAt => {
-        const networkTime = _.max(updatedAt) ?? 0 - startTime;
+        const networkTime = (_.max(updatedAt) ?? 0) - startTime;
         await nextTick(); // wait for child components finish dom update
         const fetchedPage = data.value?.pages.find(i => i.pages.currentCursor === cursor);
         const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
-        const renderTime = (Date.now() / 1000) - startTime - networkTime;
-        notyShow('success', `已加载${postCount}条记录 前端耗时${renderTime.toFixed(2)}s 后端+网络耗时${networkTime}ms`);
+        const renderTime = (Date.now() - startTime - networkTime) / 1000;
+        notyShow('success', `已加载${postCount}条记录
+            前端耗时${renderTime.toFixed(2)}s
+            后端+网络耗时${(networkTime / 1000).toFixed(2)}s`);
     });
 };
 
@@ -140,14 +142,14 @@ watchEffect(() => {
     }
 });
 
-const parseRouteThenFetch = async (newRoute: RouteLocationNormalized, isNewQuery: boolean, cursor: Cursor) => {
+const parseRouteThenFetch = async (newRoute: RouteLocationNormalized, cursor: Cursor) => {
     if (queryFormRef.value === undefined)
         return;
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
         return;
     lastFetchingRoute.value = newRoute;
-    fetchPosts(flattenParams, isNewQuery, cursor);
+    fetchPosts(flattenParams, cursor);
 };
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = useTriggerRouteUpdateStore()
@@ -158,10 +160,10 @@ onBeforeRouteUpdate(async (to, from) => {
         data.value?.pages,
         i => i.pages.currentCursor === cursor
     )))
-        await parseRouteThenFetch(to, isNewQuery, cursor);
+        await parseRouteThenFetch(to, cursor);
 });
 onMounted(async () => {
-    await parseRouteThenFetch(route, true, getRouteCursorParam(route));
+    await parseRouteThenFetch(route, getRouteCursorParam(route));
 });
 </script>
 

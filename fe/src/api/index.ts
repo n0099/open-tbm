@@ -1,6 +1,6 @@
 import type { Api, ApiError, ApiForums, ApiPosts, ApiStatsForumPostCount, ApiStatus, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
 import type { MaybeRefOrGetter, Ref } from 'vue';
-import type { InfiniteData, QueryFunctionContext, QueryKey } from '@tanstack/vue-query';
+import type { InfiniteData, QueryKey } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';
@@ -29,31 +29,31 @@ export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TRes
 
     return response;
 };
-export const queryFunction = <TResponse, TQueryParam>(endpoint: string, queryParam?: TQueryParam) =>
-    async (queryContext: QueryFunctionContext): Promise<TResponse> => {
-        nprogress.start();
-        document.body.style.cursor = 'progress';
-        try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_URL_PREFIX}${endpoint}`
-                    + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
-                { headers: { Accept: 'application/json' }, signal: queryContext.signal }
-            );
+export const queryFunction = async <TResponse, TQueryParam>
+(endpoint: string, queryParam?: TQueryParam, signal?: AbortSignal): Promise<TResponse> => {
+    nprogress.start();
+    document.body.style.cursor = 'progress';
+    try {
+        const response = await fetch(
+            `${import.meta.env.VITE_API_URL_PREFIX}${endpoint}`
+                + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
+            { headers: { Accept: 'application/json' }, signal }
+        );
 
-            // must before any Response.text|json() to prevent `Failed to execute 'clone' on 'Response': Response body is already used`
-            const response2 = response.clone();
-            const json = await response.json() as TResponse;
-            if (isApiError(json))
-                throw new ApiResponseError(json.errorCode, json.errorInfo);
-            if (!response.ok)
-                throw new FetchResponseError(await response2.text());
+        // must before any Response.text|json() to prevent `Failed to execute 'clone' on 'Response': Response body is already used`
+        const response2 = response.clone();
+        const json = await response.json() as TResponse;
+        if (isApiError(json))
+            throw new ApiResponseError(json.errorCode, json.errorInfo);
+        if (!response.ok)
+            throw new FetchResponseError(await response2.text());
 
-            return json;
-        } finally {
-            nprogress.done();
-            document.body.style.cursor = '';
-        }
-    };
+        return json;
+    } finally {
+        nprogress.done();
+        document.body.style.cursor = '';
+    }
+};
 const checkReCAPTCHA = async (action = '') =>
     new Promise<{ reCAPTCHA?: string }>((reslove, reject) => {
         if (import.meta.env.VITE_RECAPTCHA_SITE_KEY === '') {
@@ -70,13 +70,13 @@ const checkReCAPTCHA = async (action = '') =>
             });
         }
     });
-const queryFunctionWithReCAPTCHA = <TResponse, TQueryParam>
-(endpoint: string, queryParam?: TQueryParam, action = '') =>
-    async (queryContext: QueryFunctionContext): Promise<TResponse> =>
-        queryFunction<TResponse, TQueryParam & { reCAPTCHA?: string }>(
-            endpoint,
-            { ...queryParam as TQueryParam, ...await checkReCAPTCHA(action) }
-        )(queryContext);
+const queryFunctionWithReCAPTCHA = async <TResponse, TQueryParam>
+(endpoint: string, queryParam?: TQueryParam, signal?: AbortSignal, action = ''): Promise<TResponse> =>
+    queryFunction<TResponse, TQueryParam & { reCAPTCHA?: string }>(
+        endpoint,
+        { ...queryParam as TQueryParam, ...await checkReCAPTCHA(action) },
+        signal
+    );
 
 export type ApiErrorClass = ApiResponseError | FetchResponseError;
 type QueryFunctions = typeof queryFunction | typeof queryFunctionWithReCAPTCHA;
@@ -88,7 +88,7 @@ const useApi = <
     (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
         useQuery<TResponse, ApiErrorClass>({
             queryKey: [endpoint, queryParam],
-            queryFn: queryFn<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            queryFn: async () => queryFn<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
             enabled
         });
 const useApiWithCursor = <
@@ -103,7 +103,7 @@ const useApiWithCursor = <
             QueryKey, Cursor
         >({
             queryKey: [endpoint, queryParam],
-            queryFn: queryFn<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            queryFn: async () => queryFn<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam?.value),
             initialPageParam: '',
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
             enabled
