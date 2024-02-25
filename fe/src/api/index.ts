@@ -40,7 +40,8 @@ export const queryFunction = async <TResponse, TQueryParam>
             { headers: { Accept: 'application/json' }, signal }
         );
 
-        // must before any Response.text|json() to prevent `Failed to execute 'clone' on 'Response': Response body is already used`
+        /** must be cloned before any {@link Response.text()} */
+        // to prevent `Failed to execute 'clone' on 'Response': Response body is already used`
         const response2 = response.clone();
         const json = await response.json() as TResponse;
         if (isApiError(json))

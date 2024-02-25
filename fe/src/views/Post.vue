@@ -34,7 +34,7 @@ import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.v
 
 import { useApiPosts } from '@/api';
 import type { ApiPosts, Cursor } from '@/api/index.d';
-import { scrollToPostListItemByRoute } from '@/components/Post/renderers/rendererList';
+import { scrollToPostListItemByRoute } from '@/components/Post/renderers/list/index';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
 import type { ObjUnknown } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';

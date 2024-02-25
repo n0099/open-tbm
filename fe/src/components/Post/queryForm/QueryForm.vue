@@ -329,7 +329,7 @@ const checkParams = async (): Promise<boolean> => {
     // check params required post types, index query doesn't restrict on post types
     invalidParamsIndex.value = []; // reset to prevent duplicate indexes
     if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
-        // we don't filter() here for post types validate
+        /** we don't {@link Array.filter()} here for post types validate */
         params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
             if (param?.name === undefined || param.value === undefined) {
                 invalidParamsIndex.value.push(paramIndex);

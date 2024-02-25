@@ -7,8 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import RendererList from './renderers/RendererList.vue';
 import RendererTable from './renderers/RendererTable.vue';
+import RendererList from './renderers/list/RendererList.vue';
 
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
 import type { PostRenderer } from '@/views/Post.vue';

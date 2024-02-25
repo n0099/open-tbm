@@ -161,7 +161,7 @@ const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
     }
 };
 
-// must get invoked with in the setup() of component
+/** must get invoked with in the {@link setup()} of component */
 export const useQueryFormWithUniqueParams = () => {
     const ret = useQueryForm<KnownUniqueParams, KnownParams>(useQueryFormDependency);
     ret.uniqueParams.value = {

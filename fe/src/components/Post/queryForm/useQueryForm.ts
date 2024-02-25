@@ -61,11 +61,12 @@ export default <
         if (defaultParam === undefined)
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
 
-        // remove subParam.not: false, which previously added by fillParamDefaultValue()
+        /** remove subParam.not: false, which previously added by {@link fillParamDefaultValue()} */
         if (defaultParam.subParam !== undefined)
             defaultParam.subParam.not ??= false;
         const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
-        // number will consider as empty in isEmpty(), to prevent this we use complex short circuit evaluate expression
+        /** number will consider as empty in {@link _.isEmpty()} */
+        // to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
             || (_.isArray(newParam.value) && _.isArray(defaultParam.value)
 
@@ -85,15 +86,16 @@ export default <
         if (_.isEmpty(newParam.subParam))
             delete newParam.subParam;
 
-        return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam; // return null for further filter()
+        /** return null for further {@link _.filter()} */
+        return _.isEmpty(_.omit(newParam, 'name')) ? null : newParam;
     };
     const clearedParamsDefaultValue = (): Array<Partial<Param>> =>
 
-        // filter() will remove falsy values like null
+        /** {@link _.filter()} will remove falsy values like null */
         _.filter(params.value.map(clearParamDefaultValue)) as Array<Partial<Param>>;
     const clearedUniqueParamsDefaultValue = (): Partial<UniqueParams> =>
 
-        // mapValues() return object which remains keys, pickBy() like filter() for objects
+        /** {@link _.mapValues()} return object which remains keys, {@link _.pickBy()} like {@link _.filter()} for objects */
         _.pickBy(_.mapValues(uniqueParams.value, clearParamDefaultValue)) as Partial<UniqueParams>;
     const removeUndefinedFromPartialObjectValues = <T extends Partial<T>, R>(object: Partial<T>) =>
         Object.values(object).filter(i => i !== undefined) as R[];

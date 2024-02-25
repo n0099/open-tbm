@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { isApiError } from '@/api/index';
 import type { ApiPosts, Cursor } from '@/api/index.d';
-import { getReplyTitleTopOffset } from '@/components/Post/renderers/rendererList';
+import { getReplyTitleTopOffset } from '@/components/Post/renderers/list';
 import type { Pid, Tid, ToPromise } from '@/shared';
 import { cursorTemplate, scrollBarWidth } from '@/shared';
 import { useElementRefsStore } from '@/stores/elementRefs';

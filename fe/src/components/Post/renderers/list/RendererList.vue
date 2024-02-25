@@ -152,12 +152,12 @@
 </template>
 
 <script setup lang="ts">
-import { baseGetUser, baseRenderUsername } from './common';
-import { postListItemScrollPosition } from './rendererList';
-import BadgePostTime from '../badges/BadgePostTime.vue';
-import BadgeThread from '../badges/BadgeThread.vue';
-import BadgeUser from '../badges/BadgeUser.vue';
-import PostCommonMetadataIconLinks from '../badges/PostCommonMetadataIconLinks.vue';
+import { postListItemScrollPosition } from './index';
+import { baseGetUser, baseRenderUsername } from '../common';
+import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
+import BadgeThread from '@/components/Post/badges/BadgeThread.vue';
+import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
+import PostCommonMetadataIconLinks from '@/components/Post/badges/PostCommonMetadataIconLinks.vue';
 
 import type { ApiPosts } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/post';
@@ -223,7 +223,7 @@ const posts = computed(() => {
 onMounted(initialTippy);
 onMounted(async () => {
     await nextTick();
-    const imageWidth = convertRemToPixels(18.75); // match with .tieba-image:max-inline-size in shread/tieba.css
+    const imageWidth = convertRemToPixels(18.75); // match with .tieba-image:max-inline-size in shared/tieba.css
 
     // block-size of .reply-content should be similar when author usernames are also similar, so only takes the first element
     const contentEl = document.querySelector<HTMLElement>('.reply-content');

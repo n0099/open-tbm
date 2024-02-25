@@ -123,7 +123,7 @@ export default createRouter({
 
         if (to.hash)
             return { el: to.hash, top: 0 };
-        if (from.name !== undefined) { // from.name will be undefined when user refresh page
+        if (from.name !== undefined) { // when user refresh page
             assertRouteNameIsStr(to.name);
             assertRouteNameIsStr(from.name);
 

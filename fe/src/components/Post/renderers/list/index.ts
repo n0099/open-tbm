@@ -17,12 +17,12 @@ export const postListItemScrollPosition = (route: RouteLocationNormalized)
     };
 };
 const scrollToPostListItem = (el: Element) => {
-    // simply invoke el.scrollIntoView() for only once will scroll the element to the top of the viewport
+    /** simply invoke {@link Element.scrollIntoView()} for only once will scroll the element to the top of the viewport */
     // and then some other elements above it such as img[loading='lazy'] may change its box size
     // that would lead to reflow resulting in the element being pushed down or up out of viewport
-    // due to document.scrollingElement.scrollTop changed a lot
+    /** due to {@link document.scrollingElement.scrollTop()} changed a lot */
     const tryScroll = () => {
-        // not using a passive callback by IntersectionObserverto to prevent getBoundingClientRect() caused force reflow
+        /** not using a passive callback by IntersectionObserverto to prevent {@link Element.getBoundingClientRect()} caused force reflow */
         // due to it will only emit once the configured thresholds are reached
         // thus the top offset might be far from 0 that is top aligned with viewport when the callback is called
         // since the element is still near the bottom of viewport at that point of time
