@@ -23,7 +23,7 @@ import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setCompon
 import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
 
 import { nextTick, onBeforeMount, ref, watchEffect } from 'vue';
-import type { RouteLocationNormalizedLoaded, RouterScrollBehavior } from 'vue-router';
+import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@unhead/vue';
 import * as _ from 'lodash-es';
@@ -43,7 +43,7 @@ const isLoading = ref<boolean>(false);
 const lastFetchError = ref<ApiError | null>(null);
 const showPlaceholderPostList = ref<boolean>(false);
 
-const fetchUsers = async (_route: RouteLocationNormalizedLoaded, isNewQuery: boolean) => {
+const fetchUsers = async (_route: RouteLocationNormalized, isNewQuery: boolean) => {
     const startTime = Date.now();
     const queryString = { ..._route.params, ..._route.query };
     lastFetchError.value = null;

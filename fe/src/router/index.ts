@@ -4,7 +4,7 @@ import type { Cursor } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
-import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
+import type { RouteLocationNormalized, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import nprogress from 'nprogress';
 import * as _ from 'lodash-es';
@@ -15,7 +15,7 @@ export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
     onUnmounted(() => { componentCustomScrollBehaviour.value = undefined });
 };
 
-export const assertRouteNameIsStr: (name: RouteLocationNormalizedLoaded['name']) => asserts name is string = name => {
+export const assertRouteNameIsStr: (name: RouteLocationNormalized['name']) => asserts name is string = name => {
     if (!_.isString(name))
         throw new Error('https://github.com/vuejs/vue-router-next/issues/1185');
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122

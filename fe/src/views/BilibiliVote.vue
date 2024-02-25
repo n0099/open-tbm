@@ -679,9 +679,9 @@ const loadCharts = {
 };
 
 watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
-    () => { loadCharts.top5CandidateCountGroupByTime() });
+    loadCharts.top5CandidateCountGroupByTime);
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
-    () => { loadCharts.allVoteCountGroupByTime() });
+    loadCharts.allVoteCountGroupByTime);
 onMounted(() => {
     _.map(chartElements, (elRef, chartName: ChartName) => {
         if (elRef.value === undefined)

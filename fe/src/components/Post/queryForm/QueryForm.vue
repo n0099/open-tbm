@@ -179,7 +179,7 @@ import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, ref, watch } from 'vue';
-import type { RouteLocationNormalizedLoaded } from 'vue-router';
+import type { RouteLocationNormalized } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -359,7 +359,7 @@ const checkParams = async (): Promise<boolean> => {
     return _.isEmpty(invalidParamsIndex.value) && !(isOrderByInvalid.value || isFidInvalid.value);
 };
 
-const parseRoute = (route: RouteLocationNormalizedLoaded) => {
+const parseRoute = (route: RouteLocationNormalized) => {
     assertRouteNameIsStr(route.name);
     uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
     params.value = [];
@@ -377,7 +377,7 @@ const parseRoute = (route: RouteLocationNormalizedLoaded) => {
             fillParamDefaultValue({ name, value }));
     }
 };
-const parseRouteToGetFlattenParams = async (route: RouteLocationNormalizedLoaded)
+const parseRouteToGetFlattenParams = async (route: RouteLocationNormalized)
 : Promise<ReturnType<typeof flattenParams> | false> => {
     parseRoute(route);
     if (await checkParams())
