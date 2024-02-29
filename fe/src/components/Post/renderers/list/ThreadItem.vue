@@ -45,7 +45,7 @@
                     </span>
                 </div>
                 <div class="col-auto badge bg-light" role="group">
-                    <RouterLink :to="userRoute(thread.authorUid)">
+                    <RouterLink :to="toUserRoute(thread.authorUid)">
                         <span v-if="thread.latestReplierUid !== thread.authorUid"
                               class="fw-normal link-success">楼主：</span>
                         <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
@@ -58,7 +58,7 @@
                         <span class="fw-bold link-dark">未知用户</span>
                     </template>
                     <template v-else-if="thread.latestReplierUid !== thread.authorUid">
-                        <RouterLink :to="userRoute(thread.latestReplierUid)" class="ms-2">
+                        <RouterLink :to="toUserRoute(thread.latestReplierUid)" class="ms-2">
                             <span class="fw-normal link-secondary">最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                         </RouterLink>
@@ -67,24 +67,28 @@
                 </div>
             </div>
         </div>
-        <ReplyItem v-for="reply in thread.replies" :key="reply.pid" :reply="reply" />
+        <ReplyItem v-for="reply in thread.replies" :key="reply.pid" :reply="reply" :threadAuthorUid="thread.authorUid" />
     </div>
 </template>
 
 <script setup lang="ts">
+import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
 import ReplyItem from './ReplyItem.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeThread from '@/components/Post/badges/BadgeThread.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import PostCommonMetadataIconLinks from '@/components/Post/badges/PostCommonMetadataIconLinks.vue';
-import type { Thread } from '@/api/post';
+import { toUserRoute } from '@/shared/index';
 import { useElementRefsStore } from '@/stores/elementRefs';
+import { inject } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
-defineProps<{ thread: Thread }>();
+defineProps<{ thread: ThreadWithGroupedSubReplies }>();
 const elementRefsStore = useElementRefsStore();
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
 </script>
 
 <style scoped>

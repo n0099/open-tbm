@@ -1,6 +1,7 @@
 import type { Cursor } from '@/api/index.d';
-import type { User } from '@/api/user';
+import type { BaiduUserID, User } from '@/api/user';
 import { computed } from 'vue';
+import type { LocationAsRelativeRaw } from 'vue-router';
 import Noty from 'noty';
 import * as _ from 'lodash-es';
 
@@ -51,6 +52,8 @@ export const toUserProfileUrl = (user: Partial<Pick<User, 'name' | 'portrait'>>)
         : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
 export const toUserPortraitImageUrl = (portrait: string) =>
     `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
+export const toUserRoute = (uid: BaiduUserID): LocationAsRelativeRaw =>
+    ({ name: 'user/uid', params: { uid: uid.toString() } });
 
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
 export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);
