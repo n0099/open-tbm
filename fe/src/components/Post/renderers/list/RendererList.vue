@@ -13,20 +13,21 @@ import type { Reply, SubReply, Thread } from '@/api/post';
 import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { Modify } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
+import type { ComputedRef } from 'vue';
 import { computed, onMounted, provide } from 'vue';
 import type { RouterScrollBehavior } from 'vue-router';
 import * as _ from 'lodash-es';
 
 const props = defineProps<{ initialPosts: ApiPosts['response'] }>();
-const getUser = baseGetUser(props.initialPosts.users);
-const renderUsername = baseRenderUsername(getUser);
+const getUser = computed(() => baseGetUser(props.initialPosts.users));
+const renderUsername = computed(() => baseRenderUsername(getUser.value));
 const userProvision = { getUser, renderUsername };
 
 // export type UserProvision = typeof userProvision;
 // will trigger @typescript-eslint/no-unsafe-assignment when `inject<UserProvision>('userProvision')`
 export interface UserProvision {
-    getUser: ReturnType<typeof baseGetUser>,
-    renderUsername: ReturnType<typeof baseRenderUsername>
+    getUser: ComputedRef<ReturnType<typeof baseGetUser>>,
+    renderUsername: ComputedRef<ReturnType<typeof baseRenderUsername>>
 }
 provide<UserProvision>('userProvision', userProvision);
 

@@ -2,7 +2,7 @@
     <slot v-if="isFetching || isError" :renderer="indicatorsRenderer" name="indicators">
         <RenderFunction :renderer="indicatorsRenderer" />
     </slot>
-    <select v-if="!isFetching && isSuccess && data !== undefined"
+    <select v-if="!isFetching && isSuccess && data !== undefined" v-model="modelValue"
             class="form-select form-control" v-bind="$attrs">
         <option value="0">未指定</option>
         <option v-for="forum in data"
@@ -13,11 +13,13 @@
 <script setup lang="tsx">
 import { useApiForums } from '@/api/index';
 import RenderFunction from '@/components/RenderFunction';
+import type { Fid } from '@/shared';
 import type { VNode } from 'vue';
 import { computed } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ indicators: (props: { renderer: VNode }) => unknown }>();
+const modelValue = defineModel<Fid>();
 
 const { data, error, isFetching, isError, isSuccess } = useApiForums();
 const indicatorsRenderer = computed(() => (<>

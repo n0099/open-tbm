@@ -21,7 +21,7 @@
     </div>
     <div class="container">
         <PlaceholderError :error="error" class="border-top" />
-        <PlaceholderPostList :isLoading="isFetching" />
+        <PlaceholderPostList v-show="isPending" :isLoading="isFetching" />
     </div>
 </template>
 
@@ -36,7 +36,7 @@ import { useApiPosts } from '@/api';
 import type { ApiPosts, Cursor } from '@/api/index.d';
 import { scrollToPostListItemByRoute } from '@/components/Post/renderers/list/index';
 import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
-import type { ObjUnknown } from '@/shared';
+import type { ObjUnknown, UnixTimestamp } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
@@ -53,7 +53,8 @@ export type PostRenderer = 'list' | 'table';
 const route = useRoute();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref<boolean>(false);
-const { data, error, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt } = useApiPosts(queryParam, shouldFetch);
+const { data, error, isPending, isRefetching, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt } =
+    useApiPosts(queryParam, shouldFetch);
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormRef = ref<InstanceType<typeof QueryForm>>();
@@ -90,16 +91,26 @@ const fetchPosts = (queryParams: ObjUnknown[], cursor: Cursor) => {
         if (value)
             shouldFetch.value = false;
     });
-    watchOnce([dataUpdatedAt, errorUpdatedAt], async updatedAt => {
-        const networkTime = (_.max(updatedAt) ?? 0) - startTime;
-        await nextTick(); // wait for child components finish dom update
+    const updatedAtWatcher = async (updatedAt: UnixTimestamp[]) => {
+        if (isRefetching.value) // background refetching with cached data already presented, watching for refetch
+            watchOnce([dataUpdatedAt, errorUpdatedAt], updatedAtWatcher);
+        const maxUpdatedAt = Math.max(...updatedAt);
+        if (maxUpdatedAt === 0) { // just starts to fetch, defer watching to next time
+            watchOnce([dataUpdatedAt, errorUpdatedAt], updatedAtWatcher);
+
+            return;
+        }
+        const isCached = maxUpdatedAt < startTime;
+        const networkTime = isCached ? 0 : maxUpdatedAt - startTime;
+        await nextTick(); // wait for child components to finish dom update
         const fetchedPage = data.value?.pages.find(i => i.pages.currentCursor === cursor);
         const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
         const renderTime = (Date.now() - startTime - networkTime) / 1000;
         notyShow('success', `已加载${postCount}条记录
             前端耗时${renderTime.toFixed(2)}s
-            后端+网络耗时${(networkTime / 1000).toFixed(2)}s`);
-    });
+            ${isCached ? '使用本地缓存' : `后端+网络耗时${(networkTime / 1000).toFixed(2)}s`}`);
+    };
+    watchOnce([dataUpdatedAt, errorUpdatedAt], updatedAtWatcher);
 };
 
 watch(isFetchedAfterMount, async () => {

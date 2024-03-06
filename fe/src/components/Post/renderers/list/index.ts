@@ -31,7 +31,7 @@ const scrollToPostListItem = (el: Element) => {
         // and the element reached the top of viewport
         const elTop = el.getBoundingClientRect().top;
         const replyTitleTopOffset = getReplyTitleTopOffset();
-        if (Math.abs(elTop) < replyTitleTopOffset + (window.innerHeight * 0.05)) // at most 5dvh tolerance
+        if (elTop > 0 && Math.abs(elTop) < replyTitleTopOffset + (window.innerHeight * 0.05)) // at most 5dvh tolerance
             removeEventListener('scrollend', tryScroll);
         else
             document.documentElement.scrollBy({ top: elTop - replyTitleTopOffset });
