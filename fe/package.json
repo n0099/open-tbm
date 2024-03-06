@@ -7,7 +7,7 @@
         "dev": "vite",
         "build": "vue-tsc && vite build",
         "preview": "vite preview",
-        "eslint": "tsx node_modules/eslint/bin/eslint"
+        "eslint": "tsx .yarn/unplugged/eslint-npm-*/node_modules/eslint/bin/eslint.js"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.5.1",
@@ -16,7 +16,7 @@
         "@fortawesome/free-solid-svg-icons": "^6.5.1",
         "@fortawesome/vue-fontawesome": "^3.0.6",
         "@popperjs/core": "^2.11.8",
-        "@tanstack/vue-query": "^5.24.8",
+        "@tanstack/vue-query": "^5.25.0",
         "@unhead/vue": "^1.8.11",
         "@vueuse/core": "^10.9.0",
         "ant-design-vue": "^4.1.2",
@@ -40,7 +40,7 @@
         "@stylistic/eslint-plugin": "^1.6.3",
         "@stylistic/eslint-plugin-migrate": "^1.6.3",
         "@tanstack/eslint-plugin-query": "^5.20.1",
-        "@tanstack/vue-query-devtools": "^5.24.8",
+        "@tanstack/vue-query-devtools": "^5.25.0",
         "@types/bootstrap": "^5.2.10",
         "@types/grecaptcha": "^3.0.8",
         "@types/lodash-es": "^4.17.12",
@@ -54,7 +54,7 @@
         "@vitejs/plugin-vue-jsx": "^3.1.0",
         "@vue/compiler-sfc": "^3.4.21",
         "@vue/eslint-config-typescript": "^12.0.0",
-        "@vue/language-server": "^2.0.4",
+        "@vue/language-server": "^2.0.5",
         "checkcss": "^2.0.9",
         "eslint": "^8.57.0",
         "eslint-import-resolver-typescript": "^3.6.1",
@@ -70,12 +70,17 @@
         "vite": "^5.1.5",
         "vite-bundle-analyzer": "^0.8.1",
         "vue-eslint-parser": "^9.4.2",
-        "vue-tsc": "^2.0.4"
+        "vue-tsc": "^2.0.5"
     },
     "browserslist": [
         "> 1% in CN",
         "not ie 11",
         "not dead"
     ],
-    "packageManager": "yarn@4.1.1"
+    "packageManager": "yarn@4.1.1",
+    "dependenciesMeta": {
+        "eslint@8.57.0": {
+            "unplugged": true
+        }
+    }
 }
