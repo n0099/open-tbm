@@ -35,7 +35,7 @@
 import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 import TimeRange from '@/components/widgets/TimeRange.vue';
 
-import { useApiStatus, throwIfApiError } from '@/api';
+import { throwIfApiError, useApiStatus } from '@/api';
 import type { ApiStatus } from '@/api/index.d';
 import { titleTemplate } from '@/shared';
 import { commonToolboxFeatures, emptyChartSeriesData } from '@/shared/echarts';

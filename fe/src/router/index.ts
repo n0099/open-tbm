@@ -1,10 +1,11 @@
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
 import Index from '@/views/Index.vue';
+import { ApiResponseError } from '@/api';
 import type { Cursor } from '@/api/index.d';
 import { notyShow } from '@/shared';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
-import type { RouteLocationNormalized, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
+import type { RouteLocation, RouteLocationNormalized, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import nprogress from 'nprogress';
 import * as _ from 'lodash-es';
@@ -76,6 +77,11 @@ const userRoute: ParentRoute = {
 const postRoute: ParentRoute = {
     components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }
 };
+const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => [{
+    path: `${before}/:pathMatch(.*)*`,
+    redirect: to =>
+        `${after}/${_.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch}`
+}, { path: before, redirect: after }];
 
 export default createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -84,25 +90,36 @@ export default createRouter({
             path: '/:pathMatch(.*)*',
             name: '404',
             component: PlaceholderError,
-            props: r => ({ error: { errorCode: 404, errorInfo: r.path } })
+            props: (route): InstanceType<typeof PlaceholderError>['$props'] =>
+                ({ error: new ApiResponseError(404, route.path) })
         },
         { path: '/', name: 'index', component: Index },
-        _.merge(withCursorRoute(postRoute, '/p', 'post'),
+        ...redirectRoute('/p', '/posts'),
+        _.merge(withCursorRoute(postRoute, '/posts', 'post'),
             {
                 children: [
-                    withCursorRoute(postRoute, 'f/:fid(\\d+)', 'post/fid'),
-                    withCursorRoute(postRoute, 't/:tid(\\d+)', 'post/tid'),
-                    withCursorRoute(postRoute, 'p/:pid(\\d+)', 'post/pid'),
-                    withCursorRoute(postRoute, 'sp/:spid(\\d+)', 'post/spid'),
+                    withCursorRoute(postRoute, 'fid/:fid(\\d+)', 'post/fid'),
+                    withCursorRoute(postRoute, 'tid/:tid(\\d+)', 'post/tid'),
+                    withCursorRoute(postRoute, 'pid/:pid(\\d+)', 'post/pid'),
+                    withCursorRoute(postRoute, 'spid/:spid(\\d+)', 'post/spid'),
+                    {
+                        path: ':idType(f|t|p|sp)/:id(\\d+)',
+                        redirect: (to: RouteLocation) =>
+                            _.isString(to.params.idType) && _.isString(to.params.id)
+                            && `/posts/${to.params.idType}id/${to.params.id}`
+                    },
                     withCursorRoute(postRoute, ':pathMatch(.*)*', 'post/param')
                 ]
             }),
-        _.merge(withCursorRoute(userRoute, '/u', 'user'),
+        ...redirectRoute('/u', '/users'),
+        _.merge(withCursorRoute(userRoute, '/users', 'user'),
             {
                 children: [
                     withCursorRoute(userRoute, 'id/:uid(\\d+)', 'user/uid'),
-                    withCursorRoute(userRoute, 'n/:name', 'user/name'),
-                    withCursorRoute(userRoute, 'dn/:displayName', 'user/displayName')
+                    ...redirectRoute('n', '/users/name'),
+                    withCursorRoute(userRoute, 'name/:name', 'user/name'),
+                    ...redirectRoute('dn', '/users/displayName'),
+                    withCursorRoute(userRoute, 'displayName/:displayName', 'user/displayName')
                 ]
             }),
         withViewRoute(import('@/views/Status.vue'), 'status'),

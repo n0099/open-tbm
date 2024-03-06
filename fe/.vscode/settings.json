@@ -10,5 +10,9 @@
   ],
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "eslint.nodePath": ".yarn/sdks"
+  "eslint.nodePath": ".yarn/sdks",
+  "vue.complete.casing.props": "autoCamel",
+  "[vue]": {
+      "editor.defaultFormatter": "Vue.volar"
+  }
 }
