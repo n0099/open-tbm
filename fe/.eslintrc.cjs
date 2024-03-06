@@ -26,7 +26,7 @@ const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
         'import/no-self-import': 'error',
         'import/no-useless-path-segments': 'error',
         'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
-        'import/extensions': ['error', 'always', { ts: 'never' }],
+        'import/extensions': ['error', 'always', { js: 'never', ts: 'never' }],
         'import/newline-after-import': 'error',
         'import/no-named-default': 'error',
         'import/order': ['error', {
@@ -550,9 +550,8 @@ module.exports = {
             'import/resolver': {
                 typescript: true,
 
-                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1858743165
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-var-requires, no-undef
-                vite: { viteConfig: require('import-sync')('./vite.config.ts').default },
+                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1979897899
+                vite: { viteConfig: import('./vite.config') },
             },
         },
     }, {
