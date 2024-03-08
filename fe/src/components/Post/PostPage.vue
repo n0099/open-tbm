@@ -2,25 +2,27 @@
     <PageCurrentButton :currentCursor="props.posts.pages.currentCursor" />
     <RendererList v-if="renderType === 'list'" :initialPosts="posts" />
     <RendererTable v-else-if="renderType === 'table'" :posts="posts" />
-    <PageNextButton v-if="!isLoadingNewPage && isLastPageInPages && props.posts.pages.hasMore"
-                    :nextCursorRoute="nextCursorRoute" />
+    <!-- eslint-disable vue/v-on-handler-style -->
+    <PageNextButton v-if="isLastPageInPages && !isFetching && hasNextPage"
+                    @click="async () => await fetchNextPage()" />
+    <!-- eslint-enable vue/v-on-handler-style -->
 </template>
 
 <script setup lang="ts">
 import RendererTable from './renderers/RendererTable.vue';
 import RendererList from './renderers/list/RendererList.vue';
-
-import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
+import PageCurrentButton from '../paginations/PageCurrentButton.vue';
+import PageNextButton from '../paginations/PageNextButton.vue';
 import type { PostRenderer } from '@/views/Post.vue';
 import type { ApiPosts } from '@/api/index.d';
-import type { RouteLocationNormalized } from 'vue-router';
+import type { InfiniteQueryObserverBaseResult } from '@tanstack/vue-query';
 
 const props = defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,
-    currentRoute: RouteLocationNormalized,
-    isLoadingNewPage: boolean,
+    isFetching: boolean,
+    fetchNextPage: InfiniteQueryObserverBaseResult['fetchNextPage'],
+    hasNextPage: boolean,
     isLastPageInPages: boolean
 }>();
-const nextCursorRoute = useNextCursorRoute(props.currentRoute, props.posts.pages.nextCursor);
 </script>

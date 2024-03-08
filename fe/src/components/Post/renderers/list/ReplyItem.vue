@@ -2,7 +2,7 @@
     <div :data-post-id="reply.pid" :id="reply.pid.toString()">
         <div :ref="el => elementRefsStore.pushOrClear('<RendererList>.reply-title', el as Element | null)"
              class="reply-title sticky-top card-header">
-            <div class="d-inline-flex gap-1 h5">
+            <div class="d-inline-flex gap-1 fs-5">
                 <span class="badge bg-secondary">{{ reply.floor }}楼</span>
                 <span v-if="reply.subReplyCount > 0" class="badge bg-info">
                     {{ reply.subReplyCount }}条<FontAwesomeIcon icon="comment-dots" />

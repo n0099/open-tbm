@@ -104,7 +104,10 @@ const useApiWithCursor = <
             QueryKey, Cursor
         >({
             queryKey: [endpoint, queryParam],
-            queryFn: async () => queryFn<TResponse & CursorPagination, TQueryParam>(`/${endpoint}`, queryParam?.value),
+            queryFn: async ({ pageParam }) => queryFn<TResponse & CursorPagination, TQueryParam & { cursor?: Cursor }>(
+                `/${endpoint}`,
+                { ...queryParam?.value as TQueryParam, cursor: pageParam === '' ? undefined : pageParam }
+            ),
             initialPageParam: '',
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
             enabled

@@ -1,20 +1,13 @@
 <template>
-    <div class="p-4">
-        <div class="row align-items-center">
-            <div class="col"><hr /></div>
-            <div class="w-auto">
-                <RouterLink :to="nextCursorRoute" class="btn btn-secondary">
-                    <span class="h4">下一页</span>
-                </RouterLink>
-            </div>
-            <div class="col"><hr /></div>
+    <div class="row align-items-center p-4">
+        <div class="col align-middle"><hr /></div>
+        <div class="w-auto">
+            <button @click="() => $emit('click')" class="btn btn-secondary fs-5">下一页</button>
         </div>
+        <div class="col align-middle"><hr /></div>
     </div>
 </template>
 
 <script setup lang="ts">
-import type { RouteLocationRaw } from 'vue-router';
-import { RouterLink } from 'vue-router';
-
-defineProps<{ nextCursorRoute: RouteLocationRaw }>();
+defineEmits<{ click: [] }>();
 </script>

@@ -12,8 +12,8 @@
             <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
-                          :renderType="renderType" :posts="page"
-                          :currentRoute="lastFetchingRoute" :isLoadingNewPage="isFetching"
+                          :posts="page" :renderType="renderType" :isFetching="isFetching"
+                          :fetchNextPage="fetchNextPage" :hasNextPage="hasNextPage"
                           :isLastPageInPages="pageIndex === data.pages.length - 1" />
             </div>
             <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
@@ -53,7 +53,7 @@ export type PostRenderer = 'list' | 'table';
 const route = useRoute();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref<boolean>(false);
-const { data, error, isPending, isRefetching, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt } =
+const { data, error, isPending, isRefetching, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, hasNextPage } =
     useApiPosts(queryParam, shouldFetch);
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
@@ -82,10 +82,7 @@ useHead({
 
 const fetchPosts = (queryParams: ObjUnknown[], cursor: Cursor) => {
     const startTime = Date.now();
-    queryParam.value = {
-        query: JSON.stringify(queryParams),
-        cursor: cursor === '' ? undefined : cursor
-    };
+    queryParam.value = { query: JSON.stringify(queryParams) };
     shouldFetch.value = true;
     watchOnce(isFetchedAfterMount, value => {
         if (value)
@@ -120,28 +117,25 @@ watch(isFetchedAfterMount, async () => {
     }
 });
 
-const parseRouteThenFetch = async (newRoute: RouteLocationNormalized, cursor: Cursor) => {
+const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
     if (queryFormRef.value === undefined)
         return;
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
         return;
     lastFetchingRoute.value = newRoute;
-    fetchPosts(flattenParams, cursor);
+    fetchPosts(flattenParams, getRouteCursorParam(newRoute));
 };
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = useTriggerRouteUpdateStore()
         .isTriggeredBy('<QueryForm>@submit', { ...to, force: true })
         || compareRouteIsNewQuery(to, from);
-    const cursor = getRouteCursorParam(to);
-    if (isNewQuery || _.isEmpty(_.filter(
-        data.value?.pages,
-        i => i.pages.currentCursor === cursor
-    )))
-        await parseRouteThenFetch(to, cursor);
+    if (isNewQuery)
+        window.scrollTo({ top: 0 });
+    await parseRouteThenFetch(to);
 });
 onMounted(async () => {
-    await parseRouteThenFetch(route, getRouteCursorParam(route));
+    await parseRouteThenFetch(route);
 });
 </script>
 

@@ -3,7 +3,7 @@
         <div class="col align-middle"><hr /></div>
         <div class="w-auto">
             <div class="p-2 badge bg-light text-dark">
-                <p class="h4">{{ cursorTemplate(currentCursor) }}</p>
+                <h4>{{ cursorTemplate(currentCursor) }}</h4>
             </div>
         </div>
         <div class="col align-middle"><hr /></div>
