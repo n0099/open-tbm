@@ -54,14 +54,16 @@
                     <BadgeUser v-if="getUser(thread.authorUid).currentForumModerator !== null"
                                :user="getUser(thread.authorUid)" />
                     <template v-if="thread.latestReplierUid === null">
-                        <span class="fw-normal link-secondary">最后回复：</span>
+                        <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                         <span class="fw-bold link-dark">未知用户</span>
                     </template>
                     <template v-else-if="thread.latestReplierUid !== thread.authorUid">
                         <RouterLink :to="toUserRoute(thread.latestReplierUid)" class="ms-2">
-                            <span class="fw-normal link-secondary">最后回复：</span>
+                            <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                         </RouterLink>
+                        <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
+                                   :user="getUser(thread.latestReplierUid)" />
                     </template>
                     <BadgePostTime :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" badgeColor="secondary" />
                 </div>

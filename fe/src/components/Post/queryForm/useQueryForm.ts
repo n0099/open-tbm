@@ -186,7 +186,7 @@ export default <
         ];
 
         return {
-            path: `/p/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
+            path: `/posts/${flatParams // format param to url, e.g. name:value;subParamName:subParamValue...
                 .map(param =>
                     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     `${param.name}:${tryEscapeParamValue(param.value)}${tryEncodeSubParamValue(param.subParam)}`)

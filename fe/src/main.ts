@@ -20,7 +20,7 @@ nprogress.configure({ trickleSpeed: 200 });
 
 if (import.meta.env.DEV) {
     // @ts-expect-error no .d.ts
-    await import('@/stats.js');
+    await import('@/stats');
     await import('@/checkCSS');
 }
 
@@ -40,9 +40,9 @@ if (googleAnalyticsMeasurementId !== '') {
     document.body.append(tag);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
     // @ts-ignore
-    await import('@/gtag.js');
+    await import('@/gtag');
 }
 
 export const app = createApp(App).use(router).use(createHead()).use(createPinia())
-    .use(VueQueryPlugin, { queryClientConfig: { defaultOptions: { queries: { refetchOnWindowFocus: false } } } });
+    .use(VueQueryPlugin, { queryClientConfig: { defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } } } });
 app.mount('#app');

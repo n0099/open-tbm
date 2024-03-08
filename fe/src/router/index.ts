@@ -22,7 +22,7 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalized['name']) => as
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>
     !(_.isEqual(to.query, from.query) && _.isEqual(_.omit(to.params, 'cursor'), _.omit(from.params, 'cursor')));
-export const routeNameSuffix = { page: '+p', cursor: '+c' } as const;
+export const routeNameSuffix = { cursor: '/cursor' } as const;
 export const routeNameWithCursor = (name: string) =>
     (_.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`);
 
@@ -60,8 +60,9 @@ const withChildrenRoute = (path: string, name: string, parentRoute: ParentRoute,
         } as RouteRecordSingleView | RouteRecordMultipleViews]
     });
 const withCursorRoute = (parentRoute: ParentRoute, path: string, name: string): ReturnType<typeof withChildrenRoute> =>
-    withChildrenRoute(path, name, parentRoute, {
-        path: 'cursor/:cursor(\\d+)',
+    withChildrenRoute(path, name, parentRoute, { // see `App\Http\Controllers\PostsQuery->query()` in be
+        // non capture group (?:) and escaping `)` is required for regex in vue route
+        path: 'cursor/:cursor((?:(?:[A-Za-z0-9-_]{4}\\)*(?:[A-Za-z0-9-_]{2,3}\\)(?:,|$\\)|,\\){5,6})',
         name: `${name}${routeNameSuffix.cursor}`
     });
 const withViewRoute = (lazyComponent: Promise<Component>, path: string): RouteRecordSingleView => ({

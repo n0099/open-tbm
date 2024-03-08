@@ -14,10 +14,10 @@ abstract class PostContent extends Post
     {
         return Attribute::make(
             /**
-             * @param resource $value
+             * @param resource|null $value
              * @return string
              */
-            get: static fn ($value) => stream_get_contents($value)
+            get: static fn ($value) => $value === null ? null : stream_get_contents($value)
         )->shouldCache();
     }
 }

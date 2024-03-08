@@ -19,7 +19,7 @@ class PostsQuery extends Controller
         $validator = new ParamsValidator(Helper::jsonDecode(
             $request->validate([
                 'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
-                    // (,|$)|,){6} means allow at most six parts of base64 segment or empty string to co-exist
+                    // (,|$)|,){5,6} means allow at most five or six components of base64 segment or empty string to exist
                     'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/'
                 ],
                 'query' => 'json|required'

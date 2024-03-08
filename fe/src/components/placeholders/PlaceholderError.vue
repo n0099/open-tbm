@@ -1,9 +1,9 @@
 <template>
-    <div class="text-center">
-        <template v-if="error instanceof FetchResponseError">
-            <p class="error-code text-muted">{{ error.bodyText }}</p>
-        </template>
-        <template v-else-if="error instanceof ApiResponseError">
+    <template v-if="error instanceof FetchResponseError">
+        <pre class="text-muted">{{ error.bodyText }}</pre>
+    </template>
+    <template v-else-if="error instanceof ApiResponseError">
+        <div class="text-center">
             <p class="error-code text-muted">{{ error.errorCode }}</p>
             <template v-if="_.isString(error.errorInfo)">
                 <p v-for="(info, _k) in error.errorInfo.split('\n')" :key="_k">{{ info }}</p>
@@ -20,8 +20,8 @@
                     <template v-else>{{ paramError }}</template>
                 </p>
             </template>
-        </template>
-    </div>
+        </div>
+    </template>
 </template>
 
 <script setup lang="ts">

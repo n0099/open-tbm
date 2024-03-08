@@ -50,7 +50,7 @@ const hoveringSubReplyID = ref(0);
 
 <style scoped>
 .sub-reply-group {
-    margin-block-start: .5rem;
+    margin-block-start: .5rem !important;
     margin-inline-start: .5rem;
     padding: .25rem;
 }

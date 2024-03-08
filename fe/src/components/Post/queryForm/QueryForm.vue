@@ -363,11 +363,11 @@ const parseRoute = (route: RouteLocationNormalized) => {
     assertRouteNameIsStr(route.name);
     uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
     params.value = [];
-    const routeName = removeEnd(route.name, routeNameSuffix.page);
+    const routeName = removeEnd(route.name, routeNameSuffix.cursor);
 
     // parse route path to params
     if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
-        parseParamRoute(route.params.pathMatch); // omit the page param from route full path
+        parseParamRoute(route.params.pathMatch); // omit the cursor param from route full path
     } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
         uniqueParams.value.fid.value = parseInt(route.params.fid);
     } else { // post id routes
