@@ -123,8 +123,6 @@ export default createRouter({
                     withCursorRoute(userRoute, 'displayName/:displayName', 'user/displayName')
                 ]
             }),
-        withViewRoute(import('@/views/Status.vue'), 'status'),
-        withViewRoute(import('@/views/Stats.vue'), 'stats'),
         withViewRoute(import('@/views/BilibiliVote.vue'), 'bilibiliVote')
     ],
     linkActiveClass: 'active',

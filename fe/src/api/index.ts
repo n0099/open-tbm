@@ -1,4 +1,4 @@
-import type { Api, ApiError, ApiForums, ApiPosts, ApiStatsForumPostCount, ApiStatus, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
+import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
 import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
@@ -23,12 +23,6 @@ export class FetchResponseError extends Error {
 export const isApiError = (response: ApiError | unknown): response is ApiError => _.isObject(response)
     && 'errorCode' in response && _.isNumber(response.errorCode)
     && 'errorInfo' in response && (_.isObject(response.errorInfo) || _.isString(response.errorInfo));
-export const throwIfApiError = <TResponse>(response: ApiError | TResponse): TResponse => {
-    if (isApiError(response))
-        throw new Error(JSON.stringify(response));
-
-    return response;
-};
 export const queryFunction = async <TResponse, TQueryParam>
 (endpoint: string, queryParam?: TQueryParam, signal?: AbortSignal): Promise<TResponse> => {
     nprogress.start();
@@ -119,7 +113,5 @@ const useApiWithCursor = <
         });
 
 export const useApiForums = () => useApi<ApiForums>('forums', queryFunction)();
-export const useApiStatus = useApi<ApiStatus>('status', queryFunctionWithReCAPTCHA);
-export const useApiStatsForumsPostCount = useApi<ApiStatsForumPostCount>('stats/forums/postCount', queryFunctionWithReCAPTCHA);
 export const useApiUsers = useApi<ApiUsers>('users', queryFunctionWithReCAPTCHA);
 export const useApiPosts = useApiWithCursor<ApiPosts>('posts', queryFunctionWithReCAPTCHA);

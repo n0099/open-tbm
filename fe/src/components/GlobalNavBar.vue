@@ -52,8 +52,6 @@ const navs = reactive<Array<DropDown | Route>>([
             { route: 'user', title: '用户', icon: 'users' }
         ]
     },
-    { route: 'stats', title: '统计', icon: 'chart-pie' },
-    { route: 'status', title: '状态', icon: 'satellite-dish' },
     {
         title: '专题',
         icon: 'paper-plane',

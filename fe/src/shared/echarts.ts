@@ -1,8 +1,5 @@
 import { DateTime } from 'luxon';
 import * as _ from 'lodash-es';
-
-import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts';
-import type { ToolboxComponentOption } from 'echarts/components';
 import * as echarts from 'echarts/core';
 // eslint-disable-next-line import/extensions
 import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types.d.ts';
@@ -26,29 +23,6 @@ export const echarts4ColorTheme: ColorPaletteOptionMixin = {
         '#546570',
         '#c4ccd3'
     ]
-};
-
-export const commonToolboxFeatures: echarts.ComposeOption<ToolboxComponentOption> = {
-    toolbox: {
-        feature: {
-            dataZoom: { show: true, yAxisIndex: 'none' },
-            saveAsImage: { show: true }
-        }
-    }
-};
-export const extendCommonToolbox = (extend: echarts.ComposeOption<ToolboxComponentOption>)
-: echarts.ComposeOption<ToolboxComponentOption> =>
-    _.merge(commonToolboxFeatures, extend);
-
-export const emptyChartSeriesData = (chart: echarts.ECharts) => {
-    chart.setOption({
-        series: _.map(chart.getOption().series as BarSeriesOption | LineSeriesOption, series => {
-            if (_.isObject(series) && 'data' in series)
-                series.data = [];
-
-            return series;
-        })
-    });
 };
 
 export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'year'] as const;
