@@ -84,8 +84,10 @@ import { DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, L
 import * as echarts from 'echarts/core';
 import { LabelLayout } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction';
-import type { OptionDataItem } from 'echarts/types/src/util/types';
+// eslint-disable-next-line import/extensions
+import type { TimelineChangePayload } from 'echarts/types/src/component/timeline/timelineAction.d.ts';
+// eslint-disable-next-line import/extensions
+import type { OptionDataItem } from 'echarts/types/src/util/types.d.ts';
 
 echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent]);
 

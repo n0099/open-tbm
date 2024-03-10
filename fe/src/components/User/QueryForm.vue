@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import type { SelectUserBy, SelectUserModel, SelectUserParams } from '../widgets/selectUser';
 import SelectUser from '../widgets/SelectUser.vue';
-import { selectUserBy } from '../widgets/selectUser';
+import { selectUserBy as selectUserByAll } from '../widgets/selectUser';
 import type { BaiduUserID, UserGenderQueryParam } from '@/api/user';
 import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
 
@@ -63,8 +63,8 @@ const submitQueryForm = async () => {
 
     return router.push({
         name: `user${_.isEmpty(params) ? '' : `/${routeName}`}`,
-        query: omitDefaultParamsValue({ ..._.omit(params, selectUserBy), gender: gender.value }),
-        params: _.pick(params, selectUserBy)
+        query: omitDefaultParamsValue({ ..._.omit(params, selectUserByAll), gender: gender.value }),
+        params: _.pick(params, selectUserByAll)
     });
 };
 

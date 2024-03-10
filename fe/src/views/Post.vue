@@ -1,7 +1,6 @@
 <template>
     <div class="container">
         <QueryForm ref="queryFormRef" :isLoading="isFetching" />
-        <p>当前页数：{{ getRouteCursorParam(route) }}</p>
         <Menu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <MenuItem key="list">列表视图</MenuItem>
             <MenuItem key="table">表格视图</MenuItem>
@@ -21,7 +20,7 @@
     </div>
     <div class="container">
         <PlaceholderError :error="error" class="border-top" />
-        <PlaceholderPostList v-show="isPending" :isLoading="isFetching" />
+        <PlaceholderPostList v-show="isPending || isFetchingNextPage" :isLoading="isFetching" />
     </div>
 </template>
 
@@ -53,12 +52,12 @@ export type PostRenderer = 'list' | 'table';
 const route = useRoute();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref<boolean>(false);
-const { data, error, isPending, isRefetching, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, hasNextPage } =
-    useApiPosts(queryParam, shouldFetch);
+const initialPageCursor = ref<Cursor>('');
+const { data, error, isPending, isRefetching, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
+    useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormRef = ref<InstanceType<typeof QueryForm>>();
-const lastFetchingRoute = ref<RouteLocationNormalized>(route);
 useHead({
     title: computed(() => titleTemplate((() => {
         const firstPostPage = data.value?.pages[0];
@@ -83,6 +82,7 @@ useHead({
 const fetchPosts = (queryParams: ObjUnknown[], cursor: Cursor) => {
     const startTime = Date.now();
     queryParam.value = { query: JSON.stringify(queryParams) };
+    initialPageCursor.value = cursor;
     shouldFetch.value = true;
     watchOnce(isFetchedAfterMount, value => {
         if (value)
@@ -113,7 +113,7 @@ const fetchPosts = (queryParams: ObjUnknown[], cursor: Cursor) => {
 watch(isFetchedAfterMount, async () => {
     if (isFetchedAfterMount.value && renderType.value === 'list') {
         await nextTick();
-        scrollToPostListItemByRoute(lastFetchingRoute.value);
+        scrollToPostListItemByRoute(route);
     }
 });
 
@@ -123,7 +123,6 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
         return;
-    lastFetchingRoute.value = newRoute;
     fetchPosts(flattenParams, getRouteCursorParam(newRoute));
 };
 onBeforeRouteUpdate(async (to, from) => {

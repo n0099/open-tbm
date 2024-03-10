@@ -1,6 +1,6 @@
 import type { Api, ApiError, ApiForums, ApiPosts, ApiStatsForumPostCount, ApiStatus, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
-import type { MaybeRefOrGetter, Ref } from 'vue';
-import type { InfiniteData, QueryKey } from '@tanstack/vue-query';
+import type { Ref } from 'vue';
+import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';
@@ -86,18 +86,23 @@ const useApi = <
     TResponse = TApi['response'],
     TQueryParam = TApi['queryParam']>
 (endpoint: string, queryFn: QueryFunctions) =>
-    (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
+    (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseQueryOptions<TResponse, ApiErrorClass>>) =>
         useQuery<TResponse, ApiErrorClass>({
             queryKey: [endpoint, queryParam],
             queryFn: async () => queryFn<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
-            enabled
+            ...options
         });
 const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'] & CursorPagination,
     TQueryParam = TApi['queryParam']>
 (endpoint: string, queryFn: QueryFunctions) =>
-    (queryParam?: Ref<TQueryParam | undefined>, enabled?: MaybeRefOrGetter<boolean>) =>
+    (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseInfiniteQueryOptions<
+        TResponse & CursorPagination, ApiErrorClass,
+        InfiniteData<TResponse & CursorPagination, Cursor>,
+        TResponse & CursorPagination,
+        QueryKey, Cursor
+    >>) =>
         useInfiniteQuery<
             TResponse & CursorPagination, ApiErrorClass,
             InfiniteData<TResponse & CursorPagination, Cursor>,
@@ -108,9 +113,9 @@ const useApiWithCursor = <
                 `/${endpoint}`,
                 { ...queryParam?.value as TQueryParam, cursor: pageParam === '' ? undefined : pageParam }
             ),
-            initialPageParam: '',
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
-            enabled
+            initialPageParam: '',
+            ...options
         });
 
 export const useApiForums = () => useApi<ApiForums>('forums', queryFunction)();

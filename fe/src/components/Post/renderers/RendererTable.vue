@@ -49,11 +49,12 @@
                     </template>
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                    <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component vue/no-v-html -->
+                    <!-- eslint-disable vue/no-v-text-v-html-on-component -->
                     <component :is="subRepliesKeyByPid[pid] === undefined
                                    ? 'span'
                                    : 'p'"
                                v-viewer.static v-html="content" />
+                    <!-- eslint-enable vue/no-v-text-v-html-on-component -->
                     <Table v-if="subRepliesKeyByPid[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
                            defaultExpandAllRows expandRowByClick

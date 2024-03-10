@@ -507,7 +507,7 @@ const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
         }],
         'vue/match-component-import-name': 'error',
         'vue/define-props-declaration': 'error',
-        'vue/define-emits-declaration': 'error',
+        'vue/define-emits-declaration': ['error', 'type-literal'],
         'vue/no-required-prop-with-default': 'error',
         'vue/v-on-handler-style': ['error', 'inline-function'],
         'vue/multiline-ternary': 'error',

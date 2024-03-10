@@ -44,7 +44,6 @@ export type ApiStatsForumPostCount = Api<{
     }>;
 
 export type Cursor = string;
-interface CursorPaginationQueryParam { cursor?: Cursor }
 interface CursorPagination {
     pages: {
         currentCursor: Cursor,
@@ -55,7 +54,7 @@ interface CursorPagination {
 
 export type ApiUsers = Api<
     CursorPagination & { users: User[] },
-    CursorPaginationQueryParam & SelectUserParams & { gender?: UserGenderQueryParam }
+    SelectUserParams & { gender?: UserGenderQueryParam }
 >;
 
 export type JsonString = string;
@@ -72,4 +71,4 @@ export type ApiPosts = Api<CursorPagination & {
         }>
     }>,
     users: User[]
-}, CursorPaginationQueryParam & { query: JsonString }>;
+}, { query: JsonString }>;

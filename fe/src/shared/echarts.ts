@@ -4,7 +4,8 @@ import * as _ from 'lodash-es';
 import type { BarSeriesOption, LineSeriesOption } from 'echarts/charts';
 import type { ToolboxComponentOption } from 'echarts/components';
 import * as echarts from 'echarts/core';
-import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types';
+// eslint-disable-next-line import/extensions
+import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types.d.ts';
 
 addEventListener('resize', _.throttle(() => {
     document.querySelectorAll<HTMLElement>('.echarts')
