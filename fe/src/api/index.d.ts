@@ -20,8 +20,7 @@ export type Cursor = string;
 interface CursorPagination {
     pages: {
         currentCursor: Cursor,
-        nextCursor: Cursor,
-        hasMore: boolean
+        nextCursor: Cursor | null
     }
 }
 

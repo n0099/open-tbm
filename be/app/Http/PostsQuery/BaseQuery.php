@@ -94,16 +94,19 @@ abstract class BaseQuery
                 [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
         Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
+
+        $hasMore = self::unionPageStats(
+            $paginators,
+            'hasMorePages',
+            static fn (Collection $v) => $v->filter()->count() !== 0 // Collection->filter() will remove false values
+        );
         $this->queryResultPages = [
             'currentCursor' => $cursorParamValue ?? '',
-            'nextCursor' => $this->encodeNextCursor($queryByPostIDParamName === null
-                ? $postsKeyByTypePluralName
-                : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]])),
-            'hasMore' => self::unionPageStats(
-                $paginators,
-                'hasMorePages',
-                static fn (Collection $v) => $v->filter()->count() !== 0
-            ) // Collection->filter() will remove false values
+            'nextCursor' => $hasMore
+                ? $this->encodeNextCursor($queryByPostIDParamName === null
+                    ? $postsKeyByTypePluralName
+                    : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]]))
+                : null
         ];
 
         Debugbar::stopMeasure('setResult');

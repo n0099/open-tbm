@@ -11,8 +11,8 @@
             <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
-                          :posts="page" :renderType="renderType" :isFetching="isFetching"
-                          :fetchNextPage="fetchNextPage" :hasNextPage="hasNextPage"
+                          @clickNextPage="() => clickNextPage()" :posts="page" :renderType="renderType"
+                          :isFetching="isFetching" :hasNextPage="hasNextPage"
                           :isLastPageInPages="pageIndex === data.pages.length - 1" />
             </div>
             <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
@@ -34,26 +34,28 @@ import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.v
 import { useApiPosts } from '@/api';
 import type { ApiPosts, Cursor } from '@/api/index.d';
 import { scrollToPostListItemByRoute } from '@/components/Post/renderers/list/index';
-import { compareRouteIsNewQuery, getRouteCursorParam } from '@/router';
-import type { ObjUnknown, UnixTimestamp } from '@/shared';
+import { compareRouteIsNewQuery, getNextCursorRoute, getRouteCursorParam } from '@/router';
+import type { UnixTimestamp } from '@/shared';
 import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
 import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { watchOnce } from '@vueuse/core';
+import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
+import { useQueryClient } from '@tanstack/vue-query';
 import { useHead } from '@unhead/vue';
 import * as _ from 'lodash-es';
 
 export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
+const router = useRouter();
+const queryClient = useQueryClient();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref<boolean>(false);
 const initialPageCursor = ref<Cursor>('');
-const { data, error, isPending, isRefetching, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
+const { data, error, isPending, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
     useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
@@ -79,37 +81,25 @@ useHead({
     })()))
 });
 
-const fetchPosts = (queryParams: ObjUnknown[], cursor: Cursor) => {
-    const startTime = Date.now();
-    queryParam.value = { query: JSON.stringify(queryParams) };
-    initialPageCursor.value = cursor;
-    shouldFetch.value = true;
-    watchOnce(isFetchedAfterMount, value => {
-        if (value)
-            shouldFetch.value = false;
-    });
-    const updatedAtWatcher = async (updatedAt: UnixTimestamp[]) => {
-        if (isRefetching.value) // background refetching with cached data already presented, watching for refetch
-            watchOnce([dataUpdatedAt, errorUpdatedAt], updatedAtWatcher);
-        const maxUpdatedAt = Math.max(...updatedAt);
-        if (maxUpdatedAt === 0) { // just starts to fetch, defer watching to next time
-            watchOnce([dataUpdatedAt, errorUpdatedAt], updatedAtWatcher);
-
-            return;
-        }
-        const isCached = maxUpdatedAt < startTime;
-        const networkTime = isCached ? 0 : maxUpdatedAt - startTime;
-        await nextTick(); // wait for child components to finish dom update
-        const fetchedPage = data.value?.pages.find(i => i.pages.currentCursor === cursor);
-        const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
-        const renderTime = (Date.now() - startTime - networkTime) / 1000;
-        notyShow('success', `已加载${postCount}条记录
-            前端耗时${renderTime.toFixed(2)}s
-            ${isCached ? '使用本地缓存' : `后端+网络耗时${(networkTime / 1000).toFixed(2)}s`}`);
-    };
-    watchOnce([dataUpdatedAt, errorUpdatedAt], updatedAtWatcher);
-};
-
+let startTime = 0;
+watch(isFetching, () => {
+    if (isFetching.value)
+        startTime = Date.now();
+});
+watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
+    const maxUpdatedAt = Math.max(...updatedAt);
+    if (maxUpdatedAt === 0) // just starts to fetch, defer watching to next time
+        return;
+    const isCached = maxUpdatedAt < startTime;
+    const networkTime = isCached ? 0 : maxUpdatedAt - startTime;
+    await nextTick(); // wait for child components to finish dom update
+    const fetchedPage = data.value?.pages.find(i => i.pages.currentCursor === getRouteCursorParam(route));
+    const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
+    const renderTime = (Date.now() - startTime - networkTime) / 1000;
+    notyShow('success', `已加载${postCount}条记录
+        前端耗时${renderTime.toFixed(2)}s
+        ${isCached ? '使用本地缓存' : `后端+网络耗时${_.round(networkTime / 1000, 2)}s`}`);
+});
 watch(isFetchedAfterMount, async () => {
     if (isFetchedAfterMount.value && renderType.value === 'list') {
         await nextTick();
@@ -117,24 +107,37 @@ watch(isFetchedAfterMount, async () => {
     }
 });
 
+const clickNextPage = async () => {
+    await router.push(getNextCursorRoute(route, data.value?.pages.at(-1)?.pages.nextCursor));
+    await fetchNextPage();
+};
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
     if (queryFormRef.value === undefined)
         return;
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false)
         return;
-    fetchPosts(flattenParams, getRouteCursorParam(newRoute));
+
+    /** {@link initialPageCursor} only take effect when the queryKey of {@link useQuery()} is changed */
+    initialPageCursor.value = getRouteCursorParam(newRoute);
+    queryParam.value = { query: JSON.stringify(flattenParams) };
 };
+
 onBeforeRouteUpdate(async (to, from) => {
-    const isNewQuery = useTriggerRouteUpdateStore()
-        .isTriggeredBy('<QueryForm>@submit', { ...to, force: true })
-        || compareRouteIsNewQuery(to, from);
-    if (isNewQuery)
+    const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
+        .isTriggeredBy('<QueryForm>@submit', { ...to, force: true });
+    if (isTriggeredByQueryForm || compareRouteIsNewQuery(to, from))
         window.scrollTo({ top: 0 });
     await parseRouteThenFetch(to);
+
+    /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */
+    /** to prevent refetch the old route when navigating to different route aka {@link compareRouteIsNewQuery()} is true */
+    if (isTriggeredByQueryForm)
+        await queryClient.resetQueries({ queryKey: ['posts'] });
 });
 onMounted(async () => {
     await parseRouteThenFetch(route);
+    shouldFetch.value = true; // prevent eager fetching with the initial empty queryParam
 });
 </script>
 

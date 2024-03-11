@@ -6,7 +6,7 @@ import { notyShow } from '@/shared';
 import { useLazyLoadRouteViewStore } from '@/stores/lazyLoadRouteView';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
-import type { RouteLocation, RouteLocationNormalized, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
+import type { RouteLocation, RouteLocationNormalized, RouteLocationRaw, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
 import * as _ from 'lodash-es';
 
@@ -28,7 +28,14 @@ export const routeNameWithCursor = (name: string) =>
 
 // https://github.com/vuejs/vue-router-next/issues/1184
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => r.params.cursor?.toString() ?? '';
+export const getRouteCursorParam = (route: RouteLocationNormalized): Cursor => route.params.cursor?.toString() ?? '';
+export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: Cursor | null): RouteLocationRaw => {
+    assertRouteNameIsStr(route.name);
+    const name = routeNameWithCursor(route.name);
+    const { query, params } = route;
+
+    return { query, name, params: { ...params, cursor: nextCursor } };
+};
 
 const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
     const routeLazyComponent = useLazyLoadRouteViewStore();
