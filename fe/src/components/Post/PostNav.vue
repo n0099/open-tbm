@@ -42,7 +42,6 @@
 </template>
 
 <script setup lang="ts">
-import { isApiError } from '@/api/index';
 import type { ApiPosts, Cursor } from '@/api/index.d';
 import { getReplyTitleTopOffset } from '@/components/Post/renderers/list';
 import type { Pid, Tid, ToPromise } from '@/shared';
@@ -127,7 +126,7 @@ const removeScrollEventListener = () => { document.removeEventListener('scroll',
 onUnmounted(removeScrollEventListener);
 
 watchEffect(() => {
-    if (!isPostNavExpanded.value || _.isEmpty(props.postPages) || isApiError(props.postPages))
+    if (!isPostNavExpanded.value || _.isEmpty(props.postPages))
         removeScrollEventListener();
     else
         document.addEventListener('scroll', scrollStop, { passive: true });

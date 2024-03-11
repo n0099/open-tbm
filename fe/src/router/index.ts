@@ -3,11 +3,11 @@ import Index from '@/views/Index.vue';
 import { ApiResponseError } from '@/api';
 import type { Cursor } from '@/api/index.d';
 import { notyShow } from '@/shared';
+import { useLazyLoadRouteViewStore } from '@/stores/lazyLoadRouteView';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
 import type { RouteLocation, RouteLocationNormalized, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
-import nprogress from 'nprogress';
 import * as _ from 'lodash-es';
 
 const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
@@ -31,20 +31,12 @@ export const routeNameWithCursor = (name: string) =>
 export const getRouteCursorParam = (r: RouteLocationNormalized): Cursor => r.params.cursor?.toString() ?? '';
 
 const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
-    nprogress.start();
-    const loadingBlockEl = document.querySelector('#loadingBlock');
-    const containersEl = ['.container', '.container-fluid:not(#nav)']
-        .flatMap(i => _.toArray<Element>(document.querySelectorAll(i)));
-    loadingBlockEl?.classList.remove('d-none');
-    containersEl.forEach(i => { i.classList.add('d-none') });
+    const routeLazyComponent = useLazyLoadRouteViewStore();
+    routeLazyComponent.isLoading = true;
 
     return lazyComponent
         .catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) })
-        .finally(() => {
-            nprogress.done();
-            loadingBlockEl?.classList.add('d-none');
-            containersEl.forEach(i => { i.classList.remove('d-none') });
-        });
+        .finally(() => { routeLazyComponent.isLoading = false });
 };
 
 type ParentRoute = Omit<RouteRecordSingleView, 'path'> | Omit<RouteRecordMultipleViews, 'path'>;

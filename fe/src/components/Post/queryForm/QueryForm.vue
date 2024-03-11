@@ -151,7 +151,7 @@
             <button class="add-param-button col-auto btn btn-link disabled" type="button">
                 <FontAwesomeIcon icon="plus" />
             </button>
-            <SelectParam @paramChange="e => addParam(e)" />
+            <SelectParam :key="params.length" @paramChange="e => addParam(e)" currentParam="add" />
         </div>
         <div class="row mt-3">
             <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
