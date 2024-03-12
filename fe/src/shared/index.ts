@@ -40,9 +40,11 @@ export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout:
 export const titleTemplate = (title: string) => `${title} - open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
 export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
 
-export const tiebaPostLink = (tid: Tid, pidOrSpid?: Pid | Spid) => {
-    if (pidOrSpid !== undefined)
-        return `https://tieba.baidu.com/p/${tid}?pid=${pidOrSpid}#${pidOrSpid}`;
+export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
+    if (pid !== undefined && spid !== undefined)
+        return `https://tieba.baidu.com/p/${tid}?pid=${pid}&cid=${spid}#${spid}`;
+    if (pid !== undefined)
+        return `https://tieba.baidu.com/p/${tid}?pid=${pid}#${pid}`;
 
     return `https://tieba.baidu.com/p/${tid}`;
 };
@@ -62,7 +64,6 @@ export const boolPropToStr = <T>(object: Record<string, T | boolean>): Record<st
 export const boolStrToBool = <T>(s: T | 'false' | 'true'): boolean => s === 'true';
 export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record<string, T | boolean | string> =>
     _.mapValues(object, i => (_.includes(['true', 'false'], i) ? boolStrToBool(i) : i));
-export const emitEventWithNumberValidator = (p: number) => _.isNumber(p);
 export const isElementNode = (node: Node): node is Element => node.nodeType === Node.ELEMENT_NODE;
 
 // https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683

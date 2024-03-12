@@ -10,8 +10,8 @@
                 <div class="col-auto badge bg-light">
                     <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                 class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
-                    <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" :postIDSelector="() => thread.tid" />
-                    <BadgePostTime :time="thread.postedAt" tippyPrefix="发帖时间：" badgeColor="success" />
+                    <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" />
+                    <BadgePostTime :time="thread.postedAt" tippyPrefix="发帖时间：" class="bg-success" />
                 </div>
             </div>
             <div class="row justify-content-between mt-2">
@@ -52,7 +52,7 @@
                         <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                     </RouterLink>
                     <BadgeUser v-if="getUser(thread.authorUid).currentForumModerator !== null"
-                               :user="getUser(thread.authorUid)" />
+                               :user="getUser(thread.authorUid)" class="ms-1" />
                     <template v-if="thread.latestReplierUid === null">
                         <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                         <span class="fw-bold link-dark">未知用户</span>
@@ -63,9 +63,9 @@
                             <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                         </RouterLink>
                         <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
-                                   :user="getUser(thread.latestReplierUid)" />
+                                   :user="getUser(thread.latestReplierUid)" class="ms-1" />
                     </template>
-                    <BadgePostTime :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" badgeColor="secondary" />
+                    <BadgePostTime :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" class="bg-secondary" />
                 </div>
             </div>
         </div>

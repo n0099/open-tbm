@@ -22,8 +22,11 @@ const scrollToPostListItem = (el: Element) => {
     // that would lead to reflow resulting in the element being pushed down or up out of viewport
     /** due to {@link document.scrollingElement.scrollTop()} changed a lot */
     const tryScroll = () => {
-        /** not using a passive callback by IntersectionObserverto to prevent {@link Element.getBoundingClientRect()} caused force reflow */
-        // due to it will only emit once the configured thresholds are reached
+        const abortRetries = () => { removeEventListener('scrollend', tryScroll) };
+        setTimeout(abortRetries, 10000);
+
+        /** not using a passive callback by {@link IntersectionObserver} to prevent {@link Element.getBoundingClientRect()} */
+        // caused force reflow due to it will only emit once the configured thresholds are reached
         // thus the top offset might be far from 0 that is top aligned with viewport when the callback is called
         // since the element is still near the bottom of viewport at that point of time
         // even if the thresholds steps by each percentage like [0.01, 0.02, ..., 1] to let triggers callback more often
@@ -31,8 +34,12 @@ const scrollToPostListItem = (el: Element) => {
         // and the element reached the top of viewport
         const elTop = el.getBoundingClientRect().top;
         const replyTitleTopOffset = getReplyTitleTopOffset();
-        if (elTop > 0 && Math.abs(elTop) < replyTitleTopOffset + (window.innerHeight * 0.05)) // at most 5dvh tolerance
-            removeEventListener('scrollend', tryScroll);
+        if (!el.isConnected // dangling reference to element that already removed from the document
+            || window.innerHeight + window.scrollY + (window.innerHeight * 0.01) // at most 1dvh tolerance
+                >= document.documentElement.scrollHeight // https://stackoverflow.com/questions/3962558/javascript-detect-scroll-end/4638434#comment137130726_4638434
+            || (elTop > 0 // element is below the top of viewport
+                && Math.abs(elTop) < replyTitleTopOffset + (window.innerHeight * 0.05))) // at most 5dvh tolerance
+            abortRetries();
         else
             document.documentElement.scrollBy({ top: elTop - replyTitleTopOffset });
     };

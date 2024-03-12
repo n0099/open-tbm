@@ -17,8 +17,8 @@
             <div class="float-end badge bg-light">
                 <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                             class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
-                <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" :postIDSelector="() => reply.pid" />
-                <BadgePostTime :time="reply.postedAt" badgeColor="primary" />
+                <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" />
+                <BadgePostTime :time="reply.postedAt" class="bg-primary" />
             </div>
         </div>
         <div :ref="el => el !== null && replyElements.push(el as HTMLElement)"

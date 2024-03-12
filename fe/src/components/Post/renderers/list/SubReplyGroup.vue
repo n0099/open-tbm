@@ -19,10 +19,9 @@
                     </RouterLink>
                     <div class="float-end badge bg-light">
                         <div class="d-inline" :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
-                            <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid"
-                                                         :postIDSelector="() => subReply.spid" />
+                            <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" />
                         </div>
-                        <BadgePostTime :time="subReply.postedAt" badgeColor="info" />
+                        <BadgePostTime :time="subReply.postedAt" class="bg-info" />
                     </div>
                 </template>
                 <div v-viewer.static class="sub-reply-content" v-html="subReply.content" />

@@ -1,18 +1,17 @@
 <template>
     <span :data-tippy-content="tippyPrefix + dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)"
-          :class="`ms-1 fw-normal badge rounded-pill bg-${badgeColor}`">
+          class="ms-1 fw-normal badge rounded-pill">
         {{ dateTime.toRelative({ round: false }) }}
     </span>
 </template>
 
 <script setup lang="ts">
-import type { BootstrapColor, UnixTimestamp } from '@/shared';
+import type { UnixTimestamp } from '@/shared';
 import { DateTime } from 'luxon';
 
 const props = withDefaults(defineProps<{
     time: UnixTimestamp,
-    tippyPrefix?: string,
-    badgeColor: BootstrapColor
+    tippyPrefix?: string
 }>(), { tippyPrefix: '' });
 
 const dateTime = DateTime.fromSeconds(props.time);

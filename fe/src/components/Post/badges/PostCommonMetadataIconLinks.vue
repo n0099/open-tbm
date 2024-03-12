@@ -1,32 +1,31 @@
 <template>
-    <a :href="tiebaPostLink(post.tid, postTypeID === 'tid'
-           ? undefined
-           : postIDSelector())"
+    <a :href="tiebaPostLink(props.post.tid,
+                            (props.post as Reply | SubReply).pid,
+                            (props.post as SubReply).spid)"
        target="_blank" class="badge bg-light rounded-pill link-dark">
         <FontAwesomeIcon icon="link" size="lg" class="align-bottom" />
     </a>
-    <a :data-tippy-content="`<h6>${postTypeID}：${postIDSelector()}</h6><hr />
-        首次收录时间：${formatTime(post.createdAt)}<br />
-        最后更新时间：${formatTime(post.updatedAt ?? post.createdAt)}<br />
-        最后发现时间：${formatTime(post.lastSeenAt ?? post.updatedAt ?? post.createdAt)}`"
+    <a :data-tippy-content="`<h6>${postTypeID}：${props.post[props.postTypeID]}</h6><hr />
+        首次收录时间：${formatTime(props.post.createdAt)}<br />
+        最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br />
+        最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`"
        class="badge bg-light rounded-pill link-dark">
         <FontAwesomeIcon icon="info" size="lg" class="align-bottom" />
     </a>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends Reply | SubReply | Thread">
 import type { Reply, SubReply, Thread } from '@/api/post';
-import type { Pid, PostID, Spid, Tid, UnixTimestamp } from '@/shared';
+import type { PostID, UnixTimestamp } from '@/shared';
 import { tiebaPostLink } from '@/shared';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
-defineProps<{
-    post: Reply | SubReply | Thread,
-    postTypeID: PostID,
-    postIDSelector: () => Pid | Spid | Tid
+// https://github.com/vuejs/language-tools/issues/3267
+const props = defineProps<{
+    post: T,
+    postTypeID: keyof T & PostID & (T extends Thread ? 'tid' : T extends Reply ? 'pid' : T extends SubReply ? 'spid' : '')
 }>();
-
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
     const relative = dateTime.toRelative({ round: false });

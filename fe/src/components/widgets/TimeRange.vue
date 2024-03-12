@@ -16,11 +16,11 @@
 <script setup lang="ts">
 import type { Dayjs } from 'dayjs';
 import type { DurationLike } from 'luxon';
-import { emitEventWithNumberValidator } from '@/shared';
 import { ref, watchEffect } from 'vue';
 import { RangePicker } from 'ant-design-vue';
 import dayjs, { unix } from 'dayjs';
 import { DateTime } from 'luxon';
+import * as _ from 'lodash-es';
 
 defineOptions({ inheritAttrs: true });
 const props = withDefaults(defineProps<{
@@ -33,8 +33,8 @@ const props = withDefaults(defineProps<{
 });
 // eslint-disable-next-line vue/define-emits-declaration
 const emit = defineEmits({
-    'update:startTime': emitEventWithNumberValidator,
-    'update:endTime': emitEventWithNumberValidator
+    'update:startTime': i => _.isNumber(i),
+    'update:endTime': i => _.isNumber(i)
 });
 const timeRange = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
 
