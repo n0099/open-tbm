@@ -36,12 +36,12 @@ const emit = defineEmits({
     'update:startTime': i => _.isNumber(i),
     'update:endTime': i => _.isNumber(i)
 });
-const timeRange = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
 
-timeRange.value = [
+const timeRange = ref<[Dayjs, Dayjs]>([
     dayjs(DateTime.now().minus(props.startBefore).startOf('minute').toISO()),
     dayjs(DateTime.now().startOf('minute').toISO())
-];
+]);
+
 watchEffect(() => {
     timeRange.value = [unix(props.startTime), unix(props.endTime)];
 });

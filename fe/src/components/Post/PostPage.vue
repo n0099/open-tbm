@@ -1,5 +1,5 @@
 <template>
-    <PageCurrentButton :currentCursor="props.posts.pages.currentCursor" />
+    <PageCurrentButton :currentCursor="posts.pages.currentCursor" />
     <RendererList v-if="renderType === 'list'" :initialPosts="posts" />
     <RendererTable v-else-if="renderType === 'table'" :posts="posts" />
     <PageNextButton v-if="isLastPageInPages && !isFetching && hasNextPage"
@@ -14,7 +14,7 @@ import PageNextButton from '../paginations/PageNextButton.vue';
 import type { PostRenderer } from '@/views/Post.vue';
 import type { ApiPosts } from '@/api/index.d';
 
-const props = defineProps<{
+defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,
     isFetching: boolean,

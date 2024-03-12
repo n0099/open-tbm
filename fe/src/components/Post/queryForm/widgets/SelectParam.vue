@@ -1,6 +1,6 @@
 <template>
     <select @change="e => emit('paramChange', (e.target as HTMLSelectElement).value)"
-            :value="props.currentParam" class="form-select form-control flex-grow-0" id="newParam">
+            :value="currentParam" class="form-select form-control flex-grow-0" id="newParam">
         <option value="add" disabled>New...</option>
         <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
             <option v-for="(paramDescription, paramName) in group"
@@ -49,7 +49,7 @@ const paramsGroup = {
 <script setup lang="ts">
 import * as _ from 'lodash-es';
 
-const props = defineProps<{ currentParam: string }>();
+defineProps<{ currentParam: string }>();
 // eslint-disable-next-line vue/define-emits-declaration
 const emit = defineEmits({ paramChange: p => _.includes(_.flatMap(paramsGroup, Object.keys), p) });
 </script>

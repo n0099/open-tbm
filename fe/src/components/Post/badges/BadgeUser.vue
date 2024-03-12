@@ -42,6 +42,6 @@ const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColor]
     publication_editor: ['吧刊小编', 'secondary'],
     publication: ['吧刊小编', 'secondary']
 };
-const moderators = computed(() =>
-    _.pick(knownModeratorTypes, props.user.currentForumModerator?.moderatorTypes.split(',') ?? []));
+const moderators = computed(() => _.pick(knownModeratorTypes,
+    props.user.currentForumModerator?.moderatorTypes.split(',') ?? []));
 </script>

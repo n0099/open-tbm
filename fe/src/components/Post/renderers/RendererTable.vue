@@ -92,7 +92,7 @@ import type { Reply, SubReply, Thread } from '@/api/post';
 import type { Pid, Tid } from '@/shared';
 import { toUserPortraitImageUrl, toUserProfileUrl } from '@/shared';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
@@ -145,8 +145,8 @@ const subReplyColumns = ref<ColumnType[]>([
     { title: '最后更新时间', dataIndex: 'updatedAt' }
 ]);
 
-const getUser = baseGetUser(props.posts.users);
-const renderUsername = baseRenderUsername(getUser);
+const getUser = computed(() => baseGetUser(props.posts.users));
+const renderUsername = computed(() => baseRenderUsername(getUser.value));
 
 onMounted(() => {
     threads.value = props.posts.threads;
