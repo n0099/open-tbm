@@ -1,6 +1,7 @@
 <template>
     <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
-        <ThreadItem v-for="thread in posts.threads" :key="thread.tid" :thread="thread" />
+        <ThreadItem v-for="(thread, index) in posts.threads" :key="thread.tid"
+                    :thread="thread" :nextThread="posts.threads[index + 1]" />
     </div>
 </template>
 
@@ -31,7 +32,7 @@ export interface UserProvision {
 }
 provide<UserProvision>('userProvision', userProvision);
 
-export type ThreadWithGroupedSubReplies<AdditionalSubReply = never> =
+export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
 const posts = computed(() => {
     // https://github.com/microsoft/TypeScript/issues/33591

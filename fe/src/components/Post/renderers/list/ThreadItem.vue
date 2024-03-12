@@ -11,6 +11,8 @@
                     <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                 class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
                     <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" />
+                    <BadgePostTime v-if="nextThread !== undefined" :time="nextThread.postedAt"
+                                   :base="thread.postedAt" tippyPrefix="本帖相对于下一主题帖发帖时间：" class="bg-success" />
                     <BadgePostTime :time="thread.postedAt" tippyPrefix="发帖时间：" class="bg-success" />
                 </div>
             </div>
@@ -65,11 +67,14 @@
                         <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
                                    :user="getUser(thread.latestReplierUid)" class="ms-1" />
                     </template>
+                    <BadgePostTime v-if="nextThread !== undefined" :time="nextThread.latestReplyPostedAt"
+                                   :base="thread.latestReplyPostedAt" tippyPrefix="本帖相对于下一主题帖最后回复时间时间：" class="bg-secondary" />
                     <BadgePostTime :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" class="bg-secondary" />
                 </div>
             </div>
         </div>
-        <ReplyItem v-for="reply in thread.replies" :key="reply.pid" :reply="reply" :threadAuthorUid="thread.authorUid" />
+        <ReplyItem v-for="(reply, index) in thread.replies" :key="reply.pid"
+                   :reply="reply" :nextReply="thread.replies[index + 1]" :threadAuthorUid="thread.authorUid" />
     </div>
 </template>
 
@@ -87,7 +92,10 @@ import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
-defineProps<{ thread: ThreadWithGroupedSubReplies }>();
+defineProps<{
+    thread: ThreadWithGroupedSubReplies,
+    nextThread?: ThreadWithGroupedSubReplies
+}>();
 const elementRefsStore = useElementRefsStore();
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;

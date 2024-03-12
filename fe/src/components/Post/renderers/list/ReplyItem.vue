@@ -18,7 +18,9 @@
                 <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                             class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
                 <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" />
-                <BadgePostTime :time="reply.postedAt" class="bg-primary" />
+                <BadgePostTime v-if="nextReply !== undefined" :time="nextReply.postedAt"
+                               :base="reply.postedAt" tippyPrefix="本帖相对于下一回复帖发帖时间：" class="bg-primary" />
+                <BadgePostTime :time="reply.postedAt" tippyPrefix="发帖时间：" class="bg-primary" />
             </div>
         </div>
         <div :ref="el => el !== null && replyElements.push(el as HTMLElement)"
@@ -35,7 +37,8 @@
             <div class="col me-2 px-1 border-start overflow-auto">
                 <div v-viewer.static class="reply-content p-2" v-html="reply.content" />
                 <template v-if="reply.subReplies.length > 0">
-                    <SubReplyGroup v-for="(subReplyGroup, _k) in reply.subReplies" :key="_k" :subReplyGroup="subReplyGroup"
+                    <SubReplyGroup v-for="(subReplyGroup, index) in reply.subReplies" :key="index"
+                                   :subReplyGroup="subReplyGroup" :nextSubReplyGroup="reply.subReplies[index + 1]"
                                    :threadAuthorUid="threadAuthorUid" :replyAuthorUid="reply.authorUid" />
                 </template>
             </div>
@@ -58,7 +61,11 @@ import { inject, nextTick, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-defineProps<{ reply: ThreadWithGroupedSubReplies['replies'][number], threadAuthorUid: BaiduUserID }>();
+defineProps<{
+    reply: ThreadWithGroupedSubReplies['replies'][number],
+    nextReply?: ThreadWithGroupedSubReplies['replies'][number],
+    threadAuthorUid: BaiduUserID
+}>();
 const elementRefsStore = useElementRefsStore();
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser } = inject<UserProvision>('userProvision')!;

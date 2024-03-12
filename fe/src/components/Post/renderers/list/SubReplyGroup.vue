@@ -21,7 +21,9 @@
                         <div class="d-inline" :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
                             <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" />
                         </div>
-                        <BadgePostTime :time="subReply.postedAt" class="bg-info" />
+                        <BadgePostTime v-if="nextSubReplyGroup !== undefined" :time="nextSubReplyGroup[0].postedAt"
+                                       :base="subReply.postedAt" tippyPrefix="本帖相对于下一楼中楼发帖时间：" class="bg-info" />
+                        <BadgePostTime :time="subReply.postedAt" tippyPrefix="发帖时间：" class="bg-info" />
                     </div>
                 </template>
                 <div v-viewer.static class="sub-reply-content" v-html="subReply.content" />
@@ -41,7 +43,12 @@ import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
 import { inject, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
-defineProps<{ subReplyGroup: SubReply[], threadAuthorUid: BaiduUserID, replyAuthorUid: BaiduUserID }>();
+defineProps<{
+    subReplyGroup: SubReply[],
+    nextSubReplyGroup?: SubReply[],
+    threadAuthorUid: BaiduUserID,
+    replyAuthorUid: BaiduUserID
+}>();
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
 const hoveringSubReplyID = ref(0);
