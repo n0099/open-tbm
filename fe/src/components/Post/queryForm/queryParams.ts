@@ -2,7 +2,7 @@ import type { NamelessUnknownParam, ParamPreprocessorOrWatcher, UnknownParam } f
 import useQueryForm from './useQueryForm';
 import type { ForumModeratorType } from '@/api/user';
 import type { DeepWritable, Fid, ObjEmpty, PostID, PostType } from '@/shared';
-import { boolStrToBool } from '@/shared';
+import { boolStrToBool, postType } from '@/shared';
 import * as _ from 'lodash-es';
 
 // value of [0] will be either ALL: require exactly same post types, or SUB: requiring a subset of types
@@ -132,7 +132,7 @@ const paramsMetadataKeyByType: { [P in 'array' | 'dateTimeRange' | 'numeric' | '
 };
 const paramsDefaultValue = {
     fid: { value: 0, subParam: {} },
-    postTypes: { value: ['thread', 'reply', 'subReply'], subParam: {} },
+    postTypes: { value: postType, subParam: {} },
     orderBy: { value: 'default', subParam: { direction: 'default' } },
     threadProperties: { value: [] },
     authorManagerType: { value: 'NULL' },

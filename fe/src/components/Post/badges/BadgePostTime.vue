@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts" generic="
-    TPost extends Reply | SubReply | Thread,
+    TPost extends Post,
     TParentPost extends TPost extends SubReply ? Reply
         : TPost extends Reply ? Thread
         : TPost extends Thread ? never : unknown,
@@ -37,6 +37,7 @@
         & ('postedAt' | (TPost extends Thread ? 'latestReplyPostedAt' : never)),
     TPostTimeValue extends TPost['postedAt'] & (TPost extends Thread ? TPost['latestReplyPostedAt'] : unknown)">
 import type { Reply, SubReply, Thread } from '@/api/post';
+import type { Post, PostTypeTextOf } from '@/shared';
 import { postTypeText, undefinedOr } from '@/shared';
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
@@ -54,9 +55,7 @@ const props = defineProps<{
     postTimeKey: TPostTimeKey,
     timestampType: 'latestReplyPostedAt' extends TPostTimeKey ? '最后回复时间'
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never,
-    postType: TPost extends Thread ? '主题帖'
-        : TPost extends Reply ? '回复贴'
-            : TPost extends SubReply ? '楼中楼' : never
+    postType: PostTypeTextOf<TPost>
 }>();
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
     base?: DateTime<true>,

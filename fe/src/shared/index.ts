@@ -1,10 +1,12 @@
 import type { Cursor } from '@/api/index.d';
+import type { Reply, SubReply, Thread } from '@/api/post';
 import type { BaiduUserID, User } from '@/api/user';
 import { computed } from 'vue';
 import type { LocationAsRelativeRaw } from 'vue-router';
 import Noty from 'noty';
 import * as _ from 'lodash-es';
 
+export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type SqlDateTimeUtcPlus8 = string; // '2020-10-10 00:11:22'
 export type UnixTimestamp = number;
 export type Int = number;
@@ -24,13 +26,17 @@ export type Modify<T, R> = Omit<T, keyof R> & R;
 export type ObjValues<T> = T[keyof T];
 export type ToPromise<T> = T extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : never;
 
-export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
+export type Post = Reply | SubReply | Thread;
 export const postType = ['thread', 'reply', 'subReply'] as const;
 export type PostType = typeof postType[number];
 export const postTypeText = ['主题帖', '回复贴', '楼中楼'] as const;
 export type PostTypeText = typeof postTypeText[number];
+export type PostTypeTextOf<T> = T extends Thread ? '主题帖'
+    : T extends Reply ? '回复贴'
+        : T extends SubReply ? '楼中楼' : never;
 export const postID = ['tid', 'pid', 'spid'] as const;
 export type PostID = typeof postID[number];
+export type PostIDOf<T> = T extends Thread ? 'tid' : T extends Reply ? 'pid' : T extends SubReply ? 'spid' : never;
 export type Fid = UInt;
 export type Tid = UInt;
 export type Pid = UInt;

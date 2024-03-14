@@ -10,7 +10,7 @@
                 <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
                     <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                 class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
-                    <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" />
+                    <BadgePostCommon :post="thread" postIDKey="tid" />
                     <BadgePostTime postType="主题帖" :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
                                    postTimeKey="postedAt" timestampType="发帖时间" class="bg-success" />
                 </div>
@@ -82,10 +82,10 @@
 <script setup lang="ts">
 import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
 import ReplyItem from './ReplyItem.vue';
+import BadgePostCommon from '@/components/Post/badges/BadgePostCommon.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeThread from '@/components/Post/badges/BadgeThread.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
-import PostCommonMetadataIconLinks from '@/components/Post/badges/PostCommonMetadataIconLinks.vue';
 import { toUserRoute } from '@/shared/index';
 import { useElementRefsStore } from '@/stores/elementRefs';
 import { inject } from 'vue';

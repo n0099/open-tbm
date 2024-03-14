@@ -19,7 +19,7 @@
                     </RouterLink>
                     <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                         <div class="d-inline" :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
-                            <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" />
+                            <BadgePostCommon :post="subReply" postIDKey="spid" />
                         </div>
                         <BadgePostTime postType="楼中楼" :parentPost="reply" :currentPost="subReply"
                                        :previousTimeOverride="getSiblingPostedAt(subReplyGroupIndex, 'previous')"
@@ -35,9 +35,9 @@
 
 <script setup lang="ts">
 import type { UserProvision } from './RendererList.vue';
+import BadgePostCommon from '@/components/Post/badges/BadgePostCommon.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
-import PostCommonMetadataIconLinks from '@/components/Post/badges/PostCommonMetadataIconLinks.vue';
 import type { Reply, SubReply, Thread } from '@/api/post';
 import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
 import { inject, ref } from 'vue';
