@@ -1,12 +1,12 @@
 <template>
     <div class="sub-reply-group bs-callout bs-callout-success">
         <ul class="list-group list-group-flush">
-            <li v-for="(subReply, subReplyIndex) in subReplyGroup" :key="subReply.spid"
+            <li v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
                 @mouseenter="() => { hoveringSubReplyID = subReply.spid }"
                 @mouseleave="() => { hoveringSubReplyID = 0 }"
                 class="sub-reply-item list-group-item">
                 <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
-                    <RouterLink v-if="subReplyGroup[subReplyIndex - 1] === undefined" :to="toUserRoute(author.uid)"
+                    <RouterLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined" :to="toUserRoute(author.uid)"
                                 class="sub-reply-author text-wrap badge bg-light">
                         <img :src="toUserPortraitImageUrl(author.portrait)"
                              loading="lazy" class="tieba-user-portrait-small" />
@@ -17,13 +17,14 @@
                                    :threadAuthorUid="threadAuthorUid"
                                    :replyAuthorUid="replyAuthorUid" />
                     </RouterLink>
-                    <div class="float-end badge bg-light">
+                    <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                         <div class="d-inline" :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
                             <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" />
                         </div>
-                        <BadgePostTime v-if="nextSubReplyGroup !== undefined" :time="nextSubReplyGroup[0].postedAt"
-                                       :base="subReply.postedAt" tippyPrefix="本帖相对于下一楼中楼发帖时间：" class="bg-info" />
-                        <BadgePostTime :time="subReply.postedAt" tippyPrefix="发帖时间：" class="bg-info" />
+                        <BadgePostTime :previousPostTime="(subReplyGroup[subReplyGroupIndex - 1] ?? previousSubReplyGroup?.at(-1))?.postedAt"
+                                       :currentPostTime="subReply.postedAt"
+                                       :nextPostTime="(subReplyGroup[subReplyGroupIndex - 1] ?? nextSubReplyGroup?.[0])?.postedAt"
+                                       timestampType="发帖时间" class="bg-info" />
                     </div>
                 </template>
                 <div v-viewer.static class="sub-reply-content" v-html="subReply.content" />
@@ -44,6 +45,7 @@ import { inject, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
 defineProps<{
+    previousSubReplyGroup?: SubReply[],
     subReplyGroup: SubReply[],
     nextSubReplyGroup?: SubReply[],
     threadAuthorUid: BaiduUserID,

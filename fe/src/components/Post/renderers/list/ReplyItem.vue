@@ -14,13 +14,14 @@
                     <span>{{ reply.tail }}</span>
                 -->
             </div>
-            <div class="float-end badge bg-light">
+            <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                 <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                             class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
                 <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" />
-                <BadgePostTime v-if="nextReply !== undefined" :time="nextReply.postedAt"
-                               :base="reply.postedAt" tippyPrefix="本帖相对于下一回复帖发帖时间：" class="bg-primary" />
-                <BadgePostTime :time="reply.postedAt" tippyPrefix="发帖时间：" class="bg-primary" />
+                <BadgePostTime :previousPostTime="previousReply?.postedAt"
+                               :currentPostTime="reply.postedAt"
+                               :nextPostTime="nextReply?.postedAt"
+                               timestampType="发帖时间" class="bg-primary" />
             </div>
         </div>
         <div :ref="el => el !== null && replyElements.push(el as HTMLElement)"
@@ -38,7 +39,8 @@
                 <div v-viewer.static class="reply-content p-2" v-html="reply.content" />
                 <template v-if="reply.subReplies.length > 0">
                     <SubReplyGroup v-for="(subReplyGroup, index) in reply.subReplies" :key="index"
-                                   :subReplyGroup="subReplyGroup" :nextSubReplyGroup="reply.subReplies[index + 1]"
+                                   :previousSubReplyGroup="reply.subReplies[index - 1]" :subReplyGroup="subReplyGroup"
+                                   :nextSubReplyGroup="reply.subReplies[index + 1]"
                                    :threadAuthorUid="threadAuthorUid" :replyAuthorUid="reply.authorUid" />
                 </template>
             </div>
@@ -61,11 +63,14 @@ import { inject, nextTick, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
+type Reply = ThreadWithGroupedSubReplies['replies'][number];
 defineProps<{
-    reply: ThreadWithGroupedSubReplies['replies'][number],
-    nextReply?: ThreadWithGroupedSubReplies['replies'][number],
+    previousReply?: Reply,
+    reply: Reply,
+    nextReply?: Reply,
     threadAuthorUid: BaiduUserID
 }>();
+
 const elementRefsStore = useElementRefsStore();
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser } = inject<UserProvision>('userProvision')!;

@@ -1,24 +1,47 @@
 <template>
-    <span :data-tippy-content="tippyPrefix + dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)"
-          class="ms-1 fw-normal badge rounded-pill">
-        {{ dateTime.toRelative({ base, round: false }) }}
-    </span>
+    <DefineTemplate v-slot="{ base, time, tippyPrefix }">
+        <span :data-tippy-content="`
+            ${base === undefined ? '' : `${base.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>`}
+            ${tippyPrefix}<br>
+            ${time.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
+              class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
+            {{ time.toRelative({
+                base,
+                round: false
+            }) }}
+        </span>
+    </DefineTemplate>
+    <ReuseTemplate v-if="previousPostDateTime !== undefined"
+                   :time="currentPostDateTime" :base="previousPostDateTime" :tippyPrefix="`相对于上一帖${timestampType}`" />
+    <ReuseTemplate :time="currentPostDateTime" :tippyPrefix="`${timestampType}：`" />
+    <ReuseTemplate v-if="nextPostDateTime !== undefined"
+                   :time="nextPostDateTime" :base="currentPostDateTime" :tippyPrefix="`相对于下一帖${timestampType}`" />
 </template>
 
 <script setup lang="ts">
 import type { UnixTimestamp } from '@/shared';
 import { computed } from 'vue';
+import { createReusableTemplate } from '@vueuse/core';
 import { DateTime } from 'luxon';
 
-const props = withDefaults(defineProps<{
-    time: UnixTimestamp,
-    base?: UnixTimestamp,
-    tippyPrefix?: string
-}>(), { tippyPrefix: '' });
+defineOptions({ inheritAttrs: false });
+const props = defineProps<{
+    timestampType: string,
+    previousPostTime?: UnixTimestamp,
+    currentPostTime: UnixTimestamp,
+    nextPostTime?: UnixTimestamp
+}>();
 
-const dateTime = computed(() => DateTime.fromSeconds(props.time));
-const base = computed(() =>
-    (props.base === undefined ? undefined : DateTime.fromSeconds(props.base)));
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
+    base?: DateTime<true>,
+    time: DateTime<true>,
+    tippyPrefix: string
+}>();
+const previousPostDateTime = computed(() =>
+    (props.previousPostTime === undefined ? undefined : DateTime.fromSeconds(props.previousPostTime)));
+const currentPostDateTime = computed(() => DateTime.fromSeconds(props.currentPostTime));
+const nextPostDateTime = computed(() =>
+    (props.nextPostTime === undefined ? undefined : DateTime.fromSeconds(props.nextPostTime)));
 </script>
 
 <style scoped>

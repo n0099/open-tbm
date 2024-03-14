@@ -7,13 +7,14 @@
                     <BadgeThread :thread="thread" />
                     <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
                 </div>
-                <div class="col-auto badge bg-light">
+                <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
                     <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                 class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
                     <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" />
-                    <BadgePostTime v-if="nextThread !== undefined" :time="nextThread.postedAt"
-                                   :base="thread.postedAt" tippyPrefix="本帖相对于下一主题帖发帖时间：" class="bg-success" />
-                    <BadgePostTime :time="thread.postedAt" tippyPrefix="发帖时间：" class="bg-success" />
+                    <BadgePostTime :previousPostTime="previousThread?.postedAt"
+                                   :currentPostTime="thread.postedAt"
+                                   :nextPostTime="nextThread?.postedAt"
+                                   timestampType="发帖时间" class="bg-success" />
                 </div>
             </div>
             <div class="row justify-content-between mt-2">
@@ -46,35 +47,39 @@
                         <!-- todo: unknown json struct -->
                     </span>
                 </div>
-                <div class="col-auto badge bg-light" role="group">
-                    <RouterLink :to="toUserRoute(thread.authorUid)">
+                <div class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
+                    <RouterLink :to="toUserRoute(thread.authorUid)" class="fs-.75">
                         <span v-if="thread.latestReplierUid !== thread.authorUid"
                               class="fw-normal link-success">楼主：</span>
                         <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
                         <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                     </RouterLink>
                     <BadgeUser v-if="getUser(thread.authorUid).currentForumModerator !== null"
-                               :user="getUser(thread.authorUid)" class="ms-1" />
+                               :user="getUser(thread.authorUid)" class="fs-.75 ms-1" />
                     <template v-if="thread.latestReplierUid === null">
-                        <span class="ms-2 fw-normal link-secondary">最后回复：</span>
-                        <span class="fw-bold link-dark">未知用户</span>
+                        <span class="fs-.75">
+                            <span class="ms-2 fw-normal link-secondary">最后回复：</span>
+                            <span class="fw-bold link-dark">未知用户</span>
+                        </span>
                     </template>
                     <template v-else-if="thread.latestReplierUid !== thread.authorUid">
-                        <RouterLink :to="toUserRoute(thread.latestReplierUid)" class="ms-2">
+                        <RouterLink :to="toUserRoute(thread.latestReplierUid)" class="fs-.75 ms-2">
                             <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                         </RouterLink>
                         <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
-                                   :user="getUser(thread.latestReplierUid)" class="ms-1" />
+                                   :user="getUser(thread.latestReplierUid)" class="fs-.75 ms-1" />
                     </template>
-                    <BadgePostTime v-if="nextThread !== undefined" :time="nextThread.latestReplyPostedAt"
-                                   :base="thread.latestReplyPostedAt" tippyPrefix="本帖相对于下一主题帖最后回复时间时间：" class="bg-secondary" />
-                    <BadgePostTime :time="thread.latestReplyPostedAt" tippyPrefix="最后回复时间：" class="bg-secondary" />
+                    <BadgePostTime :previousPostTime="previousThread?.latestReplyPostedAt"
+                                   :currentPostTime="thread.latestReplyPostedAt"
+                                   :nextPostTime="nextThread?.latestReplyPostedAt"
+                                   timestampType="最后回复时间" class="bg-secondary" />
                 </div>
             </div>
         </div>
         <ReplyItem v-for="(reply, index) in thread.replies" :key="reply.pid"
-                   :reply="reply" :nextReply="thread.replies[index + 1]" :threadAuthorUid="thread.authorUid" />
+                   :previousReply="thread.replies[index - 1]" :reply="reply"
+                   :nextReply="thread.replies[index + 1]" :threadAuthorUid="thread.authorUid" />
     </div>
 </template>
 
@@ -93,6 +98,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { DateTime } from 'luxon';
 
 defineProps<{
+    previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies
 }>();
@@ -117,5 +123,8 @@ const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
     text-overflow: ellipsis;
     flex-basis: 100%;
     inline-size: 0;
+}
+.fs-\.75 {
+    font-size: .75rem;
 }
 </style>
