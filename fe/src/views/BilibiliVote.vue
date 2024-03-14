@@ -26,7 +26,7 @@
             <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><FontAwesomeIcon icon="calendar-alt" /></span>
+                    <span class="input-group-text"><FontAwesomeIcon :icon="faCalendarAlt" /></span>
                     <TimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
                                      :granularities="['minute', 'hour']"
                                      id="top5CandidateCountGroupByTimeGranularity" />
@@ -39,7 +39,7 @@
             <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><FontAwesomeIcon icon="clock" /></span>
+                    <span class="input-group-text"><FontAwesomeIcon :icon="faClock" /></span>
                     <TimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
                                      :granularities="['minute', 'hour']"
                                      id="allVoteCountGroupByTimeGranularity" />
@@ -72,8 +72,9 @@ import { echarts4ColorTheme, timeGranularityAxisPointerLabelFormatter, timeGranu
 
 import { onMounted, ref, watch } from 'vue';
 import { Table } from 'ant-design-vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { useHead } from '@unhead/vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 import * as _ from 'lodash-es';
 

@@ -36,10 +36,13 @@ const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
                 { pattern: '@/**', group: 'internal', position: 'before' },
                 { pattern: 'vue*', group: 'external', position: 'before' }, // vue vue-router
                 { pattern: 'pinia', group: 'external', position: 'before' },
-                { pattern: '*vue*{,/**}', group: 'external', position: 'before' }, // ant-design-vue @vueuse/core
-                { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome
+                { pattern: '@fortawesome/vue-fontawesome', group: 'external', position: 'after' }, // fontawesome
+                { pattern: '@fortawesome{,/**}', group: 'external', position: 'after' }, // fontawesome
+                { pattern: 'luxon{,/**}', group: 'external', position: 'after' },
                 { pattern: 'lodash{,-{es,fp}}{,/**}', group: 'external', position: 'after' }, // lodash
                 { pattern: 'echarts{,/**}', group: 'external', position: 'after' },
+                { pattern: '*vue*{,/**}', group: 'external', position: 'before' }, // ant-design-vue @vueuse/core
+                { pattern: '*/*vue*{,/**}', group: 'external', position: 'before' }, // @unhead/vue @fortawesome/vue-fontawesome @tanstack/vue-query
             ],
             pathGroupsExcludedImportTypes: [], // https://github.com/import-js/eslint-plugin-import/issues/2897
             distinctGroup: false,

@@ -37,24 +37,27 @@
 import { reactive, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { faCommentDots, faPaperPlane, faSearch, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 const route = useRoute();
 const envInstanceName = import.meta.env.VITE_INSTANCE_NAME;
 
-interface Route { route: string, title: string, icon?: string, isActive?: boolean }
-interface DropDown { title: string, icon: string, routes: Route[], isActive?: boolean }
+interface Nav { title: string, icon?: IconDefinition, isActive?: boolean }
+interface Route extends Nav { route: string }
+interface DropDown extends Nav { routes: Route[], icon: IconDefinition }
 const navs = reactive<Array<DropDown | Route>>([
     {
         title: '查询',
-        icon: 'search',
+        icon: faSearch,
         routes: [
-            { route: 'post', title: '帖子', icon: 'comment-dots' },
-            { route: 'user', title: '用户', icon: 'users' }
+            { route: 'post', title: '帖子', icon: faCommentDots },
+            { route: 'user', title: '用户', icon: faUsers }
         ]
     },
     {
         title: '专题',
-        icon: 'paper-plane',
+        icon: faPaperPlane,
         routes: [
             { route: 'bilibiliVote', title: 'bilibili吧公投' }
         ]

@@ -5,7 +5,7 @@
             <div class="d-inline-flex gap-1 fs-5">
                 <span class="badge bg-secondary">{{ reply.floor }}楼</span>
                 <span v-if="reply.subReplyCount > 0" class="badge bg-info">
-                    {{ reply.subReplyCount }}条<FontAwesomeIcon icon="comment-dots" />
+                    {{ reply.subReplyCount }}条<FontAwesomeIcon :icon="faCommentDots" />
                 </span>
                 <!-- TODO: implement these reply's property
                     <span>fold:{{ reply.isFold }}</span>
@@ -54,9 +54,11 @@ import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
 import { useElementRefsStore } from '@/stores/elementRefs';
 import '@/styles/bootstrapCallout.css';
+
 import { inject, nextTick, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
 type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];
 defineProps<{

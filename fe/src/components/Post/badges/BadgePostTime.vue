@@ -13,16 +13,16 @@
     </DefineTemplate>
     <ReuseTemplate v-if="previousTime !== undefined && previousTime < currentTime && previousDateTime !== undefined"
                    :base="previousDateTime" :relativeTo="`相对于下一${postType}${timestampType}`">
-        <FontAwesomeIcon icon="chevron-down" class="align-bottom" />
+        <FontAwesomeIcon :icon="faChevronDown" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="nextTime !== undefined && nextTime < currentTime && nextDateTime !== undefined"
                    :base="nextDateTime" :relativeTo="`相对于上一${postType}${timestampType}`">
-        <FontAwesomeIcon icon="chevron-up" class="align-bottom" />
+        <FontAwesomeIcon :icon="faChevronUp" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="parentTime !== undefined && parentTime !== currentTime"
                    :base="parentDateTime"
                    :relativeTo="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`">
-        <FontAwesomeIcon icon="angles-up" class="align-bottom" />
+        <FontAwesomeIcon :icon="faAnglesUp" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate />
 </template>
@@ -42,6 +42,7 @@ import { postTypeText, undefinedOr } from '@/shared';
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faAnglesUp, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 
 defineOptions({ inheritAttrs: false });

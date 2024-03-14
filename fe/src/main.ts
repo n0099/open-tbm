@@ -1,8 +1,6 @@
 import App from '@/App.vue';
 import router from '@/router';
-import * as fontAwesomeIcons from '@/shared/fontAwesome';
 import '@/styles/style.css';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
@@ -13,8 +11,6 @@ import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
 import nprogress from 'nprogress';
 import 'nprogress/nprogress.css';
-
-library.add(...Object.values(fontAwesomeIcons));
 
 nprogress.configure({ trickleSpeed: 200 });
 

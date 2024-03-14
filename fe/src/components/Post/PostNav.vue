@@ -35,8 +35,8 @@
          }"
          class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
         <a @click="_ => togglePostNavExpanded()" class="text-primary">
-            <FontAwesomeIcon v-show="isPostNavExpanded" icon="angle-left" />
-            <FontAwesomeIcon v-show="!isPostNavExpanded" icon="angle-right" />
+            <FontAwesomeIcon v-show="isPostNavExpanded" :icon="faAngleLeft" />
+            <FontAwesomeIcon v-show="!isPostNavExpanded" :icon="faAngleRight" />
         </a>
     </div>
 </template>
@@ -53,8 +53,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import scrollIntoView from 'scroll-into-view-if-needed';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import * as _ from 'lodash-es';
 
 const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
