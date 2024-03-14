@@ -14,17 +14,17 @@
                             {{ renderUsername(subReply.authorUid) }}
                         </span>
                         <BadgeUser :user="getUser(subReply.authorUid)"
-                                   :threadAuthorUid="threadAuthorUid"
-                                   :replyAuthorUid="replyAuthorUid" />
+                                   :threadAuthorUid="thread.authorUid"
+                                   :replyAuthorUid="reply.authorUid" />
                     </RouterLink>
                     <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                         <div class="d-inline" :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
                             <PostCommonMetadataIconLinks :post="subReply" postTypeID="spid" />
                         </div>
-                        <BadgePostTime :previousPostTime="(subReplyGroup[subReplyGroupIndex - 1] ?? previousSubReplyGroup?.at(-1))?.postedAt"
-                                       :currentPostTime="subReply.postedAt"
-                                       :nextPostTime="(subReplyGroup[subReplyGroupIndex - 1] ?? nextSubReplyGroup?.[0])?.postedAt"
-                                       timestampType="发帖时间" class="bg-info" />
+                        <BadgePostTime postType="楼中楼" :parentPost="reply" :currentPost="subReply"
+                                       :previousTimeOverride="getSiblingPostedAt(subReplyGroupIndex, 'previous')"
+                                       :nextTimeOverride="getSiblingPostedAt(subReplyGroupIndex, 'next')"
+                                       postTimeKey="postedAt" timestampType="发帖时间" class="bg-info" />
                     </div>
                 </template>
                 <div v-viewer.static class="sub-reply-content" v-html="subReply.content" />
@@ -38,22 +38,26 @@ import type { UserProvision } from './RendererList.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import PostCommonMetadataIconLinks from '@/components/Post/badges/PostCommonMetadataIconLinks.vue';
-import type { SubReply } from '@/api/post';
-import type { BaiduUserID } from '@/api/user';
+import type { Reply, SubReply, Thread } from '@/api/post';
 import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
 import { inject, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
-defineProps<{
+const props = defineProps<{
+    thread: Thread,
+    reply: Reply,
     previousSubReplyGroup?: SubReply[],
     subReplyGroup: SubReply[],
-    nextSubReplyGroup?: SubReply[],
-    threadAuthorUid: BaiduUserID,
-    replyAuthorUid: BaiduUserID
+    nextSubReplyGroup?: SubReply[]
 }>();
+
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
 const hoveringSubReplyID = ref(0);
+const getSiblingPostedAt = (index: number, direction: 'previous' | 'next') =>
+    (props.subReplyGroup[index + (direction === 'next' ? 1 : -1)] as SubReply | undefined
+        ?? (direction === 'next' ? props.nextSubReplyGroup?.[0] : props.previousSubReplyGroup?.at(-1))
+    )?.postedAt;
 </script>
 
 <style scoped>

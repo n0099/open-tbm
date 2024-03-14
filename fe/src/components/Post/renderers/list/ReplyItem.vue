@@ -18,10 +18,9 @@
                 <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
                             class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
                 <PostCommonMetadataIconLinks :post="reply" postTypeID="pid" />
-                <BadgePostTime :previousPostTime="previousReply?.postedAt"
-                               :currentPostTime="reply.postedAt"
-                               :nextPostTime="nextReply?.postedAt"
-                               timestampType="发帖时间" class="bg-primary" />
+                <BadgePostTime postType="回复贴" :parentPost="thread"
+                               :previousPost="previousReply" :currentPost="reply" :nextPost="nextReply"
+                               postTimeKey="postedAt" timestampType="发帖时间" class="bg-primary" />
             </div>
         </div>
         <div :ref="el => el !== null && replyElements.push(el as HTMLElement)"
@@ -33,15 +32,14 @@
                     <p class="my-0">{{ author.name }}</p>
                     <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>
                 </RouterLink>
-                <BadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="threadAuthorUid" />
+                <BadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
             </div>
             <div class="col me-2 px-1 border-start overflow-auto">
                 <div v-viewer.static class="reply-content p-2" v-html="reply.content" />
                 <template v-if="reply.subReplies.length > 0">
                     <SubReplyGroup v-for="(subReplyGroup, index) in reply.subReplies" :key="index"
                                    :previousSubReplyGroup="reply.subReplies[index - 1]" :subReplyGroup="subReplyGroup"
-                                   :nextSubReplyGroup="reply.subReplies[index + 1]"
-                                   :threadAuthorUid="threadAuthorUid" :replyAuthorUid="reply.authorUid" />
+                                   :nextSubReplyGroup="reply.subReplies[index + 1]" :thread="thread" :reply="reply" />
                 </template>
             </div>
         </div>
@@ -55,7 +53,6 @@ import SubReplyGroup from './SubReplyGroup.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import PostCommonMetadataIconLinks from '@/components/Post/badges/PostCommonMetadataIconLinks.vue';
-import type { BaiduUserID } from '@/api/user';
 import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
 import { useElementRefsStore } from '@/stores/elementRefs';
 import '@/styles/bootstrapCallout.css';
@@ -63,12 +60,12 @@ import { inject, nextTick, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-type Reply = ThreadWithGroupedSubReplies['replies'][number];
+type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];
 defineProps<{
-    previousReply?: Reply,
-    reply: Reply,
-    nextReply?: Reply,
-    threadAuthorUid: BaiduUserID
+    thread: ThreadWithGroupedSubReplies,
+    previousReply?: ReplyWithGroupedSubReplies,
+    reply: ReplyWithGroupedSubReplies,
+    nextReply?: ReplyWithGroupedSubReplies
 }>();
 
 const elementRefsStore = useElementRefsStore();

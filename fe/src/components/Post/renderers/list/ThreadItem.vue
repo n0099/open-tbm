@@ -11,10 +11,8 @@
                     <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
                                 class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
                     <PostCommonMetadataIconLinks :post="thread" postTypeID="tid" />
-                    <BadgePostTime :previousPostTime="previousThread?.postedAt"
-                                   :currentPostTime="thread.postedAt"
-                                   :nextPostTime="nextThread?.postedAt"
-                                   timestampType="发帖时间" class="bg-success" />
+                    <BadgePostTime postType="主题帖" :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
+                                   postTimeKey="postedAt" timestampType="发帖时间" class="bg-success" />
                 </div>
             </div>
             <div class="row justify-content-between mt-2">
@@ -70,16 +68,14 @@
                         <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
                                    :user="getUser(thread.latestReplierUid)" class="fs-.75 ms-1" />
                     </template>
-                    <BadgePostTime :previousPostTime="previousThread?.latestReplyPostedAt"
-                                   :currentPostTime="thread.latestReplyPostedAt"
-                                   :nextPostTime="nextThread?.latestReplyPostedAt"
-                                   timestampType="最后回复时间" class="bg-secondary" />
+                    <BadgePostTime postType="主题帖" :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
+                                   postTimeKey="latestReplyPostedAt" timestampType="最后回复时间" class="bg-secondary" />
                 </div>
             </div>
         </div>
         <ReplyItem v-for="(reply, index) in thread.replies" :key="reply.pid"
                    :previousReply="thread.replies[index - 1]" :reply="reply"
-                   :nextReply="thread.replies[index + 1]" :threadAuthorUid="thread.authorUid" />
+                   :nextReply="thread.replies[index + 1]" :thread="thread" />
     </div>
 </template>
 

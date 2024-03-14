@@ -1,4 +1,7 @@
 export {
+    faChevronUp,
+    faChevronDown,
+    faAnglesUp,
     faCalendarAlt,
     faChartPie,
     faClock,
