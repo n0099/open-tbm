@@ -15,9 +15,7 @@
                 -->
             </div>
             <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
-                <RouterLink :to="{ name: 'post/pid', params: { pid: reply.pid } }"
-                            class="badge bg-light rounded-pill link-dark">只看此楼</RouterLink>
-                <BadgePostCommon :post="reply" postIDKey="pid" />
+                <BadgePostCommon :post="reply" postIDKey="pid" postTypeText="回复贴" />
                 <BadgePostTime postType="回复贴" :parentPost="thread"
                                :previousPost="previousReply" :currentPost="reply" :nextPost="nextReply"
                                postTimeKey="postedAt" timestampType="发帖时间" class="bg-primary" />

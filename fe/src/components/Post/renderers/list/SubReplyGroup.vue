@@ -2,8 +2,6 @@
     <div class="sub-reply-group bs-callout bs-callout-success">
         <ul class="list-group list-group-flush">
             <li v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
-                @mouseenter="() => { hoveringSubReplyID = subReply.spid }"
-                @mouseleave="() => { hoveringSubReplyID = 0 }"
                 class="sub-reply-item list-group-item">
                 <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                     <RouterLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined" :to="toUserRoute(author.uid)"
@@ -18,9 +16,7 @@
                                    :replyAuthorUid="reply.authorUid" />
                     </RouterLink>
                     <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
-                        <div class="d-inline" :class="{ invisible: hoveringSubReplyID !== subReply.spid }">
-                            <BadgePostCommon :post="subReply" postIDKey="spid" />
-                        </div>
+                        <BadgePostCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
                         <BadgePostTime postType="楼中楼" :parentPost="reply" :currentPost="subReply"
                                        :previousTimeOverride="getSiblingPostedAt(subReplyGroupIndex, 'previous')"
                                        :nextTimeOverride="getSiblingPostedAt(subReplyGroupIndex, 'next')"
@@ -40,7 +36,7 @@ import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import type { Reply, SubReply, Thread } from '@/api/post';
 import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
-import { inject, ref } from 'vue';
+import { inject } from 'vue';
 import { RouterLink } from 'vue-router';
 
 const props = defineProps<{
@@ -53,7 +49,6 @@ const props = defineProps<{
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
-const hoveringSubReplyID = ref(0);
 const getSiblingPostedAt = (index: number, direction: 'previous' | 'next') =>
     (props.subReplyGroup[index + (direction === 'next' ? 1 : -1)] as SubReply | undefined
         ?? (direction === 'next' ? props.nextSubReplyGroup?.[0] : props.previousSubReplyGroup?.at(-1))

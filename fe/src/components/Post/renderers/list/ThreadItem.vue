@@ -8,9 +8,7 @@
                     <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
                 </div>
                 <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
-                    <RouterLink :to="{ name: 'post/tid', params: { tid: thread.tid } }"
-                                class="badge bg-light rounded-pill link-dark">只看此帖</RouterLink>
-                    <BadgePostCommon :post="thread" postIDKey="tid" />
+                    <BadgePostCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
                     <BadgePostTime postType="主题帖" :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
                                    postTimeKey="postedAt" timestampType="发帖时间" class="bg-success" />
                 </div>
