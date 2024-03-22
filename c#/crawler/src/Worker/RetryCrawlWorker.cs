@@ -17,7 +17,7 @@ public class RetryCrawlWorker(
         {
             if (stoppingToken.IsCancellationRequested) return;
             var failed = registeredLocksLookup[lockType].RetryAllFailed();
-            if (!failed.Any()) continue; // skip current lock type if there's nothing needs to retry
+            if (failed.Count == 0) continue; // skip current lock type if there's nothing needs to retry
             if (lockType == "threadLate")
             {
                 await RetryThreadLate(failed, stoppingToken);
@@ -100,7 +100,7 @@ public class RetryCrawlWorker(
         var savedThreads = await crawler.RetryThenSave(pages, failureCountSelector, stoppingToken);
         if (savedThreads == null) return;
         var savedReplies = await crawlPost.CrawlReplies
-            (new() {savedThreads}, fid, stoppingToken);
+            ([savedThreads], fid, stoppingToken);
         await crawlPost.CrawlSubReplies(savedReplies, fid, stoppingToken);
     }
 

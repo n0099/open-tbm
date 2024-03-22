@@ -98,7 +98,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
             if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask.NullIfZero();
             return revision;
         }).OfType<TRevision>().ToList();
-        if (!newRevisions.Any()) return; // quick exit to prevent execute sql with WHERE FALSE clause
+        if (newRevisions.Count == 0) return; // quick exit to prevent execute sql with WHERE FALSE clause
 
         _ = db.Set<TRevision>().UpsertRange(
                 newRevisions.Where(rev => !rev.IsAllFieldsIsNullExceptSplit()))

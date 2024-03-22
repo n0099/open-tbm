@@ -11,7 +11,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
         outUsers = new(30);
         if (ShouldSkipParse(requestFlag))
         {
-            outPosts = new();
+            outPosts = [];
             return;
         }
         var outNullableUsers = new List<TbClient.User?>();

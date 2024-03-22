@@ -6,8 +6,8 @@ public class AuthorRevisionSaver(string triggeredByPostType)
 {
     // locks only using fid and uid field values from AuthorRevision
     // this prevents inserting multiple entities with similar time and other fields with the same values
-    private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = new();
-    private readonly List<(Fid Fid, long Uid)> _savedRevisions = new();
+    private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = [];
+    private readonly List<(Fid Fid, long Uid)> _savedRevisions = [];
 
     public delegate AuthorRevisionSaver New(string triggeredByPostType);
 
@@ -79,7 +79,7 @@ public class AuthorRevisionSaver(string triggeredByPostType)
                 .Select(revisionFactory)
                 .ExceptBy(locks, rev => (rev.Fid, rev.Uid))
                 .ToList();
-            if (!newRevisionsExceptLocked.Any()) return;
+            if (newRevisionsExceptLocked.Count == 0) return;
 
             _savedRevisions.AddRange(newRevisionsExceptLocked.Select(rev => (rev.Fid, rev.Uid)));
             locks.UnionWith(_savedRevisions);

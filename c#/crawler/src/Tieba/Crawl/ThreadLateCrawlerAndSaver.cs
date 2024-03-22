@@ -36,7 +36,7 @@ public class ThreadLateCrawlerAndSaver(
     {
         var crawlerLockId = new CrawlerLocks.LockId(fid, tid);
 #pragma warning disable SA1003 // Symbols should be spaced correctly
-        if (!_locks.AcquireRange(crawlerLockId, new[] {(Page)1}).Any()) return null;
+        if (_locks.AcquireRange(crawlerLockId, [(Page)1]).Count == 0) return null;
 #pragma warning restore SA1003 // Symbols should be spaced correctly
         try
         {
@@ -130,7 +130,7 @@ public class ThreadLateCrawlerAndSaver(
         }
         finally
         {
-            _locks.ReleaseRange(crawlerLockId, new Page[] {1});
+            _locks.ReleaseRange(crawlerLockId, [1]);
         }
     }
 }

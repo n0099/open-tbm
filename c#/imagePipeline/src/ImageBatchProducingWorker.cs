@@ -38,7 +38,7 @@ public class ImageBatchProducingWorker(
                     return null;
                 }
             }));
-            await writer.WriteAsync(new(imagesWithBytes.OfType<ImageWithBytes>()), stoppingToken);
+            await writer.WriteAsync([..imagesWithBytes.OfType<ImageWithBytes>()], stoppingToken);
         }
         writer.Complete();
     }
@@ -76,7 +76,7 @@ public class ImageBatchProducingWorker(
                     orderby i.ImageId
                     select i)
                 .Take(ProduceImageBatchSize * PrefetchUnconsumedImagesFactor * InterlaceBatchCount).ToList();
-            if (!interlaceBatches.Any()) yield break;
+            if (interlaceBatches.Count == 0) yield break;
             lastImageIdInPreviousBatch = interlaceBatches[^1].ImageId;
             yield return interlaceBatches
                 .Where(image => image.ImageId % InterlaceBatchCount == InterlaceBatchIndex);

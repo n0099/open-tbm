@@ -35,8 +35,8 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
             RnNeed = 30,
             SortType = 5
         };
-        return new[]
-        {
+        return
+        [
             new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0",
                 new ThreadRequest {Data = data},
                 (req, common) => req.Data.Common = common,
@@ -45,7 +45,7 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
                 new ThreadRequest {Data = data602},
                 (req, common) => req.Data.Common = common,
                 () => new ThreadResponse(), stoppingToken), CrawlRequestFlag.ThreadClientVersion602)
-        };
+        ];
     }
 
     protected ThreadRequest.Types.Data GetRequestDataForClientVersion602(Page page) =>

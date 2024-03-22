@@ -83,7 +83,7 @@ public partial class ReplySaver(
                 }))
             .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
             .ToList();
-        if (!pidAndImageList.Any()) return;
+        if (pidAndImageList.Count == 0) return;
 
         var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
             .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
@@ -116,8 +116,8 @@ public partial class ReplySaver(
 }
 public partial class ReplySaver
 {
-    private static readonly HashSet<UniqueSignature> SignatureLocks = new();
-    private readonly List<UniqueSignature> _savedSignatures = new();
+    private static readonly HashSet<UniqueSignature> SignatureLocks = [];
+    private readonly List<UniqueSignature> _savedSignatures = [];
 
     private Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
@@ -134,7 +134,7 @@ public partial class ReplySaver
                 FirstSeenAt = now,
                 LastSeenAt = now
             }).ToList();
-        if (!signatures.Any()) return () => { };
+        if (signatures.Count == 0) return () => { };
 
         var uniqueSignatures = signatures
             .ConvertAll(s => new UniqueSignature(s.SignatureId, s.XxHash3));
@@ -155,7 +155,7 @@ public partial class ReplySaver
                 .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
                 .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.XxHash3))
                 .ToList();
-            if (!newSignaturesExceptLocked.Any()) return () => { };
+            if (newSignaturesExceptLocked.Count == 0) return () => { };
 
             _savedSignatures.AddRange(newSignaturesExceptLocked
                 .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)));
@@ -165,7 +165,7 @@ public partial class ReplySaver
         return () =>
         {
             lock (SignatureLocks)
-                if (_savedSignatures.Any()) SignatureLocks.ExceptWith(_savedSignatures);
+                if (_savedSignatures.Count != 0) SignatureLocks.ExceptWith(_savedSignatures);
         };
     }
 

@@ -7,7 +7,7 @@ public abstract class StaticCommonInSavers
 
     // static field in this non generic class will be shared across all reified generic derived classes
     protected static Dictionary<Type, Dictionary<string, PropertyInfo>> RevisionPropertiesCache { get; } = GetPropsKeyByType(
-        new() {typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)});
+        [typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)]);
 
     protected static FieldChangeIgnoranceDelegates GlobalFieldChangeIgnorance { get; } = new(
         Update: (whichPostType, propName, oldValue, newValue) =>

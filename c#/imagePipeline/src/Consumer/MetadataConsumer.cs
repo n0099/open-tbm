@@ -29,7 +29,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         (_logger, _failedImageHandler) = (logger, failedImageHandler);
         var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
         ulong[] GetCommonXxHash3ToIgnore(string key) =>
-            section.GetSection(key).Get<ulong[]>() ?? Array.Empty<ulong>();
+            section.GetSection(key).Get<ulong[]>() ?? [];
         _commonEmbeddedMetadataXxHash3ToIgnore = (
             Exif: GetCommonXxHash3ToIgnore("Exif"),
             Icc: GetCommonXxHash3ToIgnore("Icc"),
@@ -307,8 +307,8 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             var culture = (DateTimeFormatInfo)CultureInfo.InvariantCulture.DateTimeFormat.Clone();
             culture.AMDesignator = "上午";
             culture.PMDesignator = "下午";
-            var dateTime = DateTime.TryParseExact(exifDateTime, new[]
-            {
+            var dateTime = DateTime.TryParseExact(exifDateTime,
+            [
                 "yyyy':'MM':'dd HH':'mm':'ss",   // 2019:04:26 20:08:02
                 "yyyy':'MM':'dd HH':'mm':'sstt", // 2018:09:12 21:20:08下午, 2018:09:12 09:20:08上午
                 "yyyy':'MM':'dd h':'mm':'sstt",  // 2018:09:12 09:20:08下午, 2018:09:12 9:20:08下午
@@ -317,7 +317,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 "yyyy'/'MM'/'dd HH':'mm':'ss",   // 2017/05/22 00:04:31
                 "yyyy-MM-dd HH':'mm':'ss",       // 2017-05-22 00:04:31
                 "ddd MMM dd HH':'mm':'ss yyyy"   // Sat Mar 03 10:05:45 2007
-            }, culture, DateTimeStyles.AllowWhiteSpaces, out var dt)
+            ], culture, DateTimeStyles.AllowWhiteSpaces, out var dt)
                 ? dt
                 : default;
             return dateTime == default ? null : new(dateTime, Offset: null);

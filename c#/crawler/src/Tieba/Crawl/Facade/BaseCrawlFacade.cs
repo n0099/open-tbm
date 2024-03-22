@@ -14,7 +14,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    private readonly HashSet<Page> _lockingPages = new();
+    private readonly HashSet<Page> _lockingPages = [];
     private ExceptionHandler _exceptionHandler = _ => { };
 
     public delegate void ExceptionHandler(Exception ex);
@@ -62,10 +62,10 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     public async Task<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>>
         CrawlPageRange(Page startPage, Page endPage = Page.MaxValue, CancellationToken stoppingToken = default)
     { // cancel when startPage is already locked
-        if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
+        if (_lockingPages.Count != 0) ThrowHelper.ThrowInvalidOperationException(
             "CrawlPageRange() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
-        var acquiredLocks = locks.AcquireRange(lockId, new[] {startPage});
-        if (!acquiredLocks.Any()) Logger.LogInformation(
+        var acquiredLocks = locks.AcquireRange(lockId, [startPage]);
+        if (acquiredLocks.Count == 0) Logger.LogInformation(
             "Cannot crawl any page within the range [{}-{}] for lock type {}, id {} since they've already been locked",
             startPage, endPage, locks.LockType, lockId);
         _lockingPages.UnionWith(acquiredLocks);
@@ -86,7 +86,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             var pagesAfterStart = Enumerable.Range(
                 (int)(startPage + 1),
                 (int)(endPage - startPage)).ToList();
-            if (pagesAfterStart.Any())
+            if (pagesAfterStart.Count != 0)
                 await CrawlPages(pagesAfterStart.ConvertAll(page => (Page)page), stoppingToken: stoppingToken);
         }
         return this;
@@ -95,7 +95,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     public async Task<SaverChangeSet<TPost>?> RetryThenSave
         (IList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
     {
-        if (_lockingPages.Any()) ThrowHelper.ThrowInvalidOperationException(
+        if (_lockingPages.Count != 0) ThrowHelper.ThrowInvalidOperationException(
             "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
         await CrawlPages(pages, failureCountSelector, stoppingToken);
         return SaveCrawled(stoppingToken);
@@ -126,8 +126,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
         if (flag == CrawlRequestFlag.None)
         {
-            if (!postsEmbeddedUsers.Any() && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
-            if (postsEmbeddedUsers.Any()) Users.ParseUsers(postsEmbeddedUsers);
+            if (postsEmbeddedUsers.Count == 0 && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
+            if (postsEmbeddedUsers.Count != 0) Users.ParseUsers(postsEmbeddedUsers);
         }
         PostParseHook(response, flag, parsedPostsInResponse);
     }
@@ -138,7 +138,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         CancellationToken stoppingToken = default)
     {
         var acquiredLocks = locks.AcquireRange(lockId, pages);
-        if (!acquiredLocks.Any())
+        if (acquiredLocks.Count == 0)
         {
             var pagesText = Enumerable
                 .Range((int)pages[0], (int)pages[^1])

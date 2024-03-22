@@ -10,7 +10,7 @@ public class ThreadCrawlFacade(
     : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
         (crawler(forumName), parser, saver.Invoke, locks["thread"], new(fid), fid)
 {
-    private readonly Dictionary<long, User> _latestRepliers = new();
+    private readonly Dictionary<long, User> _latestRepliers = [];
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
@@ -25,7 +25,7 @@ public class ThreadCrawlFacade(
             .ExceptBy(existingUsersId, pair => pair.Key)
             .Select(pair => pair.Value)
             .ToList();
-        if (!newLatestRepliers.Any()) return;
+        if (newLatestRepliers.Count == 0) return;
 
         var newlyLockedLatestRepliers = Users.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid));
         var newLatestRepliersExceptLocked = newLatestRepliers

@@ -2,7 +2,7 @@ namespace tbm.ImagePipeline.Consumer;
 
 public class FailedImageHandler(ILogger<FailedImageHandler> logger, CancellationToken stoppingToken)
 {
-    private readonly List<ImageFailed> _failedImages = new();
+    private readonly List<ImageFailed> _failedImages = [];
 
     public IEnumerable<Either<ImageId, TResult>> TrySelect<TSource, TResult>
         (IEnumerable<TSource> source, Func<TSource, ImageId> imageIdSelector, Func<TSource, TResult> payload) =>

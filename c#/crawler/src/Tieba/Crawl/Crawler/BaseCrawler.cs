@@ -32,6 +32,6 @@ public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
     protected IList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage)
     {
         var posts = GetResponsePostList(response);
-        return posts.Any() ? posts : throw new EmptyPostListException(exceptionMessage);
+        return posts.Count != 0 ? posts : throw new EmptyPostListException(exceptionMessage);
     }
 }

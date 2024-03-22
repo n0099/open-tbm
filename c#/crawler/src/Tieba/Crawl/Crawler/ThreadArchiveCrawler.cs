@@ -10,10 +10,10 @@ public class ThreadArchiveCrawler(string forumName) : ThreadCrawler(forumName)
             new ThreadRequest {Data = GetRequestDataForClientVersion602(page)},
             (req, common) => req.Data.Common = common,
             () => new ThreadResponse(), stoppingToken);
-        return new[]
-        { // passing CrawlRequestFlag.ThreadClientVersion602 in the second one in order to invokes ThreadParser.ShouldSkipParse()
+        return
+        [ // passing CrawlRequestFlag.ThreadClientVersion602 in the second one in order to invokes ThreadParser.ShouldSkipParse()
             new Request(response),
             new Request(response, CrawlRequestFlag.ThreadClientVersion602)
-        };
+        ];
     }
 }

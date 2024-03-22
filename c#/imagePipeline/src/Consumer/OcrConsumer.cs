@@ -7,7 +7,7 @@ public class OcrConsumer(
     : MatrixConsumer
 {
     private readonly JointRecognizer _recognizer = recognizerFactory(script);
-    private readonly List<ImageOcrLine> _recognizedTextLines = new();
+    private readonly List<ImageOcrLine> _recognizedTextLines = [];
 
     public delegate OcrConsumer New(string script);
 

@@ -57,14 +57,14 @@ public sealed partial class TesseractRecognizer
         var tesseract = isVertical ? TesseractInstanceVertical : TesseractInstanceHorizontal;
         tesseract.Value.Run(mat, out _, out var rects, out var texts, out var confidences);
 
-        var shouldFallbackToPaddleOcr = !rects.Any();
+        var shouldFallbackToPaddleOcr = rects.Length == 0;
         var components = rects.EquiZip(texts, confidences)
             .Select(t => (Rect: t.Item1, Text: t.Item2, Confidence: t.Item3))
             .Where(t => t.Confidence > ConfidenceThreshold)
             .ToList();
         var text = string.Concat(components.Select(t => t.Text)).Trim();
         if (text == "") shouldFallbackToPaddleOcr = true;
-        var averageConfidence = components.Any()
+        var averageConfidence = components.Count != 0
             ? components.Select(c => c.Confidence).Average().RoundToByte()
             : (byte)0;
 

@@ -91,10 +91,10 @@ public class ImageBatchConsumingWorker(
 #pragma warning restore IDE0042 // Deconstruct variable declaration
             var failed = imagesId.Failed.ToList();
             var consumed = imagesId.Consumed.ToList();
-            LogStopwatch(consumerType, consumed.Concat(failed).ToList());
+            LogStopwatch(consumerType, [.. consumed, .. failed]);
             MarkImagesInReplyAsConsumed(selector, consumed);
 
-            if (!failed.Any()) return;
+            if (failed.Count == 0) return;
             logger.LogError("Failed to {} for {} image(s): [{}]",
                 consumerType, failed.Count, string.Join(",", failed));
         }
@@ -123,7 +123,7 @@ public class ImageBatchConsumingWorker(
                 qrCodeConsumerFactory, "scan QRCode");
             await ConsumeOcrConsumer(consumedImagesId =>
                     MarkImagesInReplyAsConsumed(i => i.OcrConsumed, consumedImagesId),
-                ExceptConsumed(i => i.OcrConsumed).ToList(),
+                [.. ExceptConsumed(i => i.OcrConsumed)],
                 ocrConsumerFactory, db.Database.GetDbConnection(),
                 transaction.GetDbTransaction(), db.ForumScripts, stoppingToken);
         }
@@ -146,7 +146,7 @@ public class ImageBatchConsumingWorker(
         // preserve alpha channel if there's any, so the type of mat might be CV_8UC3 or CV_8UC4
         var imageMat = Cv2.ImDecode(imageBytes, ImreadModes.Unchanged);
         if (!imageMat.Empty())
-            return new ImageKeyWithMatrix[] {new(imageId, FrameIndex: 0, imageMat)};
+            return [new(imageId, FrameIndex: 0, imageMat)];
 
         ImageKeyWithMatrix DecodeFrame(ImageFrame<Rgb24> frame, int frameIndex)
         {
@@ -200,7 +200,7 @@ public class ImageBatchConsumingWorker(
             .GroupBy(e => e.Fid, e => e.Script).ToList();
         var scripts = scriptGroupings.SelectMany(i => i).Distinct().ToList();
         var recognizedTextLinesKeyByScript = new Dictionary<string, List<ImageOcrLine>>(scripts.Count);
-        scripts.ForEach(script => recognizedTextLinesKeyByScript[script] = new());
+        scripts.ForEach(script => recognizedTextLinesKeyByScript[script] = []);
 
         foreach (var scriptsGroupByFid in scriptGroupings)
         {
@@ -270,7 +270,7 @@ public class ImageBatchConsumingWorker(
             markImageInReplyAsConsumed(imagesId.Consumed);
 
             var failed = imagesId.Failed.ToList();
-            if (failed.Any())
+            if (failed.Count != 0)
                 logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                     script, fid, failed.Count, string.Join(",", failed));
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",

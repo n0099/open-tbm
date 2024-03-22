@@ -31,8 +31,8 @@ public class ReplyCrawler(Fid fid, Tid tid) : BaseCrawler<ReplyResponse, Reply>
     public override TbClient.Page GetResponsePage(ReplyResponse response) => response.Data.Page;
     protected override RepeatedField<Reply> GetResponsePostList(ReplyResponse response) => response.Data.PostList;
     protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
-    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
-    {
+    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) =>
+    [
         new Request(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.26.1.0",
             new ReplyRequest {Data = new()
             { // reverse order will be {"last", "1"}, {"r", "1"}
@@ -42,5 +42,5 @@ public class ReplyCrawler(Fid fid, Tid tid) : BaseCrawler<ReplyResponse, Reply>
             }},
             (req, common) => req.Data.Common = common,
             () => new ReplyResponse(), stoppingToken))
-    };
+    ];
 }

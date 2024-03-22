@@ -14,7 +14,7 @@ public class CrawlPost(
     Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
 {
     // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
-    private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = new();
+    private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = [];
 
     public async Task<SavedThreadsList> CrawlThreads
         (string forumName, Fid fid, CancellationToken stoppingToken = default)

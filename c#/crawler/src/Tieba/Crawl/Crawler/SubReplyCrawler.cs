@@ -31,8 +31,8 @@ public class SubReplyCrawler(Tid tid, Pid pid) : BaseCrawler<SubReplyResponse, S
     public override TbClient.Page GetResponsePage(SubReplyResponse response) => response.Data.Page;
     protected override RepeatedField<SubReply> GetResponsePostList(SubReplyResponse response) => response.Data.SubpostList;
     protected override int GetResponseErrorCode(SubReplyResponse response) => response.Error.Errorno;
-    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) => new[]
-    {
+    protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) =>
+    [
         new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
             new SubReplyRequest {Data = new()
             {
@@ -42,5 +42,5 @@ public class SubReplyCrawler(Tid tid, Pid pid) : BaseCrawler<SubReplyResponse, S
             }},
             (req, common) => req.Data.Common = common,
             () => new SubReplyResponse(), stoppingToken))
-    };
+    ];
 }

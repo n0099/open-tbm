@@ -36,8 +36,8 @@ public partial class UserParserAndSaver
 public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
     : CommonInSavers<BaseUserRevision>(logger)
 {
-    private static readonly HashSet<Uid> UserIdLocks = new();
-    private readonly List<Uid> _savedUsersId = new();
+    private static readonly HashSet<Uid> UserIdLocks = [];
+    private readonly List<Uid> _savedUsersId = [];
     private readonly ConcurrentDictionary<Uid, User> _users = new();
 
     public void ParseUsers(IEnumerable<TbClient.User> users) =>
@@ -96,7 +96,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
         lock (UserIdLocks)
         {
             var usersExceptLocked = new Dictionary<Uid, User>(_users.ExceptBy(UserIdLocks, pair => pair.Key));
-            if (!usersExceptLocked.Any()) return;
+            if (usersExceptLocked.Count == 0) return;
             _savedUsersId.AddRange(usersExceptLocked.Keys);
             UserIdLocks.UnionWith(_savedUsersId);
 
@@ -120,7 +120,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
         lock (UserIdLocks)
         {
             var exceptLocked = usersId.Except(UserIdLocks).ToList();
-            if (!exceptLocked.Any()) return exceptLocked;
+            if (exceptLocked.Count == 0) return exceptLocked;
             _savedUsersId.AddRange(exceptLocked); // assume all given users are saved
             UserIdLocks.UnionWith(exceptLocked);
             return exceptLocked;
@@ -129,7 +129,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
 
     public void PostSaveHook()
     {
-        lock (UserIdLocks) if (_savedUsersId.Any()) UserIdLocks.ExceptWith(_savedUsersId);
+        lock (UserIdLocks) if (_savedUsersId.Count != 0) UserIdLocks.ExceptWith(_savedUsersId);
     }
 
     [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]

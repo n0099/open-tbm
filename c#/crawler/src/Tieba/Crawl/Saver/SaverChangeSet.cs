@@ -19,7 +19,7 @@ public class SaverChangeSet<TPost> where TPost : class, IPost
         NewlyAdded = new(existingAfterAndNewlyAdded
             .ExceptBy(existingBefore.Select(postIdSelector), postIdSelector)
             .ToList());
-        AllAfter = new(existingAfterAndNewlyAdded.ToList());
+        AllAfter = new([.. existingAfterAndNewlyAdded]);
     }
 
     public ReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }

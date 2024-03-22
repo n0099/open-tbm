@@ -33,9 +33,9 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
             {
                 ImageId = imageKeyWithMatrix.ImageId,
                 FrameIndex = imageKeyWithMatrix.FrameIndex,
-                BlockMeanHash = Array.Empty<byte>(),
-                MarrHildrethHash = Array.Empty<byte>(),
-                ThumbHash = Array.Empty<byte>()
+                BlockMeanHash = [],
+                MarrHildrethHash = [],
+                ThumbHash = []
             });
 
         var thumbHashEithers = _failedImageHandler
