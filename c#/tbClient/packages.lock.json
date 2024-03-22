@@ -1,14 +1,13 @@
 {
   "version": 1,
   "dependencies": {
-    "net7.0": {
+    "net8.0": {
       "Google.Protobuf": {
         "type": "Direct",
-        "requested": "[3.25.2, )",
-        "resolved": "3.25.2",
-        "contentHash": "g/xIIeLhR77bl4ajGGbPYRmZf5acJlCRaSBqUnU8+2aQYREnZnv+UccRNndHof4mWO1ORS0b5i6on40VOjBpsg=="
+        "requested": "[3.26.0, )",
+        "resolved": "3.26.0",
+        "contentHash": "AkWr2Hz/rycJapYHXS3gT5UVq8K8D2gkNA70ePe22oejNVGMkw5Mtasri2VbNtBCgbqtE8MsIPYp73xud2wAVQ=="
       }
-    },
-    "net7.0/linux-x64": {}
+    }
   }
 }

@@ -3,11 +3,11 @@
         <PackageReference Include="Autofac" Version="8.0.0" />
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
-        <PackageReference Include="EFCore.NamingConventions" Version="7.0.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.15" />
+        <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.3" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
-        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
         <PackageReference Include="SuperLinq" Version="5.4.0" />
     </ItemGroup>
     <Choose>
@@ -15,10 +15,10 @@
             <ItemGroup>
                 <PackageReference Include="IDisposableAnalyzers" Version="4.0.7" ExcludeAssets="compile" />
                 <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" ExcludeAssets="compile" />
-                <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.8.14" ExcludeAssets="compile" />
-                <PackageReference Include="Roslynator.Analyzers" Version="4.7.0" ExcludeAssets="compile" />
-                <PackageReference Include="SonarAnalyzer.CSharp" Version="9.15.0.81779" ExcludeAssets="compile" />
-                <PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.507" ExcludeAssets="compile" />
+                <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28" ExcludeAssets="compile" />
+                <PackageReference Include="Roslynator.Analyzers" Version="4.12.0" ExcludeAssets="compile" />
+                <PackageReference Include="SonarAnalyzer.CSharp" Version="9.22.0.87781" ExcludeAssets="compile" />
+                <PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" ExcludeAssets="compile" />
             </ItemGroup>
         </When>
     </Choose>
