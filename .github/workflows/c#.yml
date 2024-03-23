@@ -11,7 +11,40 @@ jobs:
     strategy:
       matrix:
         project: [crawler, imagePipeline, shared, tbClient]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/c#
       - run: dotnet build --no-restore -c Debug ${{ matrix.project }}
+
+  ReSharper:
+    runs-on: ubuntu-latest
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/c#
+
+      - id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.resharper
+            ~/.dotnet/tools
+          key: ${{ runner.os }}-resharper-${{ hashFiles('c#/**/*') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - uses: muno92/resharper_inspectcode@v1
+        with:
+          solutionPath: c#/tbm.sln
+          cachesHome: ${{ github.workspace }}/.resharper
+
+      # https://github.com/actions/runner/issues/1478
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache-restore.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ${{ github.workspace }}/.resharper
+            ~/.dotnet/tools
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}

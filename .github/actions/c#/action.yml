@@ -8,7 +8,7 @@ runs:
         submodules: true
     - uses: actions/setup-dotnet@v4
       with: # https://github.com/actions/setup-dotnet/tree/v4
-        dotnet-version: 7
+        global-json-file: c#/global.json
         # cache: true
         # # https://github.com/actions/setup-node/issues/624#issuecomment-1328681525
         # cache-dependency-path: ${{ github.workspace }}/c#/*/packages.lock.json
@@ -18,14 +18,11 @@ runs:
     - id: cache-restore
       uses: actions/cache/restore@v4
       with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        path: ${{ github.workspace }}/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('c#/*/packages.lock.json') }}
         restore-keys: ${{ runner.os }}-nuget-
 
-    - run: dotnet new globaljson --sdk-version 7.0.405
-      working-directory: c#
-      shell: bash
-    - run: dotnet restore
+    - run: dotnet restore --locked-mode
       working-directory: c#
       shell: bash
 
@@ -34,5 +31,5 @@ runs:
     - uses: actions/cache/save@v4
       if: ${{ steps.cache-restore.outputs.cache-hit != 'true' }}
       with:
-        path: ~/.nuget/packages
+        path: ${{ github.workspace }}/.nuget/packages
         key: ${{ steps.cache-restore.outputs.cache-primary-key }}
