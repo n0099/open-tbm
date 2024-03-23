@@ -26,8 +26,10 @@ public abstract class ErrorableWorker(bool shouldExitOnException = false, bool s
         }
         catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
         {
+#pragma warning disable S6667 // Logging in a catch clause should pass the caught exception as a parameter.
             Logger.LogInformation("{}: {} CancellationToken={}",
                 e.GetType().FullName, e.Message, e.CancellationToken);
+#pragma warning restore S6667 // Logging in a catch clause should pass the caught exception as a parameter.
         }
         catch (Exception e)
         {

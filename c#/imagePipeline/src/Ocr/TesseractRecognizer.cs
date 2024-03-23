@@ -10,6 +10,7 @@ public sealed partial class TesseractRecognizer(IConfiguration config, string sc
 
     public delegate TesseractRecognizer New(string script);
 
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     private Lazy<OCRTesseract> TesseractInstanceHorizontal => _tesseractInstanceHorizontal ??= new(script switch
     { // https://en.wikipedia.org/wiki/Template:ISO_15924_script_codes_and_related_Unicode_data
         "Hans" => CreateTesseract("best/chi_sim+best/eng"),
@@ -19,6 +20,7 @@ public sealed partial class TesseractRecognizer(IConfiguration config, string sc
         _ => throw new ArgumentOutOfRangeException(nameof(script), script, "Unsupported script.")
     });
 
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     private Lazy<OCRTesseract> TesseractInstanceVertical => _tesseractInstanceVertical ??= new(script switch
     {
         "Hans" => CreateTesseract("best/chi_sim_vert", isVertical: true),
@@ -53,6 +55,8 @@ public sealed partial class TesseractRecognizer
         var (imageKey, box, preprocessedTextBoxMat) = textBox;
         using var mat = preprocessedTextBoxMat;
         var isVertical = (float)mat.Width / mat.Height < AspectRatioThresholdToConsiderAsVertical;
+
+        // ReSharper disable once StringLiteralTypo
         if (isVertical && script == "Latn") isVertical = false; // there's no vertical latin
         var tesseract = isVertical ? TesseractInstanceVertical : TesseractInstanceHorizontal;
         tesseract.Value.Run(mat, out _, out var rects, out var texts, out var confidences);
@@ -95,7 +99,8 @@ public sealed partial class TesseractRecognizer
         // http://www.fmwconcepts.com/imagemagick/threshold_comparison/index.php
         _ = Cv2.Threshold(mat, mat, thresh: 0, maxval: 255, ThresholdTypes.Otsu | ThresholdTypes.Binary);
 
-        if (degrees != 0) RotateMatrix(mat, degrees);
+        // https://stackoverflow.com/questions/9392869/where-do-i-find-the-machine-epsilon-in-c
+        if (MathF.Abs(degrees) < MathF.Pow(2, -24)) RotateMatrix(mat, degrees);
 
         // https://github.com/tesseract-ocr/tesseract/issues/427
         Cv2.CopyMakeBorder(mat, mat, 10, 10, 10, 10, BorderTypes.Constant, new(0, 0, 0));
@@ -114,8 +119,9 @@ public sealed partial class TesseractRecognizer
         var xAxisDiff = bottomLeft.X - topLeft.X;
         var yAxisDiff = bottomLeft.Y - topLeft.Y;
 
+        // atan2(y,x) is the radians of the angle C in a right triangle with side b=4 (xAxisDiff) and side c=1 (yAxisDiff)
         // https://www.calculator.net/triangle-calculator.html?vc=&vx=4&vy=&va=90&vz=1&vb=&angleunits=d&x=53&y=29
-        return (float)(Math.Atan2(xAxisDiff, yAxisDiff) * 180 / Math.PI); // radians to degrees
+        return (float)double.RadiansToDegrees(Math.Atan2(xAxisDiff, yAxisDiff));
     }
 
     private static void RotateMatrix(Mat src, float degrees)
@@ -126,7 +132,9 @@ public sealed partial class TesseractRecognizer
         var boundingRect = new RotatedRect(default, new(src.Width, src.Height), degrees).BoundingRect();
         rotationMat.Set(0, 2, rotationMat.Get<double>(0, 2) + (boundingRect.Width / 2f) - (src.Width / 2f));
         rotationMat.Set(1, 2, rotationMat.Get<double>(1, 2) + (boundingRect.Height / 2f) - (src.Height / 2f));
-        Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size);
+
+        // https://stackoverflow.com/questions/39371507/image-loses-quality-with-cv2-warpperspective
+        Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size, InterpolationFlags.Nearest);
     }
 
     public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat PreprocessedTextBoxMat);

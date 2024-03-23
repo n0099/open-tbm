@@ -8,6 +8,7 @@ public class ResumeSuspendPostContentsPushingWorker(
     public static string GetFilePath(string postType) =>
         Path.Combine(AppContext.BaseDirectory, $"suspendPostContentsPushIntoSonic.{postType}.csv");
 
+    [SuppressMessage("Reliability", "CA2021:Do not call Enumerable.Cast<T> or Enumerable.OfType<T> with incompatible types", Justification = "https://github.com/dotnet/roslyn-analyzers/issues/7031")]
     protected override Task DoWork(CancellationToken stoppingToken)
     {
         foreach (var postType in new[] {"replies", "subReplies"})

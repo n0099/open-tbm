@@ -49,8 +49,7 @@ public class ClientRequester(
                 _ = stream.Seek(0, SeekOrigin.Begin);
                 using var stream2 = new MemoryStream((int)stream.Length);
                 stream.CopyTo(stream2);
-                if (!stream2.TryGetBuffer(out var buffer))
-                    throw new ObjectDisposedException(nameof(stream2));
+                ObjectDisposedException.ThrowIf(!stream2.TryGetBuffer(out var buffer), stream2);
                 var responseBody = Encoding.UTF8.GetString(buffer);
 
                 // the invalid protoBuf bytes usually is just a plain html string

@@ -35,9 +35,7 @@ public class ThreadLateCrawlerAndSaver(
         (Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
     {
         var crawlerLockId = new CrawlerLocks.LockId(fid, tid);
-#pragma warning disable SA1003 // Symbols should be spaced correctly
-        if (_locks.AcquireRange(crawlerLockId, [(Page)1]).Count == 0) return null;
-#pragma warning restore SA1003 // Symbols should be spaced correctly
+        if (_locks.AcquireRange(crawlerLockId, [1]).Count == 0) return null;
         try
         {
             var json = await requester.RequestJson(

@@ -156,8 +156,7 @@ public class ImageBatchConsumingWorker(
             using var frameImage = Image.LoadPixelData<Rgb24>(frameBytes, frame.Width, frame.Height);
             using var stream = new MemoryStream();
             frameImage.SaveAsPng(stream);
-            if (!stream.TryGetBuffer(out var buffer))
-                throw new ObjectDisposedException(nameof(stream));
+            ObjectDisposedException.ThrowIf(!stream.TryGetBuffer(out var buffer), stream);
 #pragma warning disable IDISP001 // Dispose created
             var frameMat = Cv2.ImDecode(buffer, ImreadModes.Unchanged);
 #pragma warning restore IDISP001 // Dispose created

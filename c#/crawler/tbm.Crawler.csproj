@@ -19,17 +19,9 @@
         <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
     </ItemGroup>
     <ItemGroup>
-        <None Update="appsettings.Development.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="appsettings.Production.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="nlog.config">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+        <None Update="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="None" />
+        <None Update="appsettings.Production.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="None" />
+        <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="nlog.config" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>

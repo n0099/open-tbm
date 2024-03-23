@@ -1,3 +1,4 @@
+// ReSharper disable once RedundantUsingDirective
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out")]
@@ -6,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Roslynator", "RCS1139:Add summary element to documentation comment.")]
 [assembly: SuppressMessage("Roslynator", "RCS1156:Use string.Length instead of comparison with empty string.")]
 [assembly: SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
+[assembly: SuppressMessage("Critical Bug", "S6674:Log message template should be syntactically correct")]
 
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented")]
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1601:Partial elements should be documented")]

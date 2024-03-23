@@ -63,6 +63,7 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
 
     public void AcquireFailed(LockId lockId, Page page, FailureCount failureCount)
     {
+        // ReSharper disable once InconsistentlySynchronizedField
         var maxRetry = _config.GetValue<FailureCount>("MaxRetryTimes", 5);
         if (failureCount >= maxRetry)
         {
