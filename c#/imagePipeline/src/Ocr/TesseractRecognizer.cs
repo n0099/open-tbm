@@ -65,7 +65,7 @@ public sealed partial class TesseractRecognizer
         var text = string.Concat(components.Select(t => t.Text)).Trim();
         if (text == "") shouldFallbackToPaddleOcr = true;
         var averageConfidence = components.Count != 0
-            ? components.Select(c => c.Confidence).Average().RoundToByte()
+            ? components.Average(c => c.Confidence).RoundToByte()
             : (byte)0;
 
         return new(imageKey, box, text, averageConfidence, isVertical, shouldFallbackToPaddleOcr);

@@ -53,5 +53,5 @@ public class SubReplySaver(
         return changeSet;
     }
 
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => 0;
+    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
 }

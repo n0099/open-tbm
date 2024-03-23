@@ -37,7 +37,7 @@ public class ThreadSaver(
             PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
+    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
         nameof(ThreadPost.StickyType)       => 1,
         nameof(ThreadPost.TopicType)        => 1 << 1,

@@ -43,7 +43,6 @@ global using tbm.Crawler.Tieba.Crawl.Saver;
 global using tbm.Crawler.Worker;
 global using tbm.Shared;
 
-global using TbClient;
 global using TbClient.Api.Request;
 global using TbClient.Api.Response;
 global using TbClient.Post;
@@ -59,3 +58,4 @@ global using Pid = System.UInt64;
 global using Time = System.UInt32;
 global using Page = System.UInt32;
 global using FailureCount = System.UInt16;
+global using NullFieldsBitMask = System.UInt16;

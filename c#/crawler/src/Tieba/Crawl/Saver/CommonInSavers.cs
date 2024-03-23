@@ -95,7 +95,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
                     revisionNullFieldsBitMask |= whichBitToMask; // mask the corresponding field bit with 1
                 }
             }
-            if (revision != null) revision.NullFieldsBitMask = (ushort?)revisionNullFieldsBitMask.NullIfZero();
+            if (revision != null) revision.NullFieldsBitMask = (NullFieldsBitMask?)revisionNullFieldsBitMask.NullIfZero();
             return revision;
         }).OfType<TRevision>().ToList();
         if (newRevisions.Count == 0) return; // quick exit to prevent execute sql with WHERE FALSE clause
@@ -109,7 +109,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
             .ForEach(g => RevisionUpsertDelegatesKeyBySplitEntityType[g.Key](db, g));
     }
 
-    protected virtual ushort GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
+    protected virtual NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
 
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)
     {

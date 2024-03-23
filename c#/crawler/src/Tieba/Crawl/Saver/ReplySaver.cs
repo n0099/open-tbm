@@ -60,7 +60,7 @@ public partial class ReplySaver(
     }
 
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
-    protected override ushort GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
+    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
         nameof(ReplyPost.IsFold)        => 1 << 2,
         nameof(ReplyPost.DisagreeCount) => 1 << 4,

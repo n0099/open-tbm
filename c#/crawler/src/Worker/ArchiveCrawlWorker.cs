@@ -66,7 +66,7 @@ public class ArchiveCrawlWorker(
 
             if (cancellationToken.IsCancellationRequested) return;
             var savedReplies = await CrawlReplies(savedThreads, _fid, cancellationToken);
-            var savedReplyCount = savedReplies.Select(pair => pair.Value.AllAfter.Count).Sum();
+            var savedReplyCount = savedReplies.Sum(pair => pair.Value.AllAfter.Count);
             logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                 savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
             _ = Interlocked.Add(ref totalSavedReplyCount, savedReplyCount);
