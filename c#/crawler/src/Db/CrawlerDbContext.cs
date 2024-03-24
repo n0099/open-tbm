@@ -60,7 +60,7 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
             }
         });
 
-#pragma warning disable IDE0058 // Expression value is never used
+    [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
@@ -101,7 +101,6 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
             .HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorTypes});
         b.Entity<Forum>().ToTable("tbm_forum");
     }
-#pragma warning restore IDE0058 // Expression value is never used
 
     public class ModelCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590

@@ -3,12 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 
-#pragma warning disable IDE0058 // Expression value is never used
-
 namespace tbm.ImagePipeline;
 
 public partial class EntryPoint : BaseEntryPoint
 {
+    [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void ConfigureServices(HostBuilderContext context, IServiceCollection service)
     {
         service.AddHostedService<ImageBatchConsumingWorker>();
@@ -51,6 +50,7 @@ public partial class EntryPoint : BaseEntryPoint
         service.RemoveAll<IHttpMessageHandlerBuilderFilter>();
     }
 
+    [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
         builder.RegisterType<ImagePipelineDbContext>();

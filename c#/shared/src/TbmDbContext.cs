@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -14,6 +15,7 @@ public abstract class TbmDbContext : DbContext
 {
     protected static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
 
+    [SuppressMessage("Style", "CC0072:Remove Async termination when method is not asynchronous.", Justification = "https://github.com/code-cracker/code-cracker/issues/1086")]
     protected sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
     { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
         public override InterceptionResult<object> ScalarExecuting
@@ -65,12 +67,12 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
-#pragma warning disable IDE0058 // Expression value is never used
-#pragma warning disable S927 // Parameter names should match base declaration and other partial definitions
+    [SuppressMessage("Critical Code Smell", "S927:Parameter names should match base declaration and other partial definitions")]
+    [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        var connectionStr = Config.GetConnectionString("Main");
-        options.UseMySql(connectionStr!, ServerVersion.AutoDetect(connectionStr), OnConfiguringMysql)
+        var connectionString = Config.GetConnectionString("Main");
+        options.UseMySql(connectionString!, ServerVersion.AutoDetect(connectionString), OnConfiguringMysql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .AddInterceptors(SelectForUpdateCommandInterceptorInstance)
             .UseCamelCaseNamingConvention();
@@ -86,6 +88,8 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
         if (dbSettings.GetValue("EnableSensitiveDataLogging", false)) options.EnableSensitiveDataLogging();
     }
 
+    [SuppressMessage("Critical Code Smell", "S927:Parameter names should match base declaration and other partial definitions")]
+    [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<ImageInReply>().ToTable("tbmi_imageInReply");
@@ -95,8 +99,6 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
 
     protected void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
         b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
-#pragma warning restore S927 // Parameter names should match base declaration and other partial definitions
-#pragma warning restore IDE0058 // Expression value is never used
 
     protected virtual void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) { }
 }

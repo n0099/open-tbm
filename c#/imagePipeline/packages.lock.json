@@ -133,10 +133,20 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
         }
       },
+      "codecracker.CSharp": {
+        "type": "Transitive",
+        "resolved": "1.1.0",
+        "contentHash": "s5KSzc65WjT+912x+OLGrW0jA/R8e67GRymQeVUfIJsBx+UJVnPShvaqM48G7oGYUTqVnpJElYjGX313yeSuIA=="
+      },
       "CommunityToolkit.Diagnostics": {
         "type": "Transitive",
         "resolved": "8.2.2",
         "contentHash": "iILVyo7VvzTlQT7b2qOs1ZDcneKsmuy2mTuxCCaBWEfg3tjw35B/ImO9Xw6It7xi2ie8/2PWfXhFn+Prztg03w=="
+      },
+      "CSharpGuidelinesAnalyzer": {
+        "type": "Transitive",
+        "resolved": "3.8.4",
+        "contentHash": "yfpcYXiPeyTRcifpYsk8Ez7GqhzBHF+cFxfo8fjH4jctQqr+shTfpOeE+4kj6+SNvJBZsBzYJ/3pi5aj+1q9Wg=="
       },
       "EFCore.NamingConventions": {
         "type": "Transitive",
@@ -152,6 +162,11 @@
         "type": "Transitive",
         "resolved": "4.0.7",
         "contentHash": "Xrn/VABG/JhulJOmHOeOAY4/qafbEyRj3Z6gMeSABT1XCqMe8HnqOvid8gEVJt47VUZ6eD7XpTFLZ1KLyTZgdw=="
+      },
+      "Meziantou.Analyzer": {
+        "type": "Transitive",
+        "resolved": "2.0.146",
+        "contentHash": "pJ3k+3UjD2WwPsZR7fkgVYviXP3PCQM0hjwN1TuM4C0u1TuGKC9WdZCo0RAPZ+azhRPmYGSUjkjsN2fkQByghQ=="
       },
       "Microsoft.Bcl.AsyncInterfaces": {
         "type": "Transitive",
@@ -616,6 +631,11 @@
         "resolved": "0.33.0",
         "contentHash": "FlHfpTAADzaSlVCBF33iKJk9UhOr3Xj+r5LXbW2GzqYr0SrhiOf6shLX2LC2fqs7g7d+YlwKbBXqWFtb+e7icw=="
       },
+      "SharpSource": {
+        "type": "Transitive",
+        "resolved": "1.24.0",
+        "contentHash": "W3FnCahaLO22Wm/1WVnWi19hhrTW9Q1Jav5aSXzF2WtBJixHmDs2H8vcNx7Fm2P1mYRUs9k7cNZLm2z5sOHKzQ=="
+      },
       "SonarAnalyzer.CSharp": {
         "type": "Transitive",
         "resolved": "9.22.0.87781",
@@ -914,9 +934,11 @@
         "dependencies": {
           "Autofac": "[8.0.0, )",
           "Autofac.Extensions.DependencyInjection": "[9.0.0, )",
+          "CSharpGuidelinesAnalyzer": "[3.8.4, )",
           "CommunityToolkit.Diagnostics": "[8.2.2, )",
           "EFCore.NamingConventions": "[8.0.3, )",
           "IDisposableAnalyzers": "[4.0.7, )",
+          "Meziantou.Analyzer": "[2.0.146, )",
           "Microsoft.CodeAnalysis.NetAnalyzers": "[8.0.0, )",
           "Microsoft.EntityFrameworkCore": "[8.0.3, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
@@ -924,9 +946,11 @@
           "NLog.Extensions.Logging": "[5.3.8, )",
           "Pomelo.EntityFrameworkCore.MySql": "[8.0.2, )",
           "Roslynator.Analyzers": "[4.12.0, )",
+          "SharpSource": "[1.24.0, )",
           "SonarAnalyzer.CSharp": "[9.22.0.87781, )",
           "StyleCop.Analyzers.Unstable": "[1.2.0.556, )",
-          "SuperLinq": "[5.4.0, )"
+          "SuperLinq": "[5.4.0, )",
+          "codecracker.CSharp": "[1.1.0, )"
         }
       }
     }

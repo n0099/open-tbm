@@ -13,12 +13,18 @@
     <Choose>
         <When Condition="'$(Configuration)' == 'Debug'">
             <ItemGroup>
-                <PackageReference Include="IDisposableAnalyzers" Version="4.0.7" ExcludeAssets="compile" />
-                <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" ExcludeAssets="compile" />
-                <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28" ExcludeAssets="compile" />
-                <PackageReference Include="Roslynator.Analyzers" Version="4.12.0" ExcludeAssets="compile" />
-                <PackageReference Include="SonarAnalyzer.CSharp" Version="9.22.0.87781" ExcludeAssets="compile" />
-                <PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" ExcludeAssets="compile" />
+                <!-- https://stackoverflow.com/questions/73180516/if-a-nuget-specifies-privateassets-all-why-specify-includeassets -->
+                <!-- enable PrivateAssets="All" will prevent analyzers working on other project that has <PackageReference> to this -->
+                <PackageReference ExcludeAssets="compile" Include="codecracker.CSharp" Version="1.1.0" />
+                <PackageReference ExcludeAssets="compile" Include="CSharpGuidelinesAnalyzer" Version="3.8.4" />
+                <PackageReference ExcludeAssets="compile" Include="IDisposableAnalyzers" Version="4.0.7" />
+                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.146" />
+                <PackageReference ExcludeAssets="compile" Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" />
+                <PackageReference ExcludeAssets="compile" Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28" />
+                <PackageReference ExcludeAssets="compile" Include="Roslynator.Analyzers" Version="4.12.0" />
+                <PackageReference ExcludeAssets="compile" Include="SharpSource" Version="1.24.0" />
+                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="9.22.0.87781" />
+                <PackageReference ExcludeAssets="compile" Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" />
             </ItemGroup>
         </When>
     </Choose>

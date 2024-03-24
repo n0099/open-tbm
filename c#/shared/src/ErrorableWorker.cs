@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace tbm.Shared;
 
+#pragma warning disable AV1564 // Parameter in public or internal member is of type bool or bool?
 public abstract class ErrorableWorker(bool shouldExitOnException = false, bool shouldExitOnFinish = false)
+#pragma warning restore AV1564 // Parameter in public or internal member is of type bool or bool?
     : BackgroundService
 {
     // ReSharper disable UnusedAutoPropertyAccessor.Global
