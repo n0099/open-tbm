@@ -2,6 +2,7 @@ using Dapper;
 
 namespace tbm.Crawler.Worker;
 
+// ReSharper disable once UnusedType.Global
 public class PushAllPostContentsIntoSonicWorker(
         ILogger<PushAllPostContentsIntoSonicWorker> logger,
         IConfiguration config,
@@ -82,27 +83,26 @@ public class PushAllPostContentsIntoSonicWorker(
             var pushedCount = acc.Count + 1;
             var totalPushedCount = previousPushedPostCount + pushedCount;
             var ca = ArchiveCrawlWorker.GetCumulativeAverage(elapsedMs, acc.DurationCa, pushedCount);
-            if (pushedCount % 1000 == 0)
-            {
-                static double GetPercentage(float current, float total, int digits = 2) =>
-                    Math.Round(current / total * 100, digits);
+            if (pushedCount % 1000 != 0) return (pushedCount, ca);
+
+            static double GetPercentage(float current, float total, int digits = 2) =>
+                Math.Round(current / total * 100, digits);
 #pragma warning disable IDE0042 // Deconstruct variable declaration
-                var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
-                var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);
+            var currentForumEta = ArchiveCrawlWorker.GetEta(postApproxCount, pushedCount, ca);
+            var totalForumEta = ArchiveCrawlWorker.GetEta(forumsPostTotalApproxCount, totalPushedCount, ca);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
-                logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
-                                      + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
-                    postTypeInLog, fid,
-                    pushedCount, postApproxCount, GetPercentage(pushedCount, postApproxCount),
-                    ca, currentForumEta.Relative, currentForumEta.At, currentForumIndex, forumCount,
-                    totalPushedCount, forumsPostTotalApproxCount, GetPercentage(totalPushedCount, forumsPostTotalApproxCount),
-                    totalForumEta.Relative, totalForumEta.At);
-                Console.Title = $"Pushing progress for {postTypeInLog} in fid {fid}"
-                                + $": {pushedCount}/~{postApproxCount} ({GetPercentage(pushedCount, postApproxCount)}%)"
-                                + $", Total forums progress: {currentForumIndex}/{forumCount} posts:"
-                                + $" {totalPushedCount}/~{forumsPostTotalApproxCount} ({GetPercentage(totalPushedCount, forumsPostTotalApproxCount)}%)"
-                                + $" ETA {totalForumEta.Relative} @ {totalForumEta.At}";
-            }
+            logger.LogInformation("Pushing progress for {} in fid {}: {}/~{} ({}%) cumulativeAvg={:F3}ms"
+                                  + " ETA: {} @ {}, Total forums progress: {}/{} posts: {}/~{} ({}%) ETA {} @ {}",
+                postTypeInLog, fid,
+                pushedCount, postApproxCount, GetPercentage(pushedCount, postApproxCount),
+                ca, currentForumEta.Relative, currentForumEta.At, currentForumIndex, forumCount,
+                totalPushedCount, forumsPostTotalApproxCount, GetPercentage(totalPushedCount, forumsPostTotalApproxCount),
+                totalForumEta.Relative, totalForumEta.At);
+            Console.Title = $"Pushing progress for {postTypeInLog} in fid {fid}"
+                            + $": {pushedCount}/~{postApproxCount} ({GetPercentage(pushedCount, postApproxCount)}%)"
+                            + $", Total forums progress: {currentForumIndex}/{forumCount} posts:"
+                            + $" {totalPushedCount}/~{forumsPostTotalApproxCount} ({GetPercentage(totalPushedCount, forumsPostTotalApproxCount)}%)"
+                            + $" ETA {totalForumEta.Relative} @ {totalForumEta.At}";
             return (pushedCount, ca);
         });
         logger.LogInformation("Pushing {} historical {}' content into sonic for fid {} finished after {} (total={}ms, cumulativeAvg={:F3}ms)",

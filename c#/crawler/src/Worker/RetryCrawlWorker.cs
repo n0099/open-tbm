@@ -37,20 +37,20 @@ public class RetryCrawlWorker(
         var pages = failureCountsKeyByPage.Keys.ToList();
         FailureCount FailureCountSelector(Page p) => failureCountsKeyByPage[p];
 
-        if (lockType == "thread")
+        switch (lockType)
         {
-            await RetryThread(fid, pages,
-                failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
-        }
-        else if (lockType == "reply" && tid != null)
-        {
-            await RetryReply(fid, tid.Value, pages,
-                failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
-        }
-        else if (lockType == "subReply" && tid != null && pid != null)
-        {
-            await RetrySubReply(fid, tid.Value, pid.Value, pages,
-                failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+            case "thread":
+                await RetryThread(fid, pages,
+                    failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+                break;
+            case "reply" when tid != null:
+                await RetryReply(fid, tid.Value, pages,
+                    failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+                break;
+            case "subReply" when tid != null && pid != null:
+                await RetrySubReply(fid, tid.Value, pid.Value, pages,
+                    failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
+                break;
         }
     };
 

@@ -1,6 +1,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMemberInSuper.Global
 using System.ComponentModel;
 using SixLabors.ImageSharp.PixelFormats;
 using Point = NetTopologySuite.Geometries.Point;
@@ -56,7 +57,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
             MirrorHorizontalRotate270Cw = 5,
             Rotate90Cw = 6,
             MirrorHorizontalRotate90Cw = 7,
-            Rotate270Cw = 8,
+            Rotate270Cw = 8
         }
 
         [Key] public uint ImageId { get; set; }
@@ -90,7 +91,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
 
         // workaround to work with MetadataConsumer.CreateEmbeddedFromProfile()
         // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
-        public ICollection<TagName> TagNames { get; set; } = new List<TagName>();
+        public ICollection<TagName> TagNames { get; set; } = [];
 
         public class TagName : IImageMetadata
         {

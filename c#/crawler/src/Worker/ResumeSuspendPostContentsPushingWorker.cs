@@ -37,6 +37,8 @@ public class ResumeSuspendPostContentsPushingWorker(
                 logger.LogWarning("Malformed fid {} when resume suspend post contents push into sonic, line={}", fidStr, line);
                 return null;
             }
+
+            // ReSharper disable once InvertIf
             if (!PostId.TryParse(postIdStr, out var postId))
             {
                 logger.LogWarning("Malformed post id {} when resume suspend post contents push into sonic, line={}", postIdStr, line);

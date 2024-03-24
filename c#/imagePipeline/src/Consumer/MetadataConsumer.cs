@@ -119,58 +119,58 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 
         var ret = CreateEmbeddedFromProfile<ExifProfile, ImageMetadata.Exif>
             (_commonEmbeddedMetadataXxHash3ToIgnore.Exif, exif, i => i.ToByteArray());
-        if (ret != null && exif != null)
-        { // https://exiftool.org/TagNames/EXIF.html, https://exiv2.org/tags.html
-            ret.Orientation = exif.TryGetValue(ExifTag.Orientation, out var orientation)
-                ? Enum.GetName((ImageMetadata.Exif.ExifOrientation)orientation.Value)
-                : null;
-            ret.ImageDescription = GetExifTagValueOrNull(ExifTag.ImageDescription).NullIfEmpty();
-            ret.UserComment = GetExifTagValueOrNull2(ExifTag.UserComment).ToString().NullIfEmpty();
-            ret.Artist = GetExifTagValueOrNull(ExifTag.Artist).NullIfEmpty();
-            ret.XpAuthor = GetExifTagValueOrNull(ExifTag.XPAuthor).NullIfEmpty();
-            ret.Copyright = GetExifTagValueOrNull(ExifTag.Copyright).NullIfEmpty();
-            ret.ImageUniqueId = GetExifTagValueOrNull(ExifTag.ImageUniqueID).NullIfEmpty();
-            ret.BodySerialNumber = GetExifTagValueOrNull(ExifTag.SerialNumber).NullIfEmpty();
-            ret.Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty();
-            ret.Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty();
-            ret.Software = GetExifTagValueOrNull(ExifTag.Software).NullIfEmpty();
-            ret.CustomRendered = GetExifTagValueOrNull2(ExifTag.CustomRendered);
+        if (ret == null || exif == null) return ret;
 
-            var parsedDateTime = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
-                GetExifTagValueOrNull(ExifTag.DateTime), GetExifTagValueOrNull(ExifTag.SubsecTime));
-            ret.DateTime = parsedDateTime?.DateTime;
-            ret.DateTimeOffset = parsedDateTime?.Offset;
+        // https://exiftool.org/TagNames/EXIF.html, https://exiv2.org/tags.html
+        ret.Orientation = exif.TryGetValue(ExifTag.Orientation, out var orientation)
+            ? Enum.GetName((ImageMetadata.Exif.ExifOrientation)orientation.Value)
+            : null;
+        ret.ImageDescription = GetExifTagValueOrNull(ExifTag.ImageDescription).NullIfEmpty();
+        ret.UserComment = GetExifTagValueOrNull2(ExifTag.UserComment).ToString().NullIfEmpty();
+        ret.Artist = GetExifTagValueOrNull(ExifTag.Artist).NullIfEmpty();
+        ret.XpAuthor = GetExifTagValueOrNull(ExifTag.XPAuthor).NullIfEmpty();
+        ret.Copyright = GetExifTagValueOrNull(ExifTag.Copyright).NullIfEmpty();
+        ret.ImageUniqueId = GetExifTagValueOrNull(ExifTag.ImageUniqueID).NullIfEmpty();
+        ret.BodySerialNumber = GetExifTagValueOrNull(ExifTag.SerialNumber).NullIfEmpty();
+        ret.Make = GetExifTagValueOrNull(ExifTag.Make).NullIfEmpty();
+        ret.Model = GetExifTagValueOrNull(ExifTag.Model).NullIfEmpty();
+        ret.Software = GetExifTagValueOrNull(ExifTag.Software).NullIfEmpty();
+        ret.CustomRendered = GetExifTagValueOrNull2(ExifTag.CustomRendered);
 
-            var parsedDateTimeDigitized = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
-                GetExifTagValueOrNull(ExifTag.DateTimeDigitized), GetExifTagValueOrNull(ExifTag.SubsecTimeDigitized));
-            ret.DateTimeDigitized = parsedDateTimeDigitized?.DateTime;
-            ret.DateTimeDigitizedOffset = parsedDateTimeDigitized?.Offset;
+        var parsedDateTime = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
+            GetExifTagValueOrNull(ExifTag.DateTime), GetExifTagValueOrNull(ExifTag.SubsecTime));
+        ret.DateTime = parsedDateTime?.DateTime;
+        ret.DateTimeOffset = parsedDateTime?.Offset;
 
-            var parsedDateTimeOriginal = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
-                GetExifTagValueOrNull(ExifTag.DateTimeOriginal), GetExifTagValueOrNull(ExifTag.SubsecTimeOriginal));
-            ret.DateTimeOriginal = parsedDateTimeOriginal?.DateTime;
-            ret.DateTimeOriginalOffset = parsedDateTimeOriginal?.Offset;
+        var parsedDateTimeDigitized = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
+            GetExifTagValueOrNull(ExifTag.DateTimeDigitized), GetExifTagValueOrNull(ExifTag.SubsecTimeDigitized));
+        ret.DateTimeDigitized = parsedDateTimeDigitized?.DateTime;
+        ret.DateTimeDigitizedOffset = parsedDateTimeDigitized?.Offset;
 
-            ret.OffsetTime = GetExifTagValueOrNull(ExifTag.OffsetTime).NullIfEmpty();
-            ret.OffsetTimeDigitized = GetExifTagValueOrNull(ExifTag.OffsetTimeDigitized).NullIfEmpty();
-            ret.OffsetTimeOriginal = GetExifTagValueOrNull(ExifTag.OffsetTimeOriginal).NullIfEmpty();
+        var parsedDateTimeOriginal = ExifDateTimeTagValuesParser.ParseExifDateTimeOrNull(
+            GetExifTagValueOrNull(ExifTag.DateTimeOriginal), GetExifTagValueOrNull(ExifTag.SubsecTimeOriginal));
+        ret.DateTimeOriginal = parsedDateTimeOriginal?.DateTime;
+        ret.DateTimeOriginalOffset = parsedDateTimeOriginal?.Offset;
 
-            ret.GpsDateTime = ExifGpsTagValuesParser.ParseGpsDateTimeOrNull(
-                GetExifTagValueOrNull(ExifTag.GPSTimestamp),
-                GetExifTagValueOrNull(ExifTag.GPSDateStamp));
-            ret.GpsCoordinate = ExifGpsTagValuesParser.ParseGpsCoordinateOrNull(exif.Values,
-                GetExifTagValueOrNull(ExifTag.GPSLatitude),
-                GetExifTagValueOrNull(ExifTag.GPSLatitudeRef),
-                GetExifTagValueOrNull(ExifTag.GPSLongitude),
-                GetExifTagValueOrNull(ExifTag.GPSLongitudeRef));
-            ret.GpsImgDirection = GetExifTagValueOrNull2(ExifTag.GPSImgDirection)?.ToSingle().NanToNull();
-            ret.GpsImgDirectionRef = GetExifTagValueOrNull(ExifTag.GPSImgDirectionRef).NullIfEmpty();
+        ret.OffsetTime = GetExifTagValueOrNull(ExifTag.OffsetTime).NullIfEmpty();
+        ret.OffsetTimeDigitized = GetExifTagValueOrNull(ExifTag.OffsetTimeDigitized).NullIfEmpty();
+        ret.OffsetTimeOriginal = GetExifTagValueOrNull(ExifTag.OffsetTimeOriginal).NullIfEmpty();
 
-            ret.TagNames = exif.Values.Select(i => new ImageMetadata.Exif.TagName {Name = i.Tag.ToString()})
+        ret.GpsDateTime = ExifGpsTagValuesParser.ParseGpsDateTimeOrNull(
+            GetExifTagValueOrNull(ExifTag.GPSTimestamp),
+            GetExifTagValueOrNull(ExifTag.GPSDateStamp));
+        ret.GpsCoordinate = ExifGpsTagValuesParser.ParseGpsCoordinateOrNull(exif.Values,
+            GetExifTagValueOrNull(ExifTag.GPSLatitude),
+            GetExifTagValueOrNull(ExifTag.GPSLatitudeRef),
+            GetExifTagValueOrNull(ExifTag.GPSLongitude),
+            GetExifTagValueOrNull(ExifTag.GPSLongitudeRef));
+        ret.GpsImgDirection = GetExifTagValueOrNull2(ExifTag.GPSImgDirection)?.ToSingle().NanToNull();
+        ret.GpsImgDirectionRef = GetExifTagValueOrNull(ExifTag.GPSImgDirectionRef).NullIfEmpty();
 
-                // tags might be duplicated in EXIF with same or different values
-                .DistinctBy(tagName => tagName.Name).ToList();
-        }
+        ret.TagNames = exif.Values.Select(i => new ImageMetadata.Exif.TagName {Name = i.Tag.ToString()})
+
+            // tags might be duplicated in EXIF with same or different values
+            .DistinctBy(tagName => tagName.Name).ToList();
         return ret;
     }
 
@@ -199,7 +199,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         }
 
         public static Point? ParseGpsCoordinateOrNull(
-            IReadOnlyList<IExifValue> allTagValues,
+            IEnumerable<IExifValue> allTagValues,
             IEnumerable<Rational>? latitude,
             string? latitudeRef,
             IEnumerable<Rational>? longitude,
@@ -251,7 +251,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         }
     }
 
-    private sealed partial class ExifDateTimeTagValuesParser
+    private static partial class ExifDateTimeTagValuesParser
     {
         public static DateTimeAndOffset? ParseExifDateTimeOrNull(string? exifDateTime, string? exifFractionalSeconds)
         { // https://gist.github.com/thanatos/eee17100476a336a711e

@@ -9,7 +9,7 @@ namespace tbm.ImagePipeline;
 public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
         ILifetimeScope scope0,
-        Channel<List<ImageWithBytes>> channel,
+        Channel<List<ImageWithBytes>, List<ImageWithBytes>> channel,
         Func<Owned<ImagePipelineDbContext.New>> dbContextFactory,
         Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
@@ -250,6 +250,7 @@ public class ImageBatchConsumingWorker(
                 _ = await db.SaveChangesAsync(stoppingToken);
             }
         }
+
         async Task<IEnumerable<ImageOcrLine>> ConsumeByFidAndScript(
             ImagePipelineDbContext db,
             Fid fid,

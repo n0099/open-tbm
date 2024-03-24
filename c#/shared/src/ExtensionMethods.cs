@@ -14,7 +14,6 @@ public static class ExtensionMethods
     public static byte RoundToByte(this double number) => (byte)Math.Round(number);
     public static byte RoundToByte(this float number) => (byte)Math.Round(number);
     public static short RoundToShort(this float number) => (short)Math.Round(number);
-    public static short RoundToShort(this double number) => (short)Math.Round(number);
     public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number);
     public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number);
     public static IQueryable<T> ForUpdate<T>(this IQueryable<T> query) => query.TagWith("ForUpdate");

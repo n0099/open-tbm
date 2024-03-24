@@ -5,7 +5,7 @@ public class ImageRequester(
     IConfiguration config,
     IHttpClientFactory httpFactory,
     IReadOnlyPolicyRegistry<string> registry,
-    FixedWindowRateLimiter rateLimiter)
+    RateLimiter rateLimiter)
 {
     private readonly IConfigurationSection _config = config.GetSection("ImageRequester");
 

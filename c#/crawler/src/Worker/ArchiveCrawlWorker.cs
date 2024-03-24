@@ -120,9 +120,12 @@ public class ArchiveCrawlWorker(
         var crawler = facadeFactory.Value(fid, forumName);
         var savedThreads = (await crawler.CrawlPageRange(
             page, page, stoppingToken)).SaveCrawled(stoppingToken);
+
+        // ReSharper disable once InvertIf
         if (savedThreads != null)
         {
-            var failureCountsKeyByTid = savedThreads.NewlyAdded.ToDictionary(th => th.Tid, _ => (FailureCount)0);
+            var failureCountsKeyByTid = savedThreads.NewlyAdded
+                .ToDictionary(th => th.Tid, _ => (FailureCount)0);
             await using var threadLate = threadLateCrawlerAndSaverFactory();
             await threadLate.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }

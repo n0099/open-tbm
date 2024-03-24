@@ -70,13 +70,13 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
     {
         stoppingToken.ThrowIfCancellationRequested();
         var mat = imageKeyWithMatrix.Matrix;
-        if (mat.Width > 100 || mat.Height > 100)
-        { // not preserve the original aspect ratio
-            // https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
-            using var thumbnail = mat.Resize(new(100, 100), interpolation: InterpolationFlags.Area);
-            return new(imageKeyWithMatrix, GetThumbHashForMatrix(thumbnail));
-        }
-        return new(imageKeyWithMatrix, GetThumbHashForMatrix(mat));
+        if (mat is {Width: <= 100, Height: <= 100})
+            return new(imageKeyWithMatrix, GetThumbHashForMatrix(mat));
+
+        // not preserve the original aspect ratio
+        // https://stackoverflow.com/questions/44650888/resize-an-image-without-distortion-opencv
+        using var thumbnail = mat.Resize(new(100, 100), interpolation: InterpolationFlags.Area);
+        return new(imageKeyWithMatrix, GetThumbHashForMatrix(thumbnail));
 
         static byte[] GetThumbHashForMatrix(Mat mat)
         {

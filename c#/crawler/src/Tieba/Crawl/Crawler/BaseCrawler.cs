@@ -3,6 +3,8 @@ namespace tbm.Crawler.Tieba.Crawl.Crawler;
 public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
 {
     public abstract Exception FillExceptionData(Exception e);
+
+    // ReSharper disable once UnusedParameter.Global
     public abstract IList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
     public abstract TbClient.Page? GetResponsePage(TResponse response);
     protected abstract RepeatedField<TPostProtoBuf> GetResponsePostList(TResponse response);

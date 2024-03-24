@@ -4,7 +4,7 @@ public class ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger,
         IConfiguration config,
         ImageRequester imageRequester,
-        Channel<List<ImageWithBytes>> channel,
+        Channel<List<ImageWithBytes>, List<ImageWithBytes>> channel,
         Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true)
 {
@@ -72,7 +72,7 @@ public class ImageBatchProducingWorker(
 
                         // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
                         ? !(i.MetadataConsumed && i.HashConsumed && i.QrCodeConsumed && i.OcrConsumed)
-                        : (!i.MetadataConsumed && !i.HashConsumed && !i.QrCodeConsumed && !i.OcrConsumed)
+                        : !i.MetadataConsumed && !i.HashConsumed && !i.QrCodeConsumed && !i.OcrConsumed
                     orderby i.ImageId
                     select i)
                 .Take(ProduceImageBatchSize * PrefetchUnconsumedImagesFactor * InterlaceBatchCount).ToList();

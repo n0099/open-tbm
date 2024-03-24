@@ -5,7 +5,12 @@ root = true
 ###############################
 # All files
 [*]
+# Standard properties
 indent_style = space
+end_of_line = lf
+charset = utf-8
+indent_size = 4
+insert_final_newline = true
 
 # ReSharper properties
 resharper_allow_comment_after_lbrace = true
@@ -62,12 +67,6 @@ resharper_wrap_chained_binary_expressions = chop_if_long
 resharper_wrap_chained_binary_patterns = chop_if_long
 resharper_wrap_chained_method_calls = wrap_if_long
 
-# Standard properties
-end_of_line = lf
-insert_final_newline = true
-indent_size = 4
-charset = utf-8
-
 # Microsoft .NET properties
 csharp_new_line_before_members_in_object_initializers = false
 csharp_preferred_modifier_order = public, private, protected, internal, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async:suggestion
@@ -113,6 +112,7 @@ dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+dotnet_diagnostic.CS1591.severity = none
 
 # ReSharper inspection severities
 # https://youtrack.jetbrains.com/issue/RSRP-463998
@@ -142,6 +142,7 @@ resharper_suggest_var_or_type_elsewhere_highlighting = hint
 resharper_suggest_var_or_type_simple_types_highlighting = hint
 resharper_entity_framework_model_validation_unlimited_string_length_highlighting = none
 resharper_move_local_function_after_jump_statement_highlighting = none
+resharper_separate_local_functions_with_jump_statement_highlighting = none
 
 ###############################
 # .NET Coding Conventions     #
