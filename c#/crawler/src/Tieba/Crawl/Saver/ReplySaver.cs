@@ -123,7 +123,7 @@ public partial class ReplySaver
     {
         Helper.GetNowTimestamp(out var now);
         var signatures = replies
-            .Where(r => r.SignatureId != null && r.Signature != null)
+            .Where(r => r is {SignatureId: not null, Signature: not null})
             .DistinctBy(r => r.SignatureId)
             .Select(r => new ReplySignature
             {

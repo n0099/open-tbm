@@ -128,6 +128,8 @@ public class CrawlPost(
     }
 
     private Action<Exception> SaveThreadMissingFirstReply
+
+        // ReSharper disable once SuggestBaseTypeForParameter
         (Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
     {
         if (ex is not EmptyPostListException) return;

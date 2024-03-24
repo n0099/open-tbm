@@ -20,7 +20,7 @@ public class SubReplySaver(
             // FansNickname in sub reply response will always be null
             nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
 
-            // DisplayName in users embedded in sub replies from response will be the legacy nick name
+            // DisplayName in users embedded in sub replies from response will be the legacy nickname
             nameof(User.DisplayName) => true,
             _ => false
         }, (_, _, _, _) => false);

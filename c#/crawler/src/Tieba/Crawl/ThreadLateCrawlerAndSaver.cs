@@ -92,7 +92,7 @@ public class ThreadLateCrawlerAndSaver(
                             "Field phone_type is missing in response json.thread.thread_info, it might be a historical thread.")
 
                     // silent fail without any retry since the field `json.thread.thread_info`
-                    // might not exists in current and upcoming responses
+                    // might not exist in current and upcoming responses
                     : null;
 #pragma warning restore S3358 // Ternary operators should not be nested
             }
@@ -119,6 +119,7 @@ public class ThreadLateCrawlerAndSaver(
                 logger.LogError(e, "Exception");
             }
 
+            // ReSharper disable once InvertIf
             if (e is not TiebaException {ShouldRetry: false})
             {
                 _locks.AcquireFailed(crawlerLockId, page: 1, failureCount);

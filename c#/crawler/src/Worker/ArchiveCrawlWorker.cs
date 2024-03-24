@@ -15,10 +15,14 @@ public class ArchiveCrawlWorker(
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
-    // any request with page offset that larger than 10k threads will be respond with results from the first page
+    // any request with page offset that larger than 10k threads will be responded with results from the first page
     // in May 2023, they enlarged the limit to 100k threads: https://github.com/Starry-OvO/aiotieba/issues/124
     private const int MaxCrawlablePage = 3334; // 100k threads / 30 per request (from Rn param) = 3333.3...
+
+    // ReSharper disable once ConvertToConstant.Local
     private readonly string _forumName = "";
+
+    // ReSharper disable once ConvertToConstant.Local
     private readonly Fid _fid = 0;
 
     // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average

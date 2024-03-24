@@ -48,10 +48,10 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
                 () => Helper.WrapPostContent(inPost.Content));
 
-            // AuthorId rarely respond with 0, Author should always be null but we can guarantee
+            // AuthorId rarely respond with 0, Author should always be null with no guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
 
-            // value of AuthorExpGrade will be write back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
+            // value of AuthorExpGrade will be written back in ReplyCrawlFacade.FillAuthorInfoBackToReply()
             o.SubReplyCount = inPost.SubPostNumber.NullIfZero();
             o.PostedAt = inPost.Time;
             o.IsFold = (byte?)inPost.IsFold.NullIfZero();

@@ -43,7 +43,7 @@ public class ThreadCrawlFacade(
             .OfType<TbClient.User>() // filter out nulls
 
             // some rare deleted thread but still visible in 6.0.2 response
-            // will have a latest replier uid=0 name="" nameShow=".*"
+            // will have the latest replier uid=0 name="" nameShow=".*"
             .Where(u => u.Uid != 0)
             .Select(u => User.CreateLatestReplier(u.Uid, u.Name.NullIfEmpty(),
                 u.Name == u.NameShow ? null : u.NameShow))

@@ -81,6 +81,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
             endPage = Math.Min(endPage, maxPage ?? Page.MaxValue);
         }, startPage, previousFailureCount: 0, stoppingToken);
 
+        // ReSharper disable once InvertIf
         if (!isStartPageCrawlFailed)
         {
             var pagesAfterStart = Enumerable.Range(

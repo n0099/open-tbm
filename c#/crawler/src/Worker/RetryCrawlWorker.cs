@@ -65,7 +65,7 @@ public class RetryCrawlWorker(
             var fid = tidGroupByFid.Key;
             FailureCount FailureCountSelector(Tid tid) =>
 
-                // it should always contains only one page which is 1
+                // it should always contain only one page which is 1
                 failureCountWithPagesKeyByLockId[new(fid, tid)].Single().Value;
             var failureCountsKeyByTid = tidGroupByFid
                 .Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);

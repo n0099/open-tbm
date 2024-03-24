@@ -50,7 +50,7 @@ public class ReplyCrawlFacade(
             where t.Tid == tid
             select t.Title).SingleOrDefault();
 
-        // thread title will be empty string as a fallback when the thread author haven't write title for this thread
+        // thread title will be empty string as a fallback when the thread author haven't written title for this thread
         if (parentThreadTitle != "") return;
         var newTitle = replies.FirstOrDefault(r => r.Floor == 1)?.Title;
         if (newTitle == null) return;

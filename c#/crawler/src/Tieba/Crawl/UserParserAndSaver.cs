@@ -49,7 +49,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
                     : (portrait, null);
 
             var uid = el.Uid;
-            if (uid == 0) return null; // in client version 12.x the last user in list will be a empty user with uid 0
+            if (uid == 0) return null; // in client version 12.x the last user in list will be an empty user with uid 0
             var (portrait, portraitUpdatedAt) = ExtractPortrait(el.Portrait);
             if (uid < 0) // historical anonymous user
             {

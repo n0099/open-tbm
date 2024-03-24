@@ -23,8 +23,9 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
             .Where(u => u.CalculateSize() != 0)); // remove empty users
     }
 
-    protected abstract PostId PostIdSelector(TPost post);
+    // ReSharper disable once UnusedMemberInSuper.Global
     protected abstract TPost Convert(TPostProtoBuf inPost);
     protected abstract IEnumerable<TPost> ParsePostsInternal(IList<TPostProtoBuf> inPosts, List<TbClient.User?> outUsers);
     protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
+    protected abstract PostId PostIdSelector(TPost post);
 }

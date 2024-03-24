@@ -24,5 +24,7 @@ public class SaverChangeSet<TPost> where TPost : class, IPost
 
     public ReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }
     public ReadOnlyCollection<TPost> NewlyAdded { get; }
+
+    // ReSharper disable once CollectionNeverUpdated.Global
     public ReadOnlyCollection<TPost> AllAfter { get; }
 }

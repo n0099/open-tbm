@@ -23,7 +23,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
 #pragma warning restore S3358 // Ternary operators should not be nested
             o.IsGood = (byte?)inPost.IsGood.NullIfZero();
             o.TopicType = inPost.LivePostType.NullIfEmpty();
-            o.Title = inPost.Title; // might be write back by ReplyCrawlFacade.SaveParentThreadTitle()
+            o.Title = inPost.Title; // might be written back by ReplyCrawlFacade.SaveParentThreadTitle()
             o.AuthorUid = inPost.AuthorId;
             o.PostedAt = (uint)inPost.CreateTime;
             o.LatestReplyPostedAt = (uint)inPost.LastTimeInt;
@@ -31,7 +31,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
             o.ViewCount = (uint?)inPost.ViewNum.NullIfZero();
             o.ShareCount = (uint?)inPost.ShareNum.NullIfZero();
 
-            // when the thread is livepost or Thread.AgreeNum == 0, the agree field will not exists
+            // when the thread is livepost or Thread.AgreeNum == 0, the agree field will not exist
             o.AgreeCount = (int?)inPost.Agree?.AgreeNum.NullIfZero() ?? inPost.AgreeNum.NullIfZero();
             o.DisagreeCount = (int?)inPost.Agree?.DisagreeNum.NullIfZero();
             o.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(inPost.Location);

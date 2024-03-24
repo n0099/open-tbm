@@ -5,7 +5,7 @@ public abstract class StaticCommonInSavers
     public delegate bool FieldChangeIgnoranceDelegate(
         Type whichPostType, string propName, object? oldValue, object? newValue);
 
-    // static field in this non generic class will be shared across all reified generic derived classes
+    // static field in this non-generic class will be shared across all reified generic derived classes
     protected static Dictionary<Type, Dictionary<string, PropertyInfo>> RevisionPropertiesCache { get; } = GetPropsKeyByType(
         [typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)]);
 
@@ -37,14 +37,14 @@ public abstract class StaticCommonInSavers
             if (whichPostType == typeof(ThreadPost))
             {
                 switch (propName)
-                { // will be update by ThreadLateCrawlerAndSaver
+                { // will be updated by ThreadLateCrawlerAndSaver
                     case nameof(ThreadPost.AuthorPhoneType):
                     // prevent overwrite existing value of field liker_id which is saved by legacy crawler
-                    // and Zan itself is deprecated by tieba so it shouldn't get updated
+                    // and Zan itself is deprecated by tieba, so it shouldn't get updated
                     case nameof(ThreadPost.Zan):
                     // possible randomly respond with null
                     case nameof(ThreadPost.Geolocation) when newValue is null:
-                    // empty string means the author had not write a title
+                    // empty string means the author had not written a title
                     // its value generated from the first reply within response of reply crawler
                     // will be later set by ReplyCrawlFacade.SaveParentThreadTitle()
                     case nameof(ThreadPost.Title)
@@ -52,7 +52,7 @@ public abstract class StaticCommonInSavers
 
                              // prevent repeatedly update with different title
                              // due to the thread is a multi forum topic thread
-                             // thus its title can be vary within the forum and within the thread
+                             // thus its title can be varied within the forum and within the thread
                              || (newValue is not "" && oldValue is not ""):
                     // possible randomly respond with 0.NullIfZero()
                     case nameof(ThreadPost.DisagreeCount) when newValue is null && oldValue is not null:
@@ -76,6 +76,8 @@ public abstract class StaticCommonInSavers
         { // ignore revision that figures update existing old users that don't have ip geolocation
             if (whichPostType == typeof(User)
                 && propName == nameof(User.IpGeolocation) && oldValue is null) return true;
+
+            // ReSharper disable once InvertIf
             if (whichPostType == typeof(ThreadPost))
             {
                 switch (propName)
@@ -89,7 +91,7 @@ public abstract class StaticCommonInSavers
             return false;
         });
 
-    private static Dictionary<Type, Dictionary<string, PropertyInfo>> GetPropsKeyByType(List<Type> types) =>
+    private static Dictionary<Type, Dictionary<string, PropertyInfo>> GetPropsKeyByType(IEnumerable<Type> types) =>
         types.ToDictionary(type => type, type => type.GetProperties().ToDictionary(prop => prop.Name));
 
     public record FieldChangeIgnoranceDelegates(
