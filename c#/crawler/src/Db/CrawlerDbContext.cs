@@ -21,7 +21,6 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
     public DbSet<ReplyPost> Replies => Set<ReplyPost>();
     public DbSet<ReplySignature> ReplySignatures => Set<ReplySignature>();
     public DbSet<ReplyContent> ReplyContents => Set<ReplyContent>();
-    public DbSet<SubReplyPost> SubReplies => Set<SubReplyPost>();
     public DbSet<SubReplyContent> SubReplyContents => Set<SubReplyContent>();
     public DbSet<Forum> Forums => Set<Forum>();
 
@@ -36,6 +35,7 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
             var updatedAtProp = e.Property(ie => ie.UpdatedAt);
             var lastSeenAtProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeenAt) : null;
 
+            // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
             switch (originalEntityState)
             { // mutates Entry.CurrentValue will always update Entry.IsModified
                 // and the value of corresponding field in entity class instance

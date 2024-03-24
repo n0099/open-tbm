@@ -36,7 +36,7 @@ public sealed class SonicPusher : IDisposable
             .Trim()
 
             // https://github.com/spikensbror-dotnet/nsonic/pull/10
-            .Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\"", "\\\"");
+            .Replace("\\", @"\\").Replace("\n", "\\n").Replace("\"", "\\\"");
         if (contentTexts == "") return GetElapsedMs();
 
         try
@@ -72,16 +72,13 @@ public sealed class SonicPusher : IDisposable
                 _ = PushPost(fid, postType, postIdSelector(p), postContentSelector(p));
             }
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException e) when (e.CancellationToken == stoppingToken)
         {
-            if (e.CancellationToken == stoppingToken)
-            {
-                string GetBase64EncodedPostContent(T p) =>
-                    Convert.ToBase64String(Helper.WrapPostContent(postContentSelector(p))
-                        ?.ToByteArray() ?? ReadOnlySpan<byte>.Empty);
-                File.AppendAllLines(ResumeSuspendPostContentsPushingWorker.GetFilePath(postType),
-                    posts.Select(p => $"{fid},{postIdSelector(p)},{GetBase64EncodedPostContent(p)}"));
-            }
+            string GetBase64EncodedPostContent(T p) =>
+                Convert.ToBase64String(Helper.WrapPostContent(postContentSelector(p))
+                    ?.ToByteArray() ?? ReadOnlySpan<byte>.Empty);
+            File.AppendAllLines(ResumeSuspendPostContentsPushingWorker.GetFilePath(postType),
+                posts.Select(p => $"{fid},{postIdSelector(p)},{GetBase64EncodedPostContent(p)}"));
             throw;
         }
         finally

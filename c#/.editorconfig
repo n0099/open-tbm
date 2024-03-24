@@ -118,7 +118,6 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggest
 # https://youtrack.jetbrains.com/issue/RSRP-463998
 resharper_arrange_constructor_or_destructor_body_highlighting = none
 resharper_arrange_method_or_operator_body_highlighting = none
-resharper_arrange_object_creation_when_type_not_evident_highlighting = suggestion
 resharper_arrange_redundant_parentheses_highlighting = hint
 resharper_arrange_this_qualifier_highlighting = hint
 resharper_arrange_type_member_modifiers_highlighting = hint
@@ -137,12 +136,12 @@ resharper_enforce_lock_statement_braces_highlighting = warning
 resharper_enforce_using_statement_braces_highlighting = warning
 resharper_enforce_while_statement_braces_highlighting = warning
 resharper_loop_can_be_partly_converted_to_query_highlighting = warning
-resharper_redundant_base_qualifier_highlighting = warning
 resharper_remove_redundant_braces_highlighting = warning
 resharper_suggest_var_or_type_built_in_types_highlighting = hint
 resharper_suggest_var_or_type_elsewhere_highlighting = hint
 resharper_suggest_var_or_type_simple_types_highlighting = hint
 resharper_entity_framework_model_validation_unlimited_string_length_highlighting = none
+resharper_move_local_function_after_jump_statement_highlighting = none
 
 ###############################
 # .NET Coding Conventions     #

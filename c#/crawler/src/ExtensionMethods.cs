@@ -55,7 +55,7 @@ public static partial class ExtensionMethods
         } while (inner != null);
     }
 
-    public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value)
+    public static void SetIfNotNull<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2? value) where T2 : class
     {
         if (value != null) dict[key] = value;
     }

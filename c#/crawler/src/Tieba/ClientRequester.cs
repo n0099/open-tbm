@@ -155,6 +155,7 @@ public class ClientRequester(
         var ret = responseTaskFactory(http);
         _ = ret.ContinueWith(task =>
         {
+            // ReSharper disable once MergeIntoPattern
             if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) requesterTcs.Increase();
             else requesterTcs.Decrease();
         }, stoppingToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);

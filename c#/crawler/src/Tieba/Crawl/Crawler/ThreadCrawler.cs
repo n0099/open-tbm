@@ -37,11 +37,11 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
         };
         return
         [
-            new Request(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0",
+            new(Requester.RequestProtoBuf(EndPointUrl, "12.26.1.0",
                 new ThreadRequest {Data = data},
                 (req, common) => req.Data.Common = common,
                 () => new ThreadResponse(), stoppingToken)),
-            new Request(Requester.RequestProtoBuf(LegacyEndPointUrl, "6.0.2",
+            new(Requester.RequestProtoBuf(LegacyEndPointUrl, "6.0.2",
                 new ThreadRequest {Data = data602},
                 (req, common) => req.Data.Common = common,
                 () => new ThreadResponse(), stoppingToken), CrawlRequestFlag.ThreadClientVersion602)

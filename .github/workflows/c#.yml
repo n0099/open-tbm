@@ -37,6 +37,7 @@ jobs:
 
       - uses: muno92/resharper_inspectcode@v1
         with:
+          minimumReportSeverity: info
           solutionPath: c#/tbm.sln
           cachesHome: ${{ github.workspace }}/.resharper
 

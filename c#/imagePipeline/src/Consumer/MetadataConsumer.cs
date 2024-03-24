@@ -93,6 +93,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         IEnumerable<ulong> commonXxHash3ToIgnore,
         TImageSharpProfile? profile,
         Func<TImageSharpProfile, byte[]?> rawBytesSelector)
+        where TImageSharpProfile : class
         where TEmbeddedMetadata : class, ImageMetadata.IEmbedded, new()
     {
         if (profile == null) return null;

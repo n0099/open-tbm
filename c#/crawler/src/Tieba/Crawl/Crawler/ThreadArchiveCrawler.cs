@@ -12,8 +12,8 @@ public class ThreadArchiveCrawler(string forumName) : ThreadCrawler(forumName)
             () => new ThreadResponse(), stoppingToken);
         return
         [ // passing CrawlRequestFlag.ThreadClientVersion602 in the second one in order to invokes ThreadParser.ShouldSkipParse()
-            new Request(response),
-            new Request(response, CrawlRequestFlag.ThreadClientVersion602)
+            new(response),
+            new(response, CrawlRequestFlag.ThreadClientVersion602)
         ];
     }
 }

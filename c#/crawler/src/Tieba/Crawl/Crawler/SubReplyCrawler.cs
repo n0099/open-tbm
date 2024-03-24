@@ -33,7 +33,7 @@ public class SubReplyCrawler(Tid tid, Pid pid) : BaseCrawler<SubReplyResponse, S
     protected override int GetResponseErrorCode(SubReplyResponse response) => response.Error.Errorno;
     protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) =>
     [
-        new Request(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
+        new(Requester.RequestProtoBuf("c/f/pb/floor?cmd=302002", "12.26.1.0",
             new SubReplyRequest {Data = new()
             {
                 Kz = (long)tid,
