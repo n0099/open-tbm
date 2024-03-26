@@ -1,7 +1,8 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
-[SuppressMessage("Major Code Smell", "S3881:\"IDisposable\" should be implemented correctly")]
+#pragma warning disable S3881 // "IDisposable" should be implemented correctly
 public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
+#pragma warning restore S3881 // "IDisposable" should be implemented correctly
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
         BaseParser<TPost, TPostProtoBuf> parser,
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,

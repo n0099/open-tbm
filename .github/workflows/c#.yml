@@ -32,8 +32,8 @@ jobs:
           path: |
             ${{ github.workspace }}/.resharper
             ~/.dotnet/tools
-          key: ${{ runner.os }}-resharper-${{ hashFiles('c#/**/*') }}
-          restore-keys: ${{ runner.os }}-nuget-
+          key: ${{ runner.os }}-resharper
+          restore-keys: ${{ runner.os }}-resharper-
 
       - uses: muno92/resharper_inspectcode@v1
         with:

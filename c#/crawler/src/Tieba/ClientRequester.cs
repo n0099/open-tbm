@@ -153,10 +153,14 @@ public class ClientRequester(
         await requesterTcs.Wait(stoppingToken);
         if (_config.GetValue("LogTrace", false)) logTraceAction();
         var ret = responseTaskFactory(http);
+#pragma warning disable AV2235 // Call to Task.ContinueWith should be replaced with an await expression
         _ = ret.ContinueWith(task =>
+#pragma warning restore AV2235 // Call to Task.ContinueWith should be replaced with an await expression
         {
             // ReSharper disable once MergeIntoPattern
+#pragma warning disable SS034 // Use await to get the result of an asynchronous operation
             if (task.IsCompletedSuccessfully && task.Result.IsSuccessStatusCode) requesterTcs.Increase();
+#pragma warning restore SS034 // Use await to get the result of an asynchronous operation
             else requesterTcs.Decrease();
         }, stoppingToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         return await ret;

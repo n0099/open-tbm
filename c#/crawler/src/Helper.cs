@@ -3,7 +3,9 @@ using System.Text.Unicode;
 
 namespace tbm.Crawler;
 
+#pragma warning disable AV1708 // Type name contains term that should be avoided
 public abstract partial class Helper
+#pragma warning restore AV1708 // Type name contains term that should be avoided
 {
     public static byte[]? SerializedProtoBufOrNullIfEmpty(IMessage? protoBuf) =>
         protoBuf == null || protoBuf.CalculateSize() == 0 ? null : protoBuf.ToByteArray();

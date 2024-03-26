@@ -26,7 +26,7 @@ public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
             SplitEntities[typeof(TSplitEntity)] = entityFactory();
     }
 
-    public class ModelBuilderHelper(ModelBuilder builder, string baseTableName)
+    public class ModelBuilderExtension(ModelBuilder builder, string baseTableName)
     {
         public void HasKey<TRevision>(Expression<Func<TRevision, object?>> keySelector)
             where TRevision : class, TBaseRevision =>

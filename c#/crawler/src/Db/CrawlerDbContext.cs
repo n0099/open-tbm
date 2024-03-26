@@ -74,22 +74,22 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
         b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 
-        var thread = new RevisionWithSplitting<BaseThreadRevision>.ModelBuilderHelper(b, "tbmcr_thread");
+        var thread = new RevisionWithSplitting<BaseThreadRevision>.ModelBuilderExtension(b, "tbmcr_thread");
         thread.HasKey<ThreadRevision>(e => new {e.Tid, e.TakenAt});
         thread.SplittingHasKeyAndName<SplitViewCount>("viewCount", e => new {e.Tid, e.TakenAt});
 
-        var reply = new RevisionWithSplitting<BaseReplyRevision>.ModelBuilderHelper(b, "tbmcr_reply");
+        var reply = new RevisionWithSplitting<BaseReplyRevision>.ModelBuilderExtension(b, "tbmcr_reply");
         reply.HasKey<ReplyRevision>(e => new {e.Pid, e.TakenAt});
         reply.SplittingHasKeyAndName<ReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Pid, e.TakenAt});
         reply.SplittingHasKeyAndName<SplitSubReplyCount>("subReplyCount", e => new {e.Pid, e.TakenAt});
         reply.SplittingHasKeyAndName<SplitFloor>("floor", e => new {e.Pid, e.TakenAt});
 
-        var subReply = new RevisionWithSplitting<BaseSubReplyRevision>.ModelBuilderHelper(b, "tbmcr_subReply");
+        var subReply = new RevisionWithSplitting<BaseSubReplyRevision>.ModelBuilderExtension(b, "tbmcr_subReply");
         subReply.HasKey<SubReplyRevision>(e => new {e.Spid, e.TakenAt});
         subReply.SplittingHasKeyAndName<SubReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Spid, e.TakenAt});
         subReply.SplittingHasKeyAndName<SplitDisagreeCount>("disagreeCount", e => new {e.Spid, e.TakenAt});
 
-        var user = new RevisionWithSplitting<BaseUserRevision>.ModelBuilderHelper(b, "tbmcr_user");
+        var user = new RevisionWithSplitting<BaseUserRevision>.ModelBuilderExtension(b, "tbmcr_user");
         user.HasKey<UserRevision>(e => new {e.Uid, e.TakenAt});
         user.SplittingHasKeyAndName<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
         user.SplittingHasKeyAndName<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});

@@ -22,7 +22,7 @@ public class ImagePipelineDbContext(Fid fid, string script)
 
     protected override void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
 
-#pragma warning disable IDE0058 // Expression value is never used
+    [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
@@ -56,7 +56,6 @@ public class ImagePipelineDbContext(Fid fid, string script)
         SplitImageMetadata(e => e.GifMetadata, "gif");
         SplitImageMetadata(e => e.BmpMetadata, "bmp");
     }
-#pragma warning restore IDE0058 // Expression value is never used
 
     public class ModelCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590

@@ -48,6 +48,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
 
     public class Exif : IEmbedded
     {
+        [SuppressMessage("ApiDesign", "SS039:An enum should specify a default value")]
         public enum ExifOrientation
         { // https://magnushoff.com/articles/jpeg-orientation/
             Horizontal = 1,
