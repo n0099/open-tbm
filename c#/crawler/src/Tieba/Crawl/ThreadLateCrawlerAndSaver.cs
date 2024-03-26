@@ -41,7 +41,7 @@ public class ThreadLateCrawlerAndSaver(
             var json = await requester.RequestJson(
                 $"{ClientRequester.LegacyClientApiDomain}/c/f/pb/page", "8.8.8.8", new()
                 {
-                    {"kz", tid.ToString()},
+                    {"kz", tid.ToString(CultureInfo.InvariantCulture)},
                     {"pn", "1"},
 
                     // rn have to be at least 2
@@ -60,7 +60,7 @@ public class ThreadLateCrawlerAndSaver(
                     },
                     JsonValueKind.String => () =>
                     { // https://stackoverflow.com/questions/62100000/why-doesnt-system-text-json-jsonelement-have-trygetstring-or-trygetboolean/62100246#62100246
-                        var r = int.TryParse(errorCodeProp.GetString(), out var p);
+                        var r = int.TryParse(errorCodeProp.GetString(), CultureInfo.InvariantCulture, out var p);
                         return (p, r);
                     },
                     _ => () => (0, false)
@@ -85,7 +85,7 @@ public class ThreadLateCrawlerAndSaver(
                     ? threadInfo.TryGetProperty("phone_type", out var phoneType)
                         ? new ThreadPost
                         {
-                            Tid = Tid.Parse(thread.GetStrProp("id")),
+                            Tid = Tid.Parse(thread.GetStrProp("id"), CultureInfo.InvariantCulture),
                             AuthorPhoneType = phoneType.GetString().NullIfEmpty()
                         }
                         : throw new TiebaException(shouldRetry: false,

@@ -45,7 +45,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
         {
             static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
                 ExtractPortraitRegex().Match(portrait) is {Success: true} m
-                    ? (m.Groups["portrait"].Value, Time.Parse(m.Groups["timestamp"].ValueSpan))
+                    ? (m.Groups["portrait"].Value, Time.Parse(m.Groups["timestamp"].ValueSpan, CultureInfo.InvariantCulture))
                     : (portrait, null);
 
             var uid = el.Uid;

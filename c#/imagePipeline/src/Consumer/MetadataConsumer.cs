@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IO.Hashing;
 using System.Text.RegularExpressions;
 using NetTopologySuite.Geometries;
@@ -101,7 +100,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         if (rawBytes == null || rawBytes.Length == 0) return null;
         if (rawBytes.Length > 65535)
             _logger.LogWarning("Embedded {} in image contains {} bytes",
-                typeof(TEmbeddedMetadata).Name.ToUpper(), rawBytes.Length);
+                typeof(TEmbeddedMetadata).Name.ToUpperInvariant(), rawBytes.Length);
         var xxHash3 = XxHash3.HashToUInt64(rawBytes);
         return new()
         {
@@ -281,7 +280,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             // https://stackoverflow.com/questions/4483886/how-can-i-get-a-count-of-the-total-number-of-digits-in-a-number/51099524#51099524
             [SuppressMessage("Major Code Smell", "S3358:Ternary operators should not be nested")]
             static int CountDigits(int n) => n == 0 ? 1 : (n > 0 ? 1 : 2) + (int)Math.Log10(Math.Abs((double)n));
-            var hasFractionalSeconds = int.TryParse(exifFractionalSeconds, out var fractionalSeconds);
+            var hasFractionalSeconds = int.TryParse(exifFractionalSeconds, CultureInfo.InvariantCulture, out var fractionalSeconds);
             fractionalSeconds = hasFractionalSeconds ? fractionalSeconds : 0;
 
             if (exifDateTime == "00000" && fractionalSeconds == 0) return null;
@@ -290,7 +289,8 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                       ?? ParseWithOverflowedTimeParts(exifDateTime)
                       ?? ParseAsUnixTimestamp(exifDateTime)
                       ?? throw new ArgumentException(
-                          $"Failed to parse provided EXIF date time \"{exifDateTime}\" with fractional seconds {fractionalSeconds}.");
+                          $"Failed to parse provided EXIF date time \"{exifDateTime}\""
+                          + $" with fractional seconds {fractionalSeconds.ToString(CultureInfo.InvariantCulture)}.");
             return fractionalSeconds == 0 ? ret : ret with
             {
                 DateTime = ret.DateTime.AddSeconds(fractionalSeconds / Math.Pow(10, CountDigits(fractionalSeconds)))
@@ -333,7 +333,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 : default;
             return dateTimeOffset == default
                 ? null
-                : new(dateTimeOffset.DateTime, dateTimeOffset.ToString("zzz"));
+                : new(dateTimeOffset.DateTime, dateTimeOffset.ToString("zzz", CultureInfo.InvariantCulture));
         }
 
         [GeneratedRegex(
@@ -349,13 +349,14 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             ExtractExifDateTimePartsRegex().Match(exifDateTime) is not {Success: true} m
                 ? null
                 : new(new DateTime(
-                        int.Parse(m.Groups["year"].ValueSpan),
-                        int.Parse(m.Groups["month"].ValueSpan),
-                        int.Parse(m.Groups["day"].ValueSpan),
+                        int.Parse(m.Groups["year"].ValueSpan, CultureInfo.InvariantCulture),
+                        int.Parse(m.Groups["month"].ValueSpan, CultureInfo.InvariantCulture),
+                        int.Parse(m.Groups["day"].ValueSpan, CultureInfo.InvariantCulture),
                         hour: 0, minute: 0, second: 0, DateTimeKind.Unspecified)
-                    .AddHours(int.Parse(m.Groups["hour"].ValueSpan))
-                    .AddMinutes(int.Parse(m.Groups["minute"].ValueSpan))
-                    .AddSeconds(int.Parse(m.Groups["second"].ValueSpan)), Offset: null);
+                    .AddHours(int.Parse(m.Groups["hour"].ValueSpan, CultureInfo.InvariantCulture))
+                    .AddMinutes(int.Parse(m.Groups["minute"].ValueSpan, CultureInfo.InvariantCulture))
+                    .AddSeconds(int.Parse(m.Groups["second"].ValueSpan, CultureInfo.InvariantCulture)),
+                    Offset: null);
 
         private static DateTimeAndOffset? ParseAsUnixTimestamp(string exifDateTime) =>
             long.TryParse(exifDateTime, NumberStyles.Integer,

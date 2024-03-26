@@ -51,7 +51,7 @@ public class OcrConsumer(
             RotationDegrees = result.TextBox.Angle.RoundToUshort(),
             Recognizer = result switch
             {
-                PaddleOcrRecognitionResult r => "PaddleOCR" + Enum.GetName(r.ModelVersion)?.ToLower(),
+                PaddleOcrRecognitionResult r => "PaddleOCR" + Enum.GetName(r.ModelVersion)?.ToLowerInvariant(),
                 TesseractRecognitionResult {IsVertical: false} => "TesseractHorizontal",
                 TesseractRecognitionResult {IsVertical: true} => "TesseractVertical",
                 _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)

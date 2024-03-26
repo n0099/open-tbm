@@ -29,11 +29,12 @@ public class ArchiveCrawlWorker(
     public static float GetCumulativeAverage(float currentCa, float previousCa, int currentIndex) =>
         (currentCa + ((currentIndex - 1) * previousCa)) / currentIndex;
 
+    [SuppressMessage("Correctness", "SS002:DateTime.Now was referenced")]
     public static (string Relative, string At) GetEta(int total, int completed, float averageDurationInMs)
     {
         var etaTimeSpan = TimeSpan.FromMilliseconds((total - completed) * averageDurationInMs);
         return (etaTimeSpan.Humanize(precision: 5, minUnit: TimeUnit.Second),
-            DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm:ss"));
+            DateTime.Now.Add(etaTimeSpan).ToString("MM-dd HH:mm:ss", CultureInfo.CurrentCulture));
     }
 
     protected override async Task DoWork(CancellationToken stoppingToken)

@@ -104,7 +104,8 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
         lock (_crawling)
         lock (_failed)
         {
-            logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={} failedIdCount={} failedPageCount={} failures={}", LockType,
+            logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={}"
+                            + " failedIdCount={} failedPageCount={} failures={}", LockType,
                 _crawling.Count, _crawling.Values.Sum(d => d.Count),
                 Helper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
                 _failed.Count, _failed.Values.Sum(d => d.Count),

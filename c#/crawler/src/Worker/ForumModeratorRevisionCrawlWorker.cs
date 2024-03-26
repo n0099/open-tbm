@@ -40,7 +40,7 @@ public class ForumModeratorRevisionCrawlWorker
         {
             var type = typeEl.QuerySelector("div.title")?.Children
                 .Select(el => el.ClassList)
-                .First(classNames => classNames.Any(className => className.EndsWith("_icon")))
+                .First(classNames => classNames.Any(className => className.EndsWith("_icon", StringComparison.Ordinal)))
                 .Select(className => className.Split("_")[0])
                 .First(className => !string.IsNullOrWhiteSpace(className));
             if (string.IsNullOrEmpty(type)) throw new TiebaException();

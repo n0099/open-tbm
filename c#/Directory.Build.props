@@ -10,6 +10,7 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AnalysisMode>Recommended</AnalysisMode>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
     <ItemGroup>
         <AdditionalFiles Include="$(MSBuildThisFileDirectory)\stylecop.json" />

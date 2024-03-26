@@ -42,7 +42,8 @@ public sealed class SonicPusher : IDisposable
         try
         {
             foreach (var text in contentTexts.Chunk(30000)) // https://github.com/spikensbror-dotnet/nsonic/issues/11
-                Ingest.Push($"{CollectionPrefix}{type}_content", $"f{fid}", id.ToString(), text.ToString(), "cmn");
+                Ingest.Push($"{CollectionPrefix}{type}_content", $"f{fid}",
+                    id.ToString(CultureInfo.InvariantCulture), text.ToString(), "cmn");
         }
         catch (Exception e)
         {
