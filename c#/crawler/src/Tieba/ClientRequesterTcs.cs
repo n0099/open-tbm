@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba;
 
-public class ClientRequesterTcs : WithLogTrace
+public sealed class ClientRequesterTcs : WithLogTrace
 {
     private readonly ILogger<ClientRequesterTcs> _logger;
     private readonly IConfigurationSection _config;
@@ -39,6 +39,12 @@ public class ClientRequesterTcs : WithLogTrace
             }
             _ = Interlocked.Increment(ref _requestCounter);
         }
+    }
+
+    public override void Dispose()
+    {
+        _timer.Dispose();
+        base.Dispose();
     }
 
     public void Increase() => MaxRps = Math.Min(

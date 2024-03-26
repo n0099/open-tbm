@@ -23,6 +23,7 @@ public abstract partial class Helper
         contents == null ? null : new() {Value = {contents}};
 
     public static void GetNowTimestamp(out Time now) => now = GetNowTimestamp();
+    [SuppressMessage("Maintainability", "AV1551:Method overload should call another overload")]
     public static Time GetNowTimestamp() => (Time)DateTimeOffset.Now.ToUnixTimeSeconds();
 }
 public abstract partial class Helper

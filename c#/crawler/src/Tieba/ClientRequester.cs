@@ -99,7 +99,9 @@ public class ClientRequester(
             acc += pair.Key + '=' + pair.Value;
             return acc;
         }) + "tiebaclient!!!";
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
         var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
         postData.Add(KeyValuePair.Create("sign", signMd5));
 
         return await Post(async http =>
@@ -123,15 +125,20 @@ public class ClientRequester(
         commonParamSetter(requestParam, new() {ClientVersion = clientVersion, ClientType = 2});
 
         // https://github.com/dotnet/runtime/issues/22996 http://test.greenbytes.de/tech/tc2231
-        var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
+        using var protoBufFile = new ByteArrayContent(requestParam.ToByteArray());
         protoBufFile.Headers.Add("Content-Disposition", "form-data; name=\"data\"; filename=\"file\"");
-        var content = new MultipartFormDataContent {protoBufFile};
+#pragma warning disable IDE0028 // Simplify collection initialization
+        using var content = new MultipartFormDataContent();
+#pragma warning restore IDE0028 // Simplify collection initialization
+        content.Add(protoBufFile);
 
         // https://stackoverflow.com/questions/30926645/httpcontent-boundary-double-quotes
         var boundary = content.Headers.ContentType?.Parameters.First(header => header.Name == "boundary");
         if (boundary != null) boundary.Value = boundary.Value?.Replace("\"", "");
 
+#pragma warning disable CC0008 // Use object initializer
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
+#pragma warning restore CC0008 // Use object initializer
         request.Content = content;
         _ = request.Headers.UserAgent.TryParseAdd($"bdtb for Android {clientVersion}");
         request.Headers.Add("x_bd_data_type", "protobuf");

@@ -31,8 +31,7 @@ public class OcrConsumer(
                 return KeyValuePair.Create(new ImageKey(i.ImageId, i.FrameIndex), mat);
             }).ToList();
         var recognizedEithers = _recognizer
-            .RecognizeMatrices(matricesKeyByImageKey.Rights().ToDictionary(), stoppingToken)
-            .ToList();
+            .RecognizeMatrices(matricesKeyByImageKey.Rights().ToDictionary(), stoppingToken);
         var recognizedFailedImagesId = recognizedEithers.Lefts().ToList();
         var recognizedResults = recognizedEithers
 

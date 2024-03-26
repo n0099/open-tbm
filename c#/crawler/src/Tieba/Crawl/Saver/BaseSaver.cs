@@ -12,6 +12,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
     where TBaseRevision : class, IRevision
 {
     protected delegate void PostSaveEventHandler();
+    [SuppressMessage("Design", "MA0046:Use EventHandler<T> to declare events")]
     protected event PostSaveEventHandler PostSaveEvent = () => { };
 
     public virtual FieldChangeIgnoranceDelegates UserFieldChangeIgnorance =>

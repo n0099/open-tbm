@@ -44,6 +44,8 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "MA0007:Add a comma after the last value")]
 [assembly: SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
 [assembly: SuppressMessage("Usage", "CC0057:Unused parameters")]
+[assembly: SuppressMessage("Usage", "MA0001:StringComparison is missing")]
+[assembly: SuppressMessage("Usage", "MA0002:IEqualityComparer<string> or IComparer<string> is missing", Justification = "https://stackoverflow.com/questions/56478995/default-stringcomparer-used-by-dictionarystring-t")]
 [assembly: SuppressMessage("Usage", "MA0004:Use Task.ConfigureAwait")]
 [assembly: SuppressMessage("Usage", "MA0006:Use String.Equals instead of equality operator")]
 [assembly: SuppressMessage("Usage", "MA0015:Specify the parameter name in ArgumentException")]

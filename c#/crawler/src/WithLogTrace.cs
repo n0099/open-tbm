@@ -1,15 +1,23 @@
 namespace tbm.Crawler;
 
-public abstract class WithLogTrace
+#pragma warning disable S3881 // "IDisposable" should be implemented correctly
+public abstract class WithLogTrace : IDisposable
+#pragma warning restore S3881 // "IDisposable" should be implemented correctly
 {
     private readonly IConfigurationSection _config;
-    private readonly Timer _timerLogTrace = new() {Enabled = true};
+    private readonly Timer _timer = new() {Enabled = true};
 
     protected WithLogTrace(IConfiguration config, string section)
     {
         _config = config.GetSection(section).GetSection("LogTrace");
-        _timerLogTrace.Interval = _config.GetValue("LogIntervalMs", 1000);
-        _timerLogTrace.Elapsed += (_, _) => LogTrace();
+        _timer.Interval = _config.GetValue("LogIntervalMs", 1000);
+        _timer.Elapsed += (_, _) => LogTrace();
+    }
+
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        _timer.Dispose();
     }
 
     protected abstract void LogTrace();
@@ -17,7 +25,7 @@ public abstract class WithLogTrace
     protected bool ShouldLogTrace()
     {
         if (!_config.GetValue("Enabled", false)) return false;
-        _timerLogTrace.Interval = _config.GetValue("LogIntervalMs", 1000);
+        _timer.Interval = _config.GetValue("LogIntervalMs", 1000);
         return true;
     }
 }

@@ -34,7 +34,7 @@ public class JointRecognizer(
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
-    public IEnumerable<Either<ImageId, IRecognitionResult>> RecognizeMatrices
+    public List<Either<ImageId, IRecognitionResult>> RecognizeMatrices
         (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         var recognizedEithersViaPaddleOcr = _paddleOcrRecognizerAndDetector
@@ -63,7 +63,8 @@ public class JointRecognizer(
                 .Lefts()
                 .Concat(detectedEithers.Lefts())
                 .Concat(recognizedEithersViaTesseract.Lefts())
-                .Select(Either<ImageId, IRecognitionResult>.Left));
+                .Select(Either<ImageId, IRecognitionResult>.Left))
+            .ToList();
     }
 
     public Dictionary<ImageKey, string> GetRecognizedTextLines
