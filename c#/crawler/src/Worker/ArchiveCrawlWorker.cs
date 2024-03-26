@@ -23,7 +23,7 @@ public class ArchiveCrawlWorker(
     private readonly string _forumName = "";
 
     // ReSharper disable once ConvertToConstant.Local
-    private readonly Fid _fid = 0;
+    private readonly Fid _fid = 1;
 
     // https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
     public static float GetCumulativeAverage(float currentCa, float previousCa, int currentIndex) =>

@@ -15,7 +15,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
     protected event PostSaveEventHandler PostSaveEvent = () => { };
 
     public virtual FieldChangeIgnoranceDelegates UserFieldChangeIgnorance =>
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     public string PostType { get; } = postType;
     protected ConcurrentDictionary<ulong, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);

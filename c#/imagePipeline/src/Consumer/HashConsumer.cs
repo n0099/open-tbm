@@ -8,6 +8,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
     private readonly FailedImageHandler _failedImageHandler;
     private readonly Dictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;
 
+    [SuppressMessage("Correctness", "SS004:Implement Equals() and GetHashcode() methods for a type used in a collection.")]
     public HashConsumer(FailedImageHandler failedImageHandler)
     {
         _failedImageHandler = failedImageHandler;

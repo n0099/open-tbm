@@ -5,7 +5,7 @@ public class ProtoBufRepeatedFieldJsonConverter<TProtoBuf>
 {
     public override RepeatedField<TProtoBuf> Read
         (ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-        throw new NotImplementedException();
+        throw new NotSupportedException();
 
     public override void Write
         (Utf8JsonWriter writer, RepeatedField<TProtoBuf> value, JsonSerializerOptions options) =>

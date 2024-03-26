@@ -73,11 +73,11 @@ public class ImageBatchConsumingWorker(
                 .ForEach(entry => entry.Property(selector).CurrentValue = true);
 
         logger.LogTrace("Start to consume {} image(s): [{}]",
-            imagesWithBytes.Count, string.Join(",", imagesInReply.Select(i => i.ImageId)));
+            imagesWithBytes.Count, string.Join(',', imagesInReply.Select(i => i.ImageId)));
         var sw = new Stopwatch();
         void LogStopwatch(string consumerType, IReadOnlyCollection<ImageId> imagesId) =>
             logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
-                sw.ElapsedMilliseconds, consumerType, imagesId.Count, string.Join(",", imagesId));
+                sw.ElapsedMilliseconds, consumerType, imagesId.Count, string.Join(',', imagesId));
 
         void ConsumeConsumer<TImage, TConsumer>(
             Expression<Func<ImageInReply, bool>> selector, IReadOnlyCollection<TImage> images,
@@ -96,7 +96,7 @@ public class ImageBatchConsumingWorker(
 
             if (failed.Count == 0) return;
             logger.LogError("Failed to {} for {} image(s): [{}]",
-                consumerType, failed.Count, string.Join(",", failed));
+                consumerType, failed.Count, string.Join(',', failed));
         }
 
         ConsumeConsumer(i => i.MetadataConsumed,
@@ -243,9 +243,9 @@ public class ImageBatchConsumingWorker(
                     .ExceptBy(recognizedTextLines.Select(i => i.ImageId), i => i.ImageId).ToList();
 
                 // insert their previously recognized lines into the table of current forum and script
-                db.ImageOcrLines.AddRange(recognizedTextLines.IntersectBy(
+                await db.ImageOcrLines.AddRangeAsync(recognizedTextLines.IntersectBy(
                     imagesInCurrentFid.Except(uniqueImagesInCurrentFid).Select(i => i.ImageId),
-                    i => i.ImageId));
+                    i => i.ImageId), stoppingToken);
                 recognizedTextLines.AddRange(await ConsumeByFidAndScript(db, fid, script, uniqueImagesInCurrentFid));
                 _ = await db.SaveChangesAsync(stoppingToken);
             }
@@ -272,10 +272,10 @@ public class ImageBatchConsumingWorker(
             var failed = imagesId.Failed.ToList();
             if (failed.Count != 0)
                 logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
-                    script, fid, failed.Count, string.Join(",", failed));
+                    script, fid, failed.Count, string.Join(',', failed));
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                 sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
-                string.Join(",", imagesInCurrentFid.Select(i => i.ImageId)));
+                string.Join(',', imagesInCurrentFid.Select(i => i.ImageId)));
 
             return ocrConsumer.RecognizedTextLines;
         }

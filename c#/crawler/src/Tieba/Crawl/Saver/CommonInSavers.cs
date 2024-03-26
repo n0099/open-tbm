@@ -9,7 +9,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
     protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
 
     protected virtual Dictionary<Type, RevisionUpsertDelegate>
-        RevisionUpsertDelegatesKeyBySplitEntityType => throw new NotImplementedException();
+        RevisionUpsertDelegatesKeyBySplitEntityType => throw new NotSupportedException();
 
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
         CrawlerDbContext db,
@@ -109,7 +109,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
             .ForEach(g => RevisionUpsertDelegatesKeyBySplitEntityType[g.Key](db, g));
     }
 
-    protected virtual NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => throw new NotImplementedException();
+    protected virtual NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => throw new NotSupportedException();
 
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)
     {

@@ -88,10 +88,10 @@ public class ForumModeratorRevisionCrawlWorker
                 }).Where(e => e.Rank == 1)
             .ToLinqToDB().ToList();
 
-        db.ForumModeratorRevisions.AddRange(revisions.ExceptBy(
+        await db.ForumModeratorRevisions.AddRangeAsync(revisions.ExceptBy(
             existingLatestRevisions.Select(e => (e.Portrait, e.ModeratorTypes)),
-            rev => (rev.Portrait, rev.ModeratorTypes)));
-        db.ForumModeratorRevisions.AddRange(existingLatestRevisions
+            rev => (rev.Portrait, rev.ModeratorTypes)), stoppingToken);
+        await db.ForumModeratorRevisions.AddRangeAsync(existingLatestRevisions
 
             // filter out revisions that recorded someone who resigned from moderators
             .Where(e => e.ModeratorTypes != "")
@@ -102,7 +102,7 @@ public class ForumModeratorRevisionCrawlWorker
                 Fid = fid,
                 Portrait = e.Portrait,
                 ModeratorTypes = "" // moderator only exists in DB means the user is no longer a moderator
-            }));
+            }), stoppingToken);
 
         _ = await db.SaveChangesAsync(stoppingToken);
         await transaction.CommitAsync(stoppingToken);

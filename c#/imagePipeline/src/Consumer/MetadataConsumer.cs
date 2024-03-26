@@ -40,17 +40,17 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 
     public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
-        IReadOnlyCollection<ImageWithBytes> imagesWithBytes,
+        IReadOnlyCollection<ImageWithBytes> imageKeysWithT,
         CancellationToken stoppingToken = default)
     {
         var metadataEithers = _failedImageHandler
-            .TrySelect(imagesWithBytes,
+            .TrySelect(imageKeysWithT,
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 GetImageMetaData(stoppingToken))
             .ToList();
         db.ImageMetadata.AddRange(metadataEithers.Rights());
         var failed = metadataEithers.Lefts().ToList();
-        return (failed, imagesWithBytes.Select(i => i.ImageInReply.ImageId).Except(failed));
+        return (failed, imageKeysWithT.Select(i => i.ImageInReply.ImageId).Except(failed));
     }
 
     private Func<ImageWithBytes, ImageMetadata> GetImageMetaData
@@ -299,7 +299,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 
         [GeneratedRegex(
             "^.*(?<dateTime>[0-9]{4}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(?!(上|下)午)?).*$",
-            RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+            RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 100)]
         private static partial Regex ExtractCommonExifDateTimeWithLeadingOrTrailingCharsRegex();
 
         [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]

@@ -4,12 +4,12 @@ public abstract class MatrixConsumer : IConsumer<ImageKeyWithMatrix>
 {
     public (IEnumerable<ImageId> Failed, IEnumerable<ImageId> Consumed) Consume(
         ImagePipelineDbContext db,
-        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithMatrix,
+        IReadOnlyCollection<ImageKeyWithMatrix> imageKeysWithT,
         CancellationToken stoppingToken = default)
     {
         // defensive clone to prevent any consumer mutate the original matrix given in param
         var clonedImageKeysWithMatrix =
-            imageKeysWithMatrix.Select(i => i with {Matrix = i.Matrix.Clone()}).ToList();
+            imageKeysWithT.Select(i => i with {Matrix = i.Matrix.Clone()}).ToList();
         try
         {
             var failed = ConsumeInternal(db, clonedImageKeysWithMatrix, stoppingToken).ToList();

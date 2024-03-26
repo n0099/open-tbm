@@ -45,7 +45,7 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
         {
             static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>
                 ExtractPortraitRegex().Match(portrait) is {Success: true} m
-                    ? (m.Groups[1].Value, Time.Parse(m.Groups[2].ValueSpan))
+                    ? (m.Groups["portrait"].Value, Time.Parse(m.Groups["timestamp"].ValueSpan))
                     : (portrait, null);
 
             var uid = el.Uid;
@@ -132,6 +132,6 @@ public partial class UserParserAndSaver(ILogger<UserParserAndSaver> logger)
         lock (UserIdLocks) if (_savedUsersId.Count != 0) UserIdLocks.ExceptWith(_savedUsersId);
     }
 
-    [GeneratedRegex("^(.+)\\?t=([0-9]+)$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
+    [GeneratedRegex("^(?<portrait>.+)\\?t=(?<timestamp>[0-9]+)$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
     private static partial Regex ExtractPortraitRegex();
 }
