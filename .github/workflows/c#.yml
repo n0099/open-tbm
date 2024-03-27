@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         project: [crawler, imagePipeline, shared, tbClient]
+      fail-fast: false
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:

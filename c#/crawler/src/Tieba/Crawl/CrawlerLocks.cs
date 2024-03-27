@@ -12,7 +12,7 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
     public static IEnumerable<string> RegisteredLocks { get; } = ["thread", "threadLate", "reply", "subReply"];
     public string LockType { get; } = lockType;
 
-    public ISet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
+    public IReadOnlySet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {
         var acquiredPages = pages.ToHashSet();
         lock (_crawling)
@@ -85,14 +85,14 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
         }
     }
 
-    public IDictionary<LockId, IDictionary<Page, FailureCount>> RetryAllFailed()
+    public IReadOnlyDictionary<LockId, IReadOnlyDictionary<Page, FailureCount>> RetryAllFailed()
     {
         lock (_failed)
         {
             var deepCloneOfFailed = _failed.ToDictionary(pair => pair.Key, pair =>
             {
                 lock (pair.Value)
-                    return (IDictionary<Page, FailureCount>)new Dictionary<Page, FailureCount>(pair.Value);
+                    return (IReadOnlyDictionary<Page, FailureCount>)new Dictionary<Page, FailureCount>(pair.Value);
             });
             _failed.Clear();
             return deepCloneOfFailed;

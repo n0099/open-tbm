@@ -8,7 +8,7 @@ public class ThreadParser : BaseParser<ThreadPost, Thread>
         requestFlag == CrawlRequestFlag.ThreadClientVersion602;
 
     protected override IEnumerable<ThreadPost> ParsePostsInternal
-        (IList<Thread> inPosts, IList<TbClient.User?> outUsers) => inPosts.Select(Convert);
+        (IReadOnlyList<Thread> inPosts, IList<TbClient.User?> outUsers) => inPosts.Select(Convert);
 
     protected override ThreadPost Convert(Thread inPost)
     {

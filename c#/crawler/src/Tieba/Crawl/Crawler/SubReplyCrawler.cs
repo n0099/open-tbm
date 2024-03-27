@@ -11,7 +11,7 @@ public class SubReplyCrawler(Tid tid, Pid pid) : BaseCrawler<SubReplyResponse, S
         return e;
     }
 
-    public override IList<SubReply> GetValidPosts(SubReplyResponse response, CrawlRequestFlag flag)
+    public override IReadOnlyList<SubReply> GetValidPosts(SubReplyResponse response, CrawlRequestFlag flag)
     {
         switch (response.Error.Errorno)
         {

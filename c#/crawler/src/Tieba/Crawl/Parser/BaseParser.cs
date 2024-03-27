@@ -5,7 +5,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     public void ParsePosts(
-        CrawlRequestFlag requestFlag, IList<TPostProtoBuf> inPosts,
+        CrawlRequestFlag requestFlag, IReadOnlyList<TPostProtoBuf> inPosts,
         out IDictionary<PostId, TPost> outPosts, out IList<TbClient.User> outUsers)
     {
         if (ShouldSkipParse(requestFlag))
@@ -29,7 +29,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
     // ReSharper disable once UnusedMemberInSuper.Global
     protected abstract TPost Convert(TPostProtoBuf inPost);
     protected abstract IEnumerable<TPost> ParsePostsInternal
-        (IList<TPostProtoBuf> inPosts, IList<TbClient.User?> outUsers);
+        (IReadOnlyList<TPostProtoBuf> inPosts, IList<TbClient.User?> outUsers);
     protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
     protected abstract PostId PostIdSelector(TPost post);
 }

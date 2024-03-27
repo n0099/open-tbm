@@ -13,7 +13,7 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
         return e;
     }
 
-    public override IList<Thread> GetValidPosts(ThreadResponse response, CrawlRequestFlag flag)
+    public override IReadOnlyList<Thread> GetValidPosts(ThreadResponse response, CrawlRequestFlag flag)
     {
         ValidateOtherErrorCode(response);
         return EnsureNonEmptyPostList(response,

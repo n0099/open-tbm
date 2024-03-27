@@ -29,7 +29,7 @@ public class RetryCrawlWorker(
         }
     }
 
-    private Func<KeyValuePair<CrawlerLocks.LockId, IDictionary<Page, FailureCount>>, Task> RetryFailed
+    private Func<KeyValuePair<CrawlerLocks.LockId, IReadOnlyDictionary<Page, FailureCount>>, Task> RetryFailed
         (string lockType, CancellationToken stoppingToken = default) => async failedPagesKeyByLockId =>
     {
         if (stoppingToken.IsCancellationRequested) return;
@@ -55,7 +55,7 @@ public class RetryCrawlWorker(
     };
 
     private async Task RetryThreadLate(
-        IDictionary<CrawlerLocks.LockId, IDictionary<Page, FailureCount>> failureCountWithPagesKeyByLockId,
+        IReadOnlyDictionary<CrawlerLocks.LockId, IReadOnlyDictionary<Page, FailureCount>> failureCountWithPagesKeyByLockId,
         CancellationToken stoppingToken = default)
     {
         await using var threadLate = threadLateCrawlerAndSaverFactory();

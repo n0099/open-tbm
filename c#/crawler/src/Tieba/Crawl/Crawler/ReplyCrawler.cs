@@ -10,7 +10,7 @@ public class ReplyCrawler(Fid fid, Tid tid) : BaseCrawler<ReplyResponse, Reply>
         return e;
     }
 
-    public override IList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
+    public override IReadOnlyList<Reply> GetValidPosts(ReplyResponse response, CrawlRequestFlag flag)
     {
         if (response.Error.Errorno is 4 or 350008)
             throw new EmptyPostListException("Thread already deleted when crawling reply.");
