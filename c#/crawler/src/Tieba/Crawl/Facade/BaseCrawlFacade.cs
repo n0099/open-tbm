@@ -114,7 +114,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     protected virtual void PostParseHook(
         TResponse response,
         CrawlRequestFlag flag,
-        Dictionary<PostId, TPost> parsedPostsInResponse) { }
+        IDictionary<PostId, TPost> parsedPostsInResponse) { }
     protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
     protected virtual void PostCommitSaveHook(
         SaverChangeSet<TPost> savedPosts,

@@ -8,7 +8,7 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
 {
     protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
 
-    protected virtual Dictionary<Type, RevisionUpsertDelegate>
+    protected virtual IDictionary<Type, RevisionUpsertDelegate>
         RevisionUpsertDelegatesKeyBySplitEntityType => throw new NotSupportedException();
 
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(

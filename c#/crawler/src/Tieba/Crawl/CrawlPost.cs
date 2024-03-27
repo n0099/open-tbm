@@ -4,7 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl;
 #pragma warning disable SA1135 // Using directives should be qualified
 #pragma warning disable SA1200 // Using directives should be placed correctly
 using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
-using SavedThreadsList = List<SaverChangeSet<ThreadPost>>;
+using SavedThreadsList = IList<SaverChangeSet<ThreadPost>>;
 
 public class CrawlPost(
     Func<Owned<CrawlerDbContext.New>> dbContextFactory,
@@ -20,7 +20,7 @@ public class CrawlPost(
         (string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
-        var savedThreads = new SavedThreadsList();
+        var savedThreads = new List<SaverChangeSet<ThreadPost>>();
         Time minLatestReplyPostedAt;
         Page crawlingPage = 0;
 

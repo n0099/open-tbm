@@ -9,10 +9,10 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
 
-    public static List<string> RegisteredCrawlerLocks { get; } = ["thread", "threadLate", "reply", "subReply"];
+    public static IEnumerable<string> RegisteredCrawlerLocks { get; } = ["thread", "threadLate", "reply", "subReply"];
     public string LockType { get; } = lockType;
 
-    public HashSet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
+    public ISet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {
         var acquiredPages = pages.ToHashSet();
         lock (_crawling)
@@ -85,13 +85,14 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
         }
     }
 
-    public Dictionary<LockId, Dictionary<Page, FailureCount>> RetryAllFailed()
+    public IDictionary<LockId, IDictionary<Page, FailureCount>> RetryAllFailed()
     {
         lock (_failed)
         {
             var deepCloneOfFailed = _failed.ToDictionary(pair => pair.Key, pair =>
             {
-                lock (pair.Value) return new Dictionary<Page, FailureCount>(pair.Value);
+                lock (pair.Value)
+                    return (IDictionary<Page, FailureCount>)new Dictionary<Page, FailureCount>(pair.Value);
             });
             _failed.Clear();
             return deepCloneOfFailed;

@@ -17,4 +17,12 @@ public static class ExtensionMethods
     public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number);
     public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number);
     public static IQueryable<T> ForUpdate<T>(this IQueryable<T> query) => query.TagWith("ForUpdate");
+
+    /// <see>https://stackoverflow.com/questions/13158121/how-to-add-a-range-of-items-to-an-ilist/33104162#33104162</see>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
+    public static void AddRange<T>(this IList<T> list, IEnumerable<T> items)
+    {
+        if (list is List<T> asList) asList.AddRange(items);
+        else foreach (var item in items) list.Add(item);
+    }
 }

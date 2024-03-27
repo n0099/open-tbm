@@ -50,7 +50,7 @@ public sealed partial class PaddleOcrRecognizerAndDetector : IDisposable
 public sealed partial class PaddleOcrRecognizerAndDetector
 {
     public IEnumerable<Either<ImageId, IEnumerable<PaddleOcrRecognitionResult>>> RecognizeMatrices(
-        Dictionary<ImageKey, Mat> matricesKeyByImageKey,
+        IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
         FailedImageHandler failedImageHandler,
         CancellationToken stoppingToken = default)
     {
@@ -68,7 +68,7 @@ public sealed partial class PaddleOcrRecognizerAndDetector
     }
 
     public IEnumerable<Either<ImageId, IEnumerable<DetectionResult>>> DetectMatrices(
-        Dictionary<ImageKey, Mat> matricesKeyByImageKey,
+        IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
         FailedImageHandler failedImageHandler,
         CancellationToken stoppingToken = default)
     {

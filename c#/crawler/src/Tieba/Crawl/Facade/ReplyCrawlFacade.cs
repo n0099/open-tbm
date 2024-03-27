@@ -17,7 +17,7 @@ public class ReplyCrawlFacade(
     protected override void PostParseHook(
         ReplyResponse response,
         CrawlRequestFlag flag,
-        Dictionary<PostId, ReplyPost> parsedPostsInResponse)
+        IDictionary<PostId, ReplyPost> parsedPostsInResponse)
     {
         parsedPostsInResponse.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;

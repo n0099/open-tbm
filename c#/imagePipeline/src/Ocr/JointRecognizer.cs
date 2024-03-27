@@ -34,8 +34,8 @@ public class JointRecognizer(
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
 
-    public List<Either<ImageId, IRecognitionResult>> RecognizeMatrices
-        (Dictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
+    public IReadOnlyList<Either<ImageId, IRecognitionResult>> RecognizeMatrices
+        (IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         var recognizedEithersViaPaddleOcr = _paddleOcrRecognizerAndDetector
             .RecognizeMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken).ToList();
@@ -67,7 +67,7 @@ public class JointRecognizer(
             .ToList();
     }
 
-    public Dictionary<ImageKey, string> GetRecognizedTextLines
+    public IReadOnlyDictionary<ImageKey, string> GetRecognizedTextLines
         (IEnumerable<IRecognitionResult> recognizedResults) => recognizedResults
         .GroupBy(result => result.ImageKey)
         .ToDictionary(g => g.Key, g =>

@@ -13,7 +13,7 @@ public class ThreadLateCrawlerAndSaver(
     public delegate ThreadLateCrawlerAndSaver New(Fid fid);
 
     public async Task CrawlThenSave(
-        Dictionary<Tid, FailureCount> failureCountsKeyByTid,
+        IDictionary<Tid, FailureCount> failureCountsKeyByTid,
         CancellationToken stoppingToken = default)
     {
         var threads = await Task.WhenAll(
