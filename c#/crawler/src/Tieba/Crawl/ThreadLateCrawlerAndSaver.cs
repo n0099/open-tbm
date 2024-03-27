@@ -39,7 +39,7 @@ public class ThreadLateCrawlerAndSaver(
         try
         {
             var json = await requester.RequestJson(
-                $"{ClientRequester.LegacyClientApiDomain}/c/f/pb/page", "8.8.8.8", new()
+                $"{ClientRequester.LegacyClientApiDomain}/c/f/pb/page", "8.8.8.8", new Dictionary<string, string>
                 {
                     {"kz", tid.ToString(CultureInfo.InvariantCulture)},
                     {"pn", "1"},

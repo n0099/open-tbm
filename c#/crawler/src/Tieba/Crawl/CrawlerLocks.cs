@@ -9,7 +9,7 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
 
-    public static IEnumerable<string> RegisteredCrawlerLocks { get; } = ["thread", "threadLate", "reply", "subReply"];
+    public static IEnumerable<string> RegisteredLocks { get; } = ["thread", "threadLate", "reply", "subReply"];
     public string LockType { get; } = lockType;
 
     public ISet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)

@@ -30,7 +30,7 @@ public sealed class SonicPusher : IDisposable
         float GetElapsedMs() => (float)stopwatch.ElapsedTicks / Stopwatch.Frequency * 1000;
 
         if (content == null) return GetElapsedMs();
-        var contentTexts = string.Join(" ", content
+        var contentTexts = string.Join(' ', content
                 .Where(c => c.Type != 2) // filter out alt text of emoticons
                 .Select(c => c.Text))
             .Trim()

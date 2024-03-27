@@ -137,5 +137,5 @@ public sealed partial class TesseractRecognizer
         Cv2.WarpAffine(src, src, rotationMat, boundingRect.Size, InterpolationFlags.Nearest);
     }
 
-    public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat PreprocessedTextBoxMat);
+    public record PreprocessedTextBox(ImageKey ImageKey, RotatedRect TextBox, Mat Mat);
 }

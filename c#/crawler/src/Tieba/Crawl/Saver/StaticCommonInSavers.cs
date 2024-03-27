@@ -91,6 +91,7 @@ public abstract class StaticCommonInSavers
             return false;
         });
 
+    [SuppressMessage("Performance", "CA1859:Use concrete types when possible for improved performance")]
     private static IDictionary<Type, IDictionary<string, PropertyInfo>> GetPropsKeyByType(IEnumerable<Type> types) =>
         types.ToDictionary(type => type, type =>
             (IDictionary<string, PropertyInfo>)type.GetProperties().ToDictionary(prop => prop.Name));

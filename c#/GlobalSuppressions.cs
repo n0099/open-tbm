@@ -30,6 +30,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Miscellaneous Design", "AV1210:Catch a specific exception instead of Exception, SystemException or ApplicationException")]
 [assembly: SuppressMessage("Naming", "AV1704:Identifier contains one or more digits in its name")]
 [assembly: SuppressMessage("Naming", "AV1706:Identifier contains an abbreviation or is too short")]
+[assembly: SuppressMessage("Naming", "AV1745:Name of extension method container class should end with 'Extensions'")]
 [assembly: SuppressMessage("Naming", "AV1755:Name of async method should end with Async or TaskAsync")]
 [assembly: SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 [assembly: SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]

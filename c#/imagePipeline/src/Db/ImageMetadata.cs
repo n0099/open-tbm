@@ -43,6 +43,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public class ByteSize : IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
+        [SuppressMessage("Naming", "AV1710:Member name includes the name of its containing type")]
         public uint DownloadedByteSize { get; set; }
     }
 

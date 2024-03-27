@@ -9,6 +9,7 @@ public class JointRecognizer(
     FailedImageHandler failedImageHandler,
     string script)
 {
+    [SuppressMessage("Usage", "CC0032:Dispose Fields Properly", Justification = "disposed by Autofac")]
     private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector =
         paddleOcrRecognizerAndDetectorFactory(script);
     private readonly Lazy<TesseractRecognizer> _tesseractRecognizer =
@@ -89,7 +90,7 @@ public class JointRecognizer(
                 .OrderBy(t => t.alignedY).ThenBy(t => t.X)
                 .GroupBy(t => t.alignedY, t => t.result)
                 .Select(groupByLine =>
-                    string.Join("\n", groupByLine.Select(result => result.Text.Trim())));
+                    string.Join('\n', groupByLine.Select(result => result.Text.Trim())));
 
             // https://unicode.org/reports/tr15/
             return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC);

@@ -13,7 +13,7 @@ public class RetryCrawlWorker(
 {
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        foreach (var lockType in CrawlerLocks.RegisteredCrawlerLocks)
+        foreach (var lockType in CrawlerLocks.RegisteredLocks)
         {
             if (stoppingToken.IsCancellationRequested) return;
             var failed = registeredLocksLookup[lockType].RetryAllFailed();
