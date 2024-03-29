@@ -4,14 +4,13 @@ namespace tbm.ImagePipeline.Ocr;
 
 public class JointRecognizer(
     IConfiguration config,
-    PaddleOcrRecognizerAndDetector.New paddleOcrRecognizerAndDetectorFactory,
+    PaddleOcrProvider.New paddleOcrProviderFactory,
     TesseractRecognizer.New tesseractRecognizerFactory,
     FailedImageHandler failedImageHandler,
     string script)
 {
     [SuppressMessage("Usage", "CC0032:Dispose Fields Properly", Justification = "disposed by Autofac")]
-    private readonly PaddleOcrRecognizerAndDetector _paddleOcrRecognizerAndDetector =
-        paddleOcrRecognizerAndDetectorFactory(script);
+    private readonly PaddleOcrProvider _paddleOcrProvider = paddleOcrProviderFactory(script);
     private readonly Lazy<TesseractRecognizer> _tesseractRecognizer =
         new(() => tesseractRecognizerFactory(script));
     private readonly IConfigurationSection _config = config.GetSection("OcrConsumer");
@@ -33,14 +32,14 @@ public class JointRecognizer(
     }
 
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
-        await _paddleOcrRecognizerAndDetector.Initialize(stoppingToken);
+        await _paddleOcrProvider.Initialize(stoppingToken);
 
     public IReadOnlyList<Either<ImageId, IRecognitionResult>> RecognizeMatrices
         (IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
-        var recognizedEithersViaPaddleOcr = _paddleOcrRecognizerAndDetector
+        var recognizedEithersViaPaddleOcr = _paddleOcrProvider
             .RecognizeMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken).ToList();
-        var detectedEithers = _paddleOcrRecognizerAndDetector
+        var detectedEithers = _paddleOcrProvider
             .DetectMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken).ToList();
         var recognizedResultsViaPaddleOcr =
             recognizedEithersViaPaddleOcr.Rights().SelectMany(i => i).ToList();
@@ -98,7 +97,7 @@ public class JointRecognizer(
 
     private IEnumerable<Either<ImageId, TesseractRecognitionResult>> RecognizeMatricesViaTesseract(
         IReadOnlyCollection<PaddleOcrRecognitionResult> recognizedResultsViaPaddleOcr,
-        IEnumerable<PaddleOcrRecognizerAndDetector.DetectionResult> detectionResults,
+        IEnumerable<PaddleOcrDetector.DetectionResult> detectionResults,
         IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
         CancellationToken stoppingToken = default)
     {

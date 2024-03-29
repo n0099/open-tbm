@@ -76,7 +76,7 @@ public partial class EntryPoint : BaseEntryPoint
         }).SingleInstance();
 
         var config = context.Configuration.GetSection("OcrConsumer");
-        var paddleOcr = builder.RegisterType<PaddleOcrRecognizerAndDetector>();
+        var paddleOcr = builder.RegisterType<PaddleOcrProvider>();
         if (!config.GetSection("PaddleOcr").GetValue("DisposeAfterEachBatch", false))
             paddleOcr.SingleInstance();
         var tesseract = builder.RegisterType<TesseractRecognizer>();

@@ -1,24 +1,31 @@
 using Sdcb.PaddleInference;
 using Sdcb.PaddleOCR;
 using Sdcb.PaddleOCR.Models.Online;
+using static tbm.ImagePipeline.Ocr.PaddleOcrDetector;
 
 namespace tbm.ImagePipeline.Ocr;
 
-public sealed partial class PaddleOcrRecognizerAndDetector : IDisposable
+public sealed partial class PaddleOcrProvider : IDisposable
 {
     private readonly IConfigurationSection _config;
     private readonly string _script;
+    private readonly PaddleOcrDetector.New _paddleOcrDetectorFactory;
+    private readonly PaddleOcrRecognizer.New _paddleOcrRecognizerFactory;
     private PaddleOcrAll? _ocr;
 
-    public PaddleOcrRecognizerAndDetector(IConfiguration config, string script)
+    public PaddleOcrProvider(IConfiguration config, string script,
+        PaddleOcrDetector.New paddleOcrDetectorFactory,
+        PaddleOcrRecognizer.New paddleOcrRecognizerFactory)
     {
         _config = config.GetSection("OcrConsumer:PaddleOcr");
         _script = script;
         Settings.GlobalModelDirectory =
             _config.GetValue("ModelPath", "./PaddleOcrModels") ?? "./PaddleOcrModels";
+        _paddleOcrDetectorFactory = paddleOcrDetectorFactory;
+        _paddleOcrRecognizerFactory = paddleOcrRecognizerFactory;
     }
 
-    public delegate PaddleOcrRecognizerAndDetector New(string script);
+    public delegate PaddleOcrProvider New(string script);
 
     public void Dispose() => _ocr?.Dispose();
 
@@ -47,7 +54,7 @@ public sealed partial class PaddleOcrRecognizerAndDetector : IDisposable
             Enable180Classification = true
         };
 }
-public sealed partial class PaddleOcrRecognizerAndDetector
+public sealed partial class PaddleOcrProvider
 {
     public IEnumerable<Either<ImageId, IEnumerable<PaddleOcrRecognitionResult>>> RecognizeMatrices(
         IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey,
@@ -55,16 +62,8 @@ public sealed partial class PaddleOcrRecognizerAndDetector
         CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
-        return failedImageHandler.TrySelect(matricesKeyByImageKey,
-            pair => pair.Key.ImageId,
-            pair =>
-            {
-                stoppingToken.ThrowIfCancellationRequested();
-                return _ocr.Run(pair.Value).Regions.Select(region => new PaddleOcrRecognitionResult(
-                    pair.Key, region.Rect, region.Text,
-                    (region.Score * 100).NanToZero().RoundToByte(),
-                    _ocr.Recognizer.Model.Version));
-            });
+        return _paddleOcrRecognizerFactory(_ocr)
+            .RecognizeMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken);
     }
 
     public IEnumerable<Either<ImageId, IEnumerable<DetectionResult>>> DetectMatrices(
@@ -73,14 +72,7 @@ public sealed partial class PaddleOcrRecognizerAndDetector
         CancellationToken stoppingToken = default)
     {
         Guard.IsNotNull(_ocr);
-        return failedImageHandler.TrySelect(matricesKeyByImageKey,
-            pair => pair.Key.ImageId,
-            pair =>
-            {
-                stoppingToken.ThrowIfCancellationRequested();
-                return _ocr.Detector.Run(pair.Value).Select(rect => new DetectionResult(pair.Key, rect));
-            });
+        return _paddleOcrDetectorFactory(_ocr.Detector)
+            .DetectMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken);
     }
-
-    public record DetectionResult(ImageKey ImageKey, RotatedRect TextBox);
 }
