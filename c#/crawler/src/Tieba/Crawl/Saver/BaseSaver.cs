@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>> logger)
+#pragma warning disable S1939 // Inheritance list should not be redundant
     : SaverWithRevision<TBaseRevision>, IFieldChangeIgnorance
+#pragma warning restore S1939 // Inheritance list should not be redundant
     where TBaseRevision : class, IRevision
 {
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(

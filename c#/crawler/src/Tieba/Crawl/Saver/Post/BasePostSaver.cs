@@ -21,6 +21,7 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);
 
+    [SuppressMessage("Misc", "AV1225:Method that raises an event should be protected virtual and be named 'On' followed by event name")]
     public void OnPostSaveEvent() => PostSaveEvent();
     public abstract SaverChangeSet<TPost> Save(CrawlerDbContext db);
 

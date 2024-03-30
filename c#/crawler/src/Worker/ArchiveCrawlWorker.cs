@@ -118,8 +118,8 @@ public class ArchiveCrawlWorker(
         (Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
         await using var facadeFactory = threadArchiveCrawlFacadeFactory();
-        var crawler = facadeFactory.Value(fid, forumName);
-        var savedThreads = (await crawler.CrawlPageRange(
+        var facade = facadeFactory.Value(fid, forumName);
+        var savedThreads = (await facade.CrawlPageRange(
             page, page, stoppingToken)).SaveCrawled(stoppingToken);
 
         // ReSharper disable once InvertIf
@@ -127,8 +127,8 @@ public class ArchiveCrawlWorker(
         {
             var failureCountsKeyByTid = savedThreads.NewlyAdded
                 .ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await using var threadLate = threadLateCrawlFacadeFactory();
-            await threadLate.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
+            await using var threadLateFacade = threadLateCrawlFacadeFactory();
+            await threadLateFacade.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }
         return savedThreads;
     }
@@ -147,9 +147,9 @@ public class ArchiveCrawlWorker(
         {
             if (stoppingToken.IsCancellationRequested) return;
             await using var facadeFactory = replyCrawlFacadeFactory();
-            var crawler = facadeFactory.Value(fid, tid);
+            var facade = facadeFactory.Value(fid, tid);
             savedRepliesKeyByTid.SetIfNotNull(tid,
-                (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
+                (await facade.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
         }));
         return savedRepliesKeyByTid;
     }

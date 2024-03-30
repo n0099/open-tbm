@@ -30,8 +30,9 @@ public static partial class ExtensionMethods
 }
 public static partial class ExtensionMethods
 {
-    public static void RegisterImplementsOfBaseTypes(this ContainerBuilder builder, IEnumerable<Type> baseTypes) =>
-        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+    public static void RegisterImplementsOfBaseTypes
+        (this ContainerBuilder builder, Assembly assembly, IEnumerable<Type> baseTypes) =>
+        builder.RegisterAssemblyTypes(assembly)
             .Where(type => baseTypes.Any(baseType => baseType.IsSubTypeOfRawGeneric(type)))
             .AsSelf();
 

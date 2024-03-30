@@ -37,8 +37,8 @@ public class CrawlPost(
         {
             crawlingPage++;
             await using var facadeFactory = threadCrawlFacadeFactory();
-            var crawler = facadeFactory.Value(fid, forumName);
-            var currentPageChangeSet = (await crawler.CrawlPageRange(
+            var facade = facadeFactory.Value(fid, forumName);
+            var currentPageChangeSet = (await facade.CrawlPageRange(
                 crawlingPage, crawlingPage, stoppingToken)).SaveCrawled(stoppingToken);
             if (currentPageChangeSet != null)
             {
@@ -60,8 +60,8 @@ public class CrawlPost(
             if (stoppingToken.IsCancellationRequested) return;
             var failureCountsKeyByTid = threads.NewlyAdded
                 .ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await using var threadLateFactory = threadLateCrawlFacadeFactory();
-            await threadLateFactory.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
+            await using var threadLateFacade = threadLateCrawlFacadeFactory();
+            await threadLateFacade.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }));
 
         return savedThreads;
@@ -89,10 +89,10 @@ public class CrawlPost(
         {
             if (stoppingToken.IsCancellationRequested) return;
             await using var facadeFactory = replyCrawlFacadeFactory();
-            var crawler = facadeFactory.Value(fid, tid).AddExceptionHandler(
+            var facade = facadeFactory.Value(fid, tid).AddExceptionHandler(
                 SaveThreadMissingFirstReply(fid, tid, savedThreads).Invoke);
             savedRepliesKeyByTid.SetIfNotNull(tid,
-                (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
+                (await facade.CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken));
         }));
         return savedRepliesKeyByTid;
     }
@@ -121,8 +121,8 @@ public class CrawlPost(
             if (stoppingToken.IsCancellationRequested) return;
             var (tid, pid) = t;
             await using var facadeFactory = subReplyCrawlFacadeFactory();
-            var crawler = facadeFactory.Value(fid, tid, pid);
-            _ = (await crawler.CrawlPageRange(1, stoppingToken: stoppingToken))
+            var facade = facadeFactory.Value(fid, tid, pid);
+            _ = (await facade.CrawlPageRange(1, stoppingToken: stoppingToken))
                 .SaveCrawled(stoppingToken);
         }));
     }

@@ -162,7 +162,7 @@ public class ImageBatchConsumingWorker(
 #pragma warning restore IDISP001 // Dispose created
             return frameMat.Empty()
                 ? throw new InvalidOperationException(
-                    $"Failed to decode frame {frameIndex.ToString(CultureInfo.InvariantCulture)} of image {imageId}.")
+                    $"Failed to decode frame {frameIndex} of image {imageId}.")
                 : new(imageId, (uint)frameIndex, frameMat);
         }
 

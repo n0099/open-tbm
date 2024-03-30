@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Design", "CC0120:Your Switch maybe include default clause")]
 [assembly: SuppressMessage("Design", "MA0048:File name must match type name")]
 [assembly: SuppressMessage("Design", "MA0051:Method is too long")]
+[assembly: SuppressMessage("Design", "MA0076:Do not use implicit culture-sensitive ToString in interpolated strings", Justification = "https://stackoverflow.com/questions/8492449/is-int32-tostring-culture-specific")]
 [assembly: SuppressMessage("Documentation", "AV2305:Missing XML comment for internally visible type, member or parameter")]
 [assembly: SuppressMessage("Framework", "AV2220:Simple query should be replaced by extension method call")]
 [assembly: SuppressMessage("Maintainability", "AV1500:Member or local function contains too many statements")]

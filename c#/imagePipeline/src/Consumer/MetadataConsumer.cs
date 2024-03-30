@@ -290,7 +290,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                       ?? ParseAsUnixTimestamp(exifDateTime)
                       ?? throw new ArgumentException(
                           $"Failed to parse provided EXIF date time \"{exifDateTime}\""
-                          + $" with fractional seconds {fractionalSeconds.ToString(CultureInfo.InvariantCulture)}.");
+                          + $" with fractional seconds {fractionalSeconds}.");
             return fractionalSeconds == 0 ? ret : ret with
             {
                 DateTime = ret.DateTime.AddSeconds(fractionalSeconds / Math.Pow(10, CountDigits(fractionalSeconds)))
@@ -376,6 +376,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 }
                 : null;
 
+        [SuppressMessage("Performance", "CA1852:Seal internal types")]
         public record DateTimeAndOffset(DateTime DateTime, string? Offset);
     }
 }

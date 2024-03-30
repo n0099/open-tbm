@@ -53,7 +53,7 @@ public partial class EntryPoint : BaseEntryPoint
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
-        builder.RegisterImplementsOfBaseTypes([typeof(IConsumer<>)]);
+        builder.RegisterImplementsOfBaseTypes(typeof(EntryPoint).Assembly, [typeof(IConsumer<>)]);
         builder.RegisterType<ImagePipelineDbContext>();
         builder.RegisterType<JointRecognizer>();
         builder.RegisterType<ImageRequester>();

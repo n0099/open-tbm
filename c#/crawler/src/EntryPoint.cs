@@ -34,10 +34,10 @@ public class EntryPoint : BaseEntryPoint
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
-        builder.RegisterImplementsOfBaseTypes(
+        builder.RegisterImplementsOfBaseTypes(typeof(EntryPoint).Assembly,
         [
             typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
-            typeof(BaseParser<,>), typeof(CommonInSavers<>)
+            typeof(BasePostParser<,>), typeof(BaseSaver<>)
         ]);
         builder.RegisterType<CrawlerDbContext>();
         builder.RegisterType<ClientRequester>();

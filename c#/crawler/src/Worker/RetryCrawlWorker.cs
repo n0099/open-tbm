@@ -58,7 +58,7 @@ public class RetryCrawlWorker(
         IReadOnlyDictionary<CrawlerLocks.LockId, IReadOnlyDictionary<Page, FailureCount>> failureCountWithPagesKeyByLockId,
         CancellationToken stoppingToken = default)
     {
-        await using var threadLate = threadLateCrawlFacadeFactory();
+        await using var threadLateFacade = threadLateCrawlFacadeFactory();
         foreach (var tidGroupByFid in failureCountWithPagesKeyByLockId
                      .Keys.GroupBy(lockId => lockId.Fid, lockId => lockId.Tid))
         {
@@ -71,7 +71,7 @@ public class RetryCrawlWorker(
                 .Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
             logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",
                 fid, Helper.UnescapedJsonSerialize(tidGroupByFid));
-            await threadLate.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
+            await threadLateFacade.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }
     }
 
@@ -95,9 +95,9 @@ public class RetryCrawlWorker(
 
         logger.LogTrace("Retrying previous failed {} pages in thread crawl for fid={}, forumName={}",
             failureCount, fid, forumName);
-        await using var crawlerFactory = threadCrawlFacadeFactory();
-        var crawler = crawlerFactory.Value(fid, forumName);
-        var savedThreads = await crawler.RetryThenSave(pages, failureCountSelector, stoppingToken);
+        await using var facadeFactory = threadCrawlFacadeFactory();
+        var facade = facadeFactory.Value(fid, forumName);
+        var savedThreads = await facade.RetryThenSave(pages, failureCountSelector, stoppingToken);
         if (savedThreads == null) return;
         var savedReplies = await crawlPost.CrawlReplies
             ([savedThreads], fid, stoppingToken);
@@ -113,9 +113,9 @@ public class RetryCrawlWorker(
     {
         logger.LogTrace("Retrying previous failed {} pages reply crawl for fid={}, tid={}",
             failureCount, fid, tid);
-        await using var crawlerFactory = replyCrawlFacadeFactory();
-        var crawler = crawlerFactory.Value(fid, tid);
-        var savedReplies = await crawler.RetryThenSave(pages, failureCountSelector, stoppingToken);
+        await using var facadeFactory = replyCrawlFacadeFactory();
+        var facade = facadeFactory.Value(fid, tid);
+        var savedReplies = await facade.RetryThenSave(pages, failureCountSelector, stoppingToken);
         if (savedReplies == null) return;
         var savedRepliesKeyByTid = new Dictionary<PostId, SaverChangeSet<ReplyPost>> {{tid, savedReplies}};
         await crawlPost.CrawlSubReplies(savedRepliesKeyByTid, fid, stoppingToken);
@@ -130,8 +130,8 @@ public class RetryCrawlWorker(
     {
         logger.LogTrace("Retrying previous failed {} pages sub reply crawl for fid={}, tid={}, pid={}",
             failureCount, fid, tid, pid);
-        await using var crawlerFactory = subReplyCrawlFacadeFactory();
-        var crawler = crawlerFactory.Value(fid, tid, pid);
-        _ = await crawler.RetryThenSave(pages, failureCountSelector, stoppingToken);
+        await using var facadeFactory = subReplyCrawlFacadeFactory();
+        var facade = facadeFactory.Value(fid, tid, pid);
+        _ = await facade.RetryThenSave(pages, failureCountSelector, stoppingToken);
     }
 }
