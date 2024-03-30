@@ -34,12 +34,12 @@ public partial class UserSaver
 public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<Uid, User> users)
     : CommonInSavers<BaseUserRevision>(logger)
 {
-    public delegate UserSaver New(ConcurrentDictionary<Uid, User> users);
-
     private static readonly HashSet<Uid> UserIdLocks = [];
     private readonly List<Uid> _savedUsersId = [];
 
-    public void SaveUsers(
+    public delegate UserSaver New(ConcurrentDictionary<Uid, User> users);
+
+    public void Save(
         CrawlerDbContext db,
         string postType,
         FieldChangeIgnoranceDelegates userFieldChangeIgnorance)

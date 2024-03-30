@@ -1,7 +1,7 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser;
 
 public partial class ReplyParser(ILogger<ReplyParser> logger)
-    : BaseParser<ReplyPost, Reply>
+    : BasePostParser<ReplyPost, Reply>
 {
     // length with 24 char is only appeared in legacy replies
     [GeneratedRegex("^(?:[0-9a-f]{40}|[0-9a-f]{24})$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
@@ -9,7 +9,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
 
     protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
-    protected override IEnumerable<ReplyPost> ParsePostsInternal
+    protected override IEnumerable<ReplyPost> ParseInternal
         (IReadOnlyList<Reply> inPosts, IList<TbClient.User?> outUsers) => inPosts.Select(Convert);
 
     protected override ReplyPost Convert(Reply inPost)

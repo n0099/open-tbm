@@ -1,23 +1,25 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class ThreadCrawlFacade(
-        ThreadCrawler.New crawler,
-        ThreadParser parser,
-        ThreadSaver.New saver,
-        UserSaver.New userSaver,
-        UserParser.New userParser,
-        IIndex<string, CrawlerLocks> locks,
+        ThreadCrawler.New crawlerFactory,
+        string forumName,
         Fid fid,
-        string forumName)
-    : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
-        (crawler(forumName), parser, saver.Invoke, userSaver.Invoke, userParser.Invoke, locks["thread"], new(fid), fid)
+        IIndex<string, CrawlerLocks> locks,
+        ThreadParser postParser,
+        ThreadSaver.New postSaverFactory,
+        UserParser.New userParserFactory,
+        UserSaver.New userSaverFactory)
+    : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>(
+        crawlerFactory(forumName), fid, new(fid), locks["thread"],
+        postParser, postSaverFactory.Invoke,
+        userParserFactory.Invoke, userSaverFactory.Invoke)
 {
     private readonly Dictionary<Uid, User> _latestRepliers = [];
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
     protected override void BeforeCommitSaveHook(CrawlerDbContext db, UserSaver userSaver)
-    { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
+    { // BeforeCommitSaveHook() should get invoked after UserSaver.Save() by the base.SaveCrawled()
         // so only latest repliers that not exists in parsed users are being inserted
         // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
 
@@ -74,7 +76,7 @@ public class ThreadCrawlFacade(
         var data = response.Data;
         if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
         if (flag != CrawlRequestFlag.None) return;
-        UserParser.ParseUsers(data.UserList);
+        UserParser.Parse(data.UserList);
         UserParser.ResetUsersIcon();
         ParseLatestRepliers(data.ThreadList);
 

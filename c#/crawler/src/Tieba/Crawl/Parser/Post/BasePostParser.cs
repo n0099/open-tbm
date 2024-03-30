@@ -1,10 +1,10 @@
-namespace tbm.Crawler.Tieba.Crawl.Parser;
+namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
-public abstract class BaseParser<TPost, TPostProtoBuf>
+public abstract class BasePostParser<TPost, TPostProtoBuf>
     where TPost : class, IPost
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
-    public void ParsePosts(
+    public void Parse(
         CrawlRequestFlag requestFlag, IReadOnlyList<TPostProtoBuf> inPosts,
         out IDictionary<PostId, TPost> outPosts, out IList<TbClient.User> outUsers)
     {
@@ -15,7 +15,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
             return;
         }
         var nullableUsers = new List<TbClient.User?>();
-        outPosts = ParsePostsInternal(inPosts, nullableUsers).ToDictionary(PostIdSelector, post => post);
+        outPosts = ParseInternal(inPosts, nullableUsers).ToDictionary(PostIdSelector, post => post);
         if (outPosts.Values.Any(p => p.AuthorUid == 0))
             throw new TiebaException(shouldRetry: true,
                 "Value of IPost.AuthorUid is the protoBuf default value 0.");
@@ -28,7 +28,7 @@ public abstract class BaseParser<TPost, TPostProtoBuf>
 
     // ReSharper disable once UnusedMemberInSuper.Global
     protected abstract TPost Convert(TPostProtoBuf inPost);
-    protected abstract IEnumerable<TPost> ParsePostsInternal
+    protected abstract IEnumerable<TPost> ParseInternal
         (IReadOnlyList<TPostProtoBuf> inPosts, IList<TbClient.User?> outUsers);
     protected virtual bool ShouldSkipParse(CrawlRequestFlag requestFlag) => false;
     protected abstract PostId PostIdSelector(TPost post);

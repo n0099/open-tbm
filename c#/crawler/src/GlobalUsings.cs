@@ -40,7 +40,9 @@ global using tbm.Crawler.Tieba.Crawl;
 global using tbm.Crawler.Tieba.Crawl.Crawler;
 global using tbm.Crawler.Tieba.Crawl.Facade;
 global using tbm.Crawler.Tieba.Crawl.Parser;
+global using tbm.Crawler.Tieba.Crawl.Parser.Post;
 global using tbm.Crawler.Tieba.Crawl.Saver;
+global using tbm.Crawler.Tieba.Crawl.Saver.Post;
 global using tbm.Crawler.Worker;
 global using tbm.Shared;
 

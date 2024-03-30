@@ -1,9 +1,9 @@
 using LinqKit;
 
-namespace tbm.Crawler.Tieba.Crawl.Saver;
+namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
-public abstract class BaseSaver<TPost, TBaseRevision>(
-        ILogger<BaseSaver<TPost, TBaseRevision>> logger,
+public abstract class BasePostSaver<TPost, TBaseRevision>(
+        ILogger<BasePostSaver<TPost, TBaseRevision>> logger,
         ConcurrentDictionary<PostId, TPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory,
         string postType)
@@ -22,9 +22,9 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);
 
     public void OnPostSaveEvent() => PostSaveEvent();
-    public abstract SaverChangeSet<TPost> SavePosts(CrawlerDbContext db);
+    public abstract SaverChangeSet<TPost> Save(CrawlerDbContext db);
 
-    protected SaverChangeSet<TPost> SavePosts<TRevision>(
+    protected SaverChangeSet<TPost> Save<TRevision>(
         CrawlerDbContext db,
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,

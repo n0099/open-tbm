@@ -1,12 +1,12 @@
 using LinqKit;
 
-namespace tbm.Crawler.Tieba.Crawl.Saver;
+namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public class SubReplySaver(
         ILogger<SubReplySaver> logger,
         ConcurrentDictionary<PostId, SubReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BaseSaver<SubReplyPost, BaseSubReplyRevision>(
+    : BasePostSaver<SubReplyPost, BaseSubReplyRevision>(
         logger, posts, authorRevisionSaverFactory, "subReply")
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
@@ -40,9 +40,9 @@ public class SubReplySaver(
         }
     };
 
-    public override SaverChangeSet<SubReplyPost> SavePosts(CrawlerDbContext db)
+    public override SaverChangeSet<SubReplyPost> Save(CrawlerDbContext db)
     {
-        var changeSet = SavePosts(db, sr => sr.Spid,
+        var changeSet = Save(db, sr => sr.Spid,
             sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
             PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
 

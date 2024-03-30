@@ -83,7 +83,7 @@ public abstract class StaticCommonInSavers
                 switch (propName)
                 { // empty string from response has been updated by ReplyCrawlFacade.PostParseHook()
                     case nameof(ThreadPost.Title) when oldValue is "":
-                    // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParsePostsInternal()
+                    // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParseInternal()
                     case nameof(ThreadPost.LatestReplierUid) when oldValue is null:
                         return true;
                 }

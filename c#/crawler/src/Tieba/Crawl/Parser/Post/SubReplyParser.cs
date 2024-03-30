@@ -1,10 +1,10 @@
-namespace tbm.Crawler.Tieba.Crawl.Parser;
+namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
-public class SubReplyParser : BaseParser<SubReplyPost, SubReply>
+public class SubReplyParser : BasePostParser<SubReplyPost, SubReply>
 {
     protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
 
-    protected override IEnumerable<SubReplyPost> ParsePostsInternal
+    protected override IEnumerable<SubReplyPost> ParseInternal
         (IReadOnlyList<SubReply> inPosts, IList<TbClient.User?> outUsers)
     {
         outUsers.AddRange(inPosts.Select(sr => sr.Author));

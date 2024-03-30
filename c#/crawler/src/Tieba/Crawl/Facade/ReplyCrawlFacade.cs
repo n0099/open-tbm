@@ -1,18 +1,20 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class ReplyCrawlFacade(
-        CrawlerDbContext.New dbContextFactory,
-        ReplyCrawler.New crawler,
-        ReplyParser parser,
-        ReplySaver.New saver,
-        UserSaver.New userSaver,
-        UserParser.New userParser,
-        SonicPusher pusher,
-        IIndex<string, CrawlerLocks> locks,
+        ReplyCrawler.New crawlerFactory,
         Fid fid,
-        Tid tid)
-    : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>
-        (crawler(fid, tid), parser, saver.Invoke, userSaver.Invoke, userParser.Invoke, locks["reply"], new(fid, tid), fid)
+        Tid tid,
+        IIndex<string, CrawlerLocks> locks,
+        ReplyParser postParser,
+        ReplySaver.New postSaverFactory,
+        UserParser.New userParserFactory,
+        UserSaver.New userSaverFactory,
+        CrawlerDbContext.New dbContextFactory,
+        SonicPusher sonicPusher)
+    : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>(
+        crawlerFactory(fid, tid), fid, new(fid, tid), locks["reply"],
+        postParser, postSaverFactory.Invoke,
+        userParserFactory.Invoke, userSaverFactory.Invoke)
 {
     public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
@@ -23,7 +25,7 @@ public class ReplyCrawlFacade(
     {
         parsedPostsInResponse.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
-        UserParser.ParseUsers(data.UserList);
+        UserParser.Parse(data.UserList);
         FillAuthorInfoBackToReply(data.UserList, parsedPostsInResponse.Values);
         if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
     }
@@ -31,7 +33,7 @@ public class ReplyCrawlFacade(
     protected override void PostCommitSaveHook(
         SaverChangeSet<ReplyPost> savedPosts,
         CancellationToken stoppingToken = default) =>
-        pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
+        sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
             p => p.Pid, p => p.OriginalContents, stoppingToken);
 
     // fill the values for some field of reply from user list which is out of post list

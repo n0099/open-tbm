@@ -3,14 +3,14 @@ namespace tbm.Crawler.Tieba.Crawl.Facade;
 #pragma warning disable S3881 // "IDisposable" should be implemented correctly
 public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
-        BaseCrawler<TResponse, TPostProtoBuf> crawler,
-        BaseParser<TPost, TPostProtoBuf> parser,
-        Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
-        Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory,
-        Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
-        CrawlerLocks locks,
-        CrawlerLocks.LockId lockId,
-        Fid fid)
+    BaseCrawler<TResponse, TPostProtoBuf> crawler,
+    Fid fid,
+    CrawlerLocks.LockId lockId,
+    CrawlerLocks locks,
+    BasePostParser<TPost, TPostProtoBuf> postParser,
+    Func<ConcurrentDictionary<PostId, TPost>, BasePostSaver<TPost, TBaseRevision>> postSaverFactory,
+    Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
+    Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory)
     : IDisposable
     where TPost : class, IPost
     where TBaseRevision : class, IRevision
@@ -46,11 +46,11 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         var db = DbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        var saver = saverFactory(Posts);
-        var savedPosts = Posts.IsEmpty ? null : saver.SavePosts(db);
+        var postSaver = postSaverFactory(Posts);
+        var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
 
         var userSaver = userSaverFactory(_users);
-        userSaver.SaveUsers(db, saver.PostType, saver.UserFieldChangeIgnorance);
+        userSaver.Save(db, postSaver.PostType, postSaver.UserFieldChangeIgnorance);
 
         BeforeCommitSaveHook(db, userSaver);
         try
@@ -62,7 +62,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         }
         finally
         {
-            saver.OnPostSaveEvent();
+            postSaver.OnPostSaveEvent();
             userSaver.PostSaveHook();
         }
         return savedPosts;
@@ -132,12 +132,12 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     {
         var (response, flag) = responseTuple;
         var postsInResponse = crawler.GetValidPosts(response, flag);
-        parser.ParsePosts(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
+        postParser.Parse(flag, postsInResponse, out var parsedPostsInResponse, out var postsEmbeddedUsers);
         parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
         if (flag == CrawlRequestFlag.None)
         {
             if (postsEmbeddedUsers.Count == 0 && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
-            if (postsEmbeddedUsers.Count != 0) UserParser.ParseUsers(postsEmbeddedUsers);
+            if (postsEmbeddedUsers.Count != 0) UserParser.Parse(postsEmbeddedUsers);
         }
         PostParseHook(response, flag, parsedPostsInResponse);
     }

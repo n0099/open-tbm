@@ -1,15 +1,18 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class ThreadArchiveCrawlFacade(
-        ThreadArchiveCrawler.New crawler,
-        ThreadParser parser,
-        ThreadSaver.New saver,
-        UserSaver.New userSaver,
-        UserParser.New userParser,
-        IIndex<string, CrawlerLocks> locks,
+        ThreadArchiveCrawler.New crawlerFactory,
+        string forumName,
         Fid fid,
-        string forumName)
-    : ThreadCrawlFacade(crawler.Invoke, parser, saver, userSaver.Invoke, userParser.Invoke, locks, fid, forumName)
+        IIndex<string, CrawlerLocks> locks,
+        ThreadParser postParser,
+        ThreadSaver.New postSaverFactory,
+        UserParser.New userParserFactory,
+        UserSaver.New userSaverFactory)
+    : ThreadCrawlFacade(
+        crawlerFactory.Invoke, forumName, fid, locks,
+        postParser, postSaverFactory,
+        userParserFactory.Invoke, userSaverFactory.Invoke)
 {
     public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 
@@ -20,7 +23,7 @@ public class ThreadArchiveCrawlFacade(
     { // the second respond with flag is as same as the first one so just skip it
         if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
         var data = response.Data;
-        UserParser.ParseUsers(data.ThreadList.Select(th => th.Author));
+        UserParser.Parse(data.ThreadList.Select(th => th.Author));
         ParseLatestRepliers(data.ThreadList);
         FillFromRequestingWith602(data.ThreadList);
 

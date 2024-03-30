@@ -1,18 +1,20 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class SubReplyCrawlFacade(
-        SubReplyCrawler.New crawler,
-        SubReplyParser parser,
-        SubReplySaver.New saver,
-        UserSaver.New userSaver,
-        UserParser.New userParser,
-        SonicPusher pusher,
-        IIndex<string, CrawlerLocks> locks,
+        SubReplyCrawler.New crawlerFactory,
         Fid fid,
         Tid tid,
-        Pid pid)
-    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>
-        (crawler(tid, pid), parser, saver.Invoke, userSaver.Invoke, userParser.Invoke, locks["subReply"], new(fid, tid, pid), fid)
+        Pid pid,
+        IIndex<string, CrawlerLocks> locks,
+        SubReplyParser postParser,
+        SubReplySaver.New postSaverFactory,
+        UserParser.New userParserFactory,
+        UserSaver.New userSaverFactory,
+        SonicPusher sonicPusher)
+    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>(
+        crawlerFactory(tid, pid), fid, new(fid, tid, pid), locks["subReply"],
+        postParser, postSaverFactory.Invoke,
+        userParserFactory.Invoke, userSaverFactory.Invoke)
 {
     public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 
@@ -35,6 +37,6 @@ public class SubReplyCrawlFacade(
     protected override void PostCommitSaveHook(
         SaverChangeSet<SubReplyPost> savedPosts,
         CancellationToken stoppingToken = default) =>
-        pusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "subReplies",
+        sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "subReplies",
             p => p.Spid, p => p.OriginalContents, stoppingToken);
 }

@@ -4,7 +4,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
 {
     public delegate UserParser New(ConcurrentDictionary<Uid, User> users);
 
-    public void ParseUsers(IEnumerable<TbClient.User> inUsers) =>
+    public void Parse(IEnumerable<TbClient.User> inUsers) =>
         inUsers.Select(el =>
         {
             static (string Portrait, uint? UpdateTime) ExtractPortrait(string portrait) =>

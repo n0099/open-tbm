@@ -7,7 +7,7 @@ public partial class ReplySaver(
         ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BaseSaver<ReplyPost, BaseReplyRevision>(
+    : BasePostSaver<ReplyPost, BaseReplyRevision>(
         logger, posts, authorRevisionSaverFactory, "reply")
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
@@ -19,7 +19,7 @@ public partial class ReplySaver(
             _ => false
         },
         Revision: (_, propName, oldValue, newValue) => propName switch
-        { // user icon will be null after UserParserAndSaver.ResetUsersIcon() get invoked
+        { // user icon will be null after UserParser.ResetUsersIcon() get invoked
             nameof(User.Icon) when oldValue is null && newValue is not null => true,
             _ => false
         });
@@ -44,9 +44,9 @@ public partial class ReplySaver(
         }
     };
 
-    public override SaverChangeSet<ReplyPost> SavePosts(CrawlerDbContext db)
+    public override SaverChangeSet<ReplyPost> Save(CrawlerDbContext db)
     {
-        var changeSet = SavePosts(db, r => r.Pid,
+        var changeSet = Save(db, r => r.Pid,
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
             PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
