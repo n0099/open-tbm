@@ -53,7 +53,7 @@ public class EntryPoint : BaseEntryPoint
                 // in order to sync their timer of WithLogTrace
                 .AutoActivate());
         builder.RegisterType<AuthorRevisionSaver>();
-        builder.RegisterType<UserParserAndSaver>();
+        builder.RegisterType<UserParser>();
         builder.RegisterType<ThreadLateCrawlerAndSaver>();
         builder.RegisterType<SonicPusher>();
         builder.RegisterType<CrawlPost>();

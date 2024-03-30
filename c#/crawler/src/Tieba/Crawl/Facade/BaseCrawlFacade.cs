@@ -6,6 +6,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         BaseCrawler<TResponse, TPostProtoBuf> crawler,
         BaseParser<TPost, TPostProtoBuf> parser,
         Func<ConcurrentDictionary<PostId, TPost>, BaseSaver<TPost, TBaseRevision>> saverFactory,
+        Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory,
+        Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
         CrawlerLocks locks,
         CrawlerLocks.LockId lockId,
         Fid fid)
@@ -16,6 +18,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     private readonly HashSet<Page> _lockingPages = [];
+    private readonly ConcurrentDictionary<Uid, User> _users = new();
+    private UserParser? _userParser;
     private ExceptionHandler _exceptionHandler = _ => { };
 
     public delegate void ExceptionHandler(Exception ex);
@@ -25,11 +29,11 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         Logger { private get; init; }
     public required CrawlerDbContext.New DbContextFactory { private get; init; }
     public required ClientRequesterTcs RequesterTcs { private get; init; }
-    public required UserParserAndSaver Users { protected get; init; }
 
     // ReSharper restore UnusedAutoPropertyAccessor.Global
     protected Fid Fid { get; } = fid;
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = new();
+    protected UserParser UserParser => _userParser ??= userParserFactory(_users);
 
     public virtual void Dispose()
     {
@@ -41,10 +45,14 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     {
         var db = DbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+
         var saver = saverFactory(Posts);
         var savedPosts = Posts.IsEmpty ? null : saver.SavePosts(db);
-        Users.SaveUsers(db, saver.PostType, saver.UserFieldChangeIgnorance);
-        BeforeCommitSaveHook(db);
+
+        var userSaver = userSaverFactory(_users);
+        userSaver.SaveUsers(db, saver.PostType, saver.UserFieldChangeIgnorance);
+
+        BeforeCommitSaveHook(db, userSaver);
         try
         {
             db.TimestampingEntities();
@@ -55,7 +63,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         finally
         {
             saver.OnPostSaveEvent();
-            Users.PostSaveHook();
+            userSaver.PostSaveHook();
         }
         return savedPosts;
     }
@@ -115,7 +123,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         TResponse response,
         CrawlRequestFlag flag,
         IDictionary<PostId, TPost> parsedPostsInResponse) { }
-    protected virtual void BeforeCommitSaveHook(CrawlerDbContext db) { }
+    protected virtual void BeforeCommitSaveHook(CrawlerDbContext db, UserSaver userSaver) { }
     protected virtual void PostCommitSaveHook(
         SaverChangeSet<TPost> savedPosts,
         CancellationToken stoppingToken = default) { }
@@ -129,7 +137,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         if (flag == CrawlRequestFlag.None)
         {
             if (postsEmbeddedUsers.Count == 0 && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
-            if (postsEmbeddedUsers.Count != 0) Users.ParseUsers(postsEmbeddedUsers);
+            if (postsEmbeddedUsers.Count != 0) UserParser.ParseUsers(postsEmbeddedUsers);
         }
         PostParseHook(response, flag, parsedPostsInResponse);
     }

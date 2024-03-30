@@ -4,10 +4,12 @@ public class ThreadArchiveCrawlFacade(
         ThreadArchiveCrawler.New crawler,
         ThreadParser parser,
         ThreadSaver.New saver,
+        UserSaver.New userSaver,
+        UserParser.New userParser,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         string forumName)
-    : ThreadCrawlFacade(crawler.Invoke, parser, saver, locks, fid, forumName)
+    : ThreadCrawlFacade(crawler.Invoke, parser, saver, userSaver.Invoke, userParser.Invoke, locks, fid, forumName)
 {
     public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 
@@ -18,7 +20,7 @@ public class ThreadArchiveCrawlFacade(
     { // the second respond with flag is as same as the first one so just skip it
         if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
         var data = response.Data;
-        Users.ParseUsers(data.ThreadList.Select(th => th.Author));
+        UserParser.ParseUsers(data.ThreadList.Select(th => th.Author));
         ParseLatestRepliers(data.ThreadList);
         FillFromRequestingWith602(data.ThreadList);
 

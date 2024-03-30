@@ -4,17 +4,19 @@ public class ThreadCrawlFacade(
         ThreadCrawler.New crawler,
         ThreadParser parser,
         ThreadSaver.New saver,
+        UserSaver.New userSaver,
+        UserParser.New userParser,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         string forumName)
     : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
-        (crawler(forumName), parser, saver.Invoke, locks["thread"], new(fid), fid)
+        (crawler(forumName), parser, saver.Invoke, userSaver.Invoke, userParser.Invoke, locks["thread"], new(fid), fid)
 {
     private readonly Dictionary<Uid, User> _latestRepliers = [];
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
-    protected override void BeforeCommitSaveHook(CrawlerDbContext db)
+    protected override void BeforeCommitSaveHook(CrawlerDbContext db, UserSaver userSaver)
     { // BeforeCommitSaveHook() should get invoked after UserParserAndSaver.SaveUsers() by the base.SaveCrawled()
         // so only latest repliers that not exists in parsed users are being inserted
         // note this will bypass user revision detection since not invoking CommonInSavers.SavePostsOrUsers() but directly DbContext.AddRange()
@@ -27,7 +29,7 @@ public class ThreadCrawlFacade(
             .ToList();
         if (newLatestRepliers.Count == 0) return;
 
-        var newlyLockedLatestRepliers = Users.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid));
+        var newlyLockedLatestRepliers = userSaver.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid));
         var newLatestRepliersExceptLocked = newLatestRepliers
             .IntersectBy(newlyLockedLatestRepliers, u => u.Uid)
             .Select(u =>
@@ -72,8 +74,8 @@ public class ThreadCrawlFacade(
         var data = response.Data;
         if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
         if (flag != CrawlRequestFlag.None) return;
-        Users.ParseUsers(data.UserList);
-        Users.ResetUsersIcon();
+        UserParser.ParseUsers(data.UserList);
+        UserParser.ResetUsersIcon();
         ParseLatestRepliers(data.ThreadList);
 
         // remove livepost threads since their real parent forum may not match with current crawling fid

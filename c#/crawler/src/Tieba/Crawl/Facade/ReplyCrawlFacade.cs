@@ -5,12 +5,14 @@ public class ReplyCrawlFacade(
         ReplyCrawler.New crawler,
         ReplyParser parser,
         ReplySaver.New saver,
+        UserSaver.New userSaver,
+        UserParser.New userParser,
         SonicPusher pusher,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         Tid tid)
     : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>
-        (crawler(fid, tid), parser, saver.Invoke, locks["reply"], new(fid, tid), fid)
+        (crawler(fid, tid), parser, saver.Invoke, userSaver.Invoke, userParser.Invoke, locks["reply"], new(fid, tid), fid)
 {
     public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
@@ -21,7 +23,7 @@ public class ReplyCrawlFacade(
     {
         parsedPostsInResponse.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
-        Users.ParseUsers(data.UserList);
+        UserParser.ParseUsers(data.UserList);
         FillAuthorInfoBackToReply(data.UserList, parsedPostsInResponse.Values);
         if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
     }

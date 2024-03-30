@@ -4,13 +4,15 @@ public class SubReplyCrawlFacade(
         SubReplyCrawler.New crawler,
         SubReplyParser parser,
         SubReplySaver.New saver,
+        UserSaver.New userSaver,
+        UserParser.New userParser,
         SonicPusher pusher,
         IIndex<string, CrawlerLocks> locks,
         Fid fid,
         Tid tid,
         Pid pid)
     : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>
-        (crawler(tid, pid), parser, saver.Invoke, locks["subReply"], new(fid, tid, pid), fid)
+        (crawler(tid, pid), parser, saver.Invoke, userSaver.Invoke, userParser.Invoke, locks["subReply"], new(fid, tid, pid), fid)
 {
     public delegate SubReplyCrawlFacade New(Fid fid, Tid tid, Pid pid);
 
@@ -27,7 +29,7 @@ public class SubReplyCrawlFacade(
             sr.Tid = tid;
             sr.Pid = pid;
         }
-        Users.ResetUsersIcon();
+        UserParser.ResetUsersIcon();
     }
 
     protected override void PostCommitSaveHook(
