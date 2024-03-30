@@ -76,24 +76,24 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
 
         var thread = new RevisionWithSplitting<BaseThreadRevision>.ModelBuilderExtension(b, "tbmcr_thread");
         thread.HasKey<ThreadRevision>(e => new {e.Tid, e.TakenAt});
-        thread.SplittingHasKeyAndName<SplitViewCount>("viewCount", e => new {e.Tid, e.TakenAt});
+        thread.SplittingHasKey<SplitViewCount>("viewCount", e => new {e.Tid, e.TakenAt});
 
         var reply = new RevisionWithSplitting<BaseReplyRevision>.ModelBuilderExtension(b, "tbmcr_reply");
         reply.HasKey<ReplyRevision>(e => new {e.Pid, e.TakenAt});
-        reply.SplittingHasKeyAndName<ReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Pid, e.TakenAt});
-        reply.SplittingHasKeyAndName<SplitSubReplyCount>("subReplyCount", e => new {e.Pid, e.TakenAt});
-        reply.SplittingHasKeyAndName<SplitFloor>("floor", e => new {e.Pid, e.TakenAt});
+        reply.SplittingHasKey<ReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Pid, e.TakenAt});
+        reply.SplittingHasKey<SplitSubReplyCount>("subReplyCount", e => new {e.Pid, e.TakenAt});
+        reply.SplittingHasKey<SplitFloor>("floor", e => new {e.Pid, e.TakenAt});
 
         var subReply = new RevisionWithSplitting<BaseSubReplyRevision>.ModelBuilderExtension(b, "tbmcr_subReply");
         subReply.HasKey<SubReplyRevision>(e => new {e.Spid, e.TakenAt});
-        subReply.SplittingHasKeyAndName<SubReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Spid, e.TakenAt});
-        subReply.SplittingHasKeyAndName<SplitDisagreeCount>("disagreeCount", e => new {e.Spid, e.TakenAt});
+        subReply.SplittingHasKey<SubReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Spid, e.TakenAt});
+        subReply.SplittingHasKey<SplitDisagreeCount>("disagreeCount", e => new {e.Spid, e.TakenAt});
 
         var user = new RevisionWithSplitting<BaseUserRevision>.ModelBuilderExtension(b, "tbmcr_user");
         user.HasKey<UserRevision>(e => new {e.Uid, e.TakenAt});
-        user.SplittingHasKeyAndName<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
-        user.SplittingHasKeyAndName<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
-        user.SplittingHasKeyAndName<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
+        user.SplittingHasKey<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
+        user.SplittingHasKey<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
+        user.SplittingHasKey<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
 
         b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade")
             .HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});

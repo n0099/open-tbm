@@ -28,8 +28,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     public required UserParserAndSaver Users { protected get; init; }
 
     // ReSharper restore UnusedAutoPropertyAccessor.Global
-    protected uint Fid { get; } = fid;
-    protected ConcurrentDictionary<ulong, TPost> Posts { get; } = new();
+    protected Fid Fid { get; } = fid;
+    protected ConcurrentDictionary<PostId, TPost> Posts { get; } = new();
 
     public virtual void Dispose()
     {

@@ -18,7 +18,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
     public virtual FieldChangeIgnoranceDelegates UserFieldChangeIgnorance =>
         throw new NotSupportedException();
     public string PostType { get; } = postType;
-    protected ConcurrentDictionary<ulong, TPost> Posts { get; } = posts;
+    protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);
 
     public void OnPostSaveEvent() => PostSaveEvent();
@@ -26,7 +26,7 @@ public abstract class BaseSaver<TPost, TBaseRevision>(
 
     protected SaverChangeSet<TPost> SavePosts<TRevision>(
         CrawlerDbContext db,
-        Func<TPost, ulong> postIdSelector,
+        Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
         ExpressionStarter<TPost> existingPostPredicate)
         where TRevision : class, IRevision

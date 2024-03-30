@@ -1,8 +1,10 @@
+using System.Reflection;
+using Autofac;
 using Microsoft.EntityFrameworkCore;
 
 namespace tbm.Shared;
 
-public static class ExtensionMethods
+public static partial class ExtensionMethods
 {
     /// <see>https://stackoverflow.com/questions/10295028/c-sharp-empty-string-null/10295082#10295082</see>
     public static string? NullIfEmpty(this string? value) => string.IsNullOrEmpty(value) ? null : value;
@@ -25,4 +27,33 @@ public static class ExtensionMethods
         if (list is List<T> asList) asList.AddRange(items);
         else foreach (var item in items) list.Add(item);
     }
+}
+public static partial class ExtensionMethods
+{
+    public static void RegisterImplementsOfBaseTypes(this ContainerBuilder builder, IEnumerable<Type> baseTypes) =>
+        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+            .Where(type => baseTypes.Any(baseType => baseType.IsSubTypeOfRawGeneric(type)))
+            .AsSelf();
+
+    /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/25937893#25937893</see>
+    private static bool IsSubTypeOfRawGeneric(this Type generic, Type toCheck) =>
+        generic.IsInterface ? generic.IsImplementerOfRawGeneric(toCheck) : generic.IsSubClassOfRawGeneric(toCheck);
+
+    /// <see>https://stackoverflow.com/questions/457676/check-if-a-class-is-derived-from-a-generic-class/457708#457708</see>
+    private static bool IsSubClassOfRawGeneric(this Type generic, Type? toCheck)
+    {
+        while (toCheck != null && toCheck != typeof(object))
+        {
+            var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
+            if (generic == cur) return true;
+            toCheck = toCheck.BaseType;
+        }
+
+        return false;
+    }
+
+    /// <see>https://stackoverflow.com/questions/4963160/how-to-determine-if-a-type-implements-an-interface-with-c-sharp-reflection/4963190#4963190</see>
+    private static bool IsImplementerOfRawGeneric(this Type generic, Type toCheck) =>
+        Array.Exists(toCheck.GetInterfaces(),
+            type => type.IsGenericType && type.GetGenericTypeDefinition() == generic);
 }

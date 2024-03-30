@@ -162,7 +162,7 @@ public class ImageBatchConsumingWorker(
 #pragma warning restore IDISP001 // Dispose created
             return frameMat.Empty()
                 ? throw new InvalidOperationException(
-                    $"Failed to decode frame {frameIndex} of image {imageId}.")
+                    $"Failed to decode frame {frameIndex.ToString(CultureInfo.InvariantCulture)} of image {imageId}.")
                 : new(imageId, (uint)frameIndex, frameMat);
         }
 
@@ -246,12 +246,12 @@ public class ImageBatchConsumingWorker(
                 await db.ImageOcrLines.AddRangeAsync(recognizedTextLines.IntersectBy(
                     imagesInCurrentFid.Except(uniqueImagesInCurrentFid).Select(i => i.ImageId),
                     i => i.ImageId), stoppingToken);
-                recognizedTextLines.AddRange(await ConsumeByFidAndScript(db, fid, script, uniqueImagesInCurrentFid));
+                recognizedTextLines.AddRange(await ConsumeByFidWithScript(db, fid, script, uniqueImagesInCurrentFid));
                 _ = await db.SaveChangesAsync(stoppingToken);
             }
         }
 
-        async Task<IEnumerable<ImageOcrLine>> ConsumeByFidAndScript(
+        async Task<IEnumerable<ImageOcrLine>> ConsumeByFidWithScript(
             ImagePipelineDbContext db,
             Fid fid,
             string script,

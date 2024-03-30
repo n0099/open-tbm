@@ -10,7 +10,7 @@ public class ThreadCrawlFacade(
     : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>
         (crawler(forumName), parser, saver.Invoke, locks["thread"], new(fid), fid)
 {
-    private readonly Dictionary<long, User> _latestRepliers = [];
+    private readonly Dictionary<Uid, User> _latestRepliers = [];
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 

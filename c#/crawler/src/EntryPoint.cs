@@ -34,16 +34,11 @@ public class EntryPoint : BaseEntryPoint
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
-        var baseClassOfClassesToBeRegistered = new[]
-        {
+        builder.RegisterImplementsOfBaseTypes(
+        [
             typeof(BaseCrawler<,>), typeof(BaseCrawlFacade<,,,>),
-            typeof(BaseParser<,>), typeof(BaseSaver<,>)
-        };
-        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-            .Where(type => Array.Exists(baseClassOfClassesToBeRegistered,
-                baseType => baseType.IsSubTypeOfRawGeneric(type)))
-            .AsSelf();
-
+            typeof(BaseParser<,>), typeof(CommonInSavers<>)
+        ]);
         builder.RegisterType<CrawlerDbContext>();
         builder.RegisterType<ClientRequester>();
         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
@@ -60,7 +55,6 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<AuthorRevisionSaver>();
         builder.RegisterType<UserParserAndSaver>();
         builder.RegisterType<ThreadLateCrawlerAndSaver>();
-        builder.RegisterType<ThreadArchiveCrawler>();
         builder.RegisterType<SonicPusher>();
         builder.RegisterType<CrawlPost>();
     }

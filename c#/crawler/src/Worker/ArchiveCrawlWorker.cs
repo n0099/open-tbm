@@ -3,7 +3,7 @@ namespace tbm.Crawler.Worker;
 #pragma warning disable IDE0065 // Misplaced using directive
 #pragma warning disable SA1135 // Using directives should be qualified
 #pragma warning disable SA1200 // Using directives should be placed correctly
-using SavedRepliesKeyByTid = ConcurrentDictionary<ulong, SaverChangeSet<ReplyPost>>;
+using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
 public class ArchiveCrawlWorker(
         ILogger<ArchiveCrawlWorker> logger,

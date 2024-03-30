@@ -6,8 +6,8 @@ public class AuthorRevisionSaver(string triggeredByPostType)
 {
     // locks only using fid and uid field values from AuthorRevision
     // this prevents inserting multiple entities with similar time and other fields with the same values
-    private static readonly HashSet<(Fid Fid, long Uid)> AuthorExpGradeLocks = [];
-    private readonly List<(Fid Fid, long Uid)> _savedRevisions = [];
+    private static readonly HashSet<(Fid Fid, Uid Uid)> AuthorExpGradeLocks = [];
+    private readonly List<(Fid Fid, Uid Uid)> _savedRevisions = [];
 
     public delegate AuthorRevisionSaver New(string triggeredByPostType);
 
@@ -40,12 +40,12 @@ public class AuthorRevisionSaver(string triggeredByPostType)
     private void SaveAuthorRevisions<TPost, TRevision, TValue>(
         CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
-        HashSet<(Fid Fid, long Uid)> locks,
+        HashSet<(Fid Fid, Uid Uid)> locks,
         IQueryable<TRevision> dbSet,
         Func<TPost, TValue?> postAuthorFieldValueSelector,
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
         Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
-        Func<(long Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
+        Func<(Uid Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
         where TPost : class, IPost
         where TRevision : AuthorRevision
     {
@@ -87,7 +87,7 @@ public class AuthorRevisionSaver(string triggeredByPostType)
         }
     }
 
-    private void ReleaseAllLocks(HashSet<(Fid Fid, long Uid)> locks)
+    private void ReleaseAllLocks(HashSet<(Fid Fid, Uid Uid)> locks)
     {
         lock (locks) locks.ExceptWith(_savedRevisions);
     }

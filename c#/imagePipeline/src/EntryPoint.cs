@@ -53,12 +53,9 @@ public partial class EntryPoint : BaseEntryPoint
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void ConfigureContainer(HostBuilderContext context, ContainerBuilder builder)
     {
+        builder.RegisterImplementsOfBaseTypes([typeof(IConsumer<>)]);
         builder.RegisterType<ImagePipelineDbContext>();
         builder.RegisterType<JointRecognizer>();
-        builder.RegisterType<OcrConsumer>();
-        builder.RegisterType<HashConsumer>();
-        builder.RegisterType<QrCodeConsumer>();
-        builder.RegisterType<MetadataConsumer>();
         builder.RegisterType<ImageRequester>();
 
         builder.Register(_ => Channel.CreateBounded<List<ImageWithBytes>>(

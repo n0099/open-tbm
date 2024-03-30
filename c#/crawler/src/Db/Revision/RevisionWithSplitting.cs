@@ -32,7 +32,7 @@ public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
             where TRevision : class, TBaseRevision =>
             builder.Entity<TRevision>().ToTable(baseTableName).HasKey(keySelector);
 
-        public void SplittingHasKeyAndName<TRevisionWithSplitting>
+        public void SplittingHasKey<TRevisionWithSplitting>
             (string tableNameSuffix, Expression<Func<TRevisionWithSplitting, object?>> keySelector)
             where TRevisionWithSplitting : RevisionWithSplitting<TBaseRevision> =>
             builder.Entity<TRevisionWithSplitting>().Ignore(e => e.NullFieldsBitMask)
