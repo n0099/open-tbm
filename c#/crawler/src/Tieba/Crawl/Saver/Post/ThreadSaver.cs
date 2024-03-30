@@ -11,7 +11,8 @@ public class ThreadSaver(
 {
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-    public override FieldChangeIgnoranceDelegates UserFieldChangeIgnorance { get; } = new(
+    public override IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
+        UserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, _, _) => propName switch
         { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one
             // so we should mark it as null temporarily

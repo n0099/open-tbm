@@ -2,18 +2,13 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBaseRevision>> logger)
-    : StaticCommonInSavers
+public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>> logger)
+    : SaverWithRevision<TBaseRevision>, IFieldChangeIgnorance
     where TBaseRevision : class, IRevision
 {
-    protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
-
-    protected virtual IDictionary<Type, RevisionUpsertDelegate>
-        RevisionUpsertDelegatesKeyBySplitEntityType => throw new NotSupportedException();
-
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
         CrawlerDbContext db,
-        FieldChangeIgnoranceDelegates userFieldChangeIgnorance,
+        IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance,
         Func<TPostOrUser, TRevision> revisionFactory,
         ILookup<bool, TPostOrUser> existingOrNewLookup,
         Func<TPostOrUser, TPostOrUser> existingSelector)
@@ -48,21 +43,21 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
                 var pName = p.Metadata.Name;
                 if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
 
-                if (GlobalFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                if (IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
                     || (entryIsUser && userFieldChangeIgnorance.Update(
                         whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                 {
                     p.IsModified = false;
                     continue; // skip following revision check
                 }
-                if (GlobalFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                if (IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
                     || (entryIsUser && userFieldChangeIgnorance.Revision(
                         whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                     continue;
 
                 if (IsLatestReplierUser(pName, p, entry)) return null;
 
-                if (!RevisionPropertiesCache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
+                if (!IRevisionProperties.Cache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                 {
                     object? ToHexWhenByteArray(object? value) =>
                         value is byte[] bytes ? $"0x{Convert.ToHexString(bytes).ToLowerInvariant()}" : value;
@@ -109,14 +104,12 @@ public abstract class CommonInSavers<TBaseRevision>(ILogger<CommonInSavers<TBase
             .ForEach(g => RevisionUpsertDelegatesKeyBySplitEntityType[g.Key](db, g));
     }
 
-    protected virtual NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => throw new NotSupportedException();
-
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)
     {
         // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
         // they will soon be updated by (sub) reply crawler after it find out the latest reply
         // so we should ignore its revision update for all fields
-        // ignore entire record is not possible via GlobalFieldChangeIgnorance.Revision()
+        // ignore entire record is not possible via IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Revision()
         // since it can only determine one field at the time
         if (pName != nameof(User.Portrait) || p.OriginalValue is not "") return false;
 

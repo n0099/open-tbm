@@ -7,7 +7,7 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
         ConcurrentDictionary<PostId, TPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory,
         string postType)
-    : CommonInSavers<TBaseRevision>(logger)
+    : BaseSaver<TBaseRevision>(logger)
     where TPost : class, IPost
     where TBaseRevision : class, IRevision
 {
@@ -15,8 +15,8 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
     [SuppressMessage("Design", "MA0046:Use EventHandler<T> to declare events")]
     protected event PostSaveEventHandler PostSaveEvent = () => { };
 
-    public virtual FieldChangeIgnoranceDelegates UserFieldChangeIgnorance =>
-        throw new NotSupportedException();
+    public virtual IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
+        UserFieldChangeIgnorance => throw new NotSupportedException();
     public string PostType { get; } = postType;
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(postType);
@@ -35,7 +35,7 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
 
         var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
 
-        // deep copy before entities get mutated by CommonInSavers.SavePostsOrUsers()
+        // deep copy before entities get mutated by BaseSaver.SavePostsOrUsers()
         var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
         SavePostsOrUsers(db, UserFieldChangeIgnorance, revisionFactory,

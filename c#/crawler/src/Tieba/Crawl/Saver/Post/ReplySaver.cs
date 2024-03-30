@@ -12,7 +12,8 @@ public partial class ReplySaver(
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-    public override FieldChangeIgnoranceDelegates UserFieldChangeIgnorance { get; } = new(
+    public override IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
+        UserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // FansNickname in reply response will always be null
             nameof(User.FansNickname) when oldValue is not null && newValue is null => true,

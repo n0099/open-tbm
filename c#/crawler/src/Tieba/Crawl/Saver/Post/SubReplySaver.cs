@@ -11,7 +11,8 @@ public class SubReplySaver(
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-    public override FieldChangeIgnoranceDelegates UserFieldChangeIgnorance { get; } = new(
+    public override IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
+        UserFieldChangeIgnorance { get; } = new(
         Update: (_, propName, oldValue, newValue) => propName switch
         { // always ignore updates on iconinfo due to some rare user will show some extra icons
             // compare to reply response in the response of sub reply

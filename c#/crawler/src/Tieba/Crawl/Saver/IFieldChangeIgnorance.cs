@@ -1,14 +1,16 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract class StaticCommonInSavers
+public partial interface IFieldChangeIgnorance
 {
     public delegate bool FieldChangeIgnoranceDelegate(
         Type whichPostType, string propName, object? oldValue, object? newValue);
 
-    // static field in this non-generic class will be shared across all reified generic derived classes
-    protected static IDictionary<Type, IDictionary<string, PropertyInfo>> RevisionPropertiesCache { get; } = GetPropsKeyByType(
-        [typeof(ThreadRevision), typeof(ReplyRevision), typeof(SubReplyRevision), typeof(UserRevision)]);
-
+    public record FieldChangeIgnoranceDelegates(
+        FieldChangeIgnoranceDelegate Update,
+        FieldChangeIgnoranceDelegate Revision);
+}
+public partial interface IFieldChangeIgnorance
+{
     protected static FieldChangeIgnoranceDelegates GlobalFieldChangeIgnorance { get; } = new(
         Update: (whichPostType, propName, oldValue, newValue) =>
         {
@@ -90,13 +92,4 @@ public abstract class StaticCommonInSavers
             }
             return false;
         });
-
-    [SuppressMessage("Performance", "CA1859:Use concrete types when possible for improved performance")]
-    private static IDictionary<Type, IDictionary<string, PropertyInfo>> GetPropsKeyByType(IEnumerable<Type> types) =>
-        types.ToDictionary(type => type, type =>
-            (IDictionary<string, PropertyInfo>)type.GetProperties().ToDictionary(prop => prop.Name));
-
-    public record FieldChangeIgnoranceDelegates(
-        FieldChangeIgnoranceDelegate Update,
-        FieldChangeIgnoranceDelegate Revision);
 }

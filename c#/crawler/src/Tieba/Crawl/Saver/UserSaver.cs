@@ -32,7 +32,7 @@ public partial class UserSaver
     };
 }
 public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<Uid, User> users)
-    : CommonInSavers<BaseUserRevision>(logger)
+    : BaseSaver<BaseUserRevision>(logger)
 {
     private static readonly HashSet<Uid> UserIdLocks = [];
     private readonly List<Uid> _savedUsersId = [];
@@ -42,7 +42,7 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
     public void Save(
         CrawlerDbContext db,
         string postType,
-        FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
+        IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
     {
         if (users.IsEmpty) return;
         lock (UserIdLocks)
