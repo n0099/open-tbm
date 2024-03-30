@@ -1,8 +1,7 @@
-namespace tbm.Crawler.Tieba.Crawl;
+namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
-public class ThreadLateCrawlerAndSaver(
-    ILogger<ThreadLateCrawlerAndSaver> logger,
-    CrawlerDbContext.New dbContextFactory,
+public class ThreadLateCrawler(
+    ILogger<ThreadLateCrawler> logger,
     ClientRequester requester,
     ClientRequesterTcs requesterTcs,
     IIndex<string, CrawlerLocks> locks,
@@ -10,29 +9,9 @@ public class ThreadLateCrawlerAndSaver(
 {
     private readonly CrawlerLocks _locks = locks["threadLate"]; // singleton
 
-    public delegate ThreadLateCrawlerAndSaver New(Fid fid);
+    public delegate ThreadLateCrawler New(Fid fid);
 
-    public async Task CrawlThenSave(
-        IDictionary<Tid, FailureCount> failureCountsKeyByTid,
-        CancellationToken stoppingToken = default)
-    {
-        var threads = await Task.WhenAll(
-            failureCountsKeyByTid.Select(pair => CrawlThread(pair.Key, pair.Value, stoppingToken)));
-
-        var db = dbContextFactory(fid);
-        await using var transaction = await db.Database.BeginTransactionAsync(stoppingToken);
-
-        db.AttachRange(threads.OfType<ThreadPost>()); // remove nulls due to exception
-        db.ChangeTracker.Entries<ThreadPost>()
-            .ForEach(ee => ee.Property(th => th.AuthorPhoneType).IsModified = true);
-
-        // do not touch UpdateAt field for the accuracy of time field in thread revisions
-        _ = await db.SaveChangesAsync(stoppingToken);
-        await transaction.CommitAsync(stoppingToken);
-    }
-
-    private async Task<ThreadPost?> CrawlThread
-        (Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
+    public async Task<ThreadPost?> Crawl(Tid tid, FailureCount failureCount, CancellationToken stoppingToken = default)
     {
         var crawlerLockId = new CrawlerLocks.LockId(fid, tid);
         if (_locks.AcquireRange(crawlerLockId, [1]).Count == 0) return null;

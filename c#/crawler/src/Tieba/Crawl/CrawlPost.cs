@@ -8,7 +8,7 @@ using SavedThreadsList = IList<SaverChangeSet<ThreadPost>>;
 
 public class CrawlPost(
     Func<Owned<CrawlerDbContext.New>> dbContextFactory,
-    Func<Owned<ThreadLateCrawlerAndSaver.New>> threadLateCrawlerAndSaverFactory,
+    Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
     Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
     Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
     Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
@@ -60,7 +60,7 @@ public class CrawlPost(
             if (stoppingToken.IsCancellationRequested) return;
             var failureCountsKeyByTid = threads.NewlyAdded
                 .ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await using var threadLateFactory = threadLateCrawlerAndSaverFactory();
+            await using var threadLateFactory = threadLateCrawlFacadeFactory();
             await threadLateFactory.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }));
 

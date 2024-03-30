@@ -7,7 +7,7 @@ using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>
 
 public class ArchiveCrawlWorker(
         ILogger<ArchiveCrawlWorker> logger,
-        Func<Owned<ThreadLateCrawlerAndSaver.New>> threadLateCrawlerAndSaverFactory,
+        Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
         Func<Owned<ThreadArchiveCrawler.New>> threadArchiveCrawlerFactory,
         Func<Owned<ThreadArchiveCrawlFacade.New>> threadArchiveCrawlFacadeFactory,
         Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
@@ -127,7 +127,7 @@ public class ArchiveCrawlWorker(
         {
             var failureCountsKeyByTid = savedThreads.NewlyAdded
                 .ToDictionary(th => th.Tid, _ => (FailureCount)0);
-            await using var threadLate = threadLateCrawlerAndSaverFactory();
+            await using var threadLate = threadLateCrawlFacadeFactory();
             await threadLate.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }
         return savedThreads;

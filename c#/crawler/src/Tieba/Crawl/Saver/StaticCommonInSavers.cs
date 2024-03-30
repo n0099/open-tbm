@@ -37,7 +37,7 @@ public abstract class StaticCommonInSavers
             if (whichPostType == typeof(ThreadPost))
             {
                 switch (propName)
-                { // will be updated by ThreadLateCrawlerAndSaver
+                { // will be updated by ThreadLateCrawler and ThreadLateCrawlFacade
                     case nameof(ThreadPost.AuthorPhoneType):
                     // prevent overwrite existing value of field liker_id which is saved by legacy crawler
                     // and Zan itself is deprecated by tieba, so it shouldn't get updated

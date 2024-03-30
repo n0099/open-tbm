@@ -5,7 +5,7 @@ public class RetryCrawlWorker(
         IIndex<string, CrawlerLocks> registeredLocksLookup,
         CrawlPost crawlPost,
         Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
-        Func<Owned<ThreadLateCrawlerAndSaver.New>> threadLateCrawlerAndSaverFactory,
+        Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
         Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
         Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
         Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
@@ -58,7 +58,7 @@ public class RetryCrawlWorker(
         IReadOnlyDictionary<CrawlerLocks.LockId, IReadOnlyDictionary<Page, FailureCount>> failureCountWithPagesKeyByLockId,
         CancellationToken stoppingToken = default)
     {
-        await using var threadLate = threadLateCrawlerAndSaverFactory();
+        await using var threadLate = threadLateCrawlFacadeFactory();
         foreach (var tidGroupByFid in failureCountWithPagesKeyByLockId
                      .Keys.GroupBy(lockId => lockId.Fid, lockId => lockId.Tid))
         {

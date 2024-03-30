@@ -54,7 +54,8 @@ public class EntryPoint : BaseEntryPoint
                 .AutoActivate());
         builder.RegisterType<AuthorRevisionSaver>();
         builder.RegisterType<UserParser>();
-        builder.RegisterType<ThreadLateCrawlerAndSaver>();
+        builder.RegisterType<ThreadLateCrawler>();
+        builder.RegisterType<ThreadLateCrawlFacade>();
         builder.RegisterType<SonicPusher>();
         builder.RegisterType<CrawlPost>();
     }
