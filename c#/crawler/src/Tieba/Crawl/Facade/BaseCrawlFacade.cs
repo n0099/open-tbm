@@ -103,7 +103,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     }
 
     public async Task<SaverChangeSet<TPost>?> RetryThenSave
-        (IList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
+        (IReadOnlyList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
     {
         if (_lockingPages.Count != 0) ThrowHelper.ThrowInvalidOperationException(
             "RetryPages() can only be called once, a instance of BaseCrawlFacade shouldn't be reuse for other crawls.");
@@ -136,14 +136,14 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         parsedPostsInResponse.ForEach(pair => Posts[pair.Key] = pair.Value);
         if (flag == CrawlRequestFlag.None)
         {
-            if (postsEmbeddedUsers.Count == 0 && postsInResponse.Any()) ThrowIfEmptyUsersEmbedInPosts();
+            if (postsEmbeddedUsers.Count == 0 && postsInResponse.Count != 0) ThrowIfEmptyUsersEmbedInPosts();
             if (postsEmbeddedUsers.Count != 0) UserParser.Parse(postsEmbeddedUsers);
         }
         PostParseHook(response, flag, parsedPostsInResponse);
     }
 
     private async Task CrawlPages(
-        IList<Page> pages,
+        IReadOnlyList<Page> pages,
         Func<Page, FailureCount>? previousFailureCountSelector = null,
         CancellationToken stoppingToken = default)
     {

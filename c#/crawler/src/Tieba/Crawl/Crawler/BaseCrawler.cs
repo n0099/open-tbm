@@ -5,9 +5,9 @@ public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
     public abstract Exception FillExceptionData(Exception e);
 
     // ReSharper disable once UnusedParameter.Global
-    public abstract IReadOnlyList<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
+    public abstract IReadOnlyCollection<TPostProtoBuf> GetValidPosts(TResponse response, CrawlRequestFlag flag);
     public abstract TbClient.Page? GetResponsePage(TResponse response);
-    protected abstract IReadOnlyList<TPostProtoBuf> GetResponsePostList(TResponse response);
+    protected abstract IReadOnlyCollection<TPostProtoBuf> GetResponsePostList(TResponse response);
     protected abstract int GetResponseErrorCode(TResponse response);
     protected abstract IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default);
 
@@ -31,7 +31,7 @@ public abstract partial class BaseCrawler<TResponse, TPostProtoBuf>
             throw new TiebaException("Error from tieba client.") {Data = {{"raw", response}}};
     }
 
-    protected IReadOnlyList<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage)
+    protected IReadOnlyCollection<TPostProtoBuf> EnsureNonEmptyPostList(TResponse response, string exceptionMessage)
     {
         var posts = GetResponsePostList(response);
         return posts.Count != 0 ? posts : throw new EmptyPostListException(exceptionMessage);

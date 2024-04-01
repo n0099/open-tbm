@@ -204,7 +204,7 @@ public class ImageBatchConsumingWorker(
         foreach (var scriptsGroupByFid in scriptGroupings)
         {
             var fid = scriptsGroupByFid.Key;
-            List<ImageKeyWithMatrix> GetImagesInCurrentFid()
+            IEnumerable<ImageKeyWithMatrix> GetImagesInCurrentFid()
             { // dispose the scope of Owned<DbContext> after return to prevent long-life idle connection
                 using var dbFactory = dbContextFactory();
                 var db = dbFactory.Value(fid, "");
@@ -214,18 +214,16 @@ public class ImageBatchConsumingWorker(
 #pragma warning restore IDISP004 // Don't ignore created IDisposable
 
                 // try to know which fid owns current image batch
-                return imageKeysWithMatrix
-                    .IntersectBy(
-                        from replyContentImage in db.ReplyContentImages
-                        where imageKeysWithMatrix
-                            .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                            .Contains(replyContentImage.ImageId)
-                        select replyContentImage.ImageId,
-                        imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
-                    .ToList();
+                return imageKeysWithMatrix.IntersectBy(
+                    from replyContentImage in db.ReplyContentImages
+                    where imageKeysWithMatrix
+                        .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
+                        .Contains(replyContentImage.ImageId)
+                    select replyContentImage.ImageId,
+                    imageKeyWithMatrix => imageKeyWithMatrix.ImageId);
             }
 
-            var imagesInCurrentFid = GetImagesInCurrentFid();
+            var imagesInCurrentFid = GetImagesInCurrentFid().ToList();
             if (imagesInCurrentFid.Count == 0) continue;
             foreach (var script in scriptsGroupByFid)
             {

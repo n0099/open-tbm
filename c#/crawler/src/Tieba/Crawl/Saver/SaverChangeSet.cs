@@ -5,26 +5,24 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 public class SaverChangeSet<TPost> where TPost : class, IPost
 {
     public SaverChangeSet(
-        ICollection<TPost> existingBefore,
+        IReadOnlyCollection<TPost> existingBefore,
         ICollection<TPost> existingAfterAndNewlyAdded,
         Func<TPost, PostId> postIdSelector)
     {
-        var existingAfter = existingAfterAndNewlyAdded
-            .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)
-            .OrderBy(postIdSelector).ToList();
-        Existing = new(existingBefore
+        Existing = existingBefore
             .OrderBy(postIdSelector)
-            .EquiZip(existingAfter, (before, after) => (before, after))
-            .ToList());
-        NewlyAdded = new(existingAfterAndNewlyAdded
+            .EquiZip(existingAfterAndNewlyAdded
+                .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)
+                .OrderBy(postIdSelector),
+                (before, after) => (before, after))
+            .ToList().AsReadOnly();
+        NewlyAdded = existingAfterAndNewlyAdded
             .ExceptBy(existingBefore.Select(postIdSelector), postIdSelector)
-            .ToList());
-        AllAfter = new([.. existingAfterAndNewlyAdded]);
+            .ToList().AsReadOnly();
+        AllAfter = existingAfterAndNewlyAdded.ToList().AsReadOnly();
     }
 
-    public ReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }
-    public ReadOnlyCollection<TPost> NewlyAdded { get; }
-
-    // ReSharper disable once CollectionNeverUpdated.Global
-    public ReadOnlyCollection<TPost> AllAfter { get; }
+    public IReadOnlyCollection<(TPost Before, TPost After)> Existing { get; }
+    public IReadOnlyCollection<TPost> NewlyAdded { get; }
+    public IReadOnlyCollection<TPost> AllAfter { get; }
 }

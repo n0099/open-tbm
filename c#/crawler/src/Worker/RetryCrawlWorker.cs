@@ -77,7 +77,7 @@ public class RetryCrawlWorker(
 
     private async Task RetryThread(
         Fid fid,
-        IList<Page> pages,
+        IReadOnlyList<Page> pages,
         int failureCount,
         Func<Page, FailureCount> failureCountSelector,
         CancellationToken stoppingToken = default)
@@ -106,7 +106,7 @@ public class RetryCrawlWorker(
 
     private async Task RetryReply(
         Fid fid, Tid tid,
-        IList<Page> pages,
+        IReadOnlyList<Page> pages,
         int failureCount,
         Func<Page, FailureCount> failureCountSelector,
         CancellationToken stoppingToken = default)
@@ -123,7 +123,7 @@ public class RetryCrawlWorker(
 
     private async Task RetrySubReply(
         Fid fid, Tid tid, Pid pid,
-        IList<Page> pages,
+        IReadOnlyList<Page> pages,
         int failureCount,
         Func<Page, FailureCount> failureCountSelector,
         CancellationToken stoppingToken = default)

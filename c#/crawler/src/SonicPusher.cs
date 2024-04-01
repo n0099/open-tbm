@@ -22,7 +22,7 @@ public sealed class SonicPusher : IDisposable
 
     public void Dispose() => Ingest.Dispose();
 
-    public float PushPost(Fid fid, string type, PostId id, IReadOnlyList<Content>? content)
+    public float PushPost(Fid fid, string type, PostId id, IEnumerable<Content>? content)
     {
         if (!_config.GetValue("Enabled", false)) return 0;
         var stopwatch = new Stopwatch();
@@ -61,7 +61,7 @@ public sealed class SonicPusher : IDisposable
     public void PushPostWithCancellationToken<T>(
         IReadOnlyCollection<T> posts, Fid fid, string postType,
         Func<T, PostId> postIdSelector,
-        Func<T, IReadOnlyList<Content>?> postContentSelector,
+        Func<T, IEnumerable<Content>?> postContentSelector,
         CancellationToken stoppingToken = default)
     {
         try

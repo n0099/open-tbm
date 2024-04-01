@@ -27,6 +27,14 @@ public static partial class ExtensionMethods
         if (list is List<T> asList) asList.AddRange(items);
         else foreach (var item in items) list.Add(item);
     }
+
+    /// <see>https://stackoverflow.com/questions/1474863/addrange-to-a-collection/26360010#26360010</see>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
+    public static void AddRange<T>(this ICollection<T> list, IEnumerable<T> items)
+    {
+        if (list is List<T> asList) asList.AddRange(items);
+        else foreach (var item in items) list.Add(item);
+    }
 }
 public static partial class ExtensionMethods
 {

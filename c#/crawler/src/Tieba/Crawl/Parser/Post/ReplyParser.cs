@@ -10,7 +10,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
     protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
 
     protected override IEnumerable<ReplyPost> ParseInternal
-        (IReadOnlyList<Reply> inPosts, IList<TbClient.User?> outUsers) => inPosts.Select(Convert);
+        (IReadOnlyCollection<Reply> inPosts, ICollection<TbClient.User?> outUsers) => inPosts.Select(Convert);
 
     protected override ReplyPost Convert(Reply inPost)
     {

@@ -5,7 +5,7 @@ public class SubReplyParser : BasePostParser<SubReplyPost, SubReply>
     protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
 
     protected override IEnumerable<SubReplyPost> ParseInternal
-        (IReadOnlyList<SubReply> inPosts, IList<TbClient.User?> outUsers)
+        (IReadOnlyCollection<SubReply> inPosts, ICollection<TbClient.User?> outUsers)
     {
         outUsers.AddRange(inPosts.Select(sr => sr.Author));
         return inPosts.Select(Convert);

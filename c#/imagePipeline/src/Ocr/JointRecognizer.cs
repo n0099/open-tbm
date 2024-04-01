@@ -34,7 +34,7 @@ public class JointRecognizer(
     public async Task InitializePaddleOcr(CancellationToken stoppingToken = default) =>
         await _paddleOcrProvider.Initialize(stoppingToken);
 
-    public IReadOnlyList<Either<ImageId, IRecognitionResult>> RecognizeMatrices
+    public IReadOnlyCollection<Either<ImageId, IRecognitionResult>> RecognizeMatrices
         (IReadOnlyDictionary<ImageKey, Mat> matricesKeyByImageKey, CancellationToken stoppingToken = default)
     {
         var recognizedEithersViaPaddleOcr = _paddleOcrProvider

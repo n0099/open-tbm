@@ -18,10 +18,10 @@ public abstract partial class Helper
             ? null
             : SerializedProtoBufOrNullIfEmpty(wrapperFactory());
 
-    public static IReadOnlyList<Content>? ParseThenUnwrapPostContent(byte[]? serializedProtoBuf) =>
+    public static IEnumerable<Content>? ParseThenUnwrapPostContent(byte[]? serializedProtoBuf) =>
         serializedProtoBuf == null ? null : PostContentWrapper.Parser.ParseFrom(serializedProtoBuf).Value;
 
-    public static PostContentWrapper? WrapPostContent(IReadOnlyList<Content>? contents) =>
+    public static PostContentWrapper? WrapPostContent(IEnumerable<Content>? contents) =>
         contents == null ? null : new() {Value = {contents}};
 
     public static void GetNowTimestamp(out Time now) => now = GetNowTimestamp();

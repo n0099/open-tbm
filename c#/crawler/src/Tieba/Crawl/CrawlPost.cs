@@ -4,7 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl;
 #pragma warning disable SA1135 // Using directives should be qualified
 #pragma warning disable SA1200 // Using directives should be placed correctly
 using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
-using SavedThreadsList = IList<SaverChangeSet<ThreadPost>>;
+using SavedThreadsList = IReadOnlyCollection<SaverChangeSet<ThreadPost>>;
 
 public class CrawlPost(
     Func<Owned<CrawlerDbContext.New>> dbContextFactory,
