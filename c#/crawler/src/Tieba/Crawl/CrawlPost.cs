@@ -46,7 +46,8 @@ public class CrawlPost(
                 var threadsLatestReplyPostedAt = currentPageChangeSet.AllAfter
                     .Select(th => th.LatestReplyPostedAt).ToList();
                 minLatestReplyPostedAt = threadsLatestReplyPostedAt.Min();
-                if (crawlingPage == 1) _latestReplyPostedAtCheckpointCache[fid] = threadsLatestReplyPostedAt.Max();
+                if (crawlingPage == 1)
+                    _latestReplyPostedAtCheckpointCache[fid] = threadsLatestReplyPostedAt.Max();
             }
             else
             { // retry this page
@@ -98,7 +99,7 @@ public class CrawlPost(
     }
 
     public async Task CrawlSubReplies(
-        IDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid,
+        IReadOnlyDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid,
         Fid fid,
         CancellationToken stoppingToken = default)
     {

@@ -3,16 +3,18 @@ namespace tbm.Crawler.Db.Revision;
 public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
     where TBaseRevision : class, IRevision
 {
+    private readonly Dictionary<Type, TBaseRevision> _splitEntities = [];
+
     public uint TakenAt { get; set; }
     public ushort? NullFieldsBitMask { get; set; }
-    public IDictionary<Type, TBaseRevision> SplitEntities { get; } = new Dictionary<Type, TBaseRevision>();
+    public IReadOnlyDictionary<Type, TBaseRevision> SplitEntities => _splitEntities;
 
     public virtual bool IsAllFieldsIsNullExceptSplit() => throw new NotSupportedException();
 
     protected TValue? GetSplitEntityValue<TSplitEntity, TValue>
         (Func<TSplitEntity, TValue?> valueSelector)
         where TSplitEntity : class, TBaseRevision =>
-        SplitEntities.TryGetValue(typeof(TSplitEntity), out var entity)
+        _splitEntities.TryGetValue(typeof(TSplitEntity), out var entity)
             ? valueSelector((TSplitEntity)entity)
             : default;
 
@@ -20,10 +22,10 @@ public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
         (TValue? value, Action<TSplitEntity, TValue?> valueSetter, Func<TSplitEntity> entityFactory)
         where TSplitEntity : class, TBaseRevision
     {
-        if (SplitEntities.TryGetValue(typeof(TSplitEntity), out var entity))
+        if (_splitEntities.TryGetValue(typeof(TSplitEntity), out var entity))
             valueSetter((TSplitEntity)entity, value);
         else
-            SplitEntities[typeof(TSplitEntity)] = entityFactory();
+            _splitEntities[typeof(TSplitEntity)] = entityFactory();
     }
 
     public class ModelBuilderExtension(ModelBuilder builder, string baseTableName)

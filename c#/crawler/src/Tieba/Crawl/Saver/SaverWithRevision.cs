@@ -5,7 +5,7 @@ public abstract class SaverWithRevision<TBaseRevision> : IRevisionProperties
 {
     protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
 
-    protected virtual IDictionary<Type, RevisionUpsertDelegate> RevisionUpsertDelegatesKeyBySplitEntityType =>
+    protected virtual IReadOnlyDictionary<Type, RevisionUpsertDelegate> RevisionUpsertDelegatesKeyBySplitEntityType =>
         throw new NotSupportedException();
 
     protected virtual NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) =>

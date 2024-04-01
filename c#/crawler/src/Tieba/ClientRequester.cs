@@ -19,7 +19,7 @@ public class ClientRequester(
     public async Task<JsonElement> RequestJson(
         string url,
         string clientVersion,
-        IDictionary<string, string> postParam,
+        IReadOnlyDictionary<string, string> postParam,
         CancellationToken stoppingToken = default) =>
         await Request(() => PostJson(url, postParam, clientVersion, stoppingToken), stream =>
         {
@@ -84,7 +84,7 @@ public class ClientRequester(
 
     private async Task<HttpResponseMessage> PostJson(
         string url,
-        IDictionary<string, string> postParam,
+        IReadOnlyDictionary<string, string> postParam,
         string clientVersion,
         CancellationToken stoppingToken = default)
     {

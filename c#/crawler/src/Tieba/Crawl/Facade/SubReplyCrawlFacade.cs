@@ -24,7 +24,7 @@ public class SubReplyCrawlFacade(
     protected override void PostParseHook(
         SubReplyResponse response,
         CrawlRequestFlag flag,
-        IDictionary<PostId, SubReplyPost> parsedPostsInResponse)
+        IReadOnlyDictionary<PostId, SubReplyPost> parsedPostsInResponse)
     {
         foreach (var sr in parsedPostsInResponse.Values)
         {

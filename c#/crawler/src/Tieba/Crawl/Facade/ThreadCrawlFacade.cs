@@ -42,6 +42,23 @@ public class ThreadCrawlFacade(
         _ = db.Users.UpsertRange(newLatestRepliersExceptLocked).NoUpdate().Run();
     }
 
+    protected override void PostParseHook(
+        ThreadResponse response,
+        CrawlRequestFlag flag,
+        IReadOnlyDictionary<PostId, ThreadPost> parsedPostsInResponse)
+    {
+        var data = response.Data;
+        if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
+        if (flag != CrawlRequestFlag.None) return;
+        UserParser.Parse(data.UserList);
+        UserParser.ResetUsersIcon();
+        ParseLatestRepliers(data.ThreadList);
+
+        // remove livepost threads since their real parent forum may not match with current crawling fid
+        data.ThreadList.Where(th => th.LivePostType != "")
+            .ForEach(th => Posts.TryRemove((Tid)th.Tid, out _));
+    }
+
     protected void ParseLatestRepliers(IEnumerable<Thread> threads) =>
         threads.Select(th => th.LastReplyer ?? null) // LastReplyer will be null when LivePostType != ""
             .OfType<TbClient.User>() // filter out nulls
@@ -67,21 +84,4 @@ public class ThreadCrawlFacade(
             // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
             t.parsed.LatestReplierUid = t.inResponse.LastReplyer?.Uid;
         });
-
-    protected override void PostParseHook(
-        ThreadResponse response,
-        CrawlRequestFlag flag,
-        IDictionary<PostId, ThreadPost> parsedPostsInResponse)
-    {
-        var data = response.Data;
-        if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
-        if (flag != CrawlRequestFlag.None) return;
-        UserParser.Parse(data.UserList);
-        UserParser.ResetUsersIcon();
-        ParseLatestRepliers(data.ThreadList);
-
-        // remove livepost threads since their real parent forum may not match with current crawling fid
-        data.ThreadList.Where(th => th.LivePostType != "")
-            .ForEach(th => Posts.TryRemove((Tid)th.Tid, out _));
-    }
 }

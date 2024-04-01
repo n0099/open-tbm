@@ -8,7 +8,7 @@ public class ThreadLateCrawlFacade(
     public delegate ThreadLateCrawlFacade New(Fid fid);
 
     public async Task CrawlThenSave(
-        IDictionary<Tid, FailureCount> failureCountsKeyByTid,
+        IReadOnlyDictionary<Tid, FailureCount> failureCountsKeyByTid,
         CancellationToken stoppingToken = default)
     {
         var threads = await Task.WhenAll(

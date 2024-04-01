@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using OpenCvSharp.ImgHash;
 using Size = OpenCvSharp.Size;
 
@@ -6,19 +7,19 @@ namespace tbm.ImagePipeline.Consumer;
 public sealed class HashConsumer : MatrixConsumer, IDisposable
 {
     private readonly FailedImageHandler _failedImageHandler;
-    private readonly Dictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;
+    private readonly ReadOnlyDictionary<ImgHashBase, Action<ImageHash, byte[]>> _imageHashSettersKeyByAlgorithm;
 
     [SuppressMessage("Correctness", "SS004:Implement Equals() and GetHashcode() methods for a type used in a collection.")]
     public HashConsumer(FailedImageHandler failedImageHandler)
     {
         _failedImageHandler = failedImageHandler;
-        _imageHashSettersKeyByAlgorithm = new()
+        _imageHashSettersKeyByAlgorithm = new Dictionary<ImgHashBase, Action<ImageHash, byte[]>>
         {
             {PHash.Create(), (image, bytes) => image.PHash = BitConverter.ToUInt64(bytes)},
             {AverageHash.Create(), (image, bytes) => image.AverageHash = BitConverter.ToUInt64(bytes)},
             {BlockMeanHash.Create(), (image, bytes) => image.BlockMeanHash = bytes},
             {MarrHildrethHash.Create(), (image, bytes) => image.MarrHildrethHash = bytes}
-        };
+        }.AsReadOnly();
     }
 
     public void Dispose() => _imageHashSettersKeyByAlgorithm.Keys.ForEach(hash => hash.Dispose());
