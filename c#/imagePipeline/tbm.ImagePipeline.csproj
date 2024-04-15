@@ -14,7 +14,7 @@
         <PackageReference Include="Sdcb.PaddleInference.runtime.win64.mkl" Version="2.5.1" />
         <PackageReference Include="Sdcb.PaddleOCR" Version="2.7.0.1" />
         <PackageReference Include="Sdcb.PaddleOCR.Models.Online" Version="2.7.0.1" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.3" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.4" />
         <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
         <PackageReference Include="System.Threading.RateLimiting" Version="8.0.0" />
         <PackageReference Include="ThumbHash" Version="2.1.1" />
