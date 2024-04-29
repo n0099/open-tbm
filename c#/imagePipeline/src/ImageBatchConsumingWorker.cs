@@ -9,7 +9,9 @@ namespace tbm.ImagePipeline;
 public class ImageBatchConsumingWorker(
         ILogger<ImageBatchConsumingWorker> logger,
         ILifetimeScope scope0,
-        Channel<List<ImageWithBytes>, List<ImageWithBytes>> channel,
+
+        // ReSharper disable once SuggestBaseTypeForParameterInConstructor
+        Channel<List<ImageWithBytes>> channel,
         Func<Owned<ImagePipelineDbContext.New>> dbContextFactory,
         Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)

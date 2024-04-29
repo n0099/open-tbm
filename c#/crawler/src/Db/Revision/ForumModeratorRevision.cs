@@ -5,6 +5,6 @@ public class ForumModeratorRevision
 {
     public uint DiscoveredAt { get; set; }
     public uint Fid { get; set; }
-    public string Portrait { get; set; } = "";
-    public string ModeratorTypes { get; set; } = "";
+    public required string Portrait { get; set; }
+    public required string ModeratorTypes { get; set; }
 }

@@ -12,15 +12,18 @@ public class ThreadParser : BasePostParser<ThreadPost, Thread>
 
     protected override ThreadPost Convert(Thread inPost)
     {
-        var o = new ThreadPost();
+        var o = new ThreadPost {Title = ""};
         try
         {
             o.Tid = (Tid)inPost.Tid;
             o.FirstReplyExcerpt = inPost.Abstract;
             o.ThreadType = (ulong)inPost.ThreadTypes;
-#pragma warning disable S3358 // Ternary operators should not be nested
-            o.StickyType = inPost.IsMembertop == 1 ? "membertop" : inPost.IsTop == 0 ? null : "top";
-#pragma warning restore S3358 // Ternary operators should not be nested
+            o.StickyType = inPost switch
+            {
+                {IsMembertop: 1} => "membertop",
+                {IsTop: 0} => null,
+                _ => "top"
+            };
             o.IsGood = (byte?)inPost.IsGood.NullIfZero();
             o.TopicType = inPost.LivePostType.NullIfEmpty();
             o.Title = inPost.Title; // might be written back by ReplyCrawlFacade.SaveParentThreadTitle()

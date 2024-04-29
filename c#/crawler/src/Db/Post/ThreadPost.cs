@@ -13,7 +13,7 @@ public class ThreadPost : IPost
     public string? StickyType { get; set; }
     public string? TopicType { get; set; }
     public byte? IsGood { get; set; }
-    public string Title { get; set; } = "";
+    public required string Title { get; set; }
     public long AuthorUid { get; set; }
     public string? AuthorPhoneType { get; set; }
     public uint PostedAt { get; set; }

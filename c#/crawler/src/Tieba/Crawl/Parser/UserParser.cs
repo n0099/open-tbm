@@ -23,7 +23,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
             // will be an empty string when the user hasn't set a username for their baidu account yet
             var name = el.Name.NullIfEmpty();
             var nameShow = el.NameShow.NullIfEmpty();
-            var u = new User();
+            var u = new User {Portrait = ""};
             try
             {
                 u.Uid = uid;

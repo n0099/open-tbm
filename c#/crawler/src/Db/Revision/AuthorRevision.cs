@@ -7,5 +7,5 @@ public abstract class AuthorRevision
     public uint DiscoveredAt { get; set; }
     public uint Fid { get; set; }
     public long Uid { get; set; }
-    public string TriggeredBy { get; set; } = "";
+    public required string TriggeredBy { get; set; }
 }

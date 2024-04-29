@@ -6,7 +6,7 @@ namespace tbm.Crawler.Db.Revision;
 public abstract class BaseUserRevision : RevisionWithSplitting<BaseUserRevision>
 {
     public long Uid { get; set; }
-    public string TriggeredBy { get; set; } = "";
+    public required string TriggeredBy { get; set; }
 }
 
 public class UserRevision : BaseUserRevision

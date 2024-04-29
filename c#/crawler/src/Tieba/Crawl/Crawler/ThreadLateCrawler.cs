@@ -64,6 +64,7 @@ public class ThreadLateCrawler(
                     ? threadInfo.TryGetProperty("phone_type", out var phoneType)
                         ? new ThreadPost
                         {
+                            Title = "",
                             Tid = Tid.Parse(thread.GetStrProp("id"), CultureInfo.InvariantCulture),
                             AuthorPhoneType = phoneType.GetString().NullIfEmpty()
                         }

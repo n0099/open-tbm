@@ -4,7 +4,9 @@ public class ImageBatchProducingWorker(
         ILogger<ImageBatchProducingWorker> logger,
         IConfiguration config,
         ImageRequester imageRequester,
-        Channel<List<ImageWithBytes>, List<ImageWithBytes>> channel,
+
+        // ReSharper disable once SuggestBaseTypeForParameterInConstructor
+        Channel<List<ImageWithBytes>> channel,
         Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true)
 {

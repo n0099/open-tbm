@@ -5,7 +5,7 @@ public class User : ITimestampingEntity
     [Key] public long Uid { get; set; }
     public string? Name { get; set; }
     public string? DisplayName { get; set; }
-    public string Portrait { get; set; } = "";
+    public required string Portrait { get; set; }
     public uint? PortraitUpdatedAt { get; set; }
     public byte? Gender { get; set; }
     public string? FansNickname { get; set; }
@@ -15,5 +15,5 @@ public class User : ITimestampingEntity
     public uint? UpdatedAt { get; set; }
 
     public static User CreateLatestReplier(long uid, string? name, string? displayName) =>
-        new() {Uid = uid, Name = name, DisplayName = displayName};
+        new() {Uid = uid, Name = name, DisplayName = displayName, Portrait = ""};
 }
