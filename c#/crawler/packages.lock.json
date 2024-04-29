@@ -45,13 +45,13 @@
           "linq2db": "5.4.0"
         }
       },
-      "linq2db.MySqlConnector": {
+      "linq2db.PostgreSQL": {
         "type": "Direct",
         "requested": "[5.4.1, )",
         "resolved": "5.4.1",
-        "contentHash": "2COG7ZuoEBl5N4pODkaW5pKn27ELfnCYXr0Ei0b2I1PWvKm1HG4IPK4Z2yNf1ZLunGCRLq4xfqGjue8kuAC9jw==",
+        "contentHash": "UCZrvZJKkBw2I8Q28QCNlj3T0h1ck8wPdgHv+R8c21BJiMasBwuy81IIbC3ntz51lN8AH9o6Te6oePD/p7FkMQ==",
         "dependencies": {
-          "MySqlConnector": "2.2.7",
+          "Npgsql": "7.0.6",
           "linq2db": "5.4.1"
         }
       },
@@ -505,14 +505,6 @@
         "resolved": "17.9.28",
         "contentHash": "hNfIadilgBXbAOmV7LCdPSmLsUILA3QZhR4Wu9VbFDaHjtU3dCFRfJMbk45galt1pfffz4yI5qT9oUJl+F8mNQ=="
       },
-      "MySqlConnector": {
-        "type": "Transitive",
-        "resolved": "2.3.5",
-        "contentHash": "AmEfUPkFl+Ev6jJ8Dhns3CYHBfD12RHzGYWuLt6DfG6/af6YvOMyPz74ZPPjBYQGRJkumD2Z48Kqm8s5DJuhLA==",
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
-        }
-      },
       "NLog": {
         "type": "Transitive",
         "resolved": "5.2.8",
@@ -528,13 +520,23 @@
           "NLog": "5.2.8"
         }
       },
-      "Pomelo.EntityFrameworkCore.MySql": {
+      "Npgsql": {
         "type": "Transitive",
         "resolved": "8.0.2",
-        "contentHash": "XjnlcxVBLnEMbyEc5cZzgZeDyLvAniACZQ04W1slWN0f4rmfNzl98gEMvHnFH0fMDF06z9MmgGi/Sr7hJ+BVnw==",
+        "contentHash": "MuJzLoWCaQhQAR3oh66YR0Ir6mxuezncGX3f8wxvAc21g0+9HICktJQlqMoODhxztZKXE5k9GxRxqUAN+vPb4g==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Relational": "[8.0.2, 8.0.999]",
-          "MySqlConnector": "2.3.5"
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
+        }
+      },
+      "Npgsql.EntityFrameworkCore.PostgreSQL": {
+        "type": "Transitive",
+        "resolved": "8.0.2",
+        "contentHash": "eoZPynwkZTWFTgnocvXORuCL2yFZtscrUdqVhjxiRULpC7BMg9zhLM5oDZAU5PoX1PgN77hmkKE4a3PQiHqh7Q==",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "8.0.2",
+          "Microsoft.EntityFrameworkCore.Abstractions": "8.0.2",
+          "Microsoft.EntityFrameworkCore.Relational": "8.0.2",
+          "Npgsql": "8.0.2"
         }
       },
       "Roslynator.Analyzers": {
@@ -611,7 +613,7 @@
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
           "Microsoft.VisualStudio.Threading.Analyzers": "[17.9.28, )",
           "NLog.Extensions.Logging": "[5.3.8, )",
-          "Pomelo.EntityFrameworkCore.MySql": "[8.0.2, )",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "[8.0.2, )",
           "Roslynator.Analyzers": "[4.12.2, )",
           "SharpSource": "[1.24.0, )",
           "SonarAnalyzer.CSharp": "[9.24.0.89429, )",
