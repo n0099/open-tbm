@@ -130,7 +130,7 @@ public partial class ReplySaver
             {
                 UserId = r.AuthorUid,
                 SignatureId = (uint)r.SignatureId!,
-                XxHash3 = XxHash3.HashToUInt64(r.Signature!),
+                XxHash3 = XxHash3.Hash(r.Signature!),
                 ProtoBufBytes = r.Signature!,
                 FirstSeenAt = now,
                 LastSeenAt = now
@@ -142,7 +142,7 @@ public partial class ReplySaver
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking().ForUpdate()
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
-                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3)
+                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3, new ByteArrayEqualityComparer())
             select s
         ).ToList();
         (from existing in existingSignatures
@@ -170,5 +170,17 @@ public partial class ReplySaver
         };
     }
 
-    private sealed record UniqueSignature(uint Id, ulong XxHash3);
+    private sealed record UniqueSignature(uint Id, byte[] XxHash3)
+    {
+        public bool Equals(UniqueSignature? other) =>
+            other != null && Id == other.Id && new ByteArrayEqualityComparer().Equals(XxHash3, other.XxHash3);
+
+        public override int GetHashCode()
+        {
+            var hash = default(HashCode);
+            hash.Add(Id);
+            hash.AddBytes(XxHash3);
+            return hash.ToHashCode();
+        }
+    }
 }

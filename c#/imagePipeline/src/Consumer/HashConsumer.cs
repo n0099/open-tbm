@@ -15,8 +15,8 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
         _failedImageHandler = failedImageHandler;
         _imageHashSettersKeyByAlgorithm = new Dictionary<ImgHashBase, Action<ImageHash, byte[]>>
         {
-            {PHash.Create(), (image, bytes) => image.PHash = BitConverter.ToUInt64(bytes)},
-            {AverageHash.Create(), (image, bytes) => image.AverageHash = BitConverter.ToUInt64(bytes)},
+            {PHash.Create(), (image, bytes) => image.PHash = bytes},
+            {AverageHash.Create(), (image, bytes) => image.AverageHash = bytes},
             {BlockMeanHash.Create(), (image, bytes) => image.BlockMeanHash = bytes},
             {MarrHildrethHash.Create(), (image, bytes) => image.MarrHildrethHash = bytes}
         }.AsReadOnly();
@@ -35,6 +35,8 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
             {
                 ImageId = imageKeyWithMatrix.ImageId,
                 FrameIndex = imageKeyWithMatrix.FrameIndex,
+                PHash = [],
+                AverageHash = [],
                 BlockMeanHash = [],
                 MarrHildrethHash = [],
                 ThumbHash = []

@@ -92,7 +92,8 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
                     revisionNullFieldsBitMask |= whichBitToMask; // mask the corresponding field bit with 1
                 }
             }
-            if (revision != null) revision.NullFieldsBitMask = (NullFieldsBitMask?)revisionNullFieldsBitMask.NullIfZero();
+            if (revision != null)
+                revision.NullFieldsBitMask = (NullFieldsBitMask?)revisionNullFieldsBitMask.NullIfZero();
             return revision;
         }).OfType<TRevision>().ToList();
         if (newRevisions.Count == 0) return; // quick exit to prevent execute sql with WHERE FALSE clause
@@ -130,5 +131,6 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
     private static bool IsSameUser(User a, User b) =>
         (a.Uid, a.Name, a.DisplayName, a.Portrait, a.PortraitUpdatedAt, a.Gender, a.FansNickname, a.IpGeolocation)
         == (b.Uid, b.Name, b.DisplayName, b.Portrait, b.PortraitUpdatedAt, b.Gender, b.FansNickname, b.IpGeolocation)
-        && (a.Icon == b.Icon || (a.Icon != null && b.Icon != null && a.Icon.SequenceEqual(b.Icon)));
+        && (a.Icon == b.Icon
+            || (a.Icon != null && b.Icon != null && new ByteArrayEqualityComparer().Equals(a.Icon, b.Icon)));
 }

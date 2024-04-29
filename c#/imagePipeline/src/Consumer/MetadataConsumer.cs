@@ -13,7 +13,8 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 {
     private readonly ILogger<MetadataConsumer> _logger;
     private readonly FailedImageHandler _failedImageHandler;
-    private readonly (ulong[] Exif, ulong[] Icc, ulong[] Iptc, ulong[] Xmp) _commonEmbeddedMetadataXxHash3ToIgnore;
+    private readonly (IEnumerable<byte[]> Exif, IEnumerable<byte[]> Icc, IEnumerable<byte[]> Iptc, IEnumerable<byte[]> Xmp)
+        _commonEmbeddedMetadataXxHash3ToIgnore;
 
     static MetadataConsumer() => NetTopologySuite.NtsGeometryServices.Instance = new(
         coordinateSequenceFactory: NetTopologySuite.Geometries.Implementation.CoordinateArraySequenceFactory.Instance,
@@ -27,8 +28,8 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
     {
         (_logger, _failedImageHandler) = (logger, failedImageHandler);
         var section = config.GetSection("MetadataConsumer").GetSection("CommonEmbeddedMetadataXxHash3ToIgnore");
-        ulong[] GetCommonXxHash3ToIgnore(string key) =>
-            section.GetSection(key).Get<ulong[]>() ?? [];
+        IEnumerable<byte[]> GetCommonXxHash3ToIgnore(string key) =>
+            (section.GetSection(key).Get<string[]>() ?? []).Select(Convert.FromHexString);
         _commonEmbeddedMetadataXxHash3ToIgnore = (
             Exif: GetCommonXxHash3ToIgnore("Exif"),
             Icc: GetCommonXxHash3ToIgnore("Icc"),
@@ -70,7 +71,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
             Height = (ushort)info.Height,
             BitsPerPixel = (ushort)info.PixelType.BitsPerPixel,
             FrameCount = (uint)info.FrameMetadataCollection.Count,
-            XxHash3 = XxHash3.HashToUInt64(imageBytes),
+            XxHash3 = XxHash3.Hash(imageBytes),
             DownloadedByteSize = image.ExpectedByteSize == imageBytes.Length
                 ? null
                 : new() {DownloadedByteSize = (uint)imageBytes.Length},
@@ -89,7 +90,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
     };
 
     private TEmbeddedMetadata? CreateEmbeddedFromProfile<TImageSharpProfile, TEmbeddedMetadata>(
-        IEnumerable<ulong> commonXxHash3ToIgnore,
+        IEnumerable<byte[]> commonXxHash3ToIgnore,
         TImageSharpProfile? profile,
         Func<TImageSharpProfile, byte[]?> rawBytesSelector)
         where TImageSharpProfile : class
@@ -101,11 +102,11 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         if (rawBytes.Length > 65535)
             _logger.LogWarning("Embedded {} in image contains {} bytes",
                 typeof(TEmbeddedMetadata).Name.ToUpperInvariant(), rawBytes.Length);
-        var xxHash3 = XxHash3.HashToUInt64(rawBytes);
+        var xxHash3 = XxHash3.Hash(rawBytes);
         return new()
         {
             XxHash3 = xxHash3,
-            RawBytes = commonXxHash3ToIgnore.Contains(xxHash3) ? null : rawBytes
+            RawBytes = commonXxHash3ToIgnore.Contains(xxHash3, new ByteArrayEqualityComparer()) ? null : rawBytes
         };
     }
 

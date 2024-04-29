@@ -17,7 +17,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
 
     public interface IEmbedded : IImageMetadata
     {
-        public ulong XxHash3 { get; set; }
+        public byte[] XxHash3 { get; set; }
         public byte[]? RawBytes { get; set; }
     }
 
@@ -27,7 +27,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public ushort Height { get; set; }
     public ushort BitsPerPixel { get; set; }
     public uint FrameCount { get; set; }
-    public ulong XxHash3 { get; set; }
+    public required byte[] XxHash3 { get; set; }
     public ByteSize? DownloadedByteSize { get; set; }
     public Exif? EmbeddedExif { get; set; }
     public Icc? EmbeddedIcc { get; set; }
@@ -88,12 +88,12 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         public Point? GpsCoordinate { get; set; }
         public float? GpsImgDirection { get; set; }
         public string? GpsImgDirectionRef { get; set; }
-        public ulong XxHash3 { get; set; }
+        public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
 
         // workaround to work with MetadataConsumer.CreateEmbeddedFromProfile()
         // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
-        public ICollection<TagName> TagNames { get; set; } = [];
+        public IEnumerable<TagName> TagNames { get; set; } = [];
 
         public class TagName : IImageMetadata
         {
@@ -105,21 +105,21 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public class Icc : IEmbedded
     {
         [Key] public uint ImageId { get; set; }
-        public ulong XxHash3 { get; set; }
+        public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
     }
 
     public class Iptc : IEmbedded
     {
         [Key] public uint ImageId { get; set; }
-        public ulong XxHash3 { get; set; }
+        public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
     }
 
     public class Xmp : IEmbedded
     {
         [Key] public uint ImageId { get; set; }
-        public ulong XxHash3 { get; set; }
+        public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
     }
 
