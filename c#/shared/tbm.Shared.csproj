@@ -6,19 +6,19 @@
         <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
+        <PackageReference Include="NLog.Extensions.Logging" Version="5.3.10" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
-        <PackageReference Include="SuperLinq" Version="6.0.0" />
+        <PackageReference Include="SuperLinq" Version="6.0.1" />
     </ItemGroup>
     <Choose>
-        <When Condition="'$(Configuration)' == 'Debug'">
+        <When Condition="'$(Configuration)' == 'Release'">
             <ItemGroup>
                 <!-- https://stackoverflow.com/questions/73180516/if-a-nuget-specifies-privateassets-all-why-specify-includeassets -->
                 <!-- enable PrivateAssets="All" will prevent analyzers working on other project that has <PackageReference> to this -->
                 <PackageReference ExcludeAssets="compile" Include="codecracker.CSharp" Version="1.1.0" />
                 <PackageReference ExcludeAssets="compile" Include="CSharpGuidelinesAnalyzer" Version="3.8.5" />
                 <PackageReference ExcludeAssets="compile" Include="IDisposableAnalyzers" Version="4.0.7" />
-                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.149" />
+                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.150" />
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" />
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28" />
                 <PackageReference ExcludeAssets="compile" Include="Roslynator.Analyzers" Version="4.12.2" />

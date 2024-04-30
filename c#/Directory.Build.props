@@ -10,6 +10,8 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AnalysisMode>Recommended</AnalysisMode>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
     <ItemGroup>

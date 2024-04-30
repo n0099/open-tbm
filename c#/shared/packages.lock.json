@@ -58,9 +58,9 @@
       },
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[2.0.149, )",
-        "resolved": "2.0.149",
-        "contentHash": "nJaiWMp6AlosBpl3sJO/frbqiImPBHodaJpcwlA/ez3zwjj9ZF4oeH0tWHSRFW8+e5mJMswlc3Kwl8DFskVOCg=="
+        "requested": "[2.0.150, )",
+        "resolved": "2.0.150",
+        "contentHash": "rXKN4/Cf58Pv7uUWk4wcZtY+J9mve6wA1BHGYAf9SlpmiayA5fJ4wK2lflIwAkVo8n8HyNCeY3Ej4jwCdLk5nA=="
       },
       "Microsoft.CodeAnalysis.NetAnalyzers": {
         "type": "Direct",
@@ -118,13 +118,13 @@
       },
       "NLog.Extensions.Logging": {
         "type": "Direct",
-        "requested": "[5.3.8, )",
-        "resolved": "5.3.8",
-        "contentHash": "6VD0lyeokWltL6j8lO7mS7v7lbuO/qn0F7kdvhKhEx1JvFyD39nzohOK3JvkVh4Nn3mrcMDCyDxvTvmiW55jQg==",
+        "requested": "[5.3.10, )",
+        "resolved": "5.3.10",
+        "contentHash": "P8KHXHin9bcbsL/c8p3Q4PARFkuH/YIo0+9ENvq9Mb2vgXWVi0Nr3Z8Hb1hmkVU1txc0d2z8CIB25nKMLItdyA==",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Logging": "8.0.0",
-          "NLog": "5.2.8"
+          "NLog": "5.3.2"
         }
       },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
@@ -165,9 +165,9 @@
       },
       "SuperLinq": {
         "type": "Direct",
-        "requested": "[6.0.0, )",
-        "resolved": "6.0.0",
-        "contentHash": "g7LSvvsTW9/CFtro2+rz5vdCzHWSE5e8oQ1HYxrbJNHNOzlcrOBBKRe/YXTlodcpDBGvdueCNkBnU0Ie3WBnGg=="
+        "requested": "[6.0.1, )",
+        "resolved": "6.0.1",
+        "contentHash": "vHJgD77xAb2852WhvJ8lC+ztYw475jG4/9MvOaXl+mCM5S/TSPdAAUEBmYDcawoN/RbtdjUdfMS0IRqyZSqEYw=="
       },
       "Microsoft.EntityFrameworkCore.Abstractions": {
         "type": "Transitive",
@@ -463,8 +463,8 @@
       },
       "NLog": {
         "type": "Transitive",
-        "resolved": "5.2.8",
-        "contentHash": "jAIELkWBs1CXFPp986KSGpDFQZHCFccO+LMbKBTTNm42KifaI1mYzFMFQQfuGmGMTrCx0TFPhDjHDE4cLAZWiQ=="
+        "resolved": "5.3.2",
+        "contentHash": "cQRQZuDMjSyMe9EQBnI9v55YAMMz8GAfFd6fFJ6tc/kXnG7Hze8p1I8MgvWSBG6E36wA8vSxRrlm8uSIG+SENg=="
       },
       "Npgsql": {
         "type": "Transitive",

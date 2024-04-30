@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/c#
-      - run: dotnet build --no-restore -c Debug ${{ matrix.project }}
+      - run: dotnet build --no-restore -c Release ${{ matrix.project }}
 
   ReSharper:
     runs-on: ubuntu-latest
