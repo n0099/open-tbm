@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl;
 
-public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, string lockType)
+public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, CrawlerLocks.Type lockType)
     : WithLogTrace(config, $"CrawlerLocks:{lockType}")
 {
     private readonly IConfigurationSection _config = config.GetSection($"CrawlerLocks:{lockType}");
@@ -9,8 +9,14 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, s
     // inner value of field _failed with type ushort refers to failed times on this page and lockId before retry
     private readonly ConcurrentDictionary<LockId, ConcurrentDictionary<Page, FailureCount>> _failed = new();
 
-    public static IEnumerable<string> RegisteredLocks { get; } = ["thread", "threadLate", "reply", "subReply"];
-    public string LockType { get; } = lockType;
+    public enum Type
+    {
+        Thread,
+        ThreadLate,
+        Reply,
+        SubReply
+    }
+    public Type LockType { get; } = lockType;
 
     public IReadOnlySet<Page> AcquireRange(LockId lockId, IEnumerable<Page> pages)
     {

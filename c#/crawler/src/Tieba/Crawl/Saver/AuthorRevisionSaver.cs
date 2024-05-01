@@ -2,14 +2,14 @@ using LinqToDB.DataProvider.MySql;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class AuthorRevisionSaver(string triggeredByPostType)
+public class AuthorRevisionSaver(PostType triggeredByPostType)
 {
     // locks only using fid and uid field values from AuthorRevision
     // this prevents inserting multiple entities with similar time and other fields with the same values
     private static readonly HashSet<(Fid Fid, Uid Uid)> AuthorExpGradeLocks = [];
     private readonly List<(Fid Fid, Uid Uid)> _savedRevisions = [];
 
-    public delegate AuthorRevisionSaver New(string triggeredByPostType);
+    public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
 
     public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)

@@ -4,7 +4,7 @@ public class ThreadArchiveCrawlFacade(
         ThreadArchiveCrawler.New crawlerFactory,
         string forumName,
         Fid fid,
-        IIndex<string, CrawlerLocks> locks,
+        IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
         ThreadParser postParser,
         ThreadSaver.New postSaverFactory,
         UserParser.New userParserFactory,

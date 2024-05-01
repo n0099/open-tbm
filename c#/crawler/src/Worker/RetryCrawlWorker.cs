@@ -2,7 +2,7 @@ namespace tbm.Crawler.Worker;
 
 public class RetryCrawlWorker(
         ILogger<RetryCrawlWorker> logger,
-        IIndex<string, CrawlerLocks> registeredLocksLookup,
+        IIndex<CrawlerLocks.Type, CrawlerLocks> registeredLocksLookup,
         CrawlPost crawlPost,
         Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
         Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
@@ -13,12 +13,12 @@ public class RetryCrawlWorker(
 {
     protected override async Task DoWork(CancellationToken stoppingToken)
     {
-        foreach (var lockType in CrawlerLocks.RegisteredLocks)
+        foreach (var lockType in Enum.GetValues<CrawlerLocks.Type>())
         {
             if (stoppingToken.IsCancellationRequested) return;
             var failed = registeredLocksLookup[lockType].RetryAllFailed();
             if (failed.Count == 0) continue; // skip current lock type if there's nothing needs to retry
-            if (lockType == "threadLate")
+            if (lockType == CrawlerLocks.Type.ThreadLate)
             {
                 await RetryThreadLate(failed, stoppingToken);
 
@@ -30,7 +30,7 @@ public class RetryCrawlWorker(
     }
 
     private Func<KeyValuePair<CrawlerLocks.LockId, IReadOnlyDictionary<Page, FailureCount>>, Task> RetryFailed
-        (string lockType, CancellationToken stoppingToken = default) => async failedPagesKeyByLockId =>
+        (CrawlerLocks.Type lockType, CancellationToken stoppingToken = default) => async failedPagesKeyByLockId =>
     {
         if (stoppingToken.IsCancellationRequested) return;
         var ((fid, tid, pid), failureCountsKeyByPage) = failedPagesKeyByLockId;
@@ -39,15 +39,15 @@ public class RetryCrawlWorker(
 
         switch (lockType)
         {
-            case "thread":
+            case CrawlerLocks.Type.Thread:
                 await RetryThread(fid, pages,
                     failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
                 break;
-            case "reply" when tid != null:
+            case CrawlerLocks.Type.Reply when tid != null:
                 await RetryReply(fid, tid.Value, pages,
                     failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
                 break;
-            case "subReply" when tid != null && pid != null:
+            case CrawlerLocks.Type.SubReply when tid != null && pid != null:
                 await RetrySubReply(fid, tid.Value, pid.Value, pages,
                     failureCountsKeyByPage.Count, FailureCountSelector, stoppingToken);
                 break;

@@ -4,10 +4,10 @@ public class ThreadLateCrawler(
     ILogger<ThreadLateCrawler> logger,
     ClientRequester requester,
     ClientRequesterTcs requesterTcs,
-    IIndex<string, CrawlerLocks> locks,
+    IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
     Fid fid)
 {
-    private readonly CrawlerLocks _locks = locks["threadLate"]; // singleton
+    private readonly CrawlerLocks _locks = locks[CrawlerLocks.Type.ThreadLate]; // singleton
 
     public delegate ThreadLateCrawler New(Fid fid);
 
@@ -58,7 +58,7 @@ public class ThreadLateCrawler(
                         throw new TiebaException("Error from tieba client.") {Data = {{"raw", json}}};
                 }
 
-                var thread = json.GetProperty("thread");
+                var thread = json.GetProperty(Enum.GetName(PostType.Thread)!.ToLower(CultureInfo.InvariantCulture));
 #pragma warning disable S3358 // Ternary operators should not be nested
                 return thread.TryGetProperty("thread_info", out var threadInfo)
                     ? threadInfo.TryGetProperty("phone_type", out var phoneType)

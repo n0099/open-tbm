@@ -41,7 +41,7 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
 
     public void Save(
         CrawlerDbContext db,
-        string postType,
+        PostType postType,
         IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
     {
         if (users.IsEmpty) return;

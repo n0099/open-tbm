@@ -42,7 +42,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<CrawlerDbContext>();
         builder.RegisterType<ClientRequester>();
         builder.RegisterType<ClientRequesterTcs>().SingleInstance();
-        CrawlerLocks.RegisteredLocks.ForEach(type =>
+        Enum.GetValues<CrawlerLocks.Type>().ForEach(type =>
             builder.RegisterType<CrawlerLocks>()
                 .Keyed<CrawlerLocks>(type)
                 .WithParameter("lockType", type)

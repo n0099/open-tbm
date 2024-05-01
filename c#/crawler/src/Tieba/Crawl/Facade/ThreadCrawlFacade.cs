@@ -4,13 +4,13 @@ public class ThreadCrawlFacade(
         ThreadCrawler.New crawlerFactory,
         string forumName,
         Fid fid,
-        IIndex<string, CrawlerLocks> locks,
+        IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
         ThreadParser postParser,
         ThreadSaver.New postSaverFactory,
         UserParser.New userParserFactory,
         UserSaver.New userSaverFactory)
     : BaseCrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>(
-        crawlerFactory(forumName), fid, new(fid), locks["thread"],
+        crawlerFactory(forumName), fid, new(fid), locks[CrawlerLocks.Type.Thread],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
 {

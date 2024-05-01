@@ -50,7 +50,7 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
 
         var userSaver = userSaverFactory(_users);
-        userSaver.Save(db, postSaver.PostType, postSaver.UserFieldChangeIgnorance);
+        userSaver.Save(db, postSaver.CurrentPostType, postSaver.UserFieldChangeIgnorance);
 
         BeforeCommitSaveHook(db, userSaver);
         try

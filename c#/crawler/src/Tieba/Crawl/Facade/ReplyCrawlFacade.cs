@@ -4,7 +4,7 @@ public class ReplyCrawlFacade(
         ReplyCrawler.New crawlerFactory,
         Fid fid,
         Tid tid,
-        IIndex<string, CrawlerLocks> locks,
+        IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
         ReplyParser postParser,
         ReplySaver.New postSaverFactory,
         UserParser.New userParserFactory,
@@ -12,7 +12,7 @@ public class ReplyCrawlFacade(
         CrawlerDbContext.New dbContextFactory,
         SonicPusher sonicPusher)
     : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>(
-        crawlerFactory(fid, tid), fid, new(fid, tid), locks["reply"],
+        crawlerFactory(fid, tid), fid, new(fid, tid), locks[CrawlerLocks.Type.Reply],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
 {

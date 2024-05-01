@@ -1,6 +1,8 @@
 // ReSharper disable once RedundantUsingDirective
 using System.Diagnostics.CodeAnalysis;
 
+[assembly: SuppressMessage("ApiDesign", "SS036:An enum should explicitly specify its values", Justification = "<Pending>")]
+[assembly: SuppressMessage("ApiDesign", "SS039:An enum should specify a default value", Justification = "<Pending>")]
 [assembly: SuppressMessage("Class Design", "AV1008:Class should not be static")]
 [assembly: SuppressMessage("Class Design", "AV1010:Member hides inherited member")]
 [assembly: SuppressMessage("Correctness", "SS019:Switch should have default label.")]

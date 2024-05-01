@@ -7,7 +7,7 @@ public class SubReplySaver(
         ConcurrentDictionary<PostId, SubReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
     : BasePostSaver<SubReplyPost, BaseSubReplyRevision>(
-        logger, posts, authorRevisionSaverFactory, "subReply")
+        logger, posts, authorRevisionSaverFactory, PostType.SubReply)
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
