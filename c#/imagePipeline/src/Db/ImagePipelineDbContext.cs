@@ -34,6 +34,7 @@ public class ImagePipelineDbContext(Fid fid, string script)
             new {e.ImageId, e.FrameIndex, e.CenterPointX, e.CenterPointY, e.Width, e.Height, e.RotationDegrees, e.Recognizer});
         b.Entity<ImageQrCode>().ToTable("tbmi_qrCode").HasKey(e =>
             new {e.ImageId, e.FrameIndex, e.Point1X, e.Point1Y, e.Point2X, e.Point2Y, e.Point3X, e.Point3Y, e.Point4X, e.Point4Y});
+        b.Entity<ImageQrCode>().Property(e => e.Text).HasConversion<byte[]>();
         b.Entity<ImageMetadata>().ToTable("tbmi_metadata");
         b.Entity<ImageFailed>().ToTable("tbmi_failed");
         b.Entity<ForumScript>().ToTable("tbmi_forum_script").HasKey(e => new {e.Fid, e.Script});
@@ -45,13 +46,16 @@ public class ImagePipelineDbContext(Fid fid, string script)
             b.Entity<ImageMetadata>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
             b.Entity<TRelatedEntity>().ToTable($"tbmi_metadata_{tableNameSuffix}");
         }
-        SplitImageMetadata(e => e.DownloadedByteSize, "downloadedByteSize");
         SplitImageMetadata(e => e.EmbeddedExif, "embedded_exif");
         b.Entity<Exif>().HasMany(e => e.TagNames).WithOne().HasForeignKey(e => e.ImageId);
+        b.Entity<Exif>().Property(e => e.UserComment).HasConversion<byte[]>();
+        b.Entity<Exif>().Property(e => e.XpAuthor).HasConversion<byte[]>();
         b.Entity<Exif.TagName>().ToTable("tbmi_metadata_embedded_exif_tagName").HasKey(e => new {e.ImageId, e.Name});
+
         SplitImageMetadata(e => e.EmbeddedIcc, "embedded_icc");
         SplitImageMetadata(e => e.EmbeddedIptc, "embedded_iptc");
         SplitImageMetadata(e => e.EmbeddedXmp, "embedded_xmp");
+        SplitImageMetadata(e => e.DownloadedByteSize, "downloadedByteSize");
         SplitImageMetadata(e => e.JpgMetadata, "jpg");
         SplitImageMetadata(e => e.PngMetadata, "png");
         SplitImageMetadata(e => e.GifMetadata, "gif");

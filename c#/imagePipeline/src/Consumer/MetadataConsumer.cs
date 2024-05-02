@@ -236,8 +236,10 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                     $"Unexpected \"{longitudeRef}\", expecting \"E\" or \"W\".")
             };
 
-            return NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory()
-                .CreatePoint(new Coordinate(ConvertDmsToDd(longitudeDms), ConvertDmsToDd(latitudeDms)));
+            var coordinate = new Coordinate(ConvertDmsToDd(longitudeDms), ConvertDmsToDd(latitudeDms));
+            return coordinate.IsValid
+                ? NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory().CreatePoint(coordinate)
+                : null;
         }
 
         private static double ConvertDmsToDd(IReadOnlyList<double> dms)

@@ -97,6 +97,8 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
         user.SplittingHasKey<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
         user.SplittingHasKey<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
         user.SplittingHasKey<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
+        b.Entity<SplitDisplayName>().Property(e => e.DisplayName).HasConversion<byte[]>();
+        b.Entity<User>().Property(e => e.DisplayName).HasConversion<byte[]>();
 
         b.Entity<AuthorExpGradeRevision>().ToTable("tbmcr_authorExpGrade")
             .HasKey(e => new {e.Fid, e.Uid, e.DiscoveredAt});
