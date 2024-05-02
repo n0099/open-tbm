@@ -19,6 +19,7 @@ global using OpenCvSharp;
 global using Polly;
 global using Polly.Extensions.Http;
 global using Polly.Registry;
+global using Sdcb.PaddleOCR;
 global using SixLabors.ImageSharp;
 global using SixLabors.ImageSharp.Formats.Bmp;
 global using SixLabors.ImageSharp.Formats.Gif;

@@ -1,6 +1,6 @@
 namespace tbm.Crawler;
 
-public static partial class ExtensionMethods
+public static class ExtensionMethods
 {
     /// <summary>
     ///     Returns a random long from min (inclusive) to max (exclusive)

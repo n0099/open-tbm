@@ -59,7 +59,6 @@ global using Uid = System.Int64;
 global using PostId = System.UInt64;
 global using Tid = System.UInt64;
 global using Pid = System.UInt64;
-global using Spid = System.UInt64;
 global using Time = System.UInt32;
 global using Page = System.UInt32;
 global using FailureCount = System.UInt16;

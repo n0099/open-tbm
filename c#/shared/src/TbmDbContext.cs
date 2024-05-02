@@ -1,13 +1,9 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
-using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 

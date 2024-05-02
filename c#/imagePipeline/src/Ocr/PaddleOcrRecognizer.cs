@@ -1,5 +1,3 @@
-using Sdcb.PaddleOCR;
-
 namespace tbm.ImagePipeline.Ocr;
 
 public class PaddleOcrRecognizer(PaddleOcrAll ocr)

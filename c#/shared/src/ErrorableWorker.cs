@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
 namespace tbm.Shared;
 
 #pragma warning disable AV1564 // Parameter in public or internal member is of type bool or bool?

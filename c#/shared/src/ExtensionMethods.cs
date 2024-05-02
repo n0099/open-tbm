@@ -1,6 +1,4 @@
 using System.Reflection;
-using Autofac;
-using Microsoft.EntityFrameworkCore;
 
 namespace tbm.Shared;
 

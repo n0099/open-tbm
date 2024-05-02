@@ -1,5 +1,4 @@
 using Sdcb.PaddleInference;
-using Sdcb.PaddleOCR;
 using Sdcb.PaddleOCR.Models.Online;
 using static tbm.ImagePipeline.Ocr.PaddleOcrDetector;
 
