@@ -201,7 +201,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         public static Point? ParseGpsCoordinateOrNull(
             IEnumerable<IExifValue> allTagValues,
             IEnumerable<Rational>? latitude,
+#pragma warning disable AV1568 // Parameter value should not be overwritten in method body
             string? latitudeRef,
+#pragma warning restore AV1568 // Parameter value should not be overwritten in method body
             IEnumerable<Rational>? longitude,
             string? longitudeRef)
         {
@@ -253,7 +255,9 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
 
     private static partial class ExifDateTimeTagValuesParser
     {
+#pragma warning disable AV1568 // Parameter value should not be overwritten in method body
         public static DateTimeAndOffset? ParseExifDateTimeOrNull(string? exifDateTime, string? exifFractionalSeconds)
+#pragma warning restore AV1568 // Parameter value should not be overwritten in method body
         { // https://gist.github.com/thanatos/eee17100476a336a711e
             // tested inputs with valid results:
             // "2019:02:07 21:238"         => "2019/2/7 21:23:08"  , ""

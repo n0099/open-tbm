@@ -22,9 +22,9 @@ public class PushAllPostContentsIntoSonicWorker(
 #pragma warning restore IDISP004 // Don't ignore created IDisposable
             .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
                 string.Join(" UNION ALL ", (from f in db.Forums select f.Fid).AsEnumerable().Select(fid =>
-                    $"SELECT {fid} AS Fid,"
-                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_reply ORDER BY id DESC LIMIT 1), 0) AS ReplyCount,"
-                    + $"IFNULL((SELECT id FROM tbmc_f{fid}_subReply ORDER BY id DESC LIMIT 1), 0) AS SubReplyCount")))
+                    $"SELECT '{fid}',"
+                    + $"COALESCE((SELECT id FROM \"tbmc_f{fid}_reply\" ORDER BY id DESC LIMIT 1), 0),"
+                    + $"COALESCE((SELECT id FROM \"tbmc_f{fid}_subReply\" ORDER BY id DESC LIMIT 1), 0)")))
             .ToList();
         var forumCount = forumPostCountsTuples.Count * 2; // reply and sub reply
         var totalPostCount = forumPostCountsTuples.Sum(t => t.ReplyCount)
@@ -35,11 +35,6 @@ public class PushAllPostContentsIntoSonicWorker(
             var forumIndex = (index + 1) * 2; // counting from one, including both reply and sub reply
             await using var dbFactory = dbContextFactory();
             var dbWithFid = dbFactory.Value(fid);
-
-            // enlarge the default mysql connection read/write timeout to prevent it close connection while pushing
-            // since pushing post contents into sonic is slower than fetching records from mysql, aka back-pressure
-            _ = await dbWithFid.Database.ExecuteSqlRawAsync(
-                "SET SESSION net_read_timeout = 3600; SET SESSION net_write_timeout = 3600;", stoppingToken);
 
             _ = await pusher.Ingest.FlushBucketAsync($"{pusher.CollectionPrefix}replies_content", $"f{fid}");
             pushedPostCount += PushPostContentsWithTiming(fid, forumIndex - 1, forumCount, "replies",

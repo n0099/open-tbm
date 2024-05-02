@@ -1,4 +1,4 @@
-using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.PostgreSQL;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
@@ -51,10 +51,12 @@ public class AuthorRevisionSaver(PostType triggeredByPostType)
     {
         Helper.GetNowTimestamp(out var now);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
-            .Where(e => e.Fid == db.Fid && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
+            .Where(e => e.Fid == db.Fid
+                        && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
+            .AsCte() // https://stackoverflow.com/questions/49854322/usage-of-for-update-in-window-function-postgres#comment86726589_49854322
             .Where(e => e.Rank == 1)
-            .AsMySql().ForUpdateHint()
+            .AsPostgreSQL().ForUpdateHint()
             .ToLinqToDB().AsEnumerable()
             .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
             (

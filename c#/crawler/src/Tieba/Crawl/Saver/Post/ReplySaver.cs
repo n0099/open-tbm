@@ -142,7 +142,9 @@ public partial class ReplySaver
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking().ForUpdate()
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
-                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3, new ByteArrayEqualityComparer())
+
+                  // server side eval doesn't need ByteArrayEqualityComparer
+                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3)
             select s
         ).ToList();
         (from existing in existingSignatures

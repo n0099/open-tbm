@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using static tbm.ImagePipeline.Db.ImageMetadata;
 
 namespace tbm.ImagePipeline.Db;
@@ -20,7 +21,7 @@ public class ImagePipelineDbContext(Fid fid, string script)
     private Fid Fid { get; } = fid;
     private string Script { get; } = script;
 
-    protected override void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
+    protected override void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) => builder.UseNetTopologySuite();
 
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void OnModelCreating(ModelBuilder b)

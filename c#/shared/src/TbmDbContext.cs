@@ -7,13 +7,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
+using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Shared;
 
 public abstract class TbmDbContext : DbContext
 {
-    protected static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorInstance = new();
+    protected static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorSingleton = new();
 
     [SuppressMessage("Style", "CC0072:Remove Async termination when method is not asynchronous.", Justification = "https://github.com/code-cracker/code-cracker/issues/1086")]
     protected sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
@@ -72,10 +74,9 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        var connectionString = Config.GetConnectionString("Main");
-        options.UseMySql(connectionString!, ServerVersion.AutoDetect(connectionString), OnConfiguringMysql)
+        options.UseNpgsql(GetNpgsqlDataSource(Config.GetConnectionString("Main")).Value, OnConfiguringNpgsql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
-            .AddInterceptors(SelectForUpdateCommandInterceptorInstance)
+            .AddInterceptors(SelectForUpdateCommandInterceptorSingleton)
             .UseCamelCaseNamingConvention();
 
         var dbSettings = Config.GetSection("DbSettings");
@@ -102,5 +103,17 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     protected void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
         b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
 
-    protected virtual void OnConfiguringMysql(MySqlDbContextOptionsBuilder builder) { }
+    protected virtual void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) { }
+
+    protected virtual void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) { }
+
+    protected virtual Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
+        throw new NotSupportedException();
+
+    protected Lazy<NpgsqlDataSource> GetNpgsqlDataSourceFactory(string? connectionString) => new(() =>
+    {
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+        OnBuildingNpgsqlDataSource(dataSourceBuilder);
+        return dataSourceBuilder.Build();
+    });
 }

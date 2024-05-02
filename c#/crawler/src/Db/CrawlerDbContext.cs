@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Npgsql;
 using static tbm.Crawler.Db.Revision.ReplyRevision;
 using static tbm.Crawler.Db.Revision.SubReplyRevision;
 using static tbm.Crawler.Db.Revision.ThreadRevision;
@@ -8,6 +9,8 @@ namespace tbm.Crawler.Db;
 
 public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>
 {
+    private static Lazy<NpgsqlDataSource>? _dataSourceSingleton;
+
     public CrawlerDbContext() : this(fid: 0) { }
     public delegate CrawlerDbContext NewDefault();
     public delegate CrawlerDbContext New(Fid fid);
@@ -101,6 +104,13 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
             .HasKey(e => new {e.Fid, e.Portrait, e.DiscoveredAt, e.ModeratorTypes});
         b.Entity<Forum>().ToTable("tbm_forum");
     }
+
+    protected override void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) =>
+        builder.MapEnum<PostType>("tbmcr_triggeredBy", new NpgsqlCamelCaseNameTranslator());
+
+    [SuppressMessage("Critical Code Smell", "S2696:Instance members should not write to \"static\" fields")]
+    protected override Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
+        _dataSourceSingleton ??= GetNpgsqlDataSourceFactory(connectionString);
 
     public class ModelCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590
