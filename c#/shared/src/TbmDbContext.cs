@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -56,6 +57,39 @@ public abstract class TbmDbContext : DbContext
                 command.CommandText += " FOR UPDATE";
         }
     }
+
+    /// <see>https://stackoverflow.com/questions/74846169/how-bad-are-savepoints-in-postgresql</see>
+    /// <see>https://www.cybertec-postgresql.com/en/subtransactions-and-performance-in-postgresql/</see>
+    /// <see>https://postgres.ai/blog/20210831-postgresql-subtransactions-considered-harmful#problem-3-unexpected-use-of-multixact-ids</see>
+    /// <see>https://about.gitlab.com/blog/2021/09/29/why-we-spent-the-last-month-eliminating-postgresql-subtransactions/</see>
+    /// <see>https://gitlab.com/gitlab-org/gitlab/-/issues/338865#note_655312474</see>
+    /// <see>https://github.com/dotnet/efcore/issues/23269#issuecomment-2095902588</see>
+    protected class NoSavePointTransactionFactory(RelationalTransactionFactoryDependencies dependencies)
+        : IRelationalTransactionFactory
+    {
+        protected virtual RelationalTransactionFactoryDependencies Dependencies { get; } = dependencies;
+
+        public virtual RelationalTransaction Create(
+            IRelationalConnection connection,
+            DbTransaction transaction,
+            Guid transactionId,
+            IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
+            bool transactionOwned)
+            => new NoSavePointTransaction(
+                connection, transaction, transactionId, logger, transactionOwned, Dependencies.SqlGenerationHelper);
+
+        private sealed class NoSavePointTransaction(IRelationalConnection connection,
+            DbTransaction transaction,
+            Guid transactionId,
+            IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
+            bool transactionOwned,
+            ISqlGenerationHelper sqlGenerationHelper)
+            : RelationalTransaction(
+                connection, transaction, transactionId, logger, transactionOwned, sqlGenerationHelper)
+        {
+            public override bool SupportsSavepoints => false;
+        }
+    }
 }
 public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
@@ -72,6 +106,7 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
     {
         options.UseNpgsql(GetNpgsqlDataSource(Config.GetConnectionString("Main")).Value, OnConfiguringNpgsql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
+            .ReplaceService<IRelationalTransactionFactory, NoSavePointTransactionFactory>()
             .AddInterceptors(SelectForUpdateCommandInterceptorSingleton)
             .UseCamelCaseNamingConvention();
 
