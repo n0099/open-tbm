@@ -56,7 +56,7 @@ public class AuthorRevisionSaver(PostType triggeredByPostType)
             .Select(latestRevisionProjectionFactory)
             .AsCte() // https://stackoverflow.com/questions/49854322/usage-of-for-update-in-window-function-postgres#comment86726589_49854322
             .Where(e => e.Rank == 1)
-            .AsPostgreSQL().ForUpdateHint()
+            .AsPostgreSQL().ForNoKeyUpdateHint()
             .ToLinqToDB().AsEnumerable()
             .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
             (

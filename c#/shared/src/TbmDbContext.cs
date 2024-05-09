@@ -54,7 +54,7 @@ public abstract class TbmDbContext : DbContext
         private static void ManipulateCommand(IDbCommand command)
         {
             if (command.CommandText.StartsWith("-- ForUpdate", StringComparison.Ordinal))
-                command.CommandText += " FOR UPDATE";
+                command.CommandText += " FOR NO KEY UPDATE";
         }
     }
 

@@ -482,8 +482,8 @@
       },
       "NLog.Extensions.Logging": {
         "type": "Transitive",
-        "resolved": "5.3.10",
-        "contentHash": "P8KHXHin9bcbsL/c8p3Q4PARFkuH/YIo0+9ENvq9Mb2vgXWVi0Nr3Z8Hb1hmkVU1txc0d2z8CIB25nKMLItdyA==",
+        "resolved": "5.3.11",
+        "contentHash": "C3Rg6jmOkM7fNBX9jAoVlYzOwsrxdQzl9sYDK1EpRc7RCdjgs8FC9ivJCSsCu/m4l0w83xiTNz7Y1CzmD3BwZg==",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Logging": "8.0.0",
@@ -557,7 +557,7 @@
           "EFCore.NamingConventions": "[8.0.3, )",
           "Microsoft.EntityFrameworkCore": "[8.0.4, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
-          "NLog.Extensions.Logging": "[5.3.10, )",
+          "NLog.Extensions.Logging": "[5.3.11, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[8.0.2, )",
           "SuperLinq": "[6.0.1, )"
         }
