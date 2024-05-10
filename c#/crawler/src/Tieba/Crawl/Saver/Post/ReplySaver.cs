@@ -7,7 +7,7 @@ public partial class ReplySaver(
         ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BasePostSaver<ReplyPost, BaseReplyRevision>(
+    : PostSaver<ReplyPost, BaseReplyRevision>(
         logger, posts, authorRevisionSaverFactory, PostType.Reply)
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);

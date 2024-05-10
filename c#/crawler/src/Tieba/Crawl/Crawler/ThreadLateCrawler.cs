@@ -83,7 +83,7 @@ public class ThreadLateCrawler(
             }
         }
         catch (Exception e)
-        { // below is similar with BaseCrawlFacade.SilenceException()
+        { // below is similar with CrawlFacade.SilenceException()
             e.Data["fid"] = fid;
             e.Data["tid"] = tid;
             e = e.ExtractInnerExceptionsData();

@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
-public class SubReplyParser : BasePostParser<SubReplyPost, SubReply>
+public class SubReplyParser : PostParser<SubReplyPost, SubReply>
 {
     protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
 

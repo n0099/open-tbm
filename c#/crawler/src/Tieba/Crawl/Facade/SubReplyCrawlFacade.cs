@@ -11,7 +11,7 @@ public class SubReplyCrawlFacade(
         UserParser.New userParserFactory,
         UserSaver.New userSaverFactory,
         SonicPusher sonicPusher)
-    : BaseCrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>(
+    : CrawlFacade<SubReplyPost, BaseSubReplyRevision, SubReplyResponse, SubReply>(
         crawlerFactory(tid, pid), fid, new(fid, tid, pid), locks[CrawlerLocks.Type.SubReply],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)

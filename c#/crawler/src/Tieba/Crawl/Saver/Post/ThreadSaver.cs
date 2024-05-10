@@ -6,7 +6,7 @@ public class ThreadSaver(
         ILogger<ThreadSaver> logger,
         ConcurrentDictionary<Tid, ThreadPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : BasePostSaver<ThreadPost, BaseThreadRevision>(
+    : PostSaver<ThreadPost, BaseThreadRevision>(
         logger, posts, authorRevisionSaverFactory, PostType.Thread)
 {
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);

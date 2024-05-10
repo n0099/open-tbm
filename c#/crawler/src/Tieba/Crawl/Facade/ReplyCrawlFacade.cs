@@ -11,7 +11,7 @@ public class ReplyCrawlFacade(
         UserSaver.New userSaverFactory,
         CrawlerDbContext.New dbContextFactory,
         SonicPusher sonicPusher)
-    : BaseCrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>(
+    : CrawlFacade<ReplyPost, BaseReplyRevision, ReplyResponse, Reply>(
         crawlerFactory(fid, tid), fid, new(fid, tid), locks[CrawlerLocks.Type.Reply],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)

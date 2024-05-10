@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
-public class ThreadParser : BasePostParser<ThreadPost, Thread>
+public class ThreadParser : PostParser<ThreadPost, Thread>
 {
     protected override PostId PostIdSelector(ThreadPost post) => post.Tid;
 
