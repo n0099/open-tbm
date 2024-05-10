@@ -7,7 +7,7 @@ public abstract class PostSaver<TPost, TBaseRevision>(
         ConcurrentDictionary<PostId, TPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory,
         PostType currentPostType)
-    : BaseSaver<TBaseRevision>(logger)
+    : BaseSaver<TBaseRevision>(logger), IPostSaver<TPost>
     where TPost : BasePost
     where TBaseRevision : BaseRevisionWithSplitting
 {

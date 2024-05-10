@@ -1,31 +1,28 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 #pragma warning disable S3881 // "IDisposable" should be implemented correctly
-public abstract class CrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>(
+public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
     BaseCrawler<TResponse, TPostProtoBuf> crawler,
     Fid fid,
     CrawlerLocks.LockId lockId,
     CrawlerLocks locks,
-    PostParser<TPost, TPostProtoBuf> postParser,
-    Func<ConcurrentDictionary<PostId, TPost>, PostSaver<TPost, TBaseRevision>> postSaverFactory,
+    IPostParser<TPost, TPostProtoBuf> postParser,
+    Func<ConcurrentDictionary<PostId, TPost>, IPostSaver<TPost>> postSaverFactory,
     Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
     Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory)
-    : IDisposable
+    : ICrawlFacade<TPost>
     where TPost : BasePost
-    where TBaseRevision : BaseRevisionWithSplitting
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     private readonly HashSet<Page> _lockingPages = [];
     private readonly ConcurrentDictionary<Uid, User> _users = new();
     private UserParser? _userParser;
-    private ExceptionHandler _exceptionHandler = _ => { };
-
-    public delegate void ExceptionHandler(Exception ex);
+    private ICrawlFacade<TPost>.ExceptionHandler _exceptionHandler = _ => { };
 
     // ReSharper disable UnusedAutoPropertyAccessor.Global
-    public required ILogger<CrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>>
+    public required ILogger<CrawlFacade<TPost, TResponse, TPostProtoBuf>>
         Logger { private get; init; }
     public required CrawlerDbContext.New DbContextFactory { private get; init; }
     public required ClientRequesterTcs RequesterTcs { private get; init; }
@@ -77,8 +74,10 @@ public abstract class CrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf
         }
     }
 
-    public async Task<CrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>>
-        CrawlPageRange(Page startPage, Page endPage = Page.MaxValue, CancellationToken stoppingToken = default)
+    public async Task<ICrawlFacade<TPost>> CrawlPageRange(
+        Page startPage,
+        Page endPage = Page.MaxValue,
+        CancellationToken stoppingToken = default)
     { // cancel when startPage is already locked
         if (_lockingPages.Count != 0) ThrowHelper.ThrowInvalidOperationException(
             "CrawlPageRange() can only be called once, a instance of CrawlFacade shouldn't be reuse for other crawls.");
@@ -120,8 +119,7 @@ public abstract class CrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf
         return SaveCrawled(stoppingToken);
     }
 
-    public CrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>
-        AddExceptionHandler(ExceptionHandler handler)
+    public ICrawlFacade<TPost> AddExceptionHandler(ICrawlFacade<TPost>.ExceptionHandler handler)
     {
         _exceptionHandler += handler;
         return this;

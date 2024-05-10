@@ -1,12 +1,15 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
 public abstract class PostParser<TPost, TPostProtoBuf>
+    : IPostParser<TPost, TPostProtoBuf>
     where TPost : BasePost
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     public void Parse(
-        CrawlRequestFlag requestFlag, IReadOnlyCollection<TPostProtoBuf> inPosts,
-        out IReadOnlyDictionary<PostId, TPost> outPosts, out IReadOnlyCollection<TbClient.User> outUsers)
+        CrawlRequestFlag requestFlag,
+        IReadOnlyCollection<TPostProtoBuf> inPosts,
+        out IReadOnlyDictionary<PostId, TPost> outPosts,
+        out IReadOnlyCollection<TbClient.User> outUsers)
     {
         if (ShouldSkipParse(requestFlag))
         {

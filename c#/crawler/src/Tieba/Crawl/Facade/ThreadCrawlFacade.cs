@@ -9,7 +9,7 @@ public class ThreadCrawlFacade(
         ThreadSaver.New postSaverFactory,
         UserParser.New userParserFactory,
         UserSaver.New userSaverFactory)
-    : CrawlFacade<ThreadPost, BaseThreadRevision, ThreadResponse, Thread>(
+    : CrawlFacade<ThreadPost, ThreadResponse, Thread>(
         crawlerFactory(forumName), fid, new(fid), locks[CrawlerLocks.Type.Thread],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
