@@ -134,31 +134,30 @@ public class CrawlPost(
         (Fid fid, Tid tid, SavedThreadsList savedThreads) => ex =>
     {
         if (ex is not EmptyPostListException) return;
-        var parentThread = savedThreads
+        var thread = savedThreads
             .SelectMany(c => c.AllAfter.Where(th => th.Tid == tid))
             .FirstOrDefault();
-        if (parentThread == null) return;
+        if (thread == null) return;
 
         var newEntity = new ThreadMissingFirstReply
         {
             Tid = tid,
-            Pid = parentThread.FirstReplyPid,
-            Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(parentThread.FirstReplyExcerpt,
-                () => new ThreadAbstractWrapper {Value = {parentThread.FirstReplyExcerpt}}),
-            DiscoveredAt = Helper.GetNowTimestamp()
+            Pid = thread.FirstReplyPid,
+            Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(thread.FirstReplyExcerpt,
+                () => new ThreadAbstractWrapper {Value = {thread.FirstReplyExcerpt}}),
+            LastSeenAt = Helper.GetNowTimestamp()
         };
         if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty
 
         using var dbFactory = dbContextFactory();
         var db = dbFactory.Value(fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-        var firstReply =
-            from r in db.Replies.AsNoTracking()
-            where r.Pid == parentThread.FirstReplyPid
-            select r.Pid;
-        if (firstReply.Any()) return; // skip if the first reply of parent thread had already saved
+        if ((from r in db.Replies.AsNoTracking()
+            where r.Pid == thread.FirstReplyPid
+            select r.Pid)
+            .Any()) return; // skip if the first reply of parent thread had already saved
 
-        var existingEntity = db.ThreadMissingFirstReplies.AsTracking().ForUpdate()
+        var existingEntity = db.ThreadMissingFirstReplies.AsTracking()
             .SingleOrDefault(e => e.Tid == tid);
         if (existingEntity == null)
         {
@@ -166,12 +165,12 @@ public class CrawlPost(
         }
         else
         {
-            if (newEntity.Pid != null) existingEntity.Pid = newEntity.Pid;
-            if (newEntity.Excerpt != null) existingEntity.Excerpt = newEntity.Excerpt;
-            existingEntity.DiscoveredAt = newEntity.DiscoveredAt;
+            existingEntity.Pid = newEntity.Pid;
+            existingEntity.Excerpt = newEntity.Excerpt;
+            existingEntity.LastSeenAt = newEntity.LastSeenAt;
         }
-
-        _ = db.SaveChanges();
+        
+        _ = db.SaveChangesForUpdate();
         transaction.Commit();
     };
 }

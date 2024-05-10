@@ -16,7 +16,6 @@ public static partial class ExtensionMethods
     public static short RoundToShort(this float number) => (short)Math.Round(number);
     public static ushort RoundToUshort(this float number) => (ushort)Math.Round(number);
     public static ushort RoundToUshort(this double number) => (ushort)Math.Round(number);
-    public static IQueryable<T> ForUpdate<T>(this IQueryable<T> query) => query.TagWith("ForUpdate");
 
     /// <see>https://stackoverflow.com/questions/13158121/how-to-add-a-range-of-items-to-an-ilist/33104162#33104162</see>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]

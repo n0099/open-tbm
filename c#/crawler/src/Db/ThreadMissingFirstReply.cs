@@ -6,5 +6,5 @@ public class ThreadMissingFirstReply : RowVersionedEntity
     [Key] public ulong Tid { get; set; }
     public ulong? Pid { get; set; }
     public byte[]? Excerpt { get; set; }
-    public uint? DiscoveredAt { get; set; }
+    public uint? LastSeenAt { get; set; }
 }

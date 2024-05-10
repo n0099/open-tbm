@@ -1,4 +1,3 @@
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -12,49 +11,43 @@ namespace tbm.Shared;
 
 public abstract class TbmDbContext : DbContext
 {
-    protected static readonly SelectForUpdateCommandInterceptor SelectForUpdateCommandInterceptorSingleton = new();
-
-    [SuppressMessage("Style", "CC0072:Remove Async termination when method is not asynchronous.", Justification = "https://github.com/code-cracker/code-cracker/issues/1086")]
-    protected sealed class SelectForUpdateCommandInterceptor : DbCommandInterceptor
-    { // https://stackoverflow.com/questions/37984312/how-to-implement-select-for-update-in-ef-core/75086260#75086260
-        public override InterceptionResult<object> ScalarExecuting
-            (DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
+    public int SaveChangesForUpdate()
+    {
+        while (true)
         {
-            ManipulateCommand(command);
-            return result;
+            try
+            {
+                return SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                foreach (var entry in e.Entries)
+                {
+                    var existing = entry.GetDatabaseValues();
+                    if (existing == null) entry.State = EntityState.Added; // already deleted
+                    else entry.OriginalValues.SetValues(existing);
+                }
+            }
         }
+    }
 
-        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(
-            DbCommand command,
-            CommandEventData eventData,
-            InterceptionResult<object> result,
-            CancellationToken cancellationToken = default)
+    public async Task<int> SaveChangesForUpdateAsync(CancellationToken stoppingToken = default)
+    {
+        while (true)
         {
-            ManipulateCommand(command);
-            return new(result);
-        }
-
-        public override InterceptionResult<DbDataReader> ReaderExecuting
-            (DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
-        {
-            ManipulateCommand(command);
-            return result;
-        }
-
-        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
-            DbCommand command,
-            CommandEventData eventData,
-            InterceptionResult<DbDataReader> result,
-            CancellationToken cancellationToken = default)
-        {
-            ManipulateCommand(command);
-            return new(result);
-        }
-
-        private static void ManipulateCommand(IDbCommand command)
-        {
-            if (command.CommandText.StartsWith("-- ForUpdate", StringComparison.Ordinal))
-                command.CommandText += " FOR NO KEY UPDATE";
+            try
+            {
+                return await SaveChangesAsync(stoppingToken);
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                foreach (var entry in e.Entries)
+                {
+                    var existing = await entry.GetDatabaseValuesAsync(stoppingToken);
+                    if (existing == null) entry.State = EntityState.Added; // already deleted
+                    else entry.OriginalValues.SetValues(existing);
+                }
+            }
         }
     }
 
@@ -107,7 +100,6 @@ public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
         options.UseNpgsql(GetNpgsqlDataSource(Config.GetConnectionString("Main")).Value, OnConfiguringNpgsql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .ReplaceService<IRelationalTransactionFactory, NoSavePointTransactionFactory>()
-            .AddInterceptors(SelectForUpdateCommandInterceptorSingleton)
             .UseCamelCaseNamingConvention();
 
         var dbSettings = Config.GetSection("DbSettings");

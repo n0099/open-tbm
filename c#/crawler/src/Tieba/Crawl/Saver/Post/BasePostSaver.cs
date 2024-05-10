@@ -32,9 +32,8 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
         ExpressionStarter<TPost> existingPostPredicate)
         where TRevision : class, IRevision
     {
-        var dbSet = db.Set<TPost>().ForUpdate();
-
-        var existingPostsKeyById = dbSet.Where(existingPostPredicate).ToDictionary(postIdSelector);
+        var existingPostsKeyById = db.Set<TPost>()
+            .Where(existingPostPredicate).ToDictionary(postIdSelector);
 
         // deep copy before entities get mutated by BaseSaver.SavePostsOrUsers()
         var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();

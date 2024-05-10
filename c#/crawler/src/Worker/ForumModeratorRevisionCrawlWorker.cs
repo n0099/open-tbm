@@ -104,7 +104,7 @@ public class ForumModeratorRevisionCrawlWorker
                 ModeratorTypes = "" // moderator only exists in DB means the user is no longer a moderator
             }), stoppingToken);
 
-        _ = await db.SaveChangesAsync(stoppingToken);
+        _ = await db.SaveChangesForUpdateAsync(stoppingToken);
         await transaction.CommitAsync(stoppingToken);
     }
 }

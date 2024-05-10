@@ -46,26 +46,35 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
         var db = DbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        var postSaver = postSaverFactory(Posts);
-        var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
-
-        var userSaver = userSaverFactory(_users);
-        userSaver.Save(db, postSaver.CurrentPostType, postSaver.UserFieldChangeIgnorance);
-
-        BeforeCommitSaveHook(db, userSaver);
-        try
+        while (true)
         {
-            db.TimestampingEntities();
-            _ = db.SaveChanges();
-            transaction.Commit();
-            if (savedPosts != null) PostCommitSaveHook(savedPosts, stoppingToken);
+            var postSaver = postSaverFactory(Posts);
+            var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
+
+            var userSaver = userSaverFactory(_users);
+            userSaver.Save(db, postSaver.CurrentPostType, postSaver.UserFieldChangeIgnorance);
+
+            BeforeCommitSaveHook(db, userSaver);
+            try
+            {
+                db.TimestampingEntities();
+                _ = db.SaveChanges();
+                if (savedPosts != null) PostCommitSaveHook(savedPosts, stoppingToken);
+                postSaver.OnPostSaveEvent();
+                transaction.Commit();
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                Logger.LogError(e, "DbUpdateConcurrencyException: {}",
+                    e.Entries.GroupBy(ee => ee.Entity.GetType())
+                        .ToDictionary(g => g.Key, g => g.Count()));
+            }
+            finally
+            {
+                userSaver.PostSaveHook();
+            }
+            return savedPosts;
         }
-        finally
-        {
-            postSaver.OnPostSaveEvent();
-            userSaver.PostSaveHook();
-        }
-        return savedPosts;
     }
 
     public async Task<BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProtoBuf>>

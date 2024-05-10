@@ -52,7 +52,7 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
             _savedUsersId.AddRange(usersExceptLocked.Keys);
             UserIdLocks.UnionWith(_savedUsersId);
 
-            var existingUsersKeyByUid = (from user in db.Users.AsTracking().ForUpdate()
+            var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                 where usersExceptLocked.Keys.Contains(user.Uid)
                 select user).ToDictionary(u => u.Uid);
             SavePostsOrUsers(db, userFieldChangeIgnorance,

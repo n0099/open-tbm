@@ -89,10 +89,10 @@ public partial class ReplySaver(
         var imagesKeyByUrlFilename = pidAndImageList.Select(t => t.Image)
             .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
         var existingImages = (
-                from e in db.ImageInReplies
+                from e in db.ImageInReplies.AsTracking()
                 where imagesKeyByUrlFilename.Keys.Contains(e.UrlFilename)
                 select e)
-            .ForUpdate().ToDictionary(e => e.UrlFilename);
+            .ToDictionary(e => e.UrlFilename);
         (from existing in existingImages.Values
                 where existing.ExpectedByteSize == 0 // randomly respond with 0
                 join newInContent in imagesKeyByUrlFilename.Values
@@ -140,7 +140,7 @@ public partial class ReplySaver
         var uniqueSignatures = signatures
             .ConvertAll(s => new UniqueSignature(s.SignatureId, s.XxHash3));
         var existingSignatures = (
-            from s in db.ReplySignatures.AsTracking().ForUpdate()
+            from s in db.ReplySignatures.AsTracking()
             where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
 
                   // server side eval doesn't need ByteArrayEqualityComparer

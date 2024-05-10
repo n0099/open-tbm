@@ -45,25 +45,28 @@ public class ReplyCrawlFacade(
 
     private void SaveParentThreadTitle(IEnumerable<Reply> replies)
     {
+        var newTitle = replies.FirstOrDefault(r => r.Floor == 1)?.Title;
+        if (newTitle == null) return;
+
         // update the parent thread of reply with the new title extracted from the first-floor reply in the first page
         var db = dbContextFactory(Fid);
         using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
-        var parentThreadTitle = (
-            from t in db.Threads.AsNoTracking().ForUpdate()
-            where t.Tid == tid
-            select t.Title).SingleOrDefault();
+        var thread = db.Threads.AsTracking().SingleOrDefault(t => t.Tid == tid);
+        if (thread?.Title == newTitle) return;
+        switch (thread)
+        { // thread title will be empty string as a fallback when the thread author haven't written title for this thread
+            case {Title: not ""}:
+                return; // != null && Title != ""
+            case null:
+                _ = db.Add(new ThreadPost {Tid = tid, Title = newTitle});
+                break;
+            default:
+                thread.Title = newTitle;
+                break;
+        }
 
-        // thread title will be empty string as a fallback when the thread author haven't written title for this thread
-        if (parentThreadTitle != "") return;
-        var newTitle = replies.FirstOrDefault(r => r.Floor == 1)?.Title;
-        if (newTitle == null) return;
-
-        db.Attach(new ThreadPost {Tid = tid, Title = newTitle})
-            .Property(th => th.Title).IsModified = true;
-        if (db.SaveChanges() != 1) // do not touch UpdateAt field for the accuracy of time field in thread revisions
-            throw new DbUpdateException(
-                $"Parent thread title \"{newTitle}\" completion for tid {tid} has failed.");
+        _ = db.SaveChangesForUpdate();
         transaction.Commit();
     }
 }
