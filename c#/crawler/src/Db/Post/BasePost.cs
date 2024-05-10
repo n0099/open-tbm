@@ -1,4 +1,5 @@
 // ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace tbm.Crawler.Db.Post;
 
 public abstract class BasePost : TimestampedEntity, ICloneable

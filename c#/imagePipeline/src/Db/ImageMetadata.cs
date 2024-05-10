@@ -4,8 +4,8 @@
 // ReSharper disable UnusedMemberInSuper.Global
 using System.ComponentModel;
 using SixLabors.ImageSharp.PixelFormats;
-using Point = NetTopologySuite.Geometries.Point;
 using EntityWithImageIdAsKey = tbm.Shared.Db.EntityWithImageId.AsKey;
+using Point = NetTopologySuite.Geometries.Point;
 
 namespace tbm.ImagePipeline.Db;
 

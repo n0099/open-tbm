@@ -22,7 +22,8 @@ runs:
         key: ${{ runner.os }}-nuget-${{ hashFiles('c#/*/packages.lock.json') }}
         restore-keys: ${{ runner.os }}-nuget-
 
-    - run: dotnet restore --locked-mode
+    # https://github.com/NuGet/Home/issues/5119
+    - run: dotnet restore /property:Configuration=Release
       working-directory: c#
       shell: bash
 

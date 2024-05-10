@@ -169,7 +169,7 @@ public class CrawlPost(
             existingEntity.Excerpt = newEntity.Excerpt;
             existingEntity.LastSeenAt = newEntity.LastSeenAt;
         }
-        
+
         _ = db.SaveChangesForUpdate();
         transaction.Commit();
     };

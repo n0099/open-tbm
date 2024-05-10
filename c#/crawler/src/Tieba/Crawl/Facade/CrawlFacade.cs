@@ -38,6 +38,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
         locks.ReleaseRange(lockId, _lockingPages);
     }
 
+    [SuppressMessage("Major Bug", "S1751:Loops with at most one iteration should be refactored")]
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
         var db = DbContextFactory(Fid);
