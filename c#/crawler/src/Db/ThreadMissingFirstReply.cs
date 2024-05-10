@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db;
 
-public class ThreadMissingFirstReply
+public class ThreadMissingFirstReply : RowVersionedEntity
 {
     [Key] public ulong Tid { get; set; }
     public ulong? Pid { get; set; }

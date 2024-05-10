@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class ReplyPost : IPost, IPostWithAuthorExpGrade
+public class ReplyPost : RowVersionedEntity, IPostWithAuthorExpGrade
 {
     public ulong Tid { get; set; }
     [Key] public ulong Pid { get; set; }

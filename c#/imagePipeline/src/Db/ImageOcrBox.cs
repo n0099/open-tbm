@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.ImagePipeline.Db;
 
-public class ImageOcrBox
+public class ImageOcrBox : RowVersionedEntity
 {
     public uint ImageId { get; set; }
     public uint FrameIndex { get; set; }

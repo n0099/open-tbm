@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db;
 
-public class User : ITimestampingEntity
+public class User : RowVersionedEntity, ITimestampedEntity
 {
     [Key] public long Uid { get; set; }
     public string? Name { get; set; }

@@ -27,10 +27,10 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
             entry.CurrentValues.SetValues(newPostOrUser);
 
             bool IsTimestampingFieldName(string name) => name is nameof(IPost.LastSeenAt)
-                or nameof(ITimestampingEntity.CreatedAt) or nameof(ITimestampingEntity.UpdatedAt);
+                or nameof(ITimestampedEntity.CreatedAt) or nameof(ITimestampedEntity.UpdatedAt);
 
             // rollback changes that overwrite original values with the default value 0 or null
-            // for all fields of ITimestampingEntity and IPost.LastSeenAt
+            // for all fields of ITimestampedEntity and IPost.LastSeenAt
             // this will also affect the entity instance which postOrUserInTracking references to it
             entry.Properties
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))

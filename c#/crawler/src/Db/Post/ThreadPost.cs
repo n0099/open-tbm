@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class ThreadPost : IPost
+public class ThreadPost : RowVersionedEntity, IPost
 {
     [Key] public ulong Tid { get; set; }
     [NotMapped] public ulong? FirstReplyPid { get; set; }

@@ -30,7 +30,7 @@ public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCach
     public void TimestampingEntities() =>
 
         // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
-        ChangeTracker.Entries<ITimestampingEntity>().ForEach(e =>
+        ChangeTracker.Entries<ITimestampedEntity>().ForEach(e =>
         {
             Helper.GetNowTimestamp(out var now);
             var originalEntityState = e.State; // copy e.State since it might change after any prop value updated

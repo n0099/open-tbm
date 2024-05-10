@@ -8,7 +8,7 @@ using Point = NetTopologySuite.Geometries.Point;
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImageMetadata : ImageMetadata.IImageMetadata
+public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
 {
     public interface IImageMetadata
     {
@@ -40,14 +40,14 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
     public Gif? GifMetadata { get; set; }
     public Bmp? BmpMetadata { get; set; }
 
-    public class ByteSize : IImageMetadata
+    public class ByteSize : RowVersionedEntity, IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         [SuppressMessage("Naming", "AV1710:Member name includes the name of its containing type")]
         public uint DownloadedByteSize { get; set; }
     }
 
-    public class Exif : IEmbedded
+    public class Exif : RowVersionedEntity, IEmbedded
     {
         [SuppressMessage("ApiDesign", "SS039:An enum should specify a default value")]
         public enum ExifOrientation
@@ -95,35 +95,35 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
         public IEnumerable<TagName> TagNames { get; set; } = [];
 
-        public class TagName : IImageMetadata
+        public class TagName : RowVersionedEntity, IImageMetadata
         {
             public uint ImageId { get; set; }
             public required string Name { get; set; }
         }
     }
 
-    public class Icc : IEmbedded
+    public class Icc : RowVersionedEntity, IEmbedded
     {
         [Key] public uint ImageId { get; set; }
         public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
     }
 
-    public class Iptc : IEmbedded
+    public class Iptc : RowVersionedEntity, IEmbedded
     {
         [Key] public uint ImageId { get; set; }
         public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
     }
 
-    public class Xmp : IEmbedded
+    public class Xmp : RowVersionedEntity, IEmbedded
     {
         [Key] public uint ImageId { get; set; }
         public byte[] XxHash3 { get; set; } = null!;
         public byte[]? RawBytes { get; set; }
     }
 
-    public class Jpg : IImageMetadata
+    public class Jpg : RowVersionedEntity, IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public int Quality { get; set; }
@@ -145,7 +145,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         }
     }
 
-    public class Png : IImageMetadata
+    public class Png : RowVersionedEntity, IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public string? BitDepth { get; set; }
@@ -178,7 +178,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         }
     }
 
-    public class Gif : IImageMetadata
+    public class Gif : RowVersionedEntity, IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public ushort RepeatCount { get; set; }
@@ -203,7 +203,7 @@ public class ImageMetadata : ImageMetadata.IImageMetadata
         }
     }
 
-    public class Bmp : IImageMetadata
+    public class Bmp : RowVersionedEntity, IImageMetadata
     {
         [Key] public uint ImageId { get; set; }
         public required string InfoHeaderType { get; set; }

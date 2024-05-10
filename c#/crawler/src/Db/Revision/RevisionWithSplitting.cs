@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db.Revision;
 
-public abstract class RevisionWithSplitting<TBaseRevision> : IRevision
+public abstract class RevisionWithSplitting<TBaseRevision> : RowVersionedEntity, IRevision
     where TBaseRevision : class, IRevision
 {
     private readonly Dictionary<Type, TBaseRevision> _splitEntities = [];

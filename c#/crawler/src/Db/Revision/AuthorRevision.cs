@@ -2,7 +2,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace tbm.Crawler.Db.Revision;
 
-public abstract class AuthorRevision
+public abstract class AuthorRevision : RowVersionedEntity
 {
     public uint DiscoveredAt { get; set; }
     public uint Fid { get; set; }

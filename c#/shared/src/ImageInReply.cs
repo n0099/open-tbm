@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace tbm.Shared;
 
-public class ImageInReply
+public class ImageInReply : RowVersionedEntity
 {
     [Key] public uint ImageId { get; set; }
     public required string UrlFilename { get; set; }

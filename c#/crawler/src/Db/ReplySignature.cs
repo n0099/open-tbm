@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db;
 
-public class ReplySignature
+public class ReplySignature : RowVersionedEntity
 {
     public long UserId { get; set; }
     public uint SignatureId { get; set; }
