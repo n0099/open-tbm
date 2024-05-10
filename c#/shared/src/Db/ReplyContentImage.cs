@@ -1,5 +1,5 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
-namespace tbm.Shared;
+namespace tbm.Shared.Db;
 
 public class ReplyContentImage
 {

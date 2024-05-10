@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Db.Revision;
+namespace tbm.Crawler.Db.Revision.Splitting;
 
 public abstract class RevisionWithSplitting<TBaseRevision> : RowVersionedEntity, IRevision
     where TBaseRevision : class, IRevision

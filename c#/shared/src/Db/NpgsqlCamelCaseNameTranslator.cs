@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace tbm.Shared;
+namespace tbm.Shared.Db;
 
 public class NpgsqlCamelCaseNameTranslator : INpgsqlNameTranslator
 {

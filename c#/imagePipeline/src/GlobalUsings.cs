@@ -31,6 +31,7 @@ global using tbm.ImagePipeline.Consumer;
 global using tbm.ImagePipeline.Db;
 global using tbm.ImagePipeline.Ocr;
 global using tbm.Shared;
+global using tbm.Shared.Db;
 
 global using Fid = System.UInt32;
 global using ImageId = System.UInt32;

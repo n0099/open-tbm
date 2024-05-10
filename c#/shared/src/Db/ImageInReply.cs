@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 using System.ComponentModel.DataAnnotations;
 
-namespace tbm.Shared;
+namespace tbm.Shared.Db;
 
 public class ImageInReply : RowVersionedEntity
 {

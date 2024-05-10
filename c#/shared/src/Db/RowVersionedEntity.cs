@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace tbm.Shared;
+namespace tbm.Shared.Db;
 
 public abstract class RowVersionedEntity
 {

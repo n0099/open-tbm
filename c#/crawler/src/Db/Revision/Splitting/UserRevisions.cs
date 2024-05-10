@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UnusedMember.Global
-namespace tbm.Crawler.Db.Revision;
+namespace tbm.Crawler.Db.Revision.Splitting;
 
 public abstract class BaseUserRevision : RevisionWithSplitting<BaseUserRevision>
 {

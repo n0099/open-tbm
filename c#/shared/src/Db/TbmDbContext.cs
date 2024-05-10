@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace tbm.Shared;
+namespace tbm.Shared.Db;
 
 public abstract class TbmDbContext : DbContext
 {

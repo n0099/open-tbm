@@ -1,5 +1,5 @@
 // ReSharper disable UnusedMemberInSuper.Global
-namespace tbm.Crawler.Db.Revision;
+namespace tbm.Crawler.Db.Revision.Splitting;
 
 public interface IRevision
 {

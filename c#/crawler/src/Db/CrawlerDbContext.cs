@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql;
-using static tbm.Crawler.Db.Revision.ReplyRevision;
-using static tbm.Crawler.Db.Revision.SubReplyRevision;
-using static tbm.Crawler.Db.Revision.ThreadRevision;
-using static tbm.Crawler.Db.Revision.UserRevision;
+using static tbm.Crawler.Db.Revision.Splitting.ReplyRevision;
+using static tbm.Crawler.Db.Revision.Splitting.SubReplyRevision;
+using static tbm.Crawler.Db.Revision.Splitting.ThreadRevision;
+using static tbm.Crawler.Db.Revision.Splitting.UserRevision;
 
 namespace tbm.Crawler.Db;
 
