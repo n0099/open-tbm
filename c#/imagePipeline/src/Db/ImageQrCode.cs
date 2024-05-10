@@ -1,10 +1,8 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.ImagePipeline.Db;
 
-public class ImageQrCode : RowVersionedEntity
+public class ImageQrCode : ImageWithFrameIndex
 {
-    public uint ImageId { get; set; }
-    public uint FrameIndex { get; set; }
     public short Point1X { get; set; }
     public short Point1Y { get; set; }
     public short Point2X { get; set; }

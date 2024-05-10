@@ -1,10 +1,8 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Revision;
 
-public class ForumModeratorRevision : RowVersionedEntity
+public class ForumModeratorRevision : ForumScopedRevision
 {
-    public uint DiscoveredAt { get; set; }
-    public uint Fid { get; set; }
     public required string Portrait { get; set; }
     public required string ModeratorTypes { get; set; }
 }

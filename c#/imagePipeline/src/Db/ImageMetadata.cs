@@ -5,23 +5,12 @@
 using System.ComponentModel;
 using SixLabors.ImageSharp.PixelFormats;
 using Point = NetTopologySuite.Geometries.Point;
+using EntityWithImageIdAsKey = tbm.Shared.Db.EntityWithImageId.AsKey;
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
+public class ImageMetadata : EntityWithImageIdAsKey
 {
-    public interface IImageMetadata
-    {
-        [Key] public uint ImageId { get; set; }
-    }
-
-    public interface IEmbedded : IImageMetadata
-    {
-        public byte[] XxHash3 { get; set; }
-        public byte[]? RawBytes { get; set; }
-    }
-
-    [Key] public uint ImageId { get; set; }
     public string? Format { get; set; }
     public ushort Width { get; set; }
     public ushort Height { get; set; }
@@ -40,14 +29,19 @@ public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
     public Gif? GifMetadata { get; set; }
     public Bmp? BmpMetadata { get; set; }
 
-    public class ByteSize : RowVersionedEntity, IImageMetadata
+    public class ByteSize : EntityWithImageIdAsKey
     {
-        [Key] public uint ImageId { get; set; }
         [SuppressMessage("Naming", "AV1710:Member name includes the name of its containing type")]
         public uint DownloadedByteSize { get; set; }
     }
 
-    public class Exif : RowVersionedEntity, IEmbedded
+    public abstract class Embedded : EntityWithImageIdAsKey
+    {
+        public byte[] XxHash3 { get; set; } = null!;
+        public byte[]? RawBytes { get; set; }
+    }
+
+    public class Exif : Embedded
     {
         [SuppressMessage("ApiDesign", "SS039:An enum should specify a default value")]
         public enum ExifOrientation
@@ -62,7 +56,6 @@ public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
             Rotate270Cw = 8
         }
 
-        [Key] public uint ImageId { get; set; }
         public string? Orientation { get; set; }
         public string? ImageDescription { get; set; }
         public string? UserComment { get; set; }
@@ -88,44 +81,23 @@ public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
         public Point? GpsCoordinate { get; set; }
         public float? GpsImgDirection { get; set; }
         public string? GpsImgDirectionRef { get; set; }
-        public byte[] XxHash3 { get; set; } = null!;
-        public byte[]? RawBytes { get; set; }
 
         // workaround to work with MetadataConsumer.CreateEmbeddedFromProfile()
         // https://stackoverflow.com/questions/75266722/type-cannot-satisfy-the-new-constraint-on-parameter-tparam-because-type
         public IEnumerable<TagName> TagNames { get; set; } = [];
 
-        public class TagName : RowVersionedEntity, IImageMetadata
+        public class TagName : EntityWithImageId
         {
-            public uint ImageId { get; set; }
             public required string Name { get; set; }
         }
     }
 
-    public class Icc : RowVersionedEntity, IEmbedded
-    {
-        [Key] public uint ImageId { get; set; }
-        public byte[] XxHash3 { get; set; } = null!;
-        public byte[]? RawBytes { get; set; }
-    }
+    public class Icc : Embedded;
+    public class Iptc : Embedded;
+    public class Xmp : Embedded;
 
-    public class Iptc : RowVersionedEntity, IEmbedded
+    public class Jpg : EntityWithImageIdAsKey
     {
-        [Key] public uint ImageId { get; set; }
-        public byte[] XxHash3 { get; set; } = null!;
-        public byte[]? RawBytes { get; set; }
-    }
-
-    public class Xmp : RowVersionedEntity, IEmbedded
-    {
-        [Key] public uint ImageId { get; set; }
-        public byte[] XxHash3 { get; set; } = null!;
-        public byte[]? RawBytes { get; set; }
-    }
-
-    public class Jpg : RowVersionedEntity, IImageMetadata
-    {
-        [Key] public uint ImageId { get; set; }
         public int Quality { get; set; }
         public string? ColorType { get; set; }
         public bool? Interleaved { get; set; }
@@ -145,9 +117,8 @@ public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
         }
     }
 
-    public class Png : RowVersionedEntity, IImageMetadata
+    public class Png : EntityWithImageIdAsKey
     {
-        [Key] public uint ImageId { get; set; }
         public string? BitDepth { get; set; }
         public string? ColorType { get; set; }
         public string? InterlaceMethod { get; set; }
@@ -178,9 +149,8 @@ public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
         }
     }
 
-    public class Gif : RowVersionedEntity, IImageMetadata
+    public class Gif : EntityWithImageIdAsKey
     {
-        [Key] public uint ImageId { get; set; }
         public ushort RepeatCount { get; set; }
         public required string ColorTableMode { get; set; }
         public int GlobalColorTableLength { get; set; }
@@ -203,9 +173,8 @@ public class ImageMetadata : RowVersionedEntity, ImageMetadata.IImageMetadata
         }
     }
 
-    public class Bmp : RowVersionedEntity, IImageMetadata
+    public class Bmp : EntityWithImageIdAsKey
     {
-        [Key] public uint ImageId { get; set; }
         public required string InfoHeaderType { get; set; }
         public required string BitsPerPixel { get; set; }
 

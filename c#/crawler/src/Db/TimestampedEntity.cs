@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db;
 
-public interface ITimestampedEntity
+public abstract class TimestampedEntity : RowVersionedEntity
 {
     public uint CreatedAt { get; set; }
     public uint? UpdatedAt { get; set; }

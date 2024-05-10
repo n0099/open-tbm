@@ -4,7 +4,7 @@ public class SaverChangeSet<TPost>(
     IReadOnlyCollection<TPost> existingBefore,
     ICollection<TPost> existingAfterAndNewlyAdded,
     Func<TPost, PostId> postIdSelector)
-    where TPost : class, IPost
+    where TPost : BasePost
 {
     public IReadOnlyCollection<(TPost Before, TPost After)> Existing { get; } = existingBefore
         .OrderBy(postIdSelector)

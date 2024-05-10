@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db;
 
-public class User : RowVersionedEntity, ITimestampedEntity
+public class User : TimestampedEntity
 {
     [Key] public long Uid { get; set; }
     public string? Name { get; set; }
@@ -11,8 +11,6 @@ public class User : RowVersionedEntity, ITimestampedEntity
     public string? FansNickname { get; set; }
     public byte[]? Icon { get; set; }
     public string? IpGeolocation { get; set; }
-    public uint CreatedAt { get; set; }
-    public uint? UpdatedAt { get; set; }
 
     public static User CreateLatestReplier(long uid, string? name, string? displayName) =>
         new() {Uid = uid, Name = name, DisplayName = displayName, Portrait = ""};

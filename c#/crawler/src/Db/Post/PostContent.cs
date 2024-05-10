@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db.Post;
 
-public interface IPostContent
+public abstract class PostContent : RowVersionedEntity
 {
     public byte[]? ProtoBufBytes { get; set; }
 }

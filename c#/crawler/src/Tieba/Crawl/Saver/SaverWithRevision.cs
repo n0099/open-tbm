@@ -1,7 +1,7 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public abstract class SaverWithRevision<TBaseRevision> : IRevisionProperties
-    where TBaseRevision : class, IRevision
+    where TBaseRevision : BaseRevisionWithSplitting
 {
     protected delegate void RevisionUpsertDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
 

@@ -1,15 +1,11 @@
 namespace tbm.Crawler.Db.Revision.Splitting;
 
-public abstract class RevisionWithSplitting<TBaseRevision> : RowVersionedEntity, IRevision
-    where TBaseRevision : class, IRevision
+public abstract class RevisionWithSplitting<TBaseRevision> : BaseRevisionWithSplitting
+    where TBaseRevision : BaseRevisionWithSplitting
 {
     private readonly Dictionary<Type, TBaseRevision> _splitEntities = [];
-
-    public uint TakenAt { get; set; }
-    public ushort? NullFieldsBitMask { get; set; }
     public IReadOnlyDictionary<Type, TBaseRevision> SplitEntities => _splitEntities;
-
-    public virtual bool IsAllFieldsIsNullExceptSplit() => throw new NotSupportedException();
+    public override bool IsAllFieldsIsNullExceptSplit() => throw new NotSupportedException();
 
     protected TValue? GetSplitEntityValue<TSplitEntity, TValue>
         (Func<TSplitEntity, TValue?> valueSelector)

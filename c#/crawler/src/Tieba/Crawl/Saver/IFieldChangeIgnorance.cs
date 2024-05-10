@@ -71,7 +71,7 @@ public partial interface IFieldChangeIgnorance
                 && newValue is null && oldValue is not null) return true;
 
             // possible rarely respond with the protoBuf default value 0
-            return propName == nameof(IPost.AuthorUid)
+            return propName == nameof(BasePost.AuthorUid)
                    && newValue is 0L && oldValue is not null;
         },
         Revision: (whichPostType, propName, oldValue, _) =>

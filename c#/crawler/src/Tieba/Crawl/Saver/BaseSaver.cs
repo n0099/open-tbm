@@ -6,7 +6,7 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
 #pragma warning disable S1939 // Inheritance list should not be redundant
     : SaverWithRevision<TBaseRevision>, IFieldChangeIgnorance
 #pragma warning restore S1939 // Inheritance list should not be redundant
-    where TBaseRevision : class, IRevision
+    where TBaseRevision : BaseRevisionWithSplitting
 {
     protected void SavePostsOrUsers<TPostOrUser, TRevision>(
         CrawlerDbContext db,
@@ -15,7 +15,7 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
         ILookup<bool, TPostOrUser> existingOrNewLookup,
         Func<TPostOrUser, TPostOrUser> existingSelector)
         where TPostOrUser : class
-        where TRevision : class, IRevision
+        where TRevision : BaseRevisionWithSplitting
     {
         db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
         var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
@@ -26,11 +26,11 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
             // this will mutate postOrUserInTracking which is referenced by entry
             entry.CurrentValues.SetValues(newPostOrUser);
 
-            bool IsTimestampingFieldName(string name) => name is nameof(IPost.LastSeenAt)
-                or nameof(ITimestampedEntity.CreatedAt) or nameof(ITimestampedEntity.UpdatedAt);
+            bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
+                or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
 
             // rollback changes that overwrite original values with the default value 0 or null
-            // for all fields of ITimestampedEntity and IPost.LastSeenAt
+            // for all fields of TimestampedEntity and BasePost.LastSeenAt
             // this will also affect the entity instance which postOrUserInTracking references to it
             entry.Properties
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))

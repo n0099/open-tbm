@@ -94,7 +94,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         TImageSharpProfile? profile,
         Func<TImageSharpProfile, byte[]?> rawBytesSelector)
         where TImageSharpProfile : class
-        where TEmbeddedMetadata : class, ImageMetadata.IEmbedded, new()
+        where TEmbeddedMetadata : ImageMetadata.Embedded, new()
     {
         if (profile == null) return null;
         var rawBytes = rawBytesSelector(profile); // will be null when param profile is null

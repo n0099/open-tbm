@@ -12,8 +12,8 @@ public abstract class BaseCrawlFacade<TPost, TBaseRevision, TResponse, TPostProt
     Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
     Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory)
     : IDisposable
-    where TPost : class, IPost
-    where TBaseRevision : class, IRevision
+    where TPost : BasePost
+    where TBaseRevision : BaseRevisionWithSplitting
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {

@@ -8,8 +8,8 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
         AuthorRevisionSaver.New authorRevisionSaverFactory,
         PostType currentPostType)
     : BaseSaver<TBaseRevision>(logger)
-    where TPost : class, IPost
-    where TBaseRevision : class, IRevision
+    where TPost : BasePost
+    where TBaseRevision : BaseRevisionWithSplitting
 {
     protected delegate void PostSaveEventHandler();
     [SuppressMessage("Design", "MA0046:Use EventHandler<T> to declare events")]
@@ -30,7 +30,7 @@ public abstract class BasePostSaver<TPost, TBaseRevision>(
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
         ExpressionStarter<TPost> existingPostPredicate)
-        where TRevision : class, IRevision
+        where TRevision : BaseRevisionWithSplitting
     {
         var existingPostsKeyById = db.Set<TPost>()
             .Where(existingPostPredicate).ToDictionary(postIdSelector);

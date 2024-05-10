@@ -1,11 +1,8 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
-using System.ComponentModel.DataAnnotations;
-
 namespace tbm.Shared.Db;
 
-public class ImageInReply : RowVersionedEntity
+public class ImageInReply : EntityWithImageId.AsKey
 {
-    [Key] public uint ImageId { get; set; }
     public required string UrlFilename { get; set; }
     public uint ExpectedByteSize { get; set; }
     public bool MetadataConsumed { get; set; }

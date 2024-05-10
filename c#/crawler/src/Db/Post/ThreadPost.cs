@@ -1,9 +1,9 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class ThreadPost : RowVersionedEntity, IPost
+public class ThreadPost : BasePost
 {
-    [Key] public ulong Tid { get; set; }
+    [Key] public new ulong Tid { get; set; }
     [NotMapped] public ulong? FirstReplyPid { get; set; }
 
     [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Abstract>))]
@@ -14,7 +14,6 @@ public class ThreadPost : RowVersionedEntity, IPost
     public string? TopicType { get; set; }
     public byte? IsGood { get; set; }
     public required string Title { get; set; }
-    public long AuthorUid { get; set; }
     public string? AuthorPhoneType { get; set; }
     public uint PostedAt { get; set; }
     public uint LatestReplyPostedAt { get; set; }
@@ -26,9 +25,6 @@ public class ThreadPost : RowVersionedEntity, IPost
     public int? DisagreeCount { get; set; }
     public byte[]? Zan { get; set; }
     public byte[]? Geolocation { get; set; }
-    public uint CreatedAt { get; set; }
-    public uint? UpdatedAt { get; set; }
-    public uint? LastSeenAt { get; set; }
 
-    public object Clone() => MemberwiseClone();
+    public override object Clone() => MemberwiseClone();
 }

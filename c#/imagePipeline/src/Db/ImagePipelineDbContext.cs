@@ -41,7 +41,7 @@ public class ImagePipelineDbContext(Fid fid, string script)
 
         void SplitImageMetadata<TRelatedEntity>
             (Expression<Func<ImageMetadata, TRelatedEntity?>> keySelector, string tableNameSuffix)
-            where TRelatedEntity : class, IImageMetadata
+            where TRelatedEntity : EntityWithImageId
         {
             b.Entity<ImageMetadata>().HasOne(keySelector).WithOne().HasForeignKey<TRelatedEntity>(e => e.ImageId);
             b.Entity<TRelatedEntity>().ToTable($"tbmi_metadata_{tableNameSuffix}");
