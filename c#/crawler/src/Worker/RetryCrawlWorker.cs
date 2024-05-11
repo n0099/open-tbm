@@ -70,7 +70,7 @@ public class RetryCrawlWorker(
             var failureCountsKeyByTid = tidGroupByFid
                 .Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
             logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",
-                fid, Helper.UnescapedJsonSerialize(tidGroupByFid));
+                fid, BaseHelper.UnescapedJsonSerialize(tidGroupByFid));
             await threadLateFacade.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }
     }

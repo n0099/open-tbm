@@ -66,8 +66,8 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
                     logger.LogWarning("Updating field {} is not existing in revision table, " +
                                        "newValue={}, oldValue={}, newObject={}, oldObject={}",
                         pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
-                        Helper.UnescapedJsonSerialize(newPostOrUser),
-                        Helper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
+                        BaseHelper.UnescapedJsonSerialize(newPostOrUser),
+                        BaseHelper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
                 }
                 else
                 {

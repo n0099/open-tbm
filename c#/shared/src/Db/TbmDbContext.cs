@@ -12,9 +12,10 @@ namespace tbm.Shared.Db;
 public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
 {
     public void LogDbUpdateConcurrencyException(DbUpdateConcurrencyException e) =>
-        logger.LogError(e, "DbUpdateConcurrencyException: {}",
-            e.Entries.GroupBy(ee => ee.Entity.GetType())
-                .ToDictionary(g => g.Key, g => g.Count()));
+        logger.LogWarning(e, "DbUpdateConcurrencyException: {}",
+            BaseHelper.UnescapedJsonSerialize(e.Entries
+                .GroupBy(ee => ee.Entity.GetType())
+                .ToDictionary(g => g.Key, g => g.Count())));
 
     public int SaveChangesForUpdate()
     {

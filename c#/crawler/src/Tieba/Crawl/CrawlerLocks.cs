@@ -23,7 +23,7 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, C
         var acquiredPages = pages.ToHashSet();
         lock (_crawling)
         { // lock the entire ConcurrentDictionary since following bulk insert should be a single atomic operation
-            Helper.GetNowTimestamp(out var now);
+            BaseHelper.GetNowTimestamp(out var now);
             if (!_crawling.ContainsKey(lockId))
             { // if no one is locking any page in lockId, just insert pages then return it as is
                 var pageTimeDict = acquiredPages.Select(page => KeyValuePair.Create(page, now));
@@ -114,9 +114,9 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, C
             logger.LogTrace("Lock: type={} crawlingIdCount={} crawlingPageCount={} crawlingPageCountsKeyById={}"
                             + " failedIdCount={} failedPageCount={} failures={}", LockType,
                 _crawling.Count, _crawling.Values.Sum(d => d.Count),
-                Helper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
+                BaseHelper.UnescapedJsonSerialize(_crawling.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.Count)),
                 _failed.Count, _failed.Values.Sum(d => d.Count),
-                Helper.UnescapedJsonSerialize(_failed.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value)));
+                BaseHelper.UnescapedJsonSerialize(_failed.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value)));
         }
     }
 

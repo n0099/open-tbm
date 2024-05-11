@@ -122,7 +122,7 @@ public partial class ReplySaver
 
     private Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
-        Helper.GetNowTimestamp(out var now);
+        BaseHelper.GetNowTimestamp(out var now);
         var signatures = replies
             .Where(r => r is {SignatureId: not null, Signature: not null})
             .DistinctBy(r => r.SignatureId)
