@@ -26,18 +26,18 @@ public class SubReplySaver(
             _ => false
         }, (_, _, _, _) => false);
 
-    protected override Dictionary<Type, RevisionUpsertDelegate>
-        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
+    protected override Dictionary<Type, AddRevisionDelegate>
+        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(SubReplyRevision.SplitAgreeCount), (db, revisions) =>
                 db.Set<SubReplyRevision.SplitAgreeCount>()
-                    .UpsertRange(revisions.OfType<SubReplyRevision.SplitAgreeCount>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<SubReplyRevision.SplitAgreeCount>())
         },
         {
             typeof(SubReplyRevision.SplitDisagreeCount), (db, revisions) =>
                 db.Set<SubReplyRevision.SplitDisagreeCount>()
-                    .UpsertRange(revisions.OfType<SubReplyRevision.SplitDisagreeCount>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<SubReplyRevision.SplitDisagreeCount>())
         }
     };
 

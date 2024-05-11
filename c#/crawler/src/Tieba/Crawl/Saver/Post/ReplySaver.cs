@@ -25,23 +25,23 @@ public partial class ReplySaver(
             _ => false
         });
 
-    protected override Dictionary<Type, RevisionUpsertDelegate>
-        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
+    protected override Dictionary<Type, AddRevisionDelegate>
+        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(ReplyRevision.SplitFloor), (db, revisions) =>
                 db.Set<ReplyRevision.SplitFloor>()
-                    .UpsertRange(revisions.OfType<ReplyRevision.SplitFloor>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<ReplyRevision.SplitFloor>())
         },
         {
             typeof(ReplyRevision.SplitSubReplyCount), (db, revisions) =>
                 db.Set<ReplyRevision.SplitSubReplyCount>()
-                    .UpsertRange(revisions.OfType<ReplyRevision.SplitSubReplyCount>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<ReplyRevision.SplitSubReplyCount>())
         },
         {
             typeof(ReplyRevision.SplitAgreeCount), (db, revisions) =>
                 db.Set<ReplyRevision.SplitAgreeCount>()
-                    .UpsertRange(revisions.OfType<ReplyRevision.SplitAgreeCount>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<ReplyRevision.SplitAgreeCount>())
         }
     };
 

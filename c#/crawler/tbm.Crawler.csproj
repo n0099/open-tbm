@@ -9,7 +9,6 @@
     <ItemGroup>
         <PackageReference Include="AngleSharp" Version="1.1.2" />
         <PackageReference Include="Dapper" Version="2.1.35" />
-        <PackageReference Include="FlexLabs.EntityFrameworkCore.Upsert" Version="8.0.0" />
         <PackageReference Include="Humanizer.Core.zh-Hans" Version="2.14.1" />
         <PackageReference Include="linq2db.EntityFrameworkCore" Version="8.1.0" />
         <PackageReference Include="linq2db.PostgreSQL" Version="5.4.1" />

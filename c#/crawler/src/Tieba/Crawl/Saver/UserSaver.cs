@@ -2,23 +2,23 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public partial class UserSaver
 {
-    protected override Dictionary<Type, RevisionUpsertDelegate>
-        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
+    protected override Dictionary<Type, AddRevisionDelegate>
+        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(UserRevision.SplitDisplayName), (db, revisions) =>
                 db.Set<UserRevision.SplitDisplayName>()
-                    .UpsertRange(revisions.OfType<UserRevision.SplitDisplayName>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<UserRevision.SplitDisplayName>())
         },
         {
             typeof(UserRevision.SplitPortraitUpdatedAt), (db, revisions) =>
                 db.Set<UserRevision.SplitPortraitUpdatedAt>()
-                    .UpsertRange(revisions.OfType<UserRevision.SplitPortraitUpdatedAt>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<UserRevision.SplitPortraitUpdatedAt>())
         },
         {
             typeof(UserRevision.SplitIpGeolocation), (db, revisions) =>
                 db.Set<UserRevision.SplitIpGeolocation>()
-                    .UpsertRange(revisions.OfType<UserRevision.SplitIpGeolocation>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<UserRevision.SplitIpGeolocation>())
         }
     };
 

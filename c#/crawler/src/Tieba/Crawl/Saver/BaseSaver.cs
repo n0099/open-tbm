@@ -98,13 +98,12 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
         }).OfType<TRevision>().ToList();
         if (newRevisions.Count == 0) return; // quick exit to prevent execute sql with WHERE FALSE clause
 
-        _ = db.Set<TRevision>().UpsertRange(
-                newRevisions.Where(rev => !rev.IsAllFieldsIsNullExceptSplit()))
-            .NoUpdate().Run();
+        db.Set<TRevision>().AddRange(
+            newRevisions.Where(rev => !rev.IsAllFieldsIsNullExceptSplit()));
         newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
             .SelectMany(rev => rev.SplitEntities)
             .GroupBy(pair => pair.Key, pair => pair.Value)
-            .ForEach(g => RevisionUpsertDelegatesKeyBySplitEntityType[g.Key](db, g));
+            .ForEach(g => AddRevisionDelegatesKeyBySplitEntityType[g.Key](db, g));
     }
 
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)

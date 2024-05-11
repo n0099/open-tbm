@@ -22,13 +22,13 @@ public class ThreadSaver(
             _ => false
         }, (_, _, _, _) => false);
 
-    protected override Dictionary<Type, RevisionUpsertDelegate>
-        RevisionUpsertDelegatesKeyBySplitEntityType { get; } = new()
+    protected override Dictionary<Type, AddRevisionDelegate>
+        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
     {
         {
             typeof(ThreadRevision.SplitViewCount), (db, revisions) =>
                 db.Set<ThreadRevision.SplitViewCount>()
-                    .UpsertRange(revisions.OfType<ThreadRevision.SplitViewCount>()).NoUpdate().Run()
+                    .AddRange(revisions.OfType<ThreadRevision.SplitViewCount>())
         }
     };
 

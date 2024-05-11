@@ -39,7 +39,7 @@ public class ThreadCrawlFacade(
                 u.CreatedAt = Helper.GetNowTimestamp();
                 return u;
             });
-        _ = db.Users.UpsertRange(newLatestRepliersExceptLocked).NoUpdate().Run();
+        db.Users.AddRange(newLatestRepliersExceptLocked);
     }
 
     protected override void PostParseHook(
