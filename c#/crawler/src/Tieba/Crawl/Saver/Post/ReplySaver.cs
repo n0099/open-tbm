@@ -54,8 +54,8 @@ public partial class ReplySaver(
         db.ReplyContents.AddRange(changeSet.NewlyAdded
             .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
         SaveReplyContentImages(db, changeSet.NewlyAdded);
-        PostSaveEvent += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
-        PostSaveEvent += SaveReplySignatures(db, changeSet.AllAfter).Invoke;
+        PostSaveHooks += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
+        PostSaveHooks += SaveReplySignatures(db, changeSet.AllAfter).Invoke;
 
         return changeSet;
     }

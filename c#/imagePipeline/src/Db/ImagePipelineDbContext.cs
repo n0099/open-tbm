@@ -4,10 +4,9 @@ using static tbm.ImagePipeline.Db.ImageMetadata;
 
 namespace tbm.ImagePipeline.Db;
 
-public class ImagePipelineDbContext(Fid fid, string script)
-    : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>
+public class ImagePipelineDbContext(ILogger<ImagePipelineDbContext> logger, Fid fid = 0, string script = "")
+    : TbmDbContext<ImagePipelineDbContext.ModelCacheKeyFactory>(logger)
 {
-    public ImagePipelineDbContext() : this(fid: 0, script: "") { }
     public delegate ImagePipelineDbContext NewDefault();
     public delegate ImagePipelineDbContext New(Fid fid, string script);
 

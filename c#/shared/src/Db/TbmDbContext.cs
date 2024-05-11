@@ -9,8 +9,13 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace tbm.Shared.Db;
 
-public abstract class TbmDbContext : DbContext
+public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
 {
+    public void LogDbUpdateConcurrencyException(DbUpdateConcurrencyException e) =>
+        logger.LogError(e, "DbUpdateConcurrencyException: {}",
+            e.Entries.GroupBy(ee => ee.Entity.GetType())
+                .ToDictionary(g => g.Key, g => g.Count()));
+
     public int SaveChangesForUpdate()
     {
         while (true)
@@ -21,6 +26,7 @@ public abstract class TbmDbContext : DbContext
             }
             catch (DbUpdateConcurrencyException e)
             {
+                LogDbUpdateConcurrencyException(e);
                 foreach (var entry in e.Entries)
                 {
                     var existing = entry.GetDatabaseValues();
@@ -41,6 +47,7 @@ public abstract class TbmDbContext : DbContext
             }
             catch (DbUpdateConcurrencyException e)
             {
+                LogDbUpdateConcurrencyException(e);
                 foreach (var entry in e.Entries)
                 {
                     var existing = await entry.GetDatabaseValuesAsync(stoppingToken);
@@ -84,7 +91,8 @@ public abstract class TbmDbContext : DbContext
         }
     }
 }
-public class TbmDbContext<TModelCacheKeyFactory> : TbmDbContext
+public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCacheKeyFactory>> logger)
+    : TbmDbContext(logger)
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
     // ReSharper disable once UnusedAutoPropertyAccessor.Global

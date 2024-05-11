@@ -41,11 +41,11 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
     [SuppressMessage("Major Bug", "S1751:Loops with at most one iteration should be refactored")]
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
-        var db = DbContextFactory(Fid);
-        using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
-
         while (true)
         {
+            using var db = DbContextFactory(Fid); // dispose after each loop when retrying
+            using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
+
             var postSaver = postSaverFactory(Posts);
             var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
 
@@ -57,21 +57,19 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             {
                 db.TimestampingEntities();
                 _ = db.SaveChanges();
-                if (savedPosts != null) PostCommitSaveHook(savedPosts, stoppingToken);
-                postSaver.OnPostSaveEvent();
                 transaction.Commit();
+                if (savedPosts != null) PostCommitSaveHook(savedPosts, stoppingToken);
+                return savedPosts;
             }
             catch (DbUpdateConcurrencyException e)
             {
-                Logger.LogError(e, "DbUpdateConcurrencyException: {}",
-                    e.Entries.GroupBy(ee => ee.Entity.GetType())
-                        .ToDictionary(g => g.Key, g => g.Count()));
+                db.LogDbUpdateConcurrencyException(e);
             }
             finally
             {
+                postSaver.TriggerPostSave();
                 userSaver.PostSaveHook();
             }
-            return savedPosts;
         }
     }
 

@@ -11,9 +11,8 @@ public abstract class PostSaver<TPost, TBaseRevision>(
     where TPost : BasePost
     where TBaseRevision : BaseRevisionWithSplitting
 {
-    protected delegate void PostSaveEventHandler();
-    [SuppressMessage("Design", "MA0046:Use EventHandler<T> to declare events")]
-    protected event PostSaveEventHandler PostSaveEvent = () => { };
+    protected delegate void PostSaveHook();
+    protected PostSaveHook PostSaveHooks { get; set; } = () => { };
 
     public virtual IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
         UserFieldChangeIgnorance => throw new NotSupportedException();
@@ -21,8 +20,7 @@ public abstract class PostSaver<TPost, TBaseRevision>(
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(currentPostType);
 
-    [SuppressMessage("Misc", "AV1225:Method that raises an event should be protected virtual and be named 'On' followed by event name")]
-    public void OnPostSaveEvent() => PostSaveEvent();
+    public void TriggerPostSave() => PostSaveHooks();
     public abstract SaverChangeSet<TPost> Save(CrawlerDbContext db);
 
     protected SaverChangeSet<TPost> Save<TRevision>(

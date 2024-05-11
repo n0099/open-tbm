@@ -7,11 +7,11 @@ using static tbm.Crawler.Db.Revision.Splitting.UserRevision;
 
 namespace tbm.Crawler.Db;
 
-public class CrawlerDbContext(Fid fid) : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>
+public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
+    : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>(logger)
 {
     private static Lazy<NpgsqlDataSource>? _dataSourceSingleton;
 
-    public CrawlerDbContext() : this(fid: 0) { }
     public delegate CrawlerDbContext NewDefault();
     public delegate CrawlerDbContext New(Fid fid);
 
