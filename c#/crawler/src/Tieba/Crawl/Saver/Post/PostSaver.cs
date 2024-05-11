@@ -11,8 +11,7 @@ public abstract class PostSaver<TPost, TBaseRevision>(
     where TPost : BasePost
     where TBaseRevision : BaseRevisionWithSplitting
 {
-    protected delegate void PostSaveHook();
-    protected PostSaveHook PostSaveHooks { get; set; } = () => { };
+    protected delegate void PostSaveHandler();
 
     public virtual IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
         UserFieldChangeIgnorance => throw new NotSupportedException();
@@ -20,9 +19,10 @@ public abstract class PostSaver<TPost, TBaseRevision>(
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(currentPostType);
 
-    public void TriggerPostSave() => PostSaveHooks();
-    public abstract SaverChangeSet<TPost> Save(CrawlerDbContext db);
+    protected PostSaveHandler PostSaveHandlers { get; set; } = () => { };
+    public void OnPostSave() => PostSaveHandlers();
 
+    public abstract SaverChangeSet<TPost> Save(CrawlerDbContext db);
     protected SaverChangeSet<TPost> Save<TRevision>(
         CrawlerDbContext db,
         Func<TPost, PostId> postIdSelector,

@@ -52,13 +52,13 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             var userSaver = userSaverFactory(_users);
             userSaver.Save(db, postSaver.CurrentPostType, postSaver.UserFieldChangeIgnorance);
 
-            BeforeCommitSaveHook(db, userSaver);
+            OnBeforeCommitSave(db, userSaver);
             try
             {
                 db.TimestampingEntities();
                 _ = db.SaveChanges();
                 transaction.Commit();
-                if (savedPosts != null) PostCommitSaveHook(savedPosts, stoppingToken);
+                if (savedPosts != null) OnPostCommitSave(savedPosts, stoppingToken);
                 return savedPosts;
             }
             catch (DbUpdateConcurrencyException e)
@@ -67,8 +67,8 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             }
             finally
             {
-                postSaver.TriggerPostSave();
-                userSaver.PostSaveHook();
+                postSaver.OnPostSave();
+                userSaver.OnPostSave();
             }
         }
     }
@@ -125,12 +125,12 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
     }
 
     protected virtual void ThrowIfEmptyUsersEmbedInPosts() { }
-    protected virtual void PostParseHook(
+    protected virtual void OnPostParse(
         TResponse response,
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, TPost> parsedPostsInResponse) { }
-    protected virtual void BeforeCommitSaveHook(CrawlerDbContext db, UserSaver userSaver) { }
-    protected virtual void PostCommitSaveHook(
+    protected virtual void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver) { }
+    protected virtual void OnPostCommitSave(
         SaverChangeSet<TPost> savedPosts,
         CancellationToken stoppingToken = default) { }
 
@@ -145,7 +145,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             if (postsEmbeddedUsers.Count == 0 && postsInResponse.Count != 0) ThrowIfEmptyUsersEmbedInPosts();
             if (postsEmbeddedUsers.Count != 0) UserParser.Parse(postsEmbeddedUsers);
         }
-        PostParseHook(response, flag, parsedPostsInResponse);
+        OnPostParse(response, flag, parsedPostsInResponse);
     }
 
     private async Task CrawlPages(
@@ -173,8 +173,11 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
                 page, previousFailureCountSelector?.Invoke(page) ?? 0, stoppingToken)));
     }
 
-    private async Task<bool> LogException
-        (Func<Task> payload, Page page, FailureCount previousFailureCount, CancellationToken stoppingToken = default)
+    private async Task<bool> LogException(
+        Func<Task> payload,
+        Page page,
+        FailureCount previousFailureCount,
+        CancellationToken stoppingToken = default)
     {
         try
         {

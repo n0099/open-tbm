@@ -18,7 +18,7 @@ public class ReplyCrawlFacade(
 {
     public delegate ReplyCrawlFacade New(Fid fid, Tid tid);
 
-    protected override void PostParseHook(
+    protected override void OnPostParse(
         ReplyResponse response,
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, ReplyPost> parsedPostsInResponse)
@@ -30,7 +30,7 @@ public class ReplyCrawlFacade(
         if (data.Page.CurrentPage == 1) SaveParentThreadTitle(data.PostList);
     }
 
-    protected override void PostCommitSaveHook(
+    protected override void OnPostCommitSave(
         SaverChangeSet<ReplyPost> savedPosts,
         CancellationToken stoppingToken = default) =>
         sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",

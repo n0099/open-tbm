@@ -18,8 +18,8 @@ public class ThreadCrawlFacade(
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
-    protected override void BeforeCommitSaveHook(CrawlerDbContext db, UserSaver userSaver)
-    { // BeforeCommitSaveHook() should get invoked after UserSaver.Save() by the base.SaveCrawled()
+    protected override void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver)
+    { // OnBeforeCommitSave() should get invoked after UserSaver.Save() by the base.SaveCrawled()
         // so only latest repliers that not exists in parsed users are being inserted
         // note this will bypass user revision detection since not invoking BaseSaver.SavePostsOrUsers() but directly DbContext.AddRange()
 
@@ -42,7 +42,7 @@ public class ThreadCrawlFacade(
         db.Users.AddRange(newLatestRepliersExceptLocked);
     }
 
-    protected override void PostParseHook(
+    protected override void OnPostParse(
         ThreadResponse response,
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, ThreadPost> parsedPostsInResponse)

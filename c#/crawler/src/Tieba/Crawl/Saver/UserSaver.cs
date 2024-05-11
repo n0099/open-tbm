@@ -79,7 +79,7 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
         }
     }
 
-    public void PostSaveHook()
+    public void OnPostSave()
     {
         lock (UserIdLocks) if (_savedUsersId.Count != 0) UserIdLocks.ExceptWith(_savedUsersId);
     }

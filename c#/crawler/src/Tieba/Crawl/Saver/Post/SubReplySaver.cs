@@ -49,7 +49,7 @@ public class SubReplySaver(
 
         db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr =>
             new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));
-        PostSaveHooks += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
+        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
 
         return changeSet;
     }

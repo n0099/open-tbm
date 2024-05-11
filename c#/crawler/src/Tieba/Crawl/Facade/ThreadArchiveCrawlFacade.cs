@@ -16,7 +16,7 @@ public class ThreadArchiveCrawlFacade(
 {
     public new delegate ThreadArchiveCrawlFacade New(Fid fid, string forumName);
 
-    protected override void PostParseHook(
+    protected override void OnPostParse(
         ThreadResponse response,
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, ThreadPost> parsedPostsInResponse)
