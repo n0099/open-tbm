@@ -36,7 +36,7 @@ public class ThreadCrawlFacade(
             .IntersectBy(newlyLockedLatestRepliers, u => u.Uid)
             .Select(u =>
             {
-                u.CreatedAt = BaseHelper.GetNowTimestamp();
+                u.CreatedAt = SharedHelper.GetNowTimestamp();
                 return u;
             });
         db.Users.AddRange(newLatestRepliersExceptLocked);

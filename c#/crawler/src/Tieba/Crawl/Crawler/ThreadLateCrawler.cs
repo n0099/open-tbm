@@ -92,7 +92,7 @@ public class ThreadLateCrawler(
             {
                 logger.LogWarning("TiebaException: {} {}",
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
-                    BaseHelper.UnescapedJsonSerialize(e.Data));
+                    SharedHelper.UnescapedJsonSerialize(e.Data));
             }
             else
             {

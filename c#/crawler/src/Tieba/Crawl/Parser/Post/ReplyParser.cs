@@ -42,7 +42,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                 {
                     logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
                                           + " instead of common domains of tieba image hosting service, content={}",
-                        o.Pid, c.OriginSrc, BaseHelper.UnescapedJsonSerialize(c));
+                        o.Pid, c.OriginSrc, SharedHelper.UnescapedJsonSerialize(c));
                 }
             }
             o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,

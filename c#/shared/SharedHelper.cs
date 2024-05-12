@@ -6,7 +6,7 @@ using System.Text.Unicode;
 namespace tbm.Shared;
 
 #pragma warning disable AV1708 // Type name contains term that should be avoided
-public static class BaseHelper
+public static class SharedHelper
 #pragma warning restore AV1708 // Type name contains term that should be avoided
 {
     public static void GetNowTimestamp(out UInt32 now) => now = GetNowTimestamp();

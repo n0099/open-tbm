@@ -161,7 +161,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
                 .Select(page => (Page)page)
                 .SequenceEqual(pages)
                 ? $"within the range [{pages[0]}-{pages[^1]}]"
-                : BaseHelper.UnescapedJsonSerialize(pages);
+                : SharedHelper.UnescapedJsonSerialize(pages);
             Logger.LogInformation("Cannot crawl any page within {} for lock type {}, id {} since they've already been locked",
                 pagesText, locks.LockType, lockId);
         }
@@ -198,7 +198,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             {
                 if (!te.ShouldSilent) Logger.LogWarning("TiebaException: {} {}",
                     string.Join(' ', e.GetInnerExceptions().Select(ex => ex.Message)),
-                    BaseHelper.UnescapedJsonSerialize(e.Data));
+                    SharedHelper.UnescapedJsonSerialize(e.Data));
             }
             else
             {

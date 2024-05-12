@@ -63,7 +63,7 @@ public class ForumModeratorRevisionCrawlWorker
         await using var transaction = await db.Database.BeginTransactionAsync
             (IsolationLevel.ReadCommitted, stoppingToken);
 
-        BaseHelper.GetNowTimestamp(out var now);
+        SharedHelper.GetNowTimestamp(out var now);
         var revisions = moderators
             .GroupBy(t => t.Portrait)
             .Select(g => new ForumModeratorRevision

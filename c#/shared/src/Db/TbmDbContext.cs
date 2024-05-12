@@ -13,7 +13,7 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
 {
     public void LogDbUpdateConcurrencyException(DbUpdateConcurrencyException e) =>
         logger.LogWarning(e, "DbUpdateConcurrencyException: {}",
-            BaseHelper.UnescapedJsonSerialize(e.Entries
+            SharedHelper.UnescapedJsonSerialize(e.Entries
                 .GroupBy(ee => ee.Entity.GetType())
                 .ToDictionary(g => g.Key, g => g.Count())));
 

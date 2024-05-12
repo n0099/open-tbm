@@ -40,7 +40,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
             }
             catch (Exception e)
             {
-                e.Data["raw"] = BaseHelper.UnescapedJsonSerialize(el);
+                e.Data["raw"] = SharedHelper.UnescapedJsonSerialize(el);
                 throw new InvalidDataException("User parse error.", e);
             }
         }).OfType<User>().ForEach(u => users[u.Uid] = u);

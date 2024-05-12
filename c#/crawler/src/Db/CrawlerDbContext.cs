@@ -32,7 +32,7 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         // https://www.entityframeworktutorial.net/faq/set-created-and-modified-date-in-efcore.aspx
         ChangeTracker.Entries<TimestampedEntity>().ForEach(e =>
         {
-            BaseHelper.GetNowTimestamp(out var now);
+            SharedHelper.GetNowTimestamp(out var now);
             var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
             var createdAtProp = e.Property(ie => ie.CreatedAt);
             var updatedAtProp = e.Property(ie => ie.UpdatedAt);

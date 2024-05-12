@@ -49,7 +49,7 @@ public class AuthorRevisionSaver(PostType triggeredByPostType)
         where TPost : BasePost
         where TRevision : AuthorRevision
     {
-        BaseHelper.GetNowTimestamp(out var now);
+        SharedHelper.GetNowTimestamp(out var now);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
             .Where(e => e.Fid == db.Fid
                         && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
