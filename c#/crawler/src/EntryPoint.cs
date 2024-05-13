@@ -52,6 +52,7 @@ public class EntryPoint : BaseEntryPoint
                 // eager initial all keyed CrawlerLocks singleton instances
                 // in order to sync their timer of WithLogTrace
                 .AutoActivate());
+        builder.RegisterType<ReplySignatureSaver>();
         builder.RegisterType<AuthorRevisionSaver>();
         builder.RegisterType<UserParser>();
         builder.RegisterType<ThreadLateCrawler>();
