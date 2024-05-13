@@ -117,8 +117,8 @@ public partial class ReplySaver(
 }
 public partial class ReplySaver
 {
-    private static readonly HashSet<UniqueSignature> SignatureLocks = [];
-    private readonly List<UniqueSignature> _savedSignatures = [];
+    private static readonly HashSet<UniqueSignature> GlobalLocks = [];
+    private readonly List<UniqueSignature> _localLocks = [];
 
     private Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
@@ -152,23 +152,22 @@ public partial class ReplySaver
                 select (existing, newInReply))
             .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
 
-        lock (SignatureLocks)
+        lock (GlobalLocks)
         {
             var newSignaturesExceptLocked = signatures
                 .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                .ExceptBy(SignatureLocks, s => new(s.SignatureId, s.XxHash3))
+                .ExceptBy(GlobalLocks, s => new(s.SignatureId, s.XxHash3))
                 .ToList();
             if (newSignaturesExceptLocked.Count == 0) return () => { };
 
-            _savedSignatures.AddRange(newSignaturesExceptLocked
+            _localLocks.AddRange(newSignaturesExceptLocked
                 .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)));
-            SignatureLocks.UnionWith(_savedSignatures);
+            GlobalLocks.UnionWith(_localLocks);
             db.ReplySignatures.AddRange(newSignaturesExceptLocked);
         }
         return () =>
         {
-            lock (SignatureLocks)
-                if (_savedSignatures.Count != 0) SignatureLocks.ExceptWith(_savedSignatures);
+            lock (GlobalLocks) GlobalLocks.ExceptWith(_localLocks);
         };
     }
 

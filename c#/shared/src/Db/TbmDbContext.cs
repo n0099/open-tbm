@@ -14,7 +14,7 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
     public void LogDbUpdateConcurrencyException(DbUpdateConcurrencyException e) =>
         logger.LogWarning(e, "DbUpdateConcurrencyException: {}",
             SharedHelper.UnescapedJsonSerialize(e.Entries
-                .GroupBy(ee => ee.Entity.GetType())
+                .GroupBy(ee => ee.Entity.GetType().Name)
                 .ToDictionary(g => g.Key, g => g.Count())));
 
     public int SaveChangesForUpdate()

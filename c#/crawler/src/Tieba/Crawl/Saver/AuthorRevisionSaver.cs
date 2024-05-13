@@ -4,10 +4,10 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class AuthorRevisionSaver(PostType triggeredByPostType)
 {
-    // locks only using fid and uid field values from AuthorRevision
+    // locks only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
     // this prevents inserting multiple entities with similar time and other fields with the same values
-    private static readonly HashSet<(Fid Fid, Uid Uid)> AuthorExpGradeLocks = [];
-    private readonly List<(Fid Fid, Uid Uid)> _savedRevisions = [];
+    private static readonly HashSet<(Fid Fid, Uid Uid)> GlobalLocks = [];
+    private readonly List<(Fid Fid, Uid Uid)> _localLocks = [];
 
     public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
 
@@ -15,7 +15,7 @@ public class AuthorRevisionSaver(PostType triggeredByPostType)
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
         where TPostWithAuthorExpGrade : PostWithAuthorExpGrade
     {
-        SaveAuthorRevisions(db, posts, AuthorExpGradeLocks,
+        SaveAuthorRevisions(db, posts, GlobalLocks,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
@@ -34,13 +34,13 @@ public class AuthorRevisionSaver(PostType triggeredByPostType)
                 TriggeredBy = triggeredByPostType,
                 AuthorExpGrade = t.Value
             });
-        return () => ReleaseAllLocks(AuthorExpGradeLocks);
+        return () => ReleaseAllLocks(GlobalLocks);
     }
 
     private void SaveAuthorRevisions<TPost, TRevision, TValue>(
         CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
-        HashSet<(Fid Fid, Uid Uid)> locks,
+        HashSet<(Fid Fid, Uid Uid)> globalLocks,
         IQueryable<TRevision> dbSet,
         Func<TPost, TValue?> postAuthorFieldValueSelector,
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
@@ -74,24 +74,24 @@ public class AuthorRevisionSaver(PostType triggeredByPostType)
             .Where(t => t.Existing.DiscoveredAt != t.NewInPost.DiscoveredAt
                         && isValueChangedPredicate(t.Existing.Value, t.NewInPost.Value))
             .Select(t => (t.Uid, t.NewInPost.Value, t.NewInPost.DiscoveredAt));
-        lock (locks)
+        lock (globalLocks)
         {
             var newRevisionsExceptLocked = newRevisionOfNewUsers
                 .Concat(newRevisionOfExistingUsers)
                 .Select(revisionFactory)
-                .ExceptBy(locks, rev => (rev.Fid, rev.Uid))
+                .ExceptBy(globalLocks, rev => (rev.Fid, rev.Uid))
                 .ToList();
             if (newRevisionsExceptLocked.Count == 0) return;
 
-            _savedRevisions.AddRange(newRevisionsExceptLocked.Select(rev => (rev.Fid, rev.Uid)));
-            locks.UnionWith(_savedRevisions);
+            _localLocks.AddRange(newRevisionsExceptLocked.Select(rev => (rev.Fid, rev.Uid)));
+            globalLocks.UnionWith(_localLocks);
             db.Set<TRevision>().AddRange(newRevisionsExceptLocked);
         }
     }
 
-    private void ReleaseAllLocks(HashSet<(Fid Fid, Uid Uid)> locks)
+    private void ReleaseAllLocks(HashSet<(Fid Fid, Uid Uid)> globalLocks)
     {
-        lock (locks) locks.ExceptWith(_savedRevisions);
+        lock (globalLocks) globalLocks.ExceptWith(_localLocks);
     }
 
     private sealed class LatestAuthorRevisionProjection<TValue>

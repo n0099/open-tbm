@@ -34,8 +34,8 @@ public partial class UserSaver
 public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<Uid, User> users)
     : BaseSaver<BaseUserRevision>(logger)
 {
-    private static readonly HashSet<Uid> UserIdLocks = [];
-    private readonly List<Uid> _savedUsersId = [];
+    private static readonly HashSet<Uid> GlobalLocks = [];
+    private readonly List<Uid> _localLocks = [];
 
     public delegate UserSaver New(ConcurrentDictionary<Uid, User> users);
 
@@ -45,12 +45,12 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
         IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
     {
         if (users.IsEmpty) return;
-        lock (UserIdLocks)
+        lock (GlobalLocks)
         {
-            var usersExceptLocked = new Dictionary<Uid, User>(users.ExceptBy(UserIdLocks, pair => pair.Key));
+            var usersExceptLocked = new Dictionary<Uid, User>(users.ExceptBy(GlobalLocks, pair => pair.Key));
             if (usersExceptLocked.Count == 0) return;
-            _savedUsersId.AddRange(usersExceptLocked.Keys);
-            UserIdLocks.UnionWith(_savedUsersId);
+            _localLocks.AddRange(usersExceptLocked.Keys);
+            GlobalLocks.UnionWith(_localLocks);
 
             var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                 where usersExceptLocked.Keys.Contains(user.Uid)
@@ -69,18 +69,18 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
 
     public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId)
     {
-        lock (UserIdLocks)
+        lock (GlobalLocks)
         {
-            var exceptLocked = usersId.Except(UserIdLocks).ToList();
+            var exceptLocked = usersId.Except(GlobalLocks).ToList();
             if (exceptLocked.Count == 0) return exceptLocked;
-            _savedUsersId.AddRange(exceptLocked); // assume all given users are saved
-            UserIdLocks.UnionWith(exceptLocked);
+            _localLocks.AddRange(exceptLocked);
+            GlobalLocks.UnionWith(exceptLocked);
             return exceptLocked;
         }
     }
 
     public void OnPostSave()
     {
-        lock (UserIdLocks) if (_savedUsersId.Count != 0) UserIdLocks.ExceptWith(_savedUsersId);
+        lock (GlobalLocks) GlobalLocks.ExceptWith(_localLocks);
     }
 }
