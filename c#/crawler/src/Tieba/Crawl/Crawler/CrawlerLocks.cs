@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Tieba.Crawl;
+namespace tbm.Crawler.Tieba.Crawl.Crawler;
 
 public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, CrawlerLocks.Type lockType)
     : WithLogTrace(config, $"CrawlerLocks:{lockType}")

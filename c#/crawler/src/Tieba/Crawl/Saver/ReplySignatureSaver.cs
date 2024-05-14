@@ -2,11 +2,8 @@ using System.IO.Hashing;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class ReplySignatureSaver
+public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature> locks)
 {
-    private static readonly HashSet<UniqueSignature> GlobalLocks = [];
-    private readonly List<UniqueSignature> _localLocks = [];
-
     public Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         SharedHelper.GetNowTimestamp(out var now);
@@ -39,26 +36,17 @@ public class ReplySignatureSaver
                 select (existing, newInReply))
             .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
 
-        lock (GlobalLocks)
-        {
-            var newSignaturesExceptLocked = signatures
+        locks.AcquireLocksThen(db.ReplySignatures.AddRange,
+            alreadyLocked => signatures
                 .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                .ExceptBy(GlobalLocks, s => new(s.SignatureId, s.XxHash3))
-                .ToList();
-            if (newSignaturesExceptLocked.Count == 0) return () => { };
-
-            _localLocks.AddRange(newSignaturesExceptLocked
+                .ExceptBy(alreadyLocked, s => new(s.SignatureId, s.XxHash3))
+                .ToList(),
+            newlyLocked => newlyLocked
                 .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)));
-            GlobalLocks.UnionWith(_localLocks);
-            db.ReplySignatures.AddRange(newSignaturesExceptLocked);
-        }
-        return () =>
-        {
-            lock (GlobalLocks) GlobalLocks.ExceptWith(_localLocks);
-        };
+        return locks.ReleaseLocalLocked;
     }
 
-    private sealed record UniqueSignature(uint Id, byte[] XxHash3)
+    public sealed record UniqueSignature(uint Id, byte[] XxHash3)
     {
         public bool Equals(UniqueSignature? other) =>
             other != null && Id == other.Id && new ByteArrayEqualityComparer().Equals(XxHash3, other.XxHash3);

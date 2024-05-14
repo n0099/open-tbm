@@ -31,7 +31,8 @@ public class ThreadCrawlFacade(
             .ToList();
         if (newLatestRepliers.Count == 0) return;
 
-        var newlyLockedLatestRepliers = userSaver.AcquireUidLocksForSave(newLatestRepliers.Select(u => u.Uid));
+        var newlyLockedLatestRepliers = userSaver.AcquireUidLocksForSave
+            (newLatestRepliers.Select(u => u.Uid));
         var newLatestRepliersExceptLocked = newLatestRepliers
             .IntersectBy(newlyLockedLatestRepliers, u => u.Uid)
             .Select(u =>

@@ -59,5 +59,6 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<ThreadLateCrawlFacade>();
         builder.RegisterType<SonicPusher>();
         builder.RegisterType<CrawlPost>();
+        builder.RegisterGeneric(typeof(SaverLocks<>));
     }
 }

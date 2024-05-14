@@ -31,12 +31,11 @@ public partial class UserSaver
         _ => 0
     };
 }
-public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<Uid, User> users)
+public partial class UserSaver(
+    ILogger<UserSaver> logger, SaverLocks<Uid> locks,
+    ConcurrentDictionary<Uid, User> users)
     : BaseSaver<BaseUserRevision>(logger)
 {
-    private static readonly HashSet<Uid> GlobalLocks = [];
-    private readonly List<Uid> _localLocks = [];
-
     public delegate UserSaver New(ConcurrentDictionary<Uid, User> users);
 
     public void Save(
@@ -45,42 +44,35 @@ public partial class UserSaver(ILogger<UserSaver> logger, ConcurrentDictionary<U
         IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
     {
         if (users.IsEmpty) return;
-        lock (GlobalLocks)
-        {
-            var usersExceptLocked = new Dictionary<Uid, User>(users.ExceptBy(GlobalLocks, pair => pair.Key));
-            if (usersExceptLocked.Count == 0) return;
-            _localLocks.AddRange(usersExceptLocked.Keys);
-            GlobalLocks.UnionWith(_localLocks);
-
-            var existingUsersKeyByUid = (from user in db.Users.AsTracking()
-                where usersExceptLocked.Keys.Contains(user.Uid)
-                select user).ToDictionary(u => u.Uid);
-            SavePostsOrUsers(db, userFieldChangeIgnorance,
-                u => new UserRevision
-                {
-                    TakenAt = u.UpdatedAt ?? u.CreatedAt,
-                    Uid = u.Uid,
-                    TriggeredBy = postType
-                },
-                usersExceptLocked.Values.ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
-                u => existingUsersKeyByUid[u.Uid]);
-        }
+        locks.AcquireLocksThen(newlyLocked =>
+            {
+                var existingUsersKeyByUid = (from user in db.Users.AsTracking()
+                    where newlyLocked.Select(u => u.Uid).Contains(user.Uid)
+                    select user).ToDictionary(u => u.Uid);
+                SavePostsOrUsers(db, userFieldChangeIgnorance,
+                    u => new UserRevision
+                    {
+                        TakenAt = u.UpdatedAt ?? u.CreatedAt,
+                        Uid = u.Uid,
+                        TriggeredBy = postType
+                    },
+                    newlyLocked.ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
+                    u => existingUsersKeyByUid[u.Uid]);
+            },
+            alreadyLocked => users
+                .ExceptBy(alreadyLocked, pair => pair.Key).Select(pair => pair.Value).ToList(),
+            newlyLocked => newlyLocked.Select(u => u.Uid));
     }
 
     public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId)
     {
-        lock (GlobalLocks)
-        {
-            var exceptLocked = usersId.Except(GlobalLocks).ToList();
-            if (exceptLocked.Count == 0) return exceptLocked;
-            _localLocks.AddRange(exceptLocked);
-            GlobalLocks.UnionWith(exceptLocked);
-            return exceptLocked;
-        }
+        var exceptLocked = new List<Uid>();
+        locks.AcquireLocksThen(
+            newlyLocked => exceptLocked.AddRange(newlyLocked),
+            alreadyLocked => usersId.Except(alreadyLocked).ToList(),
+            i => i);
+        return exceptLocked;
     }
 
-    public void OnPostSave()
-    {
-        lock (GlobalLocks) GlobalLocks.ExceptWith(_localLocks);
-    }
+    public void OnPostSave() => locks.ReleaseLocalLocked();
 }
