@@ -197,7 +197,7 @@ public class ImageBatchConsumingWorker(
         IQueryable<ForumScript> forumScripts,
         CancellationToken stoppingToken = default)
     {
-        var scriptGroupings = forumScripts
+        var scriptGroupings = forumScripts.AsNoTracking()
             .GroupBy(e => e.Fid, e => e.Script).ToList();
         var scripts = scriptGroupings.SelectMany(i => i).Distinct().ToList();
         var recognizedTextLinesKeyByScript = new Dictionary<string, List<ImageOcrLine>>(scripts.Count);
@@ -217,7 +217,7 @@ public class ImageBatchConsumingWorker(
 
                 // try to know which fid owns current image batch
                 return imageKeysWithMatrix.IntersectBy(
-                    from replyContentImage in db.ReplyContentImages
+                    from replyContentImage in db.ReplyContentImages.AsNoTracking()
                     where imageKeysWithMatrix
                         .Select(imageKeyWithMatrix => imageKeyWithMatrix.ImageId)
                         .Contains(replyContentImage.ImageId)

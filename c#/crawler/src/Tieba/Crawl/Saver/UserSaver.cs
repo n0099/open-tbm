@@ -33,23 +33,23 @@ public partial class UserSaver
 }
 public partial class UserSaver(
     ILogger<UserSaver> logger, SaverLocks<Uid> locks,
-    ConcurrentDictionary<Uid, User> users)
+    IDictionary<Uid, User> users)
     : BaseSaver<BaseUserRevision>(logger)
 {
-    public delegate UserSaver New(ConcurrentDictionary<Uid, User> users);
+    public delegate UserSaver New(IDictionary<Uid, User> users);
 
     public void Save(
         CrawlerDbContext db,
         PostType postType,
         IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
     {
-        if (users.IsEmpty) return;
+        if (users.Count == 0) return;
         locks.AcquireLocksThen(newlyLocked =>
             {
                 var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                     where newlyLocked.Select(u => u.Uid).Contains(user.Uid)
                     select user).ToDictionary(u => u.Uid);
-                SavePostsOrUsers(db, userFieldChangeIgnorance,
+                SaveEntitiesWithRevision(db, userFieldChangeIgnorance,
                     u => new UserRevision
                     {
                         TakenAt = u.UpdatedAt ?? u.CreatedAt,

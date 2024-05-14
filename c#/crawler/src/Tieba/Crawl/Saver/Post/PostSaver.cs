@@ -30,13 +30,13 @@ public abstract class PostSaver<TPost, TBaseRevision>(
         ExpressionStarter<TPost> existingPostPredicate)
         where TRevision : BaseRevisionWithSplitting
     {
-        var existingPostsKeyById = db.Set<TPost>()
+        var existingPostsKeyById = db.Set<TPost>().AsTracking()
             .Where(existingPostPredicate).ToDictionary(postIdSelector);
 
-        // deep copy before entities get mutated by BaseSaver.SavePostsOrUsers()
+        // deep copy before entities get mutated by BaseSaver.SaveEntitiesWithRevision()
         var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
-        SavePostsOrUsers(db, UserFieldChangeIgnorance, revisionFactory,
+        SaveEntitiesWithRevision(db, UserFieldChangeIgnorance, revisionFactory,
             Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
             p => existingPostsKeyById[postIdSelector(p)]);
         return new(existingBeforeMerge, Posts.Values, postIdSelector);

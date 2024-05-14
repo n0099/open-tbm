@@ -8,56 +8,58 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
 #pragma warning restore S1939 // Inheritance list should not be redundant
     where TBaseRevision : BaseRevisionWithSplitting
 {
-    protected void SavePostsOrUsers<TPostOrUser, TRevision>(
+    protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,
         IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance,
-        Func<TPostOrUser, TRevision> revisionFactory,
-        ILookup<bool, TPostOrUser> existingOrNewLookup,
-        Func<TPostOrUser, TPostOrUser> existingSelector)
-        where TPostOrUser : class
+        Func<TEntity, TRevision> revisionFactory,
+        ILookup<bool, TEntity> existingOrNewLookup,
+        Func<TEntity, TEntity> existingSelector)
+        where TEntity : class
         where TRevision : BaseRevisionWithSplitting
     {
-        db.Set<TPostOrUser>().AddRange(existingOrNewLookup[false]); // newly added
-        var newRevisions = existingOrNewLookup[true].Select(newPostOrUser =>
+        db.Set<TEntity>().AddRange(existingOrNewLookup[false]); // newly added
+        var newRevisions = existingOrNewLookup[true].Select(newEntity =>
         {
-            var postOrUserInTracking = existingSelector(newPostOrUser);
-            var entry = db.Entry(postOrUserInTracking);
+            var entityInTracking = existingSelector(newEntity);
+            var entityEntry = db.Entry(entityInTracking);
 
-            // this will mutate postOrUserInTracking which is referenced by entry
-            entry.CurrentValues.SetValues(newPostOrUser);
+            // this will mutate existingEntity which is referenced by entry
+            entityEntry.CurrentValues.SetValues(newEntity);
 
             bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
                 or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
 
             // rollback changes that overwrite original values with the default value 0 or null
             // for all fields of TimestampedEntity and BasePost.LastSeenAt
-            // this will also affect the entity instance which postOrUserInTracking references to it
-            entry.Properties
+            // this will also affect the entity instance which entityInTracking references to it
+            entityEntry.Properties
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
                 .ForEach(prop => prop.IsModified = false);
 
             var revision = default(TRevision);
             var revisionNullFieldsBitMask = 0;
-            var whichPostType = typeof(TPostOrUser);
+            var whichPostType = typeof(TEntity);
             var entryIsUser = whichPostType == typeof(User);
-            foreach (var p in entry.Properties)
+            foreach (var p in entityEntry.Properties)
             {
                 var pName = p.Metadata.Name;
                 if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
 
-                if (IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Update(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                if (IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Update(
+                        whichPostType, pName, p.OriginalValue, p.CurrentValue)
                     || (entryIsUser && userFieldChangeIgnorance.Update(
                         whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                 {
                     p.IsModified = false;
                     continue; // skip following revision check
                 }
-                if (IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Revision(whichPostType, pName, p.OriginalValue, p.CurrentValue)
+                if (IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Revision(
+                        whichPostType, pName, p.OriginalValue, p.CurrentValue) 
                     || (entryIsUser && userFieldChangeIgnorance.Revision(
                         whichPostType, pName, p.OriginalValue, p.CurrentValue)))
                     continue;
 
-                if (IsLatestReplierUser(pName, p, entry)) return null;
+                if (IsLatestReplierUser(pName, p, entityEntry)) return null;
 
                 if (!IRevisionProperties.Cache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                 {
@@ -66,12 +68,12 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
                     logger.LogWarning("Updating field {} is not existing in revision table, " +
                                        "newValue={}, oldValue={}, newObject={}, oldObject={}",
                         pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),
-                        SharedHelper.UnescapedJsonSerialize(newPostOrUser),
-                        SharedHelper.UnescapedJsonSerialize(entry.OriginalValues.ToObject()));
+                        SharedHelper.UnescapedJsonSerialize(newEntity),
+                        SharedHelper.UnescapedJsonSerialize(entityEntry.OriginalValues.ToObject()));
                 }
                 else
                 {
-                    revision ??= revisionFactory(postOrUserInTracking);
+                    revision ??= revisionFactory(entityInTracking);
 
                     // quote from MSDN https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
                     // If the property type of this PropertyInfo object is a value type and value is null
@@ -109,14 +111,14 @@ public abstract class BaseSaver<TBaseRevision>(ILogger<BaseSaver<TBaseRevision>>
     private static bool IsLatestReplierUser(string pName, PropertyEntry p, EntityEntry entry)
     {
         // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
-        // they will soon be updated by (sub) reply crawler after it find out the latest reply
+        // they may soon be updated by (sub) reply crawler after it find out the latest reply
         // so we should ignore its revision update for all fields
         // ignore entire record is not possible via IFieldChangeIgnorance.GlobalFieldChangeIgnorance.Revision()
         // since it can only determine one field at the time
         if (pName != nameof(User.Portrait) || p.OriginalValue is not "") return false;
 
         // invokes OriginalValues.ToObject() to get a new instance
-        // since postOrUserInTracking is reference to the changed one
+        // since entityInTracking is reference to the changed one
         var user = (User)entry.OriginalValues.ToObject();
 
         // create another user instance with only fields of latest replier filled
