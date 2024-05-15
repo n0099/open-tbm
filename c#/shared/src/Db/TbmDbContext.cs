@@ -139,9 +139,7 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
         b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
 
     protected virtual void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) { }
-
     protected virtual void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) { }
-
     private Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
         _dataSourceSingleton ??= new(() =>
         {

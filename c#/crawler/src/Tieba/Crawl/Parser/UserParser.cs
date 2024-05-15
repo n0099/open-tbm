@@ -17,7 +17,13 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
             var (portrait, portraitUpdatedAt) = ExtractPortrait(el.Portrait);
             if (uid < 0) // historical anonymous user
             {
-                return new() {Uid = uid, Name = el.NameShow, Portrait = portrait, PortraitUpdatedAt = portraitUpdatedAt};
+                return new()
+                {
+                    Uid = uid,
+                    Name = el.NameShow,
+                    Portrait = portrait,
+                    PortraitUpdatedAt = portraitUpdatedAt
+                };
             }
 
             // will be an empty string when the user hasn't set a username for their baidu account yet

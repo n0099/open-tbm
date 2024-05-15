@@ -18,7 +18,7 @@ public class SubReplySaver(
         nameof(User.Icon) => true,
 
         // FansNickname in sub reply response will always be null
-        nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
+        nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
 
         // DisplayName in users embedded in sub replies from response will be the legacy nickname
         nameof(User.DisplayName) => true,
@@ -40,6 +40,8 @@ public class SubReplySaver(
         }
     };
 
+    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
+
     public override SaverChangeSet<SubReplyPost> Save(CrawlerDbContext db)
     {
         var changeSet = Save(db, sr => sr.Spid,
@@ -52,6 +54,4 @@ public class SubReplySaver(
 
         return changeSet;
     }
-
-    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
 }

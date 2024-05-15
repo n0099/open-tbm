@@ -48,11 +48,10 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
         ];
     }
 
-    protected ThreadRequest.Types.Data GetRequestDataForClientVersion602(Page page) =>
-        new()
-        {
-            Kw = forumName,
-            Pn = (int)page,
-            Rn = 30
-        };
+    protected ThreadRequest.Types.Data GetRequestDataForClientVersion602(Page page) => new()
+    {
+        Kw = forumName,
+        Pn = (int)page,
+        Rn = 30
+    };
 }

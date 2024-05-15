@@ -2,7 +2,7 @@ using PredicateBuilder = LinqKit.PredicateBuilder;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class ReplySaver(
+public partial class ReplySaver(
         ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
         ReplySignatureSaver replySignatureSaver,
@@ -21,13 +21,13 @@ public class ReplySaver(
 
     protected override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // FansNickname in reply response will always be null
-        nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
+        nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
         _ => false
     };
 
     protected override bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // user icon will be null after UserParser.ResetUsersIcon() get invoked
-        nameof(User.Icon) when oldValue is null && newValue is not null => true,
+        nameof(User.Icon) when newValue is not null && oldValue is null => true,
         _ => false
     };
 
@@ -51,6 +51,15 @@ public class ReplySaver(
         }
     };
 
+    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
+    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
+    {
+        nameof(ReplyPost.IsFold)        => 1 << 2,
+        nameof(ReplyPost.DisagreeCount) => 1 << 4,
+        nameof(ReplyPost.Geolocation)   => 1 << 5,
+        _ => 0
+    };
+
     public override SaverChangeSet<ReplyPost> Save(CrawlerDbContext db)
     {
         var changeSet = Save(db, r => r.Pid,
@@ -65,16 +74,9 @@ public class ReplySaver(
 
         return changeSet;
     }
-
-    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
-    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
-    {
-        nameof(ReplyPost.IsFold)        => 1 << 2,
-        nameof(ReplyPost.DisagreeCount) => 1 << 4,
-        nameof(ReplyPost.Geolocation)   => 1 << 5,
-        _ => 0
-    };
-
+}
+public partial class ReplySaver
+{
     private static void SaveReplyContentImages(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         var pidAndImageList = (

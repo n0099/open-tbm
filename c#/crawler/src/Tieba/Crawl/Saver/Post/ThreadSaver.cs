@@ -67,11 +67,6 @@ public class ThreadSaver(
         }
     };
 
-    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db) =>
-        Save(db, th => th.Tid,
-            th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
-            PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
-
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
     protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
@@ -86,4 +81,9 @@ public class ThreadSaver(
         nameof(ThreadPost.Geolocation)      => 1 << 10,
         _ => 0
     };
+
+    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db) =>
+        Save(db, th => th.Tid,
+            th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
+            PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 }
