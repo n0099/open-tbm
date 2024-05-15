@@ -2,6 +2,35 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public partial class UserSaver
 {
+    protected override bool FieldUpdateIgnorance
+        (string propName, object? oldValue, object? newValue) => propName switch
+    { // possible randomly respond with null
+        nameof(User.IpGeolocation) when newValue is null => true,
+        // possible clock drift across multiple response from tieba api
+        // they should sync their servers with NTP
+        /* following sql can track these drift
+        SELECT portraitUpdatedAtDiff, COUNT(*), MAX(uid), MIN(uid), MAX(portraitUpdatedAt), MIN(portraitUpdatedAt)
+        FROM (
+            SELECT uid, portraitUpdatedAt, CAST(portraitUpdatedAt AS SIGNED)
+                    - LEAD(CAST(portraitUpdatedAt AS SIGNED)) OVER (PARTITION BY uid ORDER BY time DESC) AS portraitUpdatedAtDiff
+                FROM tbmcr_user WHERE portraitUpdatedAt IS NOT NULL
+        ) AS T
+        WHERE portraitUpdatedAtDiff > -100 AND portraitUpdatedAtDiff < 100
+        GROUP BY portraitUpdatedAtDiff ORDER BY portraitUpdatedAtDiff;
+        */
+        nameof(User.PortraitUpdatedAt)
+            when Math.Abs((newValue as int? ?? 0) - (oldValue as int? ?? 0)) <= 10 =>
+            true,
+        _ => false
+    };
+
+    protected override bool FieldRevisionIgnorance
+        (string propName, object? oldValue, object? newValue) => propName switch
+    { // ignore revision that figures update existing old users that don't have ip geolocation
+        nameof(User.IpGeolocation) when oldValue is null => true,
+        _ => false
+    };
+
     protected override Dictionary<Type, AddRevisionDelegate>
         AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
     {
@@ -34,14 +63,11 @@ public partial class UserSaver
 public partial class UserSaver(
     ILogger<UserSaver> logger, SaverLocks<Uid> locks,
     IDictionary<Uid, User> users)
-    : BaseSaver<BaseUserRevision>(logger)
+    : SaverWithRevision<BaseUserRevision>(logger)
 {
     public delegate UserSaver New(IDictionary<Uid, User> users);
 
-    public void Save(
-        CrawlerDbContext db,
-        PostType postType,
-        IFieldChangeIgnorance.FieldChangeIgnoranceDelegates userFieldChangeIgnorance)
+    public void Save(CrawlerDbContext db, PostType postType)
     {
         if (users.Count == 0) return;
         locks.AcquireLocksThen(newlyLocked =>
@@ -49,7 +75,7 @@ public partial class UserSaver(
                 var existingUsersKeyByUid = (from user in db.Users.AsTracking()
                     where newlyLocked.Select(u => u.Uid).Contains(user.Uid)
                     select user).ToDictionary(u => u.Uid);
-                SaveEntitiesWithRevision(db, userFieldChangeIgnorance,
+                SaveEntitiesWithRevision(db,
                     u => new UserRevision
                     {
                         TakenAt = u.UpdatedAt ?? u.CreatedAt,

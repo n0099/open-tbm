@@ -12,18 +12,24 @@ public class ReplySaver(
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-    public override IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
-        UserFieldChangeIgnorance { get; } = new(
-        Update: (_, propName, oldValue, newValue) => propName switch
-        { // FansNickname in reply response will always be null
-            nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
-            _ => false
-        },
-        Revision: (_, propName, oldValue, newValue) => propName switch
-        { // user icon will be null after UserParser.ResetUsersIcon() get invoked
-            nameof(User.Icon) when oldValue is null && newValue is not null => true,
-            _ => false
-        });
+    protected override bool FieldUpdateIgnorance
+        (string propName, object? oldValue, object? newValue) => propName switch
+    { // possible randomly respond with null
+        nameof(ReplyPost.SignatureId) when newValue is null && oldValue is not null => true,
+        _ => false
+    };
+
+    protected override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
+    { // FansNickname in reply response will always be null
+        nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
+        _ => false
+    };
+
+    protected override bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => propName switch
+    { // user icon will be null after UserParser.ResetUsersIcon() get invoked
+        nameof(User.Icon) when oldValue is null && newValue is not null => true,
+        _ => false
+    };
 
     protected override Dictionary<Type, AddRevisionDelegate>
         AddRevisionDelegatesKeyBySplitEntityType { get; } = new()

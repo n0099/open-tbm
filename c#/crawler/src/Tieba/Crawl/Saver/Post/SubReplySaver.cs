@@ -11,20 +11,19 @@ public class SubReplySaver(
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-    public override IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
-        UserFieldChangeIgnorance { get; } = new(
-        Update: (_, propName, oldValue, newValue) => propName switch
-        { // always ignore updates on iconinfo due to some rare user will show some extra icons
-            // compare to reply response in the response of sub reply
-            nameof(User.Icon) => true,
+    protected override bool UserFieldUpdateIgnorance
+        (string propName, object? oldValue, object? newValue) => propName switch
+    { // always ignore updates on iconinfo due to some rare user will show some extra icons
+        // compare to reply response in the response of sub reply
+        nameof(User.Icon) => true,
 
-            // FansNickname in sub reply response will always be null
-            nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
+        // FansNickname in sub reply response will always be null
+        nameof(User.FansNickname) when oldValue is not null && newValue is null => true,
 
-            // DisplayName in users embedded in sub replies from response will be the legacy nickname
-            nameof(User.DisplayName) => true,
-            _ => false
-        }, (_, _, _, _) => false);
+        // DisplayName in users embedded in sub replies from response will be the legacy nickname
+        nameof(User.DisplayName) => true,
+        _ => false
+    };
 
     protected override Dictionary<Type, AddRevisionDelegate>
         AddRevisionDelegatesKeyBySplitEntityType { get; } = new()

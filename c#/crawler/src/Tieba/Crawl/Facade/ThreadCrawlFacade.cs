@@ -21,7 +21,7 @@ public class ThreadCrawlFacade(
     protected override void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver)
     { // OnBeforeCommitSave() should get invoked after UserSaver.Save() by the base.SaveCrawled()
         // so only latest repliers that not exists in parsed users are being inserted
-        // note this will bypass user revision detection since not invoking BaseSaver.SaveEntitiesWithRevision() but directly DbContext.AddRange()
+        // note this will bypass user revision detection since not invoking SaverWithRevision.SaveEntitiesWithRevision() but directly DbContext.AddRange()
 
         // users has already been added into DbContext and tracking
         var existingUsersId = db.ChangeTracker.Entries<User>().Select(ee => ee.Entity.Uid);

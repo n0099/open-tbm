@@ -7,14 +7,12 @@ public abstract class PostSaver<TPost, TBaseRevision>(
         ConcurrentDictionary<PostId, TPost> posts,
         AuthorRevisionSaver.New authorRevisionSaverFactory,
         PostType currentPostType)
-    : BaseSaver<TBaseRevision>(logger), IPostSaver<TPost>
+    : SaverWithRevision<TBaseRevision>(logger), IPostSaver<TPost>
     where TPost : BasePost
     where TBaseRevision : BaseRevisionWithSplitting
 {
     protected delegate void PostSaveHandler();
 
-    public virtual IFieldChangeIgnorance.FieldChangeIgnoranceDelegates
-        UserFieldChangeIgnorance => throw new NotSupportedException();
     public PostType CurrentPostType { get; } = currentPostType;
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(currentPostType);
@@ -33,10 +31,10 @@ public abstract class PostSaver<TPost, TBaseRevision>(
         var existingPostsKeyById = db.Set<TPost>().AsTracking()
             .Where(existingPostPredicate).ToDictionary(postIdSelector);
 
-        // deep copy before entities get mutated by BaseSaver.SaveEntitiesWithRevision()
+        // deep copy before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
         var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
-        SaveEntitiesWithRevision(db, UserFieldChangeIgnorance, revisionFactory,
+        SaveEntitiesWithRevision(db, revisionFactory,
             Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
             p => existingPostsKeyById[postIdSelector(p)]);
         return new(existingBeforeMerge, Posts.Values, postIdSelector);
