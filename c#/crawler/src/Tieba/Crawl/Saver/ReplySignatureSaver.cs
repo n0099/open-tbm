@@ -49,7 +49,7 @@ public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature>
     public sealed record UniqueSignature(uint Id, byte[] XxHash3)
     {
         public bool Equals(UniqueSignature? other) =>
-            other != null && Id == other.Id && new ByteArrayEqualityComparer().Equals(XxHash3, other.XxHash3);
+            other != null && Id == other.Id && ByteArrayEqualityComparer.Instance.Equals(XxHash3, other.XxHash3);
 
         public override int GetHashCode()
         {

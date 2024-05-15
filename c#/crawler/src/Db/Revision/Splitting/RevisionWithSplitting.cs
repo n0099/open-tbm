@@ -5,7 +5,6 @@ public abstract class RevisionWithSplitting<TBaseRevision> : BaseRevisionWithSpl
 {
     private readonly Dictionary<Type, TBaseRevision> _splitEntities = [];
     public IReadOnlyDictionary<Type, TBaseRevision> SplitEntities => _splitEntities;
-    public override bool IsAllFieldsIsNullExceptSplit() => throw new NotSupportedException();
 
     protected TValue? GetSplitEntityValue<TSplitEntity, TValue>
         (Func<TSplitEntity, TValue?> valueSelector)

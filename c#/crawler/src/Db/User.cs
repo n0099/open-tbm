@@ -17,12 +17,14 @@ public class User : TimestampedEntity
 
     public class EqualityComparer : EqualityComparer<User>
     {
+        public static EqualityComparer Instance { get; } = new();
+
         public override bool Equals(User? x, User? y) => x == y || (
             x != null && y != null &&
             (x.Uid, x.Name, x.DisplayName, x.Portrait, x.PortraitUpdatedAt, x.Gender, x.FansNickname, x.IpGeolocation)
             == (y.Uid, y.Name, y.DisplayName, y.Portrait, y.PortraitUpdatedAt, y.Gender, y.FansNickname, y.IpGeolocation)
             && (x.Icon == y.Icon
-                || (x.Icon != null && y.Icon != null && new ByteArrayEqualityComparer().Equals(x.Icon, y.Icon))));
+                || (x.Icon != null && y.Icon != null && ByteArrayEqualityComparer.Instance.Equals(x.Icon, y.Icon))));
 
         public override int GetHashCode(User obj)
         {

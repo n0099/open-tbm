@@ -4,6 +4,8 @@ namespace tbm.Shared.Db;
 
 public class NpgsqlCamelCaseNameTranslator : INpgsqlNameTranslator
 {
+    public static NpgsqlCamelCaseNameTranslator Instance { get; } = new();
+
     public string TranslateTypeName(string clrName) => TranslateMemberName(clrName);
 
     /// <see>https://github.com/efcore/EFCore.NamingConventions/blob/0d19b13a8e62ec20779c3cca03c27f200b5b7458/EFCore.NamingConventions/Internal/CamelCaseNameRewriter.cs#L13</see>

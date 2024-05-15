@@ -6,5 +6,5 @@ public abstract class BaseRevisionWithSplitting : RowVersionedEntity
 {
     public uint TakenAt { get; set; }
     public ushort? NullFieldsBitMask { get; set; }
-    public abstract bool IsAllFieldsIsNullExceptSplit();
+    public virtual bool IsAllFieldsIsNullExceptSplit() => throw new NotSupportedException();
 }

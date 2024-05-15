@@ -10,8 +10,6 @@ namespace tbm.Crawler.Db;
 public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
     : TbmDbContext<CrawlerDbContext.ModelCacheKeyFactory>(logger)
 {
-    private static Lazy<NpgsqlDataSource>? _dataSourceSingleton;
-
     public delegate CrawlerDbContext NewDefault();
     public delegate CrawlerDbContext New(Fid fid);
 
@@ -108,11 +106,7 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
     }
 
     protected override void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) =>
-        builder.MapEnum<PostType>("tbmcr_triggeredBy", new NpgsqlCamelCaseNameTranslator());
-
-    [SuppressMessage("Critical Code Smell", "S2696:Instance members should not write to \"static\" fields")]
-    protected override Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
-        _dataSourceSingleton ??= GetNpgsqlDataSourceFactory(connectionString);
+        builder.MapEnum<PostType>("tbmcr_triggeredBy", NpgsqlCamelCaseNameTranslator.Instance);
 
     public class ModelCacheKeyFactory : IModelCacheKeyFactory
     { // https://stackoverflow.com/questions/51864015/entity-framework-map-model-class-to-table-at-run-time/51899590#51899590

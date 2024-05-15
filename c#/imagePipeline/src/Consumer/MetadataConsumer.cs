@@ -106,7 +106,7 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
         return new()
         {
             XxHash3 = xxHash3,
-            RawBytes = commonXxHash3ToIgnore.Contains(xxHash3, new ByteArrayEqualityComparer()) ? null : rawBytes
+            RawBytes = commonXxHash3ToIgnore.Contains(xxHash3, ByteArrayEqualityComparer.Instance) ? null : rawBytes
         };
     }
 

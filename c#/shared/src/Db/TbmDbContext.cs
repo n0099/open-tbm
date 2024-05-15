@@ -96,6 +96,9 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
     : TbmDbContext(logger)
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
+    [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
+    private static Lazy<NpgsqlDataSource>? _dataSourceSingleton;
+
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public required IConfiguration Config { private get; init; }
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
@@ -139,13 +142,11 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
 
     protected virtual void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) { }
 
-    protected virtual Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
-        throw new NotSupportedException();
-
-    protected Lazy<NpgsqlDataSource> GetNpgsqlDataSourceFactory(string? connectionString) => new(() =>
-    {
-        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-        OnBuildingNpgsqlDataSource(dataSourceBuilder);
-        return dataSourceBuilder.Build();
-    });
+    private Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
+        _dataSourceSingleton ??= new(() =>
+        {
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+            OnBuildingNpgsqlDataSource(dataSourceBuilder);
+            return dataSourceBuilder.Build();
+        });
 }
