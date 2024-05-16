@@ -1,8 +1,8 @@
 namespace tbm.Crawler.Worker;
 
 public class ResumeSuspendPostContentsPushingWorker(
-        ILogger<ResumeSuspendPostContentsPushingWorker> logger,
-        SonicPusher pusher)
+    ILogger<ResumeSuspendPostContentsPushingWorker> logger,
+    SonicPusher pusher)
     : ErrorableWorker
 {
     public static string GetFilePath(string postType) =>

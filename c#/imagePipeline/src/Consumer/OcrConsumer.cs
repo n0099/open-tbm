@@ -1,9 +1,9 @@
 namespace tbm.ImagePipeline.Consumer;
 
 public class OcrConsumer(
-        JointRecognizer.New recognizerFactory,
-        FailedImageHandler failedImageHandler,
-        string script)
+    JointRecognizer.New recognizerFactory,
+    FailedImageHandler failedImageHandler,
+    string script)
     : MatrixConsumer
 {
     private readonly JointRecognizer _recognizer = recognizerFactory(script);

@@ -3,9 +3,9 @@ using LinqKit;
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public class SubReplySaver(
-        ILogger<SubReplySaver> logger,
-        ConcurrentDictionary<PostId, SubReplyPost> posts,
-        AuthorRevisionSaver.New authorRevisionSaverFactory)
+    ILogger<SubReplySaver> logger,
+    ConcurrentDictionary<PostId, SubReplyPost> posts,
+    AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<SubReplyPost, BaseSubReplyRevision>(
         logger, posts, authorRevisionSaverFactory, PostType.SubReply)
 {

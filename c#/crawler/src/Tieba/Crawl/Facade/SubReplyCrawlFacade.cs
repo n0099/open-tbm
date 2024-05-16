@@ -1,16 +1,16 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class SubReplyCrawlFacade(
-        SubReplyCrawler.New crawlerFactory,
-        Fid fid,
-        Tid tid,
-        Pid pid,
-        IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
-        SubReplyParser postParser,
-        SubReplySaver.New postSaverFactory,
-        UserParser.New userParserFactory,
-        UserSaver.New userSaverFactory,
-        SonicPusher sonicPusher)
+    SubReplyCrawler.New crawlerFactory,
+    Fid fid,
+    Tid tid,
+    Pid pid,
+    IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
+    SubReplyParser postParser,
+    SubReplySaver.New postSaverFactory,
+    UserParser.New userParserFactory,
+    UserSaver.New userSaverFactory,
+    SonicPusher sonicPusher)
     : CrawlFacade<SubReplyPost, SubReplyResponse, SubReply>(
         crawlerFactory(tid, pid), fid, new(fid, tid, pid), locks[CrawlerLocks.Type.SubReply],
         postParser, postSaverFactory.Invoke,

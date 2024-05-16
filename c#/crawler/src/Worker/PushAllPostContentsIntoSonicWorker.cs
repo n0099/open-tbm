@@ -4,11 +4,11 @@ namespace tbm.Crawler.Worker;
 
 // ReSharper disable once UnusedType.Global
 public class PushAllPostContentsIntoSonicWorker(
-        ILogger<PushAllPostContentsIntoSonicWorker> logger,
-        IConfiguration config,
-        SonicPusher pusher,
-        Func<Owned<CrawlerDbContext.New>> dbContextFactory,
-        Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory)
+    ILogger<PushAllPostContentsIntoSonicWorker> logger,
+    IConfiguration config,
+    SonicPusher pusher,
+    Func<Owned<CrawlerDbContext.New>> dbContextFactory,
+    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     private readonly IConfiguration _config = config.GetSection("Sonic");

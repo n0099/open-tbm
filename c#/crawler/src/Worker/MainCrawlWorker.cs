@@ -3,8 +3,8 @@ using System.Runtime.CompilerServices;
 namespace tbm.Crawler.Worker;
 
 public class MainCrawlWorker(
-        Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
-        CrawlPost crawlPost)
+    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
+    CrawlPost crawlPost)
     : CyclicCrawlWorker
 {
     protected override async Task DoWork(CancellationToken stoppingToken)

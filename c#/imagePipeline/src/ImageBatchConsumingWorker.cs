@@ -7,13 +7,13 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace tbm.ImagePipeline;
 
 public class ImageBatchConsumingWorker(
-        ILogger<ImageBatchConsumingWorker> logger,
-        ILifetimeScope scope0,
+    ILogger<ImageBatchConsumingWorker> logger,
+    ILifetimeScope scope0,
 
-        // ReSharper disable once SuggestBaseTypeForParameterInConstructor
-        Channel<List<ImageWithBytes>> channel,
-        Func<Owned<ImagePipelineDbContext.New>> dbContextFactory,
-        Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
+    // ReSharper disable once SuggestBaseTypeForParameterInConstructor
+    Channel<List<ImageWithBytes>> channel,
+    Func<Owned<ImagePipelineDbContext.New>> dbContextFactory,
+    Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     protected override async Task DoWork(CancellationToken stoppingToken)

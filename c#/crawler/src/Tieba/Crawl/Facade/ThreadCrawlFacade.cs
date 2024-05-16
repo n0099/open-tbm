@@ -1,14 +1,14 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public class ThreadCrawlFacade(
-        ThreadCrawler.New crawlerFactory,
-        string forumName,
-        Fid fid,
-        IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
-        ThreadParser postParser,
-        ThreadSaver.New postSaverFactory,
-        UserParser.New userParserFactory,
-        UserSaver.New userSaverFactory)
+    ThreadCrawler.New crawlerFactory,
+    string forumName,
+    Fid fid,
+    IIndex<CrawlerLocks.Type, CrawlerLocks> locks,
+    ThreadParser postParser,
+    ThreadSaver.New postSaverFactory,
+    UserParser.New userParserFactory,
+    UserSaver.New userSaverFactory)
     : CrawlFacade<ThreadPost, ThreadResponse, Thread>(
         crawlerFactory(forumName), fid, new(fid), locks[CrawlerLocks.Type.Thread],
         postParser, postSaverFactory.Invoke,

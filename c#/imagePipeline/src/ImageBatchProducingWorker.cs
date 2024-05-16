@@ -1,13 +1,13 @@
 namespace tbm.ImagePipeline;
 
 public class ImageBatchProducingWorker(
-        ILogger<ImageBatchProducingWorker> logger,
-        IConfiguration config,
-        ImageRequester imageRequester,
+    ILogger<ImageBatchProducingWorker> logger,
+    IConfiguration config,
+    ImageRequester imageRequester,
 
-        // ReSharper disable once SuggestBaseTypeForParameterInConstructor
-        Channel<List<ImageWithBytes>> channel,
-        Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
+    // ReSharper disable once SuggestBaseTypeForParameterInConstructor
+    Channel<List<ImageWithBytes>> channel,
+    Func<Owned<ImagePipelineDbContext.NewDefault>> dbContextDefaultFactory)
     : ErrorableWorker(shouldExitOnException: true)
 {
     private readonly IConfigurationSection _config = config.GetSection("ImageBatchProducer");

@@ -3,10 +3,10 @@ using LinqKit;
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public abstract class PostSaver<TPost, TBaseRevision>(
-        ILogger<PostSaver<TPost, TBaseRevision>> logger,
-        ConcurrentDictionary<PostId, TPost> posts,
-        AuthorRevisionSaver.New authorRevisionSaverFactory,
-        PostType currentPostType)
+    ILogger<PostSaver<TPost, TBaseRevision>> logger,
+    ConcurrentDictionary<PostId, TPost> posts,
+    AuthorRevisionSaver.New authorRevisionSaverFactory,
+    PostType currentPostType)
     : SaverWithRevision<TBaseRevision>(logger), IPostSaver<TPost>
     where TPost : BasePost
     where TBaseRevision : BaseRevisionWithSplitting

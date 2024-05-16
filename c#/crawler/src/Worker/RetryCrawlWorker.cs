@@ -1,14 +1,14 @@
 namespace tbm.Crawler.Worker;
 
 public class RetryCrawlWorker(
-        ILogger<RetryCrawlWorker> logger,
-        IIndex<CrawlerLocks.Type, CrawlerLocks> registeredLocksLookup,
-        CrawlPost crawlPost,
-        Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
-        Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
-        Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
-        Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
-        Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
+    ILogger<RetryCrawlWorker> logger,
+    IIndex<CrawlerLocks.Type, CrawlerLocks> registeredLocksLookup,
+    CrawlPost crawlPost,
+    Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
+    Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
+    Func<Owned<ThreadCrawlFacade.New>> threadCrawlFacadeFactory,
+    Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
+    Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
     : CyclicCrawlWorker
 {
     protected override async Task DoWork(CancellationToken stoppingToken)

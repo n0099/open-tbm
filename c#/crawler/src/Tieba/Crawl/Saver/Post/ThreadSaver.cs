@@ -3,9 +3,9 @@ using LinqKit;
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public class ThreadSaver(
-        ILogger<ThreadSaver> logger,
-        ConcurrentDictionary<Tid, ThreadPost> posts,
-        AuthorRevisionSaver.New authorRevisionSaverFactory)
+    ILogger<ThreadSaver> logger,
+    ConcurrentDictionary<Tid, ThreadPost> posts,
+    AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<ThreadPost, BaseThreadRevision>(
         logger, posts, authorRevisionSaverFactory, PostType.Thread)
 {

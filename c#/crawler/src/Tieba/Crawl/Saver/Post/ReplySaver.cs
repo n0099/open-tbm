@@ -3,11 +3,11 @@ using PredicateBuilder = LinqKit.PredicateBuilder;
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public class ReplySaver(
-        ILogger<ReplySaver> logger,
-        ConcurrentDictionary<PostId, ReplyPost> posts,
-        ReplyContentImageSaver replyContentImageSaver,
-        ReplySignatureSaver replySignatureSaver,
-        AuthorRevisionSaver.New authorRevisionSaverFactory)
+    ILogger<ReplySaver> logger,
+    ConcurrentDictionary<PostId, ReplyPost> posts,
+    ReplyContentImageSaver replyContentImageSaver,
+    ReplySignatureSaver replySignatureSaver,
+    AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<ReplyPost, BaseReplyRevision>(
         logger, posts, authorRevisionSaverFactory, PostType.Reply)
 {

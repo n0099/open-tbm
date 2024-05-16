@@ -6,12 +6,12 @@ namespace tbm.Crawler.Worker;
 using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
 
 public class ArchiveCrawlWorker(
-        ILogger<ArchiveCrawlWorker> logger,
-        Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
-        Func<Owned<ThreadArchiveCrawler.New>> threadArchiveCrawlerFactory,
-        Func<Owned<ThreadArchiveCrawlFacade.New>> threadArchiveCrawlFacadeFactory,
-        Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
-        Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
+    ILogger<ArchiveCrawlWorker> logger,
+    Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
+    Func<Owned<ThreadArchiveCrawler.New>> threadArchiveCrawlerFactory,
+    Func<Owned<ThreadArchiveCrawlFacade.New>> threadArchiveCrawlFacadeFactory,
+    Func<Owned<ReplyCrawlFacade.New>> replyCrawlFacadeFactory,
+    Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
     : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
     // as of March 2019, tieba had restrict the max accepted value for page param of forum's threads api
