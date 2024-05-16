@@ -18,15 +18,15 @@ public abstract class SaverWithRevision<TBaseRevision>
     };
     protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
     protected virtual bool FieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
-    protected virtual bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
-    protected virtual bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
     protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
 
     protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,
         Func<TEntity, TRevision> revisionFactory,
         ILookup<bool, TEntity> existingOrNewLookup,
-        Func<TEntity, TEntity> existingSelector)
+        Func<TEntity, TEntity> existingSelector,
+        UserSaver.FieldChangeIgnorance? userFieldUpdateIgnorance = null,
+        UserSaver.FieldChangeIgnorance? userFieldRevisionIgnorance = null)
         where TEntity : class
         where TRevision : BaseRevisionWithSplitting
     {
@@ -51,8 +51,7 @@ public abstract class SaverWithRevision<TBaseRevision>
 
             var revision = default(TRevision);
             var revisionNullFieldsBitMask = 0;
-            var whichPostType = typeof(TEntity);
-            var entryIsUser = whichPostType == typeof(User);
+            var entityIsUser = typeof(TEntity) == typeof(User);
             foreach (var p in entityEntry.Properties)
             {
                 var pName = p.Metadata.Name;
@@ -61,9 +60,9 @@ public abstract class SaverWithRevision<TBaseRevision>
 
                 if (FieldUpdateIgnorance(
                         pName, p.OriginalValue, p.CurrentValue)
-                    || SaverWithRevision<TBaseRevision>.GlobalFieldUpdateIgnorance(
+                    || GlobalFieldUpdateIgnorance(
                         pName, p.OriginalValue, p.CurrentValue)
-                    || (entryIsUser && UserFieldUpdateIgnorance(
+                    || (entityIsUser && userFieldUpdateIgnorance!(
                         pName, p.OriginalValue, p.CurrentValue)))
                 {
                     p.IsModified = false;
@@ -71,7 +70,7 @@ public abstract class SaverWithRevision<TBaseRevision>
                 }
                 if (FieldRevisionIgnorance(
                         pName, p.OriginalValue, p.CurrentValue) 
-                    || (entryIsUser && UserFieldRevisionIgnorance(
+                    || (entityIsUser && userFieldRevisionIgnorance!(
                         pName, p.OriginalValue, p.CurrentValue)))
                     continue;
 

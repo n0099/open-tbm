@@ -47,7 +47,7 @@ public class ThreadSaver(
         _ => false
     };
 
-    protected override bool UserFieldUpdateIgnorance
+    public override bool UserFieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
     { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one
         // so we should mark it as null temporarily

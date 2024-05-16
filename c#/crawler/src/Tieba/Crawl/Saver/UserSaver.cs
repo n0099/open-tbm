@@ -89,8 +89,13 @@ public partial class UserSaver(
     : SaverWithRevision<BaseUserRevision>(logger)
 {
     public delegate UserSaver New(IDictionary<Uid, User> users);
+    public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);
 
-    public void Save(CrawlerDbContext db, PostType postType)
+    public void Save(
+        CrawlerDbContext db,
+        PostType postType,
+        FieldChangeIgnorance userFieldUpdateIgnorance,
+        FieldChangeIgnorance userFieldRevisionIgnorance)
     {
         if (users.Count == 0) return;
         locks.AcquireLocksThen(newlyLocked =>
@@ -110,7 +115,9 @@ public partial class UserSaver(
             },
             alreadyLocked => users
                 .ExceptBy(alreadyLocked, pair => pair.Key).Select(pair => pair.Value).ToList(),
-            newlyLocked => newlyLocked.Select(u => u.Uid));
+            newlyLocked => newlyLocked.Select(u => u.Uid),
+            userFieldUpdateIgnorance,
+            userFieldRevisionIgnorance);
     }
 
     public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId)

@@ -20,6 +20,9 @@ public abstract class PostSaver<TPost, TBaseRevision>(
     protected PostSaveHandler PostSaveHandlers { get; set; } = () => { };
     public void OnPostSave() => PostSaveHandlers();
 
+    public virtual bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
+    public virtual bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
+
     public abstract SaverChangeSet<TPost> Save(CrawlerDbContext db);
     protected SaverChangeSet<TPost> Save<TRevision>(
         CrawlerDbContext db,

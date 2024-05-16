@@ -19,13 +19,13 @@ public partial class ReplySaver(
         _ => false
     };
 
-    protected override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
+    public override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // FansNickname in reply response will always be null
         nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
         _ => false
     };
 
-    protected override bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => propName switch
+    public override bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // user icon will be null after UserParser.ResetUsersIcon() get invoked
         nameof(User.Icon) when newValue is not null && oldValue is null => true,
         _ => false

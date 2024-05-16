@@ -50,7 +50,10 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
 
             var userSaver = userSaverFactory(_users);
-            userSaver.Save(db, postSaver.CurrentPostType);
+            userSaver.Save(db,
+                postSaver.CurrentPostType,
+                postSaver.UserFieldUpdateIgnorance,
+                postSaver.UserFieldRevisionIgnorance);
 
             OnBeforeCommitSave(db, userSaver);
             try
