@@ -98,37 +98,29 @@ public partial class UserSaver(
         FieldChangeIgnorance userFieldRevisionIgnorance)
     {
         if (users.Count == 0) return;
-        locks.AcquireLocksThen(newlyLocked =>
+        var newlyLocked = locks.AcquireLocks(users.Select(pair => pair.Key).ToList());
+
+        // existingUsers may have new revisions to insert so excluding already locked users
+        // to prevent inserting duplicate revision
+        var existingUsersKeyByUid = (from user in db.Users.AsTracking()
+            where newlyLocked.Contains(user.Uid)
+            select user).ToDictionary(u => u.Uid);
+        SaveEntitiesWithRevision(db,
+            u => new UserRevision
             {
-                var existingUsersKeyByUid = (from user in db.Users.AsTracking()
-                    where newlyLocked.Select(u => u.Uid).Contains(user.Uid)
-                    select user).ToDictionary(u => u.Uid);
-                SaveEntitiesWithRevision(db,
-                    u => new UserRevision
-                    {
-                        TakenAt = u.UpdatedAt ?? u.CreatedAt,
-                        Uid = u.Uid,
-                        TriggeredBy = postType
-                    },
-                    newlyLocked.ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
-                    u => existingUsersKeyByUid[u.Uid]);
+                TakenAt = u.UpdatedAt ?? u.CreatedAt,
+                Uid = u.Uid,
+                TriggeredBy = postType
             },
-            alreadyLocked => users
-                .ExceptBy(alreadyLocked, pair => pair.Key).Select(pair => pair.Value).ToList(),
-            newlyLocked => newlyLocked.Select(u => u.Uid),
+            users.IntersectBy(newlyLocked, pair => pair.Key).Select(pair => pair.Value)
+                .ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
+            u => existingUsersKeyByUid[u.Uid],
             userFieldUpdateIgnorance,
             userFieldRevisionIgnorance);
     }
 
-    public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId)
-    {
-        var exceptLocked = new List<Uid>();
-        locks.AcquireLocksThen(
-            newlyLocked => exceptLocked.AddRange(newlyLocked),
-            alreadyLocked => usersId.Except(alreadyLocked).ToList(),
-            i => i);
-        return exceptLocked;
-    }
+    public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId) =>
+        locks.AcquireLocks(usersId.ToList());
 
     public void OnPostSave() => locks.ReleaseLocalLocked();
 }

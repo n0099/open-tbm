@@ -5,6 +5,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 public partial class ReplySaver(
         ILogger<ReplySaver> logger,
         ConcurrentDictionary<PostId, ReplyPost> posts,
+        SaverLocks<string> imageInReplyLocks,
         ReplySignatureSaver replySignatureSaver,
         AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<ReplyPost, BaseReplyRevision>(
@@ -77,7 +78,7 @@ public partial class ReplySaver(
 }
 public partial class ReplySaver
 {
-    private static void SaveReplyContentImages(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
+    private void SaveReplyContentImages(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         var pidAndImageList = (
                 from r in replies
@@ -107,19 +108,24 @@ public partial class ReplySaver
                     on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
             .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
-        db.ReplyContentImages.AddRange(pidAndImageList.Select(t => new ReplyContentImage
-        {
-            Pid = t.Pid,
+        var newImagesUrlFilename = imagesKeyByUrlFilename
+            .ExceptBy(existingImages.Keys, pair => pair.Key)
+            .Select(pair => pair.Key).ToList();
+        db.ReplyContentImages.AddRange(pidAndImageList
+            .ExceptBy(imageInReplyLocks.AcquireLocks(newImagesUrlFilename), t => t.Image.UrlFilename)
+            .Select(t => new ReplyContentImage
+            {
+                Pid = t.Pid,
 
-            // no need to manually invoke DbContext.AddRange(images) since EF Core will do these chore
-            // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
-            // reuse the same instance from imagesKeyByUrlFilename
-            // will prevent assigning multiple different instances with the same key
-            // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
-            // https://github.com/dotnet/efcore/issues/30236
-            ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)
-                ? e
-                : imagesKeyByUrlFilename[t.Image.UrlFilename]
-        }));
+                // no need to manually invoke DbContext.AddRange(images) since EF Core will do these chore
+                // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
+                // reuse the same instance from imagesKeyByUrlFilename
+                // will prevent assigning multiple different instances with the same key
+                // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
+                // https://github.com/dotnet/efcore/issues/30236
+                ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)
+                    ? e
+                    : imagesKeyByUrlFilename[t.Image.UrlFilename]
+            }));
     }
 }

@@ -63,9 +63,6 @@ public class AuthorRevisionSaver(
                 Existing: (e.DiscoveredAt, e.Value),
                 NewInPost: (DiscoveredAt: now, Value: postAuthorFieldValueSelector(p))
             )).ToList();
-        var newRevisionOfNewUsers = posts
-            .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
-            .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
         var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
 
             // filter out revisions with the same DiscoveredAt to prevent duplicate keys
@@ -73,14 +70,16 @@ public class AuthorRevisionSaver(
             .Where(t => t.Existing.DiscoveredAt != t.NewInPost.DiscoveredAt
                         && isValueChangedPredicate(t.Existing.Value, t.NewInPost.Value))
             .Select(t => (t.Uid, t.NewInPost.Value, t.NewInPost.DiscoveredAt));
-        locks.AcquireLocksThen(db.Set<TRevision>().AddRange,
-            alreadyLocked => newRevisionOfNewUsers
-                .Concat(newRevisionOfExistingUsers)
-                .Select(revisionFactory)
-                .ExceptBy(alreadyLocked, rev => (rev.Fid, rev.Uid))
-                .ToList(),
-            newlyLocked => newlyLocked
-                .Select(rev => (rev.Fid, rev.Uid)));
+        var newRevisionOfNewUsers = posts
+            .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
+            .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
+        var newRevisions = newRevisionOfNewUsers
+            .Concat(newRevisionOfExistingUsers)
+            .Select(revisionFactory)
+            .ToDictionary(revision => (revision.Fid, revision.Uid), revision => revision);
+        db.Set<TRevision>().AddRange(newRevisions
+            .IntersectBy(locks.AcquireLocks(newRevisions.Keys), pair => pair.Key)
+            .Select(pair => pair.Value));
     }
 
     private sealed class LatestAuthorRevisionProjection<TValue>

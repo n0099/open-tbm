@@ -2,25 +2,20 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class SaverLocks<TKey>
 {
-    public delegate T NewLocksFactory<out T>(IReadOnlySet<TKey> alreadyLocked);
-    public delegate IEnumerable<TKey> LockingKeysSelector<in T>(T newlyLocked);
-
     private static readonly HashSet<TKey> GlobalLocks = [];
     private readonly List<TKey> _localLocks = [];
 
-    public void AcquireLocksThen<TNewLock>(
-        Action<IReadOnlyCollection<TNewLock>> payload,
-        NewLocksFactory<IReadOnlyCollection<TNewLock>> newLocksFactory,
-        LockingKeysSelector<IReadOnlyCollection<TNewLock>> lockingKeysSelector)
+    public IReadOnlyCollection<TKey> AcquireLocks(IReadOnlyCollection<TKey> pendingLocking)
     {
+        if (pendingLocking.Count == 0) return [];
+        var newlyLocked = new List<TKey>(pendingLocking.Count);
         lock (GlobalLocks)
         {
-            var newLocks = newLocksFactory(GlobalLocks);
-            if (newLocks.Count == 0) return;
-            _localLocks.AddRange(lockingKeysSelector(newLocks));
-            GlobalLocks.UnionWith(_localLocks);
-            payload(newLocks);
+            newlyLocked.AddRange(GlobalLocks.Except(pendingLocking));
+            GlobalLocks.UnionWith(newlyLocked);
         }
+        _localLocks.AddRange(newlyLocked);
+        return newlyLocked;
     }
 
     public void ReleaseLocalLocked()

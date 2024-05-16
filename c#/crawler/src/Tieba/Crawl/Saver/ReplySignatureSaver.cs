@@ -21,14 +21,12 @@ public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature>
             }).ToList();
         if (signatures.Count == 0) return () => { };
 
-        var uniqueSignatures = signatures
-            .ConvertAll(s => new UniqueSignature(s.SignatureId, s.XxHash3));
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking()
-            where uniqueSignatures.Select(us => us.Id).Contains(s.SignatureId)
+            where signatures.Select(s2 => s2.SignatureId).Contains(s.SignatureId)
 
                   // server side eval doesn't need ByteArrayEqualityComparer
-                  && uniqueSignatures.Select(us => us.XxHash3).Contains(s.XxHash3)
+                  && signatures.Select(s2 => s2.XxHash3).Contains(s.XxHash3)
             select s
         ).ToList();
         (from existing in existingSignatures
@@ -36,13 +34,12 @@ public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature>
                 select (existing, newInReply))
             .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
 
-        locks.AcquireLocksThen(db.ReplySignatures.AddRange,
-            alreadyLocked => signatures
-                .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId)
-                .ExceptBy(alreadyLocked, s => new(s.SignatureId, s.XxHash3))
-                .ToList(),
-            newlyLocked => newlyLocked
-                .Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)));
+        var newSignatures = signatures
+            .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId).ToList();
+        var newlyLocked = locks.AcquireLocks(
+            newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList());
+        db.ReplySignatures.AddRange(
+            newSignatures.IntersectBy(newlyLocked, s => new(s.SignatureId, s.XxHash3)));
         return locks.ReleaseLocalLocked;
     }
 
