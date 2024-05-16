@@ -108,9 +108,7 @@ public partial class ReplySaver
                     on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
             .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
-        var newImagesUrlFilename = imagesKeyByUrlFilename
-            .ExceptBy(existingImages.Keys, pair => pair.Key)
-            .Select(pair => pair.Key).ToList();
+        var newImagesUrlFilename = imagesKeyByUrlFilename.ExceptByKey(existingImages.Keys).Keys().ToList();
         db.ReplyContentImages.AddRange(pidAndImageList
             .ExceptBy(imageInReplyLocks.AcquireLocks(newImagesUrlFilename), t => t.Image.UrlFilename)
             .Select(t => new ReplyContentImage

@@ -32,6 +32,20 @@ public static partial class ExtensionMethods
         if (list is List<T> asList) asList.AddRange(items);
         else foreach (var item in items) list.Add(item);
     }
+
+    public static IEnumerable<TKey> Keys<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs) =>
+        pairs.Select(i => i.Key);
+    public static IEnumerable<TValue> Values<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs) =>
+        pairs.Select(i => i.Value);
+
+    public static IEnumerable<KeyValuePair<TKey, TValue>> ExceptByKey<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> first,
+        IEnumerable<TKey> second) =>
+        first.ExceptBy(second, pair => pair.Key);
+    public static IEnumerable<KeyValuePair<TKey, TValue>> IntersectByKey<TKey, TValue>(
+        this IEnumerable<KeyValuePair<TKey, TValue>> first,
+        IEnumerable<TKey> second) =>
+        first.IntersectBy(second, pair => pair.Key);
 }
 public static partial class ExtensionMethods
 {

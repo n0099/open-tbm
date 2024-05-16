@@ -78,8 +78,8 @@ public class AuthorRevisionSaver(
             .Select(revisionFactory)
             .ToDictionary(revision => (revision.Fid, revision.Uid), revision => revision);
         db.Set<TRevision>().AddRange(newRevisions
-            .IntersectBy(locks.AcquireLocks(newRevisions.Keys), pair => pair.Key)
-            .Select(pair => pair.Value));
+            .IntersectByKey(locks.AcquireLocks(newRevisions.Keys))
+            .Values());
     }
 
     private sealed class LatestAuthorRevisionProjection<TValue>

@@ -98,7 +98,7 @@ public partial class UserSaver(
         FieldChangeIgnorance userFieldRevisionIgnorance)
     {
         if (users.Count == 0) return;
-        var newlyLocked = locks.AcquireLocks(users.Select(pair => pair.Key).ToList());
+        var newlyLocked = locks.AcquireLocks(users.Keys().ToList());
 
         // existingUsers may have new revisions to insert so excluding already locked users
         // to prevent inserting duplicate revision
@@ -112,7 +112,7 @@ public partial class UserSaver(
                 Uid = u.Uid,
                 TriggeredBy = postType
             },
-            users.IntersectBy(newlyLocked, pair => pair.Key).Select(pair => pair.Value)
+            users.IntersectByKey(newlyLocked).Values()
                 .ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
             u => existingUsersKeyByUid[u.Uid],
             userFieldUpdateIgnorance,

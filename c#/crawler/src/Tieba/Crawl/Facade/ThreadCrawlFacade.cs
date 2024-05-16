@@ -25,10 +25,7 @@ public class ThreadCrawlFacade(
 
         // users has already been added into DbContext and tracking
         var existingUsersId = db.ChangeTracker.Entries<User>().Select(ee => ee.Entity.Uid);
-        var newLatestRepliers = _latestRepliers
-            .ExceptBy(existingUsersId, pair => pair.Key)
-            .Select(pair => pair.Value)
-            .ToList();
+        var newLatestRepliers = _latestRepliers.ExceptByKey(existingUsersId).Values().ToList();
         if (newLatestRepliers.Count == 0) return;
 
         var newlyLockedLatestRepliers = userSaver.AcquireUidLocksForSave

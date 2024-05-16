@@ -65,7 +65,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
             .IntersectBy( // only insert fully succeeded images id, i.e. all frames and all hashes are calculated
                 hashesKeyByImageKey.Keys.Select(i => i.ImageId).Except(failedImagesId),
                 pair => pair.Key.ImageId)
-            .Select(pair => pair.Value));
+            .Values());
         return failedImagesId;
     }
 
