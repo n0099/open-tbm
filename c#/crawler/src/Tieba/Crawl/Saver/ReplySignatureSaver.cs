@@ -4,7 +4,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature> locks)
 {
-    public Action SaveReplySignatures(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
+    public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         SharedHelper.GetNowTimestamp(out var now);
         var signatures = replies

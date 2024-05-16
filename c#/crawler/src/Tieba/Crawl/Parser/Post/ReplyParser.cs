@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Tieba.Crawl.Parser;
+namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
 public partial class ReplyParser(ILogger<ReplyParser> logger)
     : PostParser<ReplyPost, Reply>
