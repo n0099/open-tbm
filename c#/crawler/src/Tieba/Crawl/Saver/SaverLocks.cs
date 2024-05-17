@@ -1,9 +1,15 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class SaverLocks<TKey>
+public sealed class SaverLocks<TKey> : IDisposable
 {
     private static readonly HashSet<TKey> GlobalLocks = [];
     private readonly List<TKey> _localLocks = [];
+
+    public void Dispose()
+    {
+        lock (GlobalLocks) GlobalLocks.ExceptWith(_localLocks);
+        lock (_localLocks) _localLocks.Clear();
+    }
 
     public IReadOnlyCollection<TKey> AcquireLocks(IReadOnlyCollection<TKey> pendingLocking)
     {
@@ -11,15 +17,10 @@ public class SaverLocks<TKey>
         var newlyLocked = new List<TKey>(pendingLocking.Count);
         lock (GlobalLocks)
         {
-            newlyLocked.AddRange(GlobalLocks.Except(pendingLocking));
+            newlyLocked.AddRange(pendingLocking.Except(GlobalLocks));
             GlobalLocks.UnionWith(newlyLocked);
         }
-        _localLocks.AddRange(newlyLocked);
+        lock (_localLocks) _localLocks.AddRange(newlyLocked);
         return newlyLocked;
-    }
-
-    public void ReleaseLocalLocked()
-    {
-        lock (GlobalLocks) GlobalLocks.ExceptWith(_localLocks);
     }
 }

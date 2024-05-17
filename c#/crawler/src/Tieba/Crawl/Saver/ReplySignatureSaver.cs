@@ -40,7 +40,7 @@ public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature>
             newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList());
         db.ReplySignatures.AddRange(
             newSignatures.IntersectBy(newlyLocked, s => new(s.SignatureId, s.XxHash3)));
-        return locks.ReleaseLocalLocked;
+        return locks.Dispose;
     }
 
     public sealed record UniqueSignature(uint Id, byte[] XxHash3)

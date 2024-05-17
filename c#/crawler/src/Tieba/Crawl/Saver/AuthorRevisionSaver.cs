@@ -33,7 +33,7 @@ public class AuthorRevisionSaver(
                 TriggeredBy = triggeredByPostType,
                 AuthorExpGrade = t.Value
             });
-        return authorExpGradeLocks.ReleaseLocalLocked;
+        return authorExpGradeLocks.Dispose;
     }
 
     private static void SaveAuthorRevisions<TPost, TRevision, TValue>(

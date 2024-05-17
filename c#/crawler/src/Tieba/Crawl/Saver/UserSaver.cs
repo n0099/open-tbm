@@ -122,5 +122,5 @@ public partial class UserSaver(
     public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId) =>
         locks.AcquireLocks(usersId.ToList());
 
-    public void OnPostSave() => locks.ReleaseLocalLocked();
+    public void OnPostSave() => locks.Dispose();
 }
