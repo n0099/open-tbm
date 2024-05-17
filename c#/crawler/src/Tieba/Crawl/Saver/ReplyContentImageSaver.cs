@@ -36,7 +36,11 @@ public class ReplyContentImageSaver(SaverLocks<string> locks)
             throw new InvalidOperationException();
         alreadyLocked.ForEach(urlFilename =>
         {
-            lock (LocksKeyByUrlFilename[urlFilename]) { }
+            lock (LocksKeyByUrlFilename[urlFilename])
+#pragma warning disable S108 // Either remove or fill this block of code.
+            {
+            }
+#pragma warning restore S108 // Either remove or fill this block of code.
         });
         existingImages = existingImages
             .Concat((
@@ -69,6 +73,8 @@ public class ReplyContentImageSaver(SaverLocks<string> locks)
 
         if (newlyLocked.Any(urlFilename => !LocksKeyByUrlFilename.TryRemove(urlFilename, out _)))
             throw new InvalidOperationException();
+#pragma warning disable IDISP007 // Don't dispose injected
         locks.Dispose();
+#pragma warning restore IDISP007 // Don't dispose injected
     }
 }

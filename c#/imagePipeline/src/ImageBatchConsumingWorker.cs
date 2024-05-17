@@ -197,8 +197,9 @@ public class ImageBatchConsumingWorker(
         IQueryable<ForumScript> forumScripts,
         CancellationToken stoppingToken = default)
     {
-        var scriptGroupings = forumScripts.AsNoTracking()
-            .GroupBy(e => e.Fid, e => e.Script).ToList();
+        var scriptGroupings = await forumScripts.AsNoTracking()
+            .GroupBy(e => e.Fid, e => e.Script)
+            .ToListAsync(stoppingToken);
         var scripts = scriptGroupings.SelectMany(i => i).Distinct().ToList();
         var recognizedTextLinesKeyByScript = new Dictionary<string, List<ImageOcrLine>>(scripts.Count);
         scripts.ForEach(script => recognizedTextLinesKeyByScript[script] = []);

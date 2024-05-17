@@ -18,14 +18,15 @@ public class PushAllPostContentsIntoSonicWorker(
         await using var dbDefaultFactory = dbContextDefaultFactory();
         var db = dbDefaultFactory.Value();
 #pragma warning disable IDISP004 // Don't ignore created IDisposable
-        var forumPostCountsTuples = db.Database.GetDbConnection()
+        var forumPostCountsTuples = (await db.Database.GetDbConnection()
 #pragma warning restore IDISP004 // Don't ignore created IDisposable
-            .Query<(Fid Fid, int ReplyCount, int SubReplyCount)>(
+            .QueryAsync<(Fid Fid, int ReplyCount, int SubReplyCount)>(
                 string.Join(" UNION ALL ", (from f in db.Forums.AsNoTracking() select f.Fid)
                     .AsEnumerable().Select(fid =>
                         $"SELECT '{fid}',"
                         + $"COALESCE((SELECT id FROM \"tbmc_f{fid}_reply\" ORDER BY id DESC LIMIT 1), 0),"
-                        + $"COALESCE((SELECT id FROM \"tbmc_f{fid}_subReply\" ORDER BY id DESC LIMIT 1), 0)")))
+                        + $"COALESCE((SELECT id FROM \"tbmc_f{fid}_subReply\" ORDER BY id DESC LIMIT 1), 0)")),
+                stoppingToken))
             .ToList();
         var forumCount = forumPostCountsTuples.Count * 2; // reply and sub reply
         var totalPostCount = forumPostCountsTuples.Sum(t => t.ReplyCount)

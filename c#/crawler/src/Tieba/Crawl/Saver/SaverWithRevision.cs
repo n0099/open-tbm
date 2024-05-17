@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract class SaverWithRevision<TBaseRevision>
-    (ILogger<SaverWithRevision<TBaseRevision>> logger)
+public abstract partial class SaverWithRevision<TBaseRevision>(
+    ILogger<SaverWithRevision<TBaseRevision>> logger)
     : IRevisionProperties
     where TBaseRevision : BaseRevisionWithSplitting
 {
@@ -11,15 +11,17 @@ public abstract class SaverWithRevision<TBaseRevision>
     protected abstract IReadOnlyDictionary<Type, AddRevisionDelegate> AddRevisionDelegatesKeyBySplitEntityType { get; }
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
 
+    protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
+    protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
+    protected virtual bool FieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
     private static bool GlobalFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // possible rarely respond with the protoBuf default value 0
         nameof(BasePost.AuthorUid) when newValue is 0L && oldValue is not null => true,
         _ => false
     };
-    protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
-    protected virtual bool FieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
-    protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
-
+}
+public abstract partial class SaverWithRevision<TBaseRevision>
+{
     protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,
         Func<TEntity, TRevision> revisionFactory,
@@ -69,7 +71,7 @@ public abstract class SaverWithRevision<TBaseRevision>
                     continue; // skip following revision check
                 }
                 if (FieldRevisionIgnorance(
-                        pName, p.OriginalValue, p.CurrentValue) 
+                        pName, p.OriginalValue, p.CurrentValue)
                     || (entityIsUser && userFieldRevisionIgnorance!(
                         pName, p.OriginalValue, p.CurrentValue)))
                     continue;

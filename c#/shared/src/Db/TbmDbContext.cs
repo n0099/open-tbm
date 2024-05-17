@@ -97,6 +97,7 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory
 {
     [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
+    [SuppressMessage("Major Code Smell", "S2743:Static fields should not be used in generic types")]
     private static Lazy<NpgsqlDataSource>? _dataSourceSingleton;
 
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
@@ -140,6 +141,8 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
 
     protected virtual void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) { }
     protected virtual void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) { }
+
+    [SuppressMessage("Critical Code Smell", "S2696:Instance members should not write to \"static\" fields")]
     private Lazy<NpgsqlDataSource> GetNpgsqlDataSource(string? connectionString) =>
         _dataSourceSingleton ??= new(() =>
         {

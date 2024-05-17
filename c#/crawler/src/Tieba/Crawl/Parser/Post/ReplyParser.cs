@@ -54,6 +54,7 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                         o.Pid, c.OriginSrc, SharedHelper.UnescapedJsonSerialize(c));
                 }
             }
+
             // AuthorId rarely respond with 0, Author should always be null with no guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
 

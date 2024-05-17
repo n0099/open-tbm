@@ -28,7 +28,7 @@ public class User : TimestampedEntity
 
         public override int GetHashCode(User obj)
         {
-            var hash = new HashCode();
+            var hash = default(HashCode);
             hash.Add(obj.Uid);
             hash.Add(obj.Name);
             hash.Add(obj.DisplayName);

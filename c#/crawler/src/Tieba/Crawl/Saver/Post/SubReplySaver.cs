@@ -11,20 +11,6 @@ public class SubReplySaver(
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-    public override bool UserFieldUpdateIgnorance
-        (string propName, object? oldValue, object? newValue) => propName switch
-    { // always ignore updates on iconinfo due to some rare user will show some extra icons
-        // compare to reply response in the response of sub reply
-        nameof(User.Icon) => true,
-
-        // FansNickname in sub reply response will always be null
-        nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
-
-        // DisplayName in users embedded in sub replies from response will be the legacy nickname
-        nameof(User.DisplayName) => true,
-        _ => false
-    };
-
     protected override Dictionary<Type, AddRevisionDelegate>
         AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
     {
@@ -40,7 +26,19 @@ public class SubReplySaver(
         }
     };
 
-    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
+    public override bool UserFieldUpdateIgnorance
+        (string propName, object? oldValue, object? newValue) => propName switch
+    { // always ignore updates on iconinfo due to some rare user will show some extra icons
+        // compare to reply response in the response of sub reply
+        nameof(User.Icon) => true,
+
+        // FansNickname in sub reply response will always be null
+        nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
+
+        // DisplayName in users embedded in sub replies from response will be the legacy nickname
+        nameof(User.DisplayName) => true,
+        _ => false
+    };
 
     public override SaverChangeSet<SubReplyPost> Save(CrawlerDbContext db)
     {
@@ -51,4 +49,6 @@ public class SubReplySaver(
 
         return changeSet;
     }
+
+    protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
 }
