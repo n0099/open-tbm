@@ -67,8 +67,6 @@ public class ReplySaver(
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
             PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
-        db.ReplyContents.AddRange(changeSet.NewlyAdded
-            .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
         replyContentImageSaver.Save(db, changeSet.NewlyAdded);
         PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
         PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllAfter).Invoke;

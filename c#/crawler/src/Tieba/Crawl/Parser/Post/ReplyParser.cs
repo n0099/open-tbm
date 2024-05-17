@@ -14,7 +14,16 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
 
     protected override ReplyPost Convert(Reply inPost)
     {
-        var o = new ReplyPost {OriginalContents = inPost.Content};
+        var o = new ReplyPost
+        {
+            OriginalContents = inPost.Content,
+            Content = new()
+            {
+                Pid = inPost.Pid,
+                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
+                    () => Helper.WrapPostContent(inPost.Content))
+            }
+        };
         try
         {
             o.Pid = inPost.Pid;
@@ -45,9 +54,6 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
                         o.Pid, c.OriginSrc, SharedHelper.UnescapedJsonSerialize(c));
                 }
             }
-            o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
-                () => Helper.WrapPostContent(inPost.Content));
-
             // AuthorId rarely respond with 0, Author should always be null with no guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
 

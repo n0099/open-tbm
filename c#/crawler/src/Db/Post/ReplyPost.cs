@@ -5,7 +5,7 @@ public class ReplyPost : PostWithAuthorExpGrade
 {
     [Key] public ulong Pid { get; set; }
     public uint Floor { get; set; }
-    [NotMapped] public byte[]? Content { get; set; }
+    public required ReplyContent Content { get; set; }
 
     [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Content>))]
     [NotMapped]

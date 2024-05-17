@@ -69,10 +69,12 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         b.Entity<User>().ToTable("tbmc_user");
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
-        b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
-        b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
+        b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply")
+            .HasOne(e => e.Content).WithOne().HasForeignKey<ReplyContent>(e => e.Pid);
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
-        b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
+        b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
+        b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply")
+            .HasOne(e => e.Content).WithOne().HasForeignKey<SubReplyContent>(e => e.Spid);
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 
         var thread = new RevisionWithSplitting<BaseThreadRevision>.ModelBuilderExtension(b, "tbmcr_thread");
@@ -95,6 +97,7 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         user.SplittingHasKey<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
         user.SplittingHasKey<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
         user.SplittingHasKey<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
+
         b.Entity<SplitDisplayName>().Property(e => e.DisplayName).HasConversion<byte[]>();
         b.Entity<User>().Property(e => e.DisplayName).HasConversion<byte[]>();
 

@@ -34,6 +34,7 @@ global using SuperLinq;
 
 global using tbm.Crawler.Db;
 global using tbm.Crawler.Db.Post;
+global using tbm.Crawler.Db.Post.PostContent;
 global using tbm.Crawler.Db.Revision;
 global using tbm.Crawler.Db.Revision.Splitting;
 global using tbm.Crawler.Tieba;

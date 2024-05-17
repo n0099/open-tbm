@@ -5,7 +5,7 @@ public class SubReplyPost : PostWithAuthorExpGrade
 {
     public ulong Pid { get; set; }
     [Key] public ulong Spid { get; set; }
-    [NotMapped] public byte[]? Content { get; set; }
+    public required SubReplyContent Content { get; set; }
 
     [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Content>))]
     [NotMapped]
