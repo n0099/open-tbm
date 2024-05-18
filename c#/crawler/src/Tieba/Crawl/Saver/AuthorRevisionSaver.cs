@@ -1,5 +1,3 @@
-using LinqToDB.DataProvider.PostgreSQL;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 // locks only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
@@ -14,7 +12,7 @@ public class AuthorRevisionSaver(
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
         where TPostWithAuthorExpGrade : PostWithAuthorExpGrade
     {
-        SaveAuthorRevisions(db, posts, authorExpGradeLocks,
+        Save(db, posts, authorExpGradeLocks,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
@@ -36,7 +34,7 @@ public class AuthorRevisionSaver(
         return authorExpGradeLocks.Dispose;
     }
 
-    private static void SaveAuthorRevisions<TPost, TRevision, TValue>(
+    private static void Save<TPost, TRevision, TValue>(
         CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
         SaverLocks<(Fid Fid, Uid Uid)> locks,
@@ -47,17 +45,17 @@ public class AuthorRevisionSaver(
         Func<(Uid Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
         where TPost : BasePost
         where TRevision : AuthorRevision
-    {
+    { // only takes the first of multiple post from the same author
+        var uniquePosts = posts.DistinctBy(p => p.AuthorUid).ToList();
         SharedHelper.GetNowTimestamp(out var now);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
             .Where(e => e.Fid == db.Fid
-                        && posts.Select(p => p.AuthorUid).Distinct().Contains(e.Uid))
+                        && uniquePosts.Select(p => p.AuthorUid).Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
             .AsCte() // https://stackoverflow.com/questions/49854322/usage-of-for-update-in-window-function-postgres#comment86726589_49854322
             .Where(e => e.Rank == 1)
-            .AsPostgreSQL().ForNoKeyUpdateHint()
             .ToLinqToDB().AsEnumerable()
-            .Join(posts, e => e.Uid, p => p.AuthorUid, (e, p) =>
+            .Join(uniquePosts, e => e.Uid, p => p.AuthorUid, (e, p) =>
             (
                 e.Uid,
                 Existing: (e.DiscoveredAt, e.Value),
@@ -70,7 +68,7 @@ public class AuthorRevisionSaver(
             .Where(t => t.Existing.DiscoveredAt != t.NewInPost.DiscoveredAt
                         && isValueChangedPredicate(t.Existing.Value, t.NewInPost.Value))
             .Select(t => (t.Uid, t.NewInPost.Value, t.NewInPost.DiscoveredAt));
-        var newRevisionOfNewUsers = posts
+        var newRevisionOfNewUsers = uniquePosts
             .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
             .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
         var newRevisions = newRevisionOfNewUsers
