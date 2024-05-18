@@ -5,6 +5,7 @@ namespace tbm.Crawler.Db.Revision.Splitting;
 
 public abstract class BaseThreadRevision : RevisionWithSplitting<BaseThreadRevision>
 {
+    [Column(TypeName = "bigint")]
     public ulong Tid { get; set; }
 }
 

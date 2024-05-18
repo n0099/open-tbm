@@ -9,6 +9,7 @@ public class ThreadPost : BasePost
     [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Abstract>))]
     [NotMapped]
     public RepeatedField<Abstract>? FirstReplyExcerpt { get; set; }
+    [Column(TypeName = "bigint")]
     public ulong ThreadType { get; set; }
     public string? StickyType { get; set; }
     public string? TopicType { get; set; }

@@ -3,5 +3,6 @@ namespace tbm.Crawler.Db.Post.PostContent;
 
 public class ReplyContent : BasePostContent
 {
-    [Key] public ulong Pid { get; set; }
+    [Key] [Column(TypeName = "bigint")]
+    public ulong Pid { get; set; }
 }

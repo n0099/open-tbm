@@ -3,7 +3,8 @@ namespace tbm.Crawler.Db.Post;
 
 public class ReplyPost : PostWithAuthorExpGrade
 {
-    [Key] public ulong Pid { get; set; }
+    [Key] [Column(TypeName = "bigint")]
+    public ulong Pid { get; set; }
     public uint Floor { get; set; }
     public required ReplyContent Content { get; set; }
 

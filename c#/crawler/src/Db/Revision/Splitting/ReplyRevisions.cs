@@ -5,6 +5,7 @@ namespace tbm.Crawler.Db.Revision.Splitting;
 
 public abstract class BaseReplyRevision : RevisionWithSplitting<BaseReplyRevision>
 {
+    [Column(TypeName = "bigint")]
     public ulong Pid { get; set; }
 }
 
