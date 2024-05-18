@@ -91,6 +91,39 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
             public override bool SupportsSavepoints => false;
         }
     }
+
+    /// <see>https://www.postgresql.org/message-id/flat/141051591267657%40mail.yandex.ru</see>
+    /// <see>https://dba.stackexchange.com/questions/123145/how-to-view-tuples-changed-in-a-postgresql-transaction/123183#123183</see>
+    /// <see>https://stackoverflow.com/questions/49214219/what-is-the-meaning-of-epoch-in-txid-current-in-postgresql</see>
+    /// <see>https://github.com/npgsql/efcore.pg/issues/1035#issuecomment-2118584744</see>
+    protected class UseCurrentXactIdAsConcurrencyTokenCommandInterceptor : DbCommandInterceptor
+    {
+        public static UseCurrentXactIdAsConcurrencyTokenCommandInterceptor Instance => new();
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result)
+        {
+            ManipulateCommand(command);
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+        {
+            ManipulateCommand(command);
+            return new(result);
+        }
+
+        private static void ManipulateCommand(DbCommand command) =>
+            command.CommandText = command.CommandText.Replace(
+                "RETURNING xmin",
+                "RETURNING pg_current_xact_id()::xid");
+    }
 }
 public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCacheKeyFactory>> logger)
     : TbmDbContext(logger)
@@ -113,6 +146,7 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
         options.UseNpgsql(GetNpgsqlDataSource(Config.GetConnectionString("Main")).Value, OnConfiguringNpgsql)
             .ReplaceService<IModelCacheKeyFactory, TModelCacheKeyFactory>()
             .ReplaceService<IRelationalTransactionFactory, NoSavePointTransactionFactory>()
+            .AddInterceptors(UseCurrentXactIdAsConcurrencyTokenCommandInterceptor.Instance)
             .UseCamelCaseNamingConvention();
 
         var dbSettings = Config.GetSection("DbSettings");
