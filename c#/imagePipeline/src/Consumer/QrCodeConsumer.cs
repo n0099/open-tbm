@@ -29,7 +29,7 @@ public sealed class QrCodeConsumer : MatrixConsumer, IDisposable
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                 ScanQrCodeInImage)
             .ToList();
-        db.ImageQrCodes.AddRange(imageQrCodeEithers.Rights().SelectMany(i => i));
+        db.ImageQrCodes.AddRange(imageQrCodeEithers.Rights().Flatten2());
         return imageQrCodeEithers.Lefts();
     }
 

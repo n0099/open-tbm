@@ -42,10 +42,10 @@ public class JointRecognizer(
         var detectedEithers = _paddleOcrProvider
             .DetectMatrices(matricesKeyByImageKey, failedImageHandler, stoppingToken).ToList();
         var recognizedResultsViaPaddleOcr =
-            recognizedEithersViaPaddleOcr.Rights().SelectMany(i => i).ToList();
+            recognizedEithersViaPaddleOcr.Rights().Flatten2().ToList();
         var recognizedEithersViaTesseract = RecognizeMatricesViaTesseract(
                 recognizedResultsViaPaddleOcr,
-                detectedEithers.Rights().SelectMany(i => i).ToList(),
+                detectedEithers.Rights().Flatten2().ToList(),
                 matricesKeyByImageKey,
                 stoppingToken)
             .ToList();

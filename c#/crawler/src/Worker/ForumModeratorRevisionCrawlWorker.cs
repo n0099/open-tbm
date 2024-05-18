@@ -50,7 +50,7 @@ public class ForumModeratorRevisionCrawlWorker
                     ?.GetAttribute("href")?.Split("/home/main?id=")[1].NullIfEmpty())
                 .OfType<string>();
             return memberPortraits.Select(portrait => (type, portrait));
-        }).SelectMany(i => i);
+        }).Flatten2();
     }
 
     private async Task Save(

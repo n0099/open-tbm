@@ -109,7 +109,7 @@ public class ImageBatchConsumingWorker(
                     .Where(i => i.ImageInReply is not {HashConsumed: true, QrCodeConsumed: true, OcrConsumed: true}),
                 imageWithBytes => imageWithBytes.ImageInReply.ImageId,
                 DecodeImageOrFramesBytes(stoppingToken))
-            .Rights().SelectMany(i => i).ToList();
+            .Rights().Flatten2().ToList();
         try
         {
             IReadOnlyCollection<ImageKeyWithMatrix> ExceptConsumed
@@ -200,7 +200,7 @@ public class ImageBatchConsumingWorker(
         var scriptGroupings = await forumScripts.AsNoTracking()
             .GroupBy(e => e.Fid, e => e.Script)
             .ToListAsync(stoppingToken);
-        var scripts = scriptGroupings.SelectMany(i => i).Distinct().ToList();
+        var scripts = scriptGroupings.Flatten2().Distinct().ToList();
         var recognizedTextLinesKeyByScript = new Dictionary<string, List<ImageOcrLine>>(scripts.Count);
         scripts.ForEach(script => recognizedTextLinesKeyByScript[script] = []);
 

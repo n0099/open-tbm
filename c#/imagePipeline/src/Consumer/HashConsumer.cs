@@ -91,7 +91,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
             return rgbaMat.GetArray(out Vec4b[] pixels)
                 ? ThumbHashes.Utilities.RgbaToThumbHash(mat.Width, mat.Height, pixels
                     .Select(vec => new[] {vec.Item0, vec.Item1, vec.Item2, vec.Item3})
-                    .SelectMany(i => i).ToArray())
+                    .Flatten2().ToArray())
                 : throw new InvalidOperationException("Failed to convert matrix into byte array.");
         }
     };

@@ -46,6 +46,9 @@ public static partial class ExtensionMethods
         this IEnumerable<KeyValuePair<TKey, TValue>> first,
         IEnumerable<TKey> second) =>
         first.IntersectBy(second, pair => pair.Key);
+
+    public static IEnumerable<T> Flatten2<T>(this IEnumerable<IEnumerable<T>> source) =>
+        source.SelectMany(i => i);
 }
 public static partial class ExtensionMethods
 {
