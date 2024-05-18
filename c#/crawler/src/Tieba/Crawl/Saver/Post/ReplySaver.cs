@@ -1,5 +1,3 @@
-using PredicateBuilder = LinqKit.PredicateBuilder;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public class ReplySaver(
@@ -49,7 +47,7 @@ public class ReplySaver(
     {
         var changeSet = Save(db, r => r.Pid,
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
-            PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
+            LinqKit.PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
         replyContentImageSaver.Save(db, changeSet.NewlyAdded);
         PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;

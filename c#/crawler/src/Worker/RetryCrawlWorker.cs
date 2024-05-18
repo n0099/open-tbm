@@ -2,7 +2,7 @@ namespace tbm.Crawler.Worker;
 
 public class RetryCrawlWorker(
     ILogger<RetryCrawlWorker> logger,
-    IIndex<CrawlerLocks.Type, CrawlerLocks> registeredLocksLookup,
+    IIndex<CrawlerLocks.Type, CrawlerLocks> registeredLocksKeyByType,
     CrawlPost crawlPost,
     Func<Owned<CrawlerDbContext.NewDefault>> dbContextDefaultFactory,
     Func<Owned<ThreadLateCrawlFacade.New>> threadLateCrawlFacadeFactory,
@@ -16,7 +16,7 @@ public class RetryCrawlWorker(
         foreach (var lockType in Enum.GetValues<CrawlerLocks.Type>())
         {
             if (stoppingToken.IsCancellationRequested) return;
-            var failed = registeredLocksLookup[lockType].RetryAllFailed();
+            var failed = registeredLocksKeyByType[lockType].RetryAllFailed();
             if (failed.Count == 0) continue; // skip current lock type if there's nothing needs to retry
             if (lockType == CrawlerLocks.Type.ThreadLate)
             {

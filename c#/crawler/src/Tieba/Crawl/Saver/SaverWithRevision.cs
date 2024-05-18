@@ -25,21 +25,21 @@ public abstract partial class SaverWithRevision<TBaseRevision>
     protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,
         Func<TEntity, TRevision> revisionFactory,
-        ILookup<bool, TEntity> existingOrNewLookup,
+        ILookup<bool, TEntity> isExistingEntityLookup,
         Func<TEntity, TEntity> existingSelector,
         UserSaver.FieldChangeIgnorance? userFieldUpdateIgnorance = null,
         UserSaver.FieldChangeIgnorance? userFieldRevisionIgnorance = null)
-        where TEntity : class
+        where TEntity : RowVersionedEntity
         where TRevision : BaseRevisionWithSplitting
     {
-        db.Set<TEntity>().AddRange(existingOrNewLookup[false]); // newly added
-        var newRevisions = existingOrNewLookup[true].Select(newEntity =>
+        db.Set<TEntity>().AddRange(isExistingEntityLookup[false]); // newly added
+        var newRevisions = isExistingEntityLookup[true].Select(newEntity =>
         {
             var entityInTracking = existingSelector(newEntity);
             var entityEntry = db.Entry(entityInTracking);
 
-            // this will mutate existingEntity which is referenced by entry
-            entityEntry.CurrentValues.SetValues(newEntity);
+            entityEntry.CurrentValues.SetValues(newEntity); // mutate existingEntity that referenced by entry
+            entityEntry.Property(e => e.Version).IsModified = false; // newEntity.Version will always be default 0
 
             bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
                 or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);

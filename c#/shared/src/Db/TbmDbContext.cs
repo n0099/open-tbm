@@ -11,14 +11,18 @@ namespace tbm.Shared.Db;
 
 public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
 {
-    public void LogDbUpdateConcurrencyException(DbUpdateConcurrencyException e) =>
-        logger.LogWarning(e, "DbUpdateConcurrencyException: {}",
-            SharedHelper.UnescapedJsonSerialize(e.Entries
+    public void LogDbUpdateConcurrencyException(DbUpdateConcurrencyException e, ref int retryTimes)
+    {
+        retryTimes++;
+        logger.LogWarning("Failed to update following entities after {} times: {}",
+            retryTimes, SharedHelper.UnescapedJsonSerialize(e.Entries
                 .GroupBy(ee => ee.Entity.GetType().Name)
                 .ToDictionary(g => g.Key, g => g.Count())));
+    }
 
     public int SaveChangesForUpdate()
     {
+        var retryTimes = 0;
         while (true)
         {
             try
@@ -27,7 +31,7 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
             }
             catch (DbUpdateConcurrencyException e)
             {
-                LogDbUpdateConcurrencyException(e);
+                LogDbUpdateConcurrencyException(e, ref retryTimes);
                 foreach (var entry in e.Entries)
                 {
                     var existing = entry.GetDatabaseValues();
@@ -40,6 +44,7 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
 
     public async Task<int> SaveChangesForUpdateAsync(CancellationToken stoppingToken = default)
     {
+        var retryTimes = 0;
         while (true)
         {
             try
@@ -48,7 +53,7 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
             }
             catch (DbUpdateConcurrencyException e)
             {
-                LogDbUpdateConcurrencyException(e);
+                LogDbUpdateConcurrencyException(e, ref retryTimes);
                 foreach (var entry in e.Entries)
                 {
                     var existing = await entry.GetDatabaseValuesAsync(stoppingToken);

@@ -1,5 +1,3 @@
-using LinqKit;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public class SubReplySaver(
@@ -44,7 +42,7 @@ public class SubReplySaver(
     {
         var changeSet = Save(db, sr => sr.Spid,
             sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
-            PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
+            LinqKit.PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
         PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
 
         return changeSet;

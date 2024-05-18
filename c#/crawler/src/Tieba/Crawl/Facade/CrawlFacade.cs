@@ -41,6 +41,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
     [SuppressMessage("Major Bug", "S1751:Loops with at most one iteration should be refactored")]
     public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
+        var retryTimes = 0;
         while (true)
         {
             using var db = DbContextFactory(Fid); // dispose after each loop when retrying
@@ -66,7 +67,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             }
             catch (DbUpdateConcurrencyException e)
             {
-                db.LogDbUpdateConcurrencyException(e);
+                db.LogDbUpdateConcurrencyException(e, ref retryTimes);
             }
             finally
             {

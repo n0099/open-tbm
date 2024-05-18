@@ -66,7 +66,7 @@ public class AuthorRevisionSaver(
         var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
 
             // filter out revisions with the same DiscoveredAt to prevent duplicate keys
-            // when some fields get updated more than one time in a second
+            // when some fields get updated more than once in a second
             .Where(t => t.Existing.DiscoveredAt != t.NewInPost.DiscoveredAt
                         && isValueChangedPredicate(t.Existing.Value, t.NewInPost.Value))
             .Select(t => (t.Uid, t.NewInPost.Value, t.NewInPost.DiscoveredAt));

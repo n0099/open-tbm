@@ -143,6 +143,7 @@ resharper_suggest_var_or_type_simple_types_highlighting = hint
 resharper_entity_framework_model_validation_unlimited_string_length_highlighting = none
 resharper_move_local_function_after_jump_statement_highlighting = none
 resharper_separate_local_functions_with_jump_statement_highlighting = none
+resharper_unnecessary_whitespace_highlighting = warning
 
 ###############################
 # .NET Coding Conventions     #
