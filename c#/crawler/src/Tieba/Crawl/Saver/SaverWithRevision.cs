@@ -48,7 +48,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
                     on RevisionEntityIdSelector(existingRevision) equals RevisionEntityIdSelector(newRevision)
                 select (existingRevision, newRevision))
             .ForEach(t =>
-                t.newRevision.DuplicateIndex = t.existingRevision.DuplicateIndex ?? 0 + 1);
+                t.newRevision.DuplicateIndex = (ushort)(t.existingRevision.DuplicateIndex + 1));
         dbSet.AddRange(newRevisions);
     }
 }

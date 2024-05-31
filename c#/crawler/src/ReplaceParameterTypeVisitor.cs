@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using LinqToDB.Extensions;
 
 namespace tbm.Crawler;
 
@@ -14,7 +15,11 @@ public class ReplaceParameterTypeVisitor<TSource, TTarget> : ExpressionVisitor
     protected override Expression VisitLambda<T>(Expression<T> node)
     {
         _parameters = VisitAndConvert(node.Parameters, nameof(VisitLambda));
-        return Expression.Lambda(Visit(node.Body), _parameters);
+        return Expression.Lambda(Visit(node.Body.Type.IsAnonymous()
+
+            // https://stackoverflow.com/questions/38316519/replace-parameter-type-in-lambda-expression/78560844#78560844
+            ? Expression.Convert(node.Body, typeof(object))
+            : node.Body), _parameters);
     }
 
     protected override Expression VisitMember(MemberExpression node) =>
