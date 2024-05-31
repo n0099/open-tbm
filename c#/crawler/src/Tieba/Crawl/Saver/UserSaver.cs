@@ -4,25 +4,20 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public partial class UserSaver
 {
-    protected override Dictionary<Type, AddRevisionDelegate>
-        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
-    {
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
+    protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
+        AddSplitRevisionsDelegatesKeyByEntityType =>
+        _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            typeof(UserRevision.SplitDisplayName), (db, revisions) =>
-                db.Set<UserRevision.SplitDisplayName>()
-                    .AddRange(revisions.OfType<UserRevision.SplitDisplayName>())
-        },
-        {
-            typeof(UserRevision.SplitPortraitUpdatedAt), (db, revisions) =>
-                db.Set<UserRevision.SplitPortraitUpdatedAt>()
-                    .AddRange(revisions.OfType<UserRevision.SplitPortraitUpdatedAt>())
-        },
-        {
-            typeof(UserRevision.SplitIpGeolocation), (db, revisions) =>
-                db.Set<UserRevision.SplitIpGeolocation>()
-                    .AddRange(revisions.OfType<UserRevision.SplitIpGeolocation>())
-        }
-    };
+            {typeof(UserRevision.SplitDisplayName), AddSplitRevisions<UserRevision.SplitDisplayName>},
+            {typeof(UserRevision.SplitPortraitUpdatedAt), AddSplitRevisions<UserRevision.SplitPortraitUpdatedAt>},
+            {typeof(UserRevision.SplitIpGeolocation), AddSplitRevisions<UserRevision.SplitIpGeolocation>}
+        });
+
+    protected override Uid RevisionEntityIdSelector(BaseUserRevision entity) => entity.Uid;
+    protected override Expression<Func<BaseUserRevision, bool>>
+        IsRevisionEntityIdEqualsExpression(BaseUserRevision newRevision) =>
+        existingRevision => existingRevision.Uid == newRevision.Uid;
 
     protected override bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry)
     {
@@ -87,7 +82,7 @@ public partial class UserSaver
 public partial class UserSaver(
     ILogger<UserSaver> logger, SaverLocks<Uid> locks,
     IDictionary<Uid, User> users)
-    : SaverWithRevision<BaseUserRevision>(logger)
+    : SaverWithRevision<BaseUserRevision, Uid>(logger)
 {
     public delegate UserSaver New(IDictionary<Uid, User> users);
     public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);

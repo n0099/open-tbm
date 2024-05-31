@@ -6,30 +6,25 @@ public class ReplySaver(
     ReplyContentImageSaver replyContentImageSaver,
     ReplySignatureSaver replySignatureSaver,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : PostSaver<ReplyPost, BaseReplyRevision>(
+    : PostSaver<ReplyPost, BaseReplyRevision, Pid>(
         logger, posts, authorRevisionSaverFactory, PostType.Reply)
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
 
-    protected override Dictionary<Type, AddRevisionDelegate>
-        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
-    {
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
+    protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
+        AddSplitRevisionsDelegatesKeyByEntityType =>
+        _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            typeof(ReplyRevision.SplitFloor), (db, revisions) =>
-                db.Set<ReplyRevision.SplitFloor>()
-                    .AddRange(revisions.OfType<ReplyRevision.SplitFloor>())
-        },
-        {
-            typeof(ReplyRevision.SplitSubReplyCount), (db, revisions) =>
-                db.Set<ReplyRevision.SplitSubReplyCount>()
-                    .AddRange(revisions.OfType<ReplyRevision.SplitSubReplyCount>())
-        },
-        {
-            typeof(ReplyRevision.SplitAgreeCount), (db, revisions) =>
-                db.Set<ReplyRevision.SplitAgreeCount>()
-                    .AddRange(revisions.OfType<ReplyRevision.SplitAgreeCount>())
-        }
-    };
+            {typeof(ReplyRevision.SplitFloor), AddSplitRevisions<ReplyRevision.SplitFloor>},
+            {typeof(ReplyRevision.SplitSubReplyCount), AddSplitRevisions<ReplyRevision.SplitSubReplyCount>},
+            {typeof(ReplyRevision.SplitAgreeCount), AddSplitRevisions<ReplyRevision.SplitAgreeCount>}
+        });
+
+    protected override Pid RevisionEntityIdSelector(BaseReplyRevision entity) => entity.Pid;
+    protected override Expression<Func<BaseReplyRevision, bool>>
+        IsRevisionEntityIdEqualsExpression(BaseReplyRevision newRevision) =>
+        existingRevision => existingRevision.Pid == newRevision.Pid;
 
     public override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // FansNickname in reply response will always be null

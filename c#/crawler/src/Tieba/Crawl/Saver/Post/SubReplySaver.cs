@@ -4,25 +4,24 @@ public class SubReplySaver(
     ILogger<SubReplySaver> logger,
     ConcurrentDictionary<PostId, SubReplyPost> posts,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : PostSaver<SubReplyPost, BaseSubReplyRevision>(
+    : PostSaver<SubReplyPost, BaseSubReplyRevision, Spid>(
         logger, posts, authorRevisionSaverFactory, PostType.SubReply)
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-    protected override Dictionary<Type, AddRevisionDelegate>
-        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
-    {
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
+    protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
+        AddSplitRevisionsDelegatesKeyByEntityType =>
+        _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            typeof(SubReplyRevision.SplitAgreeCount), (db, revisions) =>
-                db.Set<SubReplyRevision.SplitAgreeCount>()
-                    .AddRange(revisions.OfType<SubReplyRevision.SplitAgreeCount>())
-        },
-        {
-            typeof(SubReplyRevision.SplitDisagreeCount), (db, revisions) =>
-                db.Set<SubReplyRevision.SplitDisagreeCount>()
-                    .AddRange(revisions.OfType<SubReplyRevision.SplitDisagreeCount>())
-        }
-    };
+            {typeof(SubReplyRevision.SplitAgreeCount), AddSplitRevisions<SubReplyRevision.SplitAgreeCount>},
+            {typeof(SubReplyRevision.SplitDisagreeCount), AddSplitRevisions<SubReplyRevision.SplitDisagreeCount>},
+        });
+
+    protected override Spid RevisionEntityIdSelector(BaseSubReplyRevision entity) => entity.Spid;
+    protected override Expression<Func<BaseSubReplyRevision, bool>>
+        IsRevisionEntityIdEqualsExpression(BaseSubReplyRevision newRevision) =>
+        existingRevision => existingRevision.Spid == newRevision.Spid;
 
     public override bool UserFieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch

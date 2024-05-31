@@ -2,14 +2,20 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract partial class SaverWithRevision<TBaseRevision>(
-    ILogger<SaverWithRevision<TBaseRevision>> logger)
+public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
+    ILogger<SaverWithRevision<TBaseRevision, TEntityId>> logger)
     : IRevisionProperties
     where TBaseRevision : BaseRevisionWithSplitting
 {
-    protected delegate void AddRevisionDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revision);
-    protected abstract IReadOnlyDictionary<Type, AddRevisionDelegate> AddRevisionDelegatesKeyBySplitEntityType { get; }
+    protected delegate void AddSplitRevisionsDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions);
+    protected abstract Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
+        AddSplitRevisionsDelegatesKeyByEntityType { get; }
+
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
+
+    protected abstract TEntityId RevisionEntityIdSelector(TBaseRevision entity);
+    protected abstract Expression<Func<TBaseRevision, bool>>
+        IsRevisionEntityIdEqualsExpression(TBaseRevision newRevision);
 
     protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
     protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
@@ -19,8 +25,34 @@ public abstract partial class SaverWithRevision<TBaseRevision>(
         nameof(BasePost.AuthorUid) when newValue is 0L && oldValue is not null => true,
         _ => false
     };
+
+    protected void AddSplitRevisions<TRevision>(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions)
+        where TRevision : TBaseRevision
+    {
+        var newRevisions = revisions.OfType<TRevision>().ToList();
+        var dbSet = db.Set<TRevision>();
+        var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevision>();
+        var existingRevisions = dbSet
+            .Where(newRevisions.Aggregate(
+
+                // https://github.com/npgsql/npgsql/issues/4437
+                // https://github.com/dotnet/efcore/issues/32092
+                LinqKit.PredicateBuilder.New<TRevision>(),
+                (predicate, newRevision) => predicate.Or(LinqKit.PredicateBuilder
+                    .New<TRevision>(existingRevision => existingRevision.TakenAt == newRevision.TakenAt)
+                    .And((Expression<Func<TRevision, bool>>)
+                        visitor.Visit(IsRevisionEntityIdEqualsExpression(newRevision))))))
+            .ToList();
+        (from existingRevision in existingRevisions
+                join newRevision in newRevisions
+                    on RevisionEntityIdSelector(existingRevision) equals RevisionEntityIdSelector(newRevision)
+                select (existingRevision, newRevision))
+            .ForEach(t =>
+                t.newRevision.DuplicateIndex = t.existingRevision.DuplicateIndex ?? 0 + 1);
+        dbSet.AddRange(newRevisions);
+    }
 }
-public abstract partial class SaverWithRevision<TBaseRevision>
+public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>
 {
     protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,
@@ -120,6 +152,6 @@ public abstract partial class SaverWithRevision<TBaseRevision>
         newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
             .SelectMany(rev => rev.SplitEntities)
             .GroupBy(pair => pair.Key, pair => pair.Value)
-            .ForEach(g => AddRevisionDelegatesKeyBySplitEntityType[g.Key](db, g));
+            .ForEach(g => AddSplitRevisionsDelegatesKeyByEntityType.Value[g.Key](db, g));
     }
 }

@@ -37,7 +37,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterImplementsOfBaseTypes(typeof(EntryPoint).Assembly,
         [
             typeof(ICrawler<,>), typeof(ICrawlFacade<>),
-            typeof(IPostParser<,>), typeof(SaverWithRevision<>)
+            typeof(IPostParser<,>), typeof(SaverWithRevision<,>)
         ]);
         builder.RegisterType<CrawlerDbContext>();
         builder.RegisterType<ClientRequester>();

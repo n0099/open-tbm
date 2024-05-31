@@ -78,25 +78,25 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 
         _ = new RevisionWithSplitting<BaseThreadRevision>
-                .ModelBuilder(b, "tbmcr_thread", e => new {e.Tid, e.TakenAt})
+                .ModelBuilder(b, "tbmcr_thread", e => new {e.Tid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<ThreadRevision>()
             .SplitToTable<SplitViewCount>("viewCount");
 
         _ = new RevisionWithSplitting<BaseReplyRevision>
-                .ModelBuilder(b, "tbmcr_reply", e => new {e.Pid, e.TakenAt})
+                .ModelBuilder(b, "tbmcr_reply", e => new {e.Pid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<ReplyRevision>()
             .SplitToTable<ReplyRevision.SplitAgreeCount>("agreeCount")
             .SplitToTable<SplitSubReplyCount>("subReplyCount")
             .SplitToTable<SplitFloor>("floor");
 
         _ = new RevisionWithSplitting<BaseSubReplyRevision>
-                .ModelBuilder(b, "tbmcr_subReply", e => new {e.Spid, e.TakenAt})
+                .ModelBuilder(b, "tbmcr_subReply", e => new {e.Spid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<SubReplyRevision>()
             .SplitToTable<SubReplyRevision.SplitAgreeCount>("agreeCount")
             .SplitToTable<SplitDisagreeCount>("disagreeCount");
 
         _ = new RevisionWithSplitting<BaseUserRevision>
-                .ModelBuilder(b, "tbmcr_user", e => new {e.Uid, e.TakenAt})
+                .ModelBuilder(b, "tbmcr_user", e => new {e.Uid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<UserRevision>()
             .SplitToTable<SplitIpGeolocation>("ipGeolocation")
             .SplitToTable<SplitPortraitUpdatedAt>("portraitUpdatedAt")

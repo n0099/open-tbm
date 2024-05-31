@@ -6,20 +6,23 @@ public class ThreadSaver(
     ILogger<ThreadSaver> logger,
     ConcurrentDictionary<Tid, ThreadPost> posts,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : PostSaver<ThreadPost, BaseThreadRevision>(
+    : PostSaver<ThreadPost, BaseThreadRevision, Tid>(
         logger, posts, authorRevisionSaverFactory, PostType.Thread)
 {
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-    protected override Dictionary<Type, AddRevisionDelegate>
-        AddRevisionDelegatesKeyBySplitEntityType { get; } = new()
-    {
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
+    protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
+        AddSplitRevisionsDelegatesKeyByEntityType =>
+        _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            typeof(ThreadRevision.SplitViewCount), (db, revisions) =>
-                db.Set<ThreadRevision.SplitViewCount>()
-                    .AddRange(revisions.OfType<ThreadRevision.SplitViewCount>())
-        }
-    };
+            {typeof(ThreadRevision.SplitViewCount), AddSplitRevisions<ThreadRevision.SplitViewCount>}
+        });
+
+    protected override Tid RevisionEntityIdSelector(BaseThreadRevision entity) => entity.Tid;
+    protected override Expression<Func<BaseThreadRevision, bool>>
+        IsRevisionEntityIdEqualsExpression(BaseThreadRevision newRevision) =>
+        existingRevision => existingRevision.Tid == newRevision.Tid;
 
     public override bool UserFieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
