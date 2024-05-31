@@ -77,26 +77,30 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
             .HasOne(e => e.Content).WithOne().HasForeignKey<SubReplyContent>(e => e.Spid);
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 
-        var thread = new RevisionWithSplitting<BaseThreadRevision>.ModelBuilderExtension(b, "tbmcr_thread");
-        thread.HasKey<ThreadRevision>(e => new {e.Tid, e.TakenAt});
-        thread.SplittingHasKey<SplitViewCount>("viewCount", e => new {e.Tid, e.TakenAt});
+        _ = new RevisionWithSplitting<BaseThreadRevision>
+                .ModelBuilder(b, "tbmcr_thread", e => new {e.Tid, e.TakenAt})
+            .HasBaseTable<ThreadRevision>()
+            .SplitToTable<SplitViewCount>("viewCount");
 
-        var reply = new RevisionWithSplitting<BaseReplyRevision>.ModelBuilderExtension(b, "tbmcr_reply");
-        reply.HasKey<ReplyRevision>(e => new {e.Pid, e.TakenAt});
-        reply.SplittingHasKey<ReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Pid, e.TakenAt});
-        reply.SplittingHasKey<SplitSubReplyCount>("subReplyCount", e => new {e.Pid, e.TakenAt});
-        reply.SplittingHasKey<SplitFloor>("floor", e => new {e.Pid, e.TakenAt});
+        _ = new RevisionWithSplitting<BaseReplyRevision>
+                .ModelBuilder(b, "tbmcr_reply", e => new {e.Pid, e.TakenAt})
+            .HasBaseTable<ReplyRevision>()
+            .SplitToTable<ReplyRevision.SplitAgreeCount>("agreeCount")
+            .SplitToTable<SplitSubReplyCount>("subReplyCount")
+            .SplitToTable<SplitFloor>("floor");
 
-        var subReply = new RevisionWithSplitting<BaseSubReplyRevision>.ModelBuilderExtension(b, "tbmcr_subReply");
-        subReply.HasKey<SubReplyRevision>(e => new {e.Spid, e.TakenAt});
-        subReply.SplittingHasKey<SubReplyRevision.SplitAgreeCount>("agreeCount", e => new {e.Spid, e.TakenAt});
-        subReply.SplittingHasKey<SplitDisagreeCount>("disagreeCount", e => new {e.Spid, e.TakenAt});
+        _ = new RevisionWithSplitting<BaseSubReplyRevision>
+                .ModelBuilder(b, "tbmcr_subReply", e => new {e.Spid, e.TakenAt})
+            .HasBaseTable<SubReplyRevision>()
+            .SplitToTable<SubReplyRevision.SplitAgreeCount>("agreeCount")
+            .SplitToTable<SplitDisagreeCount>("disagreeCount");
 
-        var user = new RevisionWithSplitting<BaseUserRevision>.ModelBuilderExtension(b, "tbmcr_user");
-        user.HasKey<UserRevision>(e => new {e.Uid, e.TakenAt});
-        user.SplittingHasKey<SplitIpGeolocation>("ipGeolocation", e => new {e.Uid, e.TakenAt});
-        user.SplittingHasKey<SplitPortraitUpdatedAt>("portraitUpdatedAt", e => new {e.Uid, e.TakenAt});
-        user.SplittingHasKey<SplitDisplayName>("displayName", e => new {e.Uid, e.TakenAt});
+        _ = new RevisionWithSplitting<BaseUserRevision>
+                .ModelBuilder(b, "tbmcr_user", e => new {e.Uid, e.TakenAt})
+            .HasBaseTable<UserRevision>()
+            .SplitToTable<SplitIpGeolocation>("ipGeolocation")
+            .SplitToTable<SplitPortraitUpdatedAt>("portraitUpdatedAt")
+            .SplitToTable<SplitDisplayName>("displayName");
 
         b.Entity<SplitDisplayName>().Property(e => e.DisplayName).HasConversion<byte[]>();
         b.Entity<User>().Property(e => e.DisplayName).HasConversion<byte[]>();
