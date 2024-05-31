@@ -4,7 +4,9 @@ using LinqToDB.Extensions;
 namespace tbm.Crawler;
 
 /// <see>https://stackoverflow.com/questions/38316519/replace-parameter-type-in-lambda-expression/38345590#38345590</see>
+#pragma warning disable SA1618 // Generic type parameters should be documented
 public class ReplaceParameterTypeVisitor<TSource, TTarget> : ExpressionVisitor
+#pragma warning restore SA1618 // Generic type parameters should be documented
 {
     private ReadOnlyCollection<ParameterExpression>? _parameters;
 

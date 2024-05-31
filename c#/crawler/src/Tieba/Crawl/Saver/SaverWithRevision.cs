@@ -11,6 +11,32 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
     protected abstract Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
         AddSplitRevisionsDelegatesKeyByEntityType { get; }
 
+    protected void AddSplitRevisions<TRevision>(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions)
+        where TRevision : TBaseRevision
+    {
+        var newRevisions = revisions.OfType<TRevision>().ToList();
+        var dbSet = db.Set<TRevision>();
+        var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevision>();
+
+        // https://github.com/npgsql/npgsql/issues/4437
+        // https://github.com/dotnet/efcore/issues/32092
+        var existingRevisions = dbSet
+            .Where(newRevisions.Aggregate(
+                LinqKit.PredicateBuilder.New<TRevision>(),
+                (predicate, newRevision) => predicate.Or(LinqKit.PredicateBuilder
+                    .New<TRevision>(existingRevision => existingRevision.TakenAt == newRevision.TakenAt)
+                    .And((Expression<Func<TRevision, bool>>)visitor
+                        .Visit(IsRevisionEntityIdEqualsExpression(newRevision))))))
+            .ToList();
+        (from existingRevision in existingRevisions
+                join newRevision in newRevisions
+                    on RevisionEntityIdSelector(existingRevision) equals RevisionEntityIdSelector(newRevision)
+                select (existingRevision, newRevision))
+            .ForEach(t =>
+                t.newRevision.DuplicateIndex = (ushort)(t.existingRevision.DuplicateIndex + 1));
+        dbSet.AddRange(newRevisions);
+    }
+
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
 
     protected abstract TEntityId RevisionEntityIdSelector(TBaseRevision entity);
@@ -25,32 +51,6 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
         nameof(BasePost.AuthorUid) when newValue is 0L && oldValue is not null => true,
         _ => false
     };
-
-    protected void AddSplitRevisions<TRevision>(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions)
-        where TRevision : TBaseRevision
-    {
-        var newRevisions = revisions.OfType<TRevision>().ToList();
-        var dbSet = db.Set<TRevision>();
-        var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevision>();
-        var existingRevisions = dbSet
-            .Where(newRevisions.Aggregate(
-
-                // https://github.com/npgsql/npgsql/issues/4437
-                // https://github.com/dotnet/efcore/issues/32092
-                LinqKit.PredicateBuilder.New<TRevision>(),
-                (predicate, newRevision) => predicate.Or(LinqKit.PredicateBuilder
-                    .New<TRevision>(existingRevision => existingRevision.TakenAt == newRevision.TakenAt)
-                    .And((Expression<Func<TRevision, bool>>)
-                        visitor.Visit(IsRevisionEntityIdEqualsExpression(newRevision))))))
-            .ToList();
-        (from existingRevision in existingRevisions
-                join newRevision in newRevisions
-                    on RevisionEntityIdSelector(existingRevision) equals RevisionEntityIdSelector(newRevision)
-                select (existingRevision, newRevision))
-            .ForEach(t =>
-                t.newRevision.DuplicateIndex = (ushort)(t.existingRevision.DuplicateIndex + 1));
-        dbSet.AddRange(newRevisions);
-    }
 }
 public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>
 {

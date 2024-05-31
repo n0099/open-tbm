@@ -88,3 +88,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:Closing parenthesis should be spaced correctly")]
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1012:Opening braces should be spaced correctly")]
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1013:Closing braces should be spaced correctly")]
+[assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1015:Closing generic brackets should be spaced correctly", Justification = "https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3856")]

@@ -32,8 +32,7 @@ public abstract class RevisionWithSplitting<TBaseRevision> : BaseRevisionWithSpl
         {
             var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevision>();
             _ = builder.Entity<TRevision>().ToTable(baseTableName)
-                .HasKey((Expression<Func<TRevision, object?>>)
-                    visitor.Visit(keySelector));
+                .HasKey((Expression<Func<TRevision, object?>>)visitor.Visit(keySelector));
             return this;
         }
 
@@ -44,8 +43,7 @@ public abstract class RevisionWithSplitting<TBaseRevision> : BaseRevisionWithSpl
             _ = builder.Entity<TRevisionWithSplitting>()
                 .Ignore(e => e.NullFieldsBitMask)
                 .ToTable($"{baseTableName}_{tableNameSuffix}")
-                .HasKey((Expression<Func<TRevisionWithSplitting, object?>>)
-                    visitor.Visit(keySelector));
+                .HasKey((Expression<Func<TRevisionWithSplitting, object?>>)visitor.Visit(keySelector));
             return this;
         }
     }

@@ -7,9 +7,10 @@ public class SubReplySaver(
     : PostSaver<SubReplyPost, BaseSubReplyRevision, Spid>(
         logger, posts, authorRevisionSaverFactory, PostType.SubReply)
 {
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
+
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
-    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
     protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
@@ -17,11 +18,6 @@ public class SubReplySaver(
             {typeof(SubReplyRevision.SplitAgreeCount), AddSplitRevisions<SubReplyRevision.SplitAgreeCount>},
             {typeof(SubReplyRevision.SplitDisagreeCount), AddSplitRevisions<SubReplyRevision.SplitDisagreeCount>},
         });
-
-    protected override Spid RevisionEntityIdSelector(BaseSubReplyRevision entity) => entity.Spid;
-    protected override Expression<Func<BaseSubReplyRevision, bool>>
-        IsRevisionEntityIdEqualsExpression(BaseSubReplyRevision newRevision) =>
-        existingRevision => existingRevision.Spid == newRevision.Spid;
 
     public override bool UserFieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
@@ -46,6 +42,11 @@ public class SubReplySaver(
 
         return changeSet;
     }
+
+    protected override Spid RevisionEntityIdSelector(BaseSubReplyRevision entity) => entity.Spid;
+    protected override Expression<Func<BaseSubReplyRevision, bool>>
+        IsRevisionEntityIdEqualsExpression(BaseSubReplyRevision newRevision) =>
+        existingRevision => existingRevision.Spid == newRevision.Spid;
 
     protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
 }
