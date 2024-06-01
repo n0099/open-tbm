@@ -29,7 +29,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
         ExpressionStarter<TPost> existingPostPredicate)
-        where TRevision : BaseRevisionWithSplitting
+        where TRevision : TBaseRevision
     {
         var existingPostsKeyById = db.Set<TPost>().AsTracking()
             .Where(existingPostPredicate).ToDictionary(postIdSelector);

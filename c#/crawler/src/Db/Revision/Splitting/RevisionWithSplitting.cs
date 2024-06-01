@@ -36,7 +36,7 @@ public abstract class RevisionWithSplitting<TBaseRevision> : BaseRevisionWithSpl
             return this;
         }
 
-        public ModelBuilder SplitToTable<TRevisionWithSplitting>(string tableNameSuffix)
+        public ModelBuilder HasSplitTable<TRevisionWithSplitting>(string tableNameSuffix)
             where TRevisionWithSplitting : RevisionWithSplitting<TBaseRevision>
         {
             var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevisionWithSplitting>();

@@ -80,27 +80,27 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         _ = new RevisionWithSplitting<BaseThreadRevision>
                 .ModelBuilder(b, "tbmcr_thread", e => new {e.Tid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<ThreadRevision>()
-            .SplitToTable<SplitViewCount>("viewCount");
+            .HasSplitTable<SplitViewCount>("viewCount");
 
         _ = new RevisionWithSplitting<BaseReplyRevision>
                 .ModelBuilder(b, "tbmcr_reply", e => new {e.Pid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<ReplyRevision>()
-            .SplitToTable<ReplyRevision.SplitAgreeCount>("agreeCount")
-            .SplitToTable<SplitSubReplyCount>("subReplyCount")
-            .SplitToTable<SplitFloor>("floor");
+            .HasSplitTable<ReplyRevision.SplitAgreeCount>("agreeCount")
+            .HasSplitTable<SplitSubReplyCount>("subReplyCount")
+            .HasSplitTable<SplitFloor>("floor");
 
         _ = new RevisionWithSplitting<BaseSubReplyRevision>
                 .ModelBuilder(b, "tbmcr_subReply", e => new {e.Spid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<SubReplyRevision>()
-            .SplitToTable<SubReplyRevision.SplitAgreeCount>("agreeCount")
-            .SplitToTable<SplitDisagreeCount>("disagreeCount");
+            .HasSplitTable<SubReplyRevision.SplitAgreeCount>("agreeCount")
+            .HasSplitTable<SplitDisagreeCount>("disagreeCount");
 
         _ = new RevisionWithSplitting<BaseUserRevision>
                 .ModelBuilder(b, "tbmcr_user", e => new {e.Uid, e.TakenAt, e.DuplicateIndex})
             .HasBaseTable<UserRevision>()
-            .SplitToTable<SplitIpGeolocation>("ipGeolocation")
-            .SplitToTable<SplitPortraitUpdatedAt>("portraitUpdatedAt")
-            .SplitToTable<SplitDisplayName>("displayName");
+            .HasSplitTable<SplitIpGeolocation>("ipGeolocation")
+            .HasSplitTable<SplitPortraitUpdatedAt>("portraitUpdatedAt")
+            .HasSplitTable<SplitDisplayName>("displayName");
 
         b.Entity<SplitDisplayName>().Property(e => e.DisplayName).HasConversion<byte[]>();
         b.Entity<User>().Property(e => e.DisplayName).HasConversion<byte[]>();

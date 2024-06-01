@@ -15,8 +15,8 @@ public class SubReplySaver(
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            {typeof(SubReplyRevision.SplitAgreeCount), AddSplitRevisions<SubReplyRevision.SplitAgreeCount>},
-            {typeof(SubReplyRevision.SplitDisagreeCount), AddSplitRevisions<SubReplyRevision.SplitDisagreeCount>},
+            {typeof(SubReplyRevision.SplitAgreeCount), AddRevisionsWithDuplicateIndex<SubReplyRevision.SplitAgreeCount>},
+            {typeof(SubReplyRevision.SplitDisagreeCount), AddRevisionsWithDuplicateIndex<SubReplyRevision.SplitDisagreeCount>},
         });
 
     public override bool UserFieldUpdateIgnorance

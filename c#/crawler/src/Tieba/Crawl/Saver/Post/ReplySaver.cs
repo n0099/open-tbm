@@ -17,9 +17,9 @@ public class ReplySaver(
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            {typeof(ReplyRevision.SplitFloor), AddSplitRevisions<ReplyRevision.SplitFloor>},
-            {typeof(ReplyRevision.SplitSubReplyCount), AddSplitRevisions<ReplyRevision.SplitSubReplyCount>},
-            {typeof(ReplyRevision.SplitAgreeCount), AddSplitRevisions<ReplyRevision.SplitAgreeCount>}
+            {typeof(ReplyRevision.SplitFloor), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitFloor>},
+            {typeof(ReplyRevision.SplitSubReplyCount), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitSubReplyCount>},
+            {typeof(ReplyRevision.SplitAgreeCount), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitAgreeCount>}
         });
 
     public override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch

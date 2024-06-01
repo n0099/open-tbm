@@ -9,9 +9,9 @@ public partial class UserSaver
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            {typeof(UserRevision.SplitDisplayName), AddSplitRevisions<UserRevision.SplitDisplayName>},
-            {typeof(UserRevision.SplitPortraitUpdatedAt), AddSplitRevisions<UserRevision.SplitPortraitUpdatedAt>},
-            {typeof(UserRevision.SplitIpGeolocation), AddSplitRevisions<UserRevision.SplitIpGeolocation>}
+            {typeof(UserRevision.SplitDisplayName), AddRevisionsWithDuplicateIndex<UserRevision.SplitDisplayName>},
+            {typeof(UserRevision.SplitPortraitUpdatedAt), AddRevisionsWithDuplicateIndex<UserRevision.SplitPortraitUpdatedAt>},
+            {typeof(UserRevision.SplitIpGeolocation), AddRevisionsWithDuplicateIndex<UserRevision.SplitIpGeolocation>}
         });
 
     protected override Uid RevisionEntityIdSelector(BaseUserRevision entity) => entity.Uid;

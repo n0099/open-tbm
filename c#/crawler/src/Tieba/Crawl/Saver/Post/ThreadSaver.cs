@@ -17,7 +17,7 @@ public class ThreadSaver(
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
-            {typeof(ThreadRevision.SplitViewCount), AddSplitRevisions<ThreadRevision.SplitViewCount>}
+            {typeof(ThreadRevision.SplitViewCount), AddRevisionsWithDuplicateIndex<ThreadRevision.SplitViewCount>}
         });
 
     public override bool UserFieldUpdateIgnorance

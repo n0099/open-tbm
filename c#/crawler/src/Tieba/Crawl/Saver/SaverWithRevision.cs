@@ -11,7 +11,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
     protected abstract Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
         AddSplitRevisionsDelegatesKeyByEntityType { get; }
 
-    protected void AddSplitRevisions<TRevision>(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions)
+    protected void AddRevisionsWithDuplicateIndex<TRevision>(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions)
         where TRevision : TBaseRevision
     {
         var newRevisions = revisions.OfType<TRevision>().ToList();
@@ -20,7 +20,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
 
         // https://github.com/npgsql/npgsql/issues/4437
         // https://github.com/dotnet/efcore/issues/32092
-        var existingRevisions = dbSet
+        var existingRevisions = dbSet.AsNoTracking()
             .Where(newRevisions.Aggregate(
                 LinqKit.PredicateBuilder.New<TRevision>(),
                 (predicate, newRevision) => predicate.Or(LinqKit.PredicateBuilder
@@ -62,7 +62,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>
         UserSaver.FieldChangeIgnorance? userFieldUpdateIgnorance = null,
         UserSaver.FieldChangeIgnorance? userFieldRevisionIgnorance = null)
         where TEntity : RowVersionedEntity
-        where TRevision : BaseRevisionWithSplitting
+        where TRevision : class, TBaseRevision
     {
         db.Set<TEntity>().AddRange(isExistingEntityLookup[false]); // newly added
         var newRevisions = isExistingEntityLookup[true].Select(newEntity =>
@@ -147,7 +147,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>
         }).OfType<TRevision>().ToList();
         if (newRevisions.Count == 0) return; // quick exit to prevent execute sql with WHERE FALSE clause
 
-        db.Set<TRevision>().AddRange(
+        AddRevisionsWithDuplicateIndex<TRevision>(db,
             newRevisions.Where(rev => !rev.IsAllFieldsIsNullExceptSplit()));
         newRevisions.OfType<RevisionWithSplitting<TBaseRevision>>()
             .SelectMany(rev => rev.SplitEntities)
