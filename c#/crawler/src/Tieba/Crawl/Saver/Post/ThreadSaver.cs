@@ -35,10 +35,13 @@ public class ThreadSaver(
             th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
             PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 
-    protected override Tid RevisionEntityIdSelector(BaseThreadRevision entity) => entity.Tid;
+    protected override Tid RevisionIdSelector(BaseThreadRevision entity) => entity.Tid;
     protected override Expression<Func<BaseThreadRevision, bool>>
-        IsRevisionEntityIdEqualsExpression(BaseThreadRevision newRevision) =>
+        IsRevisionIdEqualsExpression(BaseThreadRevision newRevision) =>
         existingRevision => existingRevision.Tid == newRevision.Tid;
+    protected override Expression<Func<BaseThreadRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory() =>
+        e => new() {RevisionId = e.Tid, DuplicateIndex = e.DuplicateIndex};
 
     protected override bool FieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch

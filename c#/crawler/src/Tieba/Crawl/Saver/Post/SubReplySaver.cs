@@ -43,10 +43,13 @@ public class SubReplySaver(
         return changeSet;
     }
 
-    protected override Spid RevisionEntityIdSelector(BaseSubReplyRevision entity) => entity.Spid;
+    protected override Spid RevisionIdSelector(BaseSubReplyRevision entity) => entity.Spid;
     protected override Expression<Func<BaseSubReplyRevision, bool>>
-        IsRevisionEntityIdEqualsExpression(BaseSubReplyRevision newRevision) =>
+        IsRevisionIdEqualsExpression(BaseSubReplyRevision newRevision) =>
         existingRevision => existingRevision.Spid == newRevision.Spid;
+    protected override Expression<Func<BaseSubReplyRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory() =>
+        e => new() {RevisionId = e.Spid, DuplicateIndex = e.DuplicateIndex};
 
     protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
 }

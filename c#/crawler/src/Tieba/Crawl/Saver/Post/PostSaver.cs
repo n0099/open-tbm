@@ -10,6 +10,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
     : SaverWithRevision<TBaseRevision, TPostId>(logger), IPostSaver<TPost>
     where TPost : BasePost
     where TBaseRevision : BaseRevisionWithSplitting
+    where TPostId : struct
 {
     protected delegate void PostSaveHandler();
 

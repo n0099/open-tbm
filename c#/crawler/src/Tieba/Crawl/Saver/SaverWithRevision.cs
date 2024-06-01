@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
-    ILogger<SaverWithRevision<TBaseRevision, TEntityId>> logger)
+public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>(
+    ILogger<SaverWithRevision<TBaseRevision, TRevisionId>> logger)
     : IRevisionProperties
     where TBaseRevision : BaseRevisionWithSplitting
+    where TRevisionId : struct
 {
     protected delegate void AddSplitRevisionsDelegate(CrawlerDbContext db, IEnumerable<TBaseRevision> revisions);
     protected abstract Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
@@ -15,6 +16,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
         where TRevision : TBaseRevision
     {
         var newRevisions = revisions.OfType<TRevision>().ToList();
+        if (newRevisions.Count == 0) return; // quick exit to prevent execute sql with WHERE FALSE clause
         var dbSet = db.Set<TRevision>();
         var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevision>();
 
@@ -26,11 +28,13 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
                 (predicate, newRevision) => predicate.Or(LinqKit.PredicateBuilder
                     .New<TRevision>(existingRevision => existingRevision.TakenAt == newRevision.TakenAt)
                     .And((Expression<Func<TRevision, bool>>)visitor
-                        .Visit(IsRevisionEntityIdEqualsExpression(newRevision))))))
+                        .Visit(IsRevisionIdEqualsExpression(newRevision))))))
+            .Cast<TBaseRevision>()
+            .Select(RevisionIdWithDuplicateIndexProjectionFactory())
             .ToList();
         (from existingRevision in existingRevisions
                 join newRevision in newRevisions
-                    on RevisionEntityIdSelector(existingRevision) equals RevisionEntityIdSelector(newRevision)
+                    on existingRevision.RevisionId equals RevisionIdSelector(newRevision)
                 select (existingRevision, newRevision))
             .ForEach(t =>
                 t.newRevision.DuplicateIndex = (ushort)(t.existingRevision.DuplicateIndex + 1));
@@ -39,9 +43,18 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
 
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
 
-    protected abstract TEntityId RevisionEntityIdSelector(TBaseRevision entity);
+    protected abstract TRevisionId RevisionIdSelector(TBaseRevision entity);
     protected abstract Expression<Func<TBaseRevision, bool>>
-        IsRevisionEntityIdEqualsExpression(TBaseRevision newRevision);
+        IsRevisionIdEqualsExpression(TBaseRevision newRevision);
+
+    protected abstract Expression<Func<TBaseRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory();
+    [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
+    protected class RevisionIdWithDuplicateIndexProjection
+    {
+        public TRevisionId RevisionId { get; set; }
+        public ushort DuplicateIndex { get; set; }
+    }
 
     protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
     protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
@@ -52,7 +65,7 @@ public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>(
         _ => false
     };
 }
-public abstract partial class SaverWithRevision<TBaseRevision, TEntityId>
+public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>
 {
     protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,

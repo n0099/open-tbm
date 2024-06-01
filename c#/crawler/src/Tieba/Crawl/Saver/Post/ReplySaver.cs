@@ -46,10 +46,13 @@ public class ReplySaver(
         return changeSet;
     }
 
-    protected override Pid RevisionEntityIdSelector(BaseReplyRevision entity) => entity.Pid;
+    protected override Pid RevisionIdSelector(BaseReplyRevision entity) => entity.Pid;
     protected override Expression<Func<BaseReplyRevision, bool>>
-        IsRevisionEntityIdEqualsExpression(BaseReplyRevision newRevision) =>
+        IsRevisionIdEqualsExpression(BaseReplyRevision newRevision) =>
         existingRevision => existingRevision.Pid == newRevision.Pid;
+    protected override Expression<Func<BaseReplyRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory() =>
+        e => new() {RevisionId = e.Pid, DuplicateIndex = e.DuplicateIndex};
 
     protected override bool FieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch

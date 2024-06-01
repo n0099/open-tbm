@@ -14,10 +14,13 @@ public partial class UserSaver
             {typeof(UserRevision.SplitIpGeolocation), AddRevisionsWithDuplicateIndex<UserRevision.SplitIpGeolocation>}
         });
 
-    protected override Uid RevisionEntityIdSelector(BaseUserRevision entity) => entity.Uid;
+    protected override Uid RevisionIdSelector(BaseUserRevision entity) => entity.Uid;
     protected override Expression<Func<BaseUserRevision, bool>>
-        IsRevisionEntityIdEqualsExpression(BaseUserRevision newRevision) =>
+        IsRevisionIdEqualsExpression(BaseUserRevision newRevision) =>
         existingRevision => existingRevision.Uid == newRevision.Uid;
+    protected override Expression<Func<BaseUserRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory() =>
+        e => new() {RevisionId = e.Uid, DuplicateIndex = e.DuplicateIndex};
 
     protected override bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry)
     {
