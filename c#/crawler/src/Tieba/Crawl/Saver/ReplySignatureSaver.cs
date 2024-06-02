@@ -26,20 +26,15 @@ public class ReplySignatureSaver(
             }).ToList();
         if (signatures.Count == 0) return () => { };
         if (signatures.Count != repliesWithSignature
-                .GroupBy(r => new ReplySignatureProjection(r.SignatureId!.Value, r.Signature!))
-                .Count()) (
-                from r in repliesWithSignature
-                group r by r.SignatureId into g
-                where g.Count() > 1
-                from r in g
-                group r by new ReplySignatureProjection(r.SignatureId!.Value, r.Signature!) into g
-                group g by g.Key.SignatureId into gg
-                where gg.Count() > 1
-                from g in gg
-                select g)
-            .ForEach(g => logger.LogWarning(
-                "Multiple entities with different value of revisioning field sharing the same signature id {}: {}",
-                g.Key.SignatureId, SharedHelper.UnescapedJsonSerialize(g)));
+                .GroupBy(r => (r.SignatureId!.Value, r.Signature!),
+                    comparer: SignatureIdAndValueEqualityComparer.Instance)
+                .Count())
+            Helper.LogDifferentValuesSharingTheSameKeyInEntities(logger,
+                repliesWithSignature,
+                nameof(ReplyPost.SignatureId),
+                r => r.SignatureId,
+                r => r.Signature,
+                SignatureIdAndValueEqualityComparer.Instance);
 
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking()
@@ -63,18 +58,21 @@ public class ReplySignatureSaver(
         return locks.Dispose;
     }
 
-    private sealed record ReplySignatureProjection(uint SignatureId, byte[] Signature)
+    [SuppressMessage("Class Design", "AV1000:Type name contains the word 'and', which suggests it has multiple purposes")]
+    private sealed class SignatureIdAndValueEqualityComparer : EqualityComparer<(uint? SignatureId, byte[]? Signature)>
     {
-        public bool Equals(ReplySignatureProjection? other) =>
-            other != null
-            && SignatureId == other.SignatureId
-            && ByteArrayEqualityComparer.Instance.Equals(Signature, other.Signature);
+        public static SignatureIdAndValueEqualityComparer Instance { get; } = new();
 
-        public override int GetHashCode()
+        public override bool Equals((uint? SignatureId, byte[]? Signature) x, (uint? SignatureId, byte[]? Signature) y) =>
+            x == y ||
+            (x.SignatureId == y.SignatureId
+             && ByteArrayEqualityComparer.Instance.Equals(x.Signature, y.Signature));
+
+        public override int GetHashCode((uint? SignatureId, byte[]? Signature) obj)
         {
             var hash = default(HashCode);
-            hash.Add(SignatureId);
-            hash.AddBytes(Signature);
+            hash.Add(obj.SignatureId);
+            hash.AddBytes(obj.Signature);
             return hash.ToHashCode();
         }
     }

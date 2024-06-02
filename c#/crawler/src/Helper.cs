@@ -20,4 +20,22 @@ public static class Helper
 
     public static PostContentWrapper? WrapPostContent(IEnumerable<Content>? contents) =>
         contents == null ? null : new() {Value = {contents}};
+
+    public static void LogDifferentValuesSharingTheSameKeyInEntities<TLoggerCategory, TEntity, TKey, TValue>(
+        ILogger<TLoggerCategory> logger,
+        IEnumerable<TEntity> entities,
+        string keyName,
+        Func<TEntity, TKey?> keySelector,
+        Func<TEntity, TValue?> valueSelector,
+        IEqualityComparer<(TKey?, TValue?)>? keyAndValueComparer = null) => entities
+        .GroupBy(keySelector)
+        .Where(g => g.Count() > 1)
+        .Flatten2()
+        .GroupBy(p => (keySelector(p), valueSelector(p)), comparer: keyAndValueComparer)
+        .GroupBy(g => g.Key.Item1)
+        .Where(gg => gg.Count() > 1)
+        .Flatten2()
+        .ForEach(g => logger.LogWarning(
+            "Multiple entities with different value of field {} sharing the same key \"{}\": {}",
+            keyName, g.Key, SharedHelper.UnescapedJsonSerialize(g)));
 }

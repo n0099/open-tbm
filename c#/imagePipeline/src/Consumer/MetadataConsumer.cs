@@ -383,7 +383,6 @@ public partial class MetadataConsumer : IConsumer<ImageWithBytes>
                 }
                 : null;
 
-        [SuppressMessage("Performance", "CA1852:Seal internal types")]
-        public record DateTimeAndOffset(DateTime DateTime, string? Offset);
+        public sealed record DateTimeAndOffset(DateTime DateTime, string? Offset);
     }
 }

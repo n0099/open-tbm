@@ -48,19 +48,11 @@ public class AuthorRevisionSaver(
         where TRevision : AuthorRevision
     { // only takes the first of multiple post from the same author
         var uniquePosts = posts.DistinctBy(p => p.AuthorUid).ToList();
-        if (uniquePosts.Count != posts.Count) (
-                from p in posts
-                group p by p.AuthorUid into g
-                where g.Count() > 1
-                from p in g
-                group p by (p.AuthorUid, postRevisioningFieldSelector(p)) into g
-                group g by g.Key.AuthorUid into gg
-                where gg.Count() > 1
-                from g in gg
-                select g)
-            .ForEach(g => logger.LogWarning(
-                "Multiple entities with different value of revisioning field sharing the same TPost.AuthorUid {}: {}",
-                g.Key, SharedHelper.UnescapedJsonSerialize(g)));
+        if (uniquePosts.Count != posts.Count)
+            Helper.LogDifferentValuesSharingTheSameKeyInEntities(logger, posts,
+            $"{nameof(TPost)}.{nameof(BasePost.AuthorUid)}",
+            p => p.AuthorUid,
+            postRevisioningFieldSelector);
 
         SharedHelper.GetNowTimestamp(out var now);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
