@@ -2,17 +2,23 @@ using LinqKit;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
-public class ThreadSaver(
+public partial class ThreadSaver(
     ILogger<ThreadSaver> logger,
     ConcurrentDictionary<Tid, ThreadPost> posts,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<ThreadPost, BaseThreadRevision, Tid>(
         logger, posts, authorRevisionSaverFactory, PostType.Thread)
 {
-    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
-
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
+    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db) =>
+        Save(db, th => th.Tid,
+            th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
+            PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
+}
+public partial class ThreadSaver
+{
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
     protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
@@ -20,6 +26,16 @@ public class ThreadSaver(
             {typeof(ThreadRevision.SplitViewCount), AddRevisionsWithDuplicateIndex<ThreadRevision.SplitViewCount>}
         });
 
+    protected override Tid RevisionIdSelector(BaseThreadRevision entity) => entity.Tid;
+    protected override Expression<Func<BaseThreadRevision, bool>>
+        IsRevisionIdEqualsExpression(BaseThreadRevision newRevision) =>
+        existingRevision => existingRevision.Tid == newRevision.Tid;
+    protected override Expression<Func<BaseThreadRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory() =>
+        e => new() {RevisionId = e.Tid, DuplicateIndex = e.DuplicateIndex};
+}
+public partial class ThreadSaver
+{
     public override bool UserFieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
     { // Icon.SpriteInfo will be an empty array and the icon url is a smaller one
@@ -29,19 +45,6 @@ public class ThreadSaver(
         nameof(User.Icon) => true,
         _ => false
     };
-
-    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db) =>
-        Save(db, th => th.Tid,
-            th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
-            PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
-
-    protected override Tid RevisionIdSelector(BaseThreadRevision entity) => entity.Tid;
-    protected override Expression<Func<BaseThreadRevision, bool>>
-        IsRevisionIdEqualsExpression(BaseThreadRevision newRevision) =>
-        existingRevision => existingRevision.Tid == newRevision.Tid;
-    protected override Expression<Func<BaseThreadRevision, RevisionIdWithDuplicateIndexProjection>>
-        RevisionIdWithDuplicateIndexProjectionFactory() =>
-        e => new() {RevisionId = e.Tid, DuplicateIndex = e.DuplicateIndex};
 
     protected override bool FieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch

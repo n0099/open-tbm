@@ -40,9 +40,9 @@ public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>(
                 t.newRevision.DuplicateIndex = (ushort)(t.existingRevision.DuplicateIndex + 1));
         dbSet.AddRange(newRevisions);
     }
-
-    protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
-
+}
+public partial class SaverWithRevision<TBaseRevision, TRevisionId>
+{
     protected abstract TRevisionId RevisionIdSelector(TBaseRevision entity);
     protected abstract Expression<Func<TBaseRevision, bool>>
         IsRevisionIdEqualsExpression(TBaseRevision newRevision);
@@ -55,7 +55,9 @@ public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>(
         public TRevisionId RevisionId { get; set; }
         public ushort DuplicateIndex { get; set; }
     }
-
+}
+public partial class SaverWithRevision<TBaseRevision, TRevisionId>
+{
     protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
     protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
     protected virtual bool FieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
@@ -65,8 +67,10 @@ public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>(
         _ => false
     };
 }
-public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>
+public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 {
+    protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
+
     protected void SaveEntitiesWithRevision<TEntity, TRevision>(
         CrawlerDbContext db,
         Func<TEntity, TRevision> revisionFactory,

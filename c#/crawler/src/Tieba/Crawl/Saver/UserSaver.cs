@@ -2,6 +2,48 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
+public partial class UserSaver(
+    ILogger<UserSaver> logger, SaverLocks<Uid> locks,
+    IDictionary<Uid, User> users)
+    : SaverWithRevision<BaseUserRevision, Uid>(logger)
+{
+    public delegate UserSaver New(IDictionary<Uid, User> users);
+    public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);
+
+    public void Save(
+        CrawlerDbContext db,
+        PostType postType,
+        FieldChangeIgnorance userFieldUpdateIgnorance,
+        FieldChangeIgnorance userFieldRevisionIgnorance)
+    {
+        if (users.Count == 0) return;
+        var newlyLocked = locks.AcquireLocks(users.Keys().ToList());
+
+        // existingUsers may have new revisions to insert so excluding already locked users
+        // to prevent inserting duplicate revision
+        var existingUsersKeyByUid = (from user in db.Users.AsTracking()
+            where newlyLocked.Contains(user.Uid)
+            select user).ToDictionary(u => u.Uid);
+        SaveEntitiesWithRevision(db,
+            u => new UserRevision
+            {
+                TakenAt = u.UpdatedAt ?? u.CreatedAt,
+                Uid = u.Uid,
+                TriggeredBy = postType
+            },
+            users.IntersectByKey(newlyLocked).Values()
+                .ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
+            u => existingUsersKeyByUid[u.Uid],
+            userFieldUpdateIgnorance,
+            userFieldRevisionIgnorance);
+    }
+
+    public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId) =>
+        locks.AcquireLocks(usersId.ToList());
+
+    [SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007:Don't dispose injected")]
+    public void OnPostSave() => locks.Dispose();
+}
 public partial class UserSaver
 {
     private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
@@ -21,7 +63,9 @@ public partial class UserSaver
     protected override Expression<Func<BaseUserRevision, RevisionIdWithDuplicateIndexProjection>>
         RevisionIdWithDuplicateIndexProjectionFactory() =>
         e => new() {RevisionId = e.Uid, DuplicateIndex = e.DuplicateIndex};
-
+}
+public partial class UserSaver
+{
     protected override bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry)
     {
         // ThreadCrawlFacade.ParseLatestRepliers() will save users with empty string as portrait
@@ -81,46 +125,4 @@ public partial class UserSaver
         nameof(User.Icon)   => 1 << 5,
         _ => 0
     };
-}
-public partial class UserSaver(
-    ILogger<UserSaver> logger, SaverLocks<Uid> locks,
-    IDictionary<Uid, User> users)
-    : SaverWithRevision<BaseUserRevision, Uid>(logger)
-{
-    public delegate UserSaver New(IDictionary<Uid, User> users);
-    public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);
-
-    public void Save(
-        CrawlerDbContext db,
-        PostType postType,
-        FieldChangeIgnorance userFieldUpdateIgnorance,
-        FieldChangeIgnorance userFieldRevisionIgnorance)
-    {
-        if (users.Count == 0) return;
-        var newlyLocked = locks.AcquireLocks(users.Keys().ToList());
-
-        // existingUsers may have new revisions to insert so excluding already locked users
-        // to prevent inserting duplicate revision
-        var existingUsersKeyByUid = (from user in db.Users.AsTracking()
-            where newlyLocked.Contains(user.Uid)
-            select user).ToDictionary(u => u.Uid);
-        SaveEntitiesWithRevision(db,
-            u => new UserRevision
-            {
-                TakenAt = u.UpdatedAt ?? u.CreatedAt,
-                Uid = u.Uid,
-                TriggeredBy = postType
-            },
-            users.IntersectByKey(newlyLocked).Values()
-                .ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
-            u => existingUsersKeyByUid[u.Uid],
-            userFieldUpdateIgnorance,
-            userFieldRevisionIgnorance);
-    }
-
-    public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId) =>
-        locks.AcquireLocks(usersId.ToList());
-
-    [SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007:Don't dispose injected")]
-    public void OnPostSave() => locks.Dispose();
 }

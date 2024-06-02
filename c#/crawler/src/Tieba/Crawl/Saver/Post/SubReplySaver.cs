@@ -1,16 +1,27 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
-public class SubReplySaver(
+public partial class SubReplySaver(
     ILogger<SubReplySaver> logger,
     ConcurrentDictionary<PostId, SubReplyPost> posts,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<SubReplyPost, BaseSubReplyRevision, Spid>(
         logger, posts, authorRevisionSaverFactory, PostType.SubReply)
 {
-    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
-
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost> posts);
 
+    public override SaverChangeSet<SubReplyPost> Save(CrawlerDbContext db)
+    {
+        var changeSet = Save(db, sr => sr.Spid,
+            sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
+            LinqKit.PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
+        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
+
+        return changeSet;
+    }
+}
+public partial class SubReplySaver
+{
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
     protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
         AddSplitRevisionsDelegatesKeyByEntityType =>
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
@@ -19,6 +30,16 @@ public class SubReplySaver(
             {typeof(SubReplyRevision.SplitDisagreeCount), AddRevisionsWithDuplicateIndex<SubReplyRevision.SplitDisagreeCount>},
         });
 
+    protected override Spid RevisionIdSelector(BaseSubReplyRevision entity) => entity.Spid;
+    protected override Expression<Func<BaseSubReplyRevision, bool>>
+        IsRevisionIdEqualsExpression(BaseSubReplyRevision newRevision) =>
+        existingRevision => existingRevision.Spid == newRevision.Spid;
+    protected override Expression<Func<BaseSubReplyRevision, RevisionIdWithDuplicateIndexProjection>>
+        RevisionIdWithDuplicateIndexProjectionFactory() =>
+        e => new() {RevisionId = e.Spid, DuplicateIndex = e.DuplicateIndex};
+}
+public partial class SubReplySaver
+{
     public override bool UserFieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
     { // always ignore updates on iconinfo due to some rare user will show some extra icons
@@ -32,24 +53,6 @@ public class SubReplySaver(
         nameof(User.DisplayName) => true,
         _ => false
     };
-
-    public override SaverChangeSet<SubReplyPost> Save(CrawlerDbContext db)
-    {
-        var changeSet = Save(db, sr => sr.Spid,
-            sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
-            LinqKit.PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
-        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
-
-        return changeSet;
-    }
-
-    protected override Spid RevisionIdSelector(BaseSubReplyRevision entity) => entity.Spid;
-    protected override Expression<Func<BaseSubReplyRevision, bool>>
-        IsRevisionIdEqualsExpression(BaseSubReplyRevision newRevision) =>
-        existingRevision => existingRevision.Spid == newRevision.Spid;
-    protected override Expression<Func<BaseSubReplyRevision, RevisionIdWithDuplicateIndexProjection>>
-        RevisionIdWithDuplicateIndexProjectionFactory() =>
-        e => new() {RevisionId = e.Spid, DuplicateIndex = e.DuplicateIndex};
 
     protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => 0;
 }

@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
-public class ReplySaver(
+public partial class ReplySaver(
     ILogger<ReplySaver> logger,
     ConcurrentDictionary<PostId, ReplyPost> posts,
     ReplyContentImageSaver replyContentImageSaver,
@@ -9,29 +9,7 @@ public class ReplySaver(
     : PostSaver<ReplyPost, BaseReplyRevision, Pid>(
         logger, posts, authorRevisionSaverFactory, PostType.Reply)
 {
-    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
-
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
-
-    protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
-        AddSplitRevisionsDelegatesKeyByEntityType =>
-        _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
-        {
-            {typeof(ReplyRevision.SplitFloor), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitFloor>},
-            {typeof(ReplyRevision.SplitSubReplyCount), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitSubReplyCount>},
-            {typeof(ReplyRevision.SplitAgreeCount), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitAgreeCount>}
-        });
-
-    public override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
-    { // FansNickname in reply response will always be null
-        nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
-        _ => false
-    };
-    public override bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => propName switch
-    { // user icon will be null after UserParser.ResetUsersIcon() get invoked
-        nameof(User.Icon) when newValue is not null && oldValue is null => true,
-        _ => false
-    };
 
     public override SaverChangeSet<ReplyPost> Save(CrawlerDbContext db)
     {
@@ -45,6 +23,18 @@ public class ReplySaver(
 
         return changeSet;
     }
+}
+public partial class ReplySaver
+{
+    private Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>? _addSplitRevisionsDelegatesKeyByEntityType;
+    protected override Lazy<Dictionary<Type, AddSplitRevisionsDelegate>>
+        AddSplitRevisionsDelegatesKeyByEntityType =>
+        _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
+        {
+            {typeof(ReplyRevision.SplitFloor), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitFloor>},
+            {typeof(ReplyRevision.SplitSubReplyCount), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitSubReplyCount>},
+            {typeof(ReplyRevision.SplitAgreeCount), AddRevisionsWithDuplicateIndex<ReplyRevision.SplitAgreeCount>}
+        });
 
     protected override Pid RevisionIdSelector(BaseReplyRevision entity) => entity.Pid;
     protected override Expression<Func<BaseReplyRevision, bool>>
@@ -53,7 +43,19 @@ public class ReplySaver(
     protected override Expression<Func<BaseReplyRevision, RevisionIdWithDuplicateIndexProjection>>
         RevisionIdWithDuplicateIndexProjectionFactory() =>
         e => new() {RevisionId = e.Pid, DuplicateIndex = e.DuplicateIndex};
-
+}
+public partial class ReplySaver
+{
+    public override bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
+    { // FansNickname in reply response will always be null
+        nameof(User.FansNickname) when newValue is null && oldValue is not null => true,
+        _ => false
+    };
+    public override bool UserFieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => propName switch
+    { // user icon will be null after UserParser.ResetUsersIcon() get invoked
+        nameof(User.Icon) when newValue is not null && oldValue is null => true,
+        _ => false
+    };
     protected override bool FieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
     { // possible randomly respond with null
