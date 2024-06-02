@@ -3,6 +3,7 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 // locks only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
 // this prevents inserting multiple entities with similar time and other fields with the same values
 public class AuthorRevisionSaver(
+    ILogger<AuthorRevisionSaver> logger,
     SaverLocks<(Fid Fid, Uid Uid)> authorExpGradeLocks,
     PostType triggeredByPostType)
 {
@@ -34,12 +35,12 @@ public class AuthorRevisionSaver(
         return authorExpGradeLocks.Dispose;
     }
 
-    private static void Save<TPost, TRevision, TValue>(
+    private void Save<TPost, TRevision, TValue>(
         CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
         SaverLocks<(Fid Fid, Uid Uid)> locks,
         IQueryable<TRevision> dbSet,
-        Func<TPost, TValue?> postAuthorFieldValueSelector,
+        Func<TPost, TValue?> postRevisioningFieldSelector,
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
         Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
         Func<(Uid Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
@@ -47,6 +48,20 @@ public class AuthorRevisionSaver(
         where TRevision : AuthorRevision
     { // only takes the first of multiple post from the same author
         var uniquePosts = posts.DistinctBy(p => p.AuthorUid).ToList();
+        if (uniquePosts.Count != posts.Count) (
+                from p in posts
+                group p by p.AuthorUid into g
+                where g.Count() > 1
+                from p in g
+                group p by (p.AuthorUid, postRevisioningFieldSelector(p)) into g
+                group g by g.Key.AuthorUid into gg
+                where gg.Count() > 1
+                from g in gg
+                select g)
+            .ForEach(g => logger.LogWarning(
+                "Multiple entities with different value of revisioning field sharing the same TPost.AuthorUid {}: {}",
+                g.Key, SharedHelper.UnescapedJsonSerialize(g)));
+
         SharedHelper.GetNowTimestamp(out var now);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
             .Where(e => e.Fid == db.Fid
@@ -59,7 +74,7 @@ public class AuthorRevisionSaver(
             (
                 e.Uid,
                 Existing: (e.DiscoveredAt, e.Value),
-                NewInPost: (DiscoveredAt: now, Value: postAuthorFieldValueSelector(p))
+                NewInPost: (DiscoveredAt: now, Value: postRevisioningFieldSelector(p))
             )).ToList();
         var newRevisionOfExistingUsers = existingRevisionOfExistingUsers
 
@@ -70,7 +85,7 @@ public class AuthorRevisionSaver(
             .Select(t => (t.Uid, t.NewInPost.Value, t.NewInPost.DiscoveredAt));
         var newRevisionOfNewUsers = uniquePosts
             .ExceptBy(existingRevisionOfExistingUsers.Select(t => t.Uid), p => p.AuthorUid)
-            .Select(p => (Uid: p.AuthorUid, Value: postAuthorFieldValueSelector(p), DiscoveredAt: now));
+            .Select(p => (Uid: p.AuthorUid, Value: postRevisioningFieldSelector(p), DiscoveredAt: now));
         var newRevisions = newRevisionOfNewUsers
             .Concat(newRevisionOfExistingUsers)
             .Select(revisionFactory)

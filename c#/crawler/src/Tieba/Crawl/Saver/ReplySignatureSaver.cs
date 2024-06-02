@@ -2,13 +2,18 @@ using System.IO.Hashing;
 
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature> locks)
+public class ReplySignatureSaver(
+    ILogger<ReplySignatureSaver> logger,
+    SaverLocks<ReplySignatureSaver.UniqueSignature> locks)
 {
     public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         SharedHelper.GetNowTimestamp(out var now);
-        var signatures = replies
-            .Where(r => r is {SignatureId: not null, Signature: not null})
+        var repliesWithSignature = replies
+            .Where(r => r is {SignatureId: not null, Signature: not null}).ToList();
+        var signatures = repliesWithSignature
+
+            // only takes the first of multiple signature sharing the same id
             .DistinctBy(r => r.SignatureId)
             .Select(r => new ReplySignature
             {
@@ -20,6 +25,21 @@ public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature>
                 LastSeenAt = now
             }).ToList();
         if (signatures.Count == 0) return () => { };
+        if (signatures.Count != repliesWithSignature
+                .GroupBy(r => new ReplySignatureProjection(r.SignatureId!.Value, r.Signature!))
+                .Count()) (
+                from r in repliesWithSignature
+                group r by r.SignatureId into g
+                where g.Count() > 1
+                from r in g
+                group r by new ReplySignatureProjection(r.SignatureId!.Value, r.Signature!) into g
+                group g by g.Key.SignatureId into gg
+                where gg.Count() > 1
+                from g in gg
+                select g)
+            .ForEach(g => logger.LogWarning(
+                "Multiple entities with different value of revisioning field sharing the same signature id {}: {}",
+                g.Key.SignatureId, SharedHelper.UnescapedJsonSerialize(g)));
 
         var existingSignatures = (
             from s in db.ReplySignatures.AsTracking()
@@ -43,10 +63,28 @@ public class ReplySignatureSaver(SaverLocks<ReplySignatureSaver.UniqueSignature>
         return locks.Dispose;
     }
 
+    private sealed record ReplySignatureProjection(uint SignatureId, byte[] Signature)
+    {
+        public bool Equals(ReplySignatureProjection? other) =>
+            other != null
+            && SignatureId == other.SignatureId
+            && ByteArrayEqualityComparer.Instance.Equals(Signature, other.Signature);
+
+        public override int GetHashCode()
+        {
+            var hash = default(HashCode);
+            hash.Add(SignatureId);
+            hash.AddBytes(Signature);
+            return hash.ToHashCode();
+        }
+    }
+
     public sealed record UniqueSignature(uint Id, byte[] XxHash3)
     {
         public bool Equals(UniqueSignature? other) =>
-            other != null && Id == other.Id && ByteArrayEqualityComparer.Instance.Equals(XxHash3, other.XxHash3);
+            other != null
+            && Id == other.Id
+            && ByteArrayEqualityComparer.Instance.Equals(XxHash3, other.XxHash3);
 
         public override int GetHashCode()
         {

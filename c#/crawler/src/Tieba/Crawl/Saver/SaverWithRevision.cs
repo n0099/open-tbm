@@ -128,7 +128,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                 if (!IRevisionProperties.Cache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                 {
                     object? ToHexWhenByteArray(object? value) =>
-                        value is byte[] bytes ? $"0x{Convert.ToHexString(bytes).ToLowerInvariant()}" : value;
+                        value is byte[] bytes ? bytes.ToHex() : value;
                     logger.LogWarning("Updating field {} is not existing in revision table, " +
                                        "newValue={}, oldValue={}, newObject={}, oldObject={}",
                         pName, ToHexWhenByteArray(p.CurrentValue), ToHexWhenByteArray(p.OriginalValue),

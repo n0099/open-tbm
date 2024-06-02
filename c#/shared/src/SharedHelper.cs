@@ -17,4 +17,5 @@ public static class SharedHelper
     public static void GetNowTimestamp(out UInt32 now) => now = GetNowTimestamp();
     [SuppressMessage("Maintainability", "AV1551:Method overload should call another overload")]
     public static UInt32 GetNowTimestamp() => (UInt32)DateTimeOffset.Now.ToUnixTimeSeconds();
+    public static string ToHex(this byte[] bytes) => $"0x{Convert.ToHexString(bytes).ToLowerInvariant()}";
 }
