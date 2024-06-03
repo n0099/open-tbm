@@ -2,7 +2,6 @@
 
 namespace App\Eloquent\Model\Post;
 
-use App\Eloquent\NullableBooleanAttributeCast;
 use App\Eloquent\NullableNumericAttributeCast;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +18,6 @@ class Thread extends Post
     protected $primaryKey = 'tid';
 
     protected $casts = [
-        'isGood' => NullableBooleanAttributeCast::class,
         'replyCount' => NullableNumericAttributeCast::class,
         'viewCount' => NullableNumericAttributeCast::class,
         'shareCount' => NullableNumericAttributeCast::class,

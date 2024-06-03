@@ -6,6 +6,7 @@ use App\Eloquent\Model\Revision\AuthorExpGrade;
 use App\Eloquent\Model\Revision\ForumModerator;
 use App\Eloquent\ModelHasProtoBufAttribute;
 use App\Eloquent\ModelHasPublicField;
+use App\Eloquent\ModelHasResourceAttribute;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class User extends Model
 {
     use ModelHasPublicField;
     use ModelHasProtoBufAttribute;
+    use ModelHasResourceAttribute;
 
     public static $snakeAttributes = false; // for relationship attributes
 
@@ -38,6 +40,11 @@ class User extends Model
             'createdAt',
             'updatedAt'
         ];
+    }
+
+    protected function displayName(): Attribute
+    {
+        return $this->resourceAttribute();
     }
 
     /**

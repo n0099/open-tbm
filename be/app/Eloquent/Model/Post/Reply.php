@@ -2,7 +2,6 @@
 
 namespace App\Eloquent\Model\Post;
 
-use App\Eloquent\NullableBooleanAttributeCast;
 use App\Eloquent\NullableNumericAttributeCast;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -17,7 +16,6 @@ class Reply extends Post
 
     protected $casts = [
         'subReplyCount' => NullableNumericAttributeCast::class,
-        'isFold' => NullableBooleanAttributeCast::class,
         'agreeCount' => NullableNumericAttributeCast::class,
         'disagreeCount' => NullableNumericAttributeCast::class
     ];
