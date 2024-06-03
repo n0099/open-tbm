@@ -22,6 +22,7 @@ public partial class UserSaver(
     {
         if (users.Count == 0) return;
         var newlyLocked = _saverLocks.Value.Acquire(users.Keys().ToList());
+        if (newlyLocked.Count == 0) return;
 
         // existingUsers may have new revisions to insert so excluding already locked users
         // to prevent inserting duplicate revision
