@@ -3,10 +3,14 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public partial class UserSaver(
-    ILogger<UserSaver> logger, SaverLocks<Uid> locks,
+    ILogger<UserSaver> logger,
+    SaverLocks<Uid>.New saverLocksFactory,
     IDictionary<Uid, User> users)
     : SaverWithRevision<BaseUserRevision, Uid>(logger)
 {
+    private static readonly HashSet<Uid> GlobalLockedUid = [];
+    private readonly Lazy<SaverLocks<Uid>> _saverLocks = new(() => saverLocksFactory(GlobalLockedUid));
+
     public delegate UserSaver New(IDictionary<Uid, User> users);
     public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);
 
@@ -17,7 +21,7 @@ public partial class UserSaver(
         FieldChangeIgnorance userFieldRevisionIgnorance)
     {
         if (users.Count == 0) return;
-        var newlyLocked = locks.AcquireLocks(users.Keys().ToList());
+        var newlyLocked = _saverLocks.Value.Acquire(users.Keys().ToList());
 
         // existingUsers may have new revisions to insert so excluding already locked users
         // to prevent inserting duplicate revision
@@ -39,10 +43,9 @@ public partial class UserSaver(
     }
 
     public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId) =>
-        locks.AcquireLocks(usersId.ToList());
+        _saverLocks.Value.Acquire(usersId.ToList());
 
-    [SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007:Don't dispose injected")]
-    public void OnPostSave() => locks.Dispose();
+    public void OnPostSave() => _saverLocks.Value.Dispose();
 }
 public partial class UserSaver
 {

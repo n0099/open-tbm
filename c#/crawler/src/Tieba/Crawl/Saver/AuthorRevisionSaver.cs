@@ -4,16 +4,20 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 // this prevents inserting multiple entities with similar time and other fields with the same values
 public class AuthorRevisionSaver(
     ILogger<AuthorRevisionSaver> logger,
-    SaverLocks<(Fid Fid, Uid Uid)> authorExpGradeLocks,
+    SaverLocks<(Fid Fid, Uid Uid)>.New saverLocksFactory,
     PostType triggeredByPostType)
 {
+    private static readonly HashSet<(Fid Fid, Uid Uid)> GlobalLockedAuthorExpGradeKeys = [];
+    private readonly Lazy<SaverLocks<(Fid Fid, Uid Uid)>> _authorExpGradeLocksSaverLocks =
+        new(() => saverLocksFactory(GlobalLockedAuthorExpGradeKeys));
+
     public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
 
     public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
         where TPostWithAuthorExpGrade : PostWithAuthorExpGrade
     {
-        Save(db, posts, authorExpGradeLocks,
+        Save(db, posts, _authorExpGradeLocksSaverLocks.Value,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
@@ -32,7 +36,7 @@ public class AuthorRevisionSaver(
                 TriggeredBy = triggeredByPostType,
                 AuthorExpGrade = t.Value
             });
-        return authorExpGradeLocks.Dispose;
+        return _authorExpGradeLocksSaverLocks.Value.Dispose;
     }
 
     private void Save<TPost, TRevision, TValue>(
@@ -83,7 +87,7 @@ public class AuthorRevisionSaver(
             .Select(revisionFactory)
             .ToDictionary(revision => (revision.Fid, revision.Uid), revision => revision);
         db.Set<TRevision>().AddRange(newRevisions
-            .IntersectByKey(locks.AcquireLocks(newRevisions.Keys))
+            .IntersectByKey(locks.Acquire(newRevisions.Keys))
             .Values());
     }
 

@@ -4,8 +4,12 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public class ReplySignatureSaver(
     ILogger<ReplySignatureSaver> logger,
-    SaverLocks<ReplySignatureSaver.UniqueSignature> locks)
+    SaverLocks<ReplySignatureSaver.UniqueSignature>.New saverLocksFactory)
 {
+    private static readonly HashSet<UniqueSignature> GlobalLockedSignatures = [];
+    private readonly Lazy<SaverLocks<UniqueSignature>> _saverLocks =
+        new(() => saverLocksFactory(GlobalLockedSignatures));
+
     public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
         SharedHelper.GetNowTimestamp(out var now);
@@ -51,11 +55,11 @@ public class ReplySignatureSaver(
 
         var newSignatures = signatures
             .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId).ToList();
-        var newlyLocked = locks.AcquireLocks(
+        var newlyLocked = _saverLocks.Value.Acquire(
             newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList());
         db.ReplySignatures.AddRange(
             newSignatures.IntersectBy(newlyLocked, s => new(s.SignatureId, s.XxHash3)));
-        return locks.Dispose;
+        return _saverLocks.Value.Dispose;
     }
 
     [SuppressMessage("Class Design", "AV1000:Type name contains the word 'and', which suggests it has multiple purposes")]
