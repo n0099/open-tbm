@@ -4,9 +4,8 @@ namespace App\Eloquent\Model;
 
 use App\Eloquent\Model\Revision\AuthorExpGrade;
 use App\Eloquent\Model\Revision\ForumModerator;
-use App\Eloquent\ModelHasProtoBufAttribute;
+use App\Eloquent\ModelAttributeMaker;
 use App\Eloquent\ModelHasPublicField;
-use App\Eloquent\ModelHasResourceAttribute;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -17,8 +16,6 @@ use TbClient\Wrapper\UserIconWrapper;
 class User extends Model
 {
     use ModelHasPublicField;
-    use ModelHasProtoBufAttribute;
-    use ModelHasResourceAttribute;
 
     public static $snakeAttributes = false; // for relationship attributes
 
@@ -44,7 +41,7 @@ class User extends Model
 
     protected function displayName(): Attribute
     {
-        return $this->resourceAttribute();
+        return ModelAttributeMaker::makeResourceAttribute();
     }
 
     /**
@@ -79,6 +76,6 @@ class User extends Model
 
     protected function icon(): Attribute
     {
-        return self::makeProtoBufAttribute(UserIconWrapper::class);
+        return ModelAttributeMaker::makeProtoBufAttribute(UserIconWrapper::class);
     }
 }

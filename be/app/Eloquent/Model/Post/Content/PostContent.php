@@ -3,7 +3,7 @@
 namespace App\Eloquent\Model\Post\Content;
 
 use App\Eloquent\Model\Post\Post;
-use App\Eloquent\ModelHasResourceAttribute;
+use App\Eloquent\ModelAttributeMaker;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
 /**
@@ -11,10 +11,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
  */
 abstract class PostContent extends Post
 {
-    use ModelHasResourceAttribute;
-
     protected function protoBufBytes(): Attribute
     {
-        return $this->resourceAttribute();
+        return ModelAttributeMaker::makeResourceAttribute();
     }
 }

@@ -6,17 +6,13 @@ use App\Helper;
 use Google\Protobuf\Internal\Message;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
-trait ModelHasProtoBufAttribute
+class ModelAttributeMaker
 {
     /**
      * @param class-string $protoBufClass
      * @return Attribute<\stdClass, void>
-     * @noinspection PhpMissingReturnTypeInspection
-     * @noinspection ReturnTypeCanBeDeclaredInspection
-     * DO NOT add return type to prevent being recognized as an attribute cast
-     * https://github.com/laravel/framework/blob/v10.13.5/src/Illuminate/Database/Eloquent/Concerns/HasAttributes.php#L2229
      */
-    protected static function makeProtoBufAttribute(string $protoBufClass)
+    public static function makeProtoBufAttribute(string $protoBufClass) : Attribute
     {
         return Attribute::make(/**
              * @param resource|null $value
@@ -32,6 +28,19 @@ trait ModelHasProtoBufAttribute
                 $proto->mergeFromString(stream_get_contents($value));
                 return Helper::jsonDecode($proto->serializeToJsonString(), false);
             }
+        )->shouldCache();
+    }
+
+    /**
+     * @return Attribute<string, void>
+     */
+    public static function makeResourceAttribute(): Attribute
+    {
+        return Attribute::make(/**
+             * @param resource|null $value
+             * @return string
+             */
+            get: static fn ($value) => $value === null ? null : stream_get_contents($value)
         )->shouldCache();
     }
 }

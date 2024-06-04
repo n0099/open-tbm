@@ -2,6 +2,7 @@
 
 namespace App\Eloquent\Model\Post;
 
+use App\Eloquent\ModelAttributeMaker;
 use App\Eloquent\NullableNumericAttributeCast;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,12 +54,12 @@ class Thread extends Post
 
     protected function zan(): Attribute
     {
-        return self::makeProtoBufAttribute(Zan::class);
+        return ModelAttributeMaker::makeProtoBufAttribute(Zan::class);
     }
 
     protected function geolocation(): Attribute
     {
-        return self::makeProtoBufAttribute(Lbs::class);
+        return ModelAttributeMaker::makeProtoBufAttribute(Lbs::class);
     }
 
     /**

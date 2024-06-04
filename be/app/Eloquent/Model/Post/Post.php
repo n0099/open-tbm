@@ -4,7 +4,6 @@ namespace App\Eloquent\Model\Post;
 
 use App\Eloquent\Model\Post\Content\ReplyContent;
 use App\Eloquent\Model\Post\Content\SubReplyContent;
-use App\Eloquent\ModelHasProtoBufAttribute;
 use App\Eloquent\ModelHasPublicField;
 use App\Eloquent\ModelWithTableNameSplitByFid;
 use App\Helper;
@@ -14,7 +13,6 @@ use Illuminate\Support\Collection;
 abstract class Post extends ModelWithTableNameSplitByFid
 {
     use ModelHasPublicField;
-    use ModelHasProtoBufAttribute;
 
     protected const TIMESTAMP_FIELDS = [
         'createdAt',

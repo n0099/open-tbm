@@ -2,6 +2,7 @@
 
 namespace App\Eloquent\Model\Post;
 
+use App\Eloquent\ModelAttributeMaker;
 use App\Eloquent\NullableNumericAttributeCast;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -41,7 +42,7 @@ class Reply extends Post
 
     protected function geolocation(): Attribute
     {
-        return self::makeProtoBufAttribute(Lbs::class);
+        return ModelAttributeMaker::makeProtoBufAttribute(Lbs::class);
     }
 
     /**
