@@ -1,4 +1,4 @@
-const eslintPluginUnicorn = { // as of eslint-plugin-unicorn@50.0.1
+const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     optout: {
         'unicorn/no-null': 'off',
         'unicorn/no-array-callback-reference': 'off',
@@ -14,8 +14,7 @@ const eslintPluginUnicorn = { // as of eslint-plugin-unicorn@50.0.1
         'unicorn/numeric-separators-style': ['error', { onlyIfContainsSeparator: true }],
         'unicorn/switch-case-braces': ['error', 'avoid'],
     },
-};
-const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
+}, { // as of eslint-plugin-import@2.29.1
     optout: {
         'import-x/namespace': 'off', // https://github.com/import-js/eslint-plugin-import/issues/2340
     },
@@ -50,15 +49,13 @@ const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
             warnOnUnassignedImports: true,
         }],
     },
-};
-const stylisticPlus = { // as of @stylistic/eslint-plugin-plus@1.5.1
+}, { // as of @stylistic/eslint-plugin-plus@1.5.1
     optin: {
         // '@stylistic/indent-binary-ops': ['error', 4],
         '@stylistic/type-generic-spacing': 'error',
         '@stylistic/type-named-tuple-spacing': 'error',
     },
-};
-const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
+}, { // as of @stylistic/eslint-plugin-migrate@1.5.1
     optin: {
         '@stylistic/dot-location': ['error', 'property'],
         '@stylistic/no-floating-decimal': 'error',
@@ -164,8 +161,7 @@ const stylisticMigrate = { // as of @stylistic/eslint-plugin-migrate@1.5.1
         // https://github.com/eslint-stylistic/eslint-stylistic/issues/249
         // '@stylistic/type-annotation-spacing': 'error',
     },
-};
-const eslint = { // as of eslint@8.56.0
+}, { // as of eslint@8.56.0
     optout: {
         camelcase: 'off',
     },
@@ -261,8 +257,7 @@ const eslint = { // as of eslint@8.56.0
         'no-empty-static-block': 'error',
         'no-new-native-nonconstructor': 'error',
     },
-};
-const typescriptESLint = { // as of @typescript-eslint@6.16.0
+}, { // as of @typescript-eslint@6.16.0
     override: {
         'no-empty-function': 'off',
         '@typescript-eslint/no-empty-function': 'error',
@@ -389,8 +384,7 @@ const typescriptESLint = { // as of @typescript-eslint@6.16.0
         '@typescript-eslint/no-unsafe-unary-minus': 'error',
         '@typescript-eslint/parameter-properties': ['error', { prefer: 'parameter-property' }],
     },
-};
-const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
+}, { // as of eslint-plugin-vue@9.19.2
     optout: {
         'vue/max-attributes-per-line': 'off',
         'vue/singleline-html-element-content-newline': 'off',
@@ -525,29 +519,67 @@ const eslintPluginVue = { // as of eslint-plugin-vue@9.19.2
         'vue/no-unused-emit-declarations': 'error',
         'vue/no-ref-object-reactivity-loss': 'error',
     },
-};
+}];
 
-// eslint-disable-next-line no-undef
-module.exports = {
-    root: true,
-    reportUnusedDisableDirectives: true,
-    parserOptions: {
-        project: ['./tsconfig.json', './tsconfig.node.json'],
-        // eslint-disable-next-line no-undef
-        tsconfigRootDir: __dirname,
+import viteConfig from './vite.config.ts';
+import { fixupConfigRules } from '@eslint/compat';
+import { FlatCompat } from '@eslint/eslintrc';
+import eslintJs from '@eslint/js';
+import * as vueESLintParser from 'vue-eslint-parser';
+import pluginVue from 'eslint-plugin-vue'
+import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js'
+import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
+import pluginStylistic from '@stylistic/eslint-plugin';
+import stylisticMigrate from '@stylistic/eslint-plugin-migrate';
+import pluginImportX from 'eslint-plugin-import-x';
+import pluginUnicorn from 'eslint-plugin-unicorn';
+import * as _ from 'lodash-es';
+
+// https://github.com/eslint/eslint/issues/18093
+// https://github.com/eslint/eslint/issues/18391
+const compat = new FlatCompat();
+
+export default [
+    eslintJs.configs.recommended,
+    ...pluginVue.configs['flat/recommended'],
+    ...compat.config(vueESLintConfigTypescriptRecommendedExtends), // https://github.com/vuejs/eslint-config-typescript/issues/76#issuecomment-2051234597
+    ...compat.extends( // https://github.com/ota-meshi/typescript-eslint-parser-for-extra-files/issues/95#issuecomment-2148604881
+        'plugin:@typescript-eslint/strict-type-checked',
+        'plugin:@typescript-eslint/stylistic-type-checked',
+    ),
+    ...compat.config(pluginImportX.configs.recommended), // https://github.com/un-ts/eslint-plugin-import-x/issues/29#issuecomment-2148843214
+    ...compat.config(pluginImportX.configs.typescript),
+    ...fixupConfigRules(...compat.extends(
+        'plugin:@tanstack/eslint-plugin-query/recommended', // https://github.com/TanStack/query/pull/7253
+    )),
+    pluginUnicorn.configs['flat/recommended'],
+    { linterOptions: { reportUnusedDisableDirectives: 'error' } },
+    {
+        languageOptions: {
+            parserOptions: {
+                project: ['./tsconfig.json', './tsconfig.node.json'],
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        plugins: { '@stylistic': pluginStylistic },
+    
+        // https://stackoverflow.com/questions/30221286/how-to-convert-an-array-of-objects-to-an-object-in-lodash/36692117#36692117
+        rules: Object.assign({}, ..._.flatten(_.map(rules, Object.values))),
     },
-    overrides: [{ // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
-        files: '*.ts',
-        parser: 'typescript-eslint-parser-for-extra-files',
+    {
+        files: ['**/*.ts'],
+        languageOptions: { parser: typescriptESLintParserForExtraFiles },
         settings: { 'import-x/resolver': { typescript: true } },
-    }, {
-        files: '*.vue',
-        parser: 'vue-eslint-parser',
-        parserOptions: {
-            parser: 'typescript-eslint-parser-for-extra-files',
-            project: ['./tsconfig.json', './tsconfig.node.json'],
-            // eslint-disable-next-line no-undef
-            tsconfigRootDir: __dirname,
+    },
+    {
+        files: ['**/*.vue'],
+        languageOptions: {
+            parser: vueESLintParser,
+            parserOptions: {
+                parser: typescriptESLintParserForExtraFiles,
+                project: ['./tsconfig.json', './tsconfig.node.json'],
+                tsconfigRootDir: import.meta.dirname,
+            },
         },
         settings: {
             'import-x/resolver': {
@@ -557,40 +589,15 @@ module.exports = {
                 vite: { viteConfig: import('./vite.config') },
             },
         },
-    }, {
-        files: '.eslintrc.cjs',
-        plugins: ['@stylistic', '@stylistic/migrate'],
+    },
+    {
+        files: ['eslint.config.js'],
+        plugins: { '@stylistic': pluginStylistic, '@stylistic/migrate': stylisticMigrate },
         rules: {
             '@stylistic/migrate/migrate-js': 'error',
             '@stylistic/migrate/migrate-ts': 'error',
             '@stylistic/comma-dangle': ['error', 'always-multiline'],
             '@typescript-eslint/naming-convention': 'off',
         },
-    }],
-    plugins: ['@stylistic'],
-    extends: [
-        'eslint:recommended',
-        'plugin:vue/vue3-recommended',
-        '@vue/typescript/recommended',
-        'plugin:@typescript-eslint/strict-type-checked',
-        'plugin:@typescript-eslint/stylistic-type-checked',
-        'plugin:import-x/recommended',
-        'plugin:import-x/typescript',
-        'plugin:unicorn/recommended',
-        'plugin:@tanstack/eslint-plugin-query/recommended',
-    ],
-    rules: {
-        ...eslintPluginUnicorn.optout,
-        ...eslintPluginUnicorn.optin,
-        ...eslintPluginImport.optout,
-        ...eslintPluginImport.optin,
-        ...stylisticPlus.optin,
-        ...stylisticMigrate.optin,
-        ...eslint.optout,
-        ...eslint.optin,
-        ...typescriptESLint.override,
-        ...typescriptESLint.optin,
-        ...eslintPluginVue.optout,
-        ...eslintPluginVue.optin,
     },
-};
+];
