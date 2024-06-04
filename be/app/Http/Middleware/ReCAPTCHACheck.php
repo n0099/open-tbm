@@ -3,12 +3,16 @@
 namespace App\Http\Middleware;
 
 use App\Helper;
+use Illuminate\Http\Request;
 use ReCaptcha\ReCaptcha;
 use ReCaptcha\RequestMethod\CurlPost;
 
 class ReCAPTCHACheck
 {
-    public function handle(\Illuminate\Http\Request $request, \Closure $next): mixed
+    /**
+     * @param \Closure(Request): (\Symfony\Component\HttpFoundation\Response) $next
+     */
+    public function handle(Request $request, \Closure $next): mixed
     {
         /** @var string $secret */
         $secret = config('services.recaptcha.secret');

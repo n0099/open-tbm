@@ -10,7 +10,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->appendToGroup('api', [\App\Http\Middleware\DumpJsonResponse::class]);
     })
     ->withSingletons([
         Illuminate\Contracts\Debug\ExceptionHandler::class => App\Exceptions\Handler::class
