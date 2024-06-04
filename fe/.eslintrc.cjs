@@ -17,19 +17,19 @@ const eslintPluginUnicorn = { // as of eslint-plugin-unicorn@50.0.1
 };
 const eslintPluginImport = { // as of eslint-plugin-import@2.29.1
     optout: {
-        'import/namespace': 'off', // https://github.com/import-js/eslint-plugin-import/issues/2340
+        'import-x/namespace': 'off', // https://github.com/import-js/eslint-plugin-import/issues/2340
     },
     optin: {
-        'import/no-empty-named-blocks': 'error',
-        'import/no-extraneous-dependencies': 'error',
-        'import/no-mutable-exports': 'error',
-        'import/no-self-import': 'error',
-        'import/no-useless-path-segments': 'error',
-        'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
-        'import/extensions': ['error', 'always', { js: 'never', ts: 'never' }],
-        'import/newline-after-import': 'error',
-        'import/no-named-default': 'error',
-        'import/order': ['error', {
+        'import-x/no-empty-named-blocks': 'error',
+        'import-x/no-extraneous-dependencies': 'error',
+        'import-x/no-mutable-exports': 'error',
+        'import-x/no-self-import': 'error',
+        'import-x/no-useless-path-segments': 'error',
+        'import-x/consistent-type-specifier-style': ['error', 'prefer-top-level'],
+        'import-x/extensions': ['error', 'always', { js: 'never', ts: 'never' }],
+        'import-x/newline-after-import': 'error',
+        'import-x/no-named-default': 'error',
+        'import-x/order': ['error', {
             groups: ['type', 'object', 'index', 'sibling', 'parent', 'internal', 'external', 'builtin', 'unknown'],
             pathGroups: [ // https://www.digitalocean.com/community/tools/glob
                 { pattern: '**/*.vue', group: 'internal', position: 'before' }, // vue SFC
@@ -539,7 +539,7 @@ module.exports = {
     overrides: [{ // https://stackoverflow.com/questions/57107800/eslint-disable-extends-in-override
         files: '*.ts',
         parser: 'typescript-eslint-parser-for-extra-files',
-        settings: { 'import/resolver': { typescript: true } },
+        settings: { 'import-x/resolver': { typescript: true } },
     }, {
         files: '*.vue',
         parser: 'vue-eslint-parser',
@@ -550,7 +550,7 @@ module.exports = {
             tsconfigRootDir: __dirname,
         },
         settings: {
-            'import/resolver': {
+            'import-x/resolver': {
                 typescript: true,
 
                 // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1979897899
@@ -574,8 +574,8 @@ module.exports = {
         '@vue/typescript/recommended',
         'plugin:@typescript-eslint/strict-type-checked',
         'plugin:@typescript-eslint/stylistic-type-checked',
-        'plugin:import/recommended',
-        'plugin:import/typescript',
+        'plugin:import-x/recommended',
+        'plugin:import-x/typescript',
         'plugin:unicorn/recommended',
         'plugin:@tanstack/eslint-plugin-query/recommended',
     ],
