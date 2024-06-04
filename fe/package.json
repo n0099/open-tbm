@@ -37,19 +37,23 @@
         "vue-router": "^4.3.2"
     },
     "devDependencies": {
+        "@eslint/compat": "^1.0.3",
+        "@eslint/eslintrc": "^3.1.0",
+        "@eslint/js": "^9.4.0",
         "@stylistic/eslint-plugin": "^2.1.0",
         "@stylistic/eslint-plugin-migrate": "^2.1.0",
         "@tanstack/eslint-plugin-query": "^5.35.6",
         "@tanstack/vue-query-devtools": "^5.40.1",
         "@types/bootstrap": "^5.2.10",
+        "@types/eslint": "^8.56.10",
         "@types/grecaptcha": "^3.0.9",
         "@types/lodash-es": "^4.17.12",
         "@types/luxon": "^3.4.2",
         "@types/node": "^20.14.1",
         "@types/nprogress": "^0.2.3",
         "@types/qs": "^6.9.15",
-        "@typescript-eslint/eslint-plugin": "^7.12.0",
-        "@typescript-eslint/parser": "^7.12.0",
+        "@typescript-eslint/eslint-plugin": "npm:rc-v8",
+        "@typescript-eslint/parser": "npm:rc-v8",
         "@vitejs/plugin-vue": "^5.0.5",
         "@vitejs/plugin-vue-jsx": "^4.0.0",
         "@vue/compiler-sfc": "^3.4.27",
@@ -79,7 +83,7 @@
     ],
     "packageManager": "yarn@4.2.2",
     "dependenciesMeta": {
-        "eslint@8.57.0": {
+        "eslint@9.4.0": {
             "unplugged": true
         }
     }
