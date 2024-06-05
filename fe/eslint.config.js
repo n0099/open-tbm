@@ -8,6 +8,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'unicorn/prevent-abbreviations': 'off',
         'unicorn/consistent-function-scoping': 'off',
         'unicorn/filename-case': 'off',
+        'unicorn/prefer-string-raw': 'off',
     },
     optin: {
         'unicorn/catch-error-name': ['error', { name: 'e' }],
@@ -283,8 +284,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
             hoist: 'all',
             allow: ['name'],
         }],
-        'no-throw-literal': 'off',
-        '@typescript-eslint/no-throw-literal': 'error',
         'no-unused-expressions': 'off',
         '@typescript-eslint/no-unused-expressions': 'error',
         'no-use-before-define': 'off',
@@ -522,17 +521,17 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
 }];
 
 import viteConfig from './vite.config.ts';
+import pluginStylistic from '@stylistic/eslint-plugin';
+import pluginImportX from 'eslint-plugin-import-x';
+import pluginUnicorn from 'eslint-plugin-unicorn';
+import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
+import * as vueESLintParser from 'vue-eslint-parser';
+import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
+import pluginVue from 'eslint-plugin-vue';
 import { fixupConfigRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
-import * as vueESLintParser from 'vue-eslint-parser';
-import pluginVue from 'eslint-plugin-vue'
-import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js'
-import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
-import pluginStylistic from '@stylistic/eslint-plugin';
 import stylisticMigrate from '@stylistic/eslint-plugin-migrate';
-import pluginImportX from 'eslint-plugin-import-x';
-import pluginUnicorn from 'eslint-plugin-unicorn';
 import * as _ from 'lodash-es';
 
 // https://github.com/eslint/eslint/issues/18093
@@ -553,6 +552,8 @@ export default [
         'plugin:@tanstack/eslint-plugin-query/recommended', // https://github.com/TanStack/query/pull/7253
     )),
     pluginUnicorn.configs['flat/recommended'],
+    { languageOptions: { parserOptions: { ecmaVersion: 'latest' } } },
+    { ignores: ['.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },
     {
         languageOptions: {
@@ -562,9 +563,15 @@ export default [
             },
         },
         plugins: { '@stylistic': pluginStylistic },
-    
+
         // https://stackoverflow.com/questions/30221286/how-to-convert-an-array-of-objects-to-an-object-in-lodash/36692117#36692117
-        rules: Object.assign({}, ..._.flatten(_.map(rules, Object.values))),
+        rules: Object.assign({}, ..._.flatMap(rules, Object.values)),
+    },
+    {
+        files: ['**/*.js'],
+        languageOptions: { // https://github.com/vuejs/vue-eslint-parser/issues/104#issuecomment-2148652586
+            parserOptions: { disallowAutomaticSingleRunInference: true },
+        },
     },
     {
         files: ['**/*.ts'],
@@ -584,9 +591,7 @@ export default [
         settings: {
             'import-x/resolver': {
                 typescript: true,
-
-                // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-1979897899
-                vite: { viteConfig: import('./vite.config') },
+                vite: { viteConfig }, // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2148676875
             },
         },
     },
@@ -598,6 +603,10 @@ export default [
             '@stylistic/migrate/migrate-ts': 'error',
             '@stylistic/comma-dangle': ['error', 'always-multiline'],
             '@typescript-eslint/naming-convention': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
         },
     },
 ];

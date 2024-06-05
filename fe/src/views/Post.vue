@@ -68,7 +68,7 @@ useHead({
 
         const forumName = `${firstPostPage.forum.name}吧`;
         const threadTitle = firstPostPage.threads[0].title;
-        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
+
         switch (queryFormRef.value?.getCurrentQueryType()) {
             case 'fid':
             case 'search':
