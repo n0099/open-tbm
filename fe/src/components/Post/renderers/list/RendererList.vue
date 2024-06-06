@@ -37,7 +37,7 @@ export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = ne
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
 const posts = computed(() => {
     // https://github.com/microsoft/TypeScript/issues/33591
-    const newPosts = _.cloneDeep(props.initialPosts) as
+    const newPosts = structuredClone(props.initialPosts) as
         Modify<ApiPosts['response'], { threads: Array<ThreadWithGroupedSubReplies<SubReply>> }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {

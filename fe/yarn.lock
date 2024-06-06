@@ -5685,9 +5685,6 @@ __metadata:
     vue-eslint-parser: "npm:^9.4.3"
     vue-router: "npm:^4.3.2"
     vue-tsc: "npm:^2.0.19"
-  dependenciesMeta:
-    eslint@9.4.0:
-      unplugged: true
   languageName: unknown
   linkType: soft
 

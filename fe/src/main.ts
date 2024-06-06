@@ -1,12 +1,12 @@
 import App from '@/App.vue';
 import router from '@/router';
 import '@/styles/style.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import { createHead } from '@unhead/vue';
 import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
 import nprogress from 'nprogress';
@@ -15,7 +15,7 @@ import 'nprogress/nprogress.css';
 nprogress.configure({ trickleSpeed: 200 });
 
 if (import.meta.env.DEV) {
-    // @ts-expect-error no .d.ts
+    // @ts-expect-error too small to write a .d.ts for it
     await import('@/stats');
     await import('@/checkCSS');
 }

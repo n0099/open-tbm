@@ -6,8 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc && vite build",
-        "preview": "vite preview",
-        "eslint": "tsx .yarn/unplugged/eslint-npm-*/node_modules/eslint/bin/eslint.js"
+        "preview": "vite preview"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
@@ -81,10 +80,5 @@
         "not ie 11",
         "not dead"
     ],
-    "packageManager": "yarn@4.2.2",
-    "dependenciesMeta": {
-        "eslint@9.4.0": {
-            "unplugged": true
-        }
-    }
+    "packageManager": "yarn@4.2.2"
 }

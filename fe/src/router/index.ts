@@ -42,7 +42,10 @@ const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
     routeLazyComponent.isLoading = true;
 
     return lazyComponent
-        .catch((e: Error) => { notyShow('error', `${e.name}<br />${e.message}`) })
+        .catch((e: unknown) => {
+            if (e instanceof Error)
+                notyShow('error', `${e.name}<br />${e.message}`);
+        })
         .finally(() => { routeLazyComponent.isLoading = false });
 };
 

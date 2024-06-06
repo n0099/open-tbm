@@ -8,7 +8,7 @@ import * as _ from 'lodash-es';
 export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
 export interface NamelessUnknownParam { value?: unknown, subParam?: ObjUnknown }
 export type ParamPreprocessorOrWatcher = (p: UnknownParam) => void;
-export default <
+const useQueryForm = <
     UniqueParams extends Record<string, UnknownParam> = Record<string, UnknownParam>,
     Params extends Record<string, UnknownParam> = Record<string, UnknownParam>
 >(
@@ -29,7 +29,7 @@ export default <
     const fillParamDefaultValue = <T extends Param | UniqueParam>
     (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue
-        const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
+        const defaultParam = structuredClone(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
         defaultParam.subParam ??= {};
@@ -39,7 +39,7 @@ export default <
         if (resetToDefault)
             return _.defaultsDeep(defaultParam, param) as T;
 
-        return _.defaultsDeep(_.cloneDeep(param), defaultParam) as T;
+        return _.defaultsDeep(structuredClone(param), defaultParam) as T;
     };
     const addParam = (name: string) => {
         params.value.push(fillParamDefaultValue({ name }));
@@ -57,14 +57,14 @@ export default <
         params.value.splice(paramIndex, 1);
     };
     const clearParamDefaultValue = <T extends UnknownParam>(param: UnknownParam): Partial<T | UnknownParam> | null => {
-        const defaultParam = _.cloneDeep(deps.paramsDefaultValue[param.name]);
+        const defaultParam = structuredClone(deps.paramsDefaultValue[param.name]);
         if (defaultParam === undefined)
             throw new Error(`Param ${param.name} not found in paramsDefaultValue`);
 
         /** remove subParam.not: false, which previously added by {@link fillParamDefaultValue()} */
         if (defaultParam.subParam !== undefined)
             defaultParam.subParam.not ??= false;
-        const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
+        const newParam: Partial<UnknownParam> = structuredClone(param); // prevent mutating origin param
         /** number will consider as empty in {@link _.isEmpty()} */
         // to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
@@ -223,3 +223,4 @@ export default <
         generateParamRoute
     };
 };
+export default useQueryForm;

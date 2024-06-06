@@ -382,6 +382,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@typescript-eslint/no-unsafe-enum-comparison': 'error',
         '@typescript-eslint/no-unsafe-unary-minus': 'error',
         '@typescript-eslint/parameter-properties': ['error', { prefer: 'parameter-property' }],
+        '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
 }, { // as of eslint-plugin-vue@9.19.2
     optout: {
@@ -520,19 +521,24 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     },
 }];
 
-import viteConfig from './vite.config.ts';
-import pluginStylistic from '@stylistic/eslint-plugin';
-import pluginImportX from 'eslint-plugin-import-x';
-import pluginUnicorn from 'eslint-plugin-unicorn';
-import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
 import * as vueESLintParser from 'vue-eslint-parser';
+// eslint-disable-next-line import-x/extensions
 import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
 import pluginVue from 'eslint-plugin-vue';
 import { fixupConfigRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
-import stylisticMigrate from '@stylistic/eslint-plugin-migrate';
+import pluginStylistic from '@stylistic/eslint-plugin';
+import pluginStylisticMigrate from '@stylistic/eslint-plugin-migrate';
+import pluginImportX from 'eslint-plugin-import-x';
+import pluginUnicorn from 'eslint-plugin-unicorn';
+// eslint-disable-next-line import-x/extensions
+import { tsImport } from 'tsx/esm/api';
+import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
 import * as _ from 'lodash-es';
+
+// https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2151349705
+const viteConfig = await tsImport('./vite.config.ts', import.meta.url);
 
 // https://github.com/eslint/eslint/issues/18093
 // https://github.com/eslint/eslint/issues/18391
@@ -546,8 +552,8 @@ export default [
         'plugin:@typescript-eslint/strict-type-checked',
         'plugin:@typescript-eslint/stylistic-type-checked',
     ),
-    ...compat.config(pluginImportX.configs.recommended), // https://github.com/un-ts/eslint-plugin-import-x/issues/29#issuecomment-2148843214
-    ...compat.config(pluginImportX.configs.typescript),
+    ...compat.config(pluginImportX.configs.recommended), // https://github.com/un-ts/eslint-plugin-import-x/pull/85
+    pluginImportX.configs.typescript, // https://github.com/import-js/eslint-plugin-import/issues/2556#issuecomment-2119520339
     ...fixupConfigRules(...compat.extends(
         'plugin:@tanstack/eslint-plugin-query/recommended', // https://github.com/TanStack/query/pull/7253
     )),
@@ -560,6 +566,12 @@ export default [
             parserOptions: {
                 project: ['./tsconfig.json', './tsconfig.node.json'],
                 tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        settings: {
+            'import-x/resolver': {
+                typescript: true,
+                vite: { viteConfig }, // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2148676875
             },
         },
         plugins: { '@stylistic': pluginStylistic },
@@ -576,7 +588,6 @@ export default [
     {
         files: ['**/*.ts'],
         languageOptions: { parser: typescriptESLintParserForExtraFiles },
-        settings: { 'import-x/resolver': { typescript: true } },
     },
     {
         files: ['**/*.vue'],
@@ -588,16 +599,10 @@ export default [
                 tsconfigRootDir: import.meta.dirname,
             },
         },
-        settings: {
-            'import-x/resolver': {
-                typescript: true,
-                vite: { viteConfig }, // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2148676875
-            },
-        },
     },
     {
         files: ['eslint.config.js'],
-        plugins: { '@stylistic': pluginStylistic, '@stylistic/migrate': stylisticMigrate },
+        plugins: { '@stylistic': pluginStylistic, '@stylistic/migrate': pluginStylisticMigrate },
         rules: {
             '@stylistic/migrate/migrate-js': 'error',
             '@stylistic/migrate/migrate-ts': 'error',

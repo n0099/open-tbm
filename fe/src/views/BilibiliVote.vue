@@ -576,7 +576,7 @@ const loadCharts = {
         });
 
         // clone last timeline option then transform it to official votes count option
-        const originalTimelineOptions = _.cloneDeep(options.at(-1));
+        const originalTimelineOptions = structuredClone(options.at(-1));
         if (originalTimelineOptions === undefined || !_.isArray(originalTimelineOptions.series))
             return;
         _.remove(originalTimelineOptions.series, { id: 'totalVotesValidation' });
