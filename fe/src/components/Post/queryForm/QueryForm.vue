@@ -184,7 +184,7 @@ import { useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 defineProps<{ isLoading: boolean }>();
 const router = useRouter();

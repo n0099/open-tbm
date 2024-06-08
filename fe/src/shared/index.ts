@@ -4,7 +4,7 @@ import type { BaiduUserID, User } from '@/api/user';
 import { computed, toRaw } from 'vue';
 import type { LocationAsRelativeRaw } from 'vue-router';
 import Noty from 'noty';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
 export type SqlDateTimeUtcPlus8 = string; // '2020-10-10 00:11:22'

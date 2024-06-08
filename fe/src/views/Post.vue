@@ -45,7 +45,7 @@ import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import { useQueryClient } from '@tanstack/vue-query';
 import { useHead } from '@unhead/vue';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';
 

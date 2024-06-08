@@ -3,7 +3,7 @@ import useQueryForm from './useQueryForm';
 import type { ForumModeratorType } from '@/api/user';
 import type { DeepWritable, Fid, ObjEmpty, PostID, PostType } from '@/shared';
 import { boolStrToBool, postType } from '@/shared';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 // value of [0] will be either ALL: require exactly same post types, or SUB: requiring a subset of types
 export type RequiredPostTypes = Record<string, ['ALL' | 'SUB', PostType[]] | undefined>;

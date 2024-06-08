@@ -20,7 +20,7 @@ import { RangePicker } from 'ant-design-vue';
 import dayjs, { unix } from 'dayjs';
 import type { DurationLike } from 'luxon';
 import { DateTime } from 'luxon';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 defineOptions({ inheritAttrs: true });
 const props = withDefaults(defineProps<{

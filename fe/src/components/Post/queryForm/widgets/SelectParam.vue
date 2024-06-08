@@ -47,7 +47,7 @@ const paramsGroup = {
 </script>
 
 <script setup lang="ts">
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 defineProps<{ currentParam: string }>();
 // eslint-disable-next-line vue/define-emits-declaration

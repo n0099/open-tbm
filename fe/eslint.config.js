@@ -536,7 +536,7 @@ import pluginUnicorn from 'eslint-plugin-unicorn';
 // eslint-disable-next-line import-x/extensions
 import { tsImport } from 'tsx/esm/api';
 import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2151349705
 const viteConfig = await tsImport('./vite.config.ts', import.meta.url);

@@ -4,7 +4,7 @@ import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions }
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
 import { stringify } from 'qs';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 export class ApiResponseError extends Error {
     public constructor(

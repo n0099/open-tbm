@@ -76,7 +76,7 @@ import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts/charts';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';

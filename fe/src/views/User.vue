@@ -26,7 +26,7 @@ import { nextTick, onBeforeMount, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@unhead/vue';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 const props = defineProps<{
     page: string,

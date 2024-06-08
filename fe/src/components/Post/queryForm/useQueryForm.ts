@@ -3,7 +3,7 @@ import { boolStrToBool, refDeepClone } from '@/shared';
 import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import type { Ref } from 'vue';
 import { onBeforeMount, ref, watch } from 'vue';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }
 export interface NamelessUnknownParam { value?: unknown, subParam?: ObjUnknown }

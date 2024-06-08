@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import nprogress from 'nprogress';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 export const useLazyLoadRouteViewStore = defineStore('lazyLoadRouteView', () => {
     const loadingBlockEl = document.querySelector('#loadingBlock');

@@ -3,7 +3,7 @@ import { app } from '@/main';
 import '@/styles/tieba.css';
 import viewer from 'v-viewer';
 import 'viewerjs/dist/viewer.css';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 app.use(viewer, {
     defaultOptions: {

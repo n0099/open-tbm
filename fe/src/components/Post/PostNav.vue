@@ -61,7 +61,7 @@ import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interfac
 import scrollIntoView from 'scroll-into-view-if-needed';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
 const route = useRoute();

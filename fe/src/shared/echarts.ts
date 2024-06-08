@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 import * as echarts from 'echarts/core';
 // eslint-disable-next-line import-x/extensions
 import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types.d.ts';

@@ -19,7 +19,7 @@ import { initialTippy } from '@/shared/tippy';
 import type { ComputedRef } from 'vue';
 import { computed, onMounted, provide } from 'vue';
 import type { RouterScrollBehavior } from 'vue-router';
-import * as _ from 'lodash-es';
+import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts['response'] }>();
 const getUser = computed(() => baseGetUser(props.initialPosts.users));
