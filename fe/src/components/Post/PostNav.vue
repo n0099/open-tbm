@@ -5,21 +5,26 @@
           class="post-nav col p-0 vh-100 sticky-top border-0">
         <template v-for="posts in postPages">
             <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
-                <MenuItem v-for="thread in posts.threads" :key="`c${cursor}-t${thread.tid}`"
-                          :data-key="`c${cursor}-t${thread.tid}`" :title="thread.title"
-                          class="post-nav-thread ps-2 ps-lg-3 pe-1 border-bottom">
+                <MenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
+                          :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
+                          :class="{
+                              border: route.hash === routeHash(thread.tid),
+                              'border-primary': route.hash === routeHash(thread.tid),
+                              'border-bottom': route.hash !== routeHash(thread.tid)
+                          }"
+                          class="post-nav-thread ps-2 ps-lg-3 pe-1">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <a v-for="isTopmostReply in [reply.pid === viewportTopmostPost.pid]"
                                :key="isTopmostReply.toString()"
                                @click.prevent="_ => navigate(cursor, null, reply.pid)"
-                               :data-pid="reply.pid" :href="`#${reply.pid}`"
+                               :data-pid="reply.pid" :href="routeHash(null, reply.pid)"
                                :class="{
                                    'rounded-3': isTopmostReply,
                                    'btn-info': isTopmostReply,
                                    'btn-light': !isTopmostReply,
-                                   'btn-outline-warning': !isTopmostReply && route.hash === `#${reply.pid}`,
+                                   'btn-outline-warning': !isTopmostReply && route.hash === routeHash(null, reply.pid),
                                    'text-white': isTopmostReply,
                                    'text-body-secondary': !isTopmostReply
                                }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</a>
@@ -68,9 +73,11 @@ const viewportTopmostPostDefault = { cursor: '', tid: 0, pid: 0 };
 const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(viewportTopmostPostDefault);
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(matchMedia('(min-width: 900px)').matches);
 
+const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
+const routeHash = (tid: Tid | string | null, pid?: Pid | string) => `#${pid ?? (tid === null ? '' : `t${tid}`)}`;
 const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) =>
     router.replace({
-        hash: `#${pid ?? (tid === null ? '' : `t${tid}`)}`,
+        hash: routeHash(tid, pid),
         params: { ...route.params, cursor }
     });
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
@@ -137,7 +144,7 @@ watchEffect(() => {
 });
 watchEffect(() => {
     const { cursor, tid } = viewportTopmostPost.value;
-    const menuKey = `c${cursor}-t${tid}`;
+    const menuKey = threadMenuKey(cursor, tid);
     selectedThreads.value = [menuKey];
 
     const threadEl = document.querySelector(`.post-nav-thread[data-key='${menuKey}']`);
