@@ -1,7 +1,7 @@
 <template>
     <VueQueryDevtools />
     <GlobalNavBar />
-    <MininiumResolutionWarning />
+    <MinimumResolutionWarning />
     <img :src="iconLoadingBlock" class="d-none" id="loadingBlock" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import iconLoadingBlock from '/assets/icon-loading-block.svg';
 import GlobalNavBar from '@/components/GlobalNavBar.vue';
-import MininiumResolutionWarning from '@/components/MininiumResolutionWarning.vue';
+import MinimumResolutionWarning from '@/components/MinimumResolutionWarning.vue';
 
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';

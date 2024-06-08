@@ -1,11 +1,11 @@
 <template>
     <div class="d-none p-2 bg-warning border-bottom text-center">
-        本站建议最低逻辑分辨率1280x720px
+        本站建议最低逻辑分辨率宽度720px
     </div>
 </template>
 
 <style scoped>
-@media screen and (max-width: 720px) or (max-height: 1280px) {
+@media (max-width: 720px) {
     div {
         display: block !important;
     }
