@@ -14,6 +14,7 @@ import type { ApiPosts } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/post';
 import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
 import type { Modify } from '@/shared';
+import { refDeepClone } from '@/shared';
 import { initialTippy } from '@/shared/tippy';
 import type { ComputedRef } from 'vue';
 import { computed, onMounted, provide } from 'vue';
@@ -37,7 +38,7 @@ export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = ne
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
 const posts = computed(() => {
     // https://github.com/microsoft/TypeScript/issues/33591
-    const newPosts = structuredClone(props.initialPosts) as
+    const newPosts = refDeepClone(props.initialPosts) as
         Modify<ApiPosts['response'], { threads: Array<ThreadWithGroupedSubReplies<SubReply>> }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {

@@ -1,5 +1,5 @@
 import type { ObjUnknown, ObjValues } from '@/shared';
-import { boolStrToBool } from '@/shared';
+import { boolStrToBool, refDeepClone } from '@/shared';
 import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import type { Ref } from 'vue';
 import { onBeforeMount, ref, watch } from 'vue';
@@ -39,7 +39,7 @@ const useQueryForm = <
         if (resetToDefault)
             return _.defaultsDeep(defaultParam, param) as T;
 
-        return _.defaultsDeep(structuredClone(param), defaultParam) as T;
+        return _.defaultsDeep(refDeepClone(param), defaultParam) as T;
     };
     const addParam = (name: string) => {
         params.value.push(fillParamDefaultValue({ name }));
@@ -64,7 +64,7 @@ const useQueryForm = <
         /** remove subParam.not: false, which previously added by {@link fillParamDefaultValue()} */
         if (defaultParam.subParam !== undefined)
             defaultParam.subParam.not ??= false;
-        const newParam: Partial<UnknownParam> = structuredClone(param); // prevent mutating origin param
+        const newParam: Partial<UnknownParam> = refDeepClone(param); // prevent mutating origin param
         /** number will consider as empty in {@link _.isEmpty()} */
         // to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))

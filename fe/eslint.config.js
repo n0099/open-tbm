@@ -530,6 +530,7 @@ import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
 import pluginStylisticMigrate from '@stylistic/eslint-plugin-migrate';
+import * as typescriptESLintParser from '@typescript-eslint/parser';
 import pluginImportX from 'eslint-plugin-import-x';
 import pluginUnicorn from 'eslint-plugin-unicorn';
 // eslint-disable-next-line import-x/extensions
@@ -558,14 +559,16 @@ export default [
         'plugin:@tanstack/eslint-plugin-query/recommended', // https://github.com/TanStack/query/pull/7253
     )),
     pluginUnicorn.configs['flat/recommended'],
-    { languageOptions: { parserOptions: { ecmaVersion: 'latest' } } },
+    { languageOptions: { ecmaVersion: 'latest' } },
     { ignores: ['.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },
     {
         languageOptions: {
+            parser: typescriptESLintParser,
             parserOptions: {
-                project: ['./tsconfig.json', './tsconfig.node.json'],
-                tsconfigRootDir: import.meta.dirname,
+                EXPERIMENTAL_useProjectService: true, // https://github.com/typescript-eslint/typescript-eslint/issues/2094
+                project: true, // https://typescript-eslint.io/blog/parser-options-project-true/
+                tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
         settings: {
@@ -595,8 +598,17 @@ export default [
             parser: vueESLintParser,
             parserOptions: {
                 parser: typescriptESLintParserForExtraFiles,
-                project: ['./tsconfig.json', './tsconfig.node.json'],
-                tsconfigRootDir: import.meta.dirname,
+                project: true, // https://typescript-eslint.io/blog/parser-options-project-true/
+                tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
+            },
+        },
+    },
+    {
+        files: ['vite.config.ts', 'eslint.config.js'],
+        languageOptions: {
+            parser: typescriptESLintParser,
+            parserOptions: {
+                project: ['./tsconfig.json', './tsconfig.node.json'], // https://typescript-eslint.io/blog/parser-options-project-true/
             },
         },
     },
