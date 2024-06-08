@@ -112,15 +112,26 @@ const clickNextPage = async () => {
     await fetchNextPage();
 };
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
-    if (queryFormRef.value === undefined)
+    const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
+        // prevent fetch with queryParam that's empty or parsed from invalid route
+        shouldFetch.value = newQueryParam !== undefined;
+        queryParam.value = newQueryParam;
+    };
+    if (queryFormRef.value === undefined) {
+        setQueryParam();
+
         return;
+    }
     const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
-    if (flattenParams === false)
+    if (flattenParams === false) {
+        setQueryParam();
+
         return;
+    }
 
     /** {@link initialPageCursor} only take effect when the queryKey of {@link useQuery()} is changed */
     initialPageCursor.value = getRouteCursorParam(newRoute);
-    queryParam.value = { query: JSON.stringify(flattenParams) };
+    setQueryParam({ query: JSON.stringify(flattenParams) });
 };
 
 onBeforeRouteUpdate(async (to, from) => {
@@ -135,10 +146,7 @@ onBeforeRouteUpdate(async (to, from) => {
     if (isTriggeredByQueryForm)
         await queryClient.resetQueries({ queryKey: ['posts'] });
 });
-onMounted(async () => {
-    await parseRouteThenFetch(route);
-    shouldFetch.value = true; // prevent eager fetching with the initial empty queryParam
-});
+onMounted(async () => { await parseRouteThenFetch(route) });
 </script>
 
 <style scoped>
