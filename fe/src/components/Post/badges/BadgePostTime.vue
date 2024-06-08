@@ -1,23 +1,26 @@
 <template>
     <DefineTemplate v-slot="{ $slots, base, relativeTo }">
         <span :data-tippy-content="`
-            本${postType}${timestampType}：<br>
-            ${currentDateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-            ${base === undefined || relativeTo === undefined
-                ? ''
-              : `${relativeTo}：<br>${base.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}`"
+                本${postType}${timestampType}：<br>
+                ${currentDateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
+                ${base === undefined || relativeTo === undefined
+              ? ''
+              : `${relativeTo}：<br>
+                ${base.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
+                相差 ${currentDateTime.diff(base).rescale().toHuman()}`}
+                `"
               class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
             <component :is="$slots.default" />
             {{ currentDateTime.toRelative({ base, round: false }) }}
         </span>
     </DefineTemplate>
     <ReuseTemplate v-if="previousTime !== undefined && previousTime < currentTime && previousDateTime !== undefined"
-                   :base="previousDateTime" :relativeTo="`相对于下一${postType}${timestampType}`">
-        <FontAwesomeIcon :icon="faChevronDown" class="align-bottom" />
+                   :base="previousDateTime" :relativeTo="`相对于上一${postType}${timestampType}`">
+        <FontAwesomeIcon :icon="faChevronUp" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="nextTime !== undefined && nextTime < currentTime && nextDateTime !== undefined"
-                   :base="nextDateTime" :relativeTo="`相对于上一${postType}${timestampType}`">
-        <FontAwesomeIcon :icon="faChevronUp" class="align-bottom" />
+                   :base="nextDateTime" :relativeTo="`相对于下一${postType}${timestampType}`">
+        <FontAwesomeIcon :icon="faChevronDown" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="parentTime !== undefined && parentTime !== currentTime"
                    :base="parentDateTime"
