@@ -67,10 +67,10 @@ const withCursorRoute = (parentRoute: ParentRoute, path: string, name: string): 
         path: 'cursor/:cursor((?:(?:[A-Za-z0-9-_]{4}\\)*(?:[A-Za-z0-9-_]{2,3}\\)(?:,|$\\)|,\\){5,6})',
         name: `${name}${routeNameSuffix.cursor}`
     });
-const withViewRoute = (lazyComponent: Promise<Component>, path: string): RouteRecordSingleView => ({
+const withViewRoute = (lazyComponent: () => Promise<Component>, path: string): RouteRecordSingleView => ({
     path: `/${path}`,
     name: path,
-    component: async () => lazyLoadRouteView(lazyComponent)
+    component: async () => lazyLoadRouteView(lazyComponent())
 });
 
 const userRoute: ParentRoute = {
@@ -125,7 +125,7 @@ export default createRouter({
                     withCursorRoute(userRoute, 'displayName/:displayName', 'user/displayName')
                 ]
             }),
-        withViewRoute(import('@/views/BilibiliVote.vue'), 'bilibiliVote')
+        withViewRoute(async () => import('@/views/BilibiliVote.vue'), 'bilibiliVote')
     ],
     linkActiveClass: 'active',
     async scrollBehavior(to, from, savedPosition) {

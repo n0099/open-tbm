@@ -143,7 +143,7 @@ onBeforeRouteUpdate(async (to, from) => {
 
     /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */
     /** to prevent refetch the old route when navigating to different route aka {@link compareRouteIsNewQuery()} is true */
-    if (isTriggeredByQueryForm)
+    if (isTriggeredByQueryForm && !compareRouteIsNewQuery(to, from))
         await queryClient.resetQueries({ queryKey: ['posts'] });
 });
 onMounted(async () => { await parseRouteThenFetch(route) });
