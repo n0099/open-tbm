@@ -1,6 +1,7 @@
 <template>
     <div :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
         <div :ref="el => elementRefsStore.pushOrClear('<RendererList>.thread-title', el as Element | null)"
+             :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
              class="thread-title shadow-sm card-header sticky-top">
             <div class="thread-title-inline-start row flex-nowrap">
                 <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
@@ -9,8 +10,10 @@
                 </div>
                 <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
                     <BadgePostCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
-                    <BadgePostTime postType="主题帖" :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
-                                   postTimeKey="postedAt" timestampType="发帖时间" class="bg-success" />
+                    <BadgePostTime postType="主题帖" currentPostIDKey="tid"
+                                   postTimeKey="postedAt" timestampType="发帖时间"
+                                   :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
+                                   class="bg-success" />
                 </div>
             </div>
             <div class="row justify-content-between mt-2">
@@ -66,8 +69,10 @@
                         <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
                                    :user="getUser(thread.latestReplierUid)" class="fs-.75 ms-1" />
                     </template>
-                    <BadgePostTime postType="主题帖" :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
-                                   postTimeKey="latestReplyPostedAt" timestampType="最后回复时间" class="bg-secondary" />
+                    <BadgePostTime postType="主题帖" currentPostIDKey="tid"
+                                   postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
+                                   :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
+                                   class="bg-secondary" />
                 </div>
             </div>
         </div>
@@ -86,6 +91,7 @@ import BadgeThread from '@/components/Post/badges/BadgeThread.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import { toUserRoute } from '@/shared/index';
 import { useElementRefsStore } from '@/stores/elementRefs';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 
 import { inject } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -99,11 +105,16 @@ defineProps<{
     nextThread?: ThreadWithGroupedSubReplies
 }>();
 const elementRefsStore = useElementRefsStore();
+const highlightPostStore = useHighlightPostStore();
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
 </script>
 
 <style scoped>
+:deep(.highlight-post) {
+    background-color: antiquewhite !important;
+}
+
 .thread-title {
     block-size: 5rem; /* sync with .reply-title:inset-block-start */
     padding: .75rem 1rem .5rem 1rem;

@@ -1,6 +1,7 @@
 <template>
     <div :data-post-id="reply.pid" :id="reply.pid.toString()">
         <div :ref="el => elementRefsStore.pushOrClear('<RendererList>.reply-title', el as Element | null)"
+             :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
              class="reply-title sticky-top card-header">
             <div class="d-inline-flex gap-1 fs-5">
                 <span class="badge bg-secondary">{{ reply.floor }}楼</span>
@@ -16,9 +17,11 @@
             </div>
             <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                 <BadgePostCommon :post="reply" postIDKey="pid" postTypeText="回复贴" />
-                <BadgePostTime postType="回复贴" :parentPost="thread"
+                <BadgePostTime postType="回复贴"
+                               currentPostIDKey="pid" parentPostIDKey="tid" :parentPost="thread"
+                               postTimeKey="postedAt" timestampType="发帖时间"
                                :previousPost="previousReply" :currentPost="reply" :nextPost="nextReply"
-                               postTimeKey="postedAt" timestampType="发帖时间" class="bg-primary" />
+                               class="bg-primary" />
             </div>
         </div>
         <div :ref="el => el !== null && replyElements.push(el as HTMLElement)"
@@ -53,6 +56,7 @@ import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
 import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
 import { useElementRefsStore } from '@/stores/elementRefs';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 import '@/styles/bootstrapCallout.css';
 
 import { inject, nextTick, onMounted, ref } from 'vue';
@@ -69,6 +73,7 @@ defineProps<{
 }>();
 
 const elementRefsStore = useElementRefsStore();
+const highlightPostStore = useHighlightPostStore();
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const { getUser } = inject<UserProvision>('userProvision')!;
 const replyElements = ref<HTMLElement[]>([]);
@@ -87,6 +92,9 @@ onMounted(async () => {
     border-block-start: 1px solid #ededed;
     border-block-end: 0;
     background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
+}
+.reply-title.highlight-post {
+    background-image: none !important;
 }
 .reply {
     padding: .625rem;

@@ -14,15 +14,24 @@
             {{ currentDateTime.toRelative({ base, round: false }) }}
         </span>
     </DefineTemplate>
-    <ReuseTemplate v-if="previousTime !== undefined && previousTime < currentTime && previousDateTime !== undefined"
+    <ReuseTemplate v-if="previousTime !== undefined && previousTime < currentTime"
+                   @mouseenter="() => props.previousPost !== undefined
+                       && highlightPostStore.set(props.previousPost, props.currentPostIDKey)"
+                   @mouseleave="() => highlightPostStore.unset()"
                    :base="previousDateTime" :relativeTo="`相对于上一${postType}${timestampType}`">
         <FontAwesomeIcon :icon="faChevronUp" class="align-bottom" />
     </ReuseTemplate>
-    <ReuseTemplate v-else-if="nextTime !== undefined && nextTime < currentTime && nextDateTime !== undefined"
+    <ReuseTemplate v-else-if="nextTime !== undefined && nextTime < currentTime"
+                   @mouseenter="() => props.nextPost !== undefined
+                       && highlightPostStore.set(props.nextPost, props.currentPostIDKey)"
+                   @mouseleave="() => highlightPostStore.unset()"
                    :base="nextDateTime" :relativeTo="`相对于下一${postType}${timestampType}`">
         <FontAwesomeIcon :icon="faChevronDown" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="parentTime !== undefined && parentTime !== currentTime"
+                   @mouseenter="() => props.parentPost !== undefined && props.parentPostIDKey !== undefined
+                       && highlightPostStore.set(props.parentPost, props.parentPostIDKey)"
+                   @mouseleave="() => highlightPostStore.unset()"
                    :base="parentDateTime"
                    :relativeTo="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`">
         <FontAwesomeIcon :icon="faAnglesUp" class="align-bottom" />
@@ -34,14 +43,17 @@
     TPost extends Post,
     TParentPost extends TPost extends SubReply ? Reply
         : TPost extends Reply ? Thread
-        : TPost extends Thread ? never : unknown,
+        : TPost extends Thread ? never : never,
+    TPostIDKey extends keyof TPost & PostIDOf<TPost>,
+    TParentPostIDKey extends keyof TParentPost & PostIDOf<TParentPost>,
     TPostTimeKey extends keyof TPost
         & keyof TParentPost
         & ('postedAt' | (TPost extends Thread ? 'latestReplyPostedAt' : never)),
     TPostTimeValue extends TPost['postedAt'] & (TPost extends Thread ? TPost['latestReplyPostedAt'] : unknown)">
 import type { Reply, SubReply, Thread } from '@/api/post';
-import type { Post, PostTypeTextOf } from '@/shared';
+import type { Post, PostIDOf, PostTypeTextOf } from '@/shared';
 import { postTypeText, undefinedOr } from '@/shared';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -50,26 +62,27 @@ import { DateTime } from 'luxon';
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps<{
-    previousTimeOverride?: TPostTimeValue,
     previousPost?: TPost,
-    nextTimeOverride?: TPostTimeValue,
     nextPost?: TPost,
-    parentPost?: TParentPost,
     currentPost: TPost,
+    currentPostIDKey: TPostIDKey,
+    parentPost?: TParentPost,
+    parentPostIDKey?: TParentPostIDKey,
+    postType: PostTypeTextOf<TPost>,
     postTimeKey: TPostTimeKey,
     timestampType: 'latestReplyPostedAt' extends TPostTimeKey ? '最后回复时间'
-        : 'postedAt' extends TPostTimeKey ? '发帖时间' : never,
-    postType: PostTypeTextOf<TPost>
+        : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
+const highlightPostStore = useHighlightPostStore();
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
     base?: DateTime<true>,
     relativeTo?: string
 }>();
 
 const previousTime = computed(() =>
-    props.previousTimeOverride ?? (props.previousPost?.[props.postTimeKey] as TPostTimeValue | undefined));
+    (props.previousPost?.[props.postTimeKey] as TPostTimeValue | undefined));
 const nextTime = computed(() =>
-    props.nextTimeOverride ?? (props.nextPost?.[props.postTimeKey] as TPostTimeValue | undefined));
+    (props.nextPost?.[props.postTimeKey] as TPostTimeValue | undefined));
 const parentTime = computed(() =>
     (props.parentPost?.[props.postTimeKey] as TPostTimeValue | undefined));
 const currentTime = computed(() =>

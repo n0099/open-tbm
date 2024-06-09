@@ -8,11 +8,13 @@
                 <MenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
                           :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
                           :class="{
-                              border: route.hash === routeHash(thread.tid),
+                              'border-only-bottom': !(route.hash === routeHash(thread.tid)
+                                  || highlightPostStore.isHighlightingPost(thread, 'tid')),
                               'border-primary': route.hash === routeHash(thread.tid),
-                              'border-bottom': route.hash !== routeHash(thread.tid)
+                              'border-bottom': route.hash !== routeHash(thread.tid),
+                              'border-warning': highlightPostStore.isHighlightingPost(thread, 'tid')
                           }"
-                          class="post-nav-thread ps-2 ps-lg-3 pe-1">
+                          class="post-nav-thread border ps-2 ps-lg-3 pe-1">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
@@ -24,7 +26,8 @@
                                    'rounded-3': isTopmostReply,
                                    'btn-info': isTopmostReply,
                                    'btn-light': !isTopmostReply,
-                                   'btn-outline-warning': !isTopmostReply && route.hash === routeHash(null, reply.pid),
+                                   'btn-outline-warning': highlightPostStore.isHighlightingPost(reply, 'pid'),
+                                   'btn-outline-primary': !isTopmostReply && route.hash === routeHash(null, reply.pid),
                                    'text-white': isTopmostReply,
                                    'text-body-secondary': !isTopmostReply
                                }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</a>
@@ -52,6 +55,7 @@ import { getReplyTitleTopOffset } from '@/components/Post/renderers/list';
 import type { Pid, Tid, ToPromise } from '@/shared';
 import { cursorTemplate, scrollBarWidth } from '@/shared';
 import { useElementRefsStore } from '@/stores/elementRefs';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 
 import { onUnmounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -67,6 +71,7 @@ const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
 const route = useRoute();
 const router = useRouter();
 const elementRefsStore = useElementRefsStore();
+const highlightPostStore = useHighlightPostStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const viewportTopmostPostDefault = { cursor: '', tid: 0, pid: 0 };
@@ -211,6 +216,11 @@ watchEffect(() => {
     line-height: 2rem;
     content-visibility: auto;
     contain-intrinsic-block-size: auto 6rem;
+}
+:deep(.post-nav-thread.border-only-bottom) {
+    border-top-color: transparent !important;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
 }
 
 .post-nav-reply:hover {
