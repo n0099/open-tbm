@@ -9,7 +9,7 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
     {
         var pidAndImageList = (
                 from r in replies
-                from c in r.OriginalContents
+                from c in r.ContentsProtoBuf
                 where c.Type == 3
                 where // only save image filename without extension that extracted from url by ReplyParser.Convert()
                     ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)

@@ -38,5 +38,5 @@ public class SubReplyCrawlFacade(
         SaverChangeSet<SubReplyPost> savedPosts,
         CancellationToken stoppingToken = default) =>
         sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "subReplies",
-            p => p.Spid, p => p.OriginalContents, stoppingToken);
+            p => p.Spid, p => p.ContentsProtoBuf, stoppingToken);
 }

@@ -34,7 +34,7 @@ public class ReplyCrawlFacade(
         SaverChangeSet<ReplyPost> savedPosts,
         CancellationToken stoppingToken = default) =>
         sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
-            p => p.Pid, p => p.OriginalContents, stoppingToken);
+            p => p.Pid, p => p.ContentsProtoBuf, stoppingToken);
 
     // fill the values for some field of reply from user list which is out of post list
     private static void FillAuthorInfoBackToReply(IEnumerable<TbClient.User> users, IEnumerable<ReplyPost> parsedReplies) =>

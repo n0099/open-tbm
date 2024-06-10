@@ -16,12 +16,11 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
     {
         var o = new ReplyPost
         {
-            OriginalContents = inPost.Content,
+            ContentsProtoBuf = inPost.Content,
             Content = new()
             {
                 Pid = inPost.Pid,
-                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
-                    () => Helper.WrapPostContent(inPost.Content))
+                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent)
             }
         };
         try

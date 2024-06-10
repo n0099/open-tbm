@@ -144,7 +144,7 @@ public class CrawlPost(
             Tid = tid,
             Pid = thread.FirstReplyPid,
             Excerpt = Helper.SerializedProtoBufWrapperOrNullIfEmpty(thread.FirstReplyExcerpt,
-                () => new ThreadAbstractWrapper {Value = {thread.FirstReplyExcerpt}}),
+                value => new ThreadAbstractWrapper {Value = {value}}),
             LastSeenAt = SharedHelper.GetNowTimestamp()
         };
         if (newEntity.Pid == null && newEntity.Excerpt == null) return; // skip if all fields are empty

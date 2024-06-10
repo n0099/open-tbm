@@ -40,7 +40,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
                 u.Gender = (byte)el.Gender; // 0 when the user hasn't explicitly set their gender
                 u.FansNickname = el.FansNickname.NullIfEmpty();
                 u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(el.Iconinfo,
-                    () => new UserIconWrapper {Value = {el.Iconinfo}});
+                    value => new UserIconWrapper {Value = {value}});
                 u.IpGeolocation = el.IpAddress.NullIfEmpty();
                 return u;
             }

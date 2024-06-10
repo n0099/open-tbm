@@ -15,13 +15,12 @@ public class SubReplyParser : PostParser<SubReplyPost, SubReply>
     {
         var o = new SubReplyPost
         {
-            OriginalContents = inPost.Content,
             Content = new()
             {
                 Spid = inPost.Spid,
-                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content,
-                    () => Helper.WrapPostContent(inPost.Content))
-            }
+                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent)
+            },
+            ContentsProtoBuf = inPost.Content
         };
         try
         {
