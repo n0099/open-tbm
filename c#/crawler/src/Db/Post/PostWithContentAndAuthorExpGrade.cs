@@ -1,10 +1,9 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public abstract class PostWithContentAndAuthorExpGrade<TPostContent> : PostWithAuthorExpGrade
-    where TPostContent : BasePostContent
+public abstract class PostWithContentAndAuthorExpGrade : PostWithAuthorExpGrade
 {
-    public required TPostContent Content { get; set; }
+    [NotMapped] public byte[]? Content { get; set; }
 
     [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Content>))]
     [NotMapped]

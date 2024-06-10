@@ -14,6 +14,9 @@ public partial class SubReplySaver(
         var changeSet = Save(db, sr => sr.Spid,
             sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
             LinqKit.PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
+
+        db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr =>
+            new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));
         PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
 
         return changeSet;

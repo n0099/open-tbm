@@ -69,12 +69,10 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         b.Entity<User>().ToTable("tbmc_user");
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
-        b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply")
-            .HasOne(e => e.Content).WithOne().HasForeignKey<ReplyContent>(e => e.Pid);
+        b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");
         b.Entity<ReplySignature>().ToTable("tbmc_reply_signature").HasKey(e => new {e.SignatureId, e.XxHash3});
-        b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply")
-            .HasOne(e => e.Content).WithOne().HasForeignKey<SubReplyContent>(e => e.Spid);
+        b.Entity<SubReplyPost>().ToTable($"tbmc_f{Fid}_subReply");
         b.Entity<SubReplyContent>().ToTable($"tbmc_f{Fid}_subReply_content");
 
         _ = new RevisionWithSplitting<BaseThreadRevision>

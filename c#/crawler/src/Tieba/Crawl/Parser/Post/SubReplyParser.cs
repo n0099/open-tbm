@@ -13,19 +13,12 @@ public class SubReplyParser : PostParser<SubReplyPost, SubReply>
 
     protected override SubReplyPost Convert(SubReply inPost)
     {
-        var o = new SubReplyPost
-        {
-            Content = new()
-            {
-                Spid = inPost.Spid,
-                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent)
-            },
-            ContentsProtoBuf = inPost.Content
-        };
+        var o = new SubReplyPost {ContentsProtoBuf = inPost.Content};
         try
         {
             var author = inPost.Author;
             o.Spid = inPost.Spid;
+            o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent);
             o.AuthorUid = author.Uid;
             o.AuthorExpGrade = (byte)author.LevelId;
             o.PostedAt = inPost.Time;

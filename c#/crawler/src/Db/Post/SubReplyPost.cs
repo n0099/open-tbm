@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class SubReplyPost : PostWithContentAndAuthorExpGrade<SubReplyContent>
+public class SubReplyPost : PostWithContentAndAuthorExpGrade
 {
     [Column(TypeName = "bigint")]
     public ulong Pid { get; set; }

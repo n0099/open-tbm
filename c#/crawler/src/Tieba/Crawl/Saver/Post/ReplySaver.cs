@@ -17,6 +17,8 @@ public partial class ReplySaver(
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
             LinqKit.PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
 
+        db.ReplyContents.AddRange(changeSet.NewlyAdded
+            .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
         PostSaveHandlers += replyContentImageSaver.Save(db, changeSet.NewlyAdded).Invoke;
         PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
         PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllAfter).Invoke;

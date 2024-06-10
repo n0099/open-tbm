@@ -14,21 +14,13 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
 
     protected override ReplyPost Convert(Reply inPost)
     {
-        var o = new ReplyPost
-        {
-            Content = null!, // will get mutated by SimplifyImagesInReplyContent()
-            ContentsProtoBuf = inPost.Content
-        };
+        var o = new ReplyPost {ContentsProtoBuf = inPost.Content};
         try
         {
             o.Pid = inPost.Pid;
             o.Floor = inPost.Floor;
             SimplifyImagesInReplyContent(logger, ref inPost);
-            o.Content = new()
-            {
-                Pid = inPost.Pid,
-                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent)
-            };
+            o.Content = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent);
 
             // AuthorId rarely respond with 0, Author should always be null with no guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
