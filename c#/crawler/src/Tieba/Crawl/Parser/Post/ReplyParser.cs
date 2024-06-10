@@ -43,7 +43,9 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
             throw new InvalidDataException("Reply parse error.", e);
         }
     }
-
+}
+public partial class ReplyParser
+{
     public static void SimplifyImagesInReplyContent<TLoggerCategory>
         (ILogger<TLoggerCategory> logger, ref Reply inPost)
     {

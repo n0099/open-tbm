@@ -130,6 +130,7 @@ public abstract class TbmDbContext(ILogger<TbmDbContext> logger) : DbContext
                 "RETURNING pg_current_xact_id()::xid");
     }
 }
+
 public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCacheKeyFactory>> logger)
     : TbmDbContext(logger)
     where TModelCacheKeyFactory : class, IModelCacheKeyFactory

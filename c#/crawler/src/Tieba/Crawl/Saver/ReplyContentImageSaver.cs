@@ -36,7 +36,7 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
             .Where(pair => GlobalLockedImagesInReplyKeyByUrlFilename.TryAdd(pair.Key, pair.Value))
             .ToDictionary();
         newlyLockedImages.Values()
-            .Where(reply => !Monitor.TryEnter(reply, TimeSpan.FromSeconds(10)))
+            .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking newly locked image {} timed out after 10s", image.UrlFilename));
 
@@ -45,7 +45,7 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
                 .Keys().Except(newlyLockedImages.Keys()))
             .ToDictionary();
         alreadyLockedImages.Values()
-            .Where(reply => !Monitor.TryEnter(reply, TimeSpan.FromSeconds(10)))
+            .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking already locked image {} timed out after 10s", image.UrlFilename));
         if (alreadyLockedImages.Count != 0)

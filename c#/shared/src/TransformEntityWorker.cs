@@ -58,7 +58,7 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
             logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{}MiB exceptions:{}",
                 processedCount, updatedEntityCount,
                 stopwatch.ElapsedMilliseconds,
-                currentProcess.PrivateMemorySize64 / 1024 / 1024,
+                currentProcess.PrivateMemorySize64 / 1024f / 1024,
                 JsonSerializer.Serialize(exceptions, JsonSerializerOptions));
             stopwatch.Restart();
         }
