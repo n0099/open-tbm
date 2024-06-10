@@ -1,86 +1,90 @@
 using System.Diagnostics;
-using System.IO.Hashing;
 using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using SuperLinq;
+using tbm.Shared.Db;
 
-namespace tbm.ImagePipeline;
+namespace tbm.Shared;
 
-public class MigrationWorker : BackgroundService
+public abstract class TransformEntityWorker()
+    : ErrorableWorker(shouldExitOnException: true, shouldExitOnFinish: true)
 {
-    private readonly ILogger<MigrationWorker> _logger;
-    private readonly ILifetimeScope _scope0;
-    private readonly IHostApplicationLifetime _applicationLifetime;
-
-    public MigrationWorker(ILogger<MigrationWorker> logger, ILifetimeScope scope0, IHostApplicationLifetime applicationLifetime)
-    {
-        _logger = logger;
-        _scope0 = scope0;
-        _applicationLifetime = applicationLifetime;
-    }
-
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    protected static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         IncludeFields = true,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
     };
+}
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWritingEntity, TExceptionId>(
+    ILogger<TransformEntityWorker<TDbContext, TReadingEntity, TWritingEntity, TExceptionId>> logger)
+    : TransformEntityWorker
+    where TDbContext : TbmDbContext
+    where TReadingEntity : class
+    where TWritingEntity : class
+{
+    protected async Task Transform(
+        Func<TDbContext> dbContextFactory,
+        int saveByNthEntityCount,
+        Action<EntityEntry<TWritingEntity>> writingEntityEntryAction,
+        Func<TReadingEntity, TExceptionId> readingEntityExceptionIdSelector,
+        Func<TReadingEntity, TWritingEntity> entityTransformer,
+        CancellationToken stoppingToken = default)
     {
-        await using var scope1 = _scope0.BeginLifetimeScope();
-        var db = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
-        var db2 = scope1.Resolve<ImagePipelineDbContext.NewDefault>()();
-        var existingEntities =
-            from e in db.Set<ImageMetadata.Exif>().AsNoTracking() select e;
-        var i = 0;
-        using var process = Process.GetCurrentProcess();
+        var processedEntityCount = 0;
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        var exceptions = new Dictionary<string, (uint Times, ulong LastId, string StackTrace)>();
-        var newEntities = new List<ImageMetadata.Exif>();
+        using var process = Process.GetCurrentProcess();
+        var exceptions = new Dictionary<string, (int Times, TExceptionId LastId, string StackTrace)>();
+
+        var readingDb = dbContextFactory();
+        var writingDb = dbContextFactory();
+        var readingEntities =
+            from e in readingDb.Set<TReadingEntity>().AsNoTracking() select e;
+        var writingEntities = new List<TWritingEntity>();
+
         void SaveAndLog()
         {
-            db2.Set<ImageMetadata.Exif>().UpdateRange(newEntities);
-            foreach (var e in db2.ChangeTracker.Entries<ImageMetadata.Exif>())
-            {
-                e.Property(nameof(ImageMetadata.Exif.RawBytes)).IsModified = false;
-            }
-            var entitiesUpdated = db2.SaveChanges();
-            newEntities.Clear();
-            db2.ChangeTracker.Clear();
+            writingDb.Set<TWritingEntity>().UpdateRange(writingEntities);
+            writingDb.ChangeTracker.Entries<TWritingEntity>().ForEach(writingEntityEntryAction);
+            var updatedEntityCount = writingDb.SaveChanges();
+            writingEntities.Clear();
+            writingDb.ChangeTracker.Clear();
 
-            _logger.LogTrace("i:{} entitiesUpdated:{} elapsed:{}ms mem:{}mb exceptions:{}",
-                i, entitiesUpdated,
+            logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{}MiB exceptions:{}",
+                processedEntityCount, updatedEntityCount,
                 stopwatch.ElapsedMilliseconds,
                 process.PrivateMemorySize64 / 1024 / 1024,
                 JsonSerializer.Serialize(exceptions, JsonSerializerOptions));
             stopwatch.Restart();
         }
-        foreach (var entity in existingEntities)
+
+        foreach (var readingEntity in readingEntities)
         {
-            i++;
-            if (i % 10000 == 0) SaveAndLog();
+            processedEntityCount++;
+            if (processedEntityCount % saveByNthEntityCount == 0) SaveAndLog();
             if (stoppingToken.IsCancellationRequested) break;
             try
             {
-                var newEntity = MetadataConsumer.CreateEmbeddedExifFromProfile(new(entity.RawBytes));
-                newEntity.ImageId = entity.ImageId;
-                newEntity.XxHash3 = XxHash3.HashToUInt64(entity.RawBytes);
-                newEntities.Add(newEntity);
+                writingEntities.Add(entityTransformer(readingEntity));
             }
             catch (Exception e)
             {
-                var eKey = e.GetType().FullName + ": " + e.Message;
-                if (!exceptions.TryAdd(eKey, (1, entity.ImageId, e.StackTrace ?? "")))
+                var exceptionKey = e.GetType().FullName + ": " + e.Message;
+                var newTuple = (1, LastId: readingEntityExceptionIdSelector(readingEntity), StackTrace: e.StackTrace ?? "");
+                if (!exceptions.TryAdd(exceptionKey, newTuple))
                 {
-                    var ex = exceptions[eKey];
-                    ex.Times++;
-                    ex.LastId = entity.ImageId;
-                    ex.StackTrace = e.StackTrace ?? "";
-                    exceptions[eKey] = ex;
+                    var existing = exceptions[exceptionKey];
+                    existing.Times++;
+                    existing.LastId = newTuple.LastId;
+                    existing.StackTrace = newTuple.StackTrace;
+                    exceptions[exceptionKey] = existing;
                 }
             }
         }
+
         SaveAndLog();
-        _applicationLifetime.StopApplication();
     }
 }
