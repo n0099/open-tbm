@@ -16,43 +16,19 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
     {
         var o = new ReplyPost
         {
-            ContentsProtoBuf = inPost.Content,
-            Content = new()
-            {
-                Pid = inPost.Pid,
-                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent)
-            }
+            Content = null!, // will get mutated by SimplifyImagesInReplyContent()
+            ContentsProtoBuf = inPost.Content
         };
         try
         {
             o.Pid = inPost.Pid;
             o.Floor = inPost.Floor;
-            foreach (var c in inPost.Content.Where(c => c.Type == 3))
-            { // reset with the protoBuf default values to remove these image related fields that have similar values
-                if (!Uri.TryCreate(c.OriginSrc, UriKind.Absolute, out var uri)) continue;
-                c.Src = "";
-                c.CdnSrc = "";
-                c.CdnSrcActive = "";
-                c.BigCdnSrc = "";
-                c.ShowOriginalBtn = 0;
-                c.IsLongPic = 0;
-                var urlFilename = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
-
-                // only remains the image unique identity at the end of url as "filename"
-                // drops domain, path and file extension from url
-                if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com"
-                        or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
-                    && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
-                {
-                    c.OriginSrc = urlFilename;
-                }
-                else if (uri.Host != "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
-                {
-                    logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
-                                          + " instead of common domains of tieba image hosting service, content={}",
-                        o.Pid, c.OriginSrc, SharedHelper.UnescapedJsonSerialize(c));
-                }
-            }
+            SimplifyImagesInReplyContent(logger, ref inPost);
+            o.Content = new()
+            {
+                Pid = inPost.Pid,
+                ProtoBufBytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(inPost.Content, Helper.WrapPostContent)
+            };
 
             // AuthorId rarely respond with 0, Author should always be null with no guarantee
             o.AuthorUid = inPost.AuthorId.NullIfZero() ?? inPost.Author?.Uid ?? 0;
@@ -73,6 +49,37 @@ public partial class ReplyParser(ILogger<ReplyParser> logger)
             e.Data["parsed"] = o;
             e.Data["raw"] = inPost;
             throw new InvalidDataException("Reply parse error.", e);
+        }
+    }
+
+    public static void SimplifyImagesInReplyContent<TLoggerCategory>
+        (ILogger<TLoggerCategory> logger, ref Reply inPost)
+    {
+        foreach (var c in inPost.Content.Where(c => c.Type == 3))
+        { // reset with the protoBuf default values to remove these image related fields that have similar values
+            if (!Uri.TryCreate(c.OriginSrc, UriKind.Absolute, out var uri)) continue;
+            c.Src = "";
+            c.CdnSrc = "";
+            c.CdnSrcActive = "";
+            c.BigCdnSrc = "";
+            c.ShowOriginalBtn = 0;
+            c.IsLongPic = 0;
+            var urlFilename = Path.GetFileNameWithoutExtension(uri.AbsolutePath);
+
+            // only remains the image unique identity at the end of url as "filename"
+            // drops domain, path and file extension from url
+            if (uri.Host is "tiebapic.baidu.com" or "imgsrc.baidu.com"
+                    or "hiphotos.baidu.com" // http://hiphotos.baidu.com/bhitozratlo/pic/item/f1671ef3678e7608352accad.jpg
+                && ValidateContentImageFilenameRegex().IsMatch(urlFilename))
+            {
+                c.OriginSrc = urlFilename;
+            }
+            else if (uri.Host != "tb2.bdstatic.com") // http://tb2.bdstatic.com/tb/cms/commonsub/editor/images/qw_cat_small/qw_cat_0001.gif
+            {
+                logger.LogInformation("Detected an image in the content of reply with pid {} references to {}"
+                                      + " instead of common domains of tieba image hosting service, content={}",
+                    inPost.Pid, c.OriginSrc, SharedHelper.UnescapedJsonSerialize(c));
+            }
         }
     }
 }

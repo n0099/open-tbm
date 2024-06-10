@@ -116,8 +116,8 @@
       },
       "Google.Protobuf": {
         "type": "Transitive",
-        "resolved": "3.27.0",
-        "contentHash": "tEaKpc+SP7I3gYW9AHozESyKkrCg8Xe7huI3Q3iUt5t8Dn29r2k1u8jyrGrD16maj/0UsQBM0MDViWEj0iynOA=="
+        "resolved": "3.27.1",
+        "contentHash": "7IVz9TzhYCZ8qY0rPhXUnyJSXYdshUqmmxmTI763XmDDSJJFnyfKH43FFcMJu/CZgBcE98xlFztrKwhzcRkiPg=="
       },
       "Humanizer.Core": {
         "type": "Transitive",
@@ -536,7 +536,7 @@
       "tbclient": {
         "type": "Project",
         "dependencies": {
-          "Google.Protobuf": "[3.27.0, )"
+          "Google.Protobuf": "[3.27.1, )"
         }
       },
       "tbm.shared": {
