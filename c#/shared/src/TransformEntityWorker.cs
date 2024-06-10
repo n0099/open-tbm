@@ -28,9 +28,10 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
     protected async Task Transform(
         Func<TDbContext> dbContextFactory,
         int saveByNthEntityCount,
-        Action<EntityEntry<TWritingEntity>> writingEntityEntryAction,
         Func<TReadingEntity, TExceptionId> readingEntityExceptionIdSelector,
         Func<TReadingEntity, TWritingEntity> entityTransformer,
+        Action<EntityEntry<TWritingEntity>> writingEntityEntryAction,
+        Action<TDbContext, IEnumerable<TWritingEntity>> writingEntitiesAction,
         CancellationToken stoppingToken = default)
     {
         var processedEntityCount = 0;
@@ -45,18 +46,19 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
             from e in readingDb.Set<TReadingEntity>().AsNoTracking() select e;
         var writingEntities = new List<TWritingEntity>();
 
-        void SaveAndLog()
+        async Task SaveThenLog(int processedCount, Process currentProcess)
         {
-            writingDb.Set<TWritingEntity>().UpdateRange(writingEntities);
+            writingDb.Set<TWritingEntity>().AttachRange(writingEntities);
             writingDb.ChangeTracker.Entries<TWritingEntity>().ForEach(writingEntityEntryAction);
-            var updatedEntityCount = writingDb.SaveChanges();
+            writingEntitiesAction(writingDb, writingEntities);
+            var updatedEntityCount = await writingDb.SaveChangesAsync(stoppingToken);
             writingEntities.Clear();
             writingDb.ChangeTracker.Clear();
 
             logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{}MiB exceptions:{}",
-                processedEntityCount, updatedEntityCount,
+                processedCount, updatedEntityCount,
                 stopwatch.ElapsedMilliseconds,
-                process.PrivateMemorySize64 / 1024 / 1024,
+                currentProcess.PrivateMemorySize64 / 1024 / 1024,
                 JsonSerializer.Serialize(exceptions, JsonSerializerOptions));
             stopwatch.Restart();
         }
@@ -64,7 +66,7 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
         foreach (var readingEntity in readingEntities)
         {
             processedEntityCount++;
-            if (processedEntityCount % saveByNthEntityCount == 0) SaveAndLog();
+            if (processedEntityCount % saveByNthEntityCount == 0) await SaveThenLog(processedEntityCount, process);
             if (stoppingToken.IsCancellationRequested) break;
             try
             {
@@ -85,6 +87,6 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
             }
         }
 
-        SaveAndLog();
+        await SaveThenLog(processedEntityCount, process);
     }
 }
