@@ -76,10 +76,10 @@ public class ImageBatchConsumingWorker(
 
         logger.LogTrace("Start to consume {} image(s): [{}]",
             imagesWithBytes.Count, string.Join(',', imagesInReply.Select(i => i.ImageId)));
-        var sw = new Stopwatch();
+        var stopwatch = new Stopwatch();
         void LogStopwatch(string consumerType, IReadOnlyCollection<ImageId> imagesId) =>
             logger.LogTrace("Spend {}ms to {} for {} image(s): [{}]",
-                sw.ElapsedMilliseconds, consumerType, imagesId.Count, string.Join(',', imagesId));
+                stopwatch.ElapsedMilliseconds, consumerType, imagesId.Count, string.Join(',', imagesId));
 
         void ConsumeConsumer<TImage, TConsumer>(
             Expression<Func<ImageInReply, bool>> selector, IReadOnlyCollection<TImage> images,
@@ -87,7 +87,7 @@ public class ImageBatchConsumingWorker(
             where TConsumer : IConsumer<TImage>
         {
             using var consumer = consumerFactory();
-            sw.Restart();
+            stopwatch.Restart();
 #pragma warning disable IDE0042 // Deconstruct variable declaration
             var imagesId = consumer.Value.Consume(db, images, stoppingToken);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
@@ -262,12 +262,12 @@ public class ImageBatchConsumingWorker(
             var ocrConsumer = consumerFactory.Value(script);
             await ocrConsumer.InitializePaddleOcr(stoppingToken);
 
-            var sw = new Stopwatch();
-            sw.Start();
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 #pragma warning disable IDE0042 // Deconstruct variable declaration
             var imagesId = ocrConsumer.Consume(db, imagesInCurrentFid, stoppingToken);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
-            sw.Stop();
+            stopwatch.Stop();
             markImageInReplyAsConsumed(imagesId.Consumed);
 
             var failed = imagesId.Failed.ToList();
@@ -275,7 +275,7 @@ public class ImageBatchConsumingWorker(
                 logger.LogError("Failed to detect and recognize {} script text for fid {} in {} image(s): [{}]",
                     script, fid, failed.Count, string.Join(',', failed));
             logger.LogTrace("Spend {}ms to detect and recognize {} script text for fid {} in {} image(s): [{}]",
-                sw.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
+                stopwatch.ElapsedMilliseconds, script, fid, imagesInCurrentFid.Count,
                 string.Join(',', imagesInCurrentFid.Select(i => i.ImageId)));
 
             return ocrConsumer.RecognizedTextLines;

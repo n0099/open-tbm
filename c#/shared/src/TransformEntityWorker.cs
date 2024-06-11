@@ -55,7 +55,7 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
             writingEntities.Clear();
             writingDb.ChangeTracker.Clear();
 
-            logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{}MiB exceptions:{}",
+            logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{:F2}MiB exceptions:{}",
                 processedCount, updatedEntityCount,
                 stopwatch.ElapsedMilliseconds,
                 currentProcess.PrivateMemorySize64 / 1024f / 1024,
@@ -66,7 +66,8 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
         foreach (var readingEntity in readingEntities)
         {
             processedEntityCount++;
-            if (processedEntityCount % saveByNthEntityCount == 0) await SaveThenLog(processedEntityCount, process);
+            if (processedEntityCount % saveByNthEntityCount == 0)
+                await SaveThenLog(processedEntityCount, process);
             if (stoppingToken.IsCancellationRequested) break;
             try
             {
