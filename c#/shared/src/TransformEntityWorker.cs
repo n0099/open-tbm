@@ -32,6 +32,7 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
         Func<TReadingEntity, TWritingEntity> writingEntityFactory,
         Action<TReadingEntity, TWritingEntity> writingEntityMutator,
         Action<TDbContext, IReadOnlyCollection<EntityEntry<TWritingEntity>>> writingEntityEntriesAction,
+        Action onPostSaveChanges,
         CancellationToken stoppingToken = default)
     {
         var processedEntityCount = 0;
@@ -52,6 +53,7 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
             var updatedEntityCount = await writingDb.SaveChangesAsync(stoppingToken);
             writingDb.ChangeTracker.Clear();
             writingEntityEntries.Clear();
+            onPostSaveChanges();
 
             logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{:F2}MiB exceptions:{}",
                 processedCount, updatedEntityCount,

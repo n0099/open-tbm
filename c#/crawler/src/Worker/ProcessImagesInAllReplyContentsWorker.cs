@@ -53,13 +53,18 @@ public class ProcessImagesInAllReplyContentsWorker(
                         var p = ee.Property(e => e.ProtoBufBytes);
                         p.IsModified = !ByteArrayEqualityComparer.Instance.Equals(p.OriginalValue, p.CurrentValue);
                     });
-                    replyContentImageSaver.Save(writingDb, replyContentsKeyByPid.Select(pair => new ReplyPost
-                    {
-                        Pid = pair.Key,
-                        Content = null!,
-                        ContentsProtoBuf = pair.Value
-                    }));
+                    _ = replyContentImageSaver.Save(writingDb,
+                        replyContentsKeyByPid.Select(pair => new ReplyPost
+                        {
+                            Pid = pair.Key,
+                            Content = null!,
+                            ContentsProtoBuf = pair.Value
+                        }));
+                },
+                () =>
+                {
                     replyContentsKeyByPid.Clear();
+                    replyContentImageSaver.Dispose();
                 },
                 stoppingToken);
             logger.LogInformation("Simplify images in reply contents of fid {} finished after {:F2}s",

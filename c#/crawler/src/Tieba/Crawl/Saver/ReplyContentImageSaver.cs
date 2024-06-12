@@ -11,14 +11,19 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
     {
         try
         {
-            if (_newlyLockedImages != null && _newlyLockedImages.Any(pair =>
-                    !GlobalLockedImagesInReplyKeyByUrlFilename.TryRemove(pair)))
-                throw new InvalidOperationException();
+            _newlyLockedImages?.ForEach(pair =>
+            {
+                if (!GlobalLockedImagesInReplyKeyByUrlFilename.TryRemove(pair))
+                    logger.LogError("Previously locked image {} already removed from the global locks",
+                        SharedHelper.UnescapedJsonSerialize(pair));
+            });
         }
         finally
         {
             _newlyLockedImages?.Values().ForEach(Monitor.Exit);
             _alreadyLockedImages?.Values().ForEach(Monitor.Exit);
+            _newlyLockedImages = null;
+            _alreadyLockedImages = null;
         }
     }
 
