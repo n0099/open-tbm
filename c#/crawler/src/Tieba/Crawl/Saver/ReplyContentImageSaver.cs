@@ -52,18 +52,24 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
             .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking already locked image {} timed out after 10s", image.UrlFilename));
+
+        var isGlobalLockReleased = false;
         void ReleaseGlobalLocks()
         {
             try
             {
-                if (newlyLockedImages.Any(pair =>
+                if (!isGlobalLockReleased && newlyLockedImages.Any(pair =>
                         !GlobalLockedImagesInReplyKeyByUrlFilename.TryRemove(pair)))
                     throw new InvalidOperationException();
+                isGlobalLockReleased = true;
             }
             finally
             {
-                newlyLockedImages.Values().ForEach(Monitor.Exit);
-                alreadyLockedImages.Values().ForEach(Monitor.Exit);
+                if (!isGlobalLockReleased)
+                {
+                    newlyLockedImages.Values().ForEach(Monitor.Exit);
+                    alreadyLockedImages.Values().ForEach(Monitor.Exit);
+                }
             }
         }
         try

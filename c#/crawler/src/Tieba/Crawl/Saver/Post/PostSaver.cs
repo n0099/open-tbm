@@ -12,13 +12,11 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
     where TBaseRevision : BaseRevisionWithSplitting
     where TPostId : struct
 {
-    protected delegate void PostSaveHandler();
-
     public PostType CurrentPostType { get; } = currentPostType;
     protected ConcurrentDictionary<PostId, TPost> Posts { get; } = posts;
     protected AuthorRevisionSaver AuthorRevisionSaver { get; } = authorRevisionSaverFactory(currentPostType);
 
-    protected PostSaveHandler PostSaveHandlers { get; set; } = () => { };
+    protected Action PostSaveHandlers { get; set; } = () => { };
     public void OnPostSave() => PostSaveHandlers();
 
     public virtual bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
