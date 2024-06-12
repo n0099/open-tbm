@@ -7,21 +7,25 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
 
     public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
-        var pidAndImageList = (
+        var replyContentImages = (
                 from r in replies
                 from c in r.ContentsProtoBuf
                 where c.Type == 3
                 where // only save image filename without extension that extracted from url by ReplyParser.Convert()
                     ReplyParser.ValidateContentImageFilenameRegex().IsMatch(c.OriginSrc)
-                select (r.Pid, Image: new ImageInReply
+                select new ReplyContentImage
                 {
-                    UrlFilename = c.OriginSrc,
-                    ExpectedByteSize = c.OriginSize
-                }))
-            .DistinctBy(t => (t.Pid, t.Image.UrlFilename))
+                    Pid = r.Pid,
+                    ImageInReply = new()
+                    {
+                        UrlFilename = c.OriginSrc,
+                        ExpectedByteSize = c.OriginSize
+                    }
+                })
+            .DistinctBy(t => (t.Pid, t.ImageInReply.UrlFilename))
             .ToList();
-        if (pidAndImageList.Count == 0) return () => { };
-        var images = pidAndImageList.Select(t => t.Image)
+        if (replyContentImages.Count == 0) return () => { };
+        var images = replyContentImages.Select(t => t.ImageInReply)
             .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
 
         var existingImages = (
@@ -62,21 +66,27 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
                     on existing.UrlFilename equals newInContent.UrlFilename
                 select (existing, newInContent))
             .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
-        db.ReplyContentImages.AddRange(pidAndImageList
-            .Select(t => new ReplyContentImage
-            {
-                Pid = t.Pid,
 
-                // no need to manually invoke DbContext.AddRange(images) since EF Core will do these chore
-                // https://stackoverflow.com/questions/5212751/how-can-i-retrieve-id-of-inserted-entity-using-entity-framework/41146434#41146434
-                // reuse the same instance from existingImages
-                // will prevent assigning multiple different instances with the same key
-                // which will cause EF Core to insert identify entry more than one time leading to duplicated entry error
-                // https://github.com/dotnet/efcore/issues/30236
-                ImageInReply = existingImages.TryGetValue(t.Image.UrlFilename, out var e)
-                    ? e
-                    : images[t.Image.UrlFilename]
-            }));
+        (from existing in existingImages.Values
+                join replyContentImage in replyContentImages
+                    on existing.UrlFilename equals replyContentImage.ImageInReply.UrlFilename
+                select (existing, replyContentImage))
+            .ForEach(t => t.replyContentImage.ImageInReply = t.existing);
+        var existingReplyContentImages = db.ReplyContentImages.AsNoTracking()
+            .Where(replyContentImages.Aggregate(
+                LinqKit.PredicateBuilder.New<ReplyContentImage>(),
+                (predicate, newOrExisting) =>
+                    predicate.Or(LinqKit.PredicateBuilder
+                        .New<ReplyContentImage>(existing =>
+                            existing.Pid == newOrExisting.Pid)
+                        .And(existing =>
+                            existing.ImageInReply.UrlFilename == newOrExisting.ImageInReply.UrlFilename))))
+            .Include(e => e.ImageInReply)
+            .Select(e => new {e.Pid, e.ImageInReply.UrlFilename})
+            .ToList();
+        db.ReplyContentImages.AddRange(replyContentImages
+            .ExceptBy(existingReplyContentImages.Select(e => (e.Pid, e.UrlFilename)),
+                e => (e.Pid, e.ImageInReply.UrlFilename)));
 
         return () =>
         {
