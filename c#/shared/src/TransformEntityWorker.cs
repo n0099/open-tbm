@@ -25,13 +25,18 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
     where TReadingEntity : class
     where TWritingEntity : class
 {
+    protected delegate void WritingEntityMutator(
+        TReadingEntity readingEntity,
+        ref TWritingEntity writingEntity,
+        TDbContext writingDb,
+        EntityEntry<TWritingEntity> writingEntityEntry);
+
     protected async Task Transform(
         Func<TDbContext> dbContextFactory,
         int saveByNthEntityCount,
         Func<TReadingEntity, TExceptionId> readingEntityExceptionIdSelector,
-        Func<TReadingEntity, TWritingEntity> entityTransformer,
-        Action<EntityEntry<TWritingEntity>> writingEntityEntryAction,
-        Action<TDbContext, IEnumerable<TWritingEntity>> writingEntitiesAction,
+        Func<TReadingEntity, TWritingEntity> writingEntityFactory,
+        WritingEntityMutator writingEntityMutator,
         CancellationToken stoppingToken = default)
     {
         var processedEntityCount = 0;
@@ -44,15 +49,10 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
         var writingDb = dbContextFactory();
         var readingEntities =
             from e in readingDb.Set<TReadingEntity>().AsNoTracking() select e;
-        var writingEntities = new List<TWritingEntity>();
 
         async Task SaveThenLog(int processedCount, Process currentProcess)
         {
-            writingDb.Set<TWritingEntity>().AttachRange(writingEntities);
-            writingDb.ChangeTracker.Entries<TWritingEntity>().ForEach(writingEntityEntryAction);
-            writingEntitiesAction(writingDb, writingEntities);
             var updatedEntityCount = await writingDb.SaveChangesAsync(stoppingToken);
-            writingEntities.Clear();
             writingDb.ChangeTracker.Clear();
 
             logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{:F2}MiB exceptions:{}",
@@ -71,7 +71,9 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
             if (stoppingToken.IsCancellationRequested) break;
             try
             {
-                writingEntities.Add(entityTransformer(readingEntity));
+                var writingEntity = writingEntityFactory(readingEntity);
+                writingEntityMutator(readingEntity, ref writingEntity,
+                    writingDb, writingDb.Set<TWritingEntity>().Attach(writingEntity));
             }
             catch (Exception e)
             {

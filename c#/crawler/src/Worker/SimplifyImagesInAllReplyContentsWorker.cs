@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+
 namespace tbm.Crawler.Worker;
 
 public class SimplifyImagesInAllReplyContentsWorker(
@@ -21,28 +23,35 @@ public class SimplifyImagesInAllReplyContentsWorker(
                 () => dbFactory.Value(fid),
                 saveByNthEntityCount: 10000,
                 readingEntity => readingEntity.Pid,
-                readingEntity =>
+                readingEntity => new()
                 {
-                    if (readingEntity.ProtoBufBytes == null)
-                        return new() {Pid = readingEntity.Pid, ProtoBufBytes = null};
-                    var protoBuf = Reply.Parser.ParseFrom(readingEntity.ProtoBufBytes);
-                    ReplyParser.SimplifyImagesInReplyContent(logger, ref protoBuf);
-                    return new() {Pid = readingEntity.Pid, ProtoBufBytes = protoBuf.ToByteArray()};
+                    Pid = readingEntity.Pid,
+                    ProtoBufBytes = readingEntity.ProtoBufBytes,
+                    Version = readingEntity.Version
                 },
-                writingEntityEntry =>
+                delegate(
+                    ReplyContent readingEntity,
+                    ref ReplyContent writingEntity,
+                    CrawlerDbContext writingDb,
+                    EntityEntry<ReplyContent> writingEntityEntry)
                 {
+                    if (readingEntity.ProtoBufBytes == null) return;
+                    var pid = readingEntity.Pid;
+                    var protoBuf = PostContentWrapper.Parser.ParseFrom(readingEntity.ProtoBufBytes);
+                    var reply = new Reply {Pid = pid, Content = {protoBuf.Value}};
+                    ReplyParser.SimplifyImagesInReplyContent(logger, ref reply);
+                    var bytes = Helper.SerializedProtoBufWrapperOrNullIfEmpty(reply.Content, Helper.WrapPostContent);
+                    writingEntity.ProtoBufBytes = bytes;
+
                     var p = writingEntityEntry.Property(e => e.ProtoBufBytes);
                     p.IsModified = !ByteArrayEqualityComparer.Instance.Equals(p.OriginalValue, p.CurrentValue);
+                    replyContentImageSaver.Save(writingDb, [new()
+                    {
+                        Pid = pid,
+                        Content = null!,
+                        ContentsProtoBuf = reply.Content
+                    }])();
                 },
-                (writingDb, writingEntities) => replyContentImageSaver
-                    .Save(writingDb, writingEntities
-                        .Where(e => e.ProtoBufBytes != null)
-                        .Select(e => new ReplyPost
-                        {
-                            Pid = e.Pid,
-                            Content = null!,
-                            ContentsProtoBuf = Reply.Parser.ParseFrom(e.ProtoBufBytes).Content
-                        })),
                 stoppingToken);
             logger.LogInformation("Simplify images in reply contents of fid {} finished after {:F2}s",
                 fid, stopwatch.Elapsed.TotalSeconds);
