@@ -17,8 +17,7 @@ public class AuthorRevisionSaver(
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
         where TPostWithAuthorExpGrade : PostWithAuthorExpGrade
     {
-        using var saverLocks = _authorExpGradeLocksSaverLocks.Value;
-        Save(db, posts, saverLocks,
+        Save(db, posts, _authorExpGradeLocksSaverLocks.Value,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
@@ -37,7 +36,7 @@ public class AuthorRevisionSaver(
                 TriggeredBy = triggeredByPostType,
                 AuthorExpGrade = t.Value
             });
-        return saverLocks.Dispose;
+        return _authorExpGradeLocksSaverLocks.Value.Dispose;
     }
 
     private void Save<TPost, TRevision, TValue>(

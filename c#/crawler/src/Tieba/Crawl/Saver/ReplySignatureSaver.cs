@@ -12,7 +12,6 @@ public class ReplySignatureSaver(
 
     public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
-        using var saverLocks = _saverLocks.Value;
         SharedHelper.GetNowTimestamp(out var now);
         var repliesWithSignature = replies
             .Where(r => r is {SignatureId: not null, Signature: not null}).ToList();
@@ -56,11 +55,11 @@ public class ReplySignatureSaver(
 
         var newSignatures = signatures
             .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId).ToList();
-        var newlyLocked = saverLocks.Acquire(
+        var newlyLocked = _saverLocks.Value.Acquire(
             newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList());
         db.ReplySignatures.AddRange(
             newSignatures.IntersectBy(newlyLocked, s => new(s.SignatureId, s.XxHash3)));
-        return saverLocks.Dispose;
+        return _saverLocks.Value.Dispose;
     }
 
     [SuppressMessage("Class Design", "AV1000:Type name contains the word 'and', which suggests it has multiple purposes")]
