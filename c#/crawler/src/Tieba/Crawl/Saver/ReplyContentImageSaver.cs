@@ -52,43 +52,7 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
             .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking already locked image {} timed out after 10s", image.UrlFilename));
-        if (alreadyLockedImages.Count != 0)
-            existingImages = existingImages
-                .Concat((
-                    from e in db.ImageInReplies.AsTracking()
-                    where alreadyLockedImages.Keys().Contains(e.UrlFilename)
-                    select e).ToDictionary(e => e.UrlFilename))
-                .ToDictionary();
-
-        (from existing in existingImages.Values
-                where existing.ExpectedByteSize == 0 // randomly respond with 0
-                join newInContent in images.Values
-                    on existing.UrlFilename equals newInContent.UrlFilename
-                select (existing, newInContent))
-            .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
-
-        (from existing in existingImages.Values
-                join replyContentImage in replyContentImages
-                    on existing.UrlFilename equals replyContentImage.ImageInReply.UrlFilename
-                select (existing, replyContentImage))
-            .ForEach(t => t.replyContentImage.ImageInReply = t.existing);
-        var existingReplyContentImages = db.ReplyContentImages.AsNoTracking()
-            .Where(replyContentImages.Aggregate(
-                LinqKit.PredicateBuilder.New<ReplyContentImage>(),
-                (predicate, newOrExisting) =>
-                    predicate.Or(LinqKit.PredicateBuilder
-                        .New<ReplyContentImage>(existing =>
-                            existing.Pid == newOrExisting.Pid)
-                        .And(existing =>
-                            existing.ImageInReply.UrlFilename == newOrExisting.ImageInReply.UrlFilename))))
-            .Include(e => e.ImageInReply)
-            .Select(e => new {e.Pid, e.ImageInReply.UrlFilename})
-            .ToList();
-        db.ReplyContentImages.AddRange(replyContentImages
-            .ExceptBy(existingReplyContentImages.Select(e => (e.Pid, e.UrlFilename)),
-                e => (e.Pid, e.ImageInReply.UrlFilename)));
-
-        return () =>
+        void ReleaseGlobalLocks()
         {
             try
             {
@@ -101,6 +65,49 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
                 newlyLockedImages.Values().ForEach(Monitor.Exit);
                 alreadyLockedImages.Values().ForEach(Monitor.Exit);
             }
-        };
+        }
+        try
+        {
+            if (alreadyLockedImages.Count != 0)
+                existingImages = existingImages
+                    .Concat((
+                        from e in db.ImageInReplies.AsTracking()
+                        where alreadyLockedImages.Keys().Contains(e.UrlFilename)
+                        select e).ToDictionary(e => e.UrlFilename))
+                    .ToDictionary();
+
+            (from existing in existingImages.Values
+                    where existing.ExpectedByteSize == 0 // randomly respond with 0
+                    join newInContent in images.Values
+                        on existing.UrlFilename equals newInContent.UrlFilename
+                    select (existing, newInContent))
+                .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
+
+            (from existing in existingImages.Values
+                    join replyContentImage in replyContentImages
+                        on existing.UrlFilename equals replyContentImage.ImageInReply.UrlFilename
+                    select (existing, replyContentImage))
+                .ForEach(t => t.replyContentImage.ImageInReply = t.existing);
+            var existingReplyContentImages = db.ReplyContentImages.AsNoTracking()
+                .Where(replyContentImages.Aggregate(
+                    LinqKit.PredicateBuilder.New<ReplyContentImage>(),
+                    (predicate, newOrExisting) =>
+                        predicate.Or(LinqKit.PredicateBuilder
+                            .New<ReplyContentImage>(existing =>
+                                existing.Pid == newOrExisting.Pid)
+                            .And(existing =>
+                                existing.ImageInReply.UrlFilename == newOrExisting.ImageInReply.UrlFilename))))
+                .Include(e => e.ImageInReply)
+                .Select(e => new {e.Pid, e.ImageInReply.UrlFilename})
+                .ToList();
+            db.ReplyContentImages.AddRange(replyContentImages
+                .ExceptBy(existingReplyContentImages.Select(e => (e.Pid, e.UrlFilename)),
+                    e => (e.Pid, e.ImageInReply.UrlFilename)));
+            return ReleaseGlobalLocks;
+        }
+        finally
+        {
+            ReleaseGlobalLocks();
+        }
     }
 }
