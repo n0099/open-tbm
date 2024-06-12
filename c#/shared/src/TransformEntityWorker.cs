@@ -25,18 +25,13 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
     where TReadingEntity : class
     where TWritingEntity : class
 {
-    protected delegate void WritingEntityMutator(
-        TReadingEntity readingEntity,
-        ref TWritingEntity writingEntity,
-        TDbContext writingDb,
-        EntityEntry<TWritingEntity> writingEntityEntry);
-
     protected async Task Transform(
         Func<TDbContext> dbContextFactory,
-        int saveByNthEntityCount,
+        int saveWritingEntitiesBatchSize,
         Func<TReadingEntity, TExceptionId> readingEntityExceptionIdSelector,
         Func<TReadingEntity, TWritingEntity> writingEntityFactory,
-        WritingEntityMutator writingEntityMutator,
+        Action<TReadingEntity, TWritingEntity> writingEntityMutator,
+        Action<TDbContext, IReadOnlyCollection<EntityEntry<TWritingEntity>>> writingEntityEntriesAction,
         CancellationToken stoppingToken = default)
     {
         var processedEntityCount = 0;
@@ -49,11 +44,14 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
         var writingDb = dbContextFactory();
         var readingEntities =
             from e in readingDb.Set<TReadingEntity>().AsNoTracking() select e;
+        var writingEntityEntries = new List<EntityEntry<TWritingEntity>>(saveWritingEntitiesBatchSize);
 
         async Task SaveThenLog(int processedCount, Process currentProcess)
         {
+            writingEntityEntriesAction(writingDb, writingEntityEntries);
             var updatedEntityCount = await writingDb.SaveChangesAsync(stoppingToken);
             writingDb.ChangeTracker.Clear();
+            writingEntityEntries.Clear();
 
             logger.LogTrace("processedEntityCount:{} updatedEntityCount:{} elapsed:{}ms processMemory:{:F2}MiB exceptions:{}",
                 processedCount, updatedEntityCount,
@@ -66,14 +64,14 @@ public abstract class TransformEntityWorker<TDbContext, TReadingEntity, TWriting
         foreach (var readingEntity in readingEntities)
         {
             processedEntityCount++;
-            if (processedEntityCount % saveByNthEntityCount == 0)
+            if (processedEntityCount % saveWritingEntitiesBatchSize == 0)
                 await SaveThenLog(processedEntityCount, process);
             if (stoppingToken.IsCancellationRequested) break;
             try
             {
                 var writingEntity = writingEntityFactory(readingEntity);
-                writingEntityMutator(readingEntity, ref writingEntity,
-                    writingDb, writingDb.Set<TWritingEntity>().Attach(writingEntity));
+                writingEntityEntries.Add(writingDb.Set<TWritingEntity>().Attach(writingEntity));
+                writingEntityMutator(readingEntity, writingEntity);
             }
             catch (Exception e)
             {
