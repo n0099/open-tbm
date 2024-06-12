@@ -47,20 +47,21 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
             using var transaction = db.Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
             var postSaver = postSaverFactory(Posts);
-            var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
-
             var userSaver = userSaverFactory(_users);
-            userSaver.Save(db,
-                postSaver.CurrentPostType,
-                postSaver.UserFieldUpdateIgnorance,
-                postSaver.UserFieldRevisionIgnorance);
-
-            OnBeforeCommitSave(db, userSaver);
             try
             {
+                var savedPosts = Posts.IsEmpty ? null : postSaver.Save(db);
+                userSaver.Save(db,
+                    postSaver.CurrentPostType,
+                    postSaver.UserFieldUpdateIgnorance,
+                    postSaver.UserFieldRevisionIgnorance);
+
+                OnBeforeCommitSave(db, userSaver);
+
                 db.TimestampingEntities();
                 _ = db.SaveChanges();
                 transaction.Commit();
+
                 if (savedPosts != null) OnPostCommitSave(savedPosts, stoppingToken);
                 return savedPosts;
             }

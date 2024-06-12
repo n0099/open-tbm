@@ -1,9 +1,26 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
+public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger) : IDisposable
 {
     private static readonly ConcurrentDictionary<string, ImageInReply>
         GlobalLockedImagesInReplyKeyByUrlFilename = new();
+    private Dictionary<string, ImageInReply>? _newlyLockedImages;
+    private Dictionary<string, ImageInReply>? _alreadyLockedImages;
+
+    public void Dispose()
+    {
+        try
+        {
+            if (_newlyLockedImages != null && _newlyLockedImages.Any(pair =>
+                    !GlobalLockedImagesInReplyKeyByUrlFilename.TryRemove(pair)))
+                throw new InvalidOperationException();
+        }
+        finally
+        {
+            _newlyLockedImages?.Values().ForEach(Monitor.Exit);
+            _alreadyLockedImages?.Values().ForEach(Monitor.Exit);
+        }
+    }
 
     public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
     {
@@ -36,28 +53,28 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
         var newImages = images
             .ExceptByKey(existingImages.Keys).ToDictionary();
 
-        var newlyLockedImages = newImages
+        _newlyLockedImages = newImages
             .Where(pair => GlobalLockedImagesInReplyKeyByUrlFilename.TryAdd(pair.Key, pair.Value))
             .ToDictionary();
-        newlyLockedImages.Values()
+        _newlyLockedImages.Values()
             .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking newly locked image {} timed out after 10s", image.UrlFilename));
 
-        var alreadyLockedImages = GlobalLockedImagesInReplyKeyByUrlFilename
+        _alreadyLockedImages = GlobalLockedImagesInReplyKeyByUrlFilename
             .IntersectByKey(newImages
-                .Keys().Except(newlyLockedImages.Keys()))
+                .Keys().Except(_newlyLockedImages.Keys()))
             .ToDictionary();
-        alreadyLockedImages.Values()
+        _alreadyLockedImages.Values()
             .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking already locked image {} timed out after 10s", image.UrlFilename));
 
-        if (alreadyLockedImages.Count != 0)
+        if (_alreadyLockedImages.Count != 0)
             existingImages = existingImages
                 .Concat((
                     from e in db.ImageInReplies.AsTracking()
-                    where alreadyLockedImages.Keys().Contains(e.UrlFilename)
+                    where _alreadyLockedImages.Keys().Contains(e.UrlFilename)
                     select e).ToDictionary(e => e.UrlFilename))
                 .ToDictionary();
         (from existing in existingImages.Values
@@ -88,19 +105,6 @@ public class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger)
             .ExceptBy(existingReplyContentImages.Select(e => (e.Pid, e.UrlFilename)),
                 e => (e.Pid, e.ImageInReply.UrlFilename)));
 
-        return () =>
-        {
-            try
-            {
-                if (newlyLockedImages.Any(pair =>
-                        !GlobalLockedImagesInReplyKeyByUrlFilename.TryRemove(pair)))
-                    throw new InvalidOperationException();
-            }
-            finally
-            {
-                newlyLockedImages.Values().ForEach(Monitor.Exit);
-                alreadyLockedImages.Values().ForEach(Monitor.Exit);
-            }
-        };
+        return Dispose;
     }
 }
