@@ -7,7 +7,7 @@ defaults:
     working-directory: c#
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     strategy:
       matrix:
         project: [crawler, imagePipeline, shared, tbClient]
@@ -20,7 +20,7 @@ jobs:
       - run: dotnet build --no-restore -c Release ${{ matrix.project }}
 
   ReSharper:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
@@ -38,6 +38,7 @@ jobs:
 
       - uses: muno92/resharper_inspectcode@v1
         with:
+          version: 2024.*
           minimumReportSeverity: info
           minimumSeverity: warning
           solutionPath: c#/tbm.sln

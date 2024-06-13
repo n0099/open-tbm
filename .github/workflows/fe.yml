@@ -7,21 +7,21 @@ defaults:
     working-directory: fe
 jobs:
   tsc:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe
       - run: yarn run vue-tsc
 
   eslint:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe
       - run: yarn run eslint src
 
   codechecks:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps: # contains CVE that triggers Dependabot
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe

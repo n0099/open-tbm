@@ -7,21 +7,21 @@ defaults:
     working-directory: be
 jobs:
   phpstan:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
       - run: ./vendor/bin/phpstan analyse --error-format=github
 
   psalm:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
       - run: ./vendor/bin/psalm --output-format=github
 
   phpcs:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
@@ -32,7 +32,7 @@ jobs:
 
   # https://github.com/staabm/annotate-pull-request-from-checkstyle
   pint:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
@@ -42,14 +42,14 @@ jobs:
         run: ./vendor/bin/pint --test --format=checkstyle | cs2pr
 
   php-cs-fixer:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
       - run: ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle . | cs2pr
 
   phpmd:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
