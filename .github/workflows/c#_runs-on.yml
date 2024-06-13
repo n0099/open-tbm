@@ -9,6 +9,6 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
-    uses: ./.github/workflows/c#.yml
+    uses: ./.github/workflows/c#_base.yml
     with:
       runs-on: ${{ matrix.runs-on }}

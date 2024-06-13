@@ -1,4 +1,4 @@
-name: c#
+name: c#/base
 on:
   workflow_call:
     inputs:

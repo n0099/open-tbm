@@ -1,4 +1,4 @@
-name: be
+name: be/base
 on:
   workflow_call:
     inputs:
