@@ -4,14 +4,14 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
 {
     private static readonly ConcurrentDictionary<string, ImageInReply>
         GlobalLockedImagesInReplyKeyByUrlFilename = new();
-    private Dictionary<string, ImageInReply>? _newlyLockedImages;
+    private readonly Dictionary<string, ImageInReply> _localLockedImages = [];
     private Dictionary<string, ImageInReply>? _alreadyLockedImages;
 
     public void Dispose()
     {
         try
         {
-            _newlyLockedImages?.ForEach(pair =>
+            _localLockedImages.ForEach(pair =>
             {
                 if (!GlobalLockedImagesInReplyKeyByUrlFilename.TryRemove(pair))
                     logger.LogError("Previously locked image {} already removed from the global locks",
@@ -20,9 +20,9 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
         }
         finally
         {
-            _newlyLockedImages?.Values().ForEach(Monitor.Exit);
+            _localLockedImages.Values().ForEach(Monitor.Exit);
             _alreadyLockedImages?.Values().ForEach(Monitor.Exit);
-            _newlyLockedImages = null;
+            _localLockedImages.Clear();
             _alreadyLockedImages = null;
         }
     }
@@ -58,17 +58,22 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
         var newImages = images
             .ExceptByKey(existingImages.Keys).ToDictionary();
 
-        _newlyLockedImages = newImages
-            .Where(pair => GlobalLockedImagesInReplyKeyByUrlFilename.TryAdd(pair.Key, pair.Value))
+        var newlyLockedImages = newImages
+            .Where(pair =>
+            {
+                var added = GlobalLockedImagesInReplyKeyByUrlFilename.TryAdd(pair.Key, pair.Value);
+                if (added) _localLockedImages.Add(pair.Key, pair.Value);
+                return added;
+            })
             .ToDictionary();
-        _newlyLockedImages.Values()
+        newlyLockedImages.Values()
             .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
             .ForEach(image => logger.LogWarning(
                 "Wait for locking newly locked image {} timed out after 10s", image.UrlFilename));
 
         _alreadyLockedImages = GlobalLockedImagesInReplyKeyByUrlFilename
             .IntersectByKey(newImages
-                .Keys().Except(_newlyLockedImages.Keys()))
+                .Keys().Except(newlyLockedImages.Keys()))
             .ToDictionary();
         _alreadyLockedImages.Values()
             .Where(image => !Monitor.TryEnter(image, TimeSpan.FromSeconds(10)))
