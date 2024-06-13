@@ -1,27 +1,30 @@
 name: fe
 on:
-  push:
-    paths: [fe/**]
+  workflow_call:
+    inputs:
+      runs-on:
+        required: true
+        type: string
 defaults:
   run:
     working-directory: fe
 jobs:
   tsc:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe
       - run: yarn run vue-tsc
 
   eslint:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe
       - run: yarn run eslint src
 
   codechecks:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ inputs.runs-on }}
     steps: # contains CVE that triggers Dependabot
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe

@@ -1,13 +1,16 @@
 name: c#
 on:
-  push:
-    paths: [c#/**]
+  workflow_call:
+    inputs:
+      runs-on:
+        required: true
+        type: string
 defaults:
   run:
     working-directory: c#
 jobs:
   build:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ inputs.runs-on }}
     strategy:
       matrix:
         project: [crawler, imagePipeline, shared, tbClient]
@@ -20,7 +23,7 @@ jobs:
       - run: dotnet build --no-restore -c Release ${{ matrix.project }}
 
   ReSharper:
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ inputs.runs-on }}
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
