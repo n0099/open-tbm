@@ -16,15 +16,16 @@ class DumpJsonResponse
         $response = $next($request);
         if ($response instanceof JsonResponse) {
             if ($request->accepts('text/html')) {
+                $json = $response->content();
                 return response(<<<HTML
                     <div id="root"></div>
                     <script type="module">
-                        import ReactJsonView from 'https://cdn.jsdelivr.net/npm/@microlink/react-json-view@1.23.0/+esm';
-                        import { createElement } from 'https://cdn.jsdelivr.net/npm/react@18.3.1/+esm';
-                        import { createRoot } from 'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/+esm';
+                        import ReactJsonView from 'https://cdn.jsdelivr.net/npm/@microlink/react-json-view@1/+esm';
+                        import { createElement } from 'https://cdn.jsdelivr.net/npm/react@18/+esm';
+                        import { createRoot } from 'https://cdn.jsdelivr.net/npm/react-dom@18/+esm';
 
                         const root = createRoot(document.getElementById('root'));
-                        root.render(createElement(ReactJsonView.default, { src: $response->content(), quotesOnKeys: false }));
+                        root.render(createElement(ReactJsonView.default, { src: $json, quotesOnKeys: false }));
                     </script>
                     HTML);
             }
