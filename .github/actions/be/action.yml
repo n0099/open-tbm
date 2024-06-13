@@ -14,6 +14,8 @@ runs:
         # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#jit-configuration
         coverage: none
         ini-values: opcache.enable_cli=1
+        # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
+        extensions: fileinfo # league/flysystem-local@3.28.0 requires ext-fileinfo but it's not enabled by default on windows
       env: # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#force-update-setup
         update: 'true'
     # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#problem-matchers
