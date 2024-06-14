@@ -47,8 +47,10 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
             .DistinctBy(t => (t.Pid, t.ImageInReply.UrlFilename))
             .ToList();
         if (replyContentImages.Count == 0) return () => { };
-        var images = replyContentImages.Select(t => t.ImageInReply)
-            .DistinctBy(image => image.UrlFilename).ToDictionary(image => image.UrlFilename);
+        var images = replyContentImages
+            .Select(replyContentImage => replyContentImage.ImageInReply)
+            .DistinctBy(image => image.UrlFilename)
+            .ToDictionary(image => image.UrlFilename);
 
         var existingImages = (
                 from e in db.ImageInReplies.AsTracking()
@@ -94,11 +96,13 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
                 select (existing, newInContent))
             .ForEach(t => t.existing.ExpectedByteSize = t.newInContent.ExpectedByteSize);
 
-        (from existing in existingImages.Values
+        (from existingOrNew in existingImages.Values
+                    .Concat(newImages.Values)
+                    .DistinctBy(image => image.UrlFilename) // the earliest one in order takes the first
                 join replyContentImage in replyContentImages
-                    on existing.UrlFilename equals replyContentImage.ImageInReply.UrlFilename
-                select (existing, replyContentImage))
-            .ForEach(t => t.replyContentImage.ImageInReply = t.existing);
+                    on existingOrNew.UrlFilename equals replyContentImage.ImageInReply.UrlFilename
+                select (existingOrNew, replyContentImage))
+            .ForEach(t => t.replyContentImage.ImageInReply = t.existingOrNew);
         var existingReplyContentImages = db.ReplyContentImages.AsNoTracking()
             .Where(replyContentImages.Aggregate(
                 LinqKit.PredicateBuilder.New<ReplyContentImage>(),
