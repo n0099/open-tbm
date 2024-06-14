@@ -2,7 +2,7 @@
 # Common settings that generally should always be used with your language specific settings
 
 # Auto detect text files and perform LF normalization
-*          text=auto
+*          text=auto eol=lf
 
 #
 # The above will handle all files NOT found below
@@ -26,7 +26,7 @@
 *.adoc     text
 *.textile  text
 *.mustache text
-*.csv      text eol=crlf
+*.csv      text
 *.tab      text
 *.tsv      text
 *.txt      text
@@ -55,9 +55,9 @@
 *.sh       text eol=lf
 *.zsh      text eol=lf
 # These are explicitly windows files and should use crlf
-*.bat      text eol=crlf
-*.cmd      text eol=crlf
-*.ps1      text eol=crlf
+*.bat      text
+*.cmd      text
+*.ps1      text
 
 # Serialisation
 *.json     text

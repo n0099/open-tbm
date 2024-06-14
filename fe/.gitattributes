@@ -14,12 +14,12 @@
 ##   Handle line endings automatically for files detected as
 ##   text and leave all files detected as binary untouched.
 ##   This will handle all files NOT defined below.
-*                 text=auto
+*                 text=auto eol=lf
 
 # Source code
 *.bash            text eol=lf
-*.bat             text eol=crlf
-*.cmd             text eol=crlf
+*.bat             text
+*.cmd             text
 *.coffee          text
 *.css             text diff=css
 *.htm             text diff=html
@@ -38,7 +38,7 @@
 *.onlydata        text
 *.php             text diff=php
 *.pl              text
-*.ps1             text eol=crlf
+*.ps1             text
 *.py              text diff=python
 *.rb              text diff=ruby
 *.sass            text
