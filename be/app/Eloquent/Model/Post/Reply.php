@@ -2,12 +2,14 @@
 
 namespace App\Eloquent\Model\Post;
 
+use App\Eloquent\Model\Post\Content\ReplyContent;
 use App\Eloquent\ModelAttributeMaker;
 use App\Eloquent\NullableNumericAttributeCast;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use TbClient\Post\Common\Lbs;
 
@@ -59,6 +61,11 @@ class Reply extends Post
     public function subReplies(): HasMany
     {
         return $this->hasMany(SubReply::class, 'pid', 'pid');
+    }
+
+    public function contentProtoBuf() : HasOne
+    {
+        return $this->hasOne(ReplyContent::class, 'pid', 'pid')->selectPublicFields();
     }
 
     public function scopePid(Builder $query, Collection|array|int $pid): Builder

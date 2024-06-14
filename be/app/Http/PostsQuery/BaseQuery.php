@@ -2,7 +2,6 @@
 
 namespace App\Http\PostsQuery;
 
-use App\Eloquent\Model\Post\Content\PostContent;
 use App\Eloquent\Model\Post\Post;
 use App\Eloquent\Model\Post\PostFactory;
 use App\Eloquent\Model\Post\Reply;
@@ -17,7 +16,6 @@ use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JetBrains\PhpStorm\ArrayShape;
-use TbClient\Wrapper\PostContentWrapper;
 
 abstract class BaseQuery
 {
@@ -291,16 +289,23 @@ abstract class BaseQuery
         $replies = $postModels['reply']
             // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
             ->pid($parentRepliesID->concat($pids))
-            ->selectPublicFields()->get()
+            ->selectPublicFields()->with('contentProtoBuf')->get()
             ->map(static fn (Reply $r) => // mark replies that exists in the original $this->queryResult
                 $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
         Debugbar::stopMeasure('fillWithRepliesFields');
 
         Debugbar::startMeasure('fillWithSubRepliesFields');
-        $subReplies = $postModels['subReply']->spid($spids)->selectPublicFields()->get();
+        $subReplies = $postModels['subReply']->spid($spids)
+            ->selectPublicFields()->with('contentProtoBuf')->get();
         Debugbar::stopMeasure('fillWithSubRepliesFields');
 
-        self::fillPostsContent($fid, $replies, $subReplies);
+        Debugbar::startMeasure('parsePostContentProtoBufBytes');
+        $replies->concat($subReplies)->each(function ($post) {
+            $post->content = $post->contentProtoBuf?->protoBufBytes->value;
+            unset($post->contentProtoBuf);
+        });
+        Debugbar::stopMeasure('parsePostContentProtoBufBytes');
+
         return [
             'fid' => $fid,
             'matchQueryPostCount' => collect(Helper::POST_TYPES)
@@ -312,48 +317,6 @@ abstract class BaseQuery
             ],
             ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
         ];
-    }
-
-    private static function fillPostsContent(int $fid, Collection $replies, Collection $subReplies): void
-    {
-        $parseThenRenderContent = static function (PostContent $content): ?string {
-            if ($content->protoBufBytes === null) {
-                return null;
-            }
-            $proto = new PostContentWrapper();
-            $proto->mergeFromString($content->protoBufBytes);
-            $renderedView = view('renderPostContent', ['content' => $proto->getValue()])->render();
-            return str_replace("\n", '', trim($renderedView));
-        };
-        /**
-         * @param Collection<int, ?string> $contents key by post ID
-         * @param string $postIDName
-         * @return Closure
-         * @psalm-return Closure(Post):Post
-         */
-        $appendParsedContent = static fn (Collection $contents, string $postIDName): Closure =>
-            static function (Post $post) use ($contents, $postIDName): Post {
-                $post->content = $contents[$post[$postIDName]];
-                return $post;
-            };
-        if ($replies->isNotEmpty()) {
-            Debugbar::measure('fillRepliesContent', static fn () =>
-                $replies->transform($appendParsedContent(
-                    PostFactory::newReplyContent($fid)
-                        ->pid($replies->pluck('pid'))->selectPublicFields()->get()
-                        ->keyBy('pid')->map($parseThenRenderContent),
-                    'pid'
-                )));
-        }
-        if ($subReplies->isNotEmpty()) {
-            Debugbar::measure('fillSubRepliesContent', static fn () =>
-            $subReplies->transform($appendParsedContent(
-                PostFactory::newSubReplyContent($fid)
-                    ->spid($subReplies->pluck('spid'))->selectPublicFields()->get()
-                    ->keyBy('spid')->map($parseThenRenderContent),
-                'spid'
-            )));
-        }
     }
 
     /**

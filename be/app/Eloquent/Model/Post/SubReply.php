@@ -2,10 +2,12 @@
 
 namespace App\Eloquent\Model\Post;
 
+use App\Eloquent\Model\Post\Content\SubReplyContent;
 use App\Eloquent\NullableNumericAttributeCast;
 use App\Helper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 class SubReply extends Post
@@ -49,6 +51,11 @@ class SubReply extends Post
     public function scopePid(Builder $query, Collection|array|int $pid): Builder
     {
         return $this->scopeIDType($query, 'pid', $pid);
+    }
+
+    public function contentProtoBuf() : HasOne
+    {
+        return $this->hasOne(SubReplyContent::class, 'spid', 'spid')->selectPublicFields();
     }
 
     public function scopeSpid(Builder $query, Collection|array|int $spid): Builder
