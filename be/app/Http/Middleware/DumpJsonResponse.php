@@ -17,7 +17,9 @@ class DumpJsonResponse
         if ($response instanceof JsonResponse) {
             if ($request->accepts('text/html')) {
                 $json = $response->content();
+                $jsonLength = mb_strlen($json);
                 return response(<<<HTML
+                    <h4>$jsonLength bytes</h4>
                     <div id="root"></div>
                     <script type="module">
                         import ReactJsonView from 'https://cdn.jsdelivr.net/npm/@microlink/react-json-view@1/+esm';
@@ -27,6 +29,11 @@ class DumpJsonResponse
                         const root = createRoot(document.getElementById('root'));
                         root.render(createElement(ReactJsonView.default, { src: $json, quotesOnKeys: false }));
                     </script>
+                    <style>
+                        .object-content {
+                            content-visibility: auto;
+                        }
+                    </style>
                     HTML);
             }
             $response->setEncodingOptions(JSON_PRETTY_PRINT);
