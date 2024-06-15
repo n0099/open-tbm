@@ -40,5 +40,15 @@ if (googleAnalyticsMeasurementId !== '') {
 }
 
 export const app = createApp(App).use(router).use(createHead()).use(createPinia())
-    .use(VueQueryPlugin, { queryClientConfig: { defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } } } });
+    .use(VueQueryPlugin, {
+        queryClientConfig: {
+            defaultOptions: {
+                queries: {
+                    refetchOnWindowFocus: false,
+                    staleTime: Infinity,
+                    retry: false
+                }
+            }
+        }
+    });
 app.mount('#app');
