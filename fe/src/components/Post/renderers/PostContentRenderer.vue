@@ -1,14 +1,14 @@
 <template>
-    <div v-viewer.static>
-        <template v-for="(i, index) in content">
-            <NewlineToBr is="span" :key="index" v-if="i.type === undefined" :text="i.text" />
-            <a :key="index" v-if="i.type === 1 || i.type === 18"
+    <div v-viewer.static class="d-flex flex-wrap align-items-center">
+        <div v-for="(i, index) in content" :key="index" class="post-content-item">
+            <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
+            <a v-if="i.type === 1 || i.type === 18"
                :href="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</a>
-            <img :key="index" v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
+            <img v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" />
-            <img :key="index" v-if="i.type === 3" :src="imageUrl(i.originSrc)"
+            <img v-if="i.type === 3" :src="imageUrl(i.originSrc)"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
-            <a :key="index" v-if="i.type === 4"
+            <a v-if="i.type === 4"
                :href="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
                target="_blank">{{ i.text }}</a>
             <template v-if="i.type === 5">
@@ -17,27 +17,27 @@
                         todo: fix anti hotlinking on domain https://tiebapic.baidu.com and http://tb-video.bdstatic.com/tieba-smallvideo-transcode
                         <video controls :poster="i.src" :src="i.link" />
                     -->
-                    <a :key="index" :href="i.text" target="_blank">贴吧视频播放页</a>
+                    <a :href="i.text" target="_blank">贴吧视频播放页</a>
                 </template>
                 <template v-else>
-                    <a :key="index" :href="i.text" target="_blank">[[外站视频：{{ i.text }}]]</a>
+                    <a :href="i.text" target="_blank">[[外站视频：{{ i.text }}]]</a>
                 </template>
             </template>
-            <br :key="index" v-if="i.type === 7" />
-            <span :key="index" v-if="i.type === 9">{{ i.text }}</span>
-            <span :key="index" v-if="i.type === 10">
+            <br v-if="i.type === 7" />
+            <span v-if="i.type === 9">{{ i.text }}</span>
+            <span v-if="i.type === 10">
                 <!-- TODO: fill with voice player and play source url -->
                 [[语音 {{ i.voiceMd5 }} 时长:{{ i.duringTime }}s]]
             </span>
-            <img :key="index" v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
+            <img v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" class="d-block" />
-            <img :key="index" v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦"
+            <img v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
-            <a :key="index" v-if="i.type === 20" :href="i.memeInfo?.detailLink" target="_blank">
+            <a v-if="i.type === 20" :href="i.memeInfo?.detailLink" target="_blank">
                 <img :src="toHTTPS(i.src)"
                      referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
             </a>
-        </template>
+        </div>
     </div>
 </template>
 
@@ -118,10 +118,16 @@ const emoticonUrl = (text?: string) => {
     margin: .25rem;
     cursor: zoom-in;
 }
-span:has(+ .tieba-ugc-image) {
-    display: block;
+
+/* https://stackoverflow.com/questions/29732575/how-to-specify-line-breaks-in-a-multi-line-flexbox-layout/29733127#29733127 */
+.post-content-item {
+    display: contents;
 }
-.tieba-ugc-image + span {
-    display: block;
+/* https://stackoverflow.com/questions/18189147/selecting-an-element-that-doesnt-have-a-child-with-a-certain-class */
+.post-content-item:not(:has(.tieba-ugc-image)):has(+ .post-content-item > .tieba-ugc-image)::after,
+/* allow mupltie continuous .post-content-item > .tieba-ugc-image to not wrap */
+.post-content-item:has(.tieba-ugc-image):not(:has(+ .post-content-item > .tieba-ugc-image))::after {
+    content: '';
+    flex-basis: 100%;
 }
 </style>
