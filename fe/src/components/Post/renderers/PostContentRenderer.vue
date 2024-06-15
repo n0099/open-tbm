@@ -1,9 +1,42 @@
 <template>
     <div v-viewer.static>
-        <template v-for="(item, index) in content">
-            <NewlineToBr is="span" :key="index" v-if="item.type === undefined" :text="item.text" />
-            <a :key="index" v-if="item.type === 1"
-               :href="tryExtractTiebaOutboundUrl(item.link)" target="_blank">{{ item.text }}</a>
+        <template v-for="(i, index) in content">
+            <NewlineToBr is="span" :key="index" v-if="i.type === undefined" :text="i.text" />
+            <a :key="index" v-if="i.type === 1 || i.type === 18"
+               :href="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</a>
+            <img :key="index" v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
+                 referrerpolicy="no-referrer" loading="lazy" />
+            <img :key="index" v-if="i.type === 3" :src="imageUrl(i.origin_src)"
+                 referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
+            <a :key="index" v-if="i.type === 4"
+               :href="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
+               target="_blank">{{ i.text }}</a>
+            <template v-if="i.type === 5">
+                <template v-if="i.src !== undefined">
+                    <!--
+                        todo: fix anti hotlinking on domain https://tiebapic.baidu.com and http://tb-video.bdstatic.com/tieba-smallvideo-transcode
+                        <video controls :poster="i.src" :src="i.link" />
+                    -->
+                    <a :key="index" :href="i.text" target="_blank">贴吧视频播放页</a>
+                </template>
+                <template v-else>
+                    <a :key="index" :href="i.text" target="_blank">[[外站视频：{{ i.text }}]]</a>
+                </template>
+            </template>
+            <br :key="index" v-if="i.type === 7" />
+            <span :key="index" v-if="i.type === 9">{{ i.text }}</span>
+            <span :key="index" v-if="i.type === 10">
+                <!-- TODO: fill with voice player and play source url -->
+                [[语音 {{ i.voice_md5 }} 时长:{{ i.during_time }}s]]
+            </span>
+            <img :key="index" v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
+                 referrerpolicy="no-referrer" loading="lazy" class="d-block" />
+            <img :key="index" v-if="i.type === 16" :src="toHTTPS(i.graffiti_info?.url)" alt="贴吧涂鸦"
+                 referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
+            <a :key="index" v-if="i.type === 20" :href="i.meme_info?.detail_link" target="_blank">
+                <img :src="toHTTPS(i.src)"
+                     referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
+            </a>
         </template>
     </div>
 </template>
@@ -11,6 +44,7 @@
 <script setup lang="ts">
 import type { PostContent } from '@/api/postContent';
 import NewlineToBr from '@/components/NewlineToBr';
+import _ from 'lodash';
 
 defineProps<{ content: PostContent }>();
 
@@ -18,6 +52,59 @@ const tiebaOutboundUrlRegex = /^http:\/\/tieba\.baidu\.com\/mo\/q\/checkurl\?url
 const tryExtractTiebaOutboundUrl = (url?: string) =>
     (url === undefined ? undefined : tiebaOutboundUrlRegex.exec(url)?.groups?.[0] ?? url);
 
+/* eslint-disable @typescript-eslint/naming-convention */
+const emoticonsIndex = {
+    image_emoticon: { class: 'client', type: 'png' }, // 泡泡(<51)/客户端新版表情(>61)
+    // image_emoticon: { class: 'face', type: 'gif', prefix: 'i_f' }, // 旧版泡泡
+    'image_emoticon>51': { class: 'face', type: 'gif', prefix: 'i_f' }, // 泡泡-贴吧十周年(51>=i<=61)
+    bearchildren_: { class: 'bearchildren', type: 'gif' }, // 贴吧熊孩子
+    tiexing_: { class: 'tiexing', type: 'gif' }, // 痒小贱
+    ali_: { class: 'ali', type: 'gif' }, // 阿狸
+    llb_: { class: 'luoluobu', type: 'gif' }, // 罗罗布
+    b: { class: 'qpx_n', type: 'gif' }, // 气泡熊
+    xyj_: { class: 'xyj', type: 'gif' }, // 小幺鸡
+    ltn_: { class: 'lt', type: 'gif' }, // 冷兔
+    bfmn_: { class: 'bfmn', type: 'gif' }, // 白发魔女
+    pczxh_: { class: 'zxh', type: 'gif' }, // 张小盒
+    t_: { class: 'tsj', type: 'gif' }, // 兔斯基
+    wdj_: { class: 'wdj', type: 'png' }, // 豌豆荚
+    lxs_: { class: 'lxs', type: 'gif' }, // 冷先森
+    B_: { class: 'bobo', type: 'gif' }, // 波波
+    yz_: { class: 'shadow', type: 'gif' }, // 影子
+    w_: { class: 'ldw', type: 'gif' }, // 绿豆蛙
+    '10th_': { class: '10th', type: 'gif' } // 贴吧十周年
+} as const;
+/* eslint-enable @typescript-eslint/naming-convention */
+const emoticonRegex = /(.+?)(\d+|$)/u;
+const emoticonUrl = (text?: string) => {
+    if (text === undefined)
+        return '';
+    const regexMatches = emoticonRegex.exec(text);
+    if (regexMatches === null)
+        return '';
+
+    const rawEmoticon = { prefix: regexMatches.groups?.[1], ordinal: regexMatches.groups?.[2] };
+    if (rawEmoticon.prefix === 'image_emoticon' && rawEmoticon.ordinal === '')
+        rawEmoticon.ordinal = '1'; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
+
+    const filledEmoticon = {
+        ...rawEmoticon,
+        ...rawEmoticon.prefix === 'image_emoticon'
+            && Number(rawEmoticon.ordinal) >= 51 && Number(rawEmoticon.ordinal) <= 61
+            ? emoticonsIndex['image_emoticon>51']
+            : emoticonsIndex[rawEmoticon.prefix as keyof typeof emoticonsIndex]
+    };
+
+    return `https://tb2.bdstatic.com/tb/editor/images/${filledEmoticon.class}`
+        + `/${filledEmoticon.prefix}${filledEmoticon.ordinal}.${filledEmoticon.type}`;
+};
+
+const toHTTPS = (url?: string) =>
+    url?.replace('http://', 'https://');
+const imageUrl = (originSrc?: string) =>
+    (originSrc !== undefined && /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc)
+        ? `https://imgsrc.baidu.com/forum/pic/item/${originSrc}.jpg`
+        : originSrc);
 </script>
 
 <style scoped>
