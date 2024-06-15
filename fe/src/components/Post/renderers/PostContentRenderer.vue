@@ -6,7 +6,7 @@
                :href="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</a>
             <img :key="index" v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" />
-            <img :key="index" v-if="i.type === 3" :src="imageUrl(i.origin_src)"
+            <img :key="index" v-if="i.type === 3" :src="imageUrl(i.originSrc)"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
             <a :key="index" v-if="i.type === 4"
                :href="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
@@ -27,13 +27,13 @@
             <span :key="index" v-if="i.type === 9">{{ i.text }}</span>
             <span :key="index" v-if="i.type === 10">
                 <!-- TODO: fill with voice player and play source url -->
-                [[语音 {{ i.voice_md5 }} 时长:{{ i.during_time }}s]]
+                [[语音 {{ i.voiceMd5 }} 时长:{{ i.duringTime }}s]]
             </span>
             <img :key="index" v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" class="d-block" />
-            <img :key="index" v-if="i.type === 16" :src="toHTTPS(i.graffiti_info?.url)" alt="贴吧涂鸦"
+            <img :key="index" v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
-            <a :key="index" v-if="i.type === 20" :href="i.meme_info?.detail_link" target="_blank">
+            <a :key="index" v-if="i.type === 20" :href="i.memeInfo?.detailLink" target="_blank">
                 <img :src="toHTTPS(i.src)"
                      referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
             </a>
@@ -46,7 +46,7 @@ import type { PostContent } from '@/api/postContent';
 import NewlineToBr from '@/components/NewlineToBr';
 import _ from 'lodash';
 
-defineProps<{ content: PostContent }>();
+defineProps<{ content: PostContent | null }>();
 
 const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
 const imageUrl = (originSrc?: string) =>

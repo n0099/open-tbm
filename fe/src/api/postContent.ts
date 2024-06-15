@@ -1,9 +1,8 @@
 import type { Int, UInt } from '@/shared';
-/* eslint-disable @typescript-eslint/naming-convention */
 
 interface NativeApp {
-    is_native_app: UInt,
-    native_app: unknown[] // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/NativeApp.proto
+    isNativeApp: UInt,
+    nativeApp: unknown[] // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/NativeApp.proto
 }
 interface Link {
     text: string,
@@ -22,7 +21,7 @@ export type PostContent = Array<
     // {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "https://www.google.com", "type": "1"}
     // {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[失效] http://pan.baidu.com/s/", "type": "1", "url_type": "1"}
     // {"link": "http://tieba.baidu.com/mo/q/checkurl?url=", "text": "[有效] http://pan.baidu.com/s/", "type": "1", "url_type": "2"}
-    | HasType<1, { url_type: Int } & Link>
+    | HasType<1, { urlType: Int } & Link>
 
     // 表情 {"c": "滑稽", "text": "image_emoticon25", "type": "2"}
     | HasType<2, {
@@ -47,14 +46,14 @@ export type PostContent = Array<
     // http://imgsrc.baidu.com/forum/abpic/item/{image hash id}.jpg will shown as thumbnail
     | HasType<3, {
         src: string,
-        origin_size: UInt,
+        originSize: UInt,
         bsize: string,
-        cdn_src: string,
-        cdn_src_active: string,
-        big_cdn_src: string,
-        origin_src: string,
-        is_long_pic: UInt,
-        show_original_btn: UInt
+        cdnSrc: string,
+        cdnSrcActive: string,
+        bigCdnSrc: string,
+        originSrc: string,
+        isLongPic: UInt,
+        showOriginalBtn: UInt
     }>
 
     // @用户 {"uid": "12345", "text": "(@|)username", "type": "4"}
@@ -92,10 +91,10 @@ export type PostContent = Array<
         bsize: string,
         width: UInt,
         height: UInt,
-        e_type: UInt,
+        eType: UInt,
         count: Int,
-        during_time: UInt,
-        origin_size: UInt
+        duringTime: UInt,
+        originSize: UInt
     } & NativeApp>
 
     // 换行 {"type":"7", "text":"\n"} not found in many posts
@@ -116,8 +115,8 @@ export type PostContent = Array<
     //     "native_app": []
     // }
     | HasType<10, {
-        during_time: UInt,
-        voice_md5: string
+        duringTime: UInt,
+        voiceMd5: string
     } & NativeApp>
 
     // 客户端表情包
@@ -136,8 +135,8 @@ export type PostContent = Array<
         width: UInt,
         height: UInt,
         dynamic: string,
-        _static: string,
-        packet_name: string
+        static: string,
+        packetName: string
     }>
 
     // 涂鸦
@@ -156,15 +155,15 @@ export type PostContent = Array<
     // }
     | HasType<16, {
         bsize: string,
-        graffiti_info: { // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/GraffitiInfo.proto
+        graffitiInfo: { // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/GraffitiInfo.proto
             url: string,
             gid: Int
         },
-        cdn_src: string,
-        cdn_src_active: string,
-        big_cdn_src: string,
-        is_long_pic: UInt,
-        show_original_btn: UInt
+        cdnSrc: string,
+        cdnSrcActive: string,
+        bigCdnSrc: string,
+        isLongPic: UInt,
+        showOriginalBtn: UInt
     }>
 
     // 活动 not found
@@ -196,13 +195,13 @@ export type PostContent = Array<
     | HasType<20, {
         src: string,
         bsize: string,
-        meme_info: { // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/MemeInfo.proto
-            pck_id: UInt,
-            pic_id: UInt,
-            pic_url: string,
+        memeInfo: { // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/MemeInfo.proto
+            pckId: UInt,
+            picId: UInt,
+            picUrl: string,
             thumbnail: string,
             width: UInt,
             height: UInt,
-            detail_link: string
+            detailLink: string
         }
     }>>;

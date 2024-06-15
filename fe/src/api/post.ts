@@ -36,7 +36,7 @@ export interface Thread extends Post {
 export interface Reply extends Post {
     pid: Pid,
     floor: UInt,
-    content: PostContent,
+    content: PostContent | null,
     subReplyCount: UInt,
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     isFold: UInt | 0 | 6,
@@ -45,5 +45,5 @@ export interface Reply extends Post {
 export interface SubReply extends Post {
     pid: Pid,
     spid: Spid,
-    content: PostContent
+    content: PostContent | null
 }
