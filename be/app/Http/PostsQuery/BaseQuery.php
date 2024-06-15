@@ -301,7 +301,7 @@ abstract class BaseQuery
 
         Debugbar::startMeasure('parsePostContentProtoBufBytes');
         $replies->concat($subReplies)->each(function ($post) {
-            $post->content = $post->contentProtoBuf?->protoBufBytes->value;
+            $post->content = $post->contentProtoBuf?->protoBufBytes?->value;
             unset($post->contentProtoBuf);
         });
         Debugbar::stopMeasure('parsePostContentProtoBufBytes');

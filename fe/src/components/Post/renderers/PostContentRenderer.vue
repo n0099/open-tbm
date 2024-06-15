@@ -48,44 +48,52 @@ import _ from 'lodash';
 
 defineProps<{ content: PostContent }>();
 
-const tiebaOutboundUrlRegex = /^http:\/\/tieba\.baidu\.com\/mo\/q\/checkurl\?url=(.+?)(&|$)/u;
-const tryExtractTiebaOutboundUrl = (url?: string) =>
-    (url === undefined ? undefined : tiebaOutboundUrlRegex.exec(url)?.groups?.[0] ?? url);
+const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
+const imageUrl = (originSrc?: string) =>
+    (originSrc !== undefined && /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc)
+        ? `https://imgsrc.baidu.com/forum/pic/item/${originSrc}.jpg`
+        : originSrc);
+const tryExtractTiebaOutboundUrl = (rawURL?: string) => {
+    const url = new URL(rawURL ?? '');
+    if (url.hostname === 'tieba.baidu.com' && url.pathname === '/mo/q/checkurl')
+        return url.searchParams.get('url') ?? undefined;
 
-/* eslint-disable @typescript-eslint/naming-convention */
-const emoticonsIndex = {
-    image_emoticon: { class: 'client', type: 'png' }, // 泡泡(<51)/客户端新版表情(>61)
-    // image_emoticon: { class: 'face', type: 'gif', prefix: 'i_f' }, // 旧版泡泡
-    'image_emoticon>51': { class: 'face', type: 'gif', prefix: 'i_f' }, // 泡泡-贴吧十周年(51>=i<=61)
-    bearchildren_: { class: 'bearchildren', type: 'gif' }, // 贴吧熊孩子
-    tiexing_: { class: 'tiexing', type: 'gif' }, // 痒小贱
-    ali_: { class: 'ali', type: 'gif' }, // 阿狸
-    llb_: { class: 'luoluobu', type: 'gif' }, // 罗罗布
-    b: { class: 'qpx_n', type: 'gif' }, // 气泡熊
-    xyj_: { class: 'xyj', type: 'gif' }, // 小幺鸡
-    ltn_: { class: 'lt', type: 'gif' }, // 冷兔
-    bfmn_: { class: 'bfmn', type: 'gif' }, // 白发魔女
-    pczxh_: { class: 'zxh', type: 'gif' }, // 张小盒
-    t_: { class: 'tsj', type: 'gif' }, // 兔斯基
-    wdj_: { class: 'wdj', type: 'png' }, // 豌豆荚
-    lxs_: { class: 'lxs', type: 'gif' }, // 冷先森
-    B_: { class: 'bobo', type: 'gif' }, // 波波
-    yz_: { class: 'shadow', type: 'gif' }, // 影子
-    w_: { class: 'ldw', type: 'gif' }, // 绿豆蛙
-    '10th_': { class: '10th', type: 'gif' } // 贴吧十周年
-} as const;
-/* eslint-enable @typescript-eslint/naming-convention */
-const emoticonRegex = /(.+?)(\d+|$)/u;
+    return rawURL;
+};
 const emoticonUrl = (text?: string) => {
     if (text === undefined)
         return '';
-    const regexMatches = emoticonRegex.exec(text);
+    const regexMatches = /(.+?)(\d+|$)/u.exec(text);
     if (regexMatches === null)
         return '';
 
-    const rawEmoticon = { prefix: regexMatches.groups?.[1], ordinal: regexMatches.groups?.[2] };
+    const rawEmoticon = { prefix: regexMatches[1], ordinal: regexMatches[2] };
     if (rawEmoticon.prefix === 'image_emoticon' && rawEmoticon.ordinal === '')
         rawEmoticon.ordinal = '1'; // for tieba hehe emoticon: https://tb2.bdstatic.com/tb/editor/images/client/image_emoticon1.png
+
+    /* eslint-disable @typescript-eslint/naming-convention */
+    const emoticonsIndex = {
+        image_emoticon: { class: 'client', ext: 'png' }, // 泡泡(<51)/客户端新版表情(>61)
+        // image_emoticon: { class: 'face', ext: 'gif', prefix: 'i_f' }, // 旧版泡泡
+        'image_emoticon>51': { class: 'face', ext: 'gif', prefix: 'i_f' }, // 泡泡-贴吧十周年(51>=i<=61)
+        bearchildren_: { class: 'bearchildren', ext: 'gif' }, // 贴吧熊孩子
+        tiexing_: { class: 'tiexing', ext: 'gif' }, // 痒小贱
+        ali_: { class: 'ali', ext: 'gif' }, // 阿狸
+        llb_: { class: 'luoluobu', ext: 'gif' }, // 罗罗布
+        b: { class: 'qpx_n', ext: 'gif' }, // 气泡熊
+        xyj_: { class: 'xyj', ext: 'gif' }, // 小幺鸡
+        ltn_: { class: 'lt', ext: 'gif' }, // 冷兔
+        bfmn_: { class: 'bfmn', ext: 'gif' }, // 白发魔女
+        pczxh_: { class: 'zxh', ext: 'gif' }, // 张小盒
+        t_: { class: 'tsj', ext: 'gif' }, // 兔斯基
+        wdj_: { class: 'wdj', ext: 'png' }, // 豌豆荚
+        lxs_: { class: 'lxs', ext: 'gif' }, // 冷先森
+        B_: { class: 'bobo', ext: 'gif' }, // 波波
+        yz_: { class: 'shadow', ext: 'gif' }, // 影子
+        w_: { class: 'ldw', ext: 'gif' }, // 绿豆蛙
+        '10th_': { class: '10th', ext: 'gif' } // 贴吧十周年
+    } as const;
+    /* eslint-enable @typescript-eslint/naming-convention */
 
     const filledEmoticon = {
         ...rawEmoticon,
@@ -96,15 +104,8 @@ const emoticonUrl = (text?: string) => {
     };
 
     return `https://tb2.bdstatic.com/tb/editor/images/${filledEmoticon.class}`
-        + `/${filledEmoticon.prefix}${filledEmoticon.ordinal}.${filledEmoticon.type}`;
+        + `/${filledEmoticon.prefix}${filledEmoticon.ordinal}.${filledEmoticon.ext}`;
 };
-
-const toHTTPS = (url?: string) =>
-    url?.replace('http://', 'https://');
-const imageUrl = (originSrc?: string) =>
-    (originSrc !== undefined && /^(?:[0-9a-f]{40}|[0-9a-f]{24})$/u.test(originSrc)
-        ? `https://imgsrc.baidu.com/forum/pic/item/${originSrc}.jpg`
-        : originSrc);
 </script>
 
 <style scoped>
