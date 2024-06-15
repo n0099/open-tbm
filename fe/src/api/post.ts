@@ -1,3 +1,4 @@
+import type { PostContent } from './postContent';
 import type { BaiduUserID } from './user';
 import type { BoolInt, Int, ObjUnknown, Pid, Spid, Tid, UInt, UnixTimestamp } from '@/shared';
 
@@ -35,7 +36,7 @@ export interface Thread extends Post {
 export interface Reply extends Post {
     pid: Pid,
     floor: UInt,
-    content: string, // original json convert to HTML string via be/app/resources/views/renderPostContent.blade.php
+    content: PostContent,
     subReplyCount: UInt,
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     isFold: UInt | 0 | 6,
@@ -44,5 +45,5 @@ export interface Reply extends Post {
 export interface SubReply extends Post {
     pid: Pid,
     spid: Spid,
-    content: string // original json convert to HTML string via be/app/resources/views/renderPostContent.blade.php
+    content: PostContent
 }

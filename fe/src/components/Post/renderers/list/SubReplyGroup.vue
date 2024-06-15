@@ -27,7 +27,7 @@
                                        class="bg-info" />
                     </div>
                 </template>
-                <div v-viewer.static class="sub-reply-content" v-html="subReply.content" />
+                <PostContentRenderer :content="subReply.content" class="sub-reply-content" />
             </li>
         </ul>
     </div>
@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import type { UserProvision } from './RendererList.vue';
+import PostContentRenderer from '../PostContentRenderer.vue';
 import BadgePostCommon from '@/components/Post/badges/BadgePostCommon.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';

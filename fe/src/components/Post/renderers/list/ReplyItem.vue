@@ -36,7 +36,7 @@
                 <BadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
             </div>
             <div class="col me-2 px-1 border-start overflow-auto">
-                <div v-viewer.static class="reply-content p-2" v-html="reply.content" />
+                <PostContentRenderer :content="reply.content" class="reply-content p-2" />
                 <template v-if="reply.subReplies.length > 0">
                     <SubReplyGroup v-for="(subReplyGroup, index) in reply.subReplies" :key="index"
                                    :previousSubReplyGroup="reply.subReplies[index - 1]" :subReplyGroup="subReplyGroup"
@@ -51,6 +51,7 @@
 import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
 import { guessReplyContainIntrinsicBlockSize } from './index';
 import SubReplyGroup from './SubReplyGroup.vue';
+import PostContentRenderer from '../PostContentRenderer.vue';
 import BadgePostCommon from '@/components/Post/badges/BadgePostCommon.vue';
 import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
 import BadgeUser from '@/components/Post/badges/BadgeUser.vue';

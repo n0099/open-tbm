@@ -49,10 +49,10 @@
                     </template>
                 </template>
                 <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                    <!-- eslint-disable vue/no-v-text-v-html-on-component -->
-                    <component :is="subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'"
-                               v-viewer.static v-html="content" />
-                    <!-- eslint-enable vue/no-v-text-v-html-on-component -->
+                    <PostContentRenderer :content="content"
+                                         :class="{
+                                             'd-inline-block': subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'
+                                         }" />
                     <Table v-if="subRepliesKeyByPid[pid] !== undefined"
                            :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
                            defaultExpandAllRows expandRowByClick
@@ -71,7 +71,7 @@
                             </template>
                         </template>
                         <template #expandedRowRender="{ record: { content: subReplyContent } }">
-                            <span v-viewer.static v-html="subReplyContent" />
+                            <PostContentRenderer :content="subReplyContent" class="d-inline-block" />
                         </template>
                     </Table>
                 </template>
@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import { baseGetUser, baseRenderUsername } from './common';
+import PostContentRenderer from './PostContentRenderer.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 
