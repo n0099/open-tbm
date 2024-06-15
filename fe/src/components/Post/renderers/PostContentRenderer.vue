@@ -19,3 +19,19 @@ const tryExtractTiebaOutboundUrl = (url?: string) =>
     (url === undefined ? undefined : tiebaOutboundUrlRegex.exec(url)?.groups?.[0] ?? url);
 
 </script>
+
+<style scoped>
+.tieba-image {
+    max-inline-size: 18.75rem;
+    max-block-size: 18.75rem;
+    object-fit: contain;
+    margin: .25rem;
+    cursor: zoom-in;
+}
+span:has(+ .tieba-image) {
+    display: block;
+}
+.tieba-image + span {
+    display: block;
+}
+</style>

@@ -23,3 +23,17 @@ defineProps<{
 }>();
 defineEmits<{ clickNextPage: [] }>();
 </script>
+
+<style scoped>
+:deep(.tieba-user-portrait-small) {
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    object-fit: contain;
+}
+
+:deep(.tieba-user-portrait-large) {
+    inline-size: 6rem;
+    block-size: 6rem;
+    object-fit: contain;
+}
+</style>

@@ -1,6 +1,5 @@
 import type { BaiduUserID, User } from '@/api/user';
 import { app } from '@/main';
-import '@/styles/tieba.css';
 import viewer from 'v-viewer';
 import 'viewerjs/dist/viewer.css';
 import _ from 'lodash';
