@@ -1,15 +1,6 @@
 import type { BaiduUserID, User } from '@/api/user';
-import { app } from '@/main';
-import viewer from 'v-viewer';
 import 'viewerjs/dist/viewer.css';
 import _ from 'lodash';
-
-app.use(viewer, {
-    defaultOptions: {
-        url: 'data-origin',
-        filter: (img: HTMLImageElement) => img.classList.contains('tieba-image')
-    }
-});
 
 export const baseGetUser = (users: User[]) => (uid: BaiduUserID): User => _.find(users, { uid }) ?? {
     uid: 0,

@@ -7,7 +7,7 @@
             <img :key="index" v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" />
             <img :key="index" v-if="i.type === 3" :src="imageUrl(i.originSrc)"
-                 referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
+                 referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
             <a :key="index" v-if="i.type === 4"
                :href="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
                target="_blank">{{ i.text }}</a>
@@ -32,10 +32,10 @@
             <img :key="index" v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" class="d-block" />
             <img :key="index" v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦"
-                 referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
+                 referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
             <a :key="index" v-if="i.type === 20" :href="i.memeInfo?.detailLink" target="_blank">
                 <img :src="toHTTPS(i.src)"
-                     referrerpolicy="no-referrer" loading="lazy" class="tieba-image" />
+                     referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
             </a>
         </template>
     </div>
@@ -44,9 +44,11 @@
 <script setup lang="ts">
 import type { PostContent } from '@/api/postContent';
 import NewlineToBr from '@/components/NewlineToBr';
+import { useViewerStore } from '@/stores/viewer';
 import _ from 'lodash';
 
 defineProps<{ content: PostContent | null }>();
+useViewerStore().enable();
 
 const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
 const imageUrl = (originSrc?: string) =>
@@ -109,17 +111,17 @@ const emoticonUrl = (text?: string) => {
 </script>
 
 <style scoped>
-.tieba-image {
+.tieba-ugc-image {
     max-inline-size: 18.75rem;
     max-block-size: 18.75rem;
     object-fit: contain;
     margin: .25rem;
     cursor: zoom-in;
 }
-span:has(+ .tieba-image) {
+span:has(+ .tieba-ugc-image) {
     display: block;
 }
-.tieba-image + span {
+.tieba-ugc-image + span {
     display: block;
 }
 </style>

@@ -61,7 +61,7 @@ export const scrollToPostListItemByRoute = (route: RouteLocationNormalized) => {
     });
 };
 export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]) => {
-    const imageWidth = convertRemToPixels(18.75); // match with .tieba-image:max-inline-size in components/Post/renderers/PostContentRenderer.vue
+    const imageWidth = convertRemToPixels(18.75); // match with .tieba-ugc-image:max-inline-size in components/Post/renderers/PostContentRenderer.vue
 
     // block-size of .reply-content should be similar when author usernames are also similar, so only takes the first element
     const contentEl = document.querySelector<HTMLElement>('.reply-content');
@@ -123,7 +123,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
     replyElements.forEach(el => {
         el.attributeStyleMap.set('--sub-reply-group-count', el.querySelectorAll('.sub-reply-group').length);
 
-        const imageLineCount = (el.querySelectorAll('.tieba-image').length * imageWidth) / contentWidth;
+        const imageLineCount = (el.querySelectorAll('.tieba-ugc-image').length * imageWidth) / contentWidth;
         el.attributeStyleMap.set('--predicted-image-height', `${Math.ceil(imageLineCount) * imageWidth}px`);
 
         const replyContentHeight = predictPostContentHeight(contentWidth)(el.querySelector('.reply-content'));
