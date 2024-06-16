@@ -39,9 +39,9 @@ useHead({ title: titleTemplate('用户查询') });
 const params = ref<Pick<SelectUserParams, Exclude<SelectUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
 const selectUserBy = ref<SelectUserBy>('');
 const userPages = ref<Array<ApiUsers['response']>>([]);
-const isLoading = ref<boolean>(false);
+const isLoading = ref(false);
 const lastFetchError = ref<ApiError | null>(null);
-const showPlaceholderPostList = ref<boolean>(false);
+const showPlaceholderPostList = ref(false);
 
 const fetchUsers = async (_route: RouteLocationNormalized, isNewQuery: boolean) => {
     const startTime = Date.now();

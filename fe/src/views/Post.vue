@@ -53,7 +53,8 @@ const route = useRoute();
 const router = useRouter();
 const queryClient = useQueryClient();
 const queryParam = ref<ApiPosts['queryParam']>();
-const shouldFetch = ref<boolean>(false);
+const shouldFetch = ref(false);
+const isRouteNewQuery = ref(false);
 const initialPageCursor = ref<Cursor>('');
 const { data, error, isPending, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
     useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
@@ -93,12 +94,14 @@ watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
     const isCached = maxUpdatedAt < startTime;
     const networkTime = isCached ? 0 : maxUpdatedAt - startTime;
     await nextTick(); // wait for child components to finish dom update
+    if (isRouteNewQuery.value)
+        window.scrollTo({ top: 0 });
     const fetchedPage = data.value?.pages.find(i => i.pages.currentCursor === getRouteCursorParam(route));
     const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
     const renderTime = (Date.now() - startTime - networkTime) / 1000;
     notyShow('success', `已加载${postCount}条记录
         前端耗时${renderTime.toFixed(2)}s
-        ${isCached ? '使用本地缓存' : `后端+网络耗时${_.round(networkTime / 1000, 2)}s`}`);
+        ${isCached ? '使用前端本地缓存' : `后端+网络耗时${_.round(networkTime / 1000, 2)}s`}`);
 });
 watch(isFetchedAfterMount, async () => {
     if (isFetchedAfterMount.value && renderType.value === 'list') {
@@ -137,8 +140,8 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
 onBeforeRouteUpdate(async (to, from) => {
     const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
         .isTriggeredBy('<QueryForm>@submit', { ...to, force: true });
-    if (isTriggeredByQueryForm || compareRouteIsNewQuery(to, from))
-        window.scrollTo({ top: 0 });
+    isRouteNewQuery.value = to.hash === ''
+        && (isTriggeredByQueryForm || compareRouteIsNewQuery(to, from));
     await parseRouteThenFetch(to);
 
     /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */

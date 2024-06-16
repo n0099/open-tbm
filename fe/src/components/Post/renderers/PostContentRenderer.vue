@@ -1,5 +1,5 @@
 <template>
-    <div v-viewer.static class="d-flex flex-wrap align-items-center">
+    <div v-viewer.static>
         <div v-for="(i, index) in content" :key="index" class="post-content-item">
             <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
             <a v-if="i.type === 1 || i.type === 18"
@@ -128,6 +128,6 @@ const emoticonUrl = (text?: string) => {
 /* allow mupltie continuous .post-content-item > .tieba-ugc-image to not wrap */
 .post-content-item:has(.tieba-ugc-image):not(:has(+ .post-content-item > .tieba-ugc-image))::after {
     content: '';
-    flex-basis: 100%;
+    display: block;
 }
 </style>

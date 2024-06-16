@@ -139,7 +139,7 @@ export default createRouter({
                 return ret;
         }
 
-        if (to.hash)
+        if (to.hash !== '')
             return { el: to.hash, top: 0 };
         if (from.name !== undefined) { // when user refresh page
             assertRouteNameIsStr(to.name);
