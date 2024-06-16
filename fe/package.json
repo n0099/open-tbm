@@ -4,9 +4,11 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "vue-tsc && vite build",
-        "preview": "vite preview"
+        "build": "nuxt build",
+        "dev": "nuxt dev",
+        "generate": "nuxt generate",
+        "preview": "nuxt preview",
+        "postinstall": "nuxt prepare"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
