@@ -1323,7 +1323,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nuxt/kit@npm:3.12.2, @nuxt/kit@npm:^3.11.2":
+"@nuxt/kit@npm:3.12.2, @nuxt/kit@npm:^3.11.2, @nuxt/kit@npm:^3.5.0":
   version: 3.12.2
   resolution: "@nuxt/kit@npm:3.12.2"
   dependencies:
@@ -1728,6 +1728,16 @@ __metadata:
     "@parcel/watcher-win32-x64":
       optional: true
   checksum: 10c0/33b7112094b9eb46c234d824953967435b628d3d93a0553255e9910829b84cab3da870153c3a870c31db186dc58f3b2db81382fcaee3451438aeec4d786a6211
+  languageName: node
+  linkType: hard
+
+"@pinia/nuxt@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@pinia/nuxt@npm:0.5.1"
+  dependencies:
+    "@nuxt/kit": "npm:^3.5.0"
+    pinia: "npm:>=2.1.7"
+  checksum: 10c0/754720dc7285635b49c441d5f0e267828572277b0ee626345adf6f2ab0537241c4d24b65365ebc1c4f7e8c40350500ae6d712cb06fa594511ea7c306e6772d6e
   languageName: node
   linkType: hard
 
@@ -7692,7 +7702,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pinia@npm:^2.1.7":
+"pinia@npm:>=2.1.7, pinia@npm:^2.1.7":
   version: 2.1.7
   resolution: "pinia@npm:2.1.7"
   dependencies:
@@ -9188,6 +9198,7 @@ __metadata:
     "@fortawesome/free-regular-svg-icons": "npm:^6.5.2"
     "@fortawesome/free-solid-svg-icons": "npm:^6.5.2"
     "@fortawesome/vue-fontawesome": "npm:^3.0.8"
+    "@pinia/nuxt": "npm:^0.5.1"
     "@popperjs/core": "npm:^2.11.8"
     "@stylistic/eslint-plugin": "npm:^2.2.0"
     "@stylistic/eslint-plugin-migrate": "npm:^2.2.0"
