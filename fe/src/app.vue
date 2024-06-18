@@ -24,10 +24,7 @@
     <MinimumResolutionWarning />
     <img :src="iconLoadingBlock" class="d-none" id="loadingBlock" />
     <ConfigProvider :locale="AntdZhCn">
-        <div class="container">
-            <NuxtPage />
-        </div>
-        <NuxtPage name="escapeContainer" />
+        <NuxtPage />
     </ConfigProvider>
     <footer class="footer-outer text-light pt-4 mt-auto">
         <div class="text-center">

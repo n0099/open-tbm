@@ -1,26 +1,28 @@
 <template>
-    <div class="container">
-        <QueryForm ref="queryFormRef" :isLoading="isFetching" />
-        <Menu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
-            <MenuItem key="list">列表视图</MenuItem>
-            <MenuItem key="table">表格视图</MenuItem>
-        </Menu>
-    </div>
-    <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
-        <div class="row flex-nowrap">
-            <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
-            <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
-                <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
-                          @clickNextPage="() => clickNextPage()" :posts="page" :renderType="renderType"
-                          :isFetching="isFetching" :hasNextPage="hasNextPage"
-                          :isLastPageInPages="pageIndex === data.pages.length - 1" />
-            </div>
-            <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
+    <div>
+        <div class="container">
+            <QueryForm ref="queryFormRef" :isLoading="isFetching" />
+            <Menu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
+                <MenuItem key="list">列表视图</MenuItem>
+                <MenuItem key="table">表格视图</MenuItem>
+            </Menu>
         </div>
-    </div>
-    <div class="container">
-        <PlaceholderError :error="error" class="border-top" />
-        <PlaceholderPostList v-show="isPending || isFetchingNextPage" :isLoading="isFetching" />
+        <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
+            <div class="row flex-nowrap">
+                <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
+                <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
+                    <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
+                            @clickNextPage="() => clickNextPage()" :posts="page" :renderType="renderType"
+                            :isFetching="isFetching" :hasNextPage="hasNextPage"
+                            :isLastPageInPages="pageIndex === data.pages.length - 1" />
+                </div>
+                <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
+            </div>
+        </div>
+        <div class="container">
+            <PlaceholderError :error="error" class="border-top" />
+            <PlaceholderPostList v-show="isPending || isFetchingNextPage" :isLoading="isFetching" />
+        </div>
     </div>
 </template>
 
