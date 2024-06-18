@@ -49,8 +49,8 @@ const navs = reactive<Array<DropDown | Route>>([
         title: '查询',
         icon: faSearch,
         routes: [
-            { route: 'post', title: '帖子', icon: faCommentDots },
-            { route: 'user', title: '用户', icon: faUsers }
+            { route: 'posts', title: '帖子', icon: faCommentDots },
+            { route: 'users', title: '用户', icon: faUsers }
         ]
     },
     {

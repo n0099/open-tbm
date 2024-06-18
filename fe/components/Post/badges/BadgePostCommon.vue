@@ -7,7 +7,7 @@
         <FontAwesomeIcon :icon="faHashtag" size="lg" class="align-bottom" />
     </NuxtLink>
     <NuxtLink :to="{
-                    name: `post/${postIDKey}`,
+                    name: `posts/${postIDKey}`,
                     params: { [props.postIDKey]: props.post[props.postIDKey] as Tid | Pid | Spid }
                 }"
                 :data-tippy-content="`固定链接/只看此${postTypeText}`"

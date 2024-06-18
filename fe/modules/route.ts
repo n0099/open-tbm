@@ -7,18 +7,18 @@ export default defineNuxtModule({
         extendPages(pages => {
             const postFile = resolver.resolve('../pages/posts.vue');
             pages.find(p => p.path === '/posts')?.children?.push(
-                { path: 'fid/:fid(\\d+)', name: 'post/fid', file: postFile },
-                { path: 'tid/:tid(\\d+)', name: 'post/tid', file: postFile },
-                { path: 'pid/:pid(\\d+)', name: 'post/pid', file: postFile },
-                { path: 'spid/:spid(\\d+)', name: 'post/spid', file: postFile },
-                { path: ':pathMatch(.*)*', name: 'post/param' }
+                { path: 'fid/:fid(\\d+)', name: 'posts/fid', file: postFile },
+                { path: 'tid/:tid(\\d+)', name: 'posts/tid', file: postFile },
+                { path: 'pid/:pid(\\d+)', name: 'posts/pid', file: postFile },
+                { path: 'spid/:spid(\\d+)', name: 'posts/spid', file: postFile },
+                { path: ':pathMatch(.*)*', name: 'posts/param' }
             );
             pages.push({ path: '/p', redirect: '/posts' });
             const userFile = resolver.resolve('../pages/users.vue');
             pages.find(p => p.path === '/users')?.children?.push(
-                { path: 'id/:uid(\\d+)', name: 'user/uid', file: userFile },
-                { path: 'name/:name', name: 'user/name', file: userFile },
-                { path: 'displayName/:displayName', name: 'user/displayName', file: userFile }
+                { path: 'id/:uid(\\d+)', name: 'users/uid', file: userFile },
+                { path: 'name/:name', name: 'users/name', file: userFile },
+                { path: 'displayName/:displayName', name: 'users/displayName', file: userFile }
             );
             pages.push({ path: '/u', redirect: '/users' });
         });

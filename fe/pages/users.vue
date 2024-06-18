@@ -74,7 +74,7 @@ watchEffect(() => {
     selectUserBy.value = removeStart(removeEnd(
         route.name?.toString() ?? '',
         routeNameSuffix.page
-    ), 'user/') as SelectUserBy;
+    ), 'users/') as SelectUserBy;
     params.value = { ..._.omit(props, 'cursor'), uid: Number(props.uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {

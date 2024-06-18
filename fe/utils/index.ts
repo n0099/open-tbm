@@ -62,7 +62,7 @@ export const toUserProfileUrl = (user: Partial<Pick<User, 'name' | 'portrait'>>)
 export const toUserPortraitImageUrl = (portrait: string) =>
     `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
 export const toUserRoute = (uid: BaiduUserID): LocationAsRelativeRaw =>
-    ({ name: 'user/uid', params: { uid: uid.toString() } });
+    ({ name: 'users/uid', params: { uid: uid.toString() } });
 
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
 export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);

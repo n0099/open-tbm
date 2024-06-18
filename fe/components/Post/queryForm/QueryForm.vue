@@ -267,7 +267,7 @@ const generateRoute = (): RouteObjectRaw => { // decide which route to go
                 && postIDParam[0]?.subParam === undefined) { // is range subParam not set
                 // exit early to prevent pushing other route
                 return {
-                    name: `post/${postIDName}`,
+                    name: `posts/${postIDName}`,
                     params: { [postIDName]: postIDParam[0].value?.toString() }
                 };
             }
@@ -276,7 +276,7 @@ const generateRoute = (): RouteObjectRaw => { // decide which route to go
     if (clearedUniqueParams.fid !== undefined
         && _.isEmpty(clearedParams)
         && _.isEmpty(_.omit(clearedUniqueParams, 'fid'))) { // fid route
-        return { name: 'post/fid', params: { fid: clearedUniqueParams.fid.value.toString() } };
+        return { name: 'posts/fid', params: { fid: clearedUniqueParams.fid.value.toString() } };
     }
 
     return generateParamRoute(clearedUniqueParams, clearedParams); // param route
@@ -362,9 +362,9 @@ const parseRoute = (route: RouteLocationNormalized) => {
     const routeName = removeEnd(route.name, routeNameSuffix.cursor);
 
     // parse route path to params
-    if (routeName === 'post/param' && _.isArray(route.params.pathMatch)) {
+    if (routeName === 'posts/param' && _.isArray(route.params.pathMatch)) {
         parseParamRoute(route.params.pathMatch); // omit the cursor param from route full path
-    } else if (routeName === 'post/fid' && !_.isArray(route.params.fid)) {
+    } else if (routeName === 'posts/fid' && !_.isArray(route.params.fid)) {
         uniqueParams.value.fid.value = parseInt(route.params.fid);
     } else { // post id routes
         uniqueParams.value = _.mapValues(uniqueParams.value, param =>
