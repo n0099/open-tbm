@@ -5,7 +5,7 @@
         <template #bodyCell="{ column: { dataIndex: column }, record }">
             <template v-if="column === 'tid'">
                 <template v-for="tid in [(record as Thread).tid]" :key="tid">
-                    <RouterLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</RouterLink>
+                    <NuxtLink :to="{ name: 'post/tid', params: { tid } }">{{ tid }}</NuxtLink>
                 </template>
             </template>
             <template v-else-if="column === 'titleWithTag'">

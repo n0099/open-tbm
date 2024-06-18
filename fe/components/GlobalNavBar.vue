@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar navbar-expand-lg shadow-sm bg-light">
         <div class="container-fluid" id="nav">
-            <RouterLink to="/" class="navbar-brand">open-tbm @ {{ envInstanceName }}</RouterLink>
+            <NuxtLink to="/" class="navbar-brand">open-tbm @ {{ envInstanceName }}</NuxtLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                     aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon" />
@@ -15,16 +15,16 @@
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
                             </a>
                             <div class="dropdown-menu">
-                                <RouterLink v-for="r in nav.routes" :key="r.route"
+                                <NuxtLink v-for="r in nav.routes" :key="r.route"
                                             :to="{ name: r.route }" class="nav-link">
                                     <FontAwesomeIcon v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
-                                </RouterLink>
+                                </NuxtLink>
                             </div>
                         </li>
                         <li v-else class="nav-item" :class="{ action: nav.isActive }">
-                            <RouterLink :to="{ name: nav.route }" class="nav-link">
+                            <NuxtLink :to="{ name: nav.route }" class="nav-link">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
-                            </RouterLink>
+                            </NuxtLink>
                         </li>
                     </template>
                 </ul>

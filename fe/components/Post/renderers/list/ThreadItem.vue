@@ -47,12 +47,12 @@
                     </span>
                 </div>
                 <div class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
-                    <RouterLink :to="toUserRoute(thread.authorUid)" class="fs-.75">
+                    <NuxtLink :to="toUserRoute(thread.authorUid)" class="fs-.75">
                         <span v-if="thread.latestReplierUid !== thread.authorUid"
                               class="fw-normal link-success">楼主：</span>
                         <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
                         <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
-                    </RouterLink>
+                    </NuxtLink>
                     <BadgeUser v-if="getUser(thread.authorUid).currentForumModerator !== null"
                                :user="getUser(thread.authorUid)" class="fs-.75 ms-1" />
                     <template v-if="thread.latestReplierUid === null">
@@ -62,10 +62,10 @@
                         </span>
                     </template>
                     <template v-else-if="thread.latestReplierUid !== thread.authorUid">
-                        <RouterLink :to="toUserRoute(thread.latestReplierUid)" class="fs-.75 ms-2">
+                        <NuxtLink :to="toUserRoute(thread.latestReplierUid)" class="fs-.75 ms-2">
                             <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                             <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
-                        </RouterLink>
+                        </NuxtLink>
                         <BadgeUser v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
                                    :user="getUser(thread.latestReplierUid)" class="fs-.75 ms-1" />
                     </template>

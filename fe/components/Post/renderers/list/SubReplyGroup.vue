@@ -5,7 +5,7 @@
                 :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
                 class="sub-reply-item list-group-item">
                 <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
-                    <RouterLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined" :to="toUserRoute(author.uid)"
+                    <NuxtLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined" :to="toUserRoute(author.uid)"
                                 class="sub-reply-author text-wrap badge bg-light">
                         <img :src="toUserPortraitImageUrl(author.portrait)"
                              loading="lazy" class="tieba-user-portrait-small" />
@@ -15,7 +15,7 @@
                         <BadgeUser :user="getUser(subReply.authorUid)"
                                    :threadAuthorUid="thread.authorUid"
                                    :replyAuthorUid="reply.authorUid" />
-                    </RouterLink>
+                    </NuxtLink>
                     <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                         <BadgePostCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
                         <BadgePostTime postType="楼中楼"

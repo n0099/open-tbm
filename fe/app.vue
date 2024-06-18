@@ -5,9 +5,9 @@
     <img :src="iconLoadingBlock" class="d-none" id="loadingBlock" />
     <ConfigProvider :locale="AntdZhCn">
         <div class="container">
-            <RouterView />
+            <NuxtPage />
         </div>
-        <RouterView name="escapeContainer" />
+        <NuxtPage name="escapeContainer" />
     </ConfigProvider>
     <footer class="footer-outer text-light pt-4 mt-auto">
         <div class="text-center">

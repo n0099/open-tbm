@@ -1,19 +1,19 @@
 <template>
     <code class="text-primary-emphasis">{{ postIDKey }}:{{ props.post[props.postIDKey] }}</code>
-    <RouterLink v-if="postIDKey === 'tid' || postIDKey === 'pid'"
+    <NuxtLink v-if="postIDKey === 'tid' || postIDKey === 'pid'"
                 :to="{ hash: `#${postIDKey === 'tid' ? 't' : ''}${props.post[props.postIDKey]}` }"
                 :data-tippy-content="`跳至本${postTypeText}链接`"
                 class="badge bg-light rounded-pill link-dark">
         <FontAwesomeIcon :icon="faHashtag" size="lg" class="align-bottom" />
-    </RouterLink>
-    <RouterLink :to="{
+    </NuxtLink>
+    <NuxtLink :to="{
                     name: `post/${postIDKey}`,
                     params: { [props.postIDKey]: props.post[props.postIDKey] as Tid | Pid | Spid }
                 }"
                 :data-tippy-content="`固定链接/只看此${postTypeText}`"
                 class="badge bg-light rounded-pill link-dark">
         <FontAwesomeIcon :icon="faLink" size="lg" class="align-bottom" />
-    </RouterLink>
+    </NuxtLink>
     <a :href="tiebaPostLink(props.post.tid,
                             (props.post as Reply | SubReply).pid,
                             (props.post as SubReply).spid)"
