@@ -10,5 +10,6 @@ export default defineNuxtConfig({
     ],
     imports: {
         dirs: ['api/**']
-    }
+    },
+    css: ['~/assets/styles/style.css']
 });

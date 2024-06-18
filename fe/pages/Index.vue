@@ -5,7 +5,6 @@
 </template>
 
 <script setup lang="ts">
-import { titleTemplate } from '@/shared';
 import { useHead } from '@unhead/vue';
 
 useHead({ title: titleTemplate('首页') });

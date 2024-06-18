@@ -1,13 +1,11 @@
-import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
-import Index from '@/views/Index.vue';
-import { ApiResponseError } from '@/api';
-import type { Cursor } from '@/api/index.d';
-import { notyShow } from '@/shared';
-import { useLazyLoadRouteViewStore } from '@/stores/lazyLoadRouteView';
+import type { RouterConfig } from '@nuxt/schema';
+import type { Cursor } from '~/api/index.d';
+import PlaceholderError from '~/components/placeholders/PlaceholderError.vue';
+import Index from '~/pages/Index.vue';
+import { ApiResponseError } from '~/api';
 import type { Component } from 'vue';
 import { onUnmounted, ref } from 'vue';
 import type { RouteLocation, RouteLocationNormalized, RouteLocationRaw, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
-import { createRouter, createWebHistory } from 'vue-router';
 import _ from 'lodash';
 
 const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
@@ -74,11 +72,11 @@ const withViewRoute = (lazyComponent: () => Promise<Component>, path: string): R
 });
 
 const userRoute: ParentRoute = {
-    component: async () => lazyLoadRouteView(import('@/views/User.vue')),
+    component: async () => lazyLoadRouteView(import('~/pages/User.vue')),
     props: true
 };
 const postRoute: ParentRoute = {
-    components: { escapeContainer: async () => lazyLoadRouteView(import('@/views/Post.vue')) }
+    components: { escapeContainer: async () => lazyLoadRouteView(import('~/pages/Post.vue')) }
 };
 const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => [{
     path: `${before}/:pathMatch(.*)*`,
@@ -86,9 +84,8 @@ const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => 
         `${after}/${_.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch}`
 }, { path: before, redirect: after }];
 
-export default createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes: [
+export default {
+    routes: () => [
         {
             path: '/:pathMatch(.*)*',
             name: '404',
@@ -125,7 +122,7 @@ export default createRouter({
                     withCursorRoute(userRoute, 'displayName/:displayName', 'user/displayName')
                 ]
             }),
-        withViewRoute(async () => import('@/views/BilibiliVote.vue'), 'bilibiliVote')
+        withViewRoute(async () => import('~/pages/BilibiliVote.vue'), 'bilibiliVote')
     ],
     linkActiveClass: 'active',
     async scrollBehavior(to, from, savedPosition) {
@@ -152,4 +149,4 @@ export default createRouter({
 
         return false;
     }
-});
+} as RouterConfig;

@@ -31,14 +31,16 @@
 </template>
 
 <script setup lang="ts">
-import iconLoadingBlock from '/assets/icon-loading-block.svg';
-import GlobalNavBar from '@/components/GlobalNavBar.vue';
-import MinimumResolutionWarning from '@/components/MinimumResolutionWarning.vue';
-
+import iconLoadingBlock from '~/assets/icon-loading-block.svg';
 import { RouterView } from 'vue-router';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'noty/lib/noty.css';
+import 'noty/lib/themes/mint.css';
+import 'nprogress/nprogress.css';
 
 const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
 const isReCAPTCHAEnabled = import.meta.env.VITE_RECAPTCHA_SITE_KEY !== '';
