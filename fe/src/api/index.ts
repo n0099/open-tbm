@@ -6,8 +6,6 @@ import nprogress from 'nprogress';
 import { stringify } from 'qs';
 import _ from 'lodash';
 
-const config = useRuntimeConfig();
-
 export class ApiResponseError extends Error {
     public constructor(
         public readonly errorCode: number,
@@ -31,7 +29,7 @@ export const queryFunction = async <TResponse, TQueryParam>
     document.body.style.cursor = 'progress';
     try {
         const response = await fetch(
-            `${config.apiBaseURL}${endpoint}`
+            `${useRuntimeConfig().apiBaseURL}${endpoint}`
                 + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
             { headers: { Accept: 'application/json' }, signal }
         );
@@ -53,11 +51,11 @@ export const queryFunction = async <TResponse, TQueryParam>
 };
 const checkReCAPTCHA = async (action = '') =>
     new Promise<{ reCAPTCHA?: string }>((reslove, reject) => {
-        if (config.recaptchaSiteKey === '') {
+        if (useRuntimeConfig().recaptchaSiteKey === '') {
             reslove({});
         } else {
             grecaptcha.ready(() => {
-                grecaptcha.execute(config.recaptchaSiteKey, { action }).then(
+                grecaptcha.execute(useRuntimeConfig().recaptchaSiteKey, { action }).then(
                     reCAPTCHA => {
                         reslove({ reCAPTCHA });
                     }, (...args) => {

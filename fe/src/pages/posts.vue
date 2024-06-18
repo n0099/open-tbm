@@ -52,7 +52,7 @@ const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormRef = ref<InstanceType<typeof QueryForm>>();
 useHead({
-    title: computed(() => titleTemplate((() => {
+    title: computed(() => {
         const firstPostPage = data.value?.pages[0];
         if (firstPostPage === undefined)
             return '帖子查询';
@@ -69,7 +69,7 @@ useHead({
         }
 
         return '帖子查询';
-    })()))
+    })
 });
 
 let startTime = 0;

@@ -1,4 +1,24 @@
 <template>
+    <Meta charset="utf-8" />
+    <Meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+    <Link rel="preload" href="assets/icon-loading-block.svg" as="image" />
+    <Style>
+        .grecaptcha-badge {
+            visibility: hidden;
+        }
+        #loadingBlock {
+            height: 200px;
+            margin: auto;
+        }
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        body {
+            margin: 0;
+        }
+    </Style>
     <VueQueryDevtools />
     <GlobalNavBar />
     <MinimumResolutionWarning />
@@ -39,6 +59,12 @@ import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 const config = useRuntimeConfig();
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementID !== '';
+useHead({
+    titleTemplate: title => {
+        const suffix = `open-tbm @ ${config.instanceName}`;
+        return title ? `${title} - ${suffix}` : suffix;
+    }
+});
 </script>
 
 <style scoped>

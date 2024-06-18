@@ -7,5 +7,5 @@
 <script setup lang="ts">
 import { useHead } from '@unhead/vue';
 
-useHead({ title: titleTemplate('首页') });
+useHead({ title: '首页' });
 </script>

@@ -3,5 +3,4 @@ window.dataLayer ||= [];
 function gtag() { dataLayer.push(arguments) }
 gtag('js', new Date());
 
-const config = useRuntimeConfig();
-gtag('config', config.gaMeasurementID);
+gtag('config', useRuntimeConfig().gaMeasurementID);

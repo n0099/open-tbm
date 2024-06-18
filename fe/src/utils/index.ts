@@ -44,8 +44,6 @@ export type Spid = UInt;
 // we can't declare global timeout like `window.noty = new Noty({...});`
 // due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
 export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 5000, type, text }).show() };
-const config = useRuntimeConfig();
-export const titleTemplate = (title: string) => `${title} - open-tbm @ ${config.instanceName}`;
 export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
 
 export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {

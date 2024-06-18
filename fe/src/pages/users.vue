@@ -27,7 +27,7 @@ const props = defineProps<{
     displayName: string
 }>();
 const route = useRoute();
-useHead({ title: titleTemplate('用户查询') });
+useHead({ title: '用户查询' });
 const params = ref<Pick<SelectUserParams, Exclude<SelectUserBy, '' | 'displayNameNULL' | 'nameNULL'>>>({});
 const selectUserBy = ref<SelectUserBy>('');
 const userPages = ref<Array<ApiUsers['response']>>([]);

@@ -434,7 +434,7 @@ const chartsInitialOption: {
     }
 };
 
-useHead({ title: titleTemplate('bilibili吧2019年吧主公投 - 专题') });
+useHead({ title: 'bilibili吧2019年吧主公投 - 专题' });
 const query = ref<{
     top5CandidateCountGroupByTimeGranularity: GroupByTimeGranularity,
     allVoteCountGroupByTimeGranularity: GroupByTimeGranularity
