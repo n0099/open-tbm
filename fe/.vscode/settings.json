@@ -10,8 +10,6 @@
   ],
   "eslint.useFlatConfig": true,
   "eslint.runtime": "node", // https://github.com/yarnpkg/berry/pull/6278#issuecomment-2149229422
-  "eslint.nodePath": ".yarn/sdks",
-  "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsserver.experimental.useVsCodeWatcher": false, // https://github.com/yarnpkg/berry/issues/6270
   "[vue]": {
