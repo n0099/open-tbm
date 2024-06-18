@@ -3,6 +3,7 @@ import { analyzer } from 'vite-bundle-analyzer';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    devServer: { https: true },
     devtools: { enabled: true },
     modules: ['@pinia/nuxt'],
     components: [{
@@ -11,7 +12,13 @@ export default defineNuxtConfig({
     }],
     imports: { dirs: ['@/api/**'] },
     srcDir: 'src/',
-    css: ['assets/css/global.css'],
+    css: [
+        'bootstrap/dist/css/bootstrap.min.css',
+        'noty/lib/noty.css',
+        'noty/lib/themes/mint.css',
+        'nprogress/nprogress.css',
+        'assets/css/global.css'
+    ],
     vite: {
         plugins: [
             visualizer({ filename: 'dist/rollup-plugin-visualizer.html', gzipSize: true, brotliSize: true }),

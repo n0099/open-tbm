@@ -36,11 +36,6 @@ import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'noty/lib/noty.css';
-import 'noty/lib/themes/mint.css';
-import 'nprogress/nprogress.css';
-
 const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
 const isReCAPTCHAEnabled = import.meta.env.VITE_RECAPTCHA_SITE_KEY !== '';
 const isGoogleAnalyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT_ID !== '';

@@ -71,11 +71,11 @@ const withViewRoute = (lazyComponent: () => Promise<Component>, path: string): R
 });
 
 const userRoute: ParentRoute = {
-    component: async () => lazyLoadRouteView(import('@/pages/user.vue')),
+    component: async () => lazyLoadRouteView(import('@/pages/users.vue')),
     props: true
 };
 const postRoute: ParentRoute = {
-    components: { escapeContainer: async () => lazyLoadRouteView(import('@/pages/post.vue')) }
+    components: { escapeContainer: async () => lazyLoadRouteView(import('@/pages/posts.vue')) }
 };
 const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => [{
     path: `${before}/:pathMatch(.*)*`,
