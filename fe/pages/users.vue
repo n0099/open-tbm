@@ -15,7 +15,6 @@
 import { apiUsers, isApiError } from '~/api';
 import type { ApiError, ApiUsers } from '~/api/index.d';
 import type { SelectUserBy, SelectUserParams } from '~/components/widgets/selectUser';
-import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '~/router';
 
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import { useHead } from '@unhead/vue';

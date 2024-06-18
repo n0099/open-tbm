@@ -28,7 +28,6 @@
 
 import { useApiPosts } from '~/api';
 import type { ApiPosts, Cursor } from '~/api/index.d';
-import { compareRouteIsNewQuery, getNextCursorRoute, getRouteCursorParam } from '~/router';
 import type { UnixTimestamp } from '~/utils';
 import { useTriggerRouteUpdateStore } from '~/stores/triggerRouteUpdate';
 

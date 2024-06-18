@@ -170,7 +170,6 @@ import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/I
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
-import { assertRouteNameIsStr, routeNameSuffix } from '~/router';
 import type { ObjValues, PostID, PostType, Writable } from '~/utils';
 import type { RouteObjectRaw } from '~/stores/triggerRouteUpdate';
 import { useTriggerRouteUpdateStore } from '~/stores/triggerRouteUpdate';
