@@ -29,7 +29,7 @@ export const queryFunction = async <TResponse, TQueryParam>
     document.body.style.cursor = 'progress';
     try {
         const response = await fetch(
-            `${useRuntimeConfig().apiBaseURL}${endpoint}`
+            `${useRuntimeConfig().public.apiBaseURL}${endpoint}`
                 + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
             { headers: { Accept: 'application/json' }, signal }
         );
@@ -51,11 +51,12 @@ export const queryFunction = async <TResponse, TQueryParam>
 };
 const checkReCAPTCHA = async (action = '') =>
     new Promise<{ reCAPTCHA?: string }>((reslove, reject) => {
-        if (useRuntimeConfig().recaptchaSiteKey === '') {
+        const config = useRuntimeConfig().public;
+        if (config.recaptchaSiteKey === '') {
             reslove({});
         } else {
             grecaptcha.ready(() => {
-                grecaptcha.execute(useRuntimeConfig().recaptchaSiteKey, { action }).then(
+                grecaptcha.execute(config.recaptchaSiteKey, { action }).then(
                     reCAPTCHA => {
                         reslove({ reCAPTCHA });
                     }, (...args) => {

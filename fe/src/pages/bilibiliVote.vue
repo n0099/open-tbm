@@ -166,7 +166,7 @@ const voteCountSeriesLabelFormatter = (
 };
 
 const config = useRuntimeConfig();
-const sourceAttribution = `来源：open-tbm @ ${config.instanceName}`;
+const sourceAttribution = `来源：open-tbm @ ${config.public.instanceName}`;
 type ChartOptionTop10CandidatesTimeline =
     echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {

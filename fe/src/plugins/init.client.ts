@@ -11,6 +11,7 @@ export default defineNuxtPlugin(nuxt => {
             await import('@/checkCSS');
         }
 
+        const config = useRuntimeConfig().public;
         const reCAPTCHASiteKey = config.recaptchaSiteKey;
         if (reCAPTCHASiteKey !== '') {
             const tag = document.createElement('script');
