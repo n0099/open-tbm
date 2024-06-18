@@ -5,15 +5,12 @@ import { analyzer } from 'vite-bundle-analyzer';
 export default defineNuxtConfig({
     devtools: { enabled: true },
     modules: ['@pinia/nuxt'],
-    components: [
-        {
-            path: '@/components',
-            pathPrefix: false
-        }
-    ],
-    imports: {
-        dirs: ['api/**']
-    },
+    components: [{
+        path: '@/components',
+        pathPrefix: false
+    }],
+    imports: { dirs: ['@/api/**'] },
+    srcDir: 'src/',
     css: ['assets/css/global.css'],
     vite: {
         plugins: [
