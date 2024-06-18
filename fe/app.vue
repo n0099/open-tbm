@@ -25,7 +25,7 @@
             </p>
         </div>
         <footer class="footer-inner text-center p-3">
-            <span>{{ envFooterText }}</span>
+            <span>{{ config.footerText }}</span>
         </footer>
     </footer>
 </template>
@@ -36,9 +36,9 @@ import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 
-const envFooterText = import.meta.env.VITE_FOOTER_TEXT;
-const isReCAPTCHAEnabled = import.meta.env.VITE_RECAPTCHA_SITE_KEY !== '';
-const isGoogleAnalyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT_ID !== '';
+const config = useRuntimeConfig();
+const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
+const isGoogleAnalyticsEnabled = config.gaMeasurementID !== '';
 </script>
 
 <style scoped>

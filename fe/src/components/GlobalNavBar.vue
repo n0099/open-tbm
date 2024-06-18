@@ -1,7 +1,7 @@
 <template>
     <nav class="navbar navbar-expand-lg shadow-sm bg-light">
         <div class="container-fluid" id="nav">
-            <NuxtLink to="/" class="navbar-brand">open-tbm @ {{ envInstanceName }}</NuxtLink>
+            <NuxtLink to="/" class="navbar-brand">open-tbm @ {{ config.instanceName }}</NuxtLink>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
                     aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon" />
@@ -39,7 +39,7 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCommentDots, faPaperPlane, faSearch, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 const route = useRoute();
-const envInstanceName = import.meta.env.VITE_INSTANCE_NAME;
+const config = useRuntimeConfig();
 
 interface Nav { title: string, icon?: IconDefinition, isActive?: boolean }
 interface Route extends Nav { route: string }

@@ -165,7 +165,8 @@ const voteCountSeriesLabelFormatter = (
     return `${currentCount} (+${currentCount - (previousTimelineValue?.count ?? 0)})`;
 };
 
-const sourceAttribution = `来源：open-tbm @ ${import.meta.env.VITE_INSTANCE_NAME}`;
+const config = useRuntimeConfig();
+const sourceAttribution = `来源：open-tbm @ ${config.instanceName}`;
 type ChartOptionTop10CandidatesTimeline =
     echarts.ComposeOption<BarSeriesOption | GraphicComponentOption | GridComponentOption | LegendComponentOption | PieSeriesOption | TimelineComponentOption | TitleComponentOption | ToolboxComponentOption | TooltipComponentOption>;
 const chartsInitialOption: {

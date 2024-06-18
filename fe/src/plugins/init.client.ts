@@ -4,14 +4,14 @@ export default defineNuxtPlugin(nuxt => {
     nuxt.hook('app:created', async () => {
         nprogress.configure({ trickleSpeed: 200 });
 
-        if (import.meta.env.DEV) {
+        if (import.meta.dev) {
             // @ts-expect-error too small to write a .d.ts for it
             await import('@/stats');
             // @ts-expect-error too small to write a .d.ts for it
             await import('@/checkCSS');
         }
 
-        const reCAPTCHASiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+        const reCAPTCHASiteKey = config.recaptchaSiteKey;
         if (reCAPTCHASiteKey !== '') {
             const tag = document.createElement('script');
             tag.async = true;
@@ -19,7 +19,7 @@ export default defineNuxtPlugin(nuxt => {
             document.body.append(tag);
         }
 
-        const googleAnalyticsMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+        const googleAnalyticsMeasurementId = config.gaMeasurementID;
         if (googleAnalyticsMeasurementId !== '') {
             const tag = document.createElement('script');
             tag.async = true;

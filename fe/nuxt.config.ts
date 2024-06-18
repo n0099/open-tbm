@@ -1,6 +1,14 @@
 import { visualizer } from 'rollup-plugin-visualizer';
 import { analyzer } from 'vite-bundle-analyzer';
+import _ from 'lodash';
 
+const envs = [
+    'apiBaseURL',
+    'gaMeasurementID',
+    'recaptchaSiteKey',
+    'instanceName',
+    'footerText'
+];
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     devServer: { https: true },
@@ -26,5 +34,8 @@ export default defineNuxtConfig({
         ],
         build: { target: 'esnext' },
         assetsInclude: ['**/*.avifs']
+    },
+    runtimeConfig: {
+        public: _.zipObject(envs, envs.map(() => ''))
     }
 });
