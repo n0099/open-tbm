@@ -391,7 +391,7 @@ defineExpose({ getCurrentQueryType, parseRouteToGetFlattenParams });
 
 <style scoped>
 :deep(.input-group-text ~ * > .ant-input-lg) {
-    block-size: unset; /* revert the effect in global style @/shared/style.css */
+    block-size: unset; /* revert the effect in global style ~/assets/css/global.css */
 }
 /* remove borders for <RangePicker> in the start, middle and end of .input-group */
 :deep(.input-group > :not(:first-child) .ant-calendar-picker-input) {

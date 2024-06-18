@@ -1,4 +1,3 @@
-import { app } from '~/main';
 import viewer from 'v-viewer';
 import { defineStore } from 'pinia';
 
@@ -8,7 +7,7 @@ export const useViewerStore = defineStore('viewer', () => {
         if (isEnabled.value)
             return;
 
-        app.use(viewer, {
+        useNuxtApp().vueApp.use(viewer, {
             defaultOptions: {
                 url: 'data-origin',
                 filter: (img: HTMLImageElement) => img.classList.contains('tieba-ugc-image')

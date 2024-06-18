@@ -54,7 +54,7 @@ import SubReplyGroup from './SubReplyGroup.vue';
 import PostContentRenderer from '../PostContentRenderer.vue';
 import { useElementRefsStore } from '~/stores/elementRefs';
 import { useHighlightPostStore } from '~/stores/highlightPost';
-import '@/styles/bootstrapCallout.css';
+import '~/assets/css/bootstrapCallout.css';
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
