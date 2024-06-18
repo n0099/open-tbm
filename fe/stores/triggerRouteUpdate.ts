@@ -1,6 +1,4 @@
-import { ref } from 'vue';
 import type { RouteLocationRaw } from 'vue-router';
-import { useRouter } from 'vue-router';
 import { defineStore } from 'pinia';
 import _ from 'lodash';
 

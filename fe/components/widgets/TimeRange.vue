@@ -15,7 +15,6 @@
 
 <script setup lang="ts">
 import type { Dayjs } from 'dayjs';
-import { ref, watchEffect } from 'vue';
 import { RangePicker } from 'ant-design-vue';
 import dayjs, { unix } from 'dayjs';
 import type { DurationLike } from 'luxon';

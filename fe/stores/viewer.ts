@@ -1,6 +1,5 @@
-import { app } from '@/main';
+import { app } from '~/main';
 import viewer from 'v-viewer';
-import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useViewerStore = defineStore('viewer', () => {

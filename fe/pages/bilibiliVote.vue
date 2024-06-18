@@ -62,15 +62,11 @@
 </template>
 
 <script setup lang="ts">
-import TimeGranularity from '@/components/widgets/TimeGranularity.vue';
 
-import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
-import { json } from '@/api/bilibiliVote';
-import type { ObjUnknown } from '@/shared';
-import { titleTemplate, toUserProfileUrl } from '@/shared';
-import { echarts4ColorTheme, timeGranularityAxisPointerLabelFormatter, timeGranularityAxisType } from '@/shared/echarts';
+import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '~/api/bilibiliVote';
+import { json } from '~/api/bilibiliVote';
+import type { ObjUnknown } from '~/utils';
 
-import { onMounted, ref, watch } from 'vue';
 import { Table } from 'ant-design-vue';
 import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';

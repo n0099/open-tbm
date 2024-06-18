@@ -45,7 +45,6 @@
 <script setup lang="ts">
 import type { SelectUserBy, SelectUserModel, SelectUserParams } from './selectUser';
 import { selectUserBy, selectUserParamsName } from './selectUser';
-import { onMounted, ref, watch, watchEffect } from 'vue';
 import _ from 'lodash';
 
 const props = defineProps<{

@@ -19,12 +19,9 @@
 import type { SelectUserBy, SelectUserModel, SelectUserParams } from '../widgets/selectUser';
 import SelectUser from '../widgets/SelectUser.vue';
 import { selectUserBy as selectUserByAll } from '../widgets/selectUser';
-import type { BaiduUserID, UserGenderQueryParam } from '@/api/user';
-import { boolPropToStr, boolStrPropToBool, removeEnd } from '@/shared';
+import type { BaiduUserID, UserGenderQueryParam } from '~/api/user';
 
-import { ref, watchEffect } from 'vue';
 import type { LocationQueryValueRaw } from 'vue-router';
-import { useRouter } from 'vue-router';
 import _ from 'lodash';
 
 type RouteQueryString = Omit<SelectUserParams, Exclude<SelectUserBy, ''>>

@@ -86,13 +86,10 @@ import PostContentRenderer from './PostContentRenderer.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 
-import type { ApiPosts } from '@/api/index.d';
-import type { Reply, SubReply, Thread } from '@/api/post';
-import type { Pid, Tid } from '@/shared';
-import { toUserPortraitImageUrl, toUserProfileUrl } from '@/shared';
+import type { ApiPosts } from '~/api/index.d';
+import type { Reply, SubReply, Thread } from '~/api/post';
+import type { Pid, Tid } from '~/utils';
 
-import { computed, onMounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
 import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';

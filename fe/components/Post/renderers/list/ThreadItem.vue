@@ -85,16 +85,9 @@
 <script setup lang="ts">
 import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
 import ReplyItem from './ReplyItem.vue';
-import BadgePostCommon from '@/components/Post/badges/BadgePostCommon.vue';
-import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
-import BadgeThread from '@/components/Post/badges/BadgeThread.vue';
-import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
-import { toUserRoute } from '@/shared/index';
-import { useElementRefsStore } from '@/stores/elementRefs';
-import { useHighlightPostStore } from '@/stores/highlightPost';
+import { useElementRefsStore } from '~/stores/elementRefs';
+import { useHighlightPostStore } from '~/stores/highlightPost';
 
-import { inject } from 'vue';
-import { RouterLink } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';

@@ -4,7 +4,6 @@ import PlaceholderError from '~/components/placeholders/PlaceholderError.vue';
 import Index from '~/pages/Index.vue';
 import { ApiResponseError } from '~/api';
 import type { Component } from 'vue';
-import { onUnmounted, ref } from 'vue';
 import type { RouteLocation, RouteLocationNormalized, RouteLocationRaw, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import _ from 'lodash';
 

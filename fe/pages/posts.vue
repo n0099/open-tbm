@@ -25,23 +25,14 @@
 </template>
 
 <script setup lang="ts">
-import PostNav from '@/components/Post/PostNav.vue';
-import PostPage from '@/components/Post/PostPage.vue';
-import QueryForm from '@/components/Post/queryForm/QueryForm.vue';
-import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
-import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
-import { useApiPosts } from '@/api';
-import type { ApiPosts, Cursor } from '@/api/index.d';
-import { scrollToPostListItemByRoute } from '@/components/Post/renderers/list/index';
-import { compareRouteIsNewQuery, getNextCursorRoute, getRouteCursorParam } from '@/router';
-import type { UnixTimestamp } from '@/shared';
-import { notyShow, scrollBarWidth, titleTemplate } from '@/shared';
-import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
+import { useApiPosts } from '~/api';
+import type { ApiPosts, Cursor } from '~/api/index.d';
+import { compareRouteIsNewQuery, getNextCursorRoute, getRouteCursorParam } from '~/router';
+import type { UnixTimestamp } from '~/utils';
+import { useTriggerRouteUpdateStore } from '~/stores/triggerRouteUpdate';
 
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
-import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import { useQueryClient } from '@tanstack/vue-query';
 import { useHead } from '@unhead/vue';

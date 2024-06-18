@@ -50,15 +50,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiPosts, Cursor } from '@/api/index.d';
-import { getReplyTitleTopOffset } from '@/components/Post/renderers/list';
-import type { Pid, Tid, ToPromise } from '@/shared';
-import { cursorTemplate, scrollBarWidth } from '@/shared';
-import { useElementRefsStore } from '@/stores/elementRefs';
-import { useHighlightPostStore } from '@/stores/highlightPost';
+import type { ApiPosts, Cursor } from '~/api/index.d';
+import type { Pid, Tid, ToPromise } from '~/utils';
+import { useElementRefsStore } from '~/stores/elementRefs';
+import { useHighlightPostStore } from '~/stores/highlightPost';
 
-import { onUnmounted, ref, watchEffect } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';

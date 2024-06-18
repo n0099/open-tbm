@@ -11,20 +11,13 @@
 </template>
 
 <script setup lang="ts">
-import UserQueryForm from '@/components/User/QueryForm.vue';
-import UserPage from '@/components/User/UserPage.vue';
-import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
-import PlaceholderPostList from '@/components/placeholders/PlaceholderPostList.vue';
 
-import { apiUsers, isApiError } from '@/api';
-import type { ApiError, ApiUsers } from '@/api/index.d';
-import type { SelectUserBy, SelectUserParams } from '@/components/widgets/selectUser';
-import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '@/router';
-import { notyShow, removeEnd, removeStart, titleTemplate } from '@/shared';
+import { apiUsers, isApiError } from '~/api';
+import type { ApiError, ApiUsers } from '~/api/index.d';
+import type { SelectUserBy, SelectUserParams } from '~/components/widgets/selectUser';
+import { compareRouteIsNewQuery, getRouteCursorParam, routeNameSuffix, setComponentCustomScrollBehaviour } from '~/router';
 
-import { nextTick, onBeforeMount, ref, watchEffect } from 'vue';
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 

@@ -11,11 +11,9 @@
 </template>
 
 <script setup lang="tsx">
-import { useApiForums } from '@/api/index';
-import RenderFunction from '@/components/RenderFunction';
-import type { Fid } from '@/shared';
+import { useApiForums } from '~/api/index';
+import type { Fid } from '~/utils';
 import type { VNode } from 'vue';
-import { computed } from 'vue';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ indicators: (props: { renderer: VNode }) => unknown }>();

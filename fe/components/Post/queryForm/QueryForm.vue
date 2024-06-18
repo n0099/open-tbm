@@ -170,17 +170,12 @@ import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/I
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
-import SelectForum from '@/components/widgets/SelectForum.vue';
-import RenderFunction from '@/components/RenderFunction';
-import { assertRouteNameIsStr, routeNameSuffix } from '@/router';
-import type { ObjValues, PostID, PostType, Writable } from '@/shared';
-import { notyShow, postID, removeEnd } from '@/shared';
-import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
-import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
+import { assertRouteNameIsStr, routeNameSuffix } from '~/router';
+import type { ObjValues, PostID, PostType, Writable } from '~/utils';
+import type { RouteObjectRaw } from '~/stores/triggerRouteUpdate';
+import { useTriggerRouteUpdateStore } from '~/stores/triggerRouteUpdate';
 
-import { computed, ref, watch } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
-import { useRouter } from 'vue-router';
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';

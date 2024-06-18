@@ -18,9 +18,8 @@
 </template>
 
 <script setup lang="ts">
-import type { BaiduUserID, ForumModeratorType, User } from '@/api/user';
-import type { BootstrapColor } from '@/shared';
-import { computed } from 'vue';
+import type { BaiduUserID, ForumModeratorType, User } from '~/api/user';
+import type { BootstrapColor } from '~/utils';
 import _ from 'lodash';
 
 const props = defineProps<{

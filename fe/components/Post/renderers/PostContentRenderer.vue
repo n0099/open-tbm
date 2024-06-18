@@ -42,9 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import type { PostContent } from '@/api/postContent';
-import NewlineToBr from '@/components/NewlineToBr';
-import { useViewerStore } from '@/stores/viewer';
+import type { PostContent } from '~/api/postContent';
+import { useViewerStore } from '~/stores/viewer';
 import _ from 'lodash';
 
 defineProps<{ content: PostContent | null }>();

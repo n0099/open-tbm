@@ -1,5 +1,4 @@
-import { getRouteCursorParam } from '@/router';
-import { convertRemToPixels, isElementNode } from '@/shared';
+import { getRouteCursorParam } from '~/router';
 import type { RouteLocationNormalized } from 'vue-router';
 import _ from 'lodash';
 

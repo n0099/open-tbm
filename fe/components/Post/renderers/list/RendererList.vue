@@ -10,14 +10,11 @@
 import { postListItemScrollPosition } from './index';
 import ThreadItem from './ThreadItem.vue';
 import { baseGetUser, baseRenderUsername } from '../common';
-import type { ApiPosts } from '@/api/index.d';
-import type { Reply, SubReply, Thread } from '@/api/post';
-import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '@/router';
-import type { Modify } from '@/shared';
-import { refDeepClone } from '@/shared';
-import { initialTippy } from '@/shared/tippy';
+import type { ApiPosts } from '~/api/index.d';
+import type { Reply, SubReply, Thread } from '~/api/post';
+import { compareRouteIsNewQuery, setComponentCustomScrollBehaviour } from '~/router';
+import type { Modify } from '~/utils';
 import type { ComputedRef } from 'vue';
-import { computed, onMounted, provide } from 'vue';
 import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 

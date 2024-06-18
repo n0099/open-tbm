@@ -34,8 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCommentDots, faPaperPlane, faSearch, faUsers } from '@fortawesome/free-solid-svg-icons';

@@ -1,5 +1,4 @@
-import type { Pid, Post, PostID, PostIDOf, Spid, Tid } from '@/shared';
-import { ref } from 'vue';
+import type { Pid, Post, PostID, PostIDOf, Spid, Tid } from '~/utils';
 import { defineStore } from 'pinia';
 import _ from 'lodash';
 

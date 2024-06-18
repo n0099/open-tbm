@@ -1,5 +1,5 @@
-import type { BaiduUserID } from '@/api/user';
-import type { ObjValues } from '@/shared';
+import type { BaiduUserID } from '~/api/user';
+import type { ObjValues } from '~/utils';
 
 export const selectUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
 export type SelectUserBy = typeof selectUserBy[number];

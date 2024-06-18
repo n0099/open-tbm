@@ -1,4 +1,3 @@
-import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import nprogress from 'nprogress';
 import _ from 'lodash';

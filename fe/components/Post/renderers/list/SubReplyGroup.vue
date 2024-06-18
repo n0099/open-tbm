@@ -36,14 +36,8 @@
 <script setup lang="ts">
 import type { UserProvision } from './RendererList.vue';
 import PostContentRenderer from '../PostContentRenderer.vue';
-import BadgePostCommon from '@/components/Post/badges/BadgePostCommon.vue';
-import BadgePostTime from '@/components/Post/badges/BadgePostTime.vue';
-import BadgeUser from '@/components/Post/badges/BadgeUser.vue';
-import type { Reply, SubReply, Thread } from '@/api/post';
-import { toUserPortraitImageUrl, toUserRoute } from '@/shared';
-import { useHighlightPostStore } from '@/stores/highlightPost';
-import { inject } from 'vue';
-import { RouterLink } from 'vue-router';
+import type { Reply, SubReply, Thread } from '~/api/post';
+import { useHighlightPostStore } from '~/stores/highlightPost';
 
 const props = defineProps<{
     thread: Thread,

@@ -11,8 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Cursor } from '@/api/index.d';
-import { cursorTemplate } from '@/shared';
+import type { Cursor } from '~/api/index.d';
 
 defineProps<{ currentCursor: Cursor }>();
 </script>
