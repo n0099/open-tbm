@@ -36,8 +36,8 @@
 <script setup lang="ts">
 import type { UserProvision } from './RendererList.vue';
 import PostContentRenderer from '../PostContentRenderer.vue';
-import type { Reply, SubReply, Thread } from '~/api/post';
-import { useHighlightPostStore } from '~/stores/highlightPost';
+import type { Reply, SubReply, Thread } from '@/api/post';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 
 const props = defineProps<{
     thread: Thread,

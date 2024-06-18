@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
-import type { ApiUsers } from '~/api/index.d';
-import type { UserGender } from '~/api/user';
+import type { ApiUsers } from '@/api/index.d';
+import type { UserGender } from '@/api/user';
 
 const props = defineProps<{
     users: ApiUsers['response'],

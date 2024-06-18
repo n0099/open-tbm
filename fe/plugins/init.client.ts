@@ -5,8 +5,8 @@ export default defineNuxtPlugin(nuxt => {
         nprogress.configure({ trickleSpeed: 200 });
 
         if (import.meta.env.DEV) {
-            await import('~/src/stats');
-            await import('~/src/checkCSS');
+            await import('@/src/stats');
+            await import('@/src/checkCSS');
         }
 
         const reCAPTCHASiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
@@ -25,7 +25,7 @@ export default defineNuxtPlugin(nuxt => {
             document.body.append(tag);
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
             // @ts-ignore
-            await import('~/src/gtag');
+            await import('@/src/gtag');
         }
     });
 });

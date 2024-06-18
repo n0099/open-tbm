@@ -19,7 +19,7 @@
 import type { SelectUserBy, SelectUserModel, SelectUserParams } from '../widgets/selectUser';
 import SelectUser from '../widgets/SelectUser.vue';
 import { selectUserBy as selectUserByAll } from '../widgets/selectUser';
-import type { BaiduUserID, UserGenderQueryParam } from '~/api/user';
+import type { BaiduUserID, UserGenderQueryParam } from '@/api/user';
 
 import type { LocationQueryValueRaw } from 'vue-router';
 import _ from 'lodash';

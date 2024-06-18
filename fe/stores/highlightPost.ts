@@ -1,4 +1,4 @@
-import type { Pid, Post, PostID, PostIDOf, Spid, Tid } from '~/utils';
+import type { Pid, Post, PostID, PostIDOf, Spid, Tid } from '@/utils';
 import { defineStore } from 'pinia';
 import _ from 'lodash';
 

@@ -1,8 +1,8 @@
 import type { RouterConfig } from '@nuxt/schema';
-import type { Cursor } from '~/api/index.d';
-import PlaceholderError from '~/components/placeholders/PlaceholderError.vue';
-import Index from '~/pages/index.vue';
-import { ApiResponseError } from '~/api';
+import type { Cursor } from '@/api/index.d';
+import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
+import Index from '@/pages/index.vue';
+import { ApiResponseError } from '@/api';
 import type { Component } from 'vue';
 import type { RouteLocation, RouteLocationNormalized, RouteLocationRaw, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
 import _ from 'lodash';
@@ -71,11 +71,11 @@ const withViewRoute = (lazyComponent: () => Promise<Component>, path: string): R
 });
 
 const userRoute: ParentRoute = {
-    component: async () => lazyLoadRouteView(import('~/pages/user.vue')),
+    component: async () => lazyLoadRouteView(import('@/pages/user.vue')),
     props: true
 };
 const postRoute: ParentRoute = {
-    components: { escapeContainer: async () => lazyLoadRouteView(import('~/pages/post.vue')) }
+    components: { escapeContainer: async () => lazyLoadRouteView(import('@/pages/post.vue')) }
 };
 const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => [{
     path: `${before}/:pathMatch(.*)*`,
@@ -121,7 +121,7 @@ export default {
                     withCursorRoute(userRoute, 'displayName/:displayName', 'user/displayName')
                 ]
             }),
-        withViewRoute(async () => import('~/pages/bilibiliVote.vue'), 'bilibiliVote')
+        withViewRoute(async () => import('@/pages/bilibiliVote.vue'), 'bilibiliVote')
     ],
     linkActiveClass: 'active',
     async scrollBehavior(to, from, savedPosition) {

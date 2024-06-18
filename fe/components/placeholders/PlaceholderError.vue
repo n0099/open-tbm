@@ -25,8 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiErrorClass } from '~/api';
-import { ApiResponseError, FetchResponseError } from '~/api';
+import type { ApiErrorClass } from '@/api';
+import { ApiResponseError, FetchResponseError } from '@/api';
 import _ from 'lodash';
 
 defineProps<{ error: ApiErrorClass | null }>();

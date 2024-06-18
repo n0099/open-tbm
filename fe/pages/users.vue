@@ -12,9 +12,9 @@
 
 <script setup lang="ts">
 
-import { apiUsers, isApiError } from '~/api';
-import type { ApiError, ApiUsers } from '~/api/index.d';
-import type { SelectUserBy, SelectUserParams } from '~/components/widgets/selectUser';
+import { apiUsers, isApiError } from '@/api';
+import type { ApiError, ApiUsers } from '@/api/index.d';
+import type { SelectUserBy, SelectUserParams } from '@/components/widgets/selectUser';
 
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import { useHead } from '@unhead/vue';

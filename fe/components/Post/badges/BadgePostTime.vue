@@ -50,9 +50,9 @@
         & keyof TParentPost
         & ('postedAt' | (TPost extends Thread ? 'latestReplyPostedAt' : never)),
     TPostTimeValue extends TPost['postedAt'] & (TPost extends Thread ? TPost['latestReplyPostedAt'] : unknown)">
-import type { Reply, SubReply, Thread } from '~/api/post';
-import type { Post, PostIDOf, PostTypeTextOf } from '~/utils';
-import { useHighlightPostStore } from '~/stores/highlightPost';
+import type { Reply, SubReply, Thread } from '@/api/post';
+import type { Post, PostIDOf, PostTypeTextOf } from '@/utils';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 import { createReusableTemplate } from '@vueuse/core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faAnglesUp, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';

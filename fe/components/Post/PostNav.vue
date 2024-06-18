@@ -50,10 +50,10 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiPosts, Cursor } from '~/api/index.d';
-import type { Pid, Tid, ToPromise } from '~/utils';
-import { useElementRefsStore } from '~/stores/elementRefs';
-import { useHighlightPostStore } from '~/stores/highlightPost';
+import type { ApiPosts, Cursor } from '@/api/index.d';
+import type { Pid, Tid, ToPromise } from '@/utils';
+import { useElementRefsStore } from '@/stores/elementRefs';
+import { useHighlightPostStore } from '@/stores/highlightPost';
 
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';

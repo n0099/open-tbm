@@ -1,4 +1,4 @@
-import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagination } from '~/api/index.d';
+import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
 import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';

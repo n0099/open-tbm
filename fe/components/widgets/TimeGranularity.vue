@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TimeGranularityStringMap } from '~/utils/echarts';
+import type { TimeGranularityStringMap } from '@/utils/echarts';
 import _ from 'lodash';
 
 defineOptions({ inheritAttrs: true });

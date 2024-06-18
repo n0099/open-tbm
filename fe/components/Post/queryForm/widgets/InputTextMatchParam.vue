@@ -44,7 +44,7 @@ export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
 <script setup lang="ts">
 import type { KnownTextParams, NamelessParamText } from '../queryParams';
 import { textParamSubParamMatchByValues } from '../queryParams';
-import type { ObjValues } from '~/utils';
+import type { ObjValues } from '@/utils';
 import _ from 'lodash';
 
 const props = defineProps<{ paramIndex: number }>();

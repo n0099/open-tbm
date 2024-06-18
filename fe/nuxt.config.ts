@@ -7,14 +7,14 @@ export default defineNuxtConfig({
     modules: ['@pinia/nuxt'],
     components: [
         {
-            path: '~/components',
+            path: '@/components',
             pathPrefix: false
         }
     ],
     imports: {
         dirs: ['api/**']
     },
-    css: ['~/assets/css/global.css'],
+    css: ['assets/css/global.css'],
     vite: {
         plugins: [
             visualizer({ filename: 'dist/rollup-plugin-visualizer.html', gzipSize: true, brotliSize: true }),

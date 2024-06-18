@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import iconLoadingBlock from '~/assets/icon-loading-block.svg';
+import iconLoadingBlock from 'assets/icon-loading-block.svg';
 import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
