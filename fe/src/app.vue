@@ -1,7 +1,6 @@
 <template>
     <Meta charset="utf-8" />
     <Meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
-    <Link rel="preload" href="assets/icon-loading-block.svg" as="image" />
     <Style>
         .grecaptcha-badge {
             visibility: hidden;
@@ -20,31 +19,33 @@
         }
     </Style>
     <VueQueryDevtools />
-    <GlobalNavBar />
-    <MinimumResolutionWarning />
-    <img :src="iconLoadingBlock" class="d-none" id="loadingBlock" />
-    <ConfigProvider :locale="AntdZhCn">
-        <NuxtPage />
-    </ConfigProvider>
-    <footer class="footer-outer text-light pt-4 mt-auto">
-        <div class="text-center">
-            <p>
-                <span v-if="isGoogleAnalyticsEnabled">
-                    Google <a class="text-white"
-                              href="https://www.google.com/analytics/terms/cn.html"
-                              target="_blank">Analytics 服务条款</a> |
-                    <a class="text-white"
-                       href="https://policies.google.com/privacy" target="_blank">Analytics 隐私条款</a>
-                </span>
-                <span v-if="isReCAPTCHAEnabled && isGoogleAnalyticsEnabled"> | </span>
-                <a v-if="isReCAPTCHAEnabled" class="text-white"
-                   href="https://policies.google.com/terms" target="_blank">Google reCAPTCHA 服务条款</a>
-            </p>
-        </div>
-        <footer class="footer-inner text-center p-3">
-            <span>{{ config.footerText }}</span>
+    <div id="app-wrapper" class="d-flex flex-column">
+        <GlobalNavBar />
+        <MinimumResolutionWarning />
+        <img :src="iconLoadingBlock" :class="{ 'd-none': !isRouteChanging }" id="loadingBlock" />
+        <ConfigProvider :locale="AntdZhCn">
+            <NuxtPage :class="{ invisible: isRouteChanging }" />
+        </ConfigProvider>
+        <footer id="footer-upper" class="text-light pt-4 mt-auto">
+            <div class="text-center">
+                <p>
+                    <span v-if="isGoogleAnalyticsEnabled">
+                        Google <a class="text-white"
+                                href="https://www.google.com/analytics/terms/cn.html"
+                                target="_blank">Analytics 服务条款</a> |
+                        <a class="text-white"
+                        href="https://policies.google.com/privacy" target="_blank">Analytics 隐私条款</a>
+                    </span>
+                    <span v-if="isReCAPTCHAEnabled && isGoogleAnalyticsEnabled"> | </span>
+                    <a v-if="isReCAPTCHAEnabled" class="text-white"
+                    href="https://policies.google.com/terms" target="_blank">Google reCAPTCHA 服务条款</a>
+                </p>
+            </div>
+            <footer id="footer-lower" class="text-center p-3">
+                <span>{{ config.footerText }}</span>
+            </footer>
         </footer>
-    </footer>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -53,6 +54,7 @@ import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 
+const isRouteChanging = useState('isRouteChanging', () => false);
 const config = useRuntimeConfig().public;
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementID !== '';
@@ -65,11 +67,14 @@ useHead({
 </script>
 
 <style scoped>
-.footer-outer {
-    background-color: #2196f3;
+#app-wrapper{
+    min-height: 100vh;
 }
 
-.footer-inner {
+#footer-upper {
+    background-color: #2196f3;
+}
+#footer-lower {
     background-color: rgba(0,0,0,.2);
 }
 </style>

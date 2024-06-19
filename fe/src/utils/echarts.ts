@@ -4,10 +4,12 @@ import * as echarts from 'echarts/core';
 // eslint-disable-next-line import-x/extensions
 import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types.d.ts';
 
-addEventListener('resize', _.throttle(() => {
-    document.querySelectorAll<HTMLElement>('.echarts')
-        .forEach(el => { echarts.getInstanceByDom(el)?.resize() });
-}, 200, { leading: false }));
+if (import.meta.client) {
+    addEventListener('resize', _.throttle(() => {
+        document.querySelectorAll<HTMLElement>('.echarts')
+            .forEach(el => { echarts.getInstanceByDom(el)?.resize() });
+    }, 200, { leading: false }));
+}
 
 export const echarts4ColorTheme: ColorPaletteOptionMixin = {
     color: [

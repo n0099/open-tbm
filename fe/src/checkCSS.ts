@@ -5,7 +5,7 @@ checkcss.onClassnameDetected = className =>
     ![
         'grecaptcha',
         'g-recaptcha',
-        'router-link-exact', // vue-router
+        'router-link-', // vue-router
         'tsqd-', // @tanstack/vue-query-devtools
         'nprogress',
         'noty_',
