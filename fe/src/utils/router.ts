@@ -1,17 +1,9 @@
 import type { RouterConfig } from '@nuxt/schema';
 import type { Cursor } from '@/api/index.d';
 import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
-import Index from '@/pages/index.vue';
 import { ApiResponseError } from '@/api';
-import type { Component } from 'vue';
-import type { RouteLocation, RouteLocationNormalized, RouteLocationRaw, RouteRecordMultipleViews, RouteRecordMultipleViewsWithChildren, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior, _RouteRecordBase } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationRaw, _RouteRecordBase } from 'vue-router';
 import _ from 'lodash';
-
-const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
-export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
-    componentCustomScrollBehaviour.value = cb;
-    onUnmounted(() => { componentCustomScrollBehaviour.value = undefined });
-};
 
 export const assertRouteNameIsStr: (name: RouteLocationNormalized['name']) => asserts name is string = name => {
     if (!_.isString(name))
@@ -34,43 +26,6 @@ export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: 
     return { query, name, params: { ...params, cursor: nextCursor } };
 };
 
-type ParentRoute = Omit<RouteRecordSingleView, 'path'> | Omit<RouteRecordMultipleViews, 'path'>;
-const withChildrenRoute = (path: string, name: string, parentRoute: ParentRoute, childrenBaseRoute: _RouteRecordBase)
-: RouteRecordSingleViewWithChildren | RouteRecordMultipleViewsWithChildren =>
-    ({
-        path,
-        name,
-        ...parentRoute,
-        children: [{
-            ...parentRoute,
-            ...childrenBaseRoute
-        } as RouteRecordSingleView | RouteRecordMultipleViews]
-    });
-const withCursorRoute = (parentRoute: ParentRoute, path: string, name: string): ReturnType<typeof withChildrenRoute> =>
-    withChildrenRoute(path, name, parentRoute, { // see `App\Http\Controllers\PostsQuery->query()` in be
-        // non capture group (?:) and escaping `)` is required for regex in vue route
-        path: 'cursor/:cursor((?:(?:[A-Za-z0-9-_]{4}\\)*(?:[A-Za-z0-9-_]{2,3}\\)(?:,|$\\)|,\\){5,6})',
-        name: `${name}${routeNameSuffix.cursor}`
-    });
-const withViewRoute = (lazyComponent: () => Promise<Component>, path: string): RouteRecordSingleView => ({
-    path: `/${path}`,
-    name: path,
-    component: async () => lazyLoadRouteView(lazyComponent())
-});
-
-const userRoute: ParentRoute = {
-    component: async () => lazyLoadRouteView(import('@/pages/users.vue')),
-    props: true
-};
-const postRoute: ParentRoute = {
-    components: { escapeContainer: async () => lazyLoadRouteView(import('@/pages/posts.vue')) }
-};
-const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => [{
-    path: `${before}/:pathMatch(.*)*`,
-    redirect: to =>
-        `${after}/${_.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch}`
-}, { path: before, redirect: after }];
-
 const exports = {
     routes: () => [
         {
@@ -80,60 +35,5 @@ const exports = {
             props: (route): InstanceType<typeof PlaceholderError>['$props'] =>
                 ({ error: new ApiResponseError(404, route.path) })
         },
-        { path: '/', name: 'index', component: Index },
-        ...redirectRoute('/p', '/posts'),
-        _.merge(withCursorRoute(postRoute, '/posts', 'post'),
-            {
-                children: [
-                    withCursorRoute(postRoute, 'fid/:fid(\\d+)', 'post/fid'),
-                    withCursorRoute(postRoute, 'tid/:tid(\\d+)', 'post/tid'),
-                    withCursorRoute(postRoute, 'pid/:pid(\\d+)', 'post/pid'),
-                    withCursorRoute(postRoute, 'spid/:spid(\\d+)', 'post/spid'),
-                    {
-                        path: ':idType(f|t|p|sp)/:id(\\d+)',
-                        redirect: (to: RouteLocation) =>
-                            _.isString(to.params.idType) && _.isString(to.params.id)
-                            && `/posts/${to.params.idType}id/${to.params.id}`
-                    },
-                    withCursorRoute(postRoute, ':pathMatch(.*)*', 'post/param')
-                ]
-            }),
-        ...redirectRoute('/u', '/users'),
-        _.merge(withCursorRoute(userRoute, '/users', 'user'),
-            {
-                children: [
-                    withCursorRoute(userRoute, 'id/:uid(\\d+)', 'user/uid'),
-                    ...redirectRoute('n', '/users/name'),
-                    withCursorRoute(userRoute, 'name/:name', 'user/name'),
-                    ...redirectRoute('dn', '/users/displayName'),
-                    withCursorRoute(userRoute, 'displayName/:displayName', 'user/displayName')
-                ]
-            }),
-        withViewRoute(async () => import('@/pages/bilibiliVote.vue'), 'bilibiliVote')
     ],
-    linkActiveClass: 'active',
-    async scrollBehavior(to, from, savedPosition) {
-        if (savedPosition !== null)
-            return savedPosition;
-
-        if (componentCustomScrollBehaviour.value !== undefined) {
-            const ret: ReturnType<RouterScrollBehavior> | undefined =
-                componentCustomScrollBehaviour.value(to, from, savedPosition);
-            if (ret !== undefined)
-                return ret;
-        }
-
-        if (to.hash !== '')
-            return { el: to.hash, top: 0 };
-        if (from.name !== undefined) { // when user refresh page
-            assertRouteNameIsStr(to.name);
-            assertRouteNameIsStr(from.name);
-
-            // scroll to top when the prefix of route name changed
-            if (to.name.split('/')[0] !== from.name.split('/')[0])
-                return { top: 0 };
-        }
-
-        return false;
-    }
 } as RouterConfig;
