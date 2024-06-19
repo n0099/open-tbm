@@ -1,5 +1,4 @@
 import type { NamelessUnknownParam, ParamPreprocessorOrWatcher, UnknownParam } from './useQueryForm';
-import useQueryForm from './useQueryForm';
 import type { ForumModeratorType } from '@/api/user';
 import type { DeepWritable, Fid, ObjEmpty, PostID, PostType } from '@/utils';
 import _ from 'lodash';

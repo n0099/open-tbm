@@ -16,7 +16,7 @@
 
 import { apiUsers, isApiError } from '@/api';
 import type { ApiError, ApiUsers } from '@/api/index.d';
-import type { SelectUserBy, SelectUserParams } from '@/components/widgets/selectUser';
+import type { SelectUserBy, SelectUserParams } from '@/utils/selectUser';
 
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';

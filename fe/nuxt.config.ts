@@ -18,7 +18,8 @@ export default defineNuxtConfig({
         path: '@/components',
         pathPrefix: false
     }],
-    imports: { dirs: ['@/api/**'] },
+    pinia: { storesDirs: ['src/stores/**'] },
+    imports: { dirs: ['@/api/**', 'utils/**'] },
     srcDir: 'src/',
     css: [
         'bootstrap/dist/css/bootstrap.min.css',

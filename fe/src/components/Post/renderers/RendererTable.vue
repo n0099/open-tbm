@@ -81,7 +81,6 @@
 </template>
 
 <script setup lang="ts">
-import { baseGetUser, baseRenderUsername } from './common';
 import PostContentRenderer from './PostContentRenderer.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';

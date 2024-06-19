@@ -7,9 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { postListItemScrollPosition } from './index';
 import ThreadItem from './ThreadItem.vue';
-import { baseGetUser, baseRenderUsername } from '../common';
 import type { ApiPosts } from '@/api/index.d';
 import type { Reply, SubReply, Thread } from '@/api/post';
 import type { Modify } from '@/utils';

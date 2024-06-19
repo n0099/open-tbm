@@ -42,8 +42,7 @@ export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
 </script>
 
 <script setup lang="ts">
-import type { KnownTextParams, NamelessParamText } from '../queryParams';
-import { textParamSubParamMatchByValues } from '../queryParams';
+import type { KnownTextParams, NamelessParamText } from '@/utils/post/queryForm/queryParams';
 import type { ObjValues } from '@/utils';
 import _ from 'lodash';
 

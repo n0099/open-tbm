@@ -43,8 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SelectUserBy, SelectUserModel, SelectUserParams } from './selectUser';
-import { selectUserBy, selectUserParamsName } from './selectUser';
+import type { SelectUserBy, SelectUserModel, SelectUserParams } from '@/utils/selectUser';
 import _ from 'lodash';
 
 const props = defineProps<{

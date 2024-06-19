@@ -49,11 +49,8 @@
 
 <script setup lang="ts">
 import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
-import { guessReplyContainIntrinsicBlockSize } from './index';
 import SubReplyGroup from './SubReplyGroup.vue';
 import PostContentRenderer from '../PostContentRenderer.vue';
-import { useElementRefsStore } from '@/stores/elementRefs';
-import { useHighlightPostStore } from '@/stores/highlightPost';
 import 'assets/css/bootstrapCallout.css';
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';

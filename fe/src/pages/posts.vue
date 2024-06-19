@@ -31,7 +31,6 @@
 import { useApiPosts } from '@/api';
 import type { ApiPosts, Cursor } from '@/api/index.d';
 import type { UnixTimestamp } from '@/utils';
-import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 
 import type { RouteLocationNormalized } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
