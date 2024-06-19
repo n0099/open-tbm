@@ -36,7 +36,6 @@ import { useTriggerRouteUpdateStore } from '@/stores/triggerRouteUpdate';
 import type { RouteLocationNormalized } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
 import { useQueryClient } from '@tanstack/vue-query';
-import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';

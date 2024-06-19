@@ -16,19 +16,19 @@
             </template>
             <template v-else-if="column === 'author'">
                 <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
-                    <a :href="toUserProfileUrl(user)">
+                    <NuxtLink :to="toUserProfileUrl(user)">
                         <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                              class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                    </a>
+                    </NuxtLink>
                     <BadgeUser :user="user" />
                 </template>
             </template>
             <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
                 <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
-                    <a :href="toUserProfileUrl(user)">
+                    <NuxtLink :to="toUserProfileUrl(user)">
                         <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                              class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                    </a>
+                    </NuxtLink>
                 </template>
             </template>
         </template>
@@ -40,10 +40,10 @@
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
                     <template v-if="column === 'author'">
                         <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
-                            <a :href="toUserProfileUrl(user)">
+                            <NuxtLink :to="toUserProfileUrl(user)">
                                 <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                      class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                            </a>
+                            </NuxtLink>
                             <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
                         </template>
                     </template>
@@ -60,10 +60,10 @@
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
                             <template v-if="column === 'author'">
                                 <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
-                                    <a :href="toUserProfileUrl(user)">
+                                    <NuxtLink :to="toUserProfileUrl(user)">
                                         <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                              class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                                    </a>
+                                    </NuxtLink>
                                     <BadgeUser :user="user"
                                                :threadAuthorUid="threadAuthorUid"
                                                :replyAuthorUid="replyAuthorUid" />

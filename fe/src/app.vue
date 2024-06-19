@@ -30,15 +30,15 @@
             <div class="text-center">
                 <p>
                     <span v-if="isGoogleAnalyticsEnabled">
-                        Google <a class="text-white"
-                                href="https://www.google.com/analytics/terms/cn.html"
-                                target="_blank">Analytics 服务条款</a> |
-                        <a class="text-white"
-                        href="https://policies.google.com/privacy" target="_blank">Analytics 隐私条款</a>
+                        Google <NuxtLink class="text-white"
+                                to="https://www.google.com/analytics/terms/cn.html"
+                                target="_blank">Analytics 服务条款</NuxtLink> |
+                        <NuxtLink class="text-white"
+                        to="https://policies.google.com/privacy" target="_blank">Analytics 隐私条款</NuxtLink>
                     </span>
                     <span v-if="isReCAPTCHAEnabled && isGoogleAnalyticsEnabled"> | </span>
-                    <a v-if="isReCAPTCHAEnabled" class="text-white"
-                    href="https://policies.google.com/terms" target="_blank">Google reCAPTCHA 服务条款</a>
+                    <NuxtLink v-if="isReCAPTCHAEnabled" class="text-white"
+                    to="https://policies.google.com/terms" target="_blank">Google reCAPTCHA 服务条款</NuxtLink>
                 </p>
             </div>
             <footer id="footer-lower" class="text-center p-3">

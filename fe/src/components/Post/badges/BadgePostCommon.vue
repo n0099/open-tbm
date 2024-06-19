@@ -14,12 +14,12 @@
                 class="badge bg-light rounded-pill link-dark">
         <FontAwesomeIcon :icon="faLink" size="lg" class="align-bottom" />
     </NuxtLink>
-    <a :href="tiebaPostLink(props.post.tid,
+    <NuxtLink :to="tiebaPostLink(props.post.tid,
                             (props.post as Reply | SubReply).pid,
                             (props.post as SubReply).spid)"
        class="badge bg-light rounded-pill link-dark" data-tippy-content="在贴吧中查看" target="_blank">
         <FontAwesomeIcon :icon="faArrowUpRightFromSquare" size="lg" class="align-bottom" />
-    </a>
+    </NuxtLink>
     <span :data-tippy-content="`
             首次收录时间：${formatTime(props.post.createdAt)}<br />
             最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br />

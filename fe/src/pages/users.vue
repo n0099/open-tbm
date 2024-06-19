@@ -19,7 +19,6 @@ import type { ApiError, ApiUsers } from '@/api/index.d';
 import type { SelectUserBy, SelectUserParams } from '@/components/widgets/selectUser';
 
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
-import { useHead } from '@unhead/vue';
 import _ from 'lodash';
 
 const props = defineProps<{

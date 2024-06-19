@@ -10,10 +10,10 @@
                 <ul class="navbar-nav">
                     <template v-for="(nav, _k) in navs" :key="_k">
                         <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                            <NuxtLink class="nav-link dropdown-toggle" to="#" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">
                                 <FontAwesomeIcon v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
-                            </a>
+                            </NuxtLink>
                             <div class="dropdown-menu">
                                 <NuxtLink v-for="r in nav.routes" :key="r.route"
                                             :to="{ name: r.route }" class="nav-link">

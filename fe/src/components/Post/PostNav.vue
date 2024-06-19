@@ -18,10 +18,10 @@
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
-                            <a v-for="isTopmostReply in [reply.pid === viewportTopmostPost.pid]"
+                            <NuxtLink v-for="isTopmostReply in [reply.pid === viewportTopmostPost.pid]"
                                :key="isTopmostReply.toString()"
                                @click.prevent="_ => navigate(cursor, null, reply.pid)"
-                               :data-pid="reply.pid" :href="routeHash(null, reply.pid)"
+                               :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
                                :class="{
                                    'rounded-3': isTopmostReply,
                                    'btn-info': isTopmostReply,
@@ -30,7 +30,7 @@
                                    'btn-outline-primary': !isTopmostReply && route.hash === routeHash(null, reply.pid),
                                    'text-white': isTopmostReply,
                                    'text-body-secondary': !isTopmostReply
-                               }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</a>
+                               }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</NuxtLink>
                         </template>
                     </div>
                 </MenuItem>
@@ -42,10 +42,10 @@
              'border-end': !isPostNavExpanded
          }"
          class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
-        <a @click="_ => togglePostNavExpanded()" class="text-primary">
+        <NuxtLink @click="_ => togglePostNavExpanded()" class="text-primary">
             <FontAwesomeIcon v-show="isPostNavExpanded" :icon="faAngleLeft" />
             <FontAwesomeIcon v-show="!isPostNavExpanded" :icon="faAngleRight" />
-        </a>
+        </NuxtLink>
     </div>
 </template>
 

@@ -2,25 +2,25 @@
     <div v-viewer.static>
         <div v-for="(i, index) in content" :key="index" class="post-content-item">
             <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
-            <a v-if="i.type === 1 || i.type === 18"
-               :href="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</a>
+            <NuxtLink v-if="i.type === 1 || i.type === 18"
+               :to="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</NuxtLink>
             <img v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" />
             <img v-if="i.type === 3" :src="imageUrl(i.originSrc)"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
-            <a v-if="i.type === 4"
-               :href="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
-               target="_blank">{{ i.text }}</a>
+            <NuxtLink v-if="i.type === 4"
+               :to="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
+               target="_blank">{{ i.text }}</NuxtLink>
             <template v-if="i.type === 5">
                 <template v-if="i.src !== undefined">
                     <!--
                         todo: fix anti hotlinking on domain https://tiebapic.baidu.com and http://tb-video.bdstatic.com/tieba-smallvideo-transcode
                         <video controls :poster="i.src" :src="i.link" />
                     -->
-                    <a :href="i.text" target="_blank">贴吧视频播放页</a>
+                    <NuxtLink :to="i.text" target="_blank">贴吧视频播放页</NuxtLink>
                 </template>
                 <template v-else>
-                    <a :href="i.text" target="_blank">[[外站视频：{{ i.text }}]]</a>
+                    <NuxtLink :to="i.text" target="_blank">[[外站视频：{{ i.text }}]]</NuxtLink>
                 </template>
             </template>
             <br v-if="i.type === 7" />
@@ -33,10 +33,10 @@
                  referrerpolicy="no-referrer" loading="lazy" class="d-block" />
             <img v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
-            <a v-if="i.type === 20" :href="i.memeInfo?.detailLink" target="_blank">
+            <NuxtLink v-if="i.type === 20" :to="i.memeInfo?.detailLink" target="_blank">
                 <img :src="toHTTPS(i.src)"
                      referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
-            </a>
+            </NuxtLink>
         </div>
     </div>
 </template>

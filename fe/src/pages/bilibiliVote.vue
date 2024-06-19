@@ -8,15 +8,15 @@
             <li>被投候选人序号有效（1~1056）</li>
             <li>此前未有过有效投票（即改票）</li>
         </ul>
-        <p><a href="https://github.com/n0099/bilibiliVote" target="_blank">原始数据 @ GitHub</a></p>
-        <p><a href="https://web.archive.org/web/20190312014057/https://tieba.baidu.com/p/6059516291" target="_blank">关于启动本吧吧主招募的公示</a></p>
-        <p><a href="https://web.archive.org/web/20190312014145/https://tieba.baidu.com/p/6062186860" target="_blank">【吧主招募】bilibili吧吧主候选人吧友投票贴</a></p>
-        <p><a href="https://web.archive.org/web/20190312014242/https://tieba.baidu.com/p/6063655698" target="_blank">Bilibili吧吧主招募投票结果公示</a></p>
-        <p><a href="https://web.archive.org/web/0/https://tieba.baidu.com/p/6061937239" target="_blank">吧务候选名单详细数据，含精品数（截止3月10日00时15分）</a></p>
-        <p><a href="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062515014" target="_blank">B吧吧主候选人 支持率Top10 含支持者等级分布</a></p>
-        <p><a href="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062736510" target="_blank">【数据分享】炎魔 五娃 奶茶的支持者都关注哪些贴吧？</a></p>
-        <p><a href="https://web.archive.org/web/0/https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</a></p>
-        <p><a href="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</a></p>
+        <p><NuxtLink to="https://github.com/n0099/bilibiliVote" target="_blank">原始数据 @ GitHub</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/20190312014057/https://tieba.baidu.com/p/6059516291" target="_blank">关于启动本吧吧主招募的公示</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/20190312014145/https://tieba.baidu.com/p/6062186860" target="_blank">【吧主招募】bilibili吧吧主候选人吧友投票贴</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/20190312014242/https://tieba.baidu.com/p/6063655698" target="_blank">Bilibili吧吧主招募投票结果公示</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6061937239" target="_blank">吧务候选名单详细数据，含精品数（截止3月10日00时15分）</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062515014" target="_blank">B吧吧主候选人 支持率Top10 含支持者等级分布</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062736510" target="_blank">【数据分享】炎魔 五娃 奶茶的支持者都关注哪些贴吧？</NuxtLink></p>
+        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</NuxtLink></p>
+        <p><NuxtLink to="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</NuxtLink></p>
         <hr />
         <div ref="top50CandidateCountRef" class="echarts" id="top50CandidateCount" />
         <hr />
@@ -54,7 +54,7 @@
                rowKey="candidateIndex">
             <template #bodyCell="{ column: { dataIndex: column }, value: name }">
                 <template v-if="column === 'candidateName'">
-                    <a :href="toUserProfileUrl({ name })">{{ name }}</a>
+                    <NuxtLink :to="toUserProfileUrl({ name })">{{ name }}</NuxtLink>
                 </template>
             </template>
         </Table>
@@ -68,7 +68,6 @@ import { json } from '@/api/bilibiliVote';
 import type { ObjUnknown } from '@/utils';
 
 import { Table } from 'ant-design-vue';
-import { useHead } from '@unhead/vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
