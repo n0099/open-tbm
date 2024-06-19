@@ -1,7 +1,7 @@
 {
   "recommendations": [
-    "arcanis.vscode-zipfs",
     "dbaeumer.vscode-eslint",
-    "vue.volar"
+    "vue.volar",
+    "antfu.goto-alias"
   ]
 }

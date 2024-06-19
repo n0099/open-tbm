@@ -34,18 +34,6 @@ export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: 
     return { query, name, params: { ...params, cursor: nextCursor } };
 };
 
-const lazyLoadRouteView = async (lazyComponent: Promise<Component>) => {
-    const routeLazyComponent = useLazyLoadRouteViewStore();
-    routeLazyComponent.isLoading = true;
-
-    return lazyComponent
-        .catch((e: unknown) => {
-            if (e instanceof Error)
-                notyShow('error', `${e.name}<br />${e.message}`);
-        })
-        .finally(() => { routeLazyComponent.isLoading = false });
-};
-
 type ParentRoute = Omit<RouteRecordSingleView, 'path'> | Omit<RouteRecordMultipleViews, 'path'>;
 const withChildrenRoute = (path: string, name: string, parentRoute: ParentRoute, childrenBaseRoute: _RouteRecordBase)
 : RouteRecordSingleViewWithChildren | RouteRecordMultipleViewsWithChildren =>
@@ -83,7 +71,7 @@ const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => 
         `${after}/${_.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch}`
 }, { path: before, redirect: after }];
 
-export default {
+const exports = {
     routes: () => [
         {
             path: '/:pathMatch(.*)*',

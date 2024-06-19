@@ -2,7 +2,6 @@ import 'bootstrap';
 import nprogress from 'nprogress';
 
 nprogress.configure({ trickleSpeed: 200 });
-
 if (import.meta.dev) {
     // @ts-expect-error too small to write a .d.ts for it
     await import('@/stats');

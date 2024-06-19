@@ -25,8 +25,10 @@ export const isApiError = (response: ApiError | unknown): response is ApiError =
     && 'errorInfo' in response && (_.isObject(response.errorInfo) || _.isString(response.errorInfo));
 export const queryFunction = async <TResponse, TQueryParam>
 (endpoint: string, queryParam?: TQueryParam, signal?: AbortSignal): Promise<TResponse> => {
-    nprogress.start();
-    document.body.style.cursor = 'progress';
+    if (import.meta.client) {
+        nprogress.start();
+        document.body.style.cursor = 'progress';
+    }
     try {
         const response = await fetch(
             `${useRuntimeConfig().public.apiBaseURL}${endpoint}`
@@ -45,8 +47,10 @@ export const queryFunction = async <TResponse, TQueryParam>
 
         return json;
     } finally {
-        nprogress.done();
-        document.body.style.cursor = '';
+        if (import.meta.client) {
+            nprogress.done();
+            document.body.style.cursor = '';
+        }
     }
 };
 const checkReCAPTCHA = async (action = '') =>
