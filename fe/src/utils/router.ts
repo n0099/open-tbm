@@ -1,7 +1,4 @@
-import type { RouterConfig } from '@nuxt/schema';
 import type { Cursor } from '@/api/index.d';
-import PlaceholderError from '@/components/placeholders/PlaceholderError.vue';
-import { ApiResponseError } from '@/api';
 import type { RouteLocationNormalized, RouteLocationRaw, _RouteRecordBase } from 'vue-router';
 import _ from 'lodash';
 
@@ -28,14 +25,3 @@ export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: 
 
 export const isPathsFirstDirectorySame = (a: string, b: string) =>
     a.split('/')[1] === b.split('/')[1];
-const exports = {
-    routes: () => [
-        {
-            path: '/:pathMatch(.*)*',
-            name: '404',
-            component: PlaceholderError,
-            props: (route): InstanceType<typeof PlaceholderError>['$props'] =>
-                ({ error: new ApiResponseError(404, route.path) })
-        },
-    ],
-} as RouterConfig;
