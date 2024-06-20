@@ -3,12 +3,6 @@ import type { RouteLocation, RouteRecordRaw, RouteRecordRedirect, RouteRecordSin
 import { routeNameSuffix } from '@/utils/router';
 import _ from 'lodash';
 
-const componentCustomScrollBehaviour = ref<RouterScrollBehavior>();
-export const setComponentCustomScrollBehaviour = (cb: RouterScrollBehavior) => {
-    componentCustomScrollBehaviour.value = cb;
-    onUnmounted(() => { componentCustomScrollBehaviour.value = undefined });
-};
-
 const withCursorRoute = (path: string, name: string): Omit<RouteRecordSingleViewWithChildren, 'component'> =>
 ({
     path,
@@ -62,9 +56,10 @@ export default {
         if (savedPosition !== null)
             return savedPosition;
 
-        if (componentCustomScrollBehaviour.value !== undefined) {
+        const routeScrollBehavior = useRouteScrollBehaviorStore().get;
+        if (routeScrollBehavior !== undefined) {
             const ret: ReturnType<RouterScrollBehavior> | undefined =
-                componentCustomScrollBehaviour.value(to, from, savedPosition);
+                routeScrollBehavior(to, from, savedPosition);
             if (ret !== undefined)
                 return ret;
         }

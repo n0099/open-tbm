@@ -88,7 +88,7 @@ onBeforeRouteUpdate(async (to, from) => {
 
     return isNewQuery ? true : isFetchSuccess; // only pass pending route update after successful fetched
 });
-setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
+useRouteScrollBehaviorStore().set((to, from): ReturnType<RouterScrollBehavior> => {
     if (!compareRouteIsNewQuery(to, from))
         return { el: `#page${getRouteCursorParam(to)}` };
 

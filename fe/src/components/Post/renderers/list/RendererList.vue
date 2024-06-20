@@ -66,7 +66,7 @@ const posts = computed(() => {
 });
 
 onMounted(initialTippy);
-setComponentCustomScrollBehaviour((to, from): ReturnType<RouterScrollBehavior> => {
+useRouteScrollBehaviorStore().set((to, from): ReturnType<RouterScrollBehavior> => {
     if (!compareRouteIsNewQuery(to, from))
         return postListItemScrollPosition(to);
 
