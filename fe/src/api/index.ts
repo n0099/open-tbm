@@ -3,7 +3,6 @@ import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
-import { stringify } from 'qs';
 import _ from 'lodash';
 
 export class ApiResponseError extends Error {
@@ -23,29 +22,23 @@ export class FetchResponseError extends Error {
 export const isApiError = (response: ApiError | unknown): response is ApiError => _.isObject(response)
     && 'errorCode' in response && _.isNumber(response.errorCode)
     && 'errorInfo' in response && (_.isObject(response.errorInfo) || _.isString(response.errorInfo));
-export const queryFunction = async <TResponse, TQueryParam>
+export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
 (endpoint: string, queryParam?: TQueryParam, signal?: AbortSignal): Promise<TResponse> => {
     if (import.meta.client) {
         nprogress.start();
         document.body.style.cursor = 'progress';
     }
     try {
-        const response = await fetch(
-            `${useRuntimeConfig().public.apiBaseURL}${endpoint}`
-                + `${_.isEmpty(queryParam) ? '' : '?'}${stringify(queryParam)}`,
-            { headers: { Accept: 'application/json' }, signal }
+        const { data, error } = await useFetch<TResponse>(
+            `${useRuntimeConfig().public.apiBaseURL}${endpoint}`,
+            { query: queryParam, headers: { Accept: 'application/json' }, signal }
         );
+        if (isApiError(data))
+            throw new ApiResponseError(data.errorCode, data.errorInfo);
+        if (error.value !== null)
+            throw new FetchResponseError(error.value?.data);
 
-        /** must be cloned before any {@link Response.text()} */
-        // to prevent `Failed to execute 'clone' on 'Response': Response body is already used`
-        const response2 = response.clone();
-        const json = await response.json() as TResponse;
-        if (isApiError(json))
-            throw new ApiResponseError(json.errorCode, json.errorInfo);
-        if (!response.ok)
-            throw new FetchResponseError(await response2.text());
-
-        return json;
+        return data.value as TResponse;
     } finally {
         if (import.meta.client) {
             nprogress.done();

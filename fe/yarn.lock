@@ -2347,13 +2347,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/qs@npm:^6.9.15":
-  version: 6.9.15
-  resolution: "@types/qs@npm:6.9.15"
-  checksum: 10c0/49c5ff75ca3adb18a1939310042d273c9fc55920861bd8e5100c8a923b3cda90d759e1a95e18334092da1c8f7b820084687770c83a1ccef04fb2c6908117c823
-  languageName: node
-  linkType: hard
-
 "@types/resolve@npm:1.20.2":
   version: 1.20.2
   resolution: "@types/resolve@npm:1.20.2"
@@ -8154,15 +8147,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"qs@npm:^6.12.1":
-  version: 6.12.1
-  resolution: "qs@npm:6.12.1"
-  dependencies:
-    side-channel: "npm:^1.0.6"
-  checksum: 10c0/439e6d7c6583e7c69f2cab2c39c55b97db7ce576e4c7c469082b938b7fc8746e8d547baacb69b4cd2b6666484776c3f4840ad7163a4c5326300b0afa0acdd84b
-  languageName: node
-  linkType: hard
-
 "queue-microtask@npm:^1.2.2":
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
@@ -8708,13 +8692,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"side-channel@npm:@nolyfill/side-channel@latest":
-  version: 1.0.29
-  resolution: "@nolyfill/side-channel@npm:1.0.29"
-  checksum: 10c0/6348800210c07d72819a41fc227a8f35c1fb6b97126d243cbc65e5ea065664c01ebef025591a2417282fc674bbd42c314356878441c252e10a4c92619ae177ef
-  languageName: node
-  linkType: hard
-
 "signal-exit@npm:^3.0.0, signal-exit@npm:^3.0.7":
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
@@ -9212,7 +9189,6 @@ __metadata:
     "@types/luxon": "npm:^3.4.2"
     "@types/node": "npm:^20.14.2"
     "@types/nprogress": "npm:^0.2.3"
-    "@types/qs": "npm:^6.9.15"
     "@typescript-eslint/eslint-plugin": "npm:rc-v8"
     "@typescript-eslint/parser": "npm:rc-v8"
     "@vue/eslint-config-typescript": "npm:^13.0.0"
@@ -9234,7 +9210,6 @@ __metadata:
     nprogress: "npm:^0.2.0"
     nuxt: "npm:^3.12.2"
     pinia: "npm:^2.1.7"
-    qs: "npm:^6.12.1"
     rollup-plugin-visualizer: "npm:^5.12.0"
     scroll-into-view-if-needed: "npm:^3.1.0"
     stats.js: "npm:^0.17.0"
