@@ -5,11 +5,7 @@ export default defineNuxtPlugin(() => {
 
     const router = useRouter();
     router.beforeEach((to, from) => {
-        const getPathFirstDirectory = (path: string) => {
-            const secondSlashIndex = path.indexOf('/', 1);
-            return secondSlashIndex === -1 ? path : path.substring(0, secondSlashIndex);
-        };
-        if (getPathFirstDirectory(to.path) === getPathFirstDirectory(from.path))
+        if (isPathsFirstDirectorySame(to.path, from.path))
             return;
         start();
     });

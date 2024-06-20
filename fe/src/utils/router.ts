@@ -26,6 +26,8 @@ export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: 
     return { query, name, params: { ...params, cursor: nextCursor } };
 };
 
+export const isPathsFirstDirectorySame = (a: string, b: string) =>
+    a.split('/')[1] === b.split('/')[1];
 const exports = {
     routes: () => [
         {

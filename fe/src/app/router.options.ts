@@ -70,8 +70,7 @@ export default {
             assertRouteNameIsStr(to.name);
             assertRouteNameIsStr(from.name);
 
-            // scroll to top when the prefix of route name changed
-            if (to.name.split('/')[0] !== from.name.split('/')[0])
+            if (isPathsFirstDirectorySame(to.path, from.path))
                 return { top: 0 };
         }
 
