@@ -21,13 +21,6 @@ export default defineNuxtConfig({
     pinia: { storesDirs: ['src/stores/**'] },
     imports: { dirs: ['@/api/**', 'utils/**'] },
     srcDir: 'src/',
-    css: [
-        'bootstrap/dist/css/bootstrap.min.css',
-        'noty/lib/noty.css',
-        'noty/lib/themes/mint.css',
-        'nprogress/nprogress.css',
-        'assets/css/global.css'
-    ],
     vite: {
         plugins: [
             visualizer({ filename: 'dist/rollup-plugin-visualizer.html', gzipSize: true, brotliSize: true }),
