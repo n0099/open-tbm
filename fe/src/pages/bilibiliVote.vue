@@ -54,7 +54,7 @@
                rowKey="candidateIndex">
             <template #bodyCell="{ column: { dataIndex: column }, value: name }">
                 <template v-if="column === 'candidateName'">
-                    <NuxtLink :to="toUserProfileUrl({ name })">{{ name }}</NuxtLink>
+                    <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
                 </template>
             </template>
         </Table>

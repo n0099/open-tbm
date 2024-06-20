@@ -28,7 +28,7 @@
              class="reply row shadow-sm bs-callout bs-callout-info">
             <div v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
                  class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
-                <NuxtLink :to="toUserRoute(author.uid)" class="d-block">
+                <NuxtLink :to="toUserRoute(author.uid)" noPrefetch class="d-block">
                     <img :src="toUserPortraitImageUrl(author.portrait)" loading="lazy" class="tieba-user-portrait-large" />
                     <p class="my-0">{{ author.name }}</p>
                     <p v-if="author.displayName !== null && author.name !== null">{{ author.displayName }}</p>

@@ -16,7 +16,7 @@
             </template>
             <template v-else-if="column === 'author'">
                 <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
-                    <NuxtLink :to="toUserProfileUrl(user)">
+                    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
                         <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                              class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                     </NuxtLink>
@@ -25,7 +25,7 @@
             </template>
             <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
                 <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
-                    <NuxtLink :to="toUserProfileUrl(user)">
+                    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
                         <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                              class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                     </NuxtLink>
@@ -40,7 +40,7 @@
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
                     <template v-if="column === 'author'">
                         <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
-                            <NuxtLink :to="toUserProfileUrl(user)">
+                            <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
                                 <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                      class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                             </NuxtLink>
@@ -60,7 +60,7 @@
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
                             <template v-if="column === 'author'">
                                 <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
-                                    <NuxtLink :to="toUserProfileUrl(user)">
+                                    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
                                         <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                              class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                                     </NuxtLink>

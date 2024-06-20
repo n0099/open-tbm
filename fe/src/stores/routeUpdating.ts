@@ -3,15 +3,13 @@ import nprogress from 'nprogress';
 export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
     let timeoutId = 0;
     const isUpdating = ref(false);
-    const start = () => {
-        timeoutId = window.setTimeout(() => { isUpdating.value = true }, 100);
-    };
+    const start = () => { isUpdating.value = true };
     const end = () => { isUpdating.value = false };
 
     watchEffect(() => {
         if (isUpdating.value) {
             if (import.meta.client)
-                nprogress.start();
+                timeoutId = window.setTimeout(nprogress.start, 100);
             window.setTimeout(end, 10000);
         }
         else {

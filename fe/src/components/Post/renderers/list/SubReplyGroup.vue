@@ -5,8 +5,9 @@
                 :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
                 class="sub-reply-item list-group-item">
                 <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
-                    <NuxtLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined" :to="toUserRoute(author.uid)"
-                                class="sub-reply-author text-wrap badge bg-light">
+                    <NuxtLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
+                              :to="toUserRoute(author.uid)" noPrefetch
+                              class="sub-reply-author text-wrap badge bg-light">
                         <img :src="toUserPortraitImageUrl(author.portrait)"
                              loading="lazy" class="tieba-user-portrait-small" />
                         <span class="mx-2 align-middle link-dark">

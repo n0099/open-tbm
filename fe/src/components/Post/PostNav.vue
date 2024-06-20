@@ -42,10 +42,10 @@
              'border-end': !isPostNavExpanded
          }"
          class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
-        <NuxtLink @click="_ => togglePostNavExpanded()" class="text-primary">
+        <a @click="_ => togglePostNavExpanded()" class="text-primary">
             <FontAwesomeIcon v-show="isPostNavExpanded" :icon="faAngleLeft" />
             <FontAwesomeIcon v-show="!isPostNavExpanded" :icon="faAngleRight" />
-        </NuxtLink>
+        </a>
     </div>
 </template>
 
