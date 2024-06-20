@@ -22,9 +22,9 @@
     <div id="app-wrapper" class="d-flex flex-column">
         <GlobalNavBar />
         <MinimumResolutionWarning />
-        <img :src="iconLoadingBlock" :class="{ 'd-none': !isRouteChanging }" id="loadingBlock" />
+        <img :src="iconLoadingBlock" :class="{ 'd-none': !isRouteUpdating }" id="loadingBlock" />
         <ConfigProvider :locale="AntdZhCn">
-            <NuxtPage :class="{ invisible: isRouteChanging }" />
+            <NuxtPage :class="{ invisible: isRouteUpdating }" />
         </ConfigProvider>
         <footer id="footer-upper" class="text-light pt-4 mt-auto">
             <div class="text-center">
@@ -54,7 +54,7 @@ import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 
-const isRouteChanging = useState('isRouteChanging', () => false);
+const isRouteUpdating = useRouteUpdatingStore().isUpdating;
 const config = useRuntimeConfig().public;
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementID !== '';

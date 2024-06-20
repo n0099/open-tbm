@@ -1,21 +1,7 @@
-import nprogress from 'nprogress';
 import _ from 'lodash';
 
 export default defineNuxtPlugin(() => {
-    const isRouteChanging = useState('isRouteChanging', () => false);
-    const start = () => {
-        if (import.meta.client) 
-            nprogress.start();
-        isRouteChanging.value = true;
-        window.setTimeout(end, 10000);
-    };
-    let timeoutId = 0;
-    const end = () => {
-        clearTimeout(timeoutId);
-        if (import.meta.client) 
-            nprogress.done();
-        isRouteChanging.value = false;
-    };
+    const { start, end } = useRouteUpdatingStore();
 
     const router = useRouter();
     router.beforeEach((to, from) => {
@@ -25,7 +11,7 @@ export default defineNuxtPlugin(() => {
         };
         if (getPathFirstDirectory(to.path) === getPathFirstDirectory(from.path))
             return;
-        timeoutId = window.setTimeout(start, 100);
+        start();
     });
     router.afterEach(end);
     router.onError((error) => {
