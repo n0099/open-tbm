@@ -24,7 +24,7 @@ const indicatorsRenderer = computed(() => (<>
     {isFetching.value && <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>}
-    {isError.value && <span title={JSON.stringify(error)} class="text-danger fw-bold">Error</span>}
+    {isError.value && <span title={JSON.stringify(error.value?.message)} class="text-danger fw-bold">Error</span>}
 </>));
 </script>
 

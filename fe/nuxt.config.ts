@@ -3,7 +3,7 @@ import { analyzer } from 'vite-bundle-analyzer';
 import _ from 'lodash';
 
 const envs = [
-    'apiBaseURL',
+    'apiEndpointPrefix',
     'gaMeasurementID',
     'recaptchaSiteKey',
     'instanceName',

@@ -1,6 +1,6 @@
 <template>
     <template v-if="error instanceof FetchResponseError">
-        <pre class="text-muted">{{ error.bodyText }}</pre>
+        <pre class="text-muted">{{ error.responseBody }}</pre>
     </template>
     <template v-else-if="error instanceof ApiResponseError">
         <div class="text-center">

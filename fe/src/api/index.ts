@@ -14,8 +14,8 @@ export class ApiResponseError extends Error {
     }
 }
 export class FetchResponseError extends Error {
-    public constructor(public readonly bodyText: string) {
-        super(bodyText);
+    public constructor(public readonly responseBody: unknown) {
+        super(JSON.stringify(responseBody));
     }
 }
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -30,8 +30,15 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
     }
     try {
         const { data, error } = await useFetch<TResponse>(
-            `${useRuntimeConfig().public.apiBaseURL}${endpoint}`,
-            { query: queryParam, headers: { Accept: 'application/json' }, signal }
+            `${useRuntimeConfig().public.apiEndpointPrefix}${endpoint}`,
+            {
+                query: queryParam,
+                headers: {
+                    Accept: 'application/json',
+                    ...useRequestHeaders(['Authorization'])
+                },
+                signal
+            }
         );
         if (isApiError(data))
             throw new ApiResponseError(data.errorCode, data.errorInfo);
