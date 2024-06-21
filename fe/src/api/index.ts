@@ -2,6 +2,7 @@ import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagina
 import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
+import { FetchError } from 'ofetch';
 import nprogress from 'nprogress';
 import _ from 'lodash';
 
@@ -11,11 +12,6 @@ export class ApiResponseError extends Error {
         public readonly errorInfo: Record<string, unknown[]> | string
     ) {
         super(JSON.stringify({ errorCode, errorInfo }));
-    }
-}
-export class FetchResponseError extends Error {
-    public constructor(public readonly responseBody: unknown) {
-        super(JSON.stringify(responseBody));
     }
 }
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -29,7 +25,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
         document.body.style.cursor = 'progress';
     }
     try {
-        const { data, error } = await useFetch<TResponse>(
+        const response = await $fetch<TResponse>(
             `${useRuntimeConfig().public.apiEndpointPrefix}${endpoint}`,
             {
                 query: queryParam,
@@ -40,12 +36,10 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
                 signal
             }
         );
-        if (isApiError(data))
-            throw new ApiResponseError(data.errorCode, data.errorInfo);
-        if (error.value !== null)
-            throw new FetchResponseError(error.value?.data);
+        if (isApiError(response))
+            throw new ApiResponseError(response.errorCode, response.errorInfo);
 
-        return data.value as TResponse;
+        return response;
     } finally {
         if (import.meta.client) {
             nprogress.done();
@@ -78,7 +72,7 @@ const queryFunctionWithReCAPTCHA = async <TResponse, TQueryParam>
         signal
     );
 
-export type ApiErrorClass = ApiResponseError | FetchResponseError;
+export type ApiErrorClass = ApiResponseError | FetchError;
 type QueryFunctions = typeof queryFunction | typeof queryFunctionWithReCAPTCHA;
 const useApi = <
     TApi extends Api<TResponse, TQueryParam>,

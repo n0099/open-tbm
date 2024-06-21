@@ -1,6 +1,7 @@
 <template>
-    <template v-if="error instanceof FetchResponseError">
-        <pre class="text-muted">{{ error.responseBody }}</pre>
+    <template v-if="error instanceof FetchError">
+        <p class="error-code text-muted">{{ error.statusCode }}</p>
+        <pre class="text-muted">{{ error.message }}</pre>
     </template>
     <template v-else-if="error instanceof ApiResponseError">
         <div class="text-center">
@@ -26,7 +27,8 @@
 
 <script setup lang="ts">
 import type { ApiErrorClass } from '@/api';
-import { ApiResponseError, FetchResponseError } from '@/api';
+import { ApiResponseError } from '@/api';
+import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
 defineProps<{ error: ApiErrorClass | null }>();

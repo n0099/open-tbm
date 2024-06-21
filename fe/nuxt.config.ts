@@ -13,14 +13,22 @@ const envs = [
 export default defineNuxtConfig({
     devServer: { https: true },
     devtools: { enabled: true },
-    modules: ['@pinia/nuxt'],
-    components: [{
-        path: '@/components',
-        pathPrefix: false
-    }],
-    pinia: { storesDirs: ['src/stores/**'] },
-    imports: { dirs: ['@/api/**', 'utils/**'] },
     srcDir: 'src/',
+    imports: { dirs: ['@/api/**', 'utils/**'] },
+    components: [{ path: '@/components', pathPrefix: false }],
+    modules: ['@pinia/nuxt', '@hebilicious/vue-query-nuxt'],
+    pinia: { storesDirs: ['src/stores/**'] },
+    vueQuery: {
+        queryClientOptions: {
+            defaultOptions: {
+                queries: {
+                    refetchOnWindowFocus: false,
+                    staleTime: Infinity,
+                    retry: false
+                }
+            }
+        }
+    },
     vite: {
         plugins: [
             visualizer({ filename: 'dist/rollup-plugin-visualizer.html', gzipSize: true, brotliSize: true }),
