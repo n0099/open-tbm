@@ -1,6 +1,3 @@
-import type { PostContent } from './postContent';
-import type { BaiduUserID } from './user';
-
 export interface TimestampFields {
     createdAt: UnixTimestamp,
     updatedAt: UnixTimestamp | null

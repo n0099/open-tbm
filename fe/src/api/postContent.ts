@@ -1,4 +1,3 @@
-
 interface NativeApp {
     isNativeApp: UInt,
     nativeApp: unknown[] // https://github.com/n0099/tbclient.protobuf/blob/7ebe461d60a24e336b930697f98cd6e3321a2aca/proto/NativeApp.proto

@@ -48,9 +48,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
-import SubReplyGroup from './SubReplyGroup.vue';
-import PostContentRenderer from '../PostContentRenderer.vue';
 import 'assets/css/bootstrapCallout.css';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 

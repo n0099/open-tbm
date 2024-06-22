@@ -561,7 +561,7 @@ export default withNuxt(
     )),
     pluginUnicorn.configs['flat/recommended'],
     { languageOptions: { ecmaVersion: 'latest' } },
-    { ignores: ['.yarn/', '.pnp.*'] },
+    { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },
     {
         languageOptions: {

@@ -20,8 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { PageCurrentButton, PageNextButton, useNextCursorRoute } from '../paginations/usePaginationButtons';
-
 const props = defineProps<{
     users: ApiUsers['response'],
     isLoadingNewPage: boolean,

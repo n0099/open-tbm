@@ -1,4 +1,3 @@
-
 export const selectUserBy = ['', 'uid', 'name', 'nameNULL', 'displayName', 'displayNameNULL'] as const;
 export type SelectUserBy = typeof selectUserBy[number];
 export type SelectUserParams = Partial<{

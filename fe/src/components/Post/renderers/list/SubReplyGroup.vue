@@ -35,9 +35,6 @@
 </template>
 
 <script setup lang="ts">
-import type { UserProvision } from './RendererList.vue';
-import PostContentRenderer from '../PostContentRenderer.vue';
-
 const props = defineProps<{
     thread: Thread,
     reply: Reply,

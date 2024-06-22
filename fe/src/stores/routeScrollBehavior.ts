@@ -1,4 +1,3 @@
-
 export const useRouteScrollBehaviorStore = defineStore('routeScrollBehavior', () => {
     const scrollBehavior = ref<RouterScrollBehavior>();
     const set = (callback: RouterScrollBehavior) => {

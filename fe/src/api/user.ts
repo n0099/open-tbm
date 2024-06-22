@@ -1,5 +1,3 @@
-import type { TimestampFields } from './post';
-
 export type BaiduUserID = Int;
 export type ForumModeratorType = 'assist'
 | 'fourth_manager'

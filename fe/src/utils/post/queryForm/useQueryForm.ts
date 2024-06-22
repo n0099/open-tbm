@@ -1,4 +1,3 @@
-import type { RouteObjectRaw } from '@/stores/triggerRouteUpdate';
 import _ from 'lodash';
 
 export interface UnknownParam { name: string, value: unknown, subParam: ObjUnknown & { not?: boolean } }

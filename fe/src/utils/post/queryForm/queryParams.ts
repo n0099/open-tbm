@@ -1,4 +1,3 @@
-import type { NamelessUnknownParam, ParamPreprocessorOrWatcher, UnknownParam } from './useQueryForm';
 import _ from 'lodash';
 
 // value of [0] will be either ALL: require exactly same post types, or SUB: requiring a subset of types

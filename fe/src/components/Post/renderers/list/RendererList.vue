@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import ThreadItem from './ThreadItem.vue';
 import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts['response'] }>();
