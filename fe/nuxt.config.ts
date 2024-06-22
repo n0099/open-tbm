@@ -1,5 +1,4 @@
-import { visualizer } from 'rollup-plugin-visualizer';
-import { analyzer } from 'vite-bundle-analyzer';
+import vite from './vite.config';
 import _ from 'lodash';
 
 const envs = [
@@ -16,8 +15,9 @@ export default defineNuxtConfig({
     srcDir: 'src/',
     imports: { dirs: ['@/api/**', 'utils/**'] },
     components: [{ path: '@/components', pathPrefix: false }],
-    modules: ['@pinia/nuxt', '@hebilicious/vue-query-nuxt'],
+    modules: ['@pinia/nuxt', '@nuxt/eslint', '@hebilicious/vue-query-nuxt'],
     pinia: { storesDirs: ['src/stores/**'] },
+    eslint: { config: { standalone: false } },
     vueQuery: {
         queryClientOptions: {
             defaultOptions: {
@@ -29,14 +29,7 @@ export default defineNuxtConfig({
             }
         }
     },
-    vite: {
-        plugins: [
-            visualizer({ filename: 'dist/rollup-plugin-visualizer.html', gzipSize: true, brotliSize: true }),
-            analyzer({ analyzerMode: 'static', fileName: 'vite-bundle-analyzer' })
-        ],
-        build: { target: 'esnext' },
-        assetsInclude: ['**/*.avifs']
-    },
+    vite,
     runtimeConfig: {
         public: _.zipObject(envs, envs.map(() => ''))
     }

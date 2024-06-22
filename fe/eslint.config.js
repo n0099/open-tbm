@@ -537,6 +537,7 @@ import pluginUnicorn from 'eslint-plugin-unicorn';
 import { tsImport } from 'tsx/esm/api';
 import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
 import _ from 'lodash';
+import withNuxt from './.nuxt/eslint.config.mjs'
 
 // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2151349705
 const viteConfig = await tsImport('./vite.config.ts', import.meta.url);
@@ -545,7 +546,7 @@ const viteConfig = await tsImport('./vite.config.ts', import.meta.url);
 // https://github.com/eslint/eslint/issues/18391
 const compat = new FlatCompat();
 
-export default [
+export default withNuxt(
     eslintJs.configs.recommended,
     ...pluginVue.configs['flat/recommended'],
     ...compat.config(vueESLintConfigTypescriptRecommendedExtends), // https://github.com/vuejs/eslint-config-typescript/issues/76#issuecomment-2051234597
@@ -626,4 +627,4 @@ export default [
             '@typescript-eslint/no-unsafe-member-access': 'off',
         },
     },
-];
+);
