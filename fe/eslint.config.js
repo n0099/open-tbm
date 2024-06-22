@@ -278,12 +278,10 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@typescript-eslint/no-loss-of-precision': 'error',
         'no-redeclare': 'off',
         '@typescript-eslint/no-redeclare': 'error',
-        'no-shadow': 'off',
-        '@typescript-eslint/no-shadow': ['error', {
-            builtinGlobals: true,
-            hoist: 'all',
-            allow: ['name'],
-        }],
+
+        // too many false positive with nuxt auto import
+        // 'no-shadow': 'off',
+        // '@typescript-eslint/no-shadow': ['error', { builtinGlobals: true, hoist: 'all', allow: ['name'] }],
         'no-unused-expressions': 'off',
         '@typescript-eslint/no-unused-expressions': 'error',
         'no-use-before-define': 'off',
@@ -432,7 +430,10 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/no-empty-component-block': 'error',
         'vue/no-invalid-model-keys': 'error',
         'vue/no-multiple-objects-in-class': 'error',
-        'vue/no-undef-components': 'error',
+
+        // https://github.com/nuxt/nuxt/issues/15015
+        // https://github.com/nuxt/eslint/issues/309
+        // 'vue/no-undef-components': 'error',
         'vue/no-useless-mustaches': 'error',
         'vue/no-useless-v-bind': 'error',
         'vue/no-v-text': 'error',
