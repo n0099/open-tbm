@@ -2,7 +2,7 @@
     <div class="text-center">
         <template v-if="error instanceof FetchError">
             <p class="error-code text-muted">{{ error.statusCode }}</p>
-            <pre class="text-muted">{{ error.message }}</pre>
+            <pre class="text-muted">{{ error.statusMessage  }}</pre>
         </template>
         <template v-else-if="error instanceof ApiResponseError">
             <p class="error-code text-muted">{{ error.errorCode }}</p>
