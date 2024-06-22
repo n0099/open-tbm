@@ -52,8 +52,6 @@ import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.
 import SubReplyGroup from './SubReplyGroup.vue';
 import PostContentRenderer from '../PostContentRenderer.vue';
 import 'assets/css/bootstrapCallout.css';
-
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
 type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];

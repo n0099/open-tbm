@@ -32,7 +32,6 @@
 <script setup lang="ts" generic="
     TPost extends Post,
     TPostIDKey extends keyof TPost & PostIDOf<TPost>">
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faArrowUpRightFromSquare, faHashtag, faLink } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';

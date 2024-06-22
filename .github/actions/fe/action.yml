@@ -34,6 +34,9 @@ runs:
     - run: yarn install --immutable
       working-directory: fe
       shell: bash
+    - run: yarn run nuxt prepare
+      working-directory: fe
+      shell: bash
 
     # https://github.com/actions/runner/issues/1478
     # https://github.com/actions/setup-node/issues/410#issuecomment-1939482965

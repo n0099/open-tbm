@@ -169,7 +169,6 @@ import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
 
 import { RangePicker } from 'ant-design-vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 

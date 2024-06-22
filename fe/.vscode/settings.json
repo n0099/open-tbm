@@ -11,6 +11,7 @@
   "eslint.useFlatConfig": true,
   "eslint.runtime": "node", // https://github.com/yarnpkg/berry/pull/6278#issuecomment-2149229422
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsdk": "node_modules\\typescript\\lib",
   "typescript.tsserver.experimental.useVsCodeWatcher": false, // https://github.com/yarnpkg/berry/issues/6270
   "[vue]": {
     "editor.defaultFormatter": "Vue.volar"
