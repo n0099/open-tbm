@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="container">
-            <QueryForm ref="queryFormRef" :isLoading="isFetching" />
+            <QueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
             <Menu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
                 <MenuItem key="list">列表视图</MenuItem>
                 <MenuItem key="table">表格视图</MenuItem>
@@ -27,10 +27,10 @@
 </template>
 
 <script setup lang="ts">
-
 import { useApiPosts } from '@/api';
 import type { ApiPosts, Cursor } from '@/api/index.d';
 import type { UnixTimestamp } from '@/utils';
+import { getQueryFormDeps } from '@/utils/post/queryForm'
 
 import type { RouteLocationNormalized } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';
@@ -49,7 +49,9 @@ const { data, error, isPending, isFetching, isFetchedAfterMount, dataUpdatedAt, 
     useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
-const queryFormRef = ref<InstanceType<typeof QueryForm>>();
+const queryFormDeps = getQueryFormDeps();
+const { getCurrentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
+
 useHead({
     title: computed(() => {
         const firstPostPage = data.value?.pages[0];
@@ -59,7 +61,7 @@ useHead({
         const forumName = `${firstPostPage.forum.name}吧`;
         const threadTitle = firstPostPage.threads[0].title;
 
-        switch (queryFormRef.value?.getCurrentQueryType()) {
+        switch (getCurrentQueryType()) {
             case 'fid':
             case 'search':
                 return `${forumName} - 帖子查询`;
@@ -109,12 +111,7 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
         shouldFetch.value = newQueryParam !== undefined;
         queryParam.value = newQueryParam;
     };
-    if (queryFormRef.value === undefined) {
-        setQueryParam();
-
-        return;
-    }
-    const flattenParams = await queryFormRef.value.parseRouteToGetFlattenParams(newRoute);
+    const flattenParams = await parseRouteToGetFlattenParams(newRoute);
     if (flattenParams === false) {
         setQueryParam();
 
@@ -138,7 +135,7 @@ onBeforeRouteUpdate(async (to, from) => {
     if (isTriggeredByQueryForm && !compareRouteIsNewQuery(to, from))
         await queryClient.resetQueries({ queryKey: ['posts'] });
 });
-onMounted(async () => { await parseRouteThenFetch(route) });
+await parseRouteThenFetch(route);
 </script>
 
 <style scoped>
