@@ -1,7 +1,6 @@
 import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
 import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
-import { useInfiniteQuery, useQuery } from '@tanstack/vue-query';
 import { FetchError } from 'ofetch';
 import nprogress from 'nprogress';
 import _ from 'lodash';
@@ -80,11 +79,15 @@ const useApi = <
     TQueryParam = TApi['queryParam']>
 (endpoint: string, queryFn: QueryFunctions) =>
     (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseQueryOptions<TResponse, ApiErrorClass>>) =>
-        useQuery<TResponse, ApiErrorClass>({
-            queryKey: [endpoint, queryParam],
-            queryFn: async () => queryFn<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
-            ...options
-        });
+        {
+            const ret = useQuery<TResponse, ApiErrorClass>({
+                queryKey: [endpoint, queryParam],
+                queryFn: async () => queryFn<TResponse, TQueryParam>(`/${endpoint}`, queryParam?.value),
+                ...options
+            });
+            onServerPrefetch(ret.suspense);
+            return ret;
+        };
 const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'] & CursorPagination,
@@ -96,21 +99,25 @@ const useApiWithCursor = <
         TResponse & CursorPagination,
         QueryKey, Cursor
     >>) =>
-        useInfiniteQuery<
-            TResponse & CursorPagination, ApiErrorClass,
-            InfiniteData<TResponse & CursorPagination, Cursor>,
-            QueryKey, Cursor
-        >({
-            queryKey: [endpoint, queryParam],
-            queryFn: async ({ pageParam }) => queryFn<TResponse & CursorPagination, TQueryParam & { cursor?: Cursor }>(
-                `/${endpoint}`,
-                { ...queryParam?.value as TQueryParam, cursor: pageParam === '' ? undefined : pageParam }
-            ),
-            getNextPageParam: lastPage => lastPage.pages.nextCursor,
-            initialPageParam: '',
-            ...options
-        });
+        {
+            const ret = useInfiniteQuery<
+                TResponse & CursorPagination, ApiErrorClass,
+                InfiniteData<TResponse & CursorPagination, Cursor>,
+                QueryKey, Cursor
+            >({
+                queryKey: [endpoint, queryParam],
+                queryFn: async ({ pageParam }) => queryFn<TResponse & CursorPagination, TQueryParam & { cursor?: Cursor; }>(
+                    `/${endpoint}`,
+                    { ...queryParam?.value as TQueryParam, cursor: pageParam === '' ? undefined : pageParam }
+                ),
+                getNextPageParam: lastPage => lastPage.pages.nextCursor,
+                initialPageParam: '',
+                ...options
+            });
+            onServerPrefetch(ret.suspense);
+            return ret;
+        };
 
-export const useApiForums = () => useApi<ApiForums>('forums', queryFunction)();
+export const useApiForums = useApi<ApiForums>('forums', queryFunction);
 export const useApiUsers = useApi<ApiUsers>('users', queryFunctionWithReCAPTCHA);
 export const useApiPosts = useApiWithCursor<ApiPosts>('posts', queryFunctionWithReCAPTCHA);

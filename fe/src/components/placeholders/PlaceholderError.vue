@@ -1,10 +1,10 @@
 <template>
-    <template v-if="error instanceof FetchError">
-        <p class="error-code text-muted">{{ error.statusCode }}</p>
-        <pre class="text-muted">{{ error.message }}</pre>
-    </template>
-    <template v-else-if="error instanceof ApiResponseError">
-        <div class="text-center">
+    <div class="text-center">
+        <template v-if="error instanceof FetchError">
+            <p class="error-code text-muted">{{ error.statusCode }}</p>
+            <pre class="text-muted">{{ error.message }}</pre>
+        </template>
+        <template v-else-if="error instanceof ApiResponseError">
             <p class="error-code text-muted">{{ error.errorCode }}</p>
             <template v-if="_.isString(error.errorInfo)">
                 <p v-for="(info, _k) in error.errorInfo.split('\n')" :key="_k">{{ info }}</p>
@@ -21,8 +21,8 @@
                     <template v-else>{{ paramError }}</template>
                 </p>
             </template>
-        </div>
-    </template>
+        </template>
+    </div>
 </template>
 
 <script setup lang="ts">
