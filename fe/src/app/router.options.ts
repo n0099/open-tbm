@@ -1,18 +1,18 @@
 import type { RouterConfig } from 'nuxt/schema';
-import type { RouteLocation, RouteRecordRaw, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior } from 'vue-router';
 import { routeNameSuffix } from '@/utils/router';
+import type { RouteLocation, RouteRecordRaw, RouteRecordRedirect, RouteRecordSingleView, RouteRecordSingleViewWithChildren, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const withCursorRoute = (path: string, name: string): Omit<RouteRecordSingleViewWithChildren, 'component'> =>
-({
-    path,
-    name,
-    children: [{ // see `App\Http\Controllers\PostsQuery->query()` in be
+    ({
+        path,
+        name,
+        children: [{ // see `App\Http\Controllers\PostsQuery->query()` in be
         // non capture group (?:) and escaping `)` is required for regex in vue route
-        path: 'cursor/:cursor((?:(?:[A-Za-z0-9-_]{4}\\)*(?:[A-Za-z0-9-_]{2,3}\\)(?:,|$\\)|,\\){5,6})',
-        name: `${name}${routeNameSuffix.cursor}`
-    } as RouteRecordRaw]
-});
+            path: 'cursor/:cursor((?:(?:[A-Za-z0-9-_]{4}\\)*(?:[A-Za-z0-9-_]{2,3}\\)(?:,|$\\)|,\\){5,6})',
+            name: `${name}${routeNameSuffix.cursor}`
+        } as RouteRecordRaw]
+    });
 const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => [{
     path: `${before}/:pathMatch(.*)*`,
     redirect: to =>

@@ -3,14 +3,14 @@
         <div v-for="(i, index) in content" :key="index" class="post-content-item">
             <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
             <NuxtLink v-if="i.type === 1 || i.type === 18"
-               :to="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</NuxtLink>
+                      :to="tryExtractTiebaOutboundUrl(i.link)" target="_blank">{{ i.text }}</NuxtLink>
             <img v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
                  referrerpolicy="no-referrer" loading="lazy" />
             <img v-if="i.type === 3" :src="imageUrl(i.originSrc)"
                  referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
             <NuxtLink v-if="i.type === 4"
-               :to="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
-               target="_blank">{{ i.text }}</NuxtLink>
+                      :to="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
+                      target="_blank">{{ i.text }}</NuxtLink>
             <template v-if="i.type === 5">
                 <template v-if="i.src !== undefined">
                     <!--

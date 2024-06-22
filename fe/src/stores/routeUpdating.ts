@@ -11,13 +11,12 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
             if (import.meta.client)
                 timeoutId = window.setTimeout(nprogress.start, 100);
             window.setTimeout(end, 10000);
-        }
-        else {
+        } else {
             clearTimeout(timeoutId);
-            if (import.meta.client) 
+            if (import.meta.client)
                 nprogress.done();
         }
-    })
+    });
 
     return { isUpdating, start, end };
 });

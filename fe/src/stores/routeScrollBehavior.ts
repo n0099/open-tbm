@@ -1,4 +1,4 @@
-import type { RouterScrollBehavior } from "vue-router";
+import type { RouterScrollBehavior } from 'vue-router';
 
 export const useRouteScrollBehaviorStore = defineStore('routeScrollBehavior', () => {
     const scrollBehavior = ref<RouterScrollBehavior>();

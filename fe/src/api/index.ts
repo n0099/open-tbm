@@ -1,9 +1,9 @@
+import type { PublicRuntimeConfig } from 'nuxt/schema';
 import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
 import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
-import type { PublicRuntimeConfig } from 'nuxt/schema';
-import { FetchError } from 'ofetch';
 import nprogress from 'nprogress';
+import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
 export class ApiResponseError extends Error {
@@ -93,23 +93,23 @@ const useApi = <
     TResponse = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
 (endpoint: string, queryFn: QueryFunctions) =>
-    (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseQueryOptions<TResponse, ApiErrorClass>>) =>
-        {
-            const config = useRuntimeConfig().public;
-            const clientRequestHeaders = useRequestHeaders(['Authorization']);
-            const ret = useQuery<TResponse, ApiErrorClass>({
-                queryKey: [endpoint, queryParam],
-                queryFn: async () => queryFn<TResponse, TQueryParam>(
-                    config,
-                    clientRequestHeaders,
-                    `/${endpoint}`,
-                    queryParam?.value
-                ),
-                ...options
-            });
-            onServerPrefetch(ret.suspense);
-            return ret;
-        };
+    (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseQueryOptions<TResponse, ApiErrorClass>>) => {
+        const config = useRuntimeConfig().public;
+        const clientRequestHeaders = useRequestHeaders(['Authorization']);
+        const ret = useQuery<TResponse, ApiErrorClass>({
+            queryKey: [endpoint, queryParam],
+            queryFn: async () => queryFn<TResponse, TQueryParam>(
+                config,
+                clientRequestHeaders,
+                `/${endpoint}`,
+                queryParam?.value
+            ),
+            ...options
+        });
+        onServerPrefetch(ret.suspense);
+
+        return ret;
+    };
 const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'] & CursorPagination,
@@ -120,30 +120,30 @@ const useApiWithCursor = <
         InfiniteData<TResponse & CursorPagination, Cursor>,
         TResponse & CursorPagination,
         QueryKey, Cursor
-    >>) =>
-        {
-            const config = useRuntimeConfig().public;
-            const clientRequestHeaders = useRequestHeaders(['Authorization']);
-            const ret = useInfiniteQuery<
+    >>) => {
+        const config = useRuntimeConfig().public;
+        const clientRequestHeaders = useRequestHeaders(['Authorization']);
+        const ret = useInfiniteQuery<
                 TResponse & CursorPagination, ApiErrorClass,
-                InfiniteData<TResponse & CursorPagination, Cursor>,
-                QueryKey, Cursor
-            >({
-                queryKey: [endpoint, queryParam],
-                queryFn: async ({ pageParam }) =>
-                    queryFn<TResponse & CursorPagination, TQueryParam & { cursor?: Cursor; }>(
-                        config,
-                        clientRequestHeaders,
-                        `/${endpoint}`,
-                        { ...queryParam?.value as TQueryParam, cursor: pageParam === '' ? undefined : pageParam }
-                    ),
-                getNextPageParam: lastPage => lastPage.pages.nextCursor,
-                initialPageParam: '',
-                ...options
-            });
-            onServerPrefetch(ret.suspense);
-            return ret;
-        };
+            InfiniteData<TResponse & CursorPagination, Cursor>,
+            QueryKey, Cursor
+        >({
+            queryKey: [endpoint, queryParam],
+            queryFn: async ({ pageParam }) =>
+                queryFn<TResponse & CursorPagination, TQueryParam & { cursor?: Cursor }>(
+                    config,
+                    clientRequestHeaders,
+                    `/${endpoint}`,
+                    { ...queryParam?.value!, cursor: pageParam === '' ? undefined : pageParam }
+                ),
+            getNextPageParam: lastPage => lastPage.pages.nextCursor,
+            initialPageParam: '',
+            ...options
+        });
+        onServerPrefetch(ret.suspense);
+
+        return ret;
+    };
 
 export const useApiForums = useApi<ApiForums>('forums', queryFunction);
 export const useApiUsers = useApi<ApiUsers>('users', queryFunctionWithReCAPTCHA);

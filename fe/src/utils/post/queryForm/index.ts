@@ -1,5 +1,5 @@
-import type { KnownUniqueParams, RequiredPostTypes } from '@/utils/post/queryForm/queryParams';
 import type { PostType } from '@/utils';
+import type { KnownUniqueParams, RequiredPostTypes } from '@/utils/post/queryForm/queryParams';
 import type { RouteLocationNormalized } from 'vue-router';
 import _ from 'lodash';
 

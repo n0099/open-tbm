@@ -19,18 +19,18 @@
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <NuxtLink v-for="isTopmostReply in [reply.pid === viewportTopmostPost.pid]"
-                               :key="isTopmostReply.toString()"
-                               @click.prevent="_ => navigate(cursor, null, reply.pid)"
-                               :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
-                               :class="{
-                                   'rounded-3': isTopmostReply,
-                                   'btn-info': isTopmostReply,
-                                   'btn-light': !isTopmostReply,
-                                   'btn-outline-warning': highlightPostStore.isHighlightingPost(reply, 'pid'),
-                                   'btn-outline-primary': !isTopmostReply && route.hash === routeHash(null, reply.pid),
-                                   'text-white': isTopmostReply,
-                                   'text-body-secondary': !isTopmostReply
-                               }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</NuxtLink>
+                                      :key="isTopmostReply.toString()"
+                                      @click.prevent="_ => navigate(cursor, null, reply.pid)"
+                                      :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
+                                      :class="{
+                                          'rounded-3': isTopmostReply,
+                                          'btn-info': isTopmostReply,
+                                          'btn-light': !isTopmostReply,
+                                          'btn-outline-warning': highlightPostStore.isHighlightingPost(reply, 'pid'),
+                                          'btn-outline-primary': !isTopmostReply && route.hash === routeHash(null, reply.pid),
+                                          'text-white': isTopmostReply,
+                                          'text-body-secondary': !isTopmostReply
+                                      }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</NuxtLink>
                         </template>
                     </div>
                 </MenuItem>
@@ -134,7 +134,8 @@ onUnmounted(removeScrollEventListener);
 
 watchEffect(() => {
     expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
-    if (!import.meta.client) return;
+    if (!import.meta.client)
+        return;
     if (!isPostNavExpanded.value || _.isEmpty(props.postPages))
         removeScrollEventListener();
     else
@@ -147,7 +148,8 @@ watchEffect(() => {
     const menuKey = threadMenuKey(cursor, tid);
     selectedThreads.value = [menuKey];
 
-    if (!import.meta.client) return;
+    if (!import.meta.client)
+        return;
     const threadEl = document.querySelector(`.post-nav-thread[data-key='${menuKey}']`);
     if (threadEl !== null)
         scrollIntoView(threadEl, { scrollMode: 'if-needed', boundary: document.querySelector('.post-nav') });

@@ -19,6 +19,7 @@ const config = useRuntimeConfig().public;
 useHead({
     titleTemplate: title => {
         const suffix = `open-tbm @ ${config.instanceName}`;
+
         return title ? `${title} - ${suffix}` : suffix;
     }
 });

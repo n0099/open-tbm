@@ -12,9 +12,9 @@
                 <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
                 <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                     <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
-                            @clickNextPage="() => clickNextPage()" :posts="page" :renderType="renderType"
-                            :isFetching="isFetching" :hasNextPage="hasNextPage"
-                            :isLastPageInPages="pageIndex === data.pages.length - 1" />
+                              @clickNextPage="() => clickNextPage()" :posts="page" :renderType="renderType"
+                              :isFetching="isFetching" :hasNextPage="hasNextPage"
+                              :isLastPageInPages="pageIndex === data.pages.length - 1" />
                 </div>
                 <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
             </div>
@@ -30,7 +30,7 @@
 import { useApiPosts } from '@/api';
 import type { ApiPosts, Cursor } from '@/api/index.d';
 import type { UnixTimestamp } from '@/utils';
-import { getQueryFormDeps } from '@/utils/post/queryForm'
+import { getQueryFormDeps } from '@/utils/post/queryForm';
 
 import type { RouteLocationNormalized } from 'vue-router';
 import { Menu, MenuItem } from 'ant-design-vue';

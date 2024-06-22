@@ -16,7 +16,7 @@
                             </a>
                             <div class="dropdown-menu">
                                 <NuxtLink v-for="r in nav.routes" :key="r.route"
-                                            :to="{ name: r.route }" noPrefetch class="nav-link">
+                                          :to="{ name: r.route }" noPrefetch class="nav-link">
                                     <FontAwesomeIcon v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
                                 </NuxtLink>
                             </div>

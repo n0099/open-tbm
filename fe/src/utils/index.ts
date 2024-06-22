@@ -84,7 +84,8 @@ export const convertRemToPixels = (rem: number) =>
 
 // https://stackoverflow.com/questions/986937/how-can-i-get-the-browsers-scrollbar-sizes/986977#986977
 export const scrollBarWidth = computed(() => {
-    if (!import.meta.client) return;
+    if (!import.meta.client)
+        return;
     const inner = document.createElement('p');
     inner.style.width = '100%';
     inner.style.height = '200px';
