@@ -62,7 +62,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons';

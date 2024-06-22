@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-
 import _ from 'lodash';
 
 const props = defineProps<{

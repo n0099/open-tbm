@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="tsx">
-
 defineOptions({ inheritAttrs: false });
 defineSlots<{ indicators: (props: { renderer: VNode }) => unknown }>();
 const modelValue = defineModel<Fid>();

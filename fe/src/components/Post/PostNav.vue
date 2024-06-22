@@ -50,7 +50,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { useToggle } from '@vueuse/core';
 import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';

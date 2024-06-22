@@ -85,7 +85,6 @@ import PostContentRenderer from './PostContentRenderer.vue';
 import BadgeThread from '../badges/BadgeThread.vue';
 import BadgeUser from '../badges/BadgeUser.vue';
 
-
 import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';

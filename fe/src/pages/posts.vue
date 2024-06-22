@@ -27,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
