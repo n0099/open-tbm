@@ -31,7 +31,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
         document.body.style.cursor = 'progress';
     }
     try {
-        const response = await $fetch<TResponse>(
+        return await $fetch<TResponse>(
             `${config.apiEndpointPrefix}${endpoint}`,
             {
                 query: queryParam,
@@ -42,10 +42,10 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
                 signal
             }
         );
-        if (isApiError(response))
-            throw new ApiResponseError(response.errorCode, response.errorInfo);
-
-        return response;
+    } catch (e: unknown) {
+        if (e instanceof FetchError && isApiError(e.data))
+            throw new ApiResponseError(e.data.errorCode, e.data.errorInfo);
+        throw e;
     } finally {
         if (import.meta.client) {
             nprogress.done();

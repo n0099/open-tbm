@@ -66,10 +66,12 @@ const posts = computed(() => {
 });
 
 onMounted(initialTippy);
-useRouteScrollBehaviorStore().set((to, from): ReturnType<RouterScrollBehavior> => {
-    if (!compareRouteIsNewQuery(to, from))
-        return postListItemScrollPosition(to);
+if (import.meta.client) {
+    useRouteScrollBehaviorStore().set((to, from): ReturnType<RouterScrollBehavior> => {
+        if (!compareRouteIsNewQuery(to, from))
+            return postListItemScrollPosition(to);
 
-    return undefined;
-});
+        return undefined;
+    });
+}
 </script>

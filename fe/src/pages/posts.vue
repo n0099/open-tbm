@@ -46,7 +46,7 @@ const shouldFetch = ref(false);
 const isRouteNewQuery = ref(false);
 const initialPageCursor = ref<Cursor>('');
 const { data, error, isPending, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
-    useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
+    useApiPosts(queryParam, { initialPageParam: initialPageCursor });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormDeps = getQueryFormDeps();

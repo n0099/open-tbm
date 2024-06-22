@@ -70,7 +70,7 @@ const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const viewportTopmostPostDefault = { cursor: '', tid: 0, pid: 0 };
 const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(viewportTopmostPostDefault);
-const [isPostNavExpanded, togglePostNavExpanded] = useToggle(matchMedia('(min-width: 900px)').matches);
+const [isPostNavExpanded, togglePostNavExpanded] = useToggle(import.meta.client ? matchMedia('(min-width: 900px)').matches : true);
 
 const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
 const routeHash = (tid: Tid | string | null, pid?: Pid | string) => `#${pid ?? (tid === null ? '' : `t${tid}`)}`;
@@ -133,19 +133,21 @@ const removeScrollEventListener = () => { document.removeEventListener('scroll',
 onUnmounted(removeScrollEventListener);
 
 watchEffect(() => {
+    expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
+    if (!import.meta.client) return;
     if (!isPostNavExpanded.value || _.isEmpty(props.postPages))
         removeScrollEventListener();
     else
         document.addEventListener('scroll', scrollStop, { passive: true });
     if (isPostNavExpanded.value)
         scrollStop();
-    expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watchEffect(() => {
     const { cursor, tid } = viewportTopmostPost.value;
     const menuKey = threadMenuKey(cursor, tid);
     selectedThreads.value = [menuKey];
 
+    if (!import.meta.client) return;
     const threadEl = document.querySelector(`.post-nav-thread[data-key='${menuKey}']`);
     if (threadEl !== null)
         scrollIntoView(threadEl, { scrollMode: 'if-needed', boundary: document.querySelector('.post-nav') });
