@@ -35,15 +35,15 @@
         "tippy.js": "^6.3.7",
         "v-viewer": "^3.0.13",
         "viewerjs": "^1.11.6",
-        "vue": "^3.4.29",
-        "vue-router": "^4.3.3"
+        "vue": "^3.4.30",
+        "vue-router": "^4.4.0"
     },
     "devDependencies": {
         "@eslint/compat": "^1.1.0",
         "@eslint/eslintrc": "^3.1.0",
         "@eslint/js": "^9.5.0",
-        "@stylistic/eslint-plugin": "^2.2.0",
-        "@stylistic/eslint-plugin-migrate": "^2.2.0",
+        "@stylistic/eslint-plugin": "^2.2.2",
+        "@stylistic/eslint-plugin-migrate": "^2.2.2",
         "@tanstack/eslint-plugin-query": "^5.43.1",
         "@tanstack/vue-query-devtools": "^5.45.0",
         "@types/bootstrap": "^5.2.10",
@@ -51,7 +51,7 @@
         "@types/grecaptcha": "^3.0.9",
         "@types/lodash": "^4.17.5",
         "@types/luxon": "^3.4.2",
-        "@types/node": "^20.14.2",
+        "@types/node": "^20.14.8",
         "@types/nprogress": "^0.2.3",
         "@typescript-eslint/eslint-plugin": "npm:rc-v8",
         "@typescript-eslint/parser": "npm:rc-v8",
@@ -65,17 +65,17 @@
         "eslint-plugin-vue": "^9.26.0",
         "rollup-plugin-visualizer": "^5.12.0",
         "stats.js": "^0.17.0",
-        "tsx": "^4.15.5",
-        "typescript": "^5.4.5",
+        "tsx": "^4.15.7",
+        "typescript": "^5.5.2",
         "typescript-eslint-parser-for-extra-files": "^0.7.0",
-        "vite-bundle-analyzer": "^0.10.2",
+        "vite-bundle-analyzer": "^0.10.3",
         "vue-eslint-parser": "^9.4.3",
-        "vue-tsc": "^2.0.21"
+        "vue-tsc": "^2.0.22"
     },
     "browserslist": [
         "> 1% in CN",
         "not ie 11",
         "not dead"
     ],
-    "packageManager": "yarn@4.3.0"
+    "packageManager": "yarn@4.3.1"
 }
