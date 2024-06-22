@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import type { KnownNumericParams } from '@/utils/post/queryForm/queryParams';
 import _ from 'lodash';
 
 defineProps<{ placeholders: { [P in 'BETWEEN' | 'IN' | 'equals']: string } }>();

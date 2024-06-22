@@ -1,7 +1,5 @@
 import type { Reply, SubReply, Thread } from './post';
 import type { User, UserGenderQueryParam } from './user';
-import type { BoolInt, Fid, PostType, UInt } from '@/utils';
-import type { SelectUserParams } from '@/utils/selectUser';
 
 export interface ApiError { errorCode: number, errorInfo: Record<string, unknown[]> | string }
 export interface Api<TResponse, TQueryParam = never> {

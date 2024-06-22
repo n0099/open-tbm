@@ -37,7 +37,6 @@
 <script setup lang="ts">
 import type { UserProvision } from './RendererList.vue';
 import PostContentRenderer from '../PostContentRenderer.vue';
-import type { Reply, SubReply, Thread } from '@/api/post';
 
 const props = defineProps<{
     thread: Thread,

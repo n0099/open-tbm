@@ -1,5 +1,3 @@
-import type { RouteLocationRaw } from 'vue-router';
-import { defineStore } from 'pinia';
 import _ from 'lodash';
 
 export type RouteObjectRaw = Exclude<RouteLocationRaw, string>;

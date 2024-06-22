@@ -1,5 +1,3 @@
-import type { Cursor } from '@/api/index.d';
-import type { RouteLocationNormalized, RouteLocationRaw, _RouteRecordBase } from 'vue-router';
 import _ from 'lodash';
 
 export const assertRouteNameIsStr: (name: RouteLocationNormalized['name']) => asserts name is string = name => {

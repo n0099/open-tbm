@@ -62,9 +62,6 @@
 </template>
 
 <script setup lang="ts">
-import type { GroupByTimeGranularity, IsValid, Top10CandidatesTimeline } from '@/api/bilibiliVote';
-import { json } from '@/api/bilibiliVote';
-import type { ObjUnknown } from '@/utils';
 
 import { Table } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';

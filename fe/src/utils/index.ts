@@ -1,7 +1,3 @@
-import type { Cursor } from '@/api/index.d';
-import type { Reply, SubReply, Thread } from '@/api/post';
-import type { BaiduUserID, User } from '@/api/user';
-import type { LocationAsRelativeRaw } from 'vue-router';
 import Noty from 'noty';
 import _ from 'lodash';
 

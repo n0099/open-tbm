@@ -8,11 +8,6 @@
 
 <script setup lang="ts">
 import ThreadItem from './ThreadItem.vue';
-import type { ApiPosts } from '@/api/index.d';
-import type { Reply, SubReply, Thread } from '@/api/post';
-import type { Modify } from '@/utils';
-import type { ComputedRef } from 'vue';
-import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts['response'] }>();

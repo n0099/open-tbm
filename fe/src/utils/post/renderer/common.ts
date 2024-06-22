@@ -1,4 +1,3 @@
-import type { BaiduUserID, User } from '@/api/user';
 import 'viewerjs/dist/viewer.css';
 import _ from 'lodash';
 

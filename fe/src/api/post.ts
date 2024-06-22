@@ -1,6 +1,5 @@
 import type { PostContent } from './postContent';
 import type { BaiduUserID } from './user';
-import type { BoolInt, Int, ObjUnknown, Pid, Spid, Tid, UInt, UnixTimestamp } from '@/utils';
 
 export interface TimestampFields {
     createdAt: UnixTimestamp,

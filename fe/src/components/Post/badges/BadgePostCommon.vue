@@ -32,8 +32,6 @@
 <script setup lang="ts" generic="
     TPost extends Post,
     TPostIDKey extends keyof TPost & PostIDOf<TPost>">
-import type { Reply, SubReply } from '@/api/post';
-import type { Pid, Post, PostIDOf, PostTypeTextOf, Spid, Tid, UnixTimestamp } from '@/utils';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faClock } from '@fortawesome/free-regular-svg-icons';
 import { faArrowUpRightFromSquare, faHashtag, faLink } from '@fortawesome/free-solid-svg-icons';

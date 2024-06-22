@@ -26,8 +26,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ApiErrorClass } from '@/api';
-import { ApiResponseError } from '@/api';
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
 

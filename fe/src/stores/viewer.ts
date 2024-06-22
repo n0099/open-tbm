@@ -1,4 +1,3 @@
-import { defineStore } from 'pinia';
 import viewer from 'v-viewer';
 
 export const useViewerStore = defineStore('viewer', () => {

@@ -1,4 +1,3 @@
-import type { Int, UInt } from '@/utils';
 
 interface NativeApp {
     isNativeApp: UInt,

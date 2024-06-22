@@ -1,4 +1,3 @@
-import { defineStore } from 'pinia';
 
 export const useElementRefsStore = defineStore('elementRefs', () => {
     const refs = ref<Record<string, Element[] | undefined>>({});

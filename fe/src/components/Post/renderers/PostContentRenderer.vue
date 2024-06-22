@@ -42,7 +42,6 @@
 </template>
 
 <script setup lang="ts">
-import type { PostContent } from '@/api/postContent';
 import _ from 'lodash';
 
 defineProps<{ content: PostContent | null }>();

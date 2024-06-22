@@ -1,6 +1,4 @@
 import type { PublicRuntimeConfig } from 'nuxt/schema';
-import type { Api, ApiError, ApiForums, ApiPosts, ApiUsers, Cursor, CursorPagination } from '@/api/index.d';
-import type { Ref } from 'vue';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import nprogress from 'nprogress';
 import { FetchError } from 'ofetch';

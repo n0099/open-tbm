@@ -7,7 +7,6 @@ import top50CandidatesOfficialValidVoteCount from './top50CandidatesOfficialVali
 import top50CandidatesVoteCount from './top50CandidatesVoteCount.json' with { type: 'json' };
 import top5CandidatesVoteCountGroupByHour from './top5CandidatesVoteCountGroupByHour.json' with { type: 'json' };
 import top5CandidatesVoteCountGroupByMinute from './top5CandidatesVoteCountGroupByMinute.json' with { type: 'json' };
-import type { BoolInt, Float, SqlDateTimeUtcPlus8, UInt, UnixTimestamp } from '@/utils';
 
 export const json = {
     allCandidatesVoteCount: allCandidatesVoteCount as AllCandidatesVoteCount,

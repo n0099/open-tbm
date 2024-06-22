@@ -1,5 +1,4 @@
 import type { TimestampFields } from './post';
-import type { Int, ObjUnknown, UInt, UnixTimestamp } from '@/utils';
 
 export type BaiduUserID = Int;
 export type ForumModeratorType = 'assist'

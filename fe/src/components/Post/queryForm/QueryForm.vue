@@ -167,8 +167,6 @@ import InputNumericParam from './widgets/InputNumericParam.vue';
 import InputTextMatchParam, { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
 import SelectParam from './widgets/SelectParam.vue';
 import SelectRange from './widgets/SelectRange.vue';
-import type { Param, getQueryFormDeps } from '@/utils/post/queryForm';
-import type { KnownNumericParams, KnownTextParams } from '@/utils/post/queryForm/queryParams';
 
 import { RangePicker } from 'ant-design-vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';

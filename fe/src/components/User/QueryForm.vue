@@ -16,11 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import SelectUser from '@/utils/SelectUser.vue';
-import type { BaiduUserID, UserGenderQueryParam } from '@/api/user';
-import type { SelectUserBy, SelectUserModel, SelectUserParams } from '@/utils/selectUser';
 
-import type { LocationQueryValueRaw } from 'vue-router';
 import _ from 'lodash';
 
 type RouteQueryString = Omit<SelectUserParams, Exclude<SelectUserBy, ''>>

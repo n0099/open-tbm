@@ -1,5 +1,3 @@
-import type { Pid, Post, PostID, PostIDOf, Spid, Tid } from '@/utils';
-import { defineStore } from 'pinia';
 import _ from 'lodash';
 
 interface HighlightingPost { postIDKey: PostID, postId: Tid | Pid | Spid }

@@ -1,4 +1,3 @@
-import type { FunctionalComponent, VNode } from 'vue';
 
 type RootEl = Parameters<typeof h>[0];
 

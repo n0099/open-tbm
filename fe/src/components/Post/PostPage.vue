@@ -12,7 +12,6 @@ import RendererList from './renderers/list/RendererList.vue';
 import PageCurrentButton from '../paginations/PageCurrentButton.vue';
 import PageNextButton from '../paginations/PageNextButton.vue';
 import type { PostRenderer } from '@/views/Post.vue';
-import type { ApiPosts } from '@/api/index.d';
 
 defineProps<{
     posts: ApiPosts['response'],

@@ -1,4 +1,3 @@
-import type { RouteLocationNormalized } from 'vue-router';
 import _ from 'lodash';
 
 export const getReplyTitleTopOffset = () =>
