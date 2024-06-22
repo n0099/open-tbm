@@ -74,14 +74,10 @@ const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
     relativeTo?: string
 }>();
 
-const previousTime = computed(() =>
-    props.previousPost?.[props.postTimeKey]);
-const nextTime = computed(() =>
-    props.nextPost?.[props.postTimeKey]);
-const parentTime = computed(() =>
-    props.parentPost?.[props.postTimeKey]);
-const currentTime = computed(() =>
-    props.currentPost[props.postTimeKey]);
+const previousTime = computed(() => props.previousPost?.[props.postTimeKey]);
+const nextTime = computed(() => props.nextPost?.[props.postTimeKey]);
+const parentTime = computed(() => props.parentPost?.[props.postTimeKey]);
+const currentTime = computed(() => props.currentPost[props.postTimeKey]);
 
 const previousDateTime = computed(() =>
     undefinedOr(previousTime.value, i => DateTime.fromSeconds(i)));

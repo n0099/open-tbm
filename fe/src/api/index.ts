@@ -80,7 +80,7 @@ const queryFunctionWithReCAPTCHA = async <TResponse, TQueryParam extends ObjUnkn
         config,
         requestHeaders,
         endpoint,
-        { ...queryParam as TQueryParam, ...await checkReCAPTCHA(config, action) },
+        { ...queryParam, ...await checkReCAPTCHA(config, action) } as TQueryParam,
         signal
     );
 

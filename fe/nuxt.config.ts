@@ -8,12 +8,11 @@ const envs = [
     'instanceName',
     'footerText'
 ];
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     devServer: { https: true },
     devtools: { enabled: true },
-    srcDir: 'src/',
-    imports: { dirs: ['@/api/**', 'utils/**'] },
+    srcDir: 'src',
+    imports: { dirs: ['api/**', 'utils/**'] },
     components: [{ path: '@/components', pathPrefix: false }],
     modules: ['@pinia/nuxt', '@nuxt/eslint', '@hebilicious/vue-query-nuxt'],
     pinia: { storesDirs: ['src/stores/**'] },
