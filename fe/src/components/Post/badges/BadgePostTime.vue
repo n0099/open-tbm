@@ -19,14 +19,14 @@
                        && highlightPostStore.set(props.previousPost, props.currentPostIDKey)"
                    @mouseleave="() => highlightPostStore.unset()"
                    :base="previousDateTime" :relativeTo="`相对于上一${postType}${timestampType}`">
-        <FontAwesomeIcon :icon="faChevronUp" class="align-bottom" />
+        <FontAwesome :icon="faChevronUp" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="nextTime !== undefined && nextTime < currentTime"
                    @mouseenter="() => props.nextPost !== undefined
                        && highlightPostStore.set(props.nextPost, props.currentPostIDKey)"
                    @mouseleave="() => highlightPostStore.unset()"
                    :base="nextDateTime" :relativeTo="`相对于下一${postType}${timestampType}`">
-        <FontAwesomeIcon :icon="faChevronDown" class="align-bottom" />
+        <FontAwesome :icon="faChevronDown" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate v-else-if="parentTime !== undefined && parentTime !== currentTime"
                    @mouseenter="() => props.parentPost !== undefined && props.parentPostIDKey !== undefined
@@ -34,7 +34,7 @@
                    @mouseleave="() => highlightPostStore.unset()"
                    :base="parentDateTime"
                    :relativeTo="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`">
-        <FontAwesomeIcon :icon="faAnglesUp" class="align-bottom" />
+        <FontAwesome :icon="faAnglesUp" class="align-bottom" />
     </ReuseTemplate>
     <ReuseTemplate />
 </template>

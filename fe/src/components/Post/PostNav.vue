@@ -43,8 +43,8 @@
          }"
          class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
         <a @click="_ => togglePostNavExpanded()" class="text-primary">
-            <FontAwesomeIcon v-show="isPostNavExpanded" :icon="faAngleLeft" />
-            <FontAwesomeIcon v-show="!isPostNavExpanded" :icon="faAngleRight" />
+            <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
+            <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
         </a>
     </div>
 </template>

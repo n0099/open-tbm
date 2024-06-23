@@ -19,17 +19,17 @@
             <div class="row justify-content-between mt-2">
                 <div class="col-auto d-flex gap-1 align-items-center">
                     <span data-tippy-content="回复量" class="badge bg-secondary">
-                        <FontAwesomeIcon :icon="faCommentAlt" class="me-1" />{{ thread.replyCount }}
+                        <FontAwesome :icon="faCommentAlt" class="me-1" />{{ thread.replyCount }}
                     </span>
                     <span data-tippy-content="浏览量" class="badge bg-info">
-                        <FontAwesomeIcon :icon="faEye" class="me-1" />{{ thread.viewCount }}
+                        <FontAwesome :icon="faEye" class="me-1" />{{ thread.viewCount }}
                     </span>
                     <span v-if="thread.shareCount !== 0" data-tippy-content="分享量" class="badge bg-info">
-                        <FontAwesomeIcon :icon="faShareAlt" class="me-1" /> {{ thread.shareCount }}
+                        <FontAwesome :icon="faShareAlt" class="me-1" /> {{ thread.shareCount }}
                     </span>
                     <span data-tippy-content="赞踩量" class="badge bg-info">
-                        <FontAwesomeIcon :icon="faThumbsUp" class="me-1" /> {{ thread.agreeCount }}
-                        <FontAwesomeIcon :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
+                        <FontAwesome :icon="faThumbsUp" class="me-1" /> {{ thread.agreeCount }}
+                        <FontAwesome :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
                     </span>
                     <span v-if="thread.zan !== null" :data-tippy-content="`
                         点赞量：${thread.zan.num}<br />
@@ -39,10 +39,10 @@
                     .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br />
                         近期点赞用户：${thread.zan.user_id_list}<br />`" class="badge bg-info">
                         <!-- todo: fetch users info in zan.user_id_list -->
-                        <FontAwesomeIcon :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
+                        <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
                     </span>
                     <span v-if="thread.geolocation !== null" data-tippy-content="发帖位置" class="badge bg-info">
-                        <FontAwesomeIcon :icon="faLocationArrow" class="me-1" /> {{ thread.geolocation }}
+                        <FontAwesome :icon="faLocationArrow" class="me-1" /> {{ thread.geolocation }}
                         <!-- todo: unknown json struct -->
                     </span>
                 </div>

@@ -26,7 +26,7 @@
             <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><FontAwesomeIcon :icon="faCalendarAlt" /></span>
+                    <span class="input-group-text"><FontAwesome :icon="faCalendarAlt" /></span>
                     <TimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
                                      :granularities="['minute', 'hour']"
                                      id="top5CandidateCountGroupByTimeGranularity" />
@@ -39,7 +39,7 @@
             <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
             <div class="col-2">
                 <div class="input-group">
-                    <span class="input-group-text"><FontAwesomeIcon :icon="faClock" /></span>
+                    <span class="input-group-text"><FontAwesome :icon="faClock" /></span>
                     <TimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
                                      :granularities="['minute', 'hour']"
                                      id="allVoteCountGroupByTimeGranularity" />

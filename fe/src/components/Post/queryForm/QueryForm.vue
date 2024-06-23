@@ -4,7 +4,7 @@
             <label class="col-1 col-form-label" for="paramFid">贴吧</label>
             <div class="col-3">
                 <div class="input-group">
-                    <span class="input-group-text"><FontAwesomeIcon :icon="faFilter" /></span>
+                    <span class="input-group-text"><FontAwesome :icon="faFilter" /></span>
                     <SelectForum v-model.number="uniqueParams.fid.value"
                                  :class="{ 'is-invalid': isFidInvalid }" id="paramFid">
                         <template #indicators="{ renderer }">
@@ -38,7 +38,7 @@
             <label class="col-1 col-form-label" for="paramOrder">排序方式</label>
             <div class="col-8">
                 <div class="input-group">
-                    <span class="input-group-text"><FontAwesomeIcon :icon="faSortAmountDown" /></span>
+                    <span class="input-group-text"><FontAwesome :icon="faSortAmountDown" /></span>
                     <select v-model="uniqueParams.orderBy.value"
                             :class="{ 'is-invalid': isOrderByInvalid }"
                             class="form-select form-control" id="paramOrder">
@@ -62,7 +62,7 @@
         <div class="query-params">
             <div v-for="(p, pI) in params" :key="pI" class="input-group">
                 <button @click="_ => deleteParam(pI)" class="btn btn-link" type="button">
-                    <FontAwesomeIcon :icon="faTimes" />
+                    <FontAwesome :icon="faTimes" />
                 </button>
                 <SelectParam @paramChange="e => changeParam(pI, e)" :currentParam="p.name"
                              class="select-param" :class="{
@@ -149,7 +149,7 @@
         </div>
         <div class="row mt-2">
             <button class="add-param-button col-auto btn btn-link disabled" type="button">
-                <FontAwesomeIcon :icon="faPlus" />
+                <FontAwesome :icon="faPlus" />
             </button>
             <SelectParam :key="params.length" @paramChange="e => addParam(e)" currentParam="add" />
         </div>
