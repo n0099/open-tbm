@@ -62,9 +62,9 @@ useHead({
                 return `${forumName} - 帖子查询`;
             case 'postID':
                 return `${threadTitle} - ${forumName} - 帖子查询`;
+            default:
+                return '帖子查询';
         }
-
-        return '帖子查询';
     })
 });
 

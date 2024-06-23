@@ -121,18 +121,19 @@ const useApiWithCursor = <
     >>) => {
         const config = useRuntimeConfig().public;
         const clientRequestHeaders = useRequestHeaders(['Authorization']);
+        type TQueryParamWithCursor = TQueryParam & { cursor?: Cursor };
         const ret = useInfiniteQuery<
-                TResponse & CursorPagination, ApiErrorClass,
+            TResponse & CursorPagination, ApiErrorClass,
             InfiniteData<TResponse & CursorPagination, Cursor>,
             QueryKey, Cursor
         >({
             queryKey: [endpoint, queryParam],
             queryFn: async ({ pageParam }) =>
-                queryFn<TResponse & CursorPagination, TQueryParam & { cursor?: Cursor }>(
+                queryFn<TResponse & CursorPagination, TQueryParamWithCursor>(
                     config,
                     clientRequestHeaders,
                     `/${endpoint}`,
-                    { ...queryParam?.value!, cursor: pageParam === '' ? undefined : pageParam }
+                    { ...queryParam?.value, cursor: pageParam === '' ? undefined : pageParam } as TQueryParamWithCursor
                 ),
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
             initialPageParam: '',

@@ -8,19 +8,19 @@
 </template>
 
 <script setup lang="ts">
+import 'assets/css/global.css';
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
 import 'nprogress/nprogress.css';
-import 'assets/css/global.css';
 
 const config = useRuntimeConfig().public;
 useHead({
     titleTemplate: title => {
         const suffix = `open-tbm @ ${config.instanceName}`;
 
-        return title ? `${title} - ${suffix}` : suffix;
+        return title === undefined ? suffix : `${title} - ${suffix}`;
     }
 });
 
@@ -28,7 +28,6 @@ if (import.meta.client) {
     await import('bootstrap');
     (await import('nprogress')).configure({ trickleSpeed: 200 });
     if (import.meta.dev) {
-        // @ts-expect-error too small to write a .d.ts for it
         await import('@/stats');
         await import('@/checkCSS');
     }

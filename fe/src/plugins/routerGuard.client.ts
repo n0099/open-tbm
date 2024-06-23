@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 export default defineNuxtPlugin(() => {
     const { start, end } = useRouteUpdatingStore();
 

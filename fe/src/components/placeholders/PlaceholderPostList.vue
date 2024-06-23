@@ -18,9 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import placeholderPostList from '/assets/placeholder-post-list.svg';
-import iconHuajiLoadingSpinnerAvifs from '/assets/icon-huaji-loading-spinner.avifs';
-import iconHuajiLoadingSpinnerGif from '/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif';
+import iconHuajiLoadingSpinnerGif from '@/assets/icon-huaji-loading-spinner-2nd-frames-removed.gif';
+import iconHuajiLoadingSpinnerAvifs from '@/assets/icon-huaji-loading-spinner.avifs';
+import placeholderPostList from '@/assets/placeholder-post-list.svg';
 
 defineProps<{ isLoading: boolean }>();
 </script>

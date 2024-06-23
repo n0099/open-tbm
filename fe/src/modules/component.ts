@@ -1,8 +1,8 @@
 import { addComponent, defineNuxtModule } from '@nuxt/kit';
 
 export default defineNuxtModule({
-    setup() {
-        addComponent({
+    async setup() {
+        await addComponent({
             filePath: '@fortawesome/vue-fontawesome',
             export: 'FontAwesomeIcon',
             name: 'FontAwesomeIcon'

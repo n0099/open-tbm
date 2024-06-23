@@ -9,7 +9,7 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
     watchEffect(() => {
         if (isUpdating.value) {
             if (import.meta.client)
-                timeoutId = window.setTimeout(nprogress.start, 100);
+                timeoutId = window.setTimeout(() => { nprogress.start() }, 100);
             window.setTimeout(end, 10000);
         } else {
             clearTimeout(timeoutId);
