@@ -83,8 +83,8 @@
                                        :placeholders="getPostIDParamPlaceholders(p)" />
                 </template>
                 <template v-if="isDateTimeParam(p)">
-                    <RangePicker v-model:value="p.subParam.range" showTime
-                                 format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
+                    <ARangePicker v-model:value="p.subParam.range" showTime
+                                  format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
                 </template>
                 <template v-if="isTextParam(p)">
                     <input v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
@@ -164,7 +164,6 @@
 
 <script setup lang="ts">
 import { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
-import { RangePicker } from 'ant-design-vue';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
@@ -221,7 +220,7 @@ watch(() => uniqueParams.value.postTypes.value, (to, from) => {
 :deep(.input-group-text ~ * > .ant-input-lg) {
     block-size: unset; /* revert the effect in global style assets/css/global.css */
 }
-/* remove borders for <RangePicker> in the start, middle and end of .input-group */
+/* remove borders for <ARangePicker> in the start, middle and end of .input-group */
 :deep(.input-group > :not(:first-child) .ant-calendar-picker-input) {
     border-end-start-radius: 0;
     border-start-start-radius: 0;

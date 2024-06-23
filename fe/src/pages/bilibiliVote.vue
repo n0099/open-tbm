@@ -48,21 +48,20 @@
         </div>
         <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
         <hr />
-        <Table :columns="candidatesDetailColumns"
-               :data-source="candidatesDetailData"
-               :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
-               rowKey="candidateIndex">
+        <ATable :columns="candidatesDetailColumns"
+                :data-source="candidatesDetailData"
+                :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
+                rowKey="candidateIndex">
             <template #bodyCell="{ column: { dataIndex: column }, value: name }">
                 <template v-if="column === 'candidateName'">
                     <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
                 </template>
             </template>
-        </Table>
+        </ATable>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Table } from 'ant-design-vue';
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 import _ from 'lodash';

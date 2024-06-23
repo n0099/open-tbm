@@ -1,7 +1,7 @@
 <template>
-    <Table :columns="threadColumns" :dataSource="threads" defaultExpandAllRows
-           expandRowByClick :pagination="false"
-           rowKey="tid" size="middle" class="render-table-thread">
+    <ATable :columns="threadColumns" :dataSource="threads" defaultExpandAllRows
+            expandRowByClick :pagination="false"
+            rowKey="tid" size="middle" class="render-table-thread">
         <template #bodyCell="{ column: { dataIndex: column }, record }">
             <template v-if="column === 'tid'">
                 <template v-for="tid in [(record as Thread).tid]" :key="tid">
@@ -34,9 +34,9 @@
         </template>
         <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
             <span v-if="repliesKeyByTid[tid] === undefined">无子回复帖</span>
-            <Table v-else :columns="replyColumns" :dataSource="repliesKeyByTid[tid]"
-                   defaultExpandAllRows expandRowByClick
-                   :pagination="false" rowKey="pid" size="middle">
+            <ATable v-else :columns="replyColumns" :dataSource="repliesKeyByTid[tid]"
+                    defaultExpandAllRows expandRowByClick
+                    :pagination="false" rowKey="pid" size="middle">
                 <template #bodyCell="{ column: { dataIndex: column }, record }">
                     <template v-if="column === 'author'">
                         <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
@@ -53,10 +53,10 @@
                                          :class="{
                                              'd-inline-block': subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'
                                          }" />
-                    <Table v-if="subRepliesKeyByPid[pid] !== undefined"
-                           :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
-                           defaultExpandAllRows expandRowByClick
-                           :pagination="false" rowKey="spid" size="middle">
+                    <ATable v-if="subRepliesKeyByPid[pid] !== undefined"
+                            :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
+                            defaultExpandAllRows expandRowByClick
+                            :pagination="false" rowKey="spid" size="middle">
                         <template #bodyCell="{ column: { dataIndex: column }, record }">
                             <template v-if="column === 'author'">
                                 <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
@@ -73,15 +73,14 @@
                         <template #expandedRowRender="{ record: { content: subReplyContent } }">
                             <PostContentRenderer :content="subReplyContent" class="d-inline-block" />
                         </template>
-                    </Table>
+                    </ATable>
                 </template>
-            </Table>
+            </ATable>
         </template>
-    </Table>
+    </ATable>
 </template>
 
 <script setup lang="ts">
-import { Table } from 'ant-design-vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';
 

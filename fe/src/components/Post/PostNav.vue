@@ -1,20 +1,20 @@
 <template>
-    <Menu v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
-          forceSubMenuRender :inlineIndent="16" mode="inline"
-          :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded"
-          class="post-nav col p-0 vh-100 sticky-top border-0">
+    <AMenu v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
+           forceSubMenuRender :inlineIndent="16" mode="inline"
+           :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded"
+           class="post-nav col p-0 vh-100 sticky-top border-0">
         <template v-for="posts in postPages">
-            <SubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
-                <MenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
-                          :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
-                          :class="{
-                              'border-only-bottom': !(route.hash === routeHash(thread.tid)
-                                  || highlightPostStore.isHighlightingPost(thread, 'tid')),
-                              'border-primary': route.hash === routeHash(thread.tid),
-                              'border-bottom': route.hash !== routeHash(thread.tid),
-                              'border-warning': highlightPostStore.isHighlightingPost(thread, 'tid')
-                          }"
-                          class="post-nav-thread border ps-2 ps-lg-3 pe-1">
+            <ASubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
+                <AMenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
+                           :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
+                           :class="{
+                               'border-only-bottom': !(route.hash === routeHash(thread.tid)
+                                   || highlightPostStore.isHighlightingPost(thread, 'tid')),
+                               'border-primary': route.hash === routeHash(thread.tid),
+                               'border-bottom': route.hash !== routeHash(thread.tid),
+                               'border-warning': highlightPostStore.isHighlightingPost(thread, 'tid')
+                           }"
+                           class="post-nav-thread border ps-2 ps-lg-3 pe-1">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
@@ -33,10 +33,10 @@
                                       }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</NuxtLink>
                         </template>
                     </div>
-                </MenuItem>
-            </SubMenu>
+                </AMenuItem>
+            </ASubMenu>
         </template>
-    </Menu>
+    </AMenu>
     <div :class="{
              'border-start': isPostNavExpanded,
              'border-end': !isPostNavExpanded
@@ -50,8 +50,6 @@
 </template>
 
 <script setup lang="ts">
-import { useToggle } from '@vueuse/core';
-import { Menu, MenuItem, SubMenu } from 'ant-design-vue';
 import type { MenuClickEventHandler } from 'ant-design-vue/lib/menu/src/interface';
 import scrollIntoView from 'scroll-into-view-if-needed';
 import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';

@@ -3,9 +3,9 @@
         <GlobalNavBar />
         <MinimumResolutionWarning />
         <img :src="iconLoadingBlock" :class="{ 'd-none': !isRouteUpdating }" id="loading-block" />
-        <ConfigProvider :locale="AntdZhCn">
+        <AConfigProvider :locale="AntdZhCn">
             <slot :class="{ invisible: isRouteUpdating }" />
-        </ConfigProvider>
+        </AConfigProvider>
         <footer class="text-light pt-4 mt-auto" id="footer-upper">
             <div class="text-center">
                 <p>
@@ -30,7 +30,6 @@
 
 <script setup lang="ts">
 import iconLoadingBlock from 'assets/icon-loading-block.svg';
-import { ConfigProvider } from 'ant-design-vue';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 
 const isRouteUpdating = useRouteUpdatingStore().isUpdating;

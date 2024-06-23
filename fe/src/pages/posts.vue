@@ -2,10 +2,10 @@
     <div>
         <div class="container">
             <QueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
-            <Menu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
-                <MenuItem key="list">列表视图</MenuItem>
-                <MenuItem key="table">表格视图</MenuItem>
-            </Menu>
+            <AMenu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
+                <AMenuItem key="list">列表视图</AMenuItem>
+                <AMenuItem key="table">表格视图</AMenuItem>
+            </AMenu>
         </div>
         <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
             <div class="row flex-nowrap">
@@ -28,7 +28,6 @@
 
 <script setup lang="ts">
 import type { RouteLocationNormalized } from 'vue-router';
-import { Menu, MenuItem } from 'ant-design-vue';
 import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';
