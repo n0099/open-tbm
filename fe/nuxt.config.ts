@@ -1,3 +1,4 @@
+import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
 import vite from './vite.config';
 import _ from 'lodash';
 
@@ -27,6 +28,13 @@ export default defineNuxtConfig({
                 }
             }
         }
+    },
+    build: {
+        analyze: {
+            filename: 'dist/rollup-plugin-visualizer.html',
+            gzipSize: true,
+            brotliSize: true
+        } as PluginVisualizerOptions
     },
     vite,
     runtimeConfig: {

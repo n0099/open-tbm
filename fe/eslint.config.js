@@ -522,6 +522,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     },
 }];
 
+import withNuxt from './.nuxt/eslint.config.mjs';
 import * as vueESLintParser from 'vue-eslint-parser';
 // eslint-disable-next-line import-x/extensions
 import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
@@ -538,7 +539,6 @@ import pluginUnicorn from 'eslint-plugin-unicorn';
 import { tsImport } from 'tsx/esm/api';
 import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
 import _ from 'lodash';
-import withNuxt from './.nuxt/eslint.config.mjs'
 
 // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2151349705
 const viteConfig = await tsImport('./vite.config.ts', import.meta.url);

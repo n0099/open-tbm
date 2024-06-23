@@ -12,7 +12,8 @@ export const routeNameWithCursor = (name: string) =>
     (_.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`);
 
 // https://github.com/vuejs/vue-router-next/issues/1184
-export const getRouteCursorParam = (route: RouteLocationNormalized): Cursor => route.params.cursor.toString();
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+export const getRouteCursorParam = (route: RouteLocationNormalized): Cursor => route.params.cursor?.toString() ?? '';
 export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: Cursor | null): RouteLocationRaw => {
     assertRouteNameIsStr(route.name);
     const name = routeNameWithCursor(route.name);

@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe
-      - run: yarn run eslint src
+      - run: yarn run eslint .
 
   codechecks:
     runs-on: ${{ inputs.runs-on }}
