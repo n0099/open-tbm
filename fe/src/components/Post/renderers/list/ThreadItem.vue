@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 

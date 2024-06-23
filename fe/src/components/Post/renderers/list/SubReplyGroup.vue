@@ -35,6 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import type { UserProvision } from './RendererList.vue';
+
 const props = defineProps<{
     thread: Thread,
     reply: Reply,

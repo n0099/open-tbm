@@ -7,6 +7,7 @@
 </template>
 
 <script setup lang="ts">
+import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts['response'] }>();

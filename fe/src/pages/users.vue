@@ -13,6 +13,7 @@
 </template>
 
 <script setup lang="ts">
+import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const props = defineProps<{

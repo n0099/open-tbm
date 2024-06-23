@@ -1,3 +1,5 @@
+import type { FunctionalComponent } from 'vue';
+
 type RootEl = Parameters<typeof h>[0];
 
 // https://github.com/inouetakuya/vue-nl2br/blob/bdcbed79c6caf011c90258184555730683318f33/src/Nl2br.ts#L29

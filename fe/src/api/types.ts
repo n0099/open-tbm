@@ -12,7 +12,7 @@ export type ApiForums = Api<Array<{
 }>>;
 
 export type Cursor = string;
-interface CursorPagination {
+export interface CursorPagination {
     pages: {
         currentCursor: Cursor,
         nextCursor: Cursor | null

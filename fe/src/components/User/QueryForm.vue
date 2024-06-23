@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import type { LocationQueryValueRaw } from 'vue-router';
 import _ from 'lodash';
 
 type RouteQueryString = Omit<SelectUserParams, Exclude<SelectUserBy, ''>>

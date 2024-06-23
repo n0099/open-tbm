@@ -1,3 +1,4 @@
+import type { RouteLocationRaw } from 'vue-router';
 import _ from 'lodash';
 
 export type RouteObjectRaw = Exclude<RouteLocationRaw, string>;

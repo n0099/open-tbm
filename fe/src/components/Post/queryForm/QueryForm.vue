@@ -163,6 +163,7 @@
 </template>
 
 <script setup lang="ts">
+import { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
 import { RangePicker } from 'ant-design-vue';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';

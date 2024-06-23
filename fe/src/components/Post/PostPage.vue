@@ -7,6 +7,8 @@
 </template>
 
 <script setup lang="ts">
+import type { PostRenderer } from '@/pages/posts.vue';
+
 defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,

@@ -1,3 +1,4 @@
+import type { LocationAsRelativeRaw } from 'vue-router';
 import Noty from 'noty';
 import _ from 'lodash';
 

@@ -1,4 +1,5 @@
 import type { RouterConfig } from 'nuxt/schema';
+import type { RouteLocation, RouteRecordRaw, RouteRecordRedirect, RouteRecordSingleViewWithChildren, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const withCursorRoute = (path: string, name: string): Omit<RouteRecordSingleViewWithChildren, 'component'> =>
