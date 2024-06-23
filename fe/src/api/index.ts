@@ -39,7 +39,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
                 },
                 signal
             }
-        );
+        ) as TResponse;
     } catch (e: unknown) {
         if (e instanceof FetchError && isApiError(e.data))
             throw new ApiResponseError(e.data.errorCode, e.data.errorInfo);

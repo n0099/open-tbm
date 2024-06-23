@@ -1,5 +1,4 @@
 import type { LocationAsRelativeRaw } from 'vue-router';
-import Noty from 'noty';
 import _ from 'lodash';
 
 export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
@@ -38,9 +37,6 @@ export type Tid = UInt;
 export type Pid = UInt;
 export type Spid = UInt;
 
-// we can't declare global timeout like `window.noty = new Noty({...});`
-// due to https://web.archive.org/web/20201218224752/https://github.com/needim/noty/issues/455
-export const notyShow = (type: Noty.Type, text: string) => { new Noty({ timeout: 5000, type, text }).show() };
 export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
 
 export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
@@ -73,37 +69,10 @@ export const undefinedOr = <T, TReturn>(value: T | undefined, transformer: (valu
 
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));
+export const objectWithSameValues = <const TKeys extends string[], const TValue>(keys: TKeys, value: TValue) =>
+    _.zipObject(keys, keys.map(() => value)) as Record<TKeys[number], TValue>;
 
 // https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683
 // https://gist.github.com/paulirish/5d52fb081b3570c81e3a#calling-getcomputedstyle
 export const convertRemToPixels = (rem: number) =>
     rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
-
-// https://stackoverflow.com/questions/986937/how-can-i-get-the-browsers-scrollbar-sizes/986977#986977
-export const scrollBarWidth = computed(() => {
-    if (!import.meta.client)
-        return '0px';
-    const inner = document.createElement('p');
-    inner.style.width = '100%';
-    inner.style.height = '200px';
-
-    const outer = document.createElement('div');
-    outer.style.position = 'absolute';
-    outer.style.top = '0px';
-    outer.style.left = '0px';
-    outer.style.visibility = 'hidden';
-    outer.style.width = '200px';
-    outer.style.height = '150px';
-    outer.style.overflow = 'hidden';
-    outer.append(inner);
-
-    document.body.append(outer);
-    const w1 = inner.offsetWidth;
-    outer.style.overflow = 'scroll';
-    let w2 = inner.offsetWidth;
-    if (w1 === w2)
-        w2 = outer.clientWidth;
-    outer.remove();
-
-    return `${w1 - w2}px`;
-});

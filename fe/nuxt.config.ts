@@ -1,14 +1,7 @@
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
+import { objectWithSameValues } from './src/utils';
 import vite from './vite.config';
-import _ from 'lodash';
 
-const envs = [
-    'apiEndpointPrefix',
-    'gaMeasurementID',
-    'recaptchaSiteKey',
-    'instanceName',
-    'footerText'
-];
 export default defineNuxtConfig({
     devServer: { https: true },
     devtools: { enabled: true },
@@ -31,7 +24,7 @@ export default defineNuxtConfig({
             defaultOptions: {
                 queries: {
                     refetchOnWindowFocus: false,
-                    staleTime: Infinity,
+                    staleTime: Number.MAX_SAFE_INTEGER, // https://stackoverflow.com/questions/1423081/json-left-out-infinity-and-nan-json-status-in-ecmascript
                     retry: false
                 }
             }
@@ -44,8 +37,21 @@ export default defineNuxtConfig({
             brotliSize: true
         } as PluginVisualizerOptions
     },
+    experimental: {
+        viewTransition: true,
+        writeEarlyHints: true,
+        typedPages: true,
+        respectNoSSRHeader: true,
+        componentIslands: true
+    },
     vite,
     runtimeConfig: {
-        public: _.zipObject(envs, envs.map(() => ''))
+        public: objectWithSameValues([
+            'apiEndpointPrefix',
+            'gaMeasurementID',
+            'recaptchaSiteKey',
+            'instanceName',
+            'footerText'
+        ], '')
     }
 });

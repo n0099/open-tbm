@@ -21,6 +21,6 @@ a {
 
 @media (max-width: 991.98px) {
     .container { /* let all .container be like .container-fluid when vw is less than md breakpoint */
-        max-inline-size: 100%;
+        max-width: 100% !important;
     }
 }
