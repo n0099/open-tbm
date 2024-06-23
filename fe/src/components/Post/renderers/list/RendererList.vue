@@ -11,17 +11,7 @@ import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 const props = defineProps<{ initialPosts: ApiPosts['response'] }>();
-const getUser = computed(() => baseGetUser(props.initialPosts.users));
-const renderUsername = computed(() => baseRenderUsername(getUser.value));
-const userProvision = { getUser, renderUsername };
-
-// export type UserProvision = typeof userProvision;
-// will trigger @typescript-eslint/no-unsafe-assignment when `inject<UserProvision>('userProvision')`
-export interface UserProvision {
-    getUser: ComputedRef<ReturnType<typeof baseGetUser>>,
-    renderUsername: ComputedRef<ReturnType<typeof baseRenderUsername>>
-}
-provide<UserProvision>('userProvision', userProvision);
+provideUsers(props.initialPosts.users);
 
 export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };

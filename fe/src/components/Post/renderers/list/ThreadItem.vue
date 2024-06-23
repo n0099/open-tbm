@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
+import type { ThreadWithGroupedSubReplies } from './RendererList.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 
@@ -94,8 +94,7 @@ defineProps<{
 }>();
 const elementRefsStore = useElementRefsStore();
 const highlightPostStore = useHighlightPostStore();
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
+const { getUser, renderUsername } = injectUsers();
 </script>
 
 <style scoped>

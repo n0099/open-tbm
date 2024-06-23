@@ -28,10 +28,10 @@ export type JsonString = string;
 export type ApiPosts = Api<CursorPagination & {
     pages: {
         matchQueryPostCount: { [P in PostType]: UInt },
-        notMatchQueryParentPostCount: { [P in Omit<PostType, 'subRely'>]: UInt }
+        notMatchQueryParentPostCount: { [P in Exclude<PostType, 'subRely'>]: UInt }
     },
     type: 'index' | 'search',
-    forum: Pick<ApiForums[number], 'fid' | 'name'>,
+    forum: Pick<ApiForums['response'][number], 'fid' | 'name'>,
     threads: Array<Thread & {
         replies: Array<Reply & {
             subReplies: SubReply[]

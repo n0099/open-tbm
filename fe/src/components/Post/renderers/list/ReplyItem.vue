@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies, UserProvision } from './RendererList.vue';
+import type { ThreadWithGroupedSubReplies } from './RendererList.vue';
 import 'assets/css/bootstrapCallout.css';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
@@ -62,8 +62,7 @@ defineProps<{
 
 const elementRefsStore = useElementRefsStore();
 const highlightPostStore = useHighlightPostStore();
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const { getUser } = inject<UserProvision>('userProvision')!;
+const { getUser } = injectUsers();
 const replyElements = ref<HTMLElement[]>([]);
 
 onMounted(async () => {

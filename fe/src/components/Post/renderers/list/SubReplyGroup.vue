@@ -35,8 +35,6 @@
 </template>
 
 <script setup lang="ts">
-import type { UserProvision } from './RendererList.vue';
-
 const props = defineProps<{
     thread: Thread,
     reply: Reply,
@@ -45,9 +43,7 @@ const props = defineProps<{
     nextSubReplyGroup?: SubReply[]
 }>();
 const highlightPostStore = useHighlightPostStore();
-
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const { getUser, renderUsername } = inject<UserProvision>('userProvision')!;
+const { getUser, renderUsername } = injectUsers();
 const getSiblingSubReply = (index: number, direction: 'previous' | 'next') =>
     props.subReplyGroup[index + (direction === 'next' ? 1 : -1)] as SubReply | undefined
         ?? (direction === 'next' ? props.nextSubReplyGroup?.[0] : props.previousSubReplyGroup?.at(-1));

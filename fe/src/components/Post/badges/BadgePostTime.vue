@@ -73,14 +73,14 @@ const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
     relativeTo?: string
 }>();
 
-const previousTime = computed(() =>
-    (props.previousPost?.[props.postTimeKey] as TPostTimeValue | undefined));
-const nextTime = computed(() =>
-    (props.nextPost?.[props.postTimeKey] as TPostTimeValue | undefined));
-const parentTime = computed(() =>
-    (props.parentPost?.[props.postTimeKey] as TPostTimeValue | undefined));
-const currentTime = computed(() =>
-    (props.currentPost[props.postTimeKey] as TPostTimeValue));
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+const getPostTime = <T extends TPost | TParentPost>(post?: T) =>
+    post?.[props.postTimeKey as keyof T] as TPostTimeValue | undefined;
+const previousTime = computed(() => getPostTime(props.previousPost));
+const nextTime = computed(() => getPostTime(props.nextPost));
+const parentTime = computed(() => getPostTime(props.parentPost));
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const currentTime = computed(() => getPostTime(props.currentPost)!);
 
 const previousDateTime = computed(() =>
     undefinedOr(previousTime.value, i => DateTime.fromSeconds(i)));
