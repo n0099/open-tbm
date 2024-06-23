@@ -15,7 +15,15 @@ export default defineNuxtConfig({
     srcDir: 'src',
     imports: { dirs: ['api/**', 'utils/**'] },
     components: [{ path: '@/components', pathPrefix: false }],
-    modules: ['@pinia/nuxt', '@nuxt/eslint', '@hebilicious/vue-query-nuxt'],
+    modules: [
+        '@pinia/nuxt',
+        '@nuxt/eslint',
+        '@hebilicious/vue-query-nuxt',
+        '@vueuse/nuxt',
+        '@nuxtjs/seo',
+        '@ant-design-vue/nuxt',
+        '@vesp/nuxt-fontawesome'
+    ],
     pinia: { storesDirs: ['src/stores/**'] },
     eslint: { config: { standalone: false } },
     vueQuery: {
