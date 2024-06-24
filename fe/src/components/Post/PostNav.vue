@@ -8,30 +8,15 @@
                       :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
                 <AMenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
                            :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
-                           :class="{
-                               'border-only-bottom': !(route.hash === routeHash(thread.tid)
-                                   || highlightPostStore.isHighlightingPost(thread, 'tid')),
-                               'border-primary': route.hash === routeHash(thread.tid),
-                               'border-bottom': route.hash !== routeHash(thread.tid),
-                               'border-warning': highlightPostStore.isHighlightingPost(thread, 'tid')
-                           }"
-                           class="post-nav-thread border ps-2 ps-lg-3 pe-1">
+                           :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
-                            <NuxtLink v-for="isTopmostReply in [reply.pid === viewportTopmostPost.pid]"
-                                      :key="isTopmostReply.toString()"
-                                      @click.prevent="_ => navigate(cursor, null, reply.pid)"
+                            <NuxtLink @click.prevent="_ => navigate(cursor, null, reply.pid)"
                                       :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
-                                      :class="{
-                                          'rounded-3': isTopmostReply,
-                                          'btn-info': isTopmostReply,
-                                          'btn-light': !isTopmostReply,
-                                          'btn-outline-warning': highlightPostStore.isHighlightingPost(reply, 'pid'),
-                                          'btn-outline-primary': !isTopmostReply && route.hash === routeHash(null, reply.pid),
-                                          'text-white': isTopmostReply,
-                                          'text-body-secondary': !isTopmostReply
-                                      }" class="post-nav-reply btn ms-0 px-2">{{ reply.floor }}L</NuxtLink>
+                                      :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
+                                {{ reply.floor }}L
+                            </NuxtLink>
                         </template>
                     </div>
                 </AMenuItem>
@@ -63,9 +48,9 @@ const elementRefsStore = useElementRefsStore();
 const highlightPostStore = useHighlightPostStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
-const viewportTopmostPostDefault = { cursor: '', tid: 0, pid: 0 };
-const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>(viewportTopmostPostDefault);
-const [isPostNavExpanded, togglePostNavExpanded] = useToggle(import.meta.client ? matchMedia('(min-width: 900px)').matches : true);
+const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>({ cursor: '', tid: 0, pid: 0 });
+const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
+onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
 
 const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
 const routeHash = (tid: Tid | string | null, pid?: Pid | string) => `#${pid ?? (tid === null ? '' : `t${tid}`)}`;
@@ -79,6 +64,39 @@ const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key })
         const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
         await navigate(cursor, tid);
     }
+};
+
+const menuThreadClasses = (thread: Thread) => {
+    if (useHydrationStore().isHydrating())
+        return 'border-only-bottom border-bottom';
+    const isRouteHash = route.hash === routeHash(thread.tid);
+    const isHighlighting = highlightPostStore.isHighlightingPost(thread, 'tid');
+
+    return { /* eslint-disable @typescript-eslint/naming-convention */
+        'border-only-bottom': !(isRouteHash || isHighlighting),
+        'border-primary': isRouteHash,
+        'border-bottom': !isRouteHash,
+        'border-warning': isHighlighting
+    };
+    /* eslint-enable @typescript-eslint/naming-convention */
+};
+const menuReplyClasses = (reply: Reply) => {
+    if (useHydrationStore().isHydrating())
+        return 'btn-light text-body-secondary';
+    const isRouteHash = route.hash === routeHash(null, reply.pid);
+    const isHighlighting = highlightPostStore.isHighlightingPost(reply, 'pid');
+    const isTopmost = reply.pid === viewportTopmostPost.value.pid;
+
+    return { /* eslint-disable @typescript-eslint/naming-convention */
+        'rounded-3': isTopmost,
+        'btn-info': isTopmost,
+        'btn-light': !isTopmost,
+        'btn-outline-warning': isHighlighting,
+        'btn-outline-primary': !isTopmost && isRouteHash,
+        'text-white': isTopmost,
+        'text-body-secondary': !isTopmost
+    };
+    /* eslint-enable @typescript-eslint/naming-convention */
 };
 
 const scrollStop = _.debounce(() => {
