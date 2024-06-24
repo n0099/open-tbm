@@ -34,16 +34,33 @@
 <script setup lang="ts">
 import iconLoadingBlock from 'assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
+import nprogress from 'nprogress';
 
 const isRouteUpdating = useRouteUpdatingStore().isUpdating;
 const config = useRuntimeConfig().public;
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementID !== '';
+
+const noScriptStyle = `<style>
+    #app-wrapper {
+        pointer-events: unset !important;
+    }
+</style>`; // https://github.com/nuxt/nuxt/issues/13848
+useHead({ noscript: [{ innerHTML: noScriptStyle }] });
+const appPointerEvents = ref('none');
+if (import.meta.client) {
+    nprogress.start();
+    onNuxtReady(() => {
+        nprogress.done();
+        appPointerEvents.value = 'unset';
+    });
+}
 </script>
 
 <style scoped>
-#app-wrapper{
+#app-wrapper {
     min-height: 100vh;
+    pointer-events: v-bind(appPointerEvents);
 }
 #footer-upper {
     background-color: #2196f3;

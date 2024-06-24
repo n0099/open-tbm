@@ -33,7 +33,9 @@
         'border-end': !isPostNavExpanded
     }"
     class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
-    <a @click="_ => togglePostNavExpanded()" class="text-primary">
+    <a
+        v-if="!useHydrationStore().isHydratingOrSSR()"
+        @click="_ => togglePostNavExpanded()" class="text-primary">
         <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
         <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
     </a>
@@ -233,7 +235,7 @@ watchEffect(() => {
     content-visibility: auto;
     contain-intrinsic-block-size: auto 6rem;
 }
-:deep(.post-nav-thread.border-only-bottom) {
+:deep(.post-nav-thread.border-only-bottom) { /* invisible border to prevent reflow triggered by using border-width: 0px */
     border-top-color: transparent !important;
     border-left-color: transparent !important;
     border-right-color: transparent !important;

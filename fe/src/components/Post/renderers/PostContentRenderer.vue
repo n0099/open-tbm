@@ -1,5 +1,13 @@
 <template>
 <div v-viewer.static>
+    <DefineUGCImage v-slot="{ src }">
+        <NuxtLink v-if="useHydrationStore().isHydratingOrSSR()" :to="src" target="_blank" class="tieba-ugc-image">
+            <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
+            <img :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="$attrs" />
+        </NuxtLink>
+        <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
+        <img v-else :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="$attrs" />
+    </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
         <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />
         <NuxtLink
@@ -8,9 +16,7 @@
         <img
             v-if="i.type === 2" :src="emoticonUrl(i.text)" :alt="i.c"
             referrerpolicy="no-referrer" loading="lazy" />
-        <img
-            v-if="i.type === 3" :src="imageUrl(i.originSrc)"
-            referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
+        <ReuseUGCImage v-if="i.type === 3" :src="imageUrl(i.originSrc)" />
         <NuxtLink
             v-if="i.type === 4"
             :to="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
@@ -36,13 +42,9 @@
         <img
             v-if="i.type === 11" :src="toHTTPS(i.dynamic)" :alt="i.c"
             referrerpolicy="no-referrer" loading="lazy" class="d-block" />
-        <img
-            v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦"
-            referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
+        <ReuseUGCImage v-if="i.type === 16" :src="toHTTPS(i.graffitiInfo?.url)" alt="贴吧涂鸦" />
         <NuxtLink v-if="i.type === 20" :to="i.memeInfo?.detailLink" target="_blank">
-            <img
-                :src="toHTTPS(i.src)"
-                referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" />
+            <ReuseUGCImage v-if="i.type === 20" :src="toHTTPS(i.src)" />
         </NuxtLink>
     </div>
 </div>
@@ -52,6 +54,7 @@
 import _ from 'lodash';
 
 defineProps<{ content: PostContent | null }>();
+const [DefineUGCImage, ReuseUGCImage] = createReusableTemplate<{ src?: string }>({ inheritAttrs: false });
 useViewerStore().enable();
 
 const toHTTPS = (url?: string) => url?.replace('http://', 'https://');
@@ -115,7 +118,7 @@ const emoticonUrl = (text?: string) => {
 </script>
 
 <style scoped>
-.tieba-ugc-image {
+img.tieba-ugc-image {
     max-inline-size: 18.75rem;
     max-block-size: 18.75rem;
     object-fit: contain;
