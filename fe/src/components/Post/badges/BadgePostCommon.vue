@@ -2,31 +2,32 @@
 <code class="text-primary-emphasis">{{ postIDKey }}:{{ props.post[props.postIDKey] }}</code>
 <NuxtLink
     v-if="postIDKey === 'tid' || postIDKey === 'pid'"
+    v-tippy="`跳至本${postTypeText}链接`"
     :to="{ hash: `#${postIDKey === 'tid' ? 't' : ''}${props.post[props.postIDKey]}` }"
-    :data-tippy-content="`跳至本${postTypeText}链接`"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faHashtag" size="lg" class="align-bottom" />
 </NuxtLink>
 <NuxtLink
+    v-tippy="`固定链接/只看此${postTypeText}`"
     :to="{
         name: `posts/${postIDKey}`,
         params: { [props.postIDKey]: props.post[props.postIDKey] as Tid | Pid | Spid }
     }"
-    :data-tippy-content="`固定链接/只看此${postTypeText}`"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faLink" size="lg" class="align-bottom" />
 </NuxtLink>
 <NuxtLink
+    v-tippy="'在贴吧中查看'"
     :to="tiebaPostLink(props.post.tid,
                        (props.post as Reply | SubReply).pid,
                        (props.post as SubReply).spid)"
-    class="badge bg-light rounded-pill link-dark" data-tippy-content="在贴吧中查看" target="_blank">
+    class="badge bg-light rounded-pill link-dark" target="_blank">
     <FontAwesome :icon="faArrowUpRightFromSquare" size="lg" class="align-bottom" />
 </NuxtLink>
 <span
-    :data-tippy-content="`
-            首次收录时间：${formatTime(props.post.createdAt)}<br />
-            最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br />
+    v-tippy="`
+            首次收录时间：${formatTime(props.post.createdAt)}<br>
+            最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
             最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faClock" size="lg" class="align-bottom" />

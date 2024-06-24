@@ -51,7 +51,6 @@ const posts = computed(() => {
     return newPosts as Modify<ApiPosts['response'], { threads: ThreadWithGroupedSubReplies[] }>;
 });
 
-onMounted(initialTippy);
 if (import.meta.client) {
     useRouteScrollBehaviorStore().set((to, from): ReturnType<RouterScrollBehavior> => {
         if (!compareRouteIsNewQuery(to, from))

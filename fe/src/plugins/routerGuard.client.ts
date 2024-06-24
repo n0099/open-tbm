@@ -11,7 +11,7 @@ export default defineNuxtPlugin(() => {
     router.onError(error => {
         end();
         notyShow('error', error instanceof Error
-            ? `${error.name}<br />${error.message}`
+            ? `${error.name}<br>${error.message}`
             : JSON.stringify(error));
     });
 });

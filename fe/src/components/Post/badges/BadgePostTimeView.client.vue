@@ -1,6 +1,6 @@
 <template>
 <span
-    :ref="el => initialTippy([el as Element])" :data-tippy-content="`
+    v-tippy="`
             本${postType}${timestampType}：<br>
             ${current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
             ${relativeTo === undefined || relativeToText === undefined

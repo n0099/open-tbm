@@ -85,7 +85,7 @@ export const getQueryFormDeps = () => {
         const currentQueryType = getCurrentQueryType();
         switch (currentQueryType) {
             case 'empty':
-                notyShow('warning', '请选择贴吧或/并输入查询参数<br />勿只选择帖子类型参数');
+                notyShow('warning', '请选择贴吧或/并输入查询参数<br>勿只选择帖子类型参数');
 
                 return false; // exit early
             case 'postID':
@@ -142,7 +142,7 @@ export const getQueryFormDeps = () => {
             const required = orderByRequiredPostTypes[orderBy];
             if (!isRequiredPostTypes(postTypes, required)) {
                 isOrderByInvalid.value = true;
-                notyShow('warning', `排序方式与查询帖子类型要求不匹配<br />当前要求帖子类型为${requiredPostTypesToString(required)}`);
+                notyShow('warning', `排序方式与查询帖子类型要求不匹配<br>当前要求帖子类型为${requiredPostTypesToString(required)}`);
             }
         }
 
