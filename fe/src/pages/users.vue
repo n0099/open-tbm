@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 

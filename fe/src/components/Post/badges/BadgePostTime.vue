@@ -7,7 +7,7 @@
         @mouseleave="() => highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="previousDateTime"
         :relativeToText="`相对于上一${postType}${timestampType}`"
-        :postType="postType" :timestampType="timestampType" v-bind="$attrs">
+        :postType="props.postType" :timestampType="props.timestampType" v-bind="$attrs">
         <FontAwesome :icon="faChevronUp" class="align-bottom" />
     </BadgePostTimeView>
     <BadgePostTimeView
@@ -17,7 +17,7 @@
         @mouseleave="() => highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="nextDateTime"
         :relativeToText="`相对于下一${postType}${timestampType}`"
-        :postType="postType" :timestampType="timestampType" v-bind="$attrs">
+        :postType="props.postType" :timestampType="props.timestampType" v-bind="$attrs">
         <FontAwesome :icon="faChevronDown" class="align-bottom" />
     </BadgePostTimeView>
     <BadgePostTimeView
@@ -28,13 +28,13 @@
         @mouseleave="() => highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="parentDateTime"
         :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`"
-        :postType="postType" :timestampType="timestampType" v-bind="$attrs">
+        :postType="props.postType" :timestampType="props.timestampType" v-bind="$attrs">
         <FontAwesome :icon="faAnglesUp" class="align-bottom" />
     </BadgePostTimeView>
 </ClientOnly>
 <BadgePostTimeView
-    :current="currentDateTime" :postType="postType"
-    :timestampType="timestampType" v-bind="$attrs" />
+    :current="currentDateTime" :postType="props.postType"
+    :timestampType="props.timestampType" v-bind="$attrs" />
 </template>
 
 <script setup lang="ts" generic="

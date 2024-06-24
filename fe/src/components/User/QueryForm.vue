@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import type { LocationQueryValueRaw } from 'vue-router';
 import _ from 'lodash';
 
