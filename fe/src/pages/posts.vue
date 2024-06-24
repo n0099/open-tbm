@@ -12,9 +12,11 @@
                 <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
                 <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                     <PostPage v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
-                              @clickNextPage="() => clickNextPage()" :posts="page" :renderType="renderType"
+                              @clickNextPage="async () => await fetchNextPage()"
+                              :posts="page" :renderType="renderType"
                               :isFetching="isFetching" :hasNextPage="hasNextPage"
-                              :isLastPageInPages="pageIndex === data.pages.length - 1" />
+                              :isLastPageInPages="pageIndex === data.pages.length - 1"
+                              :nextPageRoute="getNextCursorRoute(route, page.pages.nextCursor)" />
                 </div>
                 <div v-if="renderType === 'list'" class="col d-none d-xxl-block p-0" />
             </div>
@@ -33,7 +35,6 @@ import _ from 'lodash';
 export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
-const router = useRouter();
 const queryClient = useQueryClient();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref(false);
@@ -95,10 +96,6 @@ watch(isFetched, async () => {
     }
 });
 
-const clickNextPage = async () => {
-    await router.push(getNextCursorRoute(route, data.value?.pages.at(-1)?.pages.nextCursor));
-    await fetchNextPage();
-};
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
     const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
         // prevent fetch with queryParam that's empty or parsed from invalid route

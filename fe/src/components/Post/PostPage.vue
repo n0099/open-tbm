@@ -3,18 +3,20 @@
     <RendererList v-if="renderType === 'list'" :initialPosts="posts" />
     <RendererTable v-else-if="renderType === 'table'" :posts="posts" />
     <PageNextButton v-if="isLastPageInPages && !isFetching && hasNextPage"
-                    @click="() => $emit('clickNextPage')" />
+                    @click="() => $emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
 </template>
 
 <script setup lang="ts">
 import type { PostRenderer } from '@/pages/posts.vue';
+import type { RouteLocationRaw } from 'vue-router';
 
 defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,
     isFetching: boolean,
     hasNextPage: boolean,
-    isLastPageInPages: boolean
+    isLastPageInPages: boolean,
+    nextPageRoute: RouteLocationRaw
 }>();
 defineEmits<{ clickNextPage: [] }>();
 </script>
