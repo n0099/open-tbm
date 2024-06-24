@@ -56,8 +56,17 @@ const highlightPostStore = useHighlightPostStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>({ cursor: '', tid: 0, pid: 0 });
+
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
 onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
+const noScriptStyle = `<style>
+    @media (max-width: 900px) {
+        .post-nav {
+            display: none;
+        }
+    }
+</style>`; // https://github.com/nuxt/nuxt/issues/13848
+useHead({ noscript: [{ innerHTML: noScriptStyle }] });
 
 const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
 const routeHash = (tid: Tid | string | null, pid?: Pid | string) => `#${pid ?? (tid === null ? '' : `t${tid}`)}`;
