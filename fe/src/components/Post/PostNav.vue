@@ -4,7 +4,8 @@
            :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded"
            class="post-nav col p-0 vh-100 sticky-top border-0">
         <template v-for="posts in postPages">
-            <ASubMenu v-for="cursor in [posts.pages.currentCursor]" :key="`c${cursor}`" :title="cursorTemplate(cursor)">
+            <ASubMenu v-for="cursor in [posts.pages.currentCursor]"
+                      :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
                 <AMenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
                            :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
                            :class="{

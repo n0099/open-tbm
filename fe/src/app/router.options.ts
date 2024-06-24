@@ -52,9 +52,6 @@ export default {
         ];
     },
     async scrollBehavior(to, from, savedPosition) {
-        if (savedPosition !== null)
-            return savedPosition;
-
         const routeScrollBehavior = useRouteScrollBehaviorStore().get;
         if (routeScrollBehavior !== undefined) {
             const ret: ReturnType<RouterScrollBehavior> | undefined =
@@ -73,6 +70,6 @@ export default {
                 return { top: 0 };
         }
 
-        return false;
+        return savedPosition ?? false;
     }
 } as RouterConfig;

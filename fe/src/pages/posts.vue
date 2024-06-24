@@ -39,7 +39,7 @@ const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref(false);
 const isRouteNewQuery = ref(false);
 const initialPageCursor = ref<Cursor>('');
-const { data, error, isPending, isFetching, isFetchedAfterMount, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
+const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
     useApiPosts(queryParam, { initialPageParam: initialPageCursor });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
@@ -88,8 +88,8 @@ watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
         前端耗时${renderTime.toFixed(2)}s
         ${isCached ? '使用前端本地缓存' : `后端+网络耗时${_.round(networkTime / 1000, 2)}s`}`);
 });
-watch(isFetchedAfterMount, async () => {
-    if (isFetchedAfterMount.value && renderType.value === 'list') {
+watch(isFetched, async () => {
+    if (isFetched.value && renderType.value === 'list') {
         await nextTick();
         scrollToPostListItemByRoute(route);
     }
