@@ -10,6 +10,7 @@ tippy.setDefaultProps({
     maxWidth: 'none'
 });
 
-export const initialTippy = () => createSingleton(tippy('[data-tippy-content]'), {
-    allowHTML: true, appendTo: document.body
-});
+export const initialTippy = (targets?: Parameters<typeof tippy>[0]) =>
+    createSingleton(tippy(targets ?? '[data-tippy-content]'), {
+        allowHTML: true, appendTo: document.body
+    });

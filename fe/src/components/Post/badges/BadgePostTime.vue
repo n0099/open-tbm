@@ -1,42 +1,36 @@
 <template>
-    <DefineTemplate v-slot="{ $slots, base, relativeTo }">
-        <span :data-tippy-content="`
-                本${postType}${timestampType}：<br>
-                ${currentDateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-                ${base === undefined || relativeTo === undefined
-              ? ''
-              : `${relativeTo}：<br>
-                ${base.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-                相差 ${currentDateTime.diff(base).rescale().toHuman()}`}
-                `"
-              class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
-            <component :is="$slots.default" />
-            {{ currentDateTime.toRelative({ base, round: false }) }}
-        </span>
-    </DefineTemplate>
-    <ReuseTemplate v-if="previousTime !== undefined && previousTime < currentTime"
-                   @mouseenter="() => props.previousPost !== undefined
-                       && highlightPostStore.set(props.previousPost, props.currentPostIDKey)"
-                   @mouseleave="() => highlightPostStore.unset()"
-                   :base="previousDateTime" :relativeTo="`相对于上一${postType}${timestampType}`">
-        <FontAwesome :icon="faChevronUp" class="align-bottom" />
-    </ReuseTemplate>
-    <ReuseTemplate v-else-if="nextTime !== undefined && nextTime < currentTime"
-                   @mouseenter="() => props.nextPost !== undefined
-                       && highlightPostStore.set(props.nextPost, props.currentPostIDKey)"
-                   @mouseleave="() => highlightPostStore.unset()"
-                   :base="nextDateTime" :relativeTo="`相对于下一${postType}${timestampType}`">
-        <FontAwesome :icon="faChevronDown" class="align-bottom" />
-    </ReuseTemplate>
-    <ReuseTemplate v-else-if="parentTime !== undefined && parentTime !== currentTime"
-                   @mouseenter="() => props.parentPost !== undefined && props.parentPostIDKey !== undefined
-                       && highlightPostStore.set(props.parentPost, props.parentPostIDKey)"
-                   @mouseleave="() => highlightPostStore.unset()"
-                   :base="parentDateTime"
-                   :relativeTo="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`">
-        <FontAwesome :icon="faAnglesUp" class="align-bottom" />
-    </ReuseTemplate>
-    <ReuseTemplate />
+    <ClientOnly>
+        <BadgePostTimeView v-if="previousTime !== undefined && previousTime < currentTime"
+                           @mouseenter="() => props.previousPost !== undefined
+                               && highlightPostStore.set(props.previousPost, props.currentPostIDKey)"
+                           @mouseleave="() => highlightPostStore.unset()"
+                           :current="currentDateTime" :relativeTo="previousDateTime"
+                           :relativeToText="`相对于上一${postType}${timestampType}`"
+                           :postType="postType" :timestampType="timestampType" v-bind="$attrs">
+            <FontAwesome :icon="faChevronUp" class="align-bottom" />
+        </BadgePostTimeView>
+        <BadgePostTimeView v-else-if="nextTime !== undefined && nextTime < currentTime"
+                           @mouseenter="() => props.nextPost !== undefined
+                               && highlightPostStore.set(props.nextPost, props.currentPostIDKey)"
+                           @mouseleave="() => highlightPostStore.unset()"
+                           :current="currentDateTime" :relativeTo="nextDateTime"
+                           :relativeToText="`相对于下一${postType}${timestampType}`"
+                           :postType="postType" :timestampType="timestampType" v-bind="$attrs">
+            <FontAwesome :icon="faChevronDown" class="align-bottom" />
+        </BadgePostTimeView>
+        <BadgePostTimeView v-else-if="parentTime !== undefined && parentTime !== currentTime"
+                           @mouseenter="() => props.parentPost !== undefined
+                               && props.parentPostIDKey !== undefined
+                               && highlightPostStore.set(props.parentPost, props.parentPostIDKey)"
+                           @mouseleave="() => highlightPostStore.unset()"
+                           :current="currentDateTime" :relativeTo="parentDateTime"
+                           :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`"
+                           :postType="postType" :timestampType="timestampType" v-bind="$attrs">
+            <FontAwesome :icon="faAnglesUp" class="align-bottom" />
+        </BadgePostTimeView>
+    </ClientOnly>
+    <BadgePostTimeView :current="currentDateTime" :postType="postType"
+                       :timestampType="timestampType" v-bind="$attrs" />
 </template>
 
 <script setup lang="ts" generic="
@@ -67,10 +61,6 @@ const props = defineProps<{
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
 const highlightPostStore = useHighlightPostStore();
-const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
-    base?: DateTime<true>,
-    relativeTo?: string
-}>();
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 const getPostTime = <T extends TPost | TParentPost>(post?: T) =>
@@ -89,10 +79,3 @@ const parentDateTime = computed(() =>
     undefinedOr(parentTime.value, i => DateTime.fromSeconds(i)));
 const currentDateTime = computed(() => DateTime.fromSeconds(currentTime.value));
 </script>
-
-<style scoped>
-span {
-    padding-inline-start: .75rem;
-    padding-inline-end: .75rem;
-}
-</style>
