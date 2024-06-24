@@ -1,13 +1,15 @@
 <template>
-    <slot v-if="isFetching || isError" :renderer="indicatorsRenderer" name="indicators">
-        <RenderFunction :renderer="indicatorsRenderer" />
-    </slot>
-    <select v-if="!isFetching && isSuccess && data !== undefined" v-model="modelValue"
-            class="form-select form-control" v-bind="$attrs">
-        <option value="0">未指定</option>
-        <option v-for="forum in data"
-                :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
-    </select>
+<slot v-if="isFetching || isError" :renderer="indicatorsRenderer" name="indicators">
+    <RenderFunction :renderer="indicatorsRenderer" />
+</slot>
+<select
+    v-if="!isFetching && isSuccess && data !== undefined" v-model="modelValue"
+    class="form-select form-control" v-bind="$attrs">
+    <option value="0">未指定</option>
+    <option
+        v-for="forum in data"
+        :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
+</select>
 </template>
 
 <script setup lang="tsx">

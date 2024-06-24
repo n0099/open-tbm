@@ -1,38 +1,43 @@
 <template>
-    <AMenu v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
-           forceSubMenuRender :inlineIndent="16" mode="inline"
-           :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded"
-           class="post-nav col p-0 vh-100 sticky-top border-0">
-        <template v-for="posts in postPages">
-            <ASubMenu v-for="cursor in [posts.pages.currentCursor]"
-                      :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
-                <AMenuItem v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
-                           :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
-                           :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
-                    {{ thread.title }}
-                    <div class="d-block btn-group p-1 text-wrap" role="group">
-                        <template v-for="reply in thread.replies" :key="reply.pid">
-                            <NuxtLink @click.prevent="_ => navigate(cursor, null, reply.pid)"
-                                      :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
-                                      :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
-                                {{ reply.floor }}L
-                            </NuxtLink>
-                        </template>
-                    </div>
-                </AMenuItem>
-            </ASubMenu>
-        </template>
-    </AMenu>
-    <div :class="{
-             'border-start': isPostNavExpanded,
-             'border-end': !isPostNavExpanded
-         }"
-         class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
-        <a @click="_ => togglePostNavExpanded()" class="text-primary">
-            <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
-            <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
-        </a>
-    </div>
+<AMenu
+    v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
+    forceSubMenuRender :inlineIndent="16" mode="inline"
+    :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded"
+    class="post-nav col p-0 vh-100 sticky-top border-0">
+    <template v-for="posts in postPages">
+        <ASubMenu
+            v-for="cursor in [posts.pages.currentCursor]"
+            :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
+            <AMenuItem
+                v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
+                :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
+                :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
+                {{ thread.title }}
+                <div class="d-block btn-group p-1 text-wrap" role="group">
+                    <template v-for="reply in thread.replies" :key="reply.pid">
+                        <NuxtLink
+                            @click.prevent="_ => navigate(cursor, null, reply.pid)"
+                            :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
+                            :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
+                            {{ reply.floor }}L
+                        </NuxtLink>
+                    </template>
+                </div>
+            </AMenuItem>
+        </ASubMenu>
+    </template>
+</AMenu>
+<div
+    :class="{
+        'border-start': isPostNavExpanded,
+        'border-end': !isPostNavExpanded
+    }"
+    class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
+    <a @click="_ => togglePostNavExpanded()" class="text-primary">
+        <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
+        <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
+    </a>
+</div>
 </template>
 
 <script setup lang="ts">

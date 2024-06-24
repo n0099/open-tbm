@@ -1,7 +1,7 @@
 <template>
-    <select v-model="modelValue" class="form-control">
-        <option v-for="(text, granularity) in options" :key="granularity" :value="granularity">{{ text }}</option>
-    </select>
+<select v-model="modelValue" class="form-control">
+    <option v-for="(text, granularity) in options" :key="granularity" :value="granularity">{{ text }}</option>
+</select>
 </template>
 
 <script setup lang="ts">

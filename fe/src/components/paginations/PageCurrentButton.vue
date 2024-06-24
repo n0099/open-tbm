@@ -1,13 +1,13 @@
 <template>
-    <div class="row align-items-center p-2">
-        <div class="col align-middle"><hr /></div>
-        <div class="w-auto">
-            <div class="p-2 badge bg-light text-dark">
-                <h4>{{ cursorTemplate(currentCursor) }}</h4>
-            </div>
+<div class="row align-items-center p-2">
+    <div class="col align-middle"><hr /></div>
+    <div class="w-auto">
+        <div class="p-2 badge bg-light text-dark">
+            <h4>{{ cursorTemplate(currentCursor) }}</h4>
         </div>
-        <div class="col align-middle"><hr /></div>
     </div>
+    <div class="col align-middle"><hr /></div>
+</div>
 </template>
 
 <script setup lang="ts">

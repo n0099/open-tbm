@@ -1,64 +1,67 @@
 <template>
-    <div class="container mt-2">
-        <small>本页上所有时间均为UTC+8时间</small>
-        <p>有效票定义：</p>
-        <ul>
-            <li>投票人吧内等级大于4</li>
-            <li><del>投票者回复内本人ID（xxx投yyy中xxx）与百度ID（非昵称）一致</del></li>
-            <li>被投候选人序号有效（1~1056）</li>
-            <li>此前未有过有效投票（即改票）</li>
-        </ul>
-        <p><NuxtLink to="https://github.com/n0099/bilibiliVote" target="_blank">原始数据 @ GitHub</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/20190312014057/https://tieba.baidu.com/p/6059516291" target="_blank">关于启动本吧吧主招募的公示</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/20190312014145/https://tieba.baidu.com/p/6062186860" target="_blank">【吧主招募】bilibili吧吧主候选人吧友投票贴</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/20190312014242/https://tieba.baidu.com/p/6063655698" target="_blank">Bilibili吧吧主招募投票结果公示</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6061937239" target="_blank">吧务候选名单详细数据，含精品数（截止3月10日00时15分）</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062515014" target="_blank">B吧吧主候选人 支持率Top10 含支持者等级分布</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062736510" target="_blank">【数据分享】炎魔 五娃 奶茶的支持者都关注哪些贴吧？</NuxtLink></p>
-        <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</NuxtLink></p>
-        <p><NuxtLink to="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</NuxtLink></p>
-        <hr />
-        <div ref="top50CandidateCountRef" class="echarts" id="top50CandidateCount" />
-        <hr />
-        <div ref="top10CandidatesTimelineRef" class="echarts" id="top10CandidatesTimeline" />
-        <hr />
-        <div class="row justify-content-end">
-            <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
-            <div class="col-2">
-                <div class="input-group">
-                    <span class="input-group-text"><FontAwesome :icon="faCalendarAlt" /></span>
-                    <TimeGranularity v-model="query.top5CandidateCountGroupByTimeGranularity"
-                                     :granularities="['minute', 'hour']"
-                                     id="top5CandidateCountGroupByTimeGranularity" />
-                </div>
+<div class="container mt-2">
+    <small>本页上所有时间均为UTC+8时间</small>
+    <p>有效票定义：</p>
+    <ul>
+        <li>投票人吧内等级大于4</li>
+        <li><del>投票者回复内本人ID（xxx投yyy中xxx）与百度ID（非昵称）一致</del></li>
+        <li>被投候选人序号有效（1~1056）</li>
+        <li>此前未有过有效投票（即改票）</li>
+    </ul>
+    <p><NuxtLink to="https://github.com/n0099/bilibiliVote" target="_blank">原始数据 @ GitHub</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/20190312014057/https://tieba.baidu.com/p/6059516291" target="_blank">关于启动本吧吧主招募的公示</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/20190312014145/https://tieba.baidu.com/p/6062186860" target="_blank">【吧主招募】bilibili吧吧主候选人吧友投票贴</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/20190312014242/https://tieba.baidu.com/p/6063655698" target="_blank">Bilibili吧吧主招募投票结果公示</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6061937239" target="_blank">吧务候选名单详细数据，含精品数（截止3月10日00时15分）</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062515014" target="_blank">B吧吧主候选人 支持率Top10 含支持者等级分布</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6062736510" target="_blank">【数据分享】炎魔 五娃 奶茶的支持者都关注哪些贴吧？</NuxtLink></p>
+    <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</NuxtLink></p>
+    <p><NuxtLink to="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</NuxtLink></p>
+    <hr />
+    <div ref="top50CandidateCountRef" class="echarts" id="top50CandidateCount" />
+    <hr />
+    <div ref="top10CandidatesTimelineRef" class="echarts" id="top10CandidatesTimeline" />
+    <hr />
+    <div class="row justify-content-end">
+        <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
+        <div class="col-2">
+            <div class="input-group">
+                <span class="input-group-text"><FontAwesome :icon="faCalendarAlt" /></span>
+                <TimeGranularity
+                    v-model="query.top5CandidateCountGroupByTimeGranularity"
+                    :granularities="['minute', 'hour']"
+                    id="top5CandidateCountGroupByTimeGranularity" />
             </div>
         </div>
-        <div ref="top5CandidateCountGroupByTimeRef" class="echarts" id="top5CandidateCountGroupByTime" />
-        <hr />
-        <div class="row justify-content-end">
-            <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
-            <div class="col-2">
-                <div class="input-group">
-                    <span class="input-group-text"><FontAwesome :icon="faClock" /></span>
-                    <TimeGranularity v-model="query.allVoteCountGroupByTimeGranularity"
-                                     :granularities="['minute', 'hour']"
-                                     id="allVoteCountGroupByTimeGranularity" />
-                </div>
-            </div>
-        </div>
-        <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
-        <hr />
-        <ATable :columns="candidatesDetailColumns"
-                :data-source="candidatesDetailData"
-                :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
-                rowKey="candidateIndex">
-            <template #bodyCell="{ column: { dataIndex: column }, value: name }">
-                <template v-if="column === 'candidateName'">
-                    <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
-                </template>
-            </template>
-        </ATable>
     </div>
+    <div ref="top5CandidateCountGroupByTimeRef" class="echarts" id="top5CandidateCountGroupByTime" />
+    <hr />
+    <div class="row justify-content-end">
+        <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
+        <div class="col-2">
+            <div class="input-group">
+                <span class="input-group-text"><FontAwesome :icon="faClock" /></span>
+                <TimeGranularity
+                    v-model="query.allVoteCountGroupByTimeGranularity"
+                    :granularities="['minute', 'hour']"
+                    id="allVoteCountGroupByTimeGranularity" />
+            </div>
+        </div>
+    </div>
+    <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
+    <hr />
+    <ATable
+        :columns="candidatesDetailColumns"
+        :data-source="candidatesDetailData"
+        :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
+        rowKey="candidateIndex">
+        <template #bodyCell="{ column: { dataIndex: column }, value: name }">
+            <template v-if="column === 'candidateName'">
+                <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
+            </template>
+        </template>
+    </ATable>
+</div>
 </template>
 
 <script setup lang="ts">

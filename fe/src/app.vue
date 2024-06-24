@@ -1,10 +1,10 @@
 <template>
-    <Meta charset="utf-8" />
-    <Meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
-    <VueQueryDevtools />
-    <NuxtLayout>
-        <NuxtPage />
-    </NuxtLayout>
+<Meta charset="utf-8" />
+<Meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+<VueQueryDevtools />
+<NuxtLayout>
+    <NuxtPage />
+</NuxtLayout>
 </template>
 
 <script setup lang="ts">

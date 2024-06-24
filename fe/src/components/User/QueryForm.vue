@@ -1,18 +1,18 @@
 <template>
-    <form @submit.prevent="_ => submitQueryForm()" class="row">
-        <SelectUser v-model="selectUser" />
-        <label class="col-2 col-form-label text-end" for="queryGender">性别</label>
-        <div class="col-3">
-            <select v-model="gender" class="form-select" id="queryGender">
-                <option value="default">不限</option>
-                <option value="NULL">NULL</option>
-                <option value="0">未指定（显示为男）</option>
-                <option value="1">男 ♂</option>
-                <option value="2">女 ♀</option>
-            </select>
-        </div>
-        <button type="submit" class="col-auto btn btn-primary">查询</button>
-    </form>
+<form @submit.prevent="_ => submitQueryForm()" class="row">
+    <SelectUser v-model="selectUser" />
+    <label class="col-2 col-form-label text-end" for="queryGender">性别</label>
+    <div class="col-3">
+        <select v-model="gender" class="form-select" id="queryGender">
+            <option value="default">不限</option>
+            <option value="NULL">NULL</option>
+            <option value="0">未指定（显示为男）</option>
+            <option value="1">男 ♂</option>
+            <option value="2">女 ♀</option>
+        </select>
+    </div>
+    <button type="submit" class="col-auto btn btn-primary">查询</button>
+</form>
 </template>
 
 <script setup lang="ts">

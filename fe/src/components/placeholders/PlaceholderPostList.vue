@@ -1,20 +1,20 @@
 <template>
-    <div class="row align-items-center">
-        <template v-if="isLoading">
-            <div class="col"><hr /></div>
-            <div class="w-auto">
-                <picture>
-                    <source :srcset="iconHuajiLoadingSpinnerAvifs" type="image/avif" />
-                    <img :src="iconHuajiLoadingSpinnerGif" />
-                </picture>
-            </div>
-        </template>
+<div class="row align-items-center">
+    <template v-if="isLoading">
         <div class="col"><hr /></div>
-        <div class="w-100" />
-        <div class="col">
-            <img :class="{ animate: isLoading }" :src="placeholderPostList" />
+        <div class="w-auto">
+            <picture>
+                <source :srcset="iconHuajiLoadingSpinnerAvifs" type="image/avif" />
+                <img :src="iconHuajiLoadingSpinnerGif" />
+            </picture>
         </div>
+    </template>
+    <div class="col"><hr /></div>
+    <div class="w-100" />
+    <div class="col">
+        <img :class="{ animate: isLoading }" :src="placeholderPostList" />
     </div>
+</div>
 </template>
 
 <script setup lang="ts">

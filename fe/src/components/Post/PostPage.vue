@@ -1,9 +1,10 @@
 <template>
-    <PageCurrentButton :currentCursor="posts.pages.currentCursor" />
-    <RendererList v-if="renderType === 'list'" :initialPosts="posts" />
-    <RendererTable v-else-if="renderType === 'table'" :posts="posts" />
-    <PageNextButton v-if="isLastPageInPages && !isFetching && hasNextPage"
-                    @click="() => $emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
+<PageCurrentButton :currentCursor="posts.pages.currentCursor" />
+<RendererList v-if="renderType === 'list'" :initialPosts="posts" />
+<RendererTable v-else-if="renderType === 'table'" :posts="posts" />
+<PageNextButton
+    v-if="isLastPageInPages && !isFetching && hasNextPage"
+    @click="() => $emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
 </template>
 
 <script setup lang="ts">

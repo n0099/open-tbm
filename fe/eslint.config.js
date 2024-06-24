@@ -392,7 +392,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/multiline-html-element-content-newline': 'off',
     },
     optin: {
-        'vue/html-indent': ['error', 4],
+        'vue/html-indent': ['error', 4, { baseIndent: 0 }],
         'vue/attribute-hyphenation': ['error', 'never'],
         'vue/attributes-order': ['error', {
             order: [
@@ -411,7 +411,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         }],
         'vue/first-attribute-linebreak': ['error', {
             singleline: 'beside',
-            multiline: 'beside',
+            multiline: 'below',
         }],
         'vue/html-closing-bracket-newline': ['error', {
             singleline: 'never',

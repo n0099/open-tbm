@@ -1,37 +1,42 @@
 <template>
-    <div class="sub-reply-group bs-callout bs-callout-success">
-        <ul class="list-group list-group-flush">
-            <li v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
-                :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
-                class="sub-reply-item list-group-item">
-                <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
-                    <NuxtLink v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
-                              :to="toUserRoute(author.uid)" noPrefetch
-                              class="sub-reply-author text-wrap badge bg-light">
-                        <img :src="toUserPortraitImageUrl(author.portrait)"
-                             loading="lazy" class="tieba-user-portrait-small" />
-                        <span class="mx-2 align-middle link-dark">
-                            {{ renderUsername(subReply.authorUid) }}
-                        </span>
-                        <BadgeUser :user="getUser(subReply.authorUid)"
-                                   :threadAuthorUid="thread.authorUid"
-                                   :replyAuthorUid="reply.authorUid" />
-                    </NuxtLink>
-                    <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
-                        <BadgePostCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
-                        <BadgePostTime postType="楼中楼"
-                                       :parentPost="reply" parentPostIDKey="pid"
-                                       :currentPost="subReply" currentPostIDKey="spid"
-                                       :previousPost="getSiblingSubReply(subReplyGroupIndex, 'previous')"
-                                       :nextPost="getSiblingSubReply(subReplyGroupIndex, 'next')"
-                                       postTimeKey="postedAt" timestampType="发帖时间"
-                                       class="bg-info" />
-                    </div>
-                </template>
-                <PostContentRenderer :content="subReply.content" class="sub-reply-content" />
-            </li>
-        </ul>
-    </div>
+<div class="sub-reply-group bs-callout bs-callout-success">
+    <ul class="list-group list-group-flush">
+        <li
+            v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
+            :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
+            class="sub-reply-item list-group-item">
+            <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
+                <NuxtLink
+                    v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
+                    :to="toUserRoute(author.uid)" noPrefetch
+                    class="sub-reply-author text-wrap badge bg-light">
+                    <img
+                        :src="toUserPortraitImageUrl(author.portrait)"
+                        loading="lazy" class="tieba-user-portrait-small" />
+                    <span class="mx-2 align-middle link-dark">
+                        {{ renderUsername(subReply.authorUid) }}
+                    </span>
+                    <BadgeUser
+                        :user="getUser(subReply.authorUid)"
+                        :threadAuthorUid="thread.authorUid"
+                        :replyAuthorUid="reply.authorUid" />
+                </NuxtLink>
+                <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
+                    <BadgePostCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
+                    <BadgePostTime
+                        postType="楼中楼"
+                        :parentPost="reply" parentPostIDKey="pid"
+                        :currentPost="subReply" currentPostIDKey="spid"
+                        :previousPost="getSiblingSubReply(subReplyGroupIndex, 'previous')"
+                        :nextPost="getSiblingSubReply(subReplyGroupIndex, 'next')"
+                        postTimeKey="postedAt" timestampType="发帖时间"
+                        class="bg-info" />
+                </div>
+            </template>
+            <PostContentRenderer :content="subReply.content" class="sub-reply-content" />
+        </li>
+    </ul>
+</div>
 </template>
 
 <script setup lang="ts">

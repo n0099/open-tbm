@@ -1,13 +1,14 @@
 <template>
-    <span :title="`本${postType}${timestampType}：\n${
-              current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
-          class="ms-1 fw-normal badge rounded-pill">
-        <component :is="$slots.default" />
-        {{ current.toLocaleString({
-            year: 'numeric',
-            ...objectWithSameValues(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
-        }) }}
-    </span>
+<span
+    :title="`本${postType}${timestampType}：\n${
+        current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
+    class="ms-1 fw-normal badge rounded-pill">
+    <component :is="$slots.default" />
+    {{ current.toLocaleString({
+        year: 'numeric',
+        ...objectWithSameValues(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
+    }) }}
+</span>
 </template>
 
 <script setup lang="ts" generic="

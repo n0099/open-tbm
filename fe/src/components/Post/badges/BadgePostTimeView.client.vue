@@ -1,5 +1,6 @@
 <template>
-    <span :ref="el => initialTippy([el as Element])" :data-tippy-content="`
+<span
+    :ref="el => initialTippy([el as Element])" :data-tippy-content="`
             本${postType}${timestampType}：<br>
             ${current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
             ${relativeTo === undefined || relativeToText === undefined
@@ -8,10 +9,10 @@
                     ${relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
                     相差 ${current.diff(relativeTo).rescale().toHuman()}`}
           `"
-          class="ms-1 fw-normal badge rounded-pill">
-        <component :is="$slots.default" />
-        {{ current.toRelative({ base: relativeTo, round: false }) }}
-    </span>
+    class="ms-1 fw-normal badge rounded-pill">
+    <component :is="$slots.default" />
+    {{ current.toRelative({ base: relativeTo, round: false }) }}
+</span>
 </template>
 
 <script setup lang="ts" generic="

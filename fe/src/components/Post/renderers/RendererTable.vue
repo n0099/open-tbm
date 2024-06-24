@@ -1,83 +1,92 @@
 <template>
-    <ATable :columns="threadColumns" :dataSource="threads" defaultExpandAllRows
-            expandRowByClick :pagination="false"
-            rowKey="tid" size="middle" class="render-table-thread">
-        <template #bodyCell="{ column: { dataIndex: column }, record }">
-            <template v-if="column === 'tid'">
-                <template v-for="tid in [(record as Thread).tid]" :key="tid">
-                    <NuxtLink :to="{ name: 'posts/tid', params: { tid } }">{{ tid }}</NuxtLink>
-                </template>
-            </template>
-            <template v-else-if="column === 'titleWithTag'">
-                <template v-for="thread in [record as Thread]" :key="thread.tid">
-                    <BadgeThread :thread="thread" />
-                    <span>{{ thread.title }}</span>
-                </template>
-            </template>
-            <template v-else-if="column === 'author'">
-                <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
-                    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                        <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                             class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                    </NuxtLink>
-                    <BadgeUser :user="user" />
-                </template>
-            </template>
-            <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
-                <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
-                    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                        <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                             class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                    </NuxtLink>
-                </template>
+<ATable
+    :columns="threadColumns" :dataSource="threads" defaultExpandAllRows
+    expandRowByClick :pagination="false"
+    rowKey="tid" size="middle" class="render-table-thread">
+    <template #bodyCell="{ column: { dataIndex: column }, record }">
+        <template v-if="column === 'tid'">
+            <template v-for="tid in [(record as Thread).tid]" :key="tid">
+                <NuxtLink :to="{ name: 'posts/tid', params: { tid } }">{{ tid }}</NuxtLink>
             </template>
         </template>
-        <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
-            <span v-if="repliesKeyByTid[tid] === undefined">无子回复帖</span>
-            <ATable v-else :columns="replyColumns" :dataSource="repliesKeyByTid[tid]"
-                    defaultExpandAllRows expandRowByClick
-                    :pagination="false" rowKey="pid" size="middle">
-                <template #bodyCell="{ column: { dataIndex: column }, record }">
-                    <template v-if="column === 'author'">
-                        <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
-                            <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                                <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                                     class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                            </NuxtLink>
-                            <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
-                        </template>
+        <template v-else-if="column === 'titleWithTag'">
+            <template v-for="thread in [record as Thread]" :key="thread.tid">
+                <BadgeThread :thread="thread" />
+                <span>{{ thread.title }}</span>
+            </template>
+        </template>
+        <template v-else-if="column === 'author'">
+            <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
+                <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
+                    <img
+                        :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
+                        class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
+                </NuxtLink>
+                <BadgeUser :user="user" />
+            </template>
+        </template>
+        <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
+            <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
+                <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
+                    <img
+                        :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
+                        class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
+                </NuxtLink>
+            </template>
+        </template>
+    </template>
+    <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
+        <span v-if="repliesKeyByTid[tid] === undefined">无子回复帖</span>
+        <ATable
+            v-else :columns="replyColumns" :dataSource="repliesKeyByTid[tid]"
+            defaultExpandAllRows expandRowByClick
+            :pagination="false" rowKey="pid" size="middle">
+            <template #bodyCell="{ column: { dataIndex: column }, record }">
+                <template v-if="column === 'author'">
+                    <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
+                        <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
+                            <img
+                                :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
+                                class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
+                        </NuxtLink>
+                        <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
                     </template>
                 </template>
-                <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                    <PostContentRenderer :content="content"
-                                         :class="{
-                                             'd-inline-block': subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'
-                                         }" />
-                    <ATable v-if="subRepliesKeyByPid[pid] !== undefined"
-                            :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
-                            defaultExpandAllRows expandRowByClick
-                            :pagination="false" rowKey="spid" size="middle">
-                        <template #bodyCell="{ column: { dataIndex: column }, record }">
-                            <template v-if="column === 'author'">
-                                <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
-                                    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                                        <img :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                                             class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                                    </NuxtLink>
-                                    <BadgeUser :user="user"
-                                               :threadAuthorUid="threadAuthorUid"
-                                               :replyAuthorUid="replyAuthorUid" />
-                                </template>
+            </template>
+            <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
+                <PostContentRenderer
+                    :content="content"
+                    :class="{
+                        'd-inline-block': subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'
+                    }" />
+                <ATable
+                    v-if="subRepliesKeyByPid[pid] !== undefined"
+                    :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
+                    defaultExpandAllRows expandRowByClick
+                    :pagination="false" rowKey="spid" size="middle">
+                    <template #bodyCell="{ column: { dataIndex: column }, record }">
+                        <template v-if="column === 'author'">
+                            <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
+                                <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
+                                    <img
+                                        :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
+                                        class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
+                                </NuxtLink>
+                                <BadgeUser
+                                    :user="user"
+                                    :threadAuthorUid="threadAuthorUid"
+                                    :replyAuthorUid="replyAuthorUid" />
                             </template>
                         </template>
-                        <template #expandedRowRender="{ record: { content: subReplyContent } }">
-                            <PostContentRenderer :content="subReplyContent" class="d-inline-block" />
-                        </template>
-                    </ATable>
-                </template>
-            </ATable>
-        </template>
-    </ATable>
+                    </template>
+                    <template #expandedRowRender="{ record: { content: subReplyContent } }">
+                        <PostContentRenderer :content="subReplyContent" class="d-inline-block" />
+                    </template>
+                </ATable>
+            </template>
+        </ATable>
+    </template>
+</ATable>
 </template>
 
 <script setup lang="ts">

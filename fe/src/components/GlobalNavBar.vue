@@ -1,36 +1,39 @@
 <template>
-    <nav class="navbar navbar-expand-lg shadow-sm bg-light">
-        <div class="container-fluid" id="nav">
-            <NuxtLink to="/" noPrefetch class="navbar-brand">open-tbm @ {{ config.public.instanceName }}</NuxtLink>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
-                    aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon" />
-            </button>
-            <div class="navbar-collapse collapse" id="navbar">
-                <ul class="navbar-nav">
-                    <template v-for="(nav, _k) in navs" :key="_k">
-                        <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
-                            </a>
-                            <div class="dropdown-menu">
-                                <NuxtLink v-for="r in nav.routes" :key="r.route"
-                                          :to="{ name: r.route }" noPrefetch class="nav-link">
-                                    <FontAwesome v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
-                                </NuxtLink>
-                            </div>
-                        </li>
-                        <li v-else class="nav-item" :class="{ action: nav.isActive }">
-                            <NuxtLink :to="{ name: nav.route }" noPrefetch class="nav-link">
-                                <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
+<nav class="navbar navbar-expand-lg shadow-sm bg-light">
+    <div class="container-fluid" id="nav">
+        <NuxtLink to="/" noPrefetch class="navbar-brand">open-tbm @ {{ config.public.instanceName }}</NuxtLink>
+        <button
+            class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
+            aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon" />
+        </button>
+        <div class="navbar-collapse collapse" id="navbar">
+            <ul class="navbar-nav">
+                <template v-for="(nav, _k) in navs" :key="_k">
+                    <li v-if="'routes' in nav" class="nav-item dropdown" :class="{ active: nav.isActive }">
+                        <a
+                            class="nav-link dropdown-toggle" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
+                        </a>
+                        <div class="dropdown-menu">
+                            <NuxtLink
+                                v-for="r in nav.routes" :key="r.route"
+                                :to="{ name: r.route }" noPrefetch class="nav-link">
+                                <FontAwesome v-if="r.icon !== undefined" :icon="r.icon" /> {{ r.title }}
                             </NuxtLink>
-                        </li>
-                    </template>
-                </ul>
-            </div>
+                        </div>
+                    </li>
+                    <li v-else class="nav-item" :class="{ action: nav.isActive }">
+                        <NuxtLink :to="{ name: nav.route }" noPrefetch class="nav-link">
+                            <FontAwesome v-if="nav.icon !== undefined" :icon="nav.icon" /> {{ nav.title }}
+                        </NuxtLink>
+                    </li>
+                </template>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 </template>
 
 <script setup lang="ts">

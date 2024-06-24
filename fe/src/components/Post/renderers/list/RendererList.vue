@@ -1,9 +1,10 @@
 <template>
-    <div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
-        <ThreadItem v-for="(thread, index) in posts.threads" :key="thread.tid"
-                    :previousThread="posts.threads[index - 1]" :thread="thread"
-                    :nextThread="posts.threads[index + 1]" />
-    </div>
+<div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
+    <ThreadItem
+        v-for="(thread, index) in posts.threads" :key="thread.tid"
+        :previousThread="posts.threads[index - 1]" :thread="thread"
+        :nextThread="posts.threads[index + 1]" />
+</div>
 </template>
 
 <script setup lang="ts">
