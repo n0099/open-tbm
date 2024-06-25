@@ -39,7 +39,6 @@ export default defineNuxtConfig({
     },
     experimental: {
         viewTransition: true,
-        writeEarlyHints: true,
         respectNoSSRHeader: true,
         componentIslands: true
     },

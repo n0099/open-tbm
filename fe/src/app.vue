@@ -13,6 +13,7 @@ import { VueQueryDevtools } from '@tanstack/vue-query-devtools';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'noty/lib/noty.css';
 import 'noty/lib/themes/mint.css';
+import nProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
 const config = useRuntimeConfig().public;
@@ -25,8 +26,8 @@ useHead({
 });
 
 if (import.meta.client) {
+    nProgress.configure({ trickleSpeed: 200 });
     await import('bootstrap');
-    (await import('nprogress')).configure({ trickleSpeed: 200 });
     if (import.meta.dev) {
         await import('@/stats');
         await import('@/checkCSS');

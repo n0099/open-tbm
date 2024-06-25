@@ -3,12 +3,14 @@ import 'tippy.js/animations/perspective.css';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
 
-tippy.setDefaultProps({
-    animation: 'perspective',
-    interactive: true,
-    theme: 'light',
-    maxWidth: 'none'
-});
+if (import.meta.client) {
+    tippy.setDefaultProps({
+        animation: 'perspective',
+        interactive: true,
+        theme: 'light',
+        maxWidth: 'none'
+    });
+};
 
 export default defineNuxtPlugin(nuxt => {
     nuxt.vueApp.directive<HTMLElement, string>('tippy', {

@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import iconLoadingBlock from 'assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
-import nprogress from 'nprogress';
+import nProgress from 'nprogress';
 
 const isRouteUpdating = useRouteUpdatingStore().isUpdating;
 const config = useRuntimeConfig().public;
@@ -49,9 +49,9 @@ const noScriptStyle = `<style>
 useHead({ noscript: [{ innerHTML: noScriptStyle }] });
 const appPointerEvents = ref('none');
 if (import.meta.client) {
-    nprogress.start();
+    nProgress.start();
     onNuxtReady(() => {
-        nprogress.done();
+        nProgress.done();
         appPointerEvents.value = 'unset';
     });
 }

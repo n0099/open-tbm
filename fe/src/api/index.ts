@@ -1,6 +1,6 @@
 import type { PublicRuntimeConfig } from 'nuxt/schema';
 import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
-import nprogress from 'nprogress';
+import nProgress from 'nprogress';
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
@@ -25,7 +25,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
     signal?: AbortSignal
 ): Promise<TResponse> => {
     if (import.meta.client) {
-        nprogress.start();
+        nProgress.start();
         document.body.style.cursor = 'progress';
     }
     try {
@@ -46,7 +46,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
         throw e;
     } finally {
         if (import.meta.client) {
-            nprogress.done();
+            nProgress.done();
             document.body.style.cursor = '';
         }
     }
