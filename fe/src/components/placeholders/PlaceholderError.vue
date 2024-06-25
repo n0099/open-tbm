@@ -29,7 +29,14 @@
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
-defineProps<{ error: ApiErrorClass | null }>();
+const props = defineProps<{ error: ApiErrorClass | null }>();
+const event = useRequestEvent();
+if (event) {
+    if (props.error instanceof FetchError)
+        setResponseStatus(event, props.error.statusCode, props.error.statusMessage);
+    if (props.error instanceof ApiResponseError)
+        setResponseStatus(event, props.error.fetchError?.statusCode ?? 200);
+}
 </script>
 
 <style scoped>

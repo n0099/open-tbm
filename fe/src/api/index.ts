@@ -7,9 +7,10 @@ import _ from 'lodash';
 export class ApiResponseError extends Error {
     public constructor(
         public readonly errorCode: number,
-        public readonly errorInfo: Record<string, unknown[]> | string
+        public readonly errorInfo: Record<string, unknown[]> | string,
+        public readonly fetchError?: FetchError
     ) {
-        super(JSON.stringify({ errorCode, errorInfo }));
+        super(JSON.stringify({ fetchError, errorCode, errorInfo }));
     }
 }
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -42,7 +43,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
         ) as TResponse;
     } catch (e: unknown) {
         if (e instanceof FetchError && isApiError(e.data))
-            throw new ApiResponseError(e.data.errorCode, e.data.errorInfo);
+            throw new ApiResponseError(e.data.errorCode, e.data.errorInfo, e);
         throw e;
     } finally {
         if (import.meta.client) {
