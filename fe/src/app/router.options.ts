@@ -59,6 +59,9 @@ export default {
         ];
     },
     async scrollBehavior(to, from, savedPosition) {
+        if (savedPosition !== null && savedPosition.top !== 0)
+            return savedPosition;
+
         const routeScrollBehavior = useRouteScrollBehaviorStore().get;
         if (routeScrollBehavior !== undefined) {
             const ret: ReturnType<RouterScrollBehavior> | undefined =
@@ -73,10 +76,10 @@ export default {
             assertRouteNameIsStr(to.name);
             assertRouteNameIsStr(from.name);
 
-            if (isPathsFirstDirectorySame(to.path, from.path))
+            if (!isPathsFirstDirectorySame(to.path, from.path))
                 return { top: 0 };
         }
 
-        return savedPosition ?? false;
+        return false;
     }
 } as RouterConfig;

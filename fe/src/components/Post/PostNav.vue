@@ -67,6 +67,8 @@ const noScriptStyle = `<style>
     }
 </style>`; // https://github.com/nuxt/nuxt/issues/13848
 useHead({ noscript: [{ innerHTML: noScriptStyle }] });
+const postNavDisplay = ref('none'); // using media query in css instead of js before hydrate
+onMounted(() => { postNavDisplay.value = 'unset' });
 
 const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
 const routeHash = (tid: Tid | string | null, pid?: Pid | string) => `#${pid ?? (tid === null ? '' : `t${tid}`)}`;
@@ -216,6 +218,9 @@ watchEffect(() => {
 }
 
 @media (max-width: 900px) {
+    .post-nav {
+        display: v-bind(postNavDisplay);
+    }
     .post-nav[aria-expanded=true], .post-nav[aria-expanded=true] + .post-nav-expand {
         position: fixed;
         z-index: 1040;

@@ -17,8 +17,9 @@ provideUsers(props.initialPosts.users);
 export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
 const posts = computed(() => {
-    // https://github.com/microsoft/TypeScript/issues/33591
-    const newPosts = refDeepClone(props.initialPosts) as
+    // https://github.com/TanStack/query/pull/6657
+    // eslint-disable-next-line unicorn/prefer-structured-clone
+    const newPosts = _.cloneDeep(props.initialPosts) as // https://github.com/microsoft/TypeScript/issues/33591
         Modify<ApiPosts['response'], { threads: Array<ThreadWithGroupedSubReplies<SubReply>> }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {
