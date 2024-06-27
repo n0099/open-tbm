@@ -1,4 +1,5 @@
 import type { LocationAsRelativeRaw } from 'vue-router';
+import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
 export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
@@ -76,3 +77,12 @@ export const objectWithSameValues = <const TKeys extends string[], const TValue>
 // https://gist.github.com/paulirish/5d52fb081b3570c81e3a#calling-getcomputedstyle
 export const convertRemToPixels = (rem: number) =>
     rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+export const responseWithError = (error: ApiErrorClass | null) => {
+    const event = useRequestEvent();
+    if (event) {
+        if (error instanceof FetchError)
+            setResponseStatus(event, error.statusCode, error.statusMessage);
+        if (error instanceof ApiResponseError)
+            setResponseStatus(event, error.fetchError?.statusCode ?? 200);
+    }
+};

@@ -70,14 +70,14 @@ useHead({
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;
-watch(isFetching, () => {
+watchSyncEffect(() => {
     if (!isFetching.value)
         return;
     if (import.meta.server)
         queryStartedAtSSR.value = Date.now();
     if (import.meta.client)
         queryStartedAt = Date.now();
-}, { flush: 'sync' });
+});
 watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
     const maxUpdatedAt = Math.max(...updatedAt);
     if (maxUpdatedAt === 0) // just starts to fetch, defer watching to next time
@@ -104,6 +104,12 @@ watch(isFetched, async () => {
         scrollToPostListItemByRoute(route);
     }
 });
+if (import.meta.server) {
+    const nuxt = useNuxtApp();
+    watchOnce(error, () => {
+        void nuxt.runWithContext(() => { responseWithError(error.value) });
+    }, { flush: 'sync' });
+}
 
 const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
     const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
