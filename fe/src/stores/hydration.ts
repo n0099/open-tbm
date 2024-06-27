@@ -18,7 +18,7 @@ export const useHydrationStore = defineStore('hydration', () => {
 
         return isHydratingState.value;
     };
-    const isHydratingOrSSR = () => !import.meta.client || isHydrating();
+    const isHydratingOrSSR = () => import.meta.server || isHydrating();
 
     return { isHydrating, isHydratingOrSSR };
 });

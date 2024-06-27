@@ -1,12 +1,13 @@
 <template>
 <div v-viewer.static>
-    <DefineUGCImage v-slot="{ src }">
+    <!-- eslint-disable-next-line vue/no-unused-vars -->
+    <DefineUGCImage v-slot="{ $slots, src, ...attrs }">
         <NuxtLink v-if="useHydrationStore().isHydratingOrSSR()" :to="src" target="_blank" class="tieba-ugc-image">
             <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
-            <img :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="$attrs" />
+            <img :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
         </NuxtLink>
         <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
-        <img v-else :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="$attrs" />
+        <img v-else :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
     </DefineUGCImage>
     <div v-for="(i, index) in content" :key="index" class="post-content-item">
         <NewlineToBr is="span" v-if="i.type === undefined" :text="i.text" />

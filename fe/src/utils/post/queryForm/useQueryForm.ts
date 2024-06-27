@@ -59,7 +59,8 @@ const useQueryForm = <
         /** remove subParam.not: false, which previously added by {@link fillParamDefaultValue()} */
         if (defaultParam.subParam !== undefined)
             defaultParam.subParam.not ??= false;
-        const newParam: Partial<UnknownParam> = refDeepClone(param); // prevent mutating origin param
+        // eslint-disable-next-line unicorn/prefer-structured-clone
+        const newParam: Partial<UnknownParam> = _.cloneDeep(param); // prevent mutating origin param
         /** number will consider as empty in {@link _.isEmpty()} */
         // to prevent this we use complex short circuit evaluate expression
         if (!(_.isNumber(newParam.value) || !_.isEmpty(newParam.value))
