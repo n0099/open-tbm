@@ -7,7 +7,7 @@
             <AMenuItem key="table">表格视图</AMenuItem>
         </AMenu>
     </div>
-    <div v-if="!(data === undefined || _.isEmpty(data.pages))" class="container-fluid">
+    <div v-if="!(data === undefined || _.isEmpty(data.pages) || _.isEmpty(route.params))" class="container-fluid">
         <div class="row flex-nowrap">
             <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
@@ -41,7 +41,7 @@ const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref(false);
 const initialPageCursor = ref<Cursor>('');
 const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdatedAt, fetchNextPage, isFetchingNextPage, hasNextPage } =
-    useApiPosts(queryParam, { initialPageParam: initialPageCursor });
+    useApiPosts(queryParam, { initialPageParam: initialPageCursor, enabled: shouldFetch });
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormDeps = getQueryFormDeps();
@@ -70,23 +70,21 @@ useHead({
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;
-watchEffect(() => {
+watch(isFetching, () => {
     if (!isFetching.value)
         return;
     if (import.meta.server)
         queryStartedAtSSR.value = Date.now();
     if (import.meta.client)
         queryStartedAt = Date.now();
-});
+}, { flush: 'sync' });
 watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
     const maxUpdatedAt = Math.max(...updatedAt);
     if (maxUpdatedAt === 0) // just starts to fetch, defer watching to next time
         return;
-    const isQueriedBySSR = queryStartedAtSSR.value < queryStartedAt;
-    if (isQueriedBySSR) {
+    const isQueriedBySSR = queryStartedAtSSR.value !== 0 && queryStartedAt === 0;
+    if (isQueriedBySSR)
         queryStartedAt = queryStartedAtSSR.value;
-        queryStartedAtSSR.value = Infinity;
-    }
     const isQueryCached = maxUpdatedAt < queryStartedAt;
     const networkDuration = isQueryCached ? 0 : maxUpdatedAt - queryStartedAt;
     await nextTick(); // wait for child components to finish dom update

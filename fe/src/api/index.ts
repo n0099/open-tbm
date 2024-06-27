@@ -1,5 +1,5 @@
 import type { PublicRuntimeConfig } from 'nuxt/schema';
-import type { InfiniteData, QueryKey, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
+import type { InfiniteData, QueryKey, QueryObserverOptions, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
 import nProgress from 'nprogress';
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
@@ -105,7 +105,10 @@ const useApi = <
             ),
             ...options
         });
-        onServerPrefetch(ret.suspense);
+        onServerPrefetch(async () => { // https://github.com/TanStack/query/issues/7609
+            if (toValue(toValue(options as QueryObserverOptions<TResponse, ApiErrorClass> | undefined)?.enabled) ?? true)
+                await ret.suspense();
+        });
 
         return ret;
     };
@@ -140,7 +143,10 @@ const useApiWithCursor = <
             initialPageParam: '',
             ...options
         });
-        onServerPrefetch(ret.suspense);
+        onServerPrefetch(async () => { // https://github.com/TanStack/query/issues/7609
+            if (toValue(toValue(options)?.enabled) ?? true)
+                await ret.suspense();
+        });
 
         return ret;
     };
