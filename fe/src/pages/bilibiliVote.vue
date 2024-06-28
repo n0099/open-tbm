@@ -27,7 +27,7 @@
         <div class="col-2">
             <div class="input-group">
                 <span class="input-group-text"><FontAwesome :icon="faCalendarAlt" /></span>
-                <TimeGranularity
+                <WidgetTimeGranularity
                     v-model="query.top5CandidateCountGroupByTimeGranularity"
                     :granularities="['minute', 'hour']"
                     id="top5CandidateCountGroupByTimeGranularity" />
@@ -41,7 +41,7 @@
         <div class="col-2">
             <div class="input-group">
                 <span class="input-group-text"><FontAwesome :icon="faClock" /></span>
-                <TimeGranularity
+                <WidgetTimeGranularity
                     v-model="query.allVoteCountGroupByTimeGranularity"
                     :granularities="['minute', 'hour']"
                     id="allVoteCountGroupByTimeGranularity" />

@@ -11,7 +11,7 @@
         </template>
         <template v-else-if="column === 'titleWithTag'">
             <template v-for="thread in [record as Thread]" :key="thread.tid">
-                <BadgeThread :thread="thread" />
+                <PostBadgeThread :thread="thread" />
                 <span>{{ thread.title }}</span>
             </template>
         </template>
@@ -22,7 +22,7 @@
                         :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                         class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                 </NuxtLink>
-                <BadgeUser :user="user" />
+                <PostBadgeUser :user="user" />
             </template>
         </template>
         <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
@@ -49,12 +49,12 @@
                                 :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                 class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                         </NuxtLink>
-                        <BadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
+                        <PostBadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
                     </template>
                 </template>
             </template>
             <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                <PostContentRenderer
+                <PostRendererContent
                     :content="content"
                     :class="{
                         'd-inline-block': subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'
@@ -72,7 +72,7 @@
                                         :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                         class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                                 </NuxtLink>
-                                <BadgeUser
+                                <PostBadgeUser
                                     :user="user"
                                     :threadAuthorUid="threadAuthorUid"
                                     :replyAuthorUid="replyAuthorUid" />
@@ -80,7 +80,7 @@
                         </template>
                     </template>
                     <template #expandedRowRender="{ record: { content: subReplyContent } }">
-                        <PostContentRenderer :content="subReplyContent" class="d-inline-block" />
+                        <PostRendererContent :content="subReplyContent" class="d-inline-block" />
                     </template>
                 </ATable>
             </template>

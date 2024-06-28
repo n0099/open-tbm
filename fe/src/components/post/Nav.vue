@@ -133,8 +133,8 @@ const scrollStop = _.debounce(() => {
     ).el;
 
     const viewportTopmostPostElement = {
-        thread: findTopmostElement(elementRefsStore.get('<RendererList>.thread-title')),
-        reply: findTopmostElement(elementRefsStore.get('<RendererList>.reply-title'), getReplyTitleTopOffset())
+        thread: findTopmostElement(elementRefsStore.get('<PostRendererList>.thread-title')),
+        reply: findTopmostElement(elementRefsStore.get('<PostRendererList>.reply-title'), getReplyTitleTopOffset())
     };
     const viewportTopmostPostID = _.mapValues(viewportTopmostPostElement, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));

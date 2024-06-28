@@ -16,14 +16,14 @@
                     <span class="mx-2 align-middle link-dark">
                         {{ renderUsername(subReply.authorUid) }}
                     </span>
-                    <BadgeUser
+                    <PostBadgeUser
                         :user="getUser(subReply.authorUid)"
                         :threadAuthorUid="thread.authorUid"
                         :replyAuthorUid="reply.authorUid" />
                 </NuxtLink>
                 <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
-                    <BadgePostCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
-                    <BadgePostTime
+                    <PostBadgeCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
+                    <PostBadgeTime
                         postType="楼中楼"
                         :parentPost="reply" parentPostIDKey="pid"
                         :currentPost="subReply" currentPostIDKey="spid"
@@ -33,7 +33,7 @@
                         class="bg-info" />
                 </div>
             </template>
-            <PostContentRenderer :content="subReply.content" class="sub-reply-content" />
+            <PostRendererContent :content="subReply.content" class="sub-reply-content" />
         </li>
     </ul>
 </div>

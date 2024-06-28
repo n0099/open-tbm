@@ -5,13 +5,13 @@
         <div class="col-3">
             <div class="input-group">
                 <span class="input-group-text"><FontAwesome :icon="faFilter" /></span>
-                <SelectForum
+                <WidgetSelectForum
                     v-model.number="uniqueParams.fid.value"
                     :class="{ 'is-invalid': isFidInvalid }" id="paramFid">
                     <template #indicators="{ renderer }">
                         <span class="input-group-text"><RenderFunction :renderer="renderer" /></span>
                     </template>
-                </SelectForum>
+                </WidgetSelectForum>
             </div>
         </div>
         <label class="col-1 col-form-label text-center">帖子类型</label>
@@ -70,7 +70,7 @@
             <button @click="_ => deleteParam(pI)" class="btn btn-link" type="button">
                 <FontAwesome :icon="faTimes" />
             </button>
-            <SelectParam
+            <PostQueryFormWidgetSelectParam
                 @paramChange="e => changeParam(pI, e)" :currentParam="p.name"
                 class="select-param" :class="{
                     'is-invalid': invalidParamsIndex.includes(pI)
@@ -86,8 +86,8 @@
                 </div>
             </div>
             <template v-if="isPostIDParam(p)">
-                <SelectRange v-model="p.subParam.range" />
-                <InputNumericParam
+                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <PostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="getPostIDParamPlaceholders(p)" />
@@ -101,14 +101,14 @@
                 <input
                     v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
                     type="text" class="form-control" required />
-                <InputTextMatchParam
+                <PostQueryFormWidgetInputTextMatchParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />
             </template>
             <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
-                <SelectRange v-model="p.subParam.range" />
-                <InputNumericParam
+                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <PostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :paramIndex="pI"
@@ -137,8 +137,8 @@
                 </div>
             </template>
             <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
-                <SelectRange v-model="p.subParam.range" />
-                <InputNumericParam
+                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <PostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="uidParamsPlaceholder" />
@@ -159,8 +159,8 @@
                 </select>
             </template>
             <template v-if="p.name === 'authorExpGrade'">
-                <SelectRange v-model="p.subParam.range" />
-                <InputNumericParam
+                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <PostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
@@ -171,7 +171,7 @@
         <button class="add-param-button col-auto btn btn-link disabled" type="button">
             <FontAwesome :icon="faPlus" />
         </button>
-        <SelectParam :key="params.length" @paramChange="e => addParam(e)" currentParam="add" />
+        <PostQueryFormWidgetSelectParam :key="params.length" @paramChange="e => addParam(e)" currentParam="add" />
     </div>
     <div class="row mt-3">
         <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
@@ -183,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-import { inputTextMatchParamPlaceholder } from './widgets/InputTextMatchParam.vue';
+import { inputTextMatchParamPlaceholder } from './widget/InputTextMatchParam.vue';
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
@@ -228,7 +228,7 @@ const currentQueryTypeDescription = computed(() => {
 });
 
 const queryFormSubmit = async () => useTriggerRouteUpdateStore()
-    .push('<QueryForm>@submit')({ ...generateRoute(), force: true });
+    .push('<PostQueryForm>@submit')({ ...generateRoute(), force: true });
 
 watch(() => uniqueParams.value.postTypes.value, (to, from) => {
     if (_.isEmpty(to))

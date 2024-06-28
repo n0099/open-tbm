@@ -1,17 +1,17 @@
 <template>
 <div :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
     <div
-        :ref="el => elementRefsStore.pushOrClear('<RendererList>.thread-title', el as Element | null)"
+        :ref="el => elementRefsStore.pushOrClear('<PostRendererList>.thread-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
         class="thread-title shadow-sm card-header sticky-top">
         <div class="thread-title-inline-start row flex-nowrap">
             <div class="thread-title-inline-start-title-wrapper col-auto flex-shrink-1 w-100 h-100 d-flex">
-                <BadgeThread :thread="thread" />
+                <PostBadgeThread :thread="thread" />
                 <h6 class="thread-title-inline-start-title overflow-hidden text-nowrap">{{ thread.title }}</h6>
             </div>
             <div class="col-auto badge bg-light fs-6 p-1 pt-0 pe-2" role="group">
-                <BadgePostCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
-                <BadgePostTime
+                <PostBadgeCommon :post="thread" postIDKey="tid" postTypeText="主题帖" />
+                <PostBadgeTime
                     postType="主题帖" currentPostIDKey="tid"
                     postTimeKey="postedAt" timestampType="发帖时间"
                     :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
@@ -57,7 +57,7 @@
                     <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
                     <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
                 </NuxtLink>
-                <BadgeUser
+                <PostBadgeUser
                     v-if="getUser(thread.authorUid).currentForumModerator !== null"
                     :user="getUser(thread.authorUid)" class="fs-.75 ms-1" />
                 <template v-if="thread.latestReplierUid === null">
@@ -71,11 +71,11 @@
                         <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                         <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
                     </NuxtLink>
-                    <BadgeUser
+                    <PostBadgeUser
                         v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
                         :user="getUser(thread.latestReplierUid)" class="fs-.75 ms-1" />
                 </template>
-                <BadgePostTime
+                <PostBadgeTime
                     postType="主题帖" currentPostIDKey="tid"
                     postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
                     :previousPost="previousThread" :currentPost="thread" :nextPost="nextThread"
@@ -83,7 +83,7 @@
             </div>
         </div>
     </div>
-    <ReplyItem
+    <PostRendererListReply
         v-for="(reply, index) in thread.replies" :key="reply.pid"
         :previousReply="thread.replies[index - 1]" :reply="reply"
         :nextReply="thread.replies[index + 1]" :thread="thread" />
@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies } from './RendererList.vue';
+import type { ThreadWithGroupedSubReplies } from './List.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 

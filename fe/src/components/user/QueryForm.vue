@@ -1,6 +1,6 @@
 <template>
 <form @submit.prevent="_ => submitQueryForm()" class="row">
-    <SelectUser v-model="selectUser" />
+    <WidgetSelectUser v-model="selectUser" />
     <label class="col-2 col-form-label text-end" for="queryGender">性别</label>
     <div class="col-3">
         <select v-model="gender" class="form-select" id="queryGender">

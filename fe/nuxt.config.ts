@@ -7,7 +7,6 @@ export default defineNuxtConfig({
     devtools: { enabled: true },
     srcDir: 'src',
     imports: { dirs: ['api/**', 'utils/**'] },
-    components: [{ path: '@/components', pathPrefix: false }],
     modules: [
         '@nuxt/eslint',
         '@pinia/nuxt',

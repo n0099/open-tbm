@@ -1,6 +1,6 @@
 <template>
 <ClientOnly>
-    <BadgePostTimeView
+    <PostBadgeTimeView
         v-if="previousTime !== undefined && previousTime < currentTime"
         @mouseenter="() => props.previousPost !== undefined
             && highlightPostStore.set(props.previousPost, props.currentPostIDKey)"
@@ -9,8 +9,8 @@
         :relativeToText="`相对于上一${postType}${timestampType}`"
         :postType="props.postType" :timestampType="props.timestampType" v-bind="$attrs">
         <FontAwesome :icon="faChevronUp" class="align-bottom" />
-    </BadgePostTimeView>
-    <BadgePostTimeView
+    </PostBadgeTimeView>
+    <PostBadgeTimeView
         v-else-if="nextTime !== undefined && nextTime < currentTime"
         @mouseenter="() => props.nextPost !== undefined
             && highlightPostStore.set(props.nextPost, props.currentPostIDKey)"
@@ -19,8 +19,8 @@
         :relativeToText="`相对于下一${postType}${timestampType}`"
         :postType="props.postType" :timestampType="props.timestampType" v-bind="$attrs">
         <FontAwesome :icon="faChevronDown" class="align-bottom" />
-    </BadgePostTimeView>
-    <BadgePostTimeView
+    </PostBadgeTimeView>
+    <PostBadgeTimeView
         v-else-if="parentTime !== undefined && parentTime !== currentTime"
         @mouseenter="() => props.parentPost !== undefined
             && props.parentPostIDKey !== undefined
@@ -30,9 +30,9 @@
         :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(props.postType) - 1]}${timestampType}`"
         :postType="props.postType" :timestampType="props.timestampType" v-bind="$attrs">
         <FontAwesome :icon="faAnglesUp" class="align-bottom" />
-    </BadgePostTimeView>
+    </PostBadgeTimeView>
 </ClientOnly>
-<BadgePostTimeView
+<PostBadgeTimeView
     :current="currentDateTime" :postType="props.postType"
     :timestampType="props.timestampType" v-bind="$attrs" />
 </template>

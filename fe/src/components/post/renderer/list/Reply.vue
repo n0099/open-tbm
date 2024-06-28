@@ -1,7 +1,7 @@
 <template>
 <div :data-post-id="reply.pid" :id="reply.pid.toString()">
     <div
-        :ref="el => elementRefsStore.pushOrClear('<RendererList>.reply-title', el as Element | null)"
+        :ref="el => elementRefsStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
         <div class="d-inline-flex gap-1 fs-5">
@@ -17,8 +17,8 @@
             -->
         </div>
         <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
-            <BadgePostCommon :post="reply" postIDKey="pid" postTypeText="回复贴" />
-            <BadgePostTime
+            <PostBadgeCommon :post="reply" postIDKey="pid" postTypeText="回复贴" />
+            <PostBadgeTime
                 postType="回复贴"
                 currentPostIDKey="pid" parentPostIDKey="tid" :parentPost="thread"
                 postTimeKey="postedAt" timestampType="发帖时间"
@@ -37,12 +37,12 @@
                 <p v-if="author.name !== null" class="mb-0">{{ author.name }}</p>
                 <p v-if="author.displayName !== null">{{ author.displayName }}</p>
             </NuxtLink>
-            <BadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
+            <PostBadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
         </div>
         <div class="col me-2 px-1 border-start overflow-auto">
-            <PostContentRenderer :content="reply.content" class="reply-content p-2" />
+            <PostRendererContent :content="reply.content" class="reply-content p-2" />
             <template v-if="reply.subReplies.length > 0">
-                <SubReplyGroup
+                <PostRendererListSubReply
                     v-for="(subReplyGroup, index) in reply.subReplies" :key="index"
                     :previousSubReplyGroup="reply.subReplies[index - 1]" :subReplyGroup="subReplyGroup"
                     :nextSubReplyGroup="reply.subReplies[index + 1]" :thread="thread" :reply="reply" />
@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies } from './RendererList.vue';
+import type { ThreadWithGroupedSubReplies } from './List.vue';
 import 'assets/css/bootstrapCallout.css';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 

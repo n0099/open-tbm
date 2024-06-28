@@ -1,7 +1,7 @@
 <template>
 <div>
     <div class="container">
-        <QueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
+        <PostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
         <AMenu v-if="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <AMenuItem key="list">列表视图</AMenuItem>
             <AMenuItem key="table">表格视图</AMenuItem>
@@ -140,7 +140,7 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
 watchDeep(() => [route.query, route.params], async (_discard, oldQueryAndParams) => {
     const [to, from] = [route, { query: oldQueryAndParams[0], params: oldQueryAndParams[1] } as RouteLocationNormalized];
     const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
-        .isTriggeredBy('<QueryForm>@submit', _.merge(to, { force: true }));
+        .isTriggeredBy('<PostQueryForm>@submit', _.merge(to, { force: true }));
     if (to.hash === '' && (isTriggeredByQueryForm || compareRouteIsNewQuery(to, from)))
         void nextTick(() => { window.scrollTo({ top: 0 }) });
     await parseRouteThenFetch(to);
