@@ -2,7 +2,7 @@
 <div>
     <div class="container">
         <QueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
-        <AMenu v-show="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
+        <AMenu v-if="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <AMenuItem key="list">列表视图</AMenuItem>
             <AMenuItem key="table">表格视图</AMenuItem>
         </AMenu>

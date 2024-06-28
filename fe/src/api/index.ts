@@ -1,5 +1,6 @@
 import type { PublicRuntimeConfig } from 'nuxt/schema';
-import type { InfiniteData, QueryKey, QueryObserverOptions, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
+import type { Enabled, InfiniteData, Query, UseInfiniteQueryOptions, UseQueryOptions } from '@tanstack/vue-query';
+import { QueryObserver } from '@tanstack/vue-query';
 import nProgress from 'nprogress';
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
@@ -92,7 +93,10 @@ const useApi = <
     TResponse = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
 (endpoint: string, queryFn: QueryFunctions) =>
-    (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseQueryOptions<TResponse, ApiErrorClass>>) => {
+    (
+        queryParam?: Ref<TQueryParam | undefined>,
+        options?: MaybeRef<Partial<Exclude<UseQueryOptions<TResponse, ApiErrorClass>, Ref>>>
+    ) => {
         const config = useRuntimeConfig().public;
         const clientRequestHeaders = useRequestHeaders(['Authorization']);
         const ret = useQuery<TResponse, ApiErrorClass>({
@@ -106,7 +110,16 @@ const useApi = <
             ...options
         });
         onServerPrefetch(async () => { // https://github.com/TanStack/query/issues/7609
-            if (toValue(toValue(options as QueryObserverOptions<TResponse, ApiErrorClass> | undefined)?.enabled) ?? true)
+            const enabled = unref(options)?.enabled;
+            if ((_.isFunction(enabled)
+                ? (enabled as Exclude<Enabled<TResponse, ApiErrorClass>, boolean>)(
+                    new QueryObserver<TResponse, ApiErrorClass>(
+                        useQueryClient(),
+                        { queryKey: [endpoint, queryParam?.value] }
+                    ).getCurrentQuery() as unknown as Query<TResponse, ApiErrorClass>
+                )
+                : unref(enabled) ?? true
+            ) === true)
                 await ret.suspense();
         });
 
@@ -114,26 +127,24 @@ const useApi = <
     };
 const useApiWithCursor = <
     TApi extends Api<TResponse, TQueryParam>,
-    TResponse = TApi['response'] & CursorPagination,
+    TResponse extends CursorPagination = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
-(endpoint: string, queryFn: QueryFunctions) =>
-    (queryParam?: Ref<TQueryParam | undefined>, options?: Partial<UseInfiniteQueryOptions<
-        TResponse & CursorPagination, ApiErrorClass,
-        InfiniteData<TResponse & CursorPagination, Cursor>,
-        TResponse & CursorPagination,
-        QueryKey, Cursor
-    >>) => {
+(endpoint: string, queryFn: QueryFunctions) => {
+    type Data = InfiniteData<TResponse, Cursor>;
+    type QueryKey = [string, TQueryParam | undefined];
+    type QueryOptions = UseInfiniteQueryOptions<TResponse, ApiErrorClass, Data, TResponse, QueryKey, Cursor>;
+
+    return (
+        queryParam?: Ref<TQueryParam | undefined>,
+        options?: Partial<QueryOptions>
+    ) => {
         const config = useRuntimeConfig().public;
         const clientRequestHeaders = useRequestHeaders(['Authorization']);
         type TQueryParamWithCursor = TQueryParam & { cursor?: Cursor };
-        const ret = useInfiniteQuery<
-            TResponse & CursorPagination, ApiErrorClass,
-            InfiniteData<TResponse & CursorPagination, Cursor>,
-            QueryKey, Cursor
-        >({
-            queryKey: [endpoint, queryParam],
+        const ret = useInfiniteQuery<TResponse, ApiErrorClass, Data, QueryKey, Cursor>({
+            queryKey: [endpoint, queryParam] as QueryOptions['queryKey'],
             queryFn: async ({ pageParam }) =>
-                queryFn<TResponse & CursorPagination, TQueryParamWithCursor>(
+                queryFn<TResponse, TQueryParamWithCursor>(
                     config,
                     clientRequestHeaders,
                     `/${endpoint}`,
@@ -144,13 +155,22 @@ const useApiWithCursor = <
             ...options
         });
         onServerPrefetch(async () => { // https://github.com/TanStack/query/issues/7609
-            if (toValue(toValue(options)?.enabled) ?? true)
+            const enabled = options?.enabled;
+            if ((_.isFunction(enabled)
+                ? (enabled as Exclude<Enabled<TResponse, ApiErrorClass, Data, QueryKey>, boolean>)(
+                    new QueryObserver<TResponse, ApiErrorClass, Data, TResponse, QueryKey>(
+                        useQueryClient(),
+                        { queryKey: [endpoint, queryParam?.value] }
+                    ).getCurrentQuery() as unknown as Query<TResponse, ApiErrorClass, Data, QueryKey>
+                )
+                : unref(enabled) ?? true
+            ) === true)
                 await ret.suspense();
         });
 
         return ret;
     };
-
+};
 export const useApiForums = useApi<ApiForums>('forums', queryFunction);
 export const useApiUsers = useApi<ApiUsers>('users', queryFunctionWithReCAPTCHA);
 export const useApiPosts = useApiWithCursor<ApiPosts>('posts', queryFunctionWithReCAPTCHA);
