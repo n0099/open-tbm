@@ -56,7 +56,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@stylistic/type-generic-spacing': 'error',
         '@stylistic/type-named-tuple-spacing': 'error',
     },
-}, { // as of @stylistic/eslint-plugin-migrate@1.5.1
+}, { // as of @stylistic/eslint-plugin@1.5.1
     optin: {
         '@stylistic/dot-location': ['error', 'property'],
         '@stylistic/no-floating-decimal': 'error',
@@ -531,17 +531,11 @@ import { fixupConfigRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
-import pluginStylisticMigrate from '@stylistic/eslint-plugin-migrate';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
 import pluginImportX from 'eslint-plugin-import-x';
 import pluginUnicorn from 'eslint-plugin-unicorn';
-// eslint-disable-next-line import-x/extensions
-import { tsImport } from 'tsx/esm/api';
 import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
 import _ from 'lodash';
-
-// https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2151349705
-const viteConfig = await tsImport('./vite.config.ts', import.meta.url);
 
 // https://github.com/eslint/eslint/issues/18093
 // https://github.com/eslint/eslint/issues/18391
@@ -573,12 +567,7 @@ export default withNuxt(
                 tsconfigRootDir: import.meta.dirname, // https://github.com/typescript-eslint/typescript-eslint/issues/251
             },
         },
-        settings: {
-            'import-x/resolver': {
-                typescript: true,
-                vite: { viteConfig }, // https://github.com/pzmosquito/eslint-import-resolver-vite/issues/12#issuecomment-2148676875
-            },
-        },
+        settings: { 'import-x/resolver': { typescript: true } },
         plugins: { '@stylistic': pluginStylistic },
 
         // https://stackoverflow.com/questions/30221286/how-to-convert-an-array-of-objects-to-an-object-in-lodash/36692117#36692117
@@ -616,10 +605,8 @@ export default withNuxt(
     },
     {
         files: ['eslint.config.js'],
-        plugins: { '@stylistic': pluginStylistic, '@stylistic/migrate': pluginStylisticMigrate },
+        plugins: { '@stylistic': pluginStylistic },
         rules: {
-            '@stylistic/migrate/migrate-js': 'error',
-            '@stylistic/migrate/migrate-ts': 'error',
             '@stylistic/comma-dangle': ['error', 'always-multiline'],
             '@typescript-eslint/naming-convention': 'off',
             '@typescript-eslint/no-unsafe-call': 'off',

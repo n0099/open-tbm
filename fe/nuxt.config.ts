@@ -1,6 +1,6 @@
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
 import { objectWithSameValues } from './src/utils';
-import vite from './vite.config';
+import { analyzer } from 'vite-bundle-analyzer';
 
 export default defineNuxtConfig({
     devServer: { https: true },
@@ -9,13 +9,13 @@ export default defineNuxtConfig({
     imports: { dirs: ['api/**', 'utils/**'] },
     components: [{ path: '@/components', pathPrefix: false }],
     modules: [
-        '@pinia/nuxt',
         '@nuxt/eslint',
-        '@hebilicious/vue-query-nuxt',
+        '@pinia/nuxt',
         '@vueuse/nuxt',
-        '@nuxtjs/seo',
         '@ant-design-vue/nuxt',
-        '@vesp/nuxt-fontawesome'
+        '@hebilicious/vue-query-nuxt',
+        '@vesp/nuxt-fontawesome',
+        '@nuxtjs/seo'
     ],
     pinia: { storesDirs: ['src/stores/**'] },
     eslint: { config: { standalone: false } },
@@ -30,19 +30,29 @@ export default defineNuxtConfig({
             }
         }
     },
+    features: {
+        inlineStyles: false // https://github.com/nuxt/nuxt/issues/21821
+    },
+    sourcemap: true,
     build: {
         analyze: {
-            filename: 'dist/rollup-plugin-visualizer.html',
+            filename: '.nuxt/analyze/rollup-plugin-visualizer.html',
             gzipSize: true,
             brotliSize: true
         } as PluginVisualizerOptions
+    },
+    vite: {
+        plugins: [
+            analyzer({ analyzerMode: 'static', fileName: 'vite-bundle-analyzer' })
+        ],
+        build: { target: 'esnext' },
+        assetsInclude: ['**/*.avifs']
     },
     experimental: {
         viewTransition: true,
         respectNoSSRHeader: true,
         componentIslands: true
     },
-    vite,
     runtimeConfig: {
         public: objectWithSameValues([
             'apiEndpointPrefix',
