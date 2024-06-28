@@ -21,7 +21,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     },
     optin: {
         'import-x/no-empty-named-blocks': 'error',
-        'import-x/no-extraneous-dependencies': 'error',
         'import-x/no-mutable-exports': 'error',
         'import-x/no-self-import': 'error',
         'import-x/no-useless-path-segments': 'error',
