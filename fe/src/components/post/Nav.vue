@@ -174,8 +174,10 @@ watchEffect(() => {
     if (isPostNavExpanded.value)
         scrollStop();
 });
-watchEffect(() => {
-    const { cursor, tid } = viewportTopmostPost.value;
+watch(viewportTopmostPost, (to, from) => {
+    if (_.isEqual(_.omit(to, 'pid'), _.omit(from, 'pid')))
+        return;
+    const { cursor, tid } = to;
     const menuKey = threadMenuKey(cursor, tid);
     selectedThreads.value = [menuKey];
 

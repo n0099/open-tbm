@@ -51,16 +51,27 @@
     <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
     <hr />
     <LazyATable
-        :columns="candidatesDetailColumns"
-        :dataSource="candidatesDetailData"
-        :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
-        rowKey="candidateIndex">
+        v-if="isMounted" rowKey="candidateIndex"
+        :columns="candidatesDetailColumns" :dataSource="candidatesDetailData"
+        :pagination="{ pageSize: 1056, pageSizeOptions: ['20', '50', '100', '300', '1056'] }">
         <template #bodyCell="{ column: { dataIndex: column }, value: name }">
             <template v-if="column === 'candidateName'">
                 <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
             </template>
         </template>
     </LazyATable>
+    <table v-else class="table">
+        <thead>
+            <tr>
+                <th v-for="k in candidatesDetailColumns" :key="k.dataIndex" scope="col">{{ k.title }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="i in candidatesDetailData" :key="i.candidateIndex">
+                <td v-for="k in candidatesDetailColumns" :key="k.dataIndex">{{ i[k.dataIndex] }}</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 </template>
 
@@ -82,6 +93,8 @@ import type { TimelineChangePayload } from 'echarts/types/src/component/timeline
 import type { OptionDataItem } from 'echarts/types/src/util/types.d.ts';
 
 echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, GraphicComponent, GridComponent, LabelLayout, LegendComponent, MarkLineComponent, LineChart, PieChart, TimelineComponent, TitleComponent, ToolboxComponent, TooltipComponent]);
+const isMounted = ref(false);
+onMounted(() => { isMounted.value = true });
 
 interface CandidateVoteCount { officialValidCount: number | null, validCount: number, invalidCount: number }
 type CandidatesDetailData = Array<CandidateVoteCount & { candidateIndex: number, candidateName: string }>;
@@ -673,6 +686,26 @@ const loadCharts = {
     }
 };
 
+// add candidate index as keys then deep merge will combine same keys values, finally remove keys
+candidatesDetailData.value = Object.values(_.merge(
+    _.keyBy(json.candidateNames
+        .map((candidateName, index) =>
+            ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }))
+        .map(candidate => {
+            const candidateVotes = _.filter(json.allCandidatesVoteCount, { voteFor: candidate.candidateIndex });
+
+            return {
+                ...candidate,
+                validCount: findVoteCount(candidateVotes, 1),
+                invalidCount: findVoteCount(candidateVotes, 0)
+            };
+        }), 'candidateIndex'),
+    _.keyBy(json.top50CandidatesOfficialValidVoteCount.map(candidate => ({
+        candidateIndex: candidate.voteFor,
+        officialValidCount: candidate.officialValidCount
+    })), 'candidateIndex')
+));
+
 watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
     loadCharts.top5CandidateCountGroupByTime);
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
@@ -686,26 +719,6 @@ onMounted(() => {
         chart.setOption(chartsInitialOption[chartName]);
         echartsInstances[chartName] = chart;
     });
-    candidatesDetailData.value = json.candidateNames.map((candidateName, index) =>
-        ({ candidateIndex: index + 1, candidateName, officialValidCount: null, validCount: 0, invalidCount: 0 }));
-    candidatesDetailData.value = candidatesDetailData.value.map(candidate => {
-        const candidateVotes = _.filter(json.allCandidatesVoteCount, { voteFor: candidate.candidateIndex });
-
-        return {
-            ...candidate,
-            validCount: findVoteCount(candidateVotes, 1),
-            invalidCount: findVoteCount(candidateVotes, 0)
-        };
-    });
-
-    // add candidate index as keys then deep merge will combine same keys values, finally remove keys
-    candidatesDetailData.value = Object.values(_.merge(
-        _.keyBy(candidatesDetailData.value, 'candidateIndex'),
-        _.keyBy(json.top50CandidatesOfficialValidVoteCount.map(candidate => ({
-            candidateIndex: candidate.voteFor,
-            officialValidCount: candidate.officialValidCount
-        })), 'candidateIndex')
-    ));
     _.map(echartsInstances, (chart: echarts.ECharts | null, chartName: ChartName) => {
         if (chart === null)
             return;
