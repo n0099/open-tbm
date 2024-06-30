@@ -1,8 +1,7 @@
 <template>
 <ATable
-    :columns="threadColumns" :dataSource="threads" defaultExpandAllRows
-    expandRowByClick :pagination="false"
-    rowKey="tid" size="middle" class="render-table-thread">
+    :dataSource="props.posts.threads" :columns="threadColumns" rowKey="tid"
+    defaultExpandAllRows expandRowByClick :pagination="false" size="middle">
     <template #bodyCell="{ column: { dataIndex: column }, record }">
         <template v-if="column === 'tid'">
             <template v-for="tid in [(record as Thread).tid]" :key="tid">
@@ -22,7 +21,7 @@
                         :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                         class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                 </NuxtLink>
-                <PostBadgeUser :user="user" />
+                <PostBadgeUser :user="user" class="ms-1" />
             </template>
         </template>
         <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
@@ -32,15 +31,16 @@
                         :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                         class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                 </NuxtLink>
+                <PostBadgeUser :user="user" class="ms-1" />
             </template>
         </template>
     </template>
-    <template #expandedRowRender="{ record: { tid, authorUid: threadAuthorUid } }">
-        <span v-if="repliesKeyByTid[tid] === undefined">无子回复帖</span>
+    <template #expandedRowRender="{ record: { authorUid: threadAuthorUid, replies } }">
         <ATable
-            v-else :columns="replyColumns" :dataSource="repliesKeyByTid[tid]"
-            defaultExpandAllRows expandRowByClick
-            :pagination="false" rowKey="pid" size="middle">
+            v-if="!_.isEmpty(replies)"
+            :dataSource="replies" :columns="replyColumns" rowKey="pid"
+            defaultExpandAllRows expandRowByClick :pagination="false"
+            size="middle" class="renderer-table-reply">
             <template #bodyCell="{ column: { dataIndex: column }, record }">
                 <template v-if="column === 'author'">
                     <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
@@ -49,21 +49,17 @@
                                 :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
                                 class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                         </NuxtLink>
-                        <PostBadgeUser :user="user" :threadAuthorUid="threadAuthorUid" />
+                        <PostBadgeUser :user="user" :threadAuthorUid="threadAuthorUid" class="ms-1" />
                     </template>
                 </template>
             </template>
-            <template #expandedRowRender="{ record: { pid, content, authorUid: replyAuthorUid } }">
-                <PostRendererContent
-                    :content="content"
-                    :class="{
-                        'd-inline-block': subRepliesKeyByPid[pid] === undefined ? 'span' : 'p'
-                    }" />
+            <template #expandedRowRender="{ record: { content, authorUid: replyAuthorUid, subReplies } }">
+                <PostRendererContent :content="content" />
                 <ATable
-                    v-if="subRepliesKeyByPid[pid] !== undefined"
-                    :columns="subReplyColumns" :dataSource="subRepliesKeyByPid[pid]"
-                    defaultExpandAllRows expandRowByClick
-                    :pagination="false" rowKey="spid" size="middle">
+                    v-if="!_.isEmpty(subReplies)"
+                    :dataSource="subReplies" :columns="subReplyColumns" rowKey="spid"
+                    defaultExpandAllRows expandRowByClick :pagination="false"
+                    size="middle" class="renderer-table-sub-reply">
                     <template #bodyCell="{ column: { dataIndex: column }, record }">
                         <template v-if="column === 'author'">
                             <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
@@ -73,14 +69,14 @@
                                         class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
                                 </NuxtLink>
                                 <PostBadgeUser
-                                    :user="user"
+                                    :user="user" class="ms-1"
                                     :threadAuthorUid="threadAuthorUid"
                                     :replyAuthorUid="replyAuthorUid" />
                             </template>
                         </template>
                     </template>
                     <template #expandedRowRender="{ record: { content: subReplyContent } }">
-                        <PostRendererContent :content="subReplyContent" class="d-inline-block" />
+                        <PostRendererContent :content="subReplyContent" />
                     </template>
                 </ATable>
             </template>
@@ -94,9 +90,6 @@ import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts['response'] }>();
-const threads = ref<ApiPosts['response']['threads']>();
-const repliesKeyByTid = ref<Record<Tid, ApiPosts['response']['threads'][number]['replies']>>([]);
-const subRepliesKeyByPid = ref<Record<Pid, SubReply[]>>([]);
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },
     { title: '标题', dataIndex: 'title' },
@@ -139,52 +132,60 @@ const subReplyColumns = ref<ColumnType[]>([
     { title: '首次收录时间', dataIndex: 'createdAt' },
     { title: '最后更新时间', dataIndex: 'updatedAt' }
 ]);
-
 const getUser = computed(() => baseGetUser(props.posts.users));
 const renderUsername = computed(() => baseRenderUsername(getUser.value));
-
-onMounted(() => {
-    threads.value = props.posts.threads;
-    repliesKeyByTid.value = _.chain(threads.value)
-        .map(i => i.replies)
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        .reject(_.isEmpty) // remove threads which have no reply
-        .mapKeys(replies => replies[0].tid) // convert threads' reply array to object for adding tid key
-        .value();
-    subRepliesKeyByPid.value = _.chain(repliesKeyByTid.value)
-        .toArray() // cast tid keyed object to array
-        .flatten() // flatten every thread's replies
-        .map(i => i.subReplies)
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        .reject(_.isEmpty) // remove replies which have no sub reply
-        .mapKeys(subReplies => subReplies[0].pid) // cast replies' sub reply from array to object which key by pid
-        .value();
-});
 </script>
 
 <style scoped>
-:deep(.render-table-thread .ant-table) {
-    /* narrow the inline-size of reply and sub reply table to prevent they stretch with thread table */
-    inline-size: fit-content;
+:deep(.renderer-table-sub-reply .ant-table) {
+    margin-block-start: 0 !important;
 }
 
-:deep(.render-table-thread > .ant-spin-nested-loading > .ant-spin-container > .ant-table) {
-    /* select the outermost thread table, might change in further antd updates */
-    inline-size: auto;
-    border: 1px solid #e8e8e8;
-    border-radius: 4px 4px 0 0;
+:deep(.ant-table) {
+    inline-size: max-content;
 }
 
-:deep(.render-table-thread .ant-table td, .render-table-thread .ant-table td > *, .render-table-thread .ant-table th) {
-    white-space: nowrap;
-    font-family: Consolas, Courier New, monospace;
+:deep(.ant-table td, .ant-table td > *, .ant-table th) {
+    font-family: monospace;
 }
 
-:deep(.render-table-thread .ant-table-expand-icon-th, .render-table-thread .ant-table-row-expand-icon-cell) {
-    /* shrink the inline-size of expanding child posts table button */
-    inline-size: auto;
-    min-inline-size: auto;
-    padding-inline-start: 5px !important;
-    padding-inline-end: 0 !important;
+:deep(.ant-table-expand-icon-col) {
+    width: 0 !important;
+}
+
+:deep(.ant-table-cell) {
+    padding: .5rem;
+}
+
+:deep(.ant-table thead > tr) {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+:deep(.renderer-table-reply thead > tr) {
+    z-index: 1021;
+}
+:deep(.renderer-table-sub-reply thead > tr) {
+    z-index: 1022;
+}
+
+:deep(.renderer-table-reply .ant-table table) {
+    min-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px);
+}
+:deep(.renderer-table-reply .ant-table tbody > tr > td) {
+    max-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px);
+}
+:deep(.renderer-table-sub-reply .ant-table table) {
+    min-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px - 48px);
+}
+:deep(.renderer-table-sub-reply .ant-table tbody > tr > td) {
+    max-inline-size: calc(100vw - v-bind(scrollBarWidth) - 48px - 48px);
+}
+
+:deep(.renderer-table-reply thead > tr > th) {
+    border-color: var(--bs-info);
+}
+:deep(.renderer-table-sub-reply thead > tr > th) {
+    border-color: var(--bs-success);
 }
 </style>
