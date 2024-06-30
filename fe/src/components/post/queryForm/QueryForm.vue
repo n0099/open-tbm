@@ -86,14 +86,14 @@
                 </div>
             </div>
             <template v-if="isPostIDParam(p)">
-                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <PostQueryFormWidgetInputNumericParam
+                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <LazyPostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="getPostIDParamPlaceholders(p)" />
             </template>
             <template v-if="isDateTimeParam(p)">
-                <ARangePicker
+                <LazyARangePicker
                     v-model:value="p.subParam.range" showTime
                     format="YYYY-MM-DD HH:mm" valueFormat="YYYY-MM-DDTHH:mm" size="large" />
             </template>
@@ -101,14 +101,14 @@
                 <input
                     v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
                     type="text" class="form-control" required />
-                <PostQueryFormWidgetInputTextMatchParam
+                <LazyPostQueryFormWidgetInputTextMatchParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />
             </template>
             <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
-                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <PostQueryFormWidgetInputNumericParam
+                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <LazyPostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :paramIndex="pI"
@@ -137,8 +137,8 @@
                 </div>
             </template>
             <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
-                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <PostQueryFormWidgetInputNumericParam
+                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <LazyPostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="uidParamsPlaceholder" />
@@ -159,8 +159,8 @@
                 </select>
             </template>
             <template v-if="p.name === 'authorExpGrade'">
-                <PostQueryFormWidgetSelectRange v-model="p.subParam.range" />
-                <PostQueryFormWidgetInputNumericParam
+                <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
+                <LazyPostQueryFormWidgetInputNumericParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />

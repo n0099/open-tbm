@@ -1,7 +1,7 @@
 <template>
 <div>
     <div class="container">
-        <PostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
+        <LazyPostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
         <AMenu v-if="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <AMenuItem key="list">列表视图</AMenuItem>
             <AMenuItem key="table">表格视图</AMenuItem>
@@ -9,7 +9,7 @@
     </div>
     <div v-if="!(data === undefined || _.isEmpty(data.pages) || _.isEmpty(route.params))" class="container-fluid">
         <div class="row flex-nowrap">
-            <PostNav v-if="renderType === 'list'" :postPages="data.pages" />
+            <LazyPostNav v-if="renderType === 'list'" :postPages="data.pages" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage
                     v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"

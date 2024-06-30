@@ -1,10 +1,15 @@
 <template>
 <PageCurrentButton :currentCursor="posts.pages.currentCursor" />
-<PostRendererList v-if="renderType === 'list'" :initialPosts="posts" />
-<div v-else-if="renderType === 'table'">
-    <!-- https://github.com/vuejs/core/issues/5446 -->
-    <PostRendererTable :posts="posts" />
-</div>
+<Suspense suspensible :timeout="0">
+    <template #fallback>
+        <PlaceholderPostList isLoading />
+    </template>
+    <LazyPostRendererList v-if="renderType === 'list'" :initialPosts="posts" />
+    <div v-else-if="renderType === 'table'">
+        <!-- https://github.com/vuejs/core/issues/5446 -->
+        <LazyPostRendererTable :posts="posts" />
+    </div>
+</Suspense>
 <PageNextButton
     v-if="isLastPageInPages && !isFetching && hasNextPage"
     @click="() => $emit('clickNextPage')" :nextPageRoute="nextPageRoute" />

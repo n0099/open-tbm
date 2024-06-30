@@ -1,6 +1,6 @@
 <template>
 <div class="container mt-2">
-    <small>本页上所有时间均为UTC+8时间</small>
+    <small>本页上所有时间均为UTC+8时区</small>
     <p>有效票定义：</p>
     <ul>
         <li>投票人吧内等级大于4</li>
@@ -50,9 +50,9 @@
     </div>
     <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
     <hr />
-    <ATable
+    <LazyATable
         :columns="candidatesDetailColumns"
-        :data-source="candidatesDetailData"
+        :dataSource="candidatesDetailData"
         :pagination="{ pageSize: 50, pageSizeOptions: ['20', '50', '100', '200', '1056'] }"
         rowKey="candidateIndex">
         <template #bodyCell="{ column: { dataIndex: column }, value: name }">
@@ -60,7 +60,7 @@
                 <NuxtLink :to="toUserProfileUrl({ name })" noPrefetch>{{ name }}</NuxtLink>
             </template>
         </template>
-    </ATable>
+    </LazyATable>
 </div>
 </template>
 
@@ -85,10 +85,11 @@ echarts.use([BarChart, CanvasRenderer, DataZoomComponent, DatasetComponent, Grap
 
 interface CandidateVoteCount { officialValidCount: number | null, validCount: number, invalidCount: number }
 type CandidatesDetailData = Array<CandidateVoteCount & { candidateIndex: number, candidateName: string }>;
-const candidatesDetailColumns: Array<ObjUnknown & {
+const candidatesDetailColumns: Array<{
     title: string,
-    dataIndex: string,
-    sorter: (a: CandidatesDetailData[0], b: CandidatesDetailData[0]) => number
+    dataIndex: keyof CandidatesDetailData[number],
+    sorter: (a: CandidatesDetailData[0], b: CandidatesDetailData[0]) => number,
+    defaultSortOrder?: 'descend' | 'ascend'
 }> = [{
     title: '#',
     dataIndex: 'candidateIndex',
@@ -120,7 +121,6 @@ const chartElements = {
     allVoteCountGroupByTime: ref<HTMLElement>()
 };
 
-// template ref
 const {
     top50CandidateCount: top50CandidateCountRef,
     top10CandidatesTimeline: top10CandidatesTimelineRef,
@@ -678,7 +678,7 @@ watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
     loadCharts.allVoteCountGroupByTime);
 onMounted(() => {
-    _.map(chartElements, (elRef, chartName: ChartName) => {
+    _.map(chartElements, (elRef: Ref<HTMLElement | undefined>, chartName: ChartName) => {
         if (elRef.value === undefined)
             return;
         elRef.value.classList.add('loading');
@@ -706,7 +706,7 @@ onMounted(() => {
             officialValidCount: candidate.officialValidCount
         })), 'candidateIndex')
     ));
-    _.map(echartsInstances, (chart, chartName: ChartName) => {
+    _.map(echartsInstances, (chart: echarts.ECharts | null, chartName: ChartName) => {
         if (chart === null)
             return;
         loadCharts[chartName]();
