@@ -1,4 +1,16 @@
 <template>
+<DefineUser v-slot="{ user, threadAuthorUid, replyAuthorUid }">
+    <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
+        <img
+            :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
+            class="tieba-user-portrait-small" />
+        {{ renderUsername(user.uid) }}
+    </NuxtLink>
+    <PostBadgeUser
+        :user="user" class="ms-1"
+        :threadAuthorUid="threadAuthorUid"
+        :replyAuthorUid="replyAuthorUid" />
+</DefineUser>
 <ATable
     :dataSource="props.posts.threads" :columns="threadColumns" rowKey="tid"
     defaultExpandAllRows expandRowByClick :pagination="false" size="middle">
@@ -15,24 +27,10 @@
             </template>
         </template>
         <template v-else-if="column === 'author'">
-            <template v-for="user in [getUser((record as Thread).authorUid)]" :key="user.uid">
-                <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                    <img
-                        :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                        class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                </NuxtLink>
-                <PostBadgeUser :user="user" class="ms-1" />
-            </template>
+            <ReuseUser :user="getUser((record as Thread).authorUid)" />
         </template>
         <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
-            <template v-for="user in [getUser(record.latestReplierUid)]" :key="user.uid">
-                <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                    <img
-                        :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                        class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                </NuxtLink>
-                <PostBadgeUser :user="user" class="ms-1" />
-            </template>
+            <ReuseUser :user="getUser(record.latestReplierUid)" />
         </template>
     </template>
     <template #expandedRowRender="{ record: { authorUid: threadAuthorUid, replies } }">
@@ -43,14 +41,9 @@
             size="middle" class="renderer-table-reply">
             <template #bodyCell="{ column: { dataIndex: column }, record }">
                 <template v-if="column === 'author'">
-                    <template v-for="user in [getUser((record as Reply).authorUid)]" :key="user.uid">
-                        <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                            <img
-                                :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                                class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                        </NuxtLink>
-                        <PostBadgeUser :user="user" :threadAuthorUid="threadAuthorUid" class="ms-1" />
-                    </template>
+                    <ReuseUser
+                        :user="getUser((record as Reply).authorUid)"
+                        :threadAuthorUid="threadAuthorUid" />
                 </template>
             </template>
             <template #expandedRowRender="{ record: { content, authorUid: replyAuthorUid, subReplies } }">
@@ -62,17 +55,10 @@
                     size="middle" class="renderer-table-sub-reply">
                     <template #bodyCell="{ column: { dataIndex: column }, record }">
                         <template v-if="column === 'author'">
-                            <template v-for="user in [getUser((record as SubReply).authorUid)]" :key="user.uid">
-                                <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-                                    <img
-                                        :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-                                        class="tieba-user-portrait-small" /> {{ renderUsername(user.uid) }}
-                                </NuxtLink>
-                                <PostBadgeUser
-                                    :user="user" class="ms-1"
-                                    :threadAuthorUid="threadAuthorUid"
-                                    :replyAuthorUid="replyAuthorUid" />
-                            </template>
+                            <ReuseUser
+                                :user="getUser((record as SubReply).authorUid)"
+                                :threadAuthorUid="threadAuthorUid"
+                                :replyAuthorUid="replyAuthorUid" />
                         </template>
                     </template>
                     <template #expandedRowRender="{ record: { content: subReplyContent } }">
@@ -86,10 +72,12 @@
 </template>
 
 <script setup lang="ts">
+import type User from '@/components/post/badge/User.vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts['response'] }>();
+const [DefineUser, ReuseUser] = createReusableTemplate<InstanceType<typeof User>['$props']>();
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },
     { title: '标题', dataIndex: 'title' },

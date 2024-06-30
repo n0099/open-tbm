@@ -1,7 +1,10 @@
 <template>
 <PageCurrentButton :currentCursor="posts.pages.currentCursor" />
 <PostRendererList v-if="renderType === 'list'" :initialPosts="posts" />
-<PostRendererTable v-else-if="renderType === 'table'" :posts="posts" />
+<div v-else-if="renderType === 'table'">
+    <!-- https://github.com/vuejs/core/issues/5446 -->
+    <PostRendererTable :posts="posts" />
+</div>
 <PageNextButton
     v-if="isLastPageInPages && !isFetching && hasNextPage"
     @click="() => $emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
