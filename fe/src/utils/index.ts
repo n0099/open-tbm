@@ -81,7 +81,7 @@ export const responseWithError = (error: ApiErrorClass | null) => {
     const event = useRequestEvent();
     if (event) {
         if (error instanceof FetchError)
-            setResponseStatus(event, error.statusCode, error.statusMessage);
+            setResponseStatus(event, error.statusCode);
         if (error instanceof ApiResponseError)
             setResponseStatus(event, error.fetchError?.statusCode ?? 200);
     }

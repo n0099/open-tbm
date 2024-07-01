@@ -16,13 +16,14 @@ import 'noty/lib/themes/mint.css';
 import nProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
-const config = useRuntimeConfig().public;
 useHead({
-    titleTemplate: title => {
-        const suffix = `open-tbm @ ${config.instanceName}`;
-
-        return title === undefined ? suffix : `${title} - ${suffix}`;
-    }
+    titleTemplate: '%pageTitle %separator %siteName',
+    templateParams: { separator: '-' }
+});
+const route = useRoute();
+const resolveSitePath = createSitePathResolver({ absolute: true });
+useSeoMeta({ // https://github.com/harlan-zw/nuxt-seo/pull/261
+    ogUrl: computed(() => resolveSitePath(route.path).value)
 });
 
 if (import.meta.client) {
@@ -33,6 +34,7 @@ if (import.meta.client) {
         await import('@/checkCSS');
     }
 
+    const config = useRuntimeConfig().public;
     const reCAPTCHASiteKey = config.recaptchaSiteKey;
     if (reCAPTCHASiteKey !== '') {
         const tag = document.createElement('script');
