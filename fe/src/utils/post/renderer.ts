@@ -140,3 +140,5 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
     //         .exec(el.computedStyleMap().get('contain-intrinsic-block-size').toString())[1]);
     // });
 };
+export const extractContentTexts = (content?: PostContent | null) => content
+    ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), '') ?? '';

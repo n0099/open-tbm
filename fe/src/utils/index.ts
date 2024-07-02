@@ -1,4 +1,3 @@
-import type { LocationAsRelativeRaw } from 'vue-router';
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
@@ -39,7 +38,6 @@ export type Pid = UInt;
 export type Spid = UInt;
 
 export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
-
 export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
     if (pid !== undefined && spid !== undefined)
         return `https://tieba.baidu.com/p/${tid}?pid=${pid}&cid=${spid}#${spid}`;
@@ -48,14 +46,6 @@ export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {
 
     return `https://tieba.baidu.com/p/${tid}`;
 };
-export const toUserProfileUrl = (user: Partial<Pick<User, 'name' | 'portrait'>>) =>
-    (_.isEmpty(user.portrait)
-        ? `https://tieba.baidu.com/home/main?un=${user.name}`
-        : `https://tieba.baidu.com/home/main?id=${user.portrait}`);
-export const toUserPortraitImageUrl = (portrait: string) =>
-    `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
-export const toUserRoute = (uid: BaiduUserID): LocationAsRelativeRaw =>
-    ({ name: 'users/uid', params: { uid: uid.toString() } });
 
 export const removeStart = (s: string, remove: string) => (s.startsWith(remove) ? s.slice(remove.length) : s);
 export const removeEnd = (s: string, remove: string) => (s.endsWith(remove) ? s.slice(0, -remove.length) : s);

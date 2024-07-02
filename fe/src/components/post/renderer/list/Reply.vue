@@ -67,7 +67,7 @@ defineProps<{
 
 const elementRefsStore = useElementRefsStore();
 const highlightPostStore = useHighlightPostStore();
-const { getUser } = injectUsers();
+const { getUser } = useUserProvision().inject();
 const replyElements = ref<HTMLElement[]>([]);
 
 onMounted(async () => {

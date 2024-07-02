@@ -1,4 +1,5 @@
 import viewer from 'v-viewer';
+import 'viewerjs/dist/viewer.css';
 
 export const useViewerStore = defineStore('viewer', () => {
     const isEnabled = ref(false);

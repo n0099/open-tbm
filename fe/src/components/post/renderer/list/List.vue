@@ -1,9 +1,9 @@
 <template>
-<div :data-cursor="posts.pages.currentCursor" class="post-render-list pb-3">
+<div :data-cursor="nestedPosts.pages.currentCursor" class="post-render-list pb-3">
     <PostRendererListThread
-        v-for="(thread, index) in posts.threads" :key="thread.tid"
-        :previousThread="posts.threads[index - 1]" :thread="thread"
-        :nextThread="posts.threads[index + 1]" />
+        v-for="(thread, index) in nestedPosts.threads" :key="thread.tid"
+        :previousThread="nestedPosts.threads[index - 1]" :thread="thread"
+        :nextThread="nestedPosts.threads[index + 1]" />
 </div>
 </template>
 
@@ -11,15 +11,14 @@
 import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
-const props = defineProps<{ initialPosts: ApiPosts['response'] }>();
-provideUsers(props.initialPosts.users);
-
 export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
-const posts = computed(() => {
+
+const props = defineProps<{ posts: ApiPosts['response'] }>();
+const nestedPosts = computed(() => {
     // https://github.com/TanStack/query/pull/6657
     // eslint-disable-next-line unicorn/prefer-structured-clone
-    const newPosts = _.cloneDeep(props.initialPosts) as // https://github.com/microsoft/TypeScript/issues/33591
+    const newPosts = _.cloneDeep(props.posts) as // https://github.com/microsoft/TypeScript/issues/33591
         Modify<ApiPosts['response'], { threads: Array<ThreadWithGroupedSubReplies<SubReply>> }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {

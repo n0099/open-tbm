@@ -102,7 +102,7 @@ defineProps<{
 }>();
 const elementRefsStore = useElementRefsStore();
 const highlightPostStore = useHighlightPostStore();
-const { getUser, renderUsername } = injectUsers();
+const { getUser, renderUsername } = useUserProvision().inject();
 </script>
 
 <style scoped>

@@ -4,7 +4,7 @@
     <template #fallback>
         <PlaceholderPostList isLoading />
     </template>
-    <LazyPostRendererList v-if="renderType === 'list'" :initialPosts="posts" />
+    <LazyPostRendererList v-if="renderType === 'list'" :posts="posts" />
     <div v-else-if="renderType === 'table'">
         <!-- https://github.com/vuejs/core/issues/5446 -->
         <LazyPostRendererTable :posts="posts" />
@@ -19,7 +19,7 @@
 import type { PostRenderer } from '@/pages/posts.vue';
 import type { RouteLocationRaw } from 'vue-router';
 
-defineProps<{
+const props = defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,
     isFetching: boolean,
@@ -28,6 +28,7 @@ defineProps<{
     nextPageRoute: RouteLocationRaw
 }>();
 defineEmits<{ clickNextPage: [] }>();
+useUserProvision().provide(props.posts.users);
 </script>
 
 <style scoped>
