@@ -45,7 +45,7 @@ const { data, error, isPending, isFetching, isFetched, dataUpdatedAt, errorUpdat
 const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormDeps = getQueryFormDeps();
-const { getCurrentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
+const { currentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
 
 const firstPostPage = computed(() => data.value?.pages[0]);
 const firstPostPageForum = computed(() => firstPostPage.value?.forum);
@@ -54,7 +54,7 @@ useHead({
     title: computed(() => {
         if (firstPostPage.value === undefined)
             return '帖子查询';
-        switch (getCurrentQueryType()) {
+        switch (currentQueryType.value) {
             case 'fid':
             case 'search':
                 return `${firstPostPageForum.value?.name}吧 - 帖子查询`;
@@ -65,7 +65,7 @@ useHead({
         }
     })
 });
-defineOgImageComponent('Post', { firstPostPage, firstPostPageForum, firstThread, queryType: getCurrentQueryType() });
+defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

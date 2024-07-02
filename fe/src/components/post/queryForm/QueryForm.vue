@@ -194,7 +194,7 @@ const props = defineProps<{
 const {
     isOrderByInvalid,
     isFidInvalid,
-    getCurrentQueryType,
+    currentQueryType,
     generateRoute,
     uniqueParams,
     params,
@@ -216,12 +216,12 @@ const uidParamsPlaceholder = {
 };
 
 const currentQueryTypeDescription = computed(() => {
-    const currentQueryType = getCurrentQueryType();
-    if (currentQueryType === 'fid')
+    const queryType = currentQueryType.value;
+    if (queryType === 'fid')
         return '按吧索引查询';
-    if (currentQueryType === 'postID')
+    if (queryType === 'postID')
         return '按帖索引查询';
-    if (currentQueryType === 'search')
+    if (queryType === 'search')
         return '搜索查询';
 
     return '空查询';

@@ -1,10 +1,22 @@
 <template>
 <div class="flex flex-row justify-between size-screen">
-    <div class="m-8">
+    <div class="m-6">
+        <p>{{ routePath }}</p>
         <h2>{{ firstPostPageForum?.name }}吧</h2>
-        <h3 v-if="queryType !== 'postID'">下方为查询结果中第一条主题帖及其回复帖 右侧为查询结果中第一张图片</h3>
+        <template v-if="currentQueryType !== 'postID'">
+            <p class="m-0">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>
+            <p class="m-0">下方为查询结果中第一条主题帖/回复帖/楼中楼</p>
+        </template>
         <h1>{{ firstThread?.title }}</h1>
-        <h3>{{ firstReplyContentTexts }}</h3>
+        <h3 class="h-auto">{{ firstPostContentTexts }}</h3>
+        <template v-for="author in [firstPostAuthor]">
+            <div :key="author.uid" v-if="author !== undefined" class="m-auto">
+                <img :src="toUserPortraitImageUrl(author.portrait)" class="size-24" />
+                <span v-if="author.name !== null">{{ author.name }}</span>
+                <span v-if="author.displayName !== null">{{ author.displayName }}</span>
+                <span v-if="author.name === null && author.displayName === null">{{ author.uid }}</span>
+            </div>
+        </template>
     </div>
     <img
         v-if="firstImage !== undefined"
@@ -14,15 +26,28 @@
 </template>
 
 <script setup lang="ts">
+import type { UnwrapRef } from 'vue';
+
 const props = defineProps<{
+    routePath: string,
     firstPostPage?: ApiPosts['response'],
     firstPostPageForum?: ApiPosts['response']['forum'],
     firstThread?: ApiPosts['response']['threads'][number],
-    queryType: ReturnType<ReturnType<typeof getQueryFormDeps>['getCurrentQueryType']>
+    currentQueryType: UnwrapRef<ReturnType<typeof getQueryFormDeps>['currentQueryType']>
 }>();
-const firstReplyContent = computed(() => props.firstThread?.replies[0].content);
-const firstReplyContentTexts = computed(() => firstReplyContent.value
+const firstReplyContent = computed(() => props.firstThread?.replies[0]);
+const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
+const firstPostContentTexts = computed(() => (firstSubReplyContent.value ?? firstReplyContent.value)?.content
     ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), ''));
+
+const firstPostAuthor = computed(() => {
+    if (props.firstPostPage === undefined)
+        // eslint-disable-next-line unicorn/no-useless-undefined
+        return undefined;
+    const uid = (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid;
+
+    return uid === undefined ? undefined : baseGetUser(props.firstPostPage.users)(uid);
+});
 const firstImage = computed(() => props.firstPostPage
     ?.threads.flatMap(thread =>
         thread.replies.flatMap(reply =>

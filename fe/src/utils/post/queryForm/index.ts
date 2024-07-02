@@ -27,7 +27,7 @@ export const getQueryFormDeps = () => {
         generateParamRoute
     } = queryFormWithUniqueParams;
 
-    const getCurrentQueryType = () => {
+    const currentQueryType = computed(() => {
         const clearedParams = clearedParamsDefaultValue(); // not including unique params
         if (_.isEmpty(clearedParams)) { // is there no other params
             // ignore the post type param since index query (postID or fid) doesn't restrict them
@@ -51,7 +51,7 @@ export const getQueryFormDeps = () => {
             return 'postID';
 
         return 'search';
-    };
+    });
     const generateRoute = (): RouteObjectRaw => { // decide which route to go
         const clearedParams = clearedParamsDefaultValue();
         const clearedUniqueParams = clearedUniqueParamsDefaultValue();
@@ -82,8 +82,7 @@ export const getQueryFormDeps = () => {
         // check query type
         isFidInvalid.value = false;
         const clearedUniqueParams = clearedUniqueParamsDefaultValue();
-        const currentQueryType = getCurrentQueryType();
-        switch (currentQueryType) {
+        switch (currentQueryType.value) {
             case 'empty':
                 notyShow('warning', '请选择贴吧或/并输入查询参数<br>勿只选择帖子类型参数');
 
@@ -119,7 +118,7 @@ export const getQueryFormDeps = () => {
 
         // check params required post types, index query doesn't restrict on post types
         invalidParamsIndex.value = []; // reset to prevent duplicate indexes
-        if (currentQueryType !== 'postID' && currentQueryType !== 'fid') {
+        if (currentQueryType.value !== 'postID' && currentQueryType.value !== 'fid') {
             /** we don't {@link Array.filter()} here for post types validate */
             params.value.map(clearParamDefaultValue).forEach((param, paramIndex) => {
                 if (param?.name === undefined || param.value === undefined) {
@@ -176,5 +175,5 @@ export const getQueryFormDeps = () => {
         return false;
     };
 
-    return { isOrderByInvalid, isFidInvalid, getCurrentQueryType, generateRoute, parseRouteToGetFlattenParams, ...queryFormWithUniqueParams };
+    return { isOrderByInvalid, isFidInvalid, currentQueryType, generateRoute, parseRouteToGetFlattenParams, ...queryFormWithUniqueParams };
 };
