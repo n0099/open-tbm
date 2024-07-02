@@ -33,6 +33,9 @@ export default defineNuxtConfig({
         name: `open-tbm @ ${process.env.NUXT_PUBLIC_INSTANCE_NAME}`,
         defaultLocale: 'zh'
     },
+    ogImage: {
+        fonts: ['Noto Sans SC']
+    },
     features: {
         inlineStyles: false // https://github.com/nuxt/nuxt/issues/21821
     },

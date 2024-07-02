@@ -47,26 +47,25 @@ const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormDeps = getQueryFormDeps();
 const { getCurrentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
 
+const firstPostPage = computed(() => data.value?.pages[0]);
+const firstPostPageForum = computed(() => firstPostPage.value?.forum);
+const firstThread = computed(() => firstPostPage.value?.threads[0]);
 useHead({
     title: computed(() => {
-        const firstPostPage = data.value?.pages[0];
-        if (firstPostPage === undefined)
+        if (firstPostPage.value === undefined)
             return '帖子查询';
-
-        const forumName = `${firstPostPage.forum.name}吧`;
-        const threadTitle = firstPostPage.threads[0].title;
-
         switch (getCurrentQueryType()) {
             case 'fid':
             case 'search':
-                return `${forumName} - 帖子查询`;
+                return `${firstPostPageForum.value?.name}吧 - 帖子查询`;
             case 'postID':
-                return `${threadTitle} - ${forumName} - 帖子查询`;
+                return `${firstThread.value?.title} - ${firstPostPageForum.value?.name}吧 - 帖子查询`;
             default:
                 return '帖子查询';
         }
     })
 });
+defineOgImageComponent('Post', { firstPostPage, firstPostPageForum, firstThread, queryType: getCurrentQueryType() });
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

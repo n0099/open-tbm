@@ -59,7 +59,7 @@ export const scrollToPostListItemByRoute = (route: RouteLocationNormalized) => {
     });
 };
 export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]) => {
-    const imageWidth = convertRemToPixels(18.75); // match with .tieba-ugc-image:max-inline-size in components/Post/renderers/PostContentRenderer.vue
+    const imageWidth = convertRemToPixels(18.75); // match with .tieba-ugc-image:max-inline-size in <PostRendererContent>
 
     // block-size of .reply-content should be similar when author usernames are also similar, so only takes the first element
     const contentEl = document.querySelector<HTMLElement>('.reply-content');

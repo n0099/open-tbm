@@ -78,6 +78,8 @@ import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts['response'] }>();
 const [DefineUser, ReuseUser] = createReusableTemplate<InstanceType<typeof User>['$props']>();
+const getUser = computed(() => baseGetUser(props.posts.users));
+const renderUsername = computed(() => baseRenderUsername(getUser.value));
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },
     { title: '标题', dataIndex: 'title' },
@@ -120,8 +122,6 @@ const subReplyColumns = ref<ColumnType[]>([
     { title: '首次收录时间', dataIndex: 'createdAt' },
     { title: '最后更新时间', dataIndex: 'updatedAt' }
 ]);
-const getUser = computed(() => baseGetUser(props.posts.users));
-const renderUsername = computed(() => baseRenderUsername(getUser.value));
 </script>
 
 <style scoped>
