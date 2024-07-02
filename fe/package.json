@@ -58,6 +58,7 @@
         "checkcss": "^2.0.9",
         "eslint": "^9.6.0",
         "eslint-import-resolver-typescript": "^3.6.1",
+        "schema-dts": "^1.1.2",
         "stats.js": "^0.17.0",
         "typescript": "^5.5.2",
         "typescript-eslint-parser-for-extra-files": "^0.7.0",

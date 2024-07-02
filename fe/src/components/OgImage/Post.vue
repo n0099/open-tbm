@@ -37,8 +37,8 @@ const props = defineProps<{
 }>();
 const firstReplyContent = computed(() => props.firstThread?.replies[0]);
 const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
-const firstPostContentTexts = computed(() => (firstSubReplyContent.value ?? firstReplyContent.value)?.content
-    ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), ''));
+const firstPostContentTexts = computed(() =>
+    extractContentTexts((firstSubReplyContent.value ?? firstReplyContent.value)?.content));
 
 const firstPostAuthor = computed(() => {
     if (props.firstPostPage === undefined)

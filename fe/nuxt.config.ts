@@ -36,6 +36,9 @@ export default defineNuxtConfig({
     ogImage: {
         fonts: ['Noto Sans SC']
     },
+    schemaOrg: {
+        identity: 'Organization'
+    },
     features: {
         inlineStyles: false // https://github.com/nuxt/nuxt/issues/21821
     },

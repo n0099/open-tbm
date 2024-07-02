@@ -20,7 +20,7 @@
         <ReuseUGCImage v-if="i.type === 3" :src="imageUrl(i.originSrc)" />
         <NuxtLink
             v-if="i.type === 4"
-            :to="`https://tieba.baidu.com/home/main?un=${_.trimStart(i.text, '@')}`"
+            :to="toUserProfileUrl({ name: _.trimStart(i.text, '@') })"
             target="_blank">{{ i.text }}</NuxtLink>
         <template v-if="i.type === 5">
             <template v-if="i.src !== undefined">

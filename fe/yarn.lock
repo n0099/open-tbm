@@ -10943,6 +10943,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"schema-dts@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "schema-dts@npm:1.1.2"
+  peerDependencies:
+    typescript: ">=4.1.0"
+  checksum: 10c0/bcca8719b1bb1cd71ba2b01a5126b3579e917a2f193e10fcffe020fa42fef911776ed9d2197c9f376780e703994b3ab854db3f962c47064f7282f41eff0f1d24
+  languageName: node
+  linkType: hard
+
 "scroll-into-view-if-needed@npm:^2.2.25":
   version: 2.2.31
   resolution: "scroll-into-view-if-needed@npm:2.2.31"
@@ -11724,6 +11733,7 @@ __metadata:
     noty: "npm:^3.2.0-beta-deprecated"
     nprogress: "npm:^0.2.0"
     nuxt: "npm:^3.12.2"
+    schema-dts: "npm:^1.1.2"
     scroll-into-view-if-needed: "npm:^3.1.0"
     stats.js: "npm:^0.17.0"
     tippy.js: "npm:^6.3.7"

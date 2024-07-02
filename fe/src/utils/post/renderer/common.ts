@@ -23,3 +23,5 @@ export const baseRenderUsername = (injectedGetUser: ReturnType<typeof baseGetUse
 
     return name + (displayName === null ? '' : ` ${displayName}`);
 };
+export const extractContentTexts = (content?: PostContent | null) => content
+    ?.reduce((acc, i) => acc + ('text' in i ? i.text ?? '' : ''), '') ?? '';
