@@ -39,15 +39,11 @@ const firstReplyContent = computed(() => props.firstThread?.replies[0]);
 const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
 const firstPostContentTexts = computed(() =>
     extractContentTexts((firstSubReplyContent.value ?? firstReplyContent.value)?.content));
-
-const firstPostAuthor = computed(() => {
-    if (props.firstPostPage === undefined)
-        // eslint-disable-next-line unicorn/no-useless-undefined
-        return undefined;
-    const uid = (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid;
-
-    return uid === undefined ? undefined : baseGetUser(props.firstPostPage.users)(uid);
-});
+const getUser = computed(() => baseGetUser(props.firstPostPage?.users ?? []));
+const firstPostAuthor = computed(() => undefinedOr(
+    (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid,
+    uid => getUser.value(uid)
+));
 const firstImage = computed(() => props.firstPostPage
     ?.threads.flatMap(thread =>
         thread.replies.flatMap(reply =>

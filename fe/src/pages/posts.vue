@@ -81,42 +81,56 @@ const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDO
     upvoteCount: post.agreeCount,
     downvoteCount: post.disagreeCount
 });
-const definePostAuthorPerson = (post: Post): Pick<Comment, 'author'> => ({
-    author: {
-        '@id': post.authorUid.toString()
-    }
-});
-const defineThreadComment = (thread: Thread): Comment => ({
+const definePostAuthorPerson = (post: Post, { getUser, renderUsername }: UserProvision): Pick<Comment, 'author'> => {
+    const uid = post.authorUid;
+    const user = getUser(uid);
+
+    return {
+        author: {
+            '@type': 'Person',
+            '@id': uid.toString(),
+            url: router.resolve(toUserRoute(uid)).fullPath,
+            name: renderUsername(uid),
+            image: toUserPortraitImageUrl(user.portrait),
+            sameAs: toUserProfileUrl(user)
+        }
+    };
+};
+const defineThreadComment = (thread: Thread, userProvision: UserProvision): Comment => ({
     ...definePostComment(thread, 'tid'),
-    ...definePostAuthorPerson(thread),
+    ...definePostAuthorPerson(thread, userProvision),
     discussionUrl: tiebaPostLink(thread.tid),
     headline: thread.title,
     commentCount: thread.replyCount
 });
-const defineReplyComment = (reply: Reply): Comment => ({
+const defineReplyComment = (reply: Reply, userProvision: UserProvision): Comment => ({
     ...definePostComment(reply, 'pid'),
-    ...definePostAuthorPerson(reply),
+    ...definePostAuthorPerson(reply, userProvision),
     discussionUrl: tiebaPostLink(reply.tid, reply.pid),
     parentItem: { '@type': 'Comment', '@id': reply.tid.toString() },
     text: extractContentTexts(reply.content),
     commentCount: reply.subReplyCount
 });
-const defineSubReplyComment = (subReply: SubReply): Comment => ({
+const defineSubReplyComment = (userProvision: UserProvision) => (subReply: SubReply): Comment => ({
     ...definePostComment(subReply, 'spid'),
-    ...definePostAuthorPerson(subReply),
+    ...definePostAuthorPerson(subReply, userProvision),
     discussionUrl: tiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
     parentItem: { '@type': 'Comment', '@id': subReply.pid.toString() },
     text: extractContentTexts(subReply.content)
 });
 /* eslint-enable @typescript-eslint/naming-convention */
-useSchemaOrg(computed(() => data.value?.pages.flatMap(page =>
-    page.threads.flatMap(thread => [
-        defineThreadComment(thread),
+useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
+    const getUser = baseGetUser(page.users);
+    const renderUsername = baseRenderUsername(getUser);
+
+    return page.threads.flatMap(thread => [
+        defineThreadComment(thread, { getUser, renderUsername }),
         ...thread.replies.flatMap(reply => [
-            defineReplyComment(reply),
-            ...reply.subReplies.map(defineSubReplyComment)
+            defineReplyComment(reply, { getUser, renderUsername }),
+            ...reply.subReplies.map(defineSubReplyComment({ getUser, renderUsername }))
         ])
-    ]))));
+    ]);
+})));
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

@@ -36,6 +36,10 @@ export const baseRenderUsername = (getUser: ReturnType<typeof baseGetUser>) => (
 
     return name + (displayName === null ? '' : ` ${displayName}`);
 };
+export interface UserProvision {
+    getUser: ReturnType<typeof baseGetUser>,
+    renderUsername: ReturnType<typeof baseRenderUsername>
+}
 export const useUserProvision = () => {
     const users = ref<User[]>([]);
     const getUser = computed(() => baseGetUser(users.value));
