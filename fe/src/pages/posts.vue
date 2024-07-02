@@ -30,12 +30,15 @@
 </template>
 
 <script setup lang="ts">
+import type { Comment } from 'schema-dts';
 import type { RouteLocationNormalized } from 'vue-router';
+import { DateTime } from 'luxon';
 import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
+const router = useRouter();
 const queryClient = useQueryClient();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref(false);
@@ -66,6 +69,54 @@ useHead({
     })
 });
 defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
+
+// https://schema.org/Comment
+/* eslint-disable @typescript-eslint/naming-convention */
+const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDOf<T>): Comment => ({
+    '@type': 'Comment',
+    '@id': (post[postIDKey] as Tid | Pid | Spid).toString(),
+    url: router.resolve({ name: `posts/${postIDKey}`, params: { [postIDKey]: post[postIDKey] as Tid | Pid | Spid } }).fullPath,
+    dateCreated: DateTime.fromSeconds(post.createdAt).toISO(),
+    datePublished: DateTime.fromSeconds(post.postedAt).toISO(),
+    upvoteCount: post.agreeCount,
+    downvoteCount: post.disagreeCount
+});
+const definePostAuthorPerson = (post: Post): Pick<Comment, 'author'> => ({
+    author: {
+        '@id': post.authorUid.toString()
+    }
+});
+const defineThreadComment = (thread: Thread): Comment => ({
+    ...definePostComment(thread, 'tid'),
+    ...definePostAuthorPerson(thread),
+    discussionUrl: tiebaPostLink(thread.tid),
+    headline: thread.title,
+    commentCount: thread.replyCount
+});
+const defineReplyComment = (reply: Reply): Comment => ({
+    ...definePostComment(reply, 'pid'),
+    ...definePostAuthorPerson(reply),
+    discussionUrl: tiebaPostLink(reply.tid, reply.pid),
+    parentItem: { '@type': 'Comment', '@id': reply.tid.toString() },
+    text: extractContentTexts(reply.content),
+    commentCount: reply.subReplyCount
+});
+const defineSubReplyComment = (subReply: SubReply): Comment => ({
+    ...definePostComment(subReply, 'spid'),
+    ...definePostAuthorPerson(subReply),
+    discussionUrl: tiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
+    parentItem: { '@type': 'Comment', '@id': subReply.pid.toString() },
+    text: extractContentTexts(subReply.content)
+});
+/* eslint-enable @typescript-eslint/naming-convention */
+useSchemaOrg(computed(() => data.value?.pages.flatMap(page =>
+    page.threads.flatMap(thread => [
+        defineThreadComment(thread),
+        ...thread.replies.flatMap(reply => [
+            defineReplyComment(reply),
+            ...reply.subReplies.map(defineSubReplyComment)
+        ])
+    ]))));
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;
