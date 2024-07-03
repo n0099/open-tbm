@@ -19,7 +19,7 @@
         "@nuxtjs/seo": "^2.0.0-rc.11",
         "@pinia/nuxt": "^0.5.1",
         "@popperjs/core": "^2.11.8",
-        "@tanstack/vue-query": "^5.49.0",
+        "@tanstack/vue-query": "^5.49.1",
         "@vesp/nuxt-fontawesome": "^1.0.4",
         "@vueuse/nuxt": "^10.11.0",
         "ant-design-vue": "^4.2.3",
@@ -43,8 +43,8 @@
         "@eslint/eslintrc": "^3.1.0",
         "@eslint/js": "^9.6.0",
         "@nuxt/eslint": "^0.3.13",
-        "@tanstack/eslint-plugin-query": "^5.49.0",
-        "@tanstack/vue-query-devtools": "^5.49.0",
+        "@tanstack/eslint-plugin-query": "^5.50.0",
+        "@tanstack/vue-query-devtools": "^5.49.1",
         "@types/bootstrap": "^5.2.10",
         "@types/eslint": "^8.56.10",
         "@types/grecaptcha": "^3.0.9",
@@ -60,10 +60,10 @@
         "eslint-import-resolver-typescript": "^3.6.1",
         "schema-dts": "^1.1.2",
         "stats.js": "^0.17.0",
-        "typescript": "^5.5.2",
+        "typescript": "^5.5.3",
         "typescript-eslint-parser-for-extra-files": "^0.7.0",
         "vite-bundle-analyzer": "^0.10.3",
-        "vue-tsc": "^2.0.22"
+        "vue-tsc": "^2.0.24"
     },
     "browserslist": [
         "> 1% in CN",
