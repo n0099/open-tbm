@@ -20,7 +20,7 @@
     </div>
     <img
         v-if="firstImage !== undefined"
-        :src="`https://imgsrc.baidu.com/forum/pic/item/${firstImage?.originSrc}.jpg`"
+        :src="imageUrl(firstImage?.originSrc)"
         class="h-screen object-contain" />
 </div>
 </template>

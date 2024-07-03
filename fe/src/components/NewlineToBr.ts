@@ -1,4 +1,5 @@
 import type { FunctionalComponent } from 'vue';
+import _ from 'lodash';
 
 type RootEl = Parameters<typeof h>[0];
 
@@ -10,7 +11,7 @@ const NewlineToBr: FunctionalComponent<{ is: RootEl, text?: string }> =
             .split('\n')
             // eslint-disable-next-line unicorn/no-array-reduce
             .reduce((acc: Array<VNode | string>, string: string) => {
-                if (acc.length === 0)
+                if (_.isEmpty(acc))
                     return [string];
 
                 return [...acc, h('br'), string];
