@@ -20,11 +20,6 @@ useHead({
     titleTemplate: '%pageTitle %separator %siteName',
     templateParams: { separator: '-' }
 });
-const route = useRoute();
-const resolveSitePath = createSitePathResolver({ absolute: true });
-useSeoMeta({ // https://github.com/harlan-zw/nuxt-seo/pull/261
-    ogUrl: computed(() => resolveSitePath(route.path).value)
-});
 
 if (import.meta.client) {
     nProgress.configure({ trickleSpeed: 200 });
