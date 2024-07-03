@@ -30,7 +30,7 @@
         "luxon": "^3.4.4",
         "noty": "^3.2.0-beta-deprecated",
         "nprogress": "^0.2.0",
-        "nuxt": "^3.12.2",
+        "nuxt": "^3.12.3",
         "scroll-into-view-if-needed": "^3.1.0",
         "tippy.js": "^6.3.7",
         "v-viewer": "^3.0.13",
