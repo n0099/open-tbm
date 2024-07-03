@@ -68,7 +68,6 @@ class Helper
                 40003 => '部分查询参数与查询帖子类型要求不匹配',
                 40004 => '排序方式与查询帖子类型要求不匹配',
                 40005 => '提供了多个唯一查询参数',
-                40006 => '指定查询的贴吧不存在',
             ],
             401 => [
                 40101 => 'Google reCAPTCHA 验证未通过 请刷新页面/更换设备/网络环境后重试',
@@ -77,6 +76,7 @@ class Helper
                 40401 => '帖子查询结果为空',
                 40402 => '用户查询结果为空',
                 40403 => '吧帖量统计查询结果为空',
+                40406 => '指定查询的贴吧不存在',
             ],
             500 => [
                 50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
@@ -94,10 +94,7 @@ class Helper
         if ($errorInfo === null) {
             throw new \InvalidArgumentException('Given error code doesn\'t existed');
         }
-        \Response::json([
-            'errorCode' => $errorCode,
-            'errorInfo' => $errorInfo
-        ], $statusCode)->send();
+        response()->json(compact('errorCode', 'errorInfo'), $statusCode)->throwResponse();
         exit;
     }
 

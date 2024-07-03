@@ -19,7 +19,7 @@ class Handler extends ExceptionHandler
             return $e->response;
         }
 
-        return \Response::json([
+        return response()->json([
             'errorCode' => 40000,
             'errorInfo' => $e->validator->getMessageBag()->getMessages()
         ], 400);

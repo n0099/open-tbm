@@ -64,7 +64,7 @@ class IndexQuery extends BaseQuery
                 $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
                 $queries = $getQueryBuilders($fid);
             } else {
-                Helper::abortAPI(40006);
+                Helper::abortAPI(40406);
             }
         } elseif ($hasPostIDParam) { // query by post ID only
             $fid = $getFidByPostIDParam($postIDParamName, $postIDParamValue);
