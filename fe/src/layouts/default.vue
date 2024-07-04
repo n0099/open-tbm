@@ -39,7 +39,7 @@ import nProgress from 'nprogress';
 const isRouteUpdating = useRouteUpdatingStore().isUpdating;
 const config = useRuntimeConfig().public;
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
-const isGoogleAnalyticsEnabled = config.gaMeasurementID !== '';
+const isGoogleAnalyticsEnabled = config.gaMeasurementId !== '';
 
 const noScriptStyle = `<style>
     #app-wrapper {

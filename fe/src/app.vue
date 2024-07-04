@@ -38,7 +38,7 @@ if (import.meta.client) {
         document.body.append(tag);
     }
 
-    const googleAnalyticsMeasurementId = config.gaMeasurementID;
+    const googleAnalyticsMeasurementId = config.gaMeasurementId;
     if (googleAnalyticsMeasurementId !== '') {
         const tag = document.createElement('script');
         tag.async = true;

@@ -1,7 +1,7 @@
 <template>
 <div class="flex flex-row justify-between size-screen">
     <div class="m-6">
-        <p>{{ routePath }}</p>
+        <p>{{ useSiteConfig().name }} {{ routePath }}</p>
         <h2>{{ firstPostPageForum?.name }}吧</h2>
         <template v-if="currentQueryType !== 'postID'">
             <p class="m-0">右侧为查询结果中第一张图片（不一定来自第一条帖子）</p>

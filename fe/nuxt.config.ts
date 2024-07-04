@@ -3,6 +3,7 @@ import { objectWithSameValues } from './src/utils';
 import { analyzer } from 'vite-bundle-analyzer';
 
 export default defineNuxtConfig({
+    compatibilityDate: '2024-07-04',
     devServer: { https: true },
     devtools: { enabled: true },
     srcDir: 'src',
@@ -34,18 +35,12 @@ export default defineNuxtConfig({
         defaultLocale: 'zh'
     },
     sitemap: {
-        sources: ['/api/__sitemap__/urls'],
-        sitemaps: true
+        sitemaps: true,
+        appendSitemaps: [{ sitemap: `${process.env.NUXT_PUBLIC_BE_URL}/sitemaps/forums` }]
     },
-    ogImage: {
-        fonts: ['Noto Sans SC']
-    },
-    schemaOrg: {
-        identity: 'Organization'
-    },
-    features: {
-        inlineStyles: false // https://github.com/nuxt/nuxt/issues/21821
-    },
+    ogImage: { fonts: ['Noto Sans SC'] },
+    schemaOrg: { identity: 'Organization' },
+    features: { inlineStyles: false }, // https://github.com/nuxt/nuxt/issues/21821
     sourcemap: true,
     build: {
         analyze: {
@@ -68,8 +63,8 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         public: objectWithSameValues([
-            'apiEndpointPrefix',
-            'gaMeasurementID',
+            'beUrl',
+            'gaMeasurementId',
             'recaptchaSiteKey',
             'instanceName',
             'footerText'

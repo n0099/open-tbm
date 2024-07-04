@@ -101,7 +101,7 @@
                 <input
                     v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
                     type="text" class="form-control" required />
-                <LazyPostQueryFormWidgetInputTextMatchParam
+                <PostQueryFormWidgetInputTextMatchParam
                     @update:modelValue="e => { params[pI] = e }"
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />

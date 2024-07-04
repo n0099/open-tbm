@@ -154,7 +154,7 @@ useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
             ...reply.subReplies.map(defineSubReplyComment({ getUser, renderUsername }))
         ])
     ]);
-})));
+}) ?? []));
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

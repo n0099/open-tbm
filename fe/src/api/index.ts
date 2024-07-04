@@ -32,7 +32,7 @@ export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
     }
     try {
         return await $fetch<TResponse>(
-            `${config.apiEndpointPrefix}${endpoint}`,
+            `${config.beUrl}/api/${endpoint}`,
             {
                 query: queryParam,
                 headers: {
@@ -104,7 +104,7 @@ const useApi = <
             queryFn: async () => queryFn<TResponse, TQueryParam>(
                 config,
                 clientRequestHeaders,
-                `/${endpoint}`,
+                endpoint,
                 queryParam?.value
             ),
             ...options
@@ -147,7 +147,7 @@ const useApiWithCursor = <
                 queryFn<TResponse, TQueryParamWithCursor>(
                     config,
                     clientRequestHeaders,
-                    `/${endpoint}`,
+                    endpoint,
                     { ...queryParam?.value, cursor: pageParam === '' ? undefined : pageParam } as TQueryParamWithCursor
                 ),
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
