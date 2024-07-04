@@ -147,4 +147,10 @@ class Helper
     {
         return json_decode($json, $assoc, flags: JSON_THROW_ON_ERROR);
     }
+
+    public static function xmlResponse(string|\Stringable $xml): \Illuminate\Http\Response
+    { // https://laracasts.com/discuss/channels/laravel/syntax-error-unexpected-identifier-version-1
+        return response('<?xml version="1.0" encoding="UTF-8"?>' . "\n$xml")
+            ->withHeaders(['Content-Type' => 'text/xml']);
+    }
 }
