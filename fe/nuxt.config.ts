@@ -33,6 +33,10 @@ export default defineNuxtConfig({
         name: `open-tbm @ ${process.env.NUXT_PUBLIC_INSTANCE_NAME}`,
         defaultLocale: 'zh'
     },
+    sitemap: {
+        sources: ['/api/__sitemap__/urls'],
+        sitemaps: true
+    },
     ogImage: {
         fonts: ['Noto Sans SC']
     },

@@ -39,3 +39,6 @@ export type ApiPosts = Api<CursorPagination & {
     }>,
     users: User[]
 }, { query: JsonString }>;
+export type ApiForumThreadsID = Api<CursorPagination & {
+    tid: Tid[]
+}, { cursor: Tid }>;

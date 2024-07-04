@@ -16,15 +16,15 @@ class ThreadsIDQuery extends Controller
         ]) + ['cursor' => 0];
         Helper::abortAPIIfNot(40406, (new Forum())->fid($fid)->exists());
         $thread = PostFactory::newThread($fid);
-        $primaryKey = $thread->getTable() . '.tid';
-        $paginators = $thread->cursorPaginate(1000, columns: 'tid', cursor: new Cursor([$primaryKey => $cursor]));
+        $cursorKey = $thread->getTable() . '.tid';
+        $paginator = $thread->cursorPaginate(1000, columns: 'tid', cursor: new Cursor([$cursorKey => $cursor]));
 
         return [
             'pages' => [
-                'currentCursor' => $paginators->cursor()->parameter($primaryKey),
-                'nextCursor' => $paginators->nextCursor()->parameter($primaryKey)
+                'currentCursor' => $paginator->cursor()->parameter($cursorKey),
+                'nextCursor' => $paginator->nextCursor()?->parameter($cursorKey)
             ],
-            'tid' => array_column($paginators->items(), 'tid')
+            'tid' => array_column($paginator->items(), 'tid')
         ];
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Topic;
+namespace App\Http;
 
 use App\Eloquent\Model\BilibiliVote as BilibiliVoteModel;
 use App\Helper;
@@ -9,14 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Spatie\Regex\Regex;
 
-/**
- * Class BilibiliVote
- *
- * Controller for /api/bilibiliVote
- *
- * @package App\Http\Controllers\Topic
- */
-class BilibiliVote
+class BilibiliVoteQuery
 {
     /**
      * Generate a query builder, which returns top $candidateCount candidates based on valid votes
