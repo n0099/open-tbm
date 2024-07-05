@@ -8,6 +8,7 @@ export const isTextParam = (param: Param): param is KnownTextParams =>
     (paramsNameKeyByType.text as Writable<typeof paramsNameKeyByType.text> as string[]).includes(param.name);
 export const isPostIDParam = (param: Param): param is AddNameToParam<PostID, NamelessParamNumeric> =>
     (postID as Writable<typeof postID> as string[]).includes(param.name);
+export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 
 export const getQueryFormDeps = () => {
     const router = useRouter();

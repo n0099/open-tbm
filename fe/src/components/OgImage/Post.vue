@@ -33,7 +33,7 @@ const props = defineProps<{
     firstPostPage?: ApiPosts['response'],
     firstPostPageForum?: ApiPosts['response']['forum'],
     firstThread?: ApiPosts['response']['threads'][number],
-    currentQueryType: UnwrapRef<ReturnType<typeof getQueryFormDeps>['currentQueryType']>
+    currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>
 }>();
 const firstReplyContent = computed(() => props.firstThread?.replies[0]);
 const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);

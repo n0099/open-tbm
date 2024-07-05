@@ -30,15 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Action, Comment, DiscussionForumPosting, InteractionCounter, Person } from 'schema-dts';
 import type { RouteLocationNormalized } from 'vue-router';
-import { DateTime } from 'luxon';
 import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';
 
 const route = useRoute();
-const router = useRouter();
 const queryClient = useQueryClient();
 const queryParam = ref<ApiPosts['queryParam']>();
 const shouldFetch = ref(false);
@@ -49,142 +46,8 @@ const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormDeps = getQueryFormDeps();
 const { currentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
-
-const firstPostPage = computed(() => data.value?.pages[0]);
-const firstPostPageForum = computed(() => firstPostPage.value?.forum);
-const firstThread = computed(() => firstPostPage.value?.threads[0]);
-useHead({
-    title: computed(() => {
-        if (firstPostPage.value === undefined)
-            return '帖子查询';
-        switch (currentQueryType.value) {
-            case 'fid':
-            case 'search':
-                return `${firstPostPageForum.value?.name}吧 - 帖子查询`;
-            case 'postID':
-                return `${firstThread.value?.title} - ${firstPostPageForum.value?.name}吧 - 帖子查询`;
-            default:
-                return '帖子查询';
-        }
-    })
-});
-defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
-
-// https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
-/* eslint-disable @typescript-eslint/naming-convention */
-const baseUrlWithDomain = useSiteConfig().url;
-const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDOf<T>): Comment => ({
-    '@type': 'Comment',
-    '@id': (post[postIDKey] as Tid | Pid | Spid).toString(),
-    url: baseUrlWithDomain + router.resolve({
-        name: `posts/${postIDKey}`,
-        params: { [postIDKey]: post[postIDKey] as Tid | Pid | Spid }
-    }).fullPath,
-    dateCreated: DateTime.fromSeconds(post.createdAt).toISO(),
-    datePublished: DateTime.fromSeconds(post.postedAt).toISO(),
-    upvoteCount: post.agreeCount,
-    downvoteCount: post.disagreeCount
-});
-
-const defineUserPerson = (uid: BaiduUserID): Exclude<Person, string> => ({
-    '@type': 'Person',
-    '@id': uid.toString(),
-    url: baseUrlWithDomain + router.resolve(toUserRoute(uid)).fullPath
-});
-const definePostAuthorPerson = (post: Post, { getUser }: UserProvision): Pick<Comment, 'author'> => {
-    const uid = post.authorUid;
-    const user = getUser(uid);
-
-    return {
-        author: {
-            ...defineUserPerson(uid),
-            name: [user.name, user.displayName].filter(i => i !== null),
-            image: toUserPortraitImageUrl(user.portrait),
-            sameAs: toUserProfileUrl(user)
-        }
-    };
-};
-
-const extractContentImagesUrl = (content: PostContent | null) => {
-    const ret = content?.filter(i => i.type === 3).map(i => imageUrl(i.originSrc)).filter(i => i !== undefined);
-
-    return _.isEmpty(ret) ? undefined : ret;
-};
-const extractContentUserMentions = (content: PostContent | null) => {
-    const ret = content?.filter(i => i.type === 4).filter(i => i.uid !== undefined)
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        .map((i): Person => ({ ...defineUserPerson(i.uid!), name: i.text }));
-
-    return _.isEmpty(ret) ? undefined : ret;
-};
-const definePostContentComment = (content: PostContent | null): Partial<Comment> => ({
-    text: extractContentTexts(content),
-    image: extractContentImagesUrl(content),
-    mentions: extractContentUserMentions(content)
-});
-
-const defineInteractionCounter = (action: Action['@type'], count: number): InteractionCounter => ({
-    '@type': 'InteractionCounter',
-    interactionType: { '@type': action } as Action,
-    userInteractionCount: count
-});
-const definePostInteractionCounters = (post: Post): InteractionCounter[] => [
-    defineInteractionCounter('LikeAction', post.agreeCount),
-    defineInteractionCounter('DislikeAction', post.disagreeCount)
-];
-
-const defineThreadDiscussionForumPosting = (
-    userProvision: UserProvision,
-    thread: Thread,
-    firstReplyContent?: PostContent | null
-): DiscussionForumPosting => ({
-    ...definePostComment(thread, 'tid'),
-    ...definePostAuthorPerson(thread, userProvision),
-    ...definePostContentComment(firstReplyContent ?? null),
-    '@type': 'DiscussionForumPosting',
-    sameAs: tiebaPostLink(thread.tid),
-    headline: thread.title,
-    commentCount: thread.replyCount,
-    interactionStatistic: [
-        ...definePostInteractionCounters(thread),
-        defineInteractionCounter('ReplyAction', thread.replyCount),
-        defineInteractionCounter('ViewAction', thread.viewCount),
-        defineInteractionCounter('ShareAction', thread.shareCount)
-    ]
-});
-const defineReplyComment = (reply: Reply, userProvision: UserProvision): Comment => ({
-    ...definePostComment(reply, 'pid'),
-    ...definePostAuthorPerson(reply, userProvision),
-    ...definePostContentComment(reply.content),
-    sameAs: tiebaPostLink(reply.tid, reply.pid),
-    parentItem: { '@type': 'Comment', '@id': reply.tid.toString() },
-    commentCount: reply.subReplyCount,
-    interactionStatistic: [
-        ...definePostInteractionCounters(reply),
-        defineInteractionCounter('ReplyAction', reply.subReplyCount)
-    ]
-});
-const defineSubReplyComment = (userProvision: UserProvision) => (subReply: SubReply): Comment => ({
-    ...definePostComment(subReply, 'spid'),
-    ...definePostAuthorPerson(subReply, userProvision),
-    ...definePostContentComment(subReply.content),
-    sameAs: tiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
-    parentItem: { '@type': 'Comment', '@id': subReply.pid.toString() },
-    interactionStatistic: definePostInteractionCounters(subReply)
-});
-/* eslint-enable @typescript-eslint/naming-convention */
-useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
-    const getUser = baseGetUser(page.users);
-    const renderUsername = baseRenderUsername(getUser);
-
-    return page.threads.flatMap(thread => [
-        defineThreadDiscussionForumPosting({ getUser, renderUsername }, thread, thread.replies[0]?.content),
-        ...thread.replies.flatMap(reply => [
-            defineReplyComment(reply, { getUser, renderUsername }),
-            ...reply.subReplies.map(defineSubReplyComment({ getUser, renderUsername }))
-        ])
-    ]);
-}) ?? []));
+usePostsOgImage(data, currentQueryType);
+usePostsSchemaOrg(data);
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

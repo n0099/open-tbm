@@ -189,7 +189,7 @@ import _ from 'lodash';
 
 const props = defineProps<{
     isLoading: boolean,
-    queryFormDeps: ReturnType<typeof getQueryFormDeps>
+    queryFormDeps: QueryFormDeps
 }>();
 const {
     isOrderByInvalid,
