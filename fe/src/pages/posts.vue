@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Comment, Person } from 'schema-dts';
+import type { Action, Comment, DiscussionForumPosting, InteractionCounter, Person } from 'schema-dts';
 import type { RouteLocationNormalized } from 'vue-router';
 import { DateTime } from 'luxon';
 import _ from 'lodash';
@@ -70,7 +70,7 @@ useHead({
 });
 defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
 
-// https://schema.org/Comment
+// https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
 /* eslint-disable @typescript-eslint/naming-convention */
 const baseUrlWithDomain = useSiteConfig().url;
 const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDOf<T>): Comment => ({
@@ -85,7 +85,8 @@ const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDO
     upvoteCount: post.agreeCount,
     downvoteCount: post.disagreeCount
 });
-const userToPerson = (uid: BaiduUserID): Exclude<Person, string> => ({
+
+const defineUserPerson = (uid: BaiduUserID): Exclude<Person, string> => ({
     '@type': 'Person',
     '@id': uid.toString(),
     url: baseUrlWithDomain + router.resolve(toUserRoute(uid)).fullPath
@@ -96,20 +97,14 @@ const definePostAuthorPerson = (post: Post, { getUser }: UserProvision): Pick<Co
 
     return {
         author: {
-            ...userToPerson(uid),
+            ...defineUserPerson(uid),
             name: [user.name, user.displayName].filter(i => i !== null),
             image: toUserPortraitImageUrl(user.portrait),
             sameAs: toUserProfileUrl(user)
         }
     };
 };
-const defineThreadComment = (thread: Thread, userProvision: UserProvision): Comment => ({
-    ...definePostComment(thread, 'tid'),
-    ...definePostAuthorPerson(thread, userProvision),
-    sameAs: tiebaPostLink(thread.tid),
-    headline: thread.title,
-    commentCount: thread.replyCount
-});
+
 const extractContentImagesUrl = (content: PostContent | null) => {
     const ret = content?.filter(i => i.type === 3).map(i => imageUrl(i.originSrc)).filter(i => i !== undefined);
 
@@ -118,29 +113,64 @@ const extractContentImagesUrl = (content: PostContent | null) => {
 const extractContentUserMentions = (content: PostContent | null) => {
     const ret = content?.filter(i => i.type === 4).filter(i => i.uid !== undefined)
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        .map((i): Person => ({ ...userToPerson(i.uid!), name: i.text }));
+        .map((i): Person => ({ ...defineUserPerson(i.uid!), name: i.text }));
 
     return _.isEmpty(ret) ? undefined : ret;
 };
-const postContentToComment = (content: PostContent | null): Partial<Comment> => ({
+const definePostContentComment = (content: PostContent | null): Partial<Comment> => ({
     text: extractContentTexts(content),
     image: extractContentImagesUrl(content),
     mentions: extractContentUserMentions(content)
 });
+
+const defineInteractionCounter = (action: Action['@type'], count: number): InteractionCounter => ({
+    '@type': 'InteractionCounter',
+    interactionType: { '@type': action } as Action,
+    userInteractionCount: count
+});
+const definePostInteractionCounters = (post: Post): InteractionCounter[] => [
+    defineInteractionCounter('LikeAction', post.agreeCount),
+    defineInteractionCounter('DislikeAction', post.disagreeCount)
+];
+
+const defineThreadDiscussionForumPosting = (
+    userProvision: UserProvision,
+    thread: Thread,
+    firstReplyContent?: PostContent | null
+): DiscussionForumPosting => ({
+    ...definePostComment(thread, 'tid'),
+    ...definePostAuthorPerson(thread, userProvision),
+    ...definePostContentComment(firstReplyContent ?? null),
+    '@type': 'DiscussionForumPosting',
+    sameAs: tiebaPostLink(thread.tid),
+    headline: thread.title,
+    commentCount: thread.replyCount,
+    interactionStatistic: [
+        ...definePostInteractionCounters(thread),
+        defineInteractionCounter('ReplyAction', thread.replyCount),
+        defineInteractionCounter('ViewAction', thread.viewCount),
+        defineInteractionCounter('ShareAction', thread.shareCount)
+    ]
+});
 const defineReplyComment = (reply: Reply, userProvision: UserProvision): Comment => ({
     ...definePostComment(reply, 'pid'),
     ...definePostAuthorPerson(reply, userProvision),
+    ...definePostContentComment(reply.content),
     sameAs: tiebaPostLink(reply.tid, reply.pid),
     parentItem: { '@type': 'Comment', '@id': reply.tid.toString() },
-    ...postContentToComment(reply.content),
-    commentCount: reply.subReplyCount
+    commentCount: reply.subReplyCount,
+    interactionStatistic: [
+        ...definePostInteractionCounters(reply),
+        defineInteractionCounter('ReplyAction', reply.subReplyCount)
+    ]
 });
 const defineSubReplyComment = (userProvision: UserProvision) => (subReply: SubReply): Comment => ({
     ...definePostComment(subReply, 'spid'),
     ...definePostAuthorPerson(subReply, userProvision),
+    ...definePostContentComment(subReply.content),
     sameAs: tiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
     parentItem: { '@type': 'Comment', '@id': subReply.pid.toString() },
-    ...postContentToComment(subReply.content)
+    interactionStatistic: definePostInteractionCounters(subReply)
 });
 /* eslint-enable @typescript-eslint/naming-convention */
 useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
@@ -148,7 +178,7 @@ useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
     const renderUsername = baseRenderUsername(getUser);
 
     return page.threads.flatMap(thread => [
-        defineThreadComment(thread, { getUser, renderUsername }),
+        defineThreadDiscussionForumPosting({ getUser, renderUsername }, thread, thread.replies[0]?.content),
         ...thread.replies.flatMap(reply => [
             defineReplyComment(reply, { getUser, renderUsername }),
             ...reply.subReplies.map(defineSubReplyComment({ getUser, renderUsername }))
