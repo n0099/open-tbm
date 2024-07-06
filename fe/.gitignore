@@ -1,6 +1,7 @@
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+.type-coverage
 
 # https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
 .pnp.*

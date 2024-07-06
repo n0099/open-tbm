@@ -23,13 +23,23 @@ jobs:
       - uses: ./.github/actions/fe
       - run: yarn run eslint .
 
-  codechecks:
+  type-coverage:
     runs-on: ${{ inputs.runs-on }}
-    steps: # contains CVE that triggers Dependabot
+    steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/fe
-      - run: |
-          yarn add -D typecov @codechecks/client
-          yarn run codechecks ../.github/codechecks.yml
-        env:
-          CC_SECRET: ${{ secrets.CC_SECRET }}
+
+      - id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/fe/.type-coverage
+          key: ${{ runner.os }}-fe-type-coverage
+          restore-keys: ${{ runner.os }}-fe-type-coverage-
+
+      - run: yarn run type-coverage --show-relative-path --cache --detail --strict --at-least 95
+
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache-restore.outputs.cache-hit != 'true'
+        with:
+          path: ${{ github.workspace }}/fe/.type-coverage
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}

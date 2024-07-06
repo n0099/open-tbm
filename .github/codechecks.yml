@@ -1,8 +1,0 @@
-settings:
-  # https://github.com/codechecks/monorepo/blob/4ccc8bbaab1586c0ef265f234f0a275fd40b38f8/packages/client/src/speculativeBranchSelection.ts#L73
-  branches: ['v2']
-checks:
-  - name: typecov
-    options:
-      strict: true
-      atLeast: 95
