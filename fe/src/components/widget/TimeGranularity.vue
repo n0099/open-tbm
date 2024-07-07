@@ -2,7 +2,9 @@
 <select v-model="modelValue" class="form-control">
     <option
         v-for="(text, granularity) in options" :key="granularity"
-        :value="granularity" :selected="granularity === modelValue">{{ text }}</option>
+        :value="granularity" :selected="granularity === modelValue">
+        {{ text }}
+    </option>
 </select>
 </template>
 

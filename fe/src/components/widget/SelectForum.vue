@@ -8,7 +8,9 @@
     <option value="0">未指定</option>
     <option
         v-for="forum in data" :key="forum.fid"
-        :value="forum.fid" :selected="forum.fid === modelValue">{{ forum.name }}</option>
+        :value="forum.fid" :selected="forum.fid === modelValue">
+        {{ forum.name }}
+    </option>
 </select>
 </template>
 

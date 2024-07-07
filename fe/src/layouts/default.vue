@@ -21,7 +21,9 @@
                 <span v-if="isReCAPTCHAEnabled && isGoogleAnalyticsEnabled"> | </span>
                 <NuxtLink
                     v-if="isReCAPTCHAEnabled" class="text-white"
-                    to="https://policies.google.com/terms" target="_blank">Google reCAPTCHA 服务条款</NuxtLink>
+                    to="https://policies.google.com/terms" target="_blank">
+                    Google reCAPTCHA 服务条款
+                </NuxtLink>
             </p>
         </div>
         <footer class="text-center p-3" id="footer-lower">

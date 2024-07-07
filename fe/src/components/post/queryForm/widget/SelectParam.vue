@@ -6,7 +6,9 @@
     <optgroup v-for="(group, groupName) in paramsGroup" :key="groupName" :label="groupName">
         <option
             v-for="(paramDescription, paramName) in group" :key="paramName"
-            :value="paramName" :selected="paramName === currentParam">{{ paramDescription }}</option>
+            :value="paramName" :selected="paramName === currentParam">
+            {{ paramDescription }}
+        </option>
     </optgroup>
 </select>
 </template>

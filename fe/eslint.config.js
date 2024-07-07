@@ -388,7 +388,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/no-reserved-component-names': 'off', // for component in antdv
         'vue/multi-word-component-names': 'off',
         'vue/require-default-prop': 'off',
-        'vue/multiline-html-element-content-newline': 'off',
     },
     optin: {
         'vue/html-indent': ['error', 4, { baseIndent: 0 }],
