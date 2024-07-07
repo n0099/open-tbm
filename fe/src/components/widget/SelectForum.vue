@@ -7,8 +7,8 @@
     class="form-select form-control" v-bind="$attrs">
     <option value="0">未指定</option>
     <option
-        v-for="forum in data"
-        :key="forum.fid" :value="forum.fid">{{ forum.name }}</option>
+        v-for="forum in data" :key="forum.fid"
+        :value="forum.fid" :selected="forum.fid === modelValue">{{ forum.name }}</option>
 </select>
 </template>
 
