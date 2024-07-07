@@ -148,7 +148,7 @@ const useApiWithCursor = <
                     config,
                     clientRequestHeaders,
                     endpoint,
-                    { ...queryParam?.value, cursor: pageParam === '' ? undefined : pageParam } as TQueryParamWithCursor
+                    { ...queryParam?.value, cursor: undefinedWhenEmpty(pageParam) } as TQueryParamWithCursor
                 ),
             getNextPageParam: lastPage => lastPage.pages.nextCursor,
             initialPageParam: '',

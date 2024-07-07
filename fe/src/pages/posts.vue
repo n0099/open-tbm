@@ -46,8 +46,7 @@ const selectedRenderTypes = ref<[PostRenderer]>(['list']);
 const renderType = computed(() => selectedRenderTypes.value[0]);
 const queryFormDeps = getQueryFormDeps();
 const { currentQueryType, parseRouteToGetFlattenParams } = queryFormDeps;
-usePostsOgImage(data, currentQueryType);
-usePostsSchemaOrg(data);
+usePostsSeo(data, currentQueryType);
 
 const queryStartedAtSSR = useState('postsQuerySSRStartTime', () => 0);
 let queryStartedAt = 0;

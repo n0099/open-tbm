@@ -1,7 +1,6 @@
 import type { Action, Comment, DiscussionForumPosting, InteractionCounter, Person } from 'schema-dts';
 import type { InfiniteData } from '@tanstack/vue-query';
 import { DateTime } from 'luxon';
-import _ from 'lodash';
 
 // https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
 export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> | undefined>) => {
@@ -40,21 +39,15 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
         };
     };
 
-    const extractContentImagesUrl = (content: PostContent | null) => {
-        const ret = content?.filter(i => i.type === 3)
+    const extractContentImagesUrl = (content: PostContent | null) =>
+        undefinedWhenEmpty(content?.filter(i => i.type === 3)
             .map(i => imageUrl(i.originSrc))
-            .filter(i => i !== undefined);
-
-        return _.isEmpty(ret) ? undefined : ret;
-    };
-    const extractContentUserMentions = (content: PostContent | null) => {
-        const ret = content?.filter(i => i.type === 4)
+            .filter(i => i !== undefined));
+    const extractContentUserMentions = (content: PostContent | null) =>
+        undefinedWhenEmpty(content?.filter(i => i.type === 4)
             .filter(i => i.uid !== undefined)
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            .map((i): Person => ({ ...defineUserPerson(i.uid!), name: i.text }));
-
-        return _.isEmpty(ret) ? undefined : ret;
-    };
+            .map((i): Person => ({ ...defineUserPerson(i.uid!), name: i.text })));
     const definePostContentComment = (content: PostContent | null): Partial<Comment> => ({
         text: extractContentTexts(content),
         image: extractContentImagesUrl(content),

@@ -57,6 +57,7 @@ export const boolStrPropToBool = <T>(object: Record<string, T | string>): Record
 export const isElementNode = (node: Node): node is Element => node.nodeType === Node.ELEMENT_NODE;
 export const undefinedOr = <T, TReturn>(value: T | undefined, transformer: (value: T) => TReturn): TReturn | undefined =>
     (value === undefined ? undefined : transformer(value));
+export const undefinedWhenEmpty = <T>(value: T) => (_.isEmpty(value) ? undefined : value);
 
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));

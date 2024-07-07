@@ -1,7 +1,7 @@
 import type { QueryFormDeps } from '@/utils/post/queryForm';
 import type { InfiniteData } from '@tanstack/vue-query';
 
-export const usePostsOgImage = (
+export const usePostsSeo = (
     data: Ref<InfiniteData<ApiPosts['response']> | undefined>,
     currentQueryType: QueryFormDeps['currentQueryType']
 ) => {
@@ -25,4 +25,5 @@ export const usePostsOgImage = (
         })
     });
     defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
+    usePostsSchemaOrg(data);
 };
