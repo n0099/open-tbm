@@ -38,8 +38,7 @@
                         点赞量：${thread.zan.num}<br>
                         最后点赞时间：${
                         useHydrationStore().isHydratingOrSSR()
-                            ? DateTime.fromSeconds(Number(thread.zan.last_time))
-                                .setZone('Asia/Shanghai').setLocale('zh-cn')
+                            ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(thread.zan.last_time)))
                                 .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
                             : `${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })
                             } ${DateTime.fromSeconds(Number(thread.zan.last_time))

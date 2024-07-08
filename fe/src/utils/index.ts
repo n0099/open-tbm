@@ -1,4 +1,5 @@
 import { FetchError } from 'ofetch';
+import type { DateTime, Zone, ZoneOptions } from 'luxon';
 import _ from 'lodash';
 
 export type BootstrapColor = 'danger' | 'dark' | 'info' | 'light' | 'muted' | 'primary' | 'secondary' | 'success' | 'warning';
@@ -58,6 +59,9 @@ export const isElementNode = (node: Node): node is Element => node.nodeType === 
 export const undefinedOr = <T, TReturn>(value: T | undefined, transformer: (value: T) => TReturn): TReturn | undefined =>
     (value === undefined ? undefined : transformer(value));
 export const undefinedWhenEmpty = <T>(value: T) => (_.isEmpty(value) ? undefined : value);
+export const setDateTimeZoneAndLocale = (timezone?: string | Zone, zoneOptions?: ZoneOptions, locale?: string) =>
+    (dateTime: DateTime) => dateTime
+        .setZone(timezone ?? 'Asia/Shanghai', zoneOptions).setLocale(locale ?? 'zh-cn');
 
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));

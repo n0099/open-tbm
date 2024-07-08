@@ -42,8 +42,7 @@ const props = defineProps<{
     timestampType: 'latestReplyPostedAt' extends TPostTimeKey ? '最后回复时间'
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
-const currentInChina = computed(() =>
-    props.current.setZone('Asia/Shanghai').setLocale('zh-cn'));
+const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
 </script>
 
 <style scoped>

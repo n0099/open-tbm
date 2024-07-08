@@ -458,6 +458,10 @@ const findVoteCount = (votes: Array<{ isValid: IsValid, count: number }>, isVali
     _.find(votes, { isValid })?.count ?? 0;
 const formatCandidateName = (id: number) => `${id}号\n${json.candidateNames[id - 1]}`;
 
+// Asia/Shanghai might change in the future https://tz.iana.narkive.com/wC4GGSQ2/adding-asia-beijing-timezone-into-the-database
+// Etc/GMT-8 in IANA tzdb is UTC+8 https://stackoverflow.com/questions/53076575/time-zones-etc-gmt-why-it-is-other-way-round
+const filledTimeGranularityAxisPointerLabelFormatter =
+    timeGranularityAxisPointerLabelFormatter(setDateTimeZoneAndLocale('UTC+8', { keepLocalTime: true }));
 const loadCharts = {
     top50CandidateCount: () => {
         // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
@@ -566,14 +570,15 @@ const loadCharts = {
                         fill: '#989898',
                         align: 'right',
                         font: '1.75rem "Microsoft YaHei"',
-                        text: `共${getVotesTotalCount()}票\n${DateTime.fromSeconds(Number(time)).toLocaleString({
-                            month: 'short',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
-                            timeZone: 'Asia/Shanghai'
-                        })}`
+                        text: `共${getVotesTotalCount()}票\n${setDateTimeZoneAndLocale('UTC+8')
+                        (DateTime.fromSeconds(Number(time)))
+                            .toLocaleString({
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            })}`
                     }
                 }
             });
@@ -657,7 +662,7 @@ const loadCharts = {
             });
         });
         echartsInstances.top5CandidateCountGroupByTime?.setOption({
-            axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
+            axisPointer: { label: { formatter: filledTimeGranularityAxisPointerLabelFormatter[timeGranularity] } },
             xAxis: Array.from({ length: 2 }).fill({ type: timeGranularityAxisType[timeGranularity] }),
             series
         } as echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>);
@@ -678,7 +683,7 @@ const loadCharts = {
             }))
             .value();
         echartsInstances.allVoteCountGroupByTime?.setOption({
-            axisPointer: { label: { formatter: timeGranularityAxisPointerLabelFormatter[timeGranularity] } },
+            axisPointer: { label: { formatter: filledTimeGranularityAxisPointerLabelFormatter[timeGranularity] } },
             xAxis: { type: timeGranularityAxisType[timeGranularity] },
             dataset: { source: dataset }
         } as echarts.ComposeOption<DatasetComponentOption | GridComponentOption>);

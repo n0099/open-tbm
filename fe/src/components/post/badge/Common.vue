@@ -51,7 +51,7 @@ const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
     const relative = import.meta.client ? dateTime.toRelative({ round: false }) : '';
     const full = import.meta.server
-        ? dateTime.setZone('Asia/Shanghai').setLocale('zh-cn')
+        ? setDateTimeZoneAndLocale()(dateTime)
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
         : dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
