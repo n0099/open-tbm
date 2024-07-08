@@ -531,6 +531,7 @@ import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
 import pluginImportX from 'eslint-plugin-import-x';
+import pluginPinia from 'eslint-plugin-pinia';
 import pluginUnicorn from 'eslint-plugin-unicorn';
 import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
 import _ from 'lodash';
@@ -553,6 +554,7 @@ export default withNuxt(
         'plugin:@tanstack/eslint-plugin-query/recommended', // https://github.com/TanStack/query/pull/7253
     )),
     pluginUnicorn.configs['flat/recommended'],
+    ...compat.config(pluginPinia.configs.all),
     { languageOptions: { ecmaVersion: 'latest' } },
     { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },
