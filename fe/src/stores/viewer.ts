@@ -16,5 +16,8 @@ export const useViewerStore = defineStore('viewer', () => {
         isEnabled.value = true;
     };
 
+    // returning ref isEnabled while SSR will be store its value in hydration
+    // leads to only server, but not including client have enabled the plugin
+    // eslint-disable-next-line pinia/require-setup-store-properties-export
     return { enable };
 });

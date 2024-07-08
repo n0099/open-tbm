@@ -20,5 +20,6 @@ export const useHydrationStore = defineStore('hydration', () => {
     });
     const isHydratingOrSSR = computed(() => import.meta.server || isHydrating.value);
 
+    // eslint-disable-next-line pinia/require-setup-store-properties-export
     return { isHydrating, isHydratingOrSSR };
 });
