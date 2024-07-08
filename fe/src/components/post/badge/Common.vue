@@ -26,9 +26,9 @@
 </NuxtLink>
 <span
     v-tippy="`
-            首次收录时间：${formatTime(props.post.createdAt)}<br>
-            最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
-            最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`"
+        首次收录时间：${formatTime(props.post.createdAt)}<br>
+        最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
+        最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faClock" size="lg" class="align-bottom" />
 </span>
@@ -49,9 +49,12 @@ const props = defineProps<{
 }>();
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
-    const relative = dateTime.toRelative({ round: false });
-    const fullWithLocale = dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+    const relative = import.meta.client ? dateTime.toRelative({ round: false }) : '';
+    const full = import.meta.server
+        ? dateTime.setZone('Asia/Shanghai').setLocale('zh-cn')
+            .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
+        : dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
-    return `${relative} ${fullWithLocale}`;
+    return `${relative} ${full}`;
 };
 </script>

@@ -16,8 +16,8 @@
 </span>
 <span
     v-if="useHydrationStore().isHydratingOrSSR()"
-    :title="`本${postType}${timestampType}：\n${
-        currentInChina.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
+    :title="`本${postType}${timestampType}：\n
+        ${currentInChina.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
     class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
     <component :is="$slots.default" />
     {{ currentInChina.toLocaleString({

@@ -16,6 +16,7 @@ export default defineNuxtPlugin(nuxt => {
     nuxt.vueApp.directive<HTMLElement, string>('tippy', {
         mounted(el, binding) {
             el.dataset.tippyContent = binding.value;
+            el.removeAttribute('title');
             createSingleton(tippy([el]), { allowHTML: true, appendTo: document.body });
         },
         getSSRProps: binding => ({

@@ -177,6 +177,9 @@
         <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
             查询 <span v-show="isLoading" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" />
         </button>
+        <span v-if="useHydrationStore().isHydratingOrSSR()" class="col-auto ms-3 my-auto">
+            提交查询表单需要使用 JavaScript
+        </span>
         <span class="col-auto ms-3 my-auto text-muted">{{ currentQueryTypeDescription }}</span>
     </div>
 </form>

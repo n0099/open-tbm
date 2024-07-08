@@ -36,10 +36,14 @@
                 <span
                     v-if="thread.zan !== null" v-tippy="`
                         点赞量：${thread.zan.num}<br>
-                        最后点赞时间：${DateTime.fromSeconds(Number(thread.zan.last_time))
-                    .toRelative({ round: false })}
-                        ${DateTime.fromSeconds(Number(thread.zan.last_time))
-                    .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
+                        最后点赞时间：${
+                        useHydrationStore().isHydratingOrSSR()
+                            ? DateTime.fromSeconds(Number(thread.zan.last_time))
+                                .setZone('Asia/Shanghai').setLocale('zh-cn')
+                                .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
+                            : `${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })
+                            } ${DateTime.fromSeconds(Number(thread.zan.last_time))
+                                .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}<br>
                         近期点赞用户：${thread.zan.user_id_list}<br>`" class="badge bg-info">
                     <!-- todo: fetch users info in zan.user_id_list -->
                     <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
