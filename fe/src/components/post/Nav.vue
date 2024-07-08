@@ -51,7 +51,7 @@ import _ from 'lodash';
 const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
 const route = useRoute();
 const router = useRouter();
-const elementRefsStore = useElementRefsStore();
+const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
@@ -130,8 +130,8 @@ const scrollStop = _.debounce(() => {
     ).el;
 
     const viewportTopmostPostElement = {
-        thread: findTopmostElement(elementRefsStore.get('<PostRendererList>.thread-title')),
-        reply: findTopmostElement(elementRefsStore.get('<PostRendererList>.reply-title'), getReplyTitleTopOffset())
+        thread: findTopmostElement(elementRefStore.get('<PostRendererList>.thread-title')),
+        reply: findTopmostElement(elementRefStore.get('<PostRendererList>.reply-title'), getReplyTitleTopOffset())
     };
     const viewportTopmostPostID = _.mapValues(viewportTopmostPostElement, i =>
         Number(i.parentElement?.getAttribute('data-post-id')));

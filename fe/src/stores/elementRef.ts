@@ -1,4 +1,4 @@
-export const useElementRefsStore = defineStore('elementRefs', () => {
+export const useElementRefStore = defineStore('elementRef', () => {
     const refs = ref<Record<string, Element[] | undefined>>({});
     const get = (key: string): Element[] => refs.value[key] ?? [];
     const set = (key: string, elements: Element[]) => {

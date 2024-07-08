@@ -1,7 +1,7 @@
 <template>
 <div :data-post-id="reply.pid" :id="reply.pid.toString()">
     <div
-        :ref="el => elementRefsStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
+        :ref="el => elementRefStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
         <div class="d-inline-flex gap-1 fs-5">
@@ -65,7 +65,7 @@ defineProps<{
     nextReply?: ReplyWithGroupedSubReplies
 }>();
 
-const elementRefsStore = useElementRefsStore();
+const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const { getUser } = useUserProvision().inject();
 const replyElements = ref<HTMLElement[]>([]);

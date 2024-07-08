@@ -1,7 +1,7 @@
 <template>
 <div :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
     <div
-        :ref="el => elementRefsStore.pushOrClear('<PostRendererList>.thread-title', el as Element | null)"
+        :ref="el => elementRefStore.pushOrClear('<PostRendererList>.thread-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
         class="thread-title shadow-sm card-header sticky-top">
         <div class="thread-title-inline-start row flex-nowrap">
@@ -103,7 +103,7 @@ defineProps<{
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies
 }>();
-const elementRefsStore = useElementRefsStore();
+const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, renderUsername } = useUserProvision().inject();
 </script>
