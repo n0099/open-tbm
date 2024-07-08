@@ -62,10 +62,10 @@ export default {
         if (savedPosition !== null && savedPosition.top !== 0)
             return savedPosition;
 
-        const routeScrollBehavior = useRouteScrollBehaviorStore().get;
-        if (routeScrollBehavior !== undefined) {
+        const routeScrollBehavior = useRouteScrollBehaviorStore();
+        if (routeScrollBehavior.get !== undefined) {
             const ret: ReturnType<RouterScrollBehavior> | undefined =
-                routeScrollBehavior(to, from, savedPosition);
+                routeScrollBehavior.get(to, from, savedPosition);
             if (ret !== undefined)
                 return ret;
         }

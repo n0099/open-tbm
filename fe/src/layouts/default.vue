@@ -2,9 +2,9 @@
 <div class="d-flex flex-column" id="app-wrapper">
     <GlobalNavBar />
     <MinimumResolutionWarning />
-    <img :src="iconLoadingBlock" :class="{ 'd-none': !isRouteUpdating }" id="loading-block" />
+    <img :src="iconLoadingBlock" :class="{ 'd-none': !routeUpdatingStore.isUpdating }" id="loading-block" />
     <AConfigProvider :locale="AntdZhCn">
-        <slot :class="{ invisible: isRouteUpdating }" />
+        <slot v-if="!routeUpdatingStore.isUpdating" />
     </AConfigProvider>
     <footer class="text-light pt-4 mt-auto" id="footer-upper">
         <div class="text-center">
@@ -38,7 +38,7 @@ import iconLoadingBlock from 'assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
 import nProgress from 'nprogress';
 
-const isRouteUpdating = useRouteUpdatingStore().isUpdating;
+const routeUpdatingStore = useRouteUpdatingStore();
 const config = useRuntimeConfig().public;
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementId !== '';

@@ -2,7 +2,7 @@
 <div v-viewer.static>
     <!-- eslint-disable-next-line vue/no-unused-vars -->
     <DefineUGCImage v-slot="{ $slots, src, ...attrs }">
-        <NuxtLink v-if="useHydrationStore().isHydratingOrSSR()" :to="src" target="_blank" class="tieba-ugc-image">
+        <NuxtLink v-if="useHydrationStore().isHydratingOrSSR" :to="src" target="_blank" class="tieba-ugc-image">
             <!-- eslint-disable-next-line vue/no-duplicate-attr-inheritance -->
             <img :src="src" referrerpolicy="no-referrer" loading="lazy" class="tieba-ugc-image" v-bind="attrs" />
         </NuxtLink>

@@ -11,7 +11,7 @@ export const notyShow = (type: Noty.Type, text: string) => {
 
 // https://stackoverflow.com/questions/986937/how-can-i-get-the-browsers-scrollbar-sizes/986977#986977
 export const scrollBarWidth = computed(() => {
-    if (useHydrationStore().isHydratingOrSSR())
+    if (useHydrationStore().isHydratingOrSSR)
         return '16px'; // assumed default width
     const inner = document.createElement('p');
     inner.style.width = '100%';

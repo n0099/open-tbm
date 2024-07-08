@@ -34,7 +34,7 @@
     }"
     class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
     <a
-        v-if="!useHydrationStore().isHydratingOrSSR()"
+        v-if="!hydrationStore.isHydratingOrSSR"
         @click="_ => togglePostNavExpanded()" class="text-primary">
         <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
         <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
@@ -53,6 +53,7 @@ const route = useRoute();
 const router = useRouter();
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
+const hydrationStore = useHydrationStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>({ cursor: '', tid: 0, pid: 0 });
@@ -85,7 +86,7 @@ const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key })
 };
 
 const menuThreadClasses = (thread: Thread) => {
-    if (useHydrationStore().isHydrating())
+    if (hydrationStore.isHydrating)
         return 'border-only-bottom border-bottom';
     const isRouteHash = route.hash === routeHash(thread.tid);
     const isHighlighting = highlightPostStore.isHighlightingPost(thread, 'tid');
@@ -99,7 +100,7 @@ const menuThreadClasses = (thread: Thread) => {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 const menuReplyClasses = (reply: Reply) => {
-    if (useHydrationStore().isHydrating())
+    if (hydrationStore.isHydrating)
         return 'btn-light text-body-secondary';
     const isRouteHash = route.hash === routeHash(null, reply.pid);
     const isHighlighting = highlightPostStore.isHighlightingPost(reply, 'pid');

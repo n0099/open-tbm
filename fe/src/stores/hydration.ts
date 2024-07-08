@@ -3,7 +3,7 @@ export const useHydrationStore = defineStore('hydration', () => {
     const isHydratingState = ref(false);
     const isHydrationHooked = ref(false);
     const nuxt = useNuxtApp();
-    const isHydrating = () => {
+    const isHydrating = computed(() => {
         if (!(import.meta.client && (nuxt.isHydrating ?? false)))
             return isHydratingState.value;
 
@@ -17,8 +17,8 @@ export const useHydrationStore = defineStore('hydration', () => {
         }
 
         return isHydratingState.value;
-    };
-    const isHydratingOrSSR = () => import.meta.server || isHydrating();
+    });
+    const isHydratingOrSSR = computed(() => import.meta.server || isHydrating.value);
 
     return { isHydrating, isHydratingOrSSR };
 });

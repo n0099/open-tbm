@@ -7,14 +7,14 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
     const end = () => { isUpdating.value = false };
 
     watchEffect(() => {
+        if (!import.meta.client)
+            return;
         if (isUpdating.value) {
-            if (import.meta.client)
-                timeoutId = window.setTimeout(() => { nProgress.start() }, 100);
+            timeoutId = window.setTimeout(() => { nProgress.start() }, 100);
             window.setTimeout(end, 10000);
         } else {
             clearTimeout(timeoutId);
-            if (import.meta.client)
-                nProgress.done();
+            nProgress.done();
         }
     });
 

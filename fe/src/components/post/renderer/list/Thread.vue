@@ -37,7 +37,7 @@
                     v-if="thread.zan !== null" v-tippy="`
                         点赞量：${thread.zan.num}<br>
                         最后点赞时间：${
-                        useHydrationStore().isHydratingOrSSR()
+                        useHydrationStore().isHydratingOrSSR
                             ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(thread.zan.last_time)))
                                 .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
                             : `${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })

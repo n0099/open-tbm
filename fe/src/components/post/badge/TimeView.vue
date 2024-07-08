@@ -1,6 +1,6 @@
 <template>
 <span
-    v-if="!useHydrationStore().isHydratingOrSSR()"
+    v-if="!hydrationStore.isHydratingOrSSR"
     v-tippy="`
             本${postType}${timestampType}：<br>
             ${current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
@@ -15,7 +15,7 @@
     {{ current.toRelative({ base: relativeTo, round: false }) }}
 </span>
 <span
-    v-if="useHydrationStore().isHydratingOrSSR()"
+    v-if="hydrationStore.isHydratingOrSSR"
     :title="`本${postType}${timestampType}：\n
         ${currentInChina.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
     class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
@@ -42,6 +42,7 @@ const props = defineProps<{
     timestampType: 'latestReplyPostedAt' extends TPostTimeKey ? '最后回复时间'
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
+const hydrationStore = useHydrationStore();
 const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
 </script>
 
