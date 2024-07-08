@@ -1,5 +1,5 @@
 import type { PluginVisualizerOptions } from 'rollup-plugin-visualizer';
-import { objectWithSameValues } from './src/utils';
+import { keysWithSameValue } from './src/utils';
 import { analyzer } from 'vite-bundle-analyzer';
 
 export default defineNuxtConfig({
@@ -62,7 +62,7 @@ export default defineNuxtConfig({
         componentIslands: true
     },
     runtimeConfig: {
-        public: objectWithSameValues([
+        public: keysWithSameValue([
             'beUrl',
             'gaMeasurementId',
             'recaptchaSiteKey',

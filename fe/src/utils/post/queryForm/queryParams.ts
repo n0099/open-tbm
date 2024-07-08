@@ -5,19 +5,21 @@ export type RequiredPostTypes = Record<string, ['ALL' | 'SUB', PostType[]] | und
 export const requiredPostTypesKeyByParam: RequiredPostTypes = {
     pid: ['SUB', ['reply', 'subReply']],
     spid: ['ALL', ['subReply']],
-    latestReplyPostedAt: ['ALL', ['thread']],
-    threadTitle: ['ALL', ['thread']],
     postContent: ['SUB', ['reply', 'subReply']],
-    threadViewCount: ['ALL', ['thread']],
-    threadShareCount: ['ALL', ['thread']],
-    threadReplyCount: ['ALL', ['thread']],
     replySubReplyCount: ['ALL', ['reply']],
-    threadProperties: ['ALL', ['thread']],
     authorExpGrade: ['SUB', ['reply', 'subReply']],
-    latestReplierUid: ['ALL', ['thread']],
-    latestReplierName: ['ALL', ['thread']],
-    latestReplierDisplayName: ['ALL', ['thread']],
-    latestReplierGender: ['ALL', ['thread']]
+    ...keysWithSameValue([
+        'latestReplyPostedAt',
+        'threadTitle',
+        'threadViewCount',
+        'threadShareCount',
+        'threadReplyCount',
+        'threadProperties',
+        'latestReplierUid',
+        'latestReplierName',
+        'latestReplierDisplayName',
+        'latestReplierGender'
+    ], ['ALL', ['thread']])
 };
 export const orderByRequiredPostTypes: RequiredPostTypes = {
     pid: ['SUB', ['reply', 'subReply']],

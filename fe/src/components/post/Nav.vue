@@ -106,13 +106,10 @@ const menuReplyClasses = (reply: Reply) => {
     const isTopmost = reply.pid === viewportTopmostPost.value.pid;
 
     return { /* eslint-disable @typescript-eslint/naming-convention */
-        'rounded-3': isTopmost,
-        'btn-info': isTopmost,
-        'btn-light': !isTopmost,
+        ...keysWithSameValue(['rounded-3', 'btn-info', 'text-white'], isTopmost),
+        ...keysWithSameValue(['btn-light', 'text-body-secondary'], !isTopmost),
         'btn-outline-warning': isHighlighting,
-        'btn-outline-primary': !isTopmost && isRouteHash,
-        'text-white': isTopmost,
-        'text-body-secondary': !isTopmost
+        'btn-outline-primary': !isTopmost && isRouteHash
     };
     /* eslint-enable @typescript-eslint/naming-convention */
 };

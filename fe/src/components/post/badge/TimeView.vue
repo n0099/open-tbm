@@ -22,7 +22,7 @@
     <component :is="$slots.default" />
     {{ currentInChina.toLocaleString({
         year: 'numeric',
-        ...objectWithSameValues(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
+        ...keysWithSameValue(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
     }) }}
 </span>
 </template>

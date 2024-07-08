@@ -65,8 +65,8 @@ export const setDateTimeZoneAndLocale = (timezone?: string | Zone, zoneOptions?:
 
 // https://stackoverflow.com/questions/71075490/how-to-make-a-structuredclone-of-a-proxy-object/77022014#77022014
 export const refDeepClone = <T>(value: T) => structuredClone(toRaw(value));
-export const objectWithSameValues = <const TKeys extends string[], const TValue>(keys: TKeys, value: TValue) =>
-    _.zipObject(keys, keys.map(() => value)) as Record<TKeys[number], TValue>;
+export const keysWithSameValue = <const TKeys extends string[], const TValue>(keys: TKeys, value: TValue) =>
+    _.zipObject(keys, keys.map(() => value)) as Record<TKeys[number], TValue> as DeepWritable<Record<TKeys[number], TValue>>;
 
 // https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683
 // https://gist.github.com/paulirish/5d52fb081b3570c81e3a#calling-getcomputedstyle

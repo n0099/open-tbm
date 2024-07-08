@@ -31,12 +31,8 @@ export const timeGranularities = ['minute', 'hour', 'day', 'week', 'month', 'yea
 export type TimeGranularity = typeof timeGranularities[number];
 export type TimeGranularityStringMap = { [P in TimeGranularity]?: string };
 export const timeGranularityAxisType: { [P in TimeGranularity]: 'category' | 'time' } = {
-    minute: 'time',
-    hour: 'time',
-    day: 'time',
-    week: 'category',
-    month: 'category',
-    year: 'category'
+    ...keysWithSameValue(['minute', 'hour', 'day'], 'time'),
+    ...keysWithSameValue(['week', 'month', 'year'], 'category')
 };
 export const timeGranularityAxisPointerLabelFormatter: (dateTimeTransformer: (dateTime: DateTime) => DateTime) =>
 { [P in TimeGranularity]: (params: { value: Date | number | string }) => string } =

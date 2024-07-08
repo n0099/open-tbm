@@ -39,17 +39,13 @@ const props = defineProps<{
 }>();
 
 const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColor] } = {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    fourth_manager: ['第四吧主', 'danger'],
-    fourthmanager: ['第四吧主', 'danger'],
+    ...keysWithSameValue(['fourth_manager', 'fourthmanager'], ['第四吧主', 'danger']),
     manager: ['吧主', 'danger'],
     assist: ['小吧', 'primary'],
     picadmin: ['图片小编', 'warning'],
     videoadmin: ['视频小编', 'warning'],
     voiceadmin: ['语音小编', 'secondary'],
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    publication_editor: ['吧刊小编', 'secondary'],
-    publication: ['吧刊小编', 'secondary']
+    ...keysWithSameValue(['publication_editor', 'publication'], ['吧刊小编', 'secondary'])
 };
 const moderators = computed(() => _.pick(knownModeratorTypes,
     props.user.currentForumModerator?.moderatorTypes.split(',') ?? []));
