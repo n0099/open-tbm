@@ -4,9 +4,9 @@
     "net8.0": {
       "LanguageExt.Core": {
         "type": "Direct",
-        "requested": "[4.4.8, )",
-        "resolved": "4.4.8",
-        "contentHash": "zd3+mICicbTvf17OuOaruTpluiA5qEl9e28rXSokkI/rK9vdtZzpigYN6+D6Yx9jTkkVDZlvoYUg28RtQqtGiw==",
+        "requested": "[4.4.9, )",
+        "resolved": "4.4.9",
+        "contentHash": "K9VGWkThJkaomifa3zcmwysw1BaSqIZZPZc6trBnJN8u9mpmA/cMMwCWEa/v7bPv/+NnG6PbyIDB7HtxBX7yCQ==",
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "7.0.0",
           "Microsoft.CSharp": "4.7.0",
@@ -43,9 +43,9 @@
       },
       "OpenCvSharp4": {
         "type": "Direct",
-        "requested": "[4.9.0.20240103, )",
-        "resolved": "4.9.0.20240103",
-        "contentHash": "+BJMqToSH3dl+5SUF2YaPI+1eY/o/aTtvCQsY3qgcE4YS8qvPNS7MObzzVy4avYrBmcEEFnCvNF+1VbFnQjU9w==",
+        "requested": "[4.10.0.20240616, )",
+        "resolved": "4.10.0.20240616",
+        "contentHash": "+iaFSUq0Cp+B9s1sUqDwB3PvQ5HdWWvRE50WsAw1PL8smD3VZNbe0P786E4Yfu7LHM7jeqkulOwjk2CoihsZeg==",
         "dependencies": {
           "System.Memory": "4.5.5",
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
@@ -53,28 +53,28 @@
       },
       "OpenCvSharp4.runtime.win": {
         "type": "Direct",
-        "requested": "[4.9.0.20240103, )",
-        "resolved": "4.9.0.20240103",
-        "contentHash": "PkV3ge6rE//gj0OlG4TRXzmcLVDoKsJx0lYN1ogx9gZhqUPHlzrnWqKk2hAFK+nU8T0chRhrwHL0U2hSMyoCWw=="
+        "requested": "[4.10.0.20240616, )",
+        "resolved": "4.10.0.20240616",
+        "contentHash": "dpQNIR6PpeB/oZM0e0fZpt9lOS3Htjm6ZjtOgLyxN7QwjRekbNevrmO8VbgezUoetk68CRwxYZGaymCm2vt8Sg=="
       },
       "Sdcb.PaddleInference.runtime.win64.mkl": {
         "type": "Direct",
-        "requested": "[2.5.1, )",
-        "resolved": "2.5.1",
-        "contentHash": "wwiPGtO42Jh2++57aPI8Fx3cJYd24Tu8qUmdk/KBdYFcf2ePBQPa0EDUgI5o1ss56QKBtuawQn1mxDV/8GO7gQ==",
+        "requested": "[2.6.1, )",
+        "resolved": "2.6.1",
+        "contentHash": "DiTSaHZ0JGl8muNkbPv43zHJ7KVvDlahPxHApycsiQ22aN53cGRft5CfPX+DVHfVJurmo0sJ/mUQTLwULniimQ==",
         "dependencies": {
           "Sdcb.Mkldnn.runtime.win64": "0.19.0",
           "Sdcb.Onnx.runtime.win64": "1.11.22.423",
-          "Sdcb.Paddle2Onnx.runtime.win64": "1.0.0.2"
+          "Sdcb.Paddle2Onnx.runtime.win64": "1.0.0-rc.2"
         }
       },
       "Sdcb.PaddleOCR": {
         "type": "Direct",
-        "requested": "[2.7.0.1, )",
-        "resolved": "2.7.0.1",
-        "contentHash": "G6pi36+uRutsGZeqyhebupCaV19dpO353IilOnzG2B0ODuwf4RkXNDOPwfAJuX9TmHW8qU6UnQN2FJ+vcED9lw==",
+        "requested": "[2.7.0.3, )",
+        "resolved": "2.7.0.3",
+        "contentHash": "6axepRnF/FSn+sdAsF0nuCjPDu8CfbzJe/6puAHFj00Sin4YUcqUTdDZ1UONHRpMkgJYW1qyzjBnvSmBD4szxQ==",
         "dependencies": {
-          "OpenCvSharp4": "4.9.0.20240103",
+          "OpenCvSharp4": "4.10.0.20240616",
           "Sdcb.PaddleInference": "2.5.0.1"
         }
       },
@@ -595,8 +595,8 @@
       },
       "Sdcb.Paddle2Onnx.runtime.win64": {
         "type": "Transitive",
-        "resolved": "1.0.0.2",
-        "contentHash": "WnaXPbkb9HzcBLz1W0zwaheVd5A2Sq7PR64D3uGJZJ5DNziV+nHIgphJgiSoDi3cwuY9lXIMeUHGXbmT7Upmhw=="
+        "resolved": "1.0.0-rc.2",
+        "contentHash": "N9y/jCj+KJ7sw4ZWy0VivJZ6z1J+HTMhI54IxgzwDrhwKMUzGpDkkag9e2zgwXfB6bRNKd05GrlSxOnSMc8Yhw=="
       },
       "Sdcb.PaddleInference": {
         "type": "Transitive",
