@@ -34,16 +34,8 @@
                     <FontAwesome :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
                 </span>
                 <span
-                    v-if="thread.zan !== null" v-tippy="`
-                        点赞量：${thread.zan.num}<br>
-                        最后点赞时间：${
-                        useHydrationStore().isHydratingOrSSR
-                            ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(thread.zan.last_time)))
-                                .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-                            : `${relativeTimeStore.registerRelative(DateTime.fromSeconds(Number(thread.zan.last_time)))
-                            } ${DateTime.fromSeconds(Number(thread.zan.last_time))
-                                .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}<br>
-                        近期点赞用户：${thread.zan.user_id_list}<br>`" class="badge bg-info">
+                    :key="zanTippyContent(thread.zan).value" v-if="thread.zan !== null"
+                    v-tippy="zanTippyContent(thread.zan)" class="badge bg-info">
                     <!-- todo: fetch users info in zan.user_id_list -->
                     <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
                 </span>
@@ -107,6 +99,19 @@ const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const relativeTimeStore = useRelativeTimeStore();
 const { getUser, renderUsername } = useUserProvision().inject();
+
+// https://github.com/vuejs/core/issues/8034
+// https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
+const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => `
+点赞量：${String(zan.num)}<br>
+最后点赞时间：${
+    useHydrationStore().isHydratingOrSSR
+        ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(zan.last_time)))
+            .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
+        : `${relativeTimeStore.registerRelative(DateTime.fromSeconds(Number(zan.last_time))).value
+        } ${DateTime.fromSeconds(Number(zan.last_time))
+            .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}<br>
+近期点赞用户：${JSON.stringify(zan.user_id_list)}<br>`);
 </script>
 
 <style scoped>

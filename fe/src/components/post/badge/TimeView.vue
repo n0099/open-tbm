@@ -1,31 +1,17 @@
 <template>
-<span
-    v-if="!hydrationStore.isHydratingOrSSR"
-    v-tippy="`
-            本${postType}${timestampType}：<br>
-            ${current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-            ${relativeTo === undefined || relativeToText === undefined
-                ? ''
-                : `${relativeToText}：<br>
-                    ${relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-                    相差 ${current.diff(relativeTo).rescale().toHuman()}`}
-          `"
-    class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
+<span v-tippy="tippyContent" class="ms-1 fw-normal badge rounded-pill">
     <component :is="$slots.default" />
-    {{ relativeTo === undefined
-        ? relativeTimeStore.registerRelative(current)
-        : current.toRelative({ base: relativeTo, round: false }) }}
-</span>
-<span
-    v-if="hydrationStore.isHydratingOrSSR"
-    :title="`本${postType}${timestampType}：\n
-        ${currentInChina.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`"
-    class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
-    <component :is="$slots.default" />
-    {{ currentInChina.toLocaleString({
-        year: 'numeric',
-        ...keysWithSameValue(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
-    }) }}
+    <template v-if="hydrationStore.isHydratingOrSSR">
+        {{ currentInChina.toLocaleString({
+            year: 'numeric',
+            ...keysWithSameValue(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
+        }) }}
+    </template>
+    <template v-else>
+        {{ relativeTo === undefined
+            ? relativeTimeStore.registerRelative(current)
+            : current.toRelative({ base: relativeTo, round: false }) }}
+    </template>
 </span>
 </template>
 
@@ -35,7 +21,6 @@
         & ('postedAt' | (TPost extends Thread ? 'latestReplyPostedAt' : never))">
 import { DateTime } from 'luxon';
 
-defineOptions({ inheritAttrs: false });
 const props = defineProps<{
     current: DateTime<true>,
     relativeTo?: DateTime<true>,
@@ -46,7 +31,19 @@ const props = defineProps<{
 }>();
 const hydrationStore = useHydrationStore();
 const relativeTimeStore = useRelativeTimeStore();
+
 const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
+const tippyCotentRelativeTo = computed(() => (props.relativeTo === undefined || props.relativeToText === undefined
+    ? ''
+    : `${props.relativeToText}：<br>
+        ${props.relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
+        相差 ${props.current.diff(props.relativeTo).rescale().toHuman()}`));
+const tippyContent = computed(() => `本${props.postType}${props.timestampType}：<br>
+${hydrationStore.isHydratingOrSSR
+        ? currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
+        : `${props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
+        ${tippyCotentRelativeTo.value}`
+}`);
 </script>
 
 <style scoped>

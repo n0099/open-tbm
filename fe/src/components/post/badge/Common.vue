@@ -25,10 +25,7 @@
     <FontAwesome :icon="faArrowUpRightFromSquare" size="lg" class="align-bottom" />
 </NuxtLink>
 <span
-    v-tippy="`
-        首次收录时间：${formatTime(props.post.createdAt)}<br>
-        最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
-        最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`"
+    :key="tippyContent" v-tippy="tippyContent"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faClock" size="lg" class="align-bottom" />
 </span>
@@ -58,4 +55,11 @@ const formatTime = (time: UnixTimestamp) => {
 
     return `${relative} ${full}`;
 };
+
+// https://github.com/vuejs/core/issues/8034
+// https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
+const tippyContent = computed(() => `
+首次收录时间：${formatTime(props.post.createdAt)}<br>
+最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
+最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`);
 </script>
