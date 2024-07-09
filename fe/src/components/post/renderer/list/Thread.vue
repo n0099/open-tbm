@@ -40,7 +40,7 @@
                         useHydrationStore().isHydratingOrSSR
                             ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(thread.zan.last_time)))
                                 .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-                            : `${DateTime.fromSeconds(Number(thread.zan.last_time)).toRelative({ round: false })
+                            : `${relativeTimeStore.registerRelative(DateTime.fromSeconds(Number(thread.zan.last_time)))
                             } ${DateTime.fromSeconds(Number(thread.zan.last_time))
                                 .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}<br>
                         近期点赞用户：${thread.zan.user_id_list}<br>`" class="badge bg-info">
@@ -105,6 +105,7 @@ defineProps<{
 }>();
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
+const relativeTimeStore = useRelativeTimeStore();
 const { getUser, renderUsername } = useUserProvision().inject();
 </script>
 

@@ -47,9 +47,10 @@ const props = defineProps<{
     postIDKey: TPostIDKey,
     postTypeText: PostTypeTextOf<TPost>
 }>();
+const relativeTimeStore = useRelativeTimeStore();
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
-    const relative = import.meta.client ? dateTime.toRelative({ round: false }) : '';
+    const relative = import.meta.client ? relativeTimeStore.registerRelative(dateTime).value : '';
     const full = import.meta.server
         ? setDateTimeZoneAndLocale()(dateTime)
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)

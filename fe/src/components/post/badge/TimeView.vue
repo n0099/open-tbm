@@ -12,7 +12,9 @@
           `"
     class="ms-1 fw-normal badge rounded-pill" v-bind="$attrs">
     <component :is="$slots.default" />
-    {{ current.toRelative({ base: relativeTo, round: false }) }}
+    {{ relativeTo === undefined
+        ? relativeTimeStore.registerRelative(current)
+        : current.toRelative({ base: relativeTo, round: false }) }}
 </span>
 <span
     v-if="hydrationStore.isHydratingOrSSR"
@@ -43,6 +45,7 @@ const props = defineProps<{
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
 const hydrationStore = useHydrationStore();
+const relativeTimeStore = useRelativeTimeStore();
 const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
 </script>
 
