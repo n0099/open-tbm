@@ -76,13 +76,11 @@ public class CrawlPost(
             .Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
                 shouldCrawl.UnionWith(threads.NewlyAdded.Select(th => th.Tid));
-                shouldCrawl.UnionWith(threads.Existing.Where(t =>
-                {
-                    var (before, after) = t;
-                    return before.ReplyCount != after.ReplyCount
-                           || before.LatestReplyPostedAt != after.LatestReplyPostedAt
-                           || before.LatestReplierUid != after.LatestReplierUid;
-                }).Select(t => t.Before.Tid));
+                shouldCrawl.UnionWith(threads.Existing
+                    .Where(t => t.Before.ReplyCount != t.After.ReplyCount
+                        || t.Before.LatestReplyPostedAt != t.After.LatestReplyPostedAt
+                        || t.Before.LatestReplierId != t.After.LatestReplierId)
+                    .Select(t => t.Before.Tid));
                 return shouldCrawl;
             });
         var savedRepliesKeyByTid = new SavedRepliesKeyByTid();

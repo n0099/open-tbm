@@ -16,7 +16,7 @@ public class ThreadRevision : BaseThreadRevision
     public string? TopicType { get; set; }
     public byte? IsGood { get; set; }
     public uint? LatestReplyPostedAt { get; set; }
-    public long? LatestReplierUid { get; set; }
+    public uint? LatestReplierId { get; set; }
     public uint? ReplyCount { get; set; }
 
     [NotMapped]
@@ -39,7 +39,7 @@ public class ThreadRevision : BaseThreadRevision
             TopicType,
             IsGood,
             LatestReplyPostedAt,
-            LatestReplierUid,
+            LatestReplierId,
             ReplyCount,
             ShareCount,
             AgreeCount,

@@ -18,7 +18,8 @@ public class ThreadPost : BasePost
     public string? AuthorPhoneType { get; set; }
     public uint PostedAt { get; set; }
     public uint LatestReplyPostedAt { get; set; }
-    public long? LatestReplierUid { get; set; }
+    public uint? LatestReplierId { get; set; }
+    public LatestReplier? LatestReplier { get; set; }
     public uint? ReplyCount { get; set; }
     public uint? ViewCount { get; set; }
     public uint? ShareCount { get; set; }

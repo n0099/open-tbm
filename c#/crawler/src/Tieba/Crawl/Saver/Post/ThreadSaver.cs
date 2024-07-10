@@ -5,16 +5,24 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 public partial class ThreadSaver(
     ILogger<ThreadSaver> logger,
     ConcurrentDictionary<Tid, ThreadPost> posts,
+    ThreadLatestReplierSaver threadLatestReplierSaver,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
     : PostSaver<ThreadPost, BaseThreadRevision, Tid>(
         logger, posts, authorRevisionSaverFactory, PostType.Thread)
 {
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db) =>
-        Save(db, th => th.Tid,
+    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db)
+    {
+        var changeSet = Save(db,
+            th => th.Tid,
             th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
             PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
+
+        PostSaveHandlers += threadLatestReplierSaver.Save(db, changeSet.AllAfter).Invoke;
+
+        return changeSet;
+    }
 }
 public partial class ThreadSaver
 {
@@ -74,7 +82,7 @@ public partial class ThreadSaver
 
         // when the latest reply post is deleted and there's no new reply after delete
         // this field but not LatestReplyPostedAt will be null
-        nameof(ThreadPost.LatestReplierUid) when newValue is null => true,
+        nameof(ThreadPost.LatestReplierId) when newValue is null => true,
         _ => false
     };
 
@@ -82,24 +90,21 @@ public partial class ThreadSaver
         (string propName, object? oldValue, object? newValue) => propName switch
     { // empty string from response has been updated by ReplyCrawlFacade.OnPostParse()
         nameof(ThreadPost.Title) when oldValue is "" => true,
-
-        // null values will be later set by tieba client 6.0.2 response at ThreadParser.ParseInternal()
-        nameof(ThreadPost.LatestReplierUid) when oldValue is null => true,
         _ => false
     };
 
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1025:Code should not contain multiple whitespace in a row")]
     protected override NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName) => fieldName switch
     {
-        nameof(ThreadPost.StickyType)       => 1,
-        nameof(ThreadPost.TopicType)        => 1 << 1,
-        nameof(ThreadPost.IsGood)           => 1 << 2,
-        nameof(ThreadPost.LatestReplierUid) => 1 << 4,
-        nameof(ThreadPost.ReplyCount)       => 1 << 5,
-        nameof(ThreadPost.ShareCount)       => 1 << 7,
-        nameof(ThreadPost.AgreeCount)       => 1 << 8,
-        nameof(ThreadPost.DisagreeCount)    => 1 << 9,
-        nameof(ThreadPost.Geolocation)      => 1 << 10,
+        nameof(ThreadPost.StickyType)      => 1,
+        nameof(ThreadPost.TopicType)       => 1 << 1,
+        nameof(ThreadPost.IsGood)          => 1 << 2,
+        nameof(ThreadPost.LatestReplierId) => 1 << 4,
+        nameof(ThreadPost.ReplyCount)      => 1 << 5,
+        nameof(ThreadPost.ShareCount)      => 1 << 7,
+        nameof(ThreadPost.AgreeCount)      => 1 << 8,
+        nameof(ThreadPost.DisagreeCount)   => 1 << 9,
+        nameof(ThreadPost.Geolocation)     => 1 << 10,
         _ => 0
     };
 }

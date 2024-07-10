@@ -14,7 +14,7 @@ public class ThreadCrawlFacade(
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
 {
-    private readonly Dictionary<Uid, User> _latestRepliers = [];
+    private readonly Dictionary<ThreadLatestReplierSaver.UniqueLatestReplier, LatestReplier?> _latestRepliersKeyByUnique = [];
 
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
@@ -44,8 +44,19 @@ public class ThreadCrawlFacade(
             { // replace with more detailed location.name in the 6.0.2 response
                 t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location);
             }
+            var name = t.inResponse.LastReplyer.Name.NullIfEmpty();
+            var nameShow = t.inResponse.LastReplyer.NameShow.NullIfEmpty();
 
             // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
-            t.parsed.LatestReplierUid = t.inResponse.LastReplyer?.Uid;
+            var latestReplierEntity = t.inResponse.LastReplyer == null ? null : new LatestReplier()
+            {
+                Name = name,
+                DisplayName = name == nameShow ? null : nameShow
+            };
+            var uniqueLatestReplier = ThreadLatestReplierSaver.UniqueLatestReplier.FromLatestReplier(latestReplierEntity);
+
+            t.parsed.LatestReplier = _latestRepliersKeyByUnique.TryGetValue(uniqueLatestReplier, out var existingLatestReplier)
+                ? existingLatestReplier
+                : _latestRepliersKeyByUnique[uniqueLatestReplier] = latestReplierEntity;
         });
 }

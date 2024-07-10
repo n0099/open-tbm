@@ -58,6 +58,7 @@ public class EntryPoint : BaseEntryPoint
         builder.RegisterType<UserParser>();
         builder.RegisterType<ThreadLateCrawler>();
         builder.RegisterType<ThreadLateCrawlFacade>();
+        builder.RegisterType<ThreadLatestReplierSaver>();
         builder.RegisterType<SonicPusher>();
         builder.RegisterType<CrawlPost>();
         builder.RegisterGeneric(typeof(SaverLocks<>));
