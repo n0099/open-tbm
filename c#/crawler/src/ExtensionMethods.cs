@@ -73,4 +73,44 @@ public static class ExtensionMethods
                     LinqKit.PredicateBuilder.New<TEntity>(),
                     (innerPredicate, expressionFactory) =>
                         innerPredicate.And(expressionFactory(valueToCompare))))));
+
+    /// <see>https://stackoverflow.com/questions/67666649/lambda-linq-with-contains-criteria-for-multiple-keywords/67666993#67666993</see>
+    public static IQueryable<T> FilterByItems<T, TItem>(
+        this IQueryable<T> query,
+        IEnumerable<TItem> items,
+        Expression<Func<T, TItem, bool>> filterPattern,
+        bool isOr = true)
+    {
+        var predicate = items.Aggregate<TItem, Expression?>(null, (current, item) =>
+        {
+            var itemExpr = Expression.Constant(item);
+            var itemCondition = FilterByItemsExpressionReplacer
+                .Replace(filterPattern.Body, filterPattern.Parameters[1], itemExpr);
+
+            return current == null
+                ? itemCondition
+                : Expression.MakeBinary(isOr ? ExpressionType.OrElse : ExpressionType.AndAlso,
+                    current,
+                    itemCondition);
+        }) ?? Expression.Constant(false);
+        var filterLambda = Expression.Lambda<Func<T, bool>>(predicate, filterPattern.Parameters[0]);
+
+        return query.Where(filterLambda);
+    }
+
+    private class FilterByItemsExpressionReplacer(IDictionary<Expression, Expression> replaceMap) : ExpressionVisitor
+    {
+        private readonly IDictionary<Expression, Expression> _replaceMap
+            = replaceMap ?? throw new ArgumentNullException(nameof(replaceMap));
+
+        [return: NotNullIfNotNull(nameof(exp))]
+        public override Expression? Visit(Expression? exp) =>
+            exp != null && _replaceMap.TryGetValue(exp, out var replacement)
+                ? replacement
+                : base.Visit(exp);
+
+        public static Expression Replace(Expression expr, Expression toReplace, Expression toExpr) =>
+            new FilterByItemsExpressionReplacer(new Dictionary<Expression, Expression> {{toReplace, toExpr}})
+                .Visit(expr);
+    }
 }

@@ -40,10 +40,11 @@ public class ReplySignatureSaver(
                 r => r.Signature,
                 SignatureIdAndValueEqualityComparer.Instance);
 
-        var existingSignatures = db.ReplySignatures.AsTracking().WhereOrContainsValues(signatures, [
-            newOrExisting => existing => existing.SignatureId == newOrExisting.SignatureId,
-            newOrExisting => existing => existing.XxHash3 == newOrExisting.XxHash3
-        ]).ToList();
+        var existingSignatures = db.ReplySignatures.AsTracking().FilterByItems(
+                signatures, (existing, newOrExisting) =>
+                    existing.SignatureId == newOrExisting.SignatureId
+                    && existing.XxHash3 == newOrExisting.XxHash3)
+            .ToList();
         (from existing in existingSignatures
                 join newInReply in signatures on existing.SignatureId equals newInReply.SignatureId
                 select (existing, newInReply))

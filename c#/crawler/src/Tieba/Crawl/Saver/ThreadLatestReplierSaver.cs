@@ -11,11 +11,11 @@ public class ThreadLatestReplierSaver(SaverLocks<ThreadLatestReplierSaver.Unique
         var uniqueLatestRepliers = threads
             .Where(th => th.LatestReplier != null)
             .Select(UniqueLatestReplier.FromThread).ToList();
-        var existingLatestRepliers = db.LatestRepliers.AsNoTracking().WhereOrContainsValues(uniqueLatestRepliers,
-        [
-            newOrExisting => existing => existing.Name == newOrExisting.Name,
-            newOrExisting => existing => existing.DisplayName == newOrExisting.DisplayName
-        ]).ToList();
+        var existingLatestRepliers = db.LatestRepliers.AsNoTracking().FilterByItems(
+            uniqueLatestRepliers, (latestReplier, uniqueLatestReplier) =>
+                latestReplier.Name == uniqueLatestReplier.Name
+                && latestReplier.DisplayName == uniqueLatestReplier.DisplayName)
+            .ToList();
         (from existing in existingLatestRepliers
                 join thread in threads
                     on UniqueLatestReplier.FromLatestReplier(existing) equals UniqueLatestReplier.FromThread(thread)
