@@ -59,4 +59,18 @@ public static class ExtensionMethods
     {
         if (value != null) dict[key] = value;
     }
+
+    /// <see>https://github.com/npgsql/npgsql/issues/4437</see>
+    /// <see>https://github.com/dotnet/efcore/issues/32092#issuecomment-2221633692</see>
+    public static IQueryable<TEntity> WhereOrContainsValues<TEntity, TToCompare>(
+        this IQueryable<TEntity> queryable,
+        IEnumerable<TToCompare> valuesToCompare,
+        IEnumerable<Func<TToCompare, Expression<Func<TEntity, bool>>>> comparatorExpressionFactories) =>
+        queryable.Where(valuesToCompare.Aggregate(
+            LinqKit.PredicateBuilder.New<TEntity>(),
+            (outerPredicate, valueToCompare) => outerPredicate.Or(
+                comparatorExpressionFactories.Aggregate(
+                    LinqKit.PredicateBuilder.New<TEntity>(),
+                    (innerPredicate, expressionFactory) =>
+                        innerPredicate.And(expressionFactory(valueToCompare))))));
 }

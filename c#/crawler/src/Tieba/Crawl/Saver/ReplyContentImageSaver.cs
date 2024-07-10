@@ -104,14 +104,11 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
                 select (existingOrNew, replyContentImage))
             .ForEach(t => t.replyContentImage.ImageInReply = t.existingOrNew);
         var existingReplyContentImages = db.ReplyContentImages.AsNoTracking()
-            .Where(replyContentImages.Aggregate(
-                LinqKit.PredicateBuilder.New<ReplyContentImage>(),
-                (predicate, newOrExisting) =>
-                    predicate.Or(LinqKit.PredicateBuilder
-                        .New<ReplyContentImage>(existing =>
-                            existing.Pid == newOrExisting.Pid)
-                        .And(existing =>
-                            existing.ImageInReply.UrlFilename == newOrExisting.ImageInReply.UrlFilename))))
+            .WhereOrContainsValues(replyContentImages, [
+                newOrExisting => existing => existing.Pid == newOrExisting.Pid,
+                newOrExisting => existing =>
+                    existing.ImageInReply.UrlFilename == newOrExisting.ImageInReply.UrlFilename
+            ])
             .Include(e => e.ImageInReply)
             .Select(e => new {e.Pid, e.ImageInReply.UrlFilename})
             .ToList();

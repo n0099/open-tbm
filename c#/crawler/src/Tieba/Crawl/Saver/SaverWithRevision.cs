@@ -20,15 +20,11 @@ public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>(
         var dbSet = db.Set<TRevision>();
         var visitor = new ReplaceParameterTypeVisitor<TBaseRevision, TRevision>();
 
-        // https://github.com/npgsql/npgsql/issues/4437
-        // https://github.com/dotnet/efcore/issues/32092
         var existingRevisions = dbSet.AsNoTracking()
-            .Where(newRevisions.Aggregate(
-                LinqKit.PredicateBuilder.New<TRevision>(),
-                (predicate, newRevision) => predicate.Or(LinqKit.PredicateBuilder
-                    .New<TRevision>(existingRevision => existingRevision.TakenAt == newRevision.TakenAt)
-                    .And((Expression<Func<TRevision, bool>>)visitor
-                        .Visit(IsRevisionIdEqualsExpression(newRevision))))))
+            .WhereOrContainsValues(newRevisions, [
+                newRevision => existingRevision => existingRevision.TakenAt == newRevision.TakenAt,
+                newRevision => (Expression<Func<TRevision, bool>>)visitor.Visit(IsRevisionIdEqualsExpression(newRevision))
+            ])
             .Cast<TBaseRevision>()
             .Select(RevisionIdWithDuplicateIndexProjectionFactory())
             .ToList();
