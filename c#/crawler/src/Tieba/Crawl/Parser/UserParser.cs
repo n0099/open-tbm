@@ -20,7 +20,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
                 return new()
                 {
                     Uid = uid,
-                    Name = el.NameShow,
+                    Name = el.NameShow.NullIfEmpty(),
                     Portrait = portrait,
                     PortraitUpdatedAt = portraitUpdatedAt
                 };

@@ -40,14 +40,16 @@ public class ReplySignatureSaver(
                 r => r.Signature,
                 SignatureIdAndValueEqualityComparer.Instance);
 
-        var existingSignatures = (
-            from s in db.ReplySignatures.AsTracking()
-            where signatures.Select(s2 => s2.SignatureId).Contains(s.SignatureId)
-
-                  // server side eval doesn't need ByteArrayEqualityComparer
-                  && signatures.Select(s2 => s2.XxHash3).Contains(s.XxHash3)
-            select s
-        ).ToList();
+        var existingSignatures = db.ReplySignatures.AsTracking()
+            .Where(signatures.Aggregate(
+                LinqKit.PredicateBuilder.New<ReplySignature>(),
+                (predicate, newOrExisting) =>
+                    predicate.Or(LinqKit.PredicateBuilder
+                        .New<ReplySignature>(existing =>
+                            existing.SignatureId == newOrExisting.SignatureId)
+                        .And(existing =>
+                            existing.XxHash3 == newOrExisting.XxHash3))))
+            .ToList();
         (from existing in existingSignatures
                 join newInReply in signatures on existing.SignatureId equals newInReply.SignatureId
                 select (existing, newInReply))
