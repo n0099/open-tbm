@@ -24,7 +24,6 @@ public class ThreadArchiveCrawlFacade(
         if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
         var data = response.Data;
         UserParser.Parse(data.ThreadList.Select(th => th.Author));
-        ParseLatestRepliers(data.ThreadList);
         FillFromRequestingWith602(data.ThreadList);
 
         // parsed author uid will be 0 when request with client version 6.0.2

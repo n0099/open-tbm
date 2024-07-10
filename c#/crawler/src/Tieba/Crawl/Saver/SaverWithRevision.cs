@@ -58,7 +58,6 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 }
 public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 {
-    protected virtual bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry) => false;
     protected virtual bool FieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => false;
     protected virtual bool FieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
     private static bool GlobalFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
@@ -107,7 +106,6 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
             {
                 var pName = p.Metadata.Name;
                 if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
-                if (ShouldIgnoreEntityRevision(pName, p, entityEntry)) return null;
 
                 if (FieldUpdateIgnorance(
                         pName, p.OriginalValue, p.CurrentValue)

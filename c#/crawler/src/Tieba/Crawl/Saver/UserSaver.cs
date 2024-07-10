@@ -70,18 +70,6 @@ public partial class UserSaver
 }
 public partial class UserSaver
 {
-    protected override bool ShouldIgnoreEntityRevision(string propName, PropertyEntry propEntry, EntityEntry entityEntry)
-    {
-        // ThreadCrawlFacade.ParseLatestRepliers() will save partial filled user of latest repliers for livepost thread
-        // they may later get updated by (sub) reply crawler after it find out the latest reply
-        // so we should ignore its revision update for all fields
-        if (propName != nameof(User.Portrait) || propEntry.OriginalValue is not "") return false;
-        var user = (User)entityEntry.OriginalValues.ToObject();
-        var latestReplier = User.CreateLatestReplier(user.Uid, user.Name, user.DisplayName);
-
-        return User.EqualityComparer.Instance.Equals(user, latestReplier);
-    }
-
     protected override bool FieldUpdateIgnorance
         (string propName, object? oldValue, object? newValue) => propName switch
     { // possible randomly respond with null
