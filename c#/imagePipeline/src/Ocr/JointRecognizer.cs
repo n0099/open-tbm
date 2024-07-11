@@ -88,8 +88,8 @@ public class JointRecognizer(
                 })
                 .OrderBy(t => t.alignedY).ThenBy(t => t.X)
                 .GroupBy(t => t.alignedY, t => t.result)
-                .Select(groupByLine =>
-                    string.Join('\n', groupByLine.Select(result => result.Text.Trim())));
+                .Select(resultsGroupByLine =>
+                    string.Join('\n', resultsGroupByLine.Select(result => result.Text.Trim())));
 
             // https://unicode.org/reports/tr15/
             return string.Join('\n', resultTextLines).Normalize(NormalizationForm.FormKC);

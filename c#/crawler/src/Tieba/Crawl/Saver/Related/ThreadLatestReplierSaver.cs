@@ -40,16 +40,29 @@ public class ThreadLatestReplierSaver(
         // possible race: two user swapped their name or displayName
         // within the timespan of crawling threads and crawling its (sub)replies
         // so the one later crawled is not the original latest replier of thread
-        var user = users
+        var matchedUsers = users
             .Where(u => u.Name == threadLatestReplier.Name
                         && u.DisplayName == threadLatestReplier.DisplayName)
             .DistinctBy(u => u.Uid).ToList();
-        if (user.Count > 1)
-            Helper.LogDifferentValuesSharingTheSameKeyInEntities(logger, user,
+        if (matchedUsers.Count == 0) return () => { };
+        if (matchedUsers.Count > 1)
+            Helper.LogDifferentValuesSharingTheSameKeyInEntities(logger, matchedUsers,
                 $"{nameof(User.Name)} and {nameof(User.DisplayName)}",
                 u => u.Uid, u => (u.Name, u.DisplayName));
 
-        threadLatestReplier.Uid = user.First().Uid;
+        var user = matchedUsers[0];
+        if (threadLatestReplier.Uid == user.Uid) return () => { };
+        if (threadLatestReplier.Uid != null)
+            _ = db.LatestReplierRevisions.Add(new()
+            {
+                TakenAt = threadLatestReplier.UpdatedAt ?? threadLatestReplier.CreatedAt,
+                Id = threadLatestReplier.Id,
+                Uid = threadLatestReplier.Uid.Value,
+                Name = threadLatestReplier.Name,
+                DisplayName = threadLatestReplier.DisplayName
+            });
+
+        threadLatestReplier.Uid = user.Uid;
         _ = _saverLocks.Value.Acquire([UniqueLatestReplier.FromLatestReplier(threadLatestReplier)]);
         return _saverLocks.Value.Dispose;
     }

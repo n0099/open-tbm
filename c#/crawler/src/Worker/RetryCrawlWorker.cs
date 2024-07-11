@@ -60,18 +60,18 @@ public class RetryCrawlWorker(
         CancellationToken stoppingToken = default)
     {
         await using var threadLateFacade = threadLateCrawlFacadeFactory();
-        foreach (var tidGroupByFid in failureCountWithPagesKeyByLockId
+        foreach (var tidsGroupByFid in failureCountWithPagesKeyByLockId
                      .Keys.GroupBy(lockId => lockId.Fid, lockId => lockId.Tid))
         {
-            var fid = tidGroupByFid.Key;
+            var fid = tidsGroupByFid.Key;
             FailureCount FailureCountSelector(Tid tid) =>
 
                 // it should always contain only one page which is 1
                 failureCountWithPagesKeyByLockId[new(fid, tid)].Single().Value;
-            var failureCountsKeyByTid = tidGroupByFid
+            var failureCountsKeyByTid = tidsGroupByFid
                 .Cast<Tid>().ToDictionary(tid => tid, FailureCountSelector);
             logger.LogTrace("Retrying previous failed thread late crawl with fid={}, threadsId={}",
-                fid, SharedHelper.UnescapedJsonSerialize(tidGroupByFid));
+                fid, SharedHelper.UnescapedJsonSerialize(tidsGroupByFid));
             await threadLateFacade.Value(fid).CrawlThenSave(failureCountsKeyByTid, stoppingToken);
         }
     }

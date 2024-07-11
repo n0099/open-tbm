@@ -16,6 +16,7 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
     public Fid Fid { get; } = fid;
     public DbSet<User> Users => Set<User>();
     public DbSet<LatestReplier> LatestRepliers => Set<LatestReplier>();
+    public DbSet<LatestReplierRevision> LatestReplierRevisions => Set<LatestReplierRevision>();
     public DbSet<AuthorExpGradeRevision> AuthorExpGradeRevisions => Set<AuthorExpGradeRevision>();
     public DbSet<ForumModeratorRevision> ForumModeratorRevisions => Set<ForumModeratorRevision>();
     public DbSet<ThreadPost> Threads => Set<ThreadPost>();
@@ -72,6 +73,8 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         b.Entity<LatestReplier>().Property(e => e.DisplayName).HasConversion<byte[]>();
         b.Entity<LatestReplier>().HasOne<ThreadPost>().WithOne(e => e.LatestReplier)
             .HasForeignKey<ThreadPost>(e => e.LatestReplierId);
+        b.Entity<LatestReplierRevision>().ToTable("tbmcr_user_latestReplier").HasKey(e => new {e.TakenAt, e.Uid});
+        b.Entity<LatestReplierRevision>().Property(e => e.DisplayName).HasConversion<byte[]>();
         b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
