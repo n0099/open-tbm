@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+
 namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 public class ThreadLatestReplierSaver(
@@ -10,19 +12,38 @@ public class ThreadLatestReplierSaver(
 
     public Action SaveFromThread(CrawlerDbContext db, IReadOnlyCollection<ThreadPost> threads)
     {
-        var uniqueLatestRepliers = threads
+        static void DetachThenReplace(
+            EntityEntry<LatestReplier> entityEntry,
+            ThreadPost thread,
+            LatestReplier newLatestReplier)
+        {
+            entityEntry.State = EntityState.Detached;
+            thread.LatestReplier = newLatestReplier;
+        }
+
+        var threadsGroupByUniqueLatestReplier = threads
             .Where(th => th.LatestReplier != null)
-            .Select(UniqueLatestReplier.FromThread).ToList();
+            .GroupBy(UniqueLatestReplier.FromThread).ToList();
+        threadsGroupByUniqueLatestReplier.ForEach(g =>
+            (from thread in g.Skip(1)
+                join entityEntry in db.ChangeTracker.Entries<LatestReplier>()
+                    on thread.LatestReplier equals entityEntry.Entity
+                select (thread, entityEntry))
+            .ForEach(t => DetachThenReplace(t.entityEntry, t.thread, g.First().LatestReplier!)));
+
+        var uniqueLatestRepliers = threadsGroupByUniqueLatestReplier.Select(g => g.Key).ToList();
         var existingLatestRepliers = db.LatestRepliers.AsNoTracking().FilterByItems(
-            uniqueLatestRepliers, (latestReplier, uniqueLatestReplier) =>
-                latestReplier.Name == uniqueLatestReplier.Name
-                && latestReplier.DisplayName == uniqueLatestReplier.DisplayName)
+                uniqueLatestRepliers, (latestReplier, uniqueLatestReplier) =>
+                    latestReplier.Name == uniqueLatestReplier.Name
+                    && latestReplier.DisplayName == uniqueLatestReplier.DisplayName)
             .ToList();
         (from existing in existingLatestRepliers
                 join thread in threads
                     on UniqueLatestReplier.FromLatestReplier(existing) equals UniqueLatestReplier.FromThread(thread)
-                select (existing, thread))
-            .ForEach(t => t.thread.LatestReplier = t.existing);
+                join entityEntry in db.ChangeTracker.Entries<LatestReplier>()
+                    on thread.LatestReplier equals entityEntry.Entity // Object.ReferenceEquals()
+                select (existing, thread, entityEntry))
+            .ForEach(t => DetachThenReplace(t.entityEntry, t.thread, t.existing));
 
         _ = _saverLocks.Value.Acquire(uniqueLatestRepliers
             .Except(existingLatestRepliers.Select(UniqueLatestReplier.FromLatestReplier))
@@ -44,6 +65,8 @@ public class ThreadLatestReplierSaver(
             .Where(u => u.Name == threadLatestReplier.Name
                         && u.DisplayName == threadLatestReplier.DisplayName)
             .DistinctBy(u => u.Uid).ToList();
+
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
         if (matchedUsers.Count == 0) return () => { };
         if (matchedUsers.Count > 1)
             Helper.LogDifferentValuesSharingTheSameKeyInEntities(logger, matchedUsers,
