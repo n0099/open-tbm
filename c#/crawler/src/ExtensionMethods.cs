@@ -62,6 +62,7 @@ public static class ExtensionMethods
 
     /// <see>https://github.com/npgsql/npgsql/issues/4437</see>
     /// <see>https://github.com/dotnet/efcore/issues/32092#issuecomment-2221633692</see>
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
     public static IQueryable<TEntity> WhereOrContainsValues<TEntity, TToCompare>(
         this IQueryable<TEntity> queryable,
         IEnumerable<TToCompare> valuesToCompare,
@@ -75,6 +76,7 @@ public static class ExtensionMethods
                         innerPredicate.And(expressionFactory(valueToCompare))))));
 
     /// <see>https://stackoverflow.com/questions/67666649/lambda-linq-with-contains-criteria-for-multiple-keywords/67666993#67666993</see>
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1618:Generic type parameters should be documented")]
     public static IQueryable<T> FilterByItems<T, TItem>(
         this IQueryable<T> query,
         IEnumerable<TItem> items,
@@ -89,28 +91,29 @@ public static class ExtensionMethods
 
             return current == null
                 ? itemCondition
+#pragma warning disable S3358 // Ternary operators should not be nested
                 : Expression.MakeBinary(isOr ? ExpressionType.OrElse : ExpressionType.AndAlso,
-                    current,
-                    itemCondition);
+#pragma warning restore S3358 // Ternary operators should not be nested
+                    current, itemCondition);
         }) ?? Expression.Constant(false);
         var filterLambda = Expression.Lambda<Func<T, bool>>(predicate, filterPattern.Parameters[0]);
 
         return query.Where(filterLambda);
     }
 
-    private class FilterByItemsExpressionReplacer(IDictionary<Expression, Expression> replaceMap) : ExpressionVisitor
+    private sealed class FilterByItemsExpressionReplacer(IDictionary<Expression, Expression> replaceMap) : ExpressionVisitor
     {
-        private readonly IDictionary<Expression, Expression> _replaceMap
-            = replaceMap ?? throw new ArgumentNullException(nameof(replaceMap));
-
-        [return: NotNullIfNotNull(nameof(exp))]
-        public override Expression? Visit(Expression? exp) =>
-            exp != null && _replaceMap.TryGetValue(exp, out var replacement)
-                ? replacement
-                : base.Visit(exp);
+        private readonly IDictionary<Expression, Expression> _replaceMap =
+            replaceMap ?? throw new ArgumentNullException(nameof(replaceMap));
 
         public static Expression Replace(Expression expr, Expression toReplace, Expression toExpr) =>
             new FilterByItemsExpressionReplacer(new Dictionary<Expression, Expression> {{toReplace, toExpr}})
                 .Visit(expr);
+
+        [return: NotNullIfNotNull(nameof(node))]
+        public override Expression? Visit(Expression? node) =>
+            node != null && _replaceMap.TryGetValue(node, out var replacement)
+                ? replacement
+                : base.Visit(node);
     }
 }

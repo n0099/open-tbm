@@ -48,15 +48,17 @@ public class ThreadCrawlFacade(
             var nameShow = t.inResponse.LastReplyer.NameShow.NullIfEmpty();
 
             // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
-            var latestReplierEntity = t.inResponse.LastReplyer == null ? null : new LatestReplier()
+            var latestReplierEntity = t.inResponse.LastReplyer == null ? null : new LatestReplier
             {
                 Name = name,
+#pragma warning disable S3358 // Ternary operators should not be nested
                 DisplayName = name == nameShow ? null : nameShow
+#pragma warning restore S3358 // Ternary operators should not be nested
             };
             var uniqueLatestReplier = ThreadLatestReplierSaver.UniqueLatestReplier.FromLatestReplier(latestReplierEntity);
 
-            t.parsed.LatestReplier = _latestRepliersKeyByUnique.TryGetValue(uniqueLatestReplier, out var existingLatestReplier)
-                ? existingLatestReplier
-                : _latestRepliersKeyByUnique[uniqueLatestReplier] = latestReplierEntity;
+            var isExists = _latestRepliersKeyByUnique.TryGetValue(uniqueLatestReplier, out var existingLatestReplier);
+            if (!isExists) _latestRepliersKeyByUnique[uniqueLatestReplier] = latestReplierEntity;
+            t.parsed.LatestReplier = isExists ? existingLatestReplier : latestReplierEntity;
         });
 }

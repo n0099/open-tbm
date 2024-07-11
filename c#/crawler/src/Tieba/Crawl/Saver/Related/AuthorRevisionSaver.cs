@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Tieba.Crawl.Saver;
+namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 // locks only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
 // this prevents inserting multiple entities with similar time and other fields with the same values

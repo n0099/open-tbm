@@ -45,6 +45,7 @@ global using tbm.Crawler.Tieba.Crawl.Parser;
 global using tbm.Crawler.Tieba.Crawl.Parser.Post;
 global using tbm.Crawler.Tieba.Crawl.Saver;
 global using tbm.Crawler.Tieba.Crawl.Saver.Post;
+global using tbm.Crawler.Tieba.Crawl.Saver.Related;
 global using tbm.Crawler.Worker;
 global using tbm.Shared;
 global using tbm.Shared.Db;

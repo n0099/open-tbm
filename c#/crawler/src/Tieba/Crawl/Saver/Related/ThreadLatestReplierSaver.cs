@@ -1,4 +1,4 @@
-﻿namespace tbm.Crawler.Tieba.Crawl.Saver;
+namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 public class ThreadLatestReplierSaver(SaverLocks<ThreadLatestReplierSaver.UniqueLatestReplier>.New saverLocksFactory)
 {

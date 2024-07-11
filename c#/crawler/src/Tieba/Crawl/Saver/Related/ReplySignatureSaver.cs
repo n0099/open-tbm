@@ -1,6 +1,6 @@
 using System.IO.Hashing;
 
-namespace tbm.Crawler.Tieba.Crawl.Saver;
+namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 public class ReplySignatureSaver(
     ILogger<ReplySignatureSaver> logger,

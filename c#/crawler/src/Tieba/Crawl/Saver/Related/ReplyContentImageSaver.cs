@@ -1,4 +1,4 @@
-namespace tbm.Crawler.Tieba.Crawl.Saver;
+namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logger) : IDisposable
 {
