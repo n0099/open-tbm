@@ -6,7 +6,7 @@ public class ThreadLatestReplierSaver(SaverLocks<ThreadLatestReplierSaver.Unique
     private readonly Lazy<SaverLocks<UniqueLatestReplier>> _saverLocks =
         new(() => saverLocksFactory(GlobalLockedLatestRepliers));
 
-    public Action Save(CrawlerDbContext db, IReadOnlyCollection<ThreadPost> threads)
+    public Action SaveFromThread(CrawlerDbContext db, IReadOnlyCollection<ThreadPost> threads)
     {
         var uniqueLatestRepliers = threads
             .Where(th => th.LatestReplier != null)

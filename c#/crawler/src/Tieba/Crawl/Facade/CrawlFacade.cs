@@ -56,6 +56,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
                     postSaver.UserFieldUpdateIgnorance,
                     postSaver.UserFieldRevisionIgnorance);
 
+                OnBeforeCommitSave(db, userSaver);
                 db.TimestampingEntities();
                 _ = db.SaveChanges();
                 transaction.Commit();
@@ -131,6 +132,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
         TResponse response,
         CrawlRequestFlag flag,
         IReadOnlyDictionary<PostId, TPost> parsedPostsInResponse) { }
+    protected virtual void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver) { }
     protected virtual void OnPostCommitSave(
         SaverChangeSet<TPost> savedPosts,
         CancellationToken stoppingToken = default) { }

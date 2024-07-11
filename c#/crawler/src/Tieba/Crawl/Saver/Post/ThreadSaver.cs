@@ -19,7 +19,7 @@ public partial class ThreadSaver(
             th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
             PredicateBuilder.New<ThreadPost>(th => Posts.Keys.Contains(th.Tid)));
 
-        PostSaveHandlers += threadLatestReplierSaver.Save(db, changeSet.AllAfter).Invoke;
+        PostSaveHandlers += threadLatestReplierSaver.SaveFromThread(db, changeSet.AllAfter);
 
         return changeSet;
     }

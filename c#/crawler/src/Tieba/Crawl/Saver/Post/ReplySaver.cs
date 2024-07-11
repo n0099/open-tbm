@@ -19,9 +19,9 @@ public partial class ReplySaver(
 
         db.ReplyContents.AddRange(changeSet.NewlyAdded // https://github.com/dotnet/efcore/issues/33945
             .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
-        PostSaveHandlers += replyContentImageSaver.Save(db, changeSet.NewlyAdded).Invoke;
-        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter).Invoke;
-        PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllAfter).Invoke;
+        PostSaveHandlers += replyContentImageSaver.Save(db, changeSet.NewlyAdded);
+        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGradeRevisions(db, changeSet.AllAfter);
+        PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllAfter);
 
         return changeSet;
     }
