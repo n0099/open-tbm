@@ -34,6 +34,9 @@ public class SubReplyCrawlFacade(
         UserParser.ResetUsersIcon();
     }
 
+    protected override void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver) =>
+        userSaver.SaveParentThreadLatestReplierUid(db, tid);
+
     protected override void OnPostCommitSave(
         SaverChangeSet<SubReplyPost> savedPosts,
         CancellationToken stoppingToken = default) =>

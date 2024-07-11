@@ -3,7 +3,8 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 public partial class UserSaver(
     ILogger<UserSaver> logger,
     SaverLocks<Uid>.New saverLocksFactory,
-    IDictionary<Uid, User> users)
+    IDictionary<Uid, User> users,
+    ThreadLatestReplierSaver threadLatestReplierSaver)
     : SaverWithRevision<BaseUserRevision, Uid>(logger)
 {
     private static readonly HashSet<Uid> GlobalLockedUid = [];
@@ -11,6 +12,9 @@ public partial class UserSaver(
 
     public delegate UserSaver New(IDictionary<Uid, User> users);
     public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);
+
+    private Action PostSaveHandlers { get; set; } = () => { };
+    public void OnPostSave() => PostSaveHandlers();
 
     public void Save(
         CrawlerDbContext db,
@@ -21,6 +25,7 @@ public partial class UserSaver(
         if (users.Count == 0) return;
         var newlyLocked = _saverLocks.Value.Acquire(users.Keys().ToList());
         if (newlyLocked.Count == 0) return;
+        PostSaveHandlers += _saverLocks.Value.Dispose;
 
         // existingUsers may have new revisions to insert so excluding already locked users
         // to prevent inserting duplicate revision
@@ -41,7 +46,8 @@ public partial class UserSaver(
             userFieldRevisionIgnorance);
     }
 
-    public void OnPostSave() => _saverLocks.Value.Dispose();
+    public void SaveParentThreadLatestReplierUid(CrawlerDbContext db, Tid tid) =>
+        PostSaveHandlers += threadLatestReplierSaver.SaveFromUser(db, tid, users.Values);
 }
 public partial class UserSaver
 {

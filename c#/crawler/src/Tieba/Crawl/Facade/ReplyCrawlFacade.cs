@@ -34,6 +34,8 @@ public class ReplyCrawlFacade(
 
     protected override void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver)
     {
+        userSaver.SaveParentThreadLatestReplierUid(db, tid);
+
         if (_parentThreadTitle == null) return;
         var thread = db.Threads.AsTracking().SingleOrDefault(t => t.Tid == tid && t.Title != _parentThreadTitle);
         if (thread == null
