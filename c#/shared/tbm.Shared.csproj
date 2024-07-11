@@ -4,7 +4,7 @@
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2" />
         <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
@@ -17,13 +17,13 @@
                 <!-- enable PrivateAssets="All" will prevent analyzers working on other project that has <PackageReference> to this -->
                 <PackageReference ExcludeAssets="compile" Include="codecracker.CSharp" Version="1.1.0" />
                 <PackageReference ExcludeAssets="compile" Include="CSharpGuidelinesAnalyzer" Version="3.8.5" />
-                <PackageReference ExcludeAssets="compile" Include="IDisposableAnalyzers" Version="4.0.7" />
-                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.155" />
+                <PackageReference ExcludeAssets="compile" Include="IDisposableAnalyzers" Version="4.0.8" />
+                <PackageReference ExcludeAssets="compile" Include="Meziantou.Analyzer" Version="2.0.160" />
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" />
                 <PackageReference ExcludeAssets="compile" Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48" />
                 <PackageReference ExcludeAssets="compile" Include="Roslynator.Analyzers" Version="4.12.4" />
                 <PackageReference ExcludeAssets="compile" Include="SharpSource" Version="1.24.0" />
-                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="9.27.0.93347" />
+                <PackageReference ExcludeAssets="compile" Include="SonarAnalyzer.CSharp" Version="9.28.0.94264" />
                 <PackageReference ExcludeAssets="compile" Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556" />
             </ItemGroup>
         </When>
