@@ -1,5 +1,6 @@
 namespace tbm.Crawler.Worker;
 
+// ReSharper disable once UnusedType.Global
 public class ProcessImagesInAllReplyContentsWorker(
     ILogger<ProcessImagesInAllReplyContentsWorker> logger,
     IConfiguration config,

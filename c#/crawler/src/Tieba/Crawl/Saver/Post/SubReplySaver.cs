@@ -30,7 +30,7 @@ public partial class SubReplySaver
         _addSplitRevisionsDelegatesKeyByEntityType ??= new(() => new()
         {
             {typeof(SubReplyRevision.SplitAgreeCount), AddRevisionsWithDuplicateIndex<SubReplyRevision.SplitAgreeCount>},
-            {typeof(SubReplyRevision.SplitDisagreeCount), AddRevisionsWithDuplicateIndex<SubReplyRevision.SplitDisagreeCount>},
+            {typeof(SubReplyRevision.SplitDisagreeCount), AddRevisionsWithDuplicateIndex<SubReplyRevision.SplitDisagreeCount>}
         });
 
     protected override Spid RevisionIdSelector(BaseSubReplyRevision entity) => entity.Spid;

@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public partial class UserSaver(
@@ -42,9 +40,6 @@ public partial class UserSaver(
             userFieldUpdateIgnorance,
             userFieldRevisionIgnorance);
     }
-
-    public IEnumerable<Uid> AcquireUidLocksForSave(IEnumerable<Uid> usersId) =>
-        _saverLocks.Value.Acquire(usersId.ToList());
 
     public void OnPostSave() => _saverLocks.Value.Dispose();
 }

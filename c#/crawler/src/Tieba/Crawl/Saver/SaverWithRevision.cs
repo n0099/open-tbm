@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
 public abstract partial class SaverWithRevision<TBaseRevision, TRevisionId>(

@@ -1,4 +1,5 @@
-﻿namespace tbm.Crawler.Db;
+﻿// ReSharper disable PropertyCanBeMadeInitOnly.Global
+namespace tbm.Crawler.Db;
 
 public class LatestReplier : BaseUser
 {

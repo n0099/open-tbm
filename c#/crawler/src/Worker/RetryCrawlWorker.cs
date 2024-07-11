@@ -37,6 +37,7 @@ public class RetryCrawlWorker(
         var pages = failureCountsKeyByPage.Keys.ToList();
         FailureCount FailureCountSelector(Page p) => failureCountsKeyByPage[p];
 
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
         switch (lockType)
         {
             case CrawlerLocks.Type.Thread:

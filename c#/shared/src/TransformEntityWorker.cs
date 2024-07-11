@@ -3,7 +3,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using SuperLinq;
 using tbm.Shared.Db;
 
 namespace tbm.Shared;
@@ -14,7 +13,7 @@ public abstract class TransformEntityWorker()
     protected static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         IncludeFields = true,
-        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
     };
 }
 
