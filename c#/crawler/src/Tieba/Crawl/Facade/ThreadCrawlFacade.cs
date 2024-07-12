@@ -14,6 +14,8 @@ public class ThreadCrawlFacade(
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
 {
+    private readonly Dictionary<ThreadLatestReplierSaver.UniqueLatestReplier, LatestReplier?> _latestRepliersKeyByUnique = [];
+
     public delegate ThreadCrawlFacade New(Fid fid, string forumName);
 
     protected override void OnPostParse(
@@ -42,17 +44,21 @@ public class ThreadCrawlFacade(
             { // replace with more detailed location.name in the 6.0.2 response
                 t.parsed.Geolocation = Helper.SerializedProtoBufOrNullIfEmpty(t.inResponse.Location);
             }
-            var lastReplyer = t.inResponse.LastReplyer;
-            var name = lastReplyer?.Name.NullIfEmpty();
-            var nameShow = lastReplyer?.NameShow.NullIfEmpty();
+            var name = t.inResponse.LastReplyer.Name.NullIfEmpty();
+            var nameShow = t.inResponse.LastReplyer.NameShow.NullIfEmpty();
 
             // LastReplyer will be null when LivePostType != "", but LastTimeInt will have expected timestamp value
-            t.parsed.LatestReplier = lastReplyer == null ? null : new LatestReplier
+            var latestReplierEntity = t.inResponse.LastReplyer == null ? null : new LatestReplier
             {
                 Name = name,
 #pragma warning disable S3358 // Ternary operators should not be nested
                 DisplayName = name == nameShow ? null : nameShow
 #pragma warning restore S3358 // Ternary operators should not be nested
             };
+            var uniqueLatestReplier = ThreadLatestReplierSaver.UniqueLatestReplier.FromLatestReplier(latestReplierEntity);
+
+            var isExists = _latestRepliersKeyByUnique.TryGetValue(uniqueLatestReplier, out var existingLatestReplier);
+            if (!isExists) _latestRepliersKeyByUnique[uniqueLatestReplier] = latestReplierEntity;
+            t.parsed.LatestReplier = isExists ? existingLatestReplier : latestReplierEntity;
         });
 }

@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 public class ThreadLatestReplierSaver(
@@ -12,27 +10,10 @@ public class ThreadLatestReplierSaver(
 
     public Action SaveFromThread(CrawlerDbContext db, IReadOnlyCollection<ThreadPost> threads)
     {
-        static void DetachThenReplace(
-            EntityEntry<LatestReplier> entityEntry,
-            ThreadPost thread,
-            LatestReplier newLatestReplier)
-        {
-            entityEntry.State = EntityState.Detached;
-            thread.LatestReplier = newLatestReplier;
-        }
-
-        var threadsGroupByUniqueLatestReplier = threads
+        var uniqueLatestRepliers = threads
             .Where(th => th.LatestReplier != null)
-            .GroupBy(UniqueLatestReplier.FromThread).ToList();
-        threadsGroupByUniqueLatestReplier.ForEach(g =>
-            (from thread in g.Skip(1)
-                join entityEntry in db.ChangeTracker.Entries<LatestReplier>()
-                    on thread.LatestReplier equals entityEntry.Entity
-                select (thread, entityEntry))
-            .ForEach(t => DetachThenReplace(t.entityEntry, t.thread, g.First().LatestReplier!)));
-
-        var uniqueLatestRepliers = threadsGroupByUniqueLatestReplier.Select(g => g.Key).ToList();
-        var existingLatestRepliers = db.LatestRepliers.AsNoTracking().FilterByItems(
+            .Select(UniqueLatestReplier.FromThread).ToList();
+        var existingLatestRepliers = db.LatestRepliers.AsTracking().FilterByItems(
                 uniqueLatestRepliers, (latestReplier, uniqueLatestReplier) =>
                     latestReplier.Name == uniqueLatestReplier.Name
                     && latestReplier.DisplayName == uniqueLatestReplier.DisplayName)
@@ -43,7 +24,11 @@ public class ThreadLatestReplierSaver(
                 join entityEntry in db.ChangeTracker.Entries<LatestReplier>()
                     on thread.LatestReplier equals entityEntry.Entity // Object.ReferenceEquals()
                 select (existing, thread, entityEntry))
-            .ForEach(t => DetachThenReplace(t.entityEntry, t.thread, t.existing));
+            .ForEach(t =>
+            {
+                t.entityEntry.State = EntityState.Detached;
+                t.thread.LatestReplier = t.existing;
+            });
 
         _ = _saverLocks.Value.Acquire(uniqueLatestRepliers
             .Except(existingLatestRepliers.Select(UniqueLatestReplier.FromLatestReplier))

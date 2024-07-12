@@ -72,7 +72,7 @@ public partial class ThreadSaver
         nameof(ThreadPost.Title)
             when newValue is ""
 
-            // prevent repeatedly update with different title
+            // prevent update repeatedly with different title
             // due to the thread is a multi forum topic thread
             // thus its title can be varied within the forum and within the thread
             || (newValue is not "" && oldValue is not "") => true,

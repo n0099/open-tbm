@@ -33,12 +33,12 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         var existingPostsKeyById = db.Set<TPost>().AsTracking()
             .Where(existingPostPredicate).ToDictionary(postIdSelector);
 
-        // deep copy before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
-        var existingBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
+        // clone before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
+        var existingPostsBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
 
         SaveEntitiesWithRevision(db, revisionFactory,
             Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
             p => existingPostsKeyById[postIdSelector(p)]);
-        return new(existingBeforeMerge, Posts.Values, postIdSelector);
+        return new(postIdSelector, existingPostsBeforeMerge, Posts.Values, existingPostsKeyById.Values);
     }
 }

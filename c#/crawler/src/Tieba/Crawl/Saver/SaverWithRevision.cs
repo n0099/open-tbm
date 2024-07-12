@@ -83,6 +83,13 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
             entityEntry.CurrentValues.SetValues(newEntity); // mutate existingEntity that referenced by entry
             entityEntry.Property(e => e.Version).IsModified = false; // newEntity.Version will always be default 0
 
+            // https://stackoverflow.com/questions/66206459/update-navigation-property-with-entity-currentvalues-setvalues/66491805#66491805
+            (from newNavigation in db.Entry(newEntity).Navigations
+                    join existingNavigation in entityEntry.Navigations
+                        on newNavigation.Metadata.Name equals existingNavigation.Metadata.Name
+                    select (newNavigation, existingNavigation))
+                .ForEach(t => t.existingNavigation.CurrentValue = t.newNavigation.CurrentValue);
+
             bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
                 or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
 
