@@ -71,11 +71,10 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
         b.Entity<User>().ToTable("tbmc_user");
         b.Entity<LatestReplier>().ToTable("tbmc_latestReplier");
         b.Entity<LatestReplier>().Property(e => e.DisplayName).HasConversion<byte[]>();
-        b.Entity<LatestReplier>().HasOne<ThreadPost>().WithOne(e => e.LatestReplier)
-            .HasForeignKey<ThreadPost>(e => e.LatestReplierId);
         b.Entity<LatestReplierRevision>().ToTable("tbmcr_latestReplier").HasKey(e => new {e.TakenAt, e.Uid});
         b.Entity<LatestReplierRevision>().Property(e => e.DisplayName).HasConversion<byte[]>();
-        b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread");
+        b.Entity<ThreadPost>().ToTable($"tbmc_f{Fid}_thread")
+            .HasOne<LatestReplier>(e => e.LatestReplier).WithMany().HasForeignKey(e => e.LatestReplierId);
         b.Entity<ThreadMissingFirstReply>().ToTable("tbmc_thread_missingFirstReply");
         b.Entity<ReplyPost>().ToTable($"tbmc_f{Fid}_reply");
         b.Entity<ReplyContent>().ToTable($"tbmc_f{Fid}_reply_content");

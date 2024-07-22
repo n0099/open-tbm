@@ -27,11 +27,10 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         CrawlerDbContext db,
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
-        ExpressionStarter<TPost> existingPostPredicate)
+        Func<IQueryable<TPost>, IQueryable<TPost>> postQueryTransformer)
         where TRevision : TBaseRevision
     {
-        var existingPostsKeyById = db.Set<TPost>().AsTracking()
-            .Where(existingPostPredicate).ToDictionary(postIdSelector);
+        var existingPostsKeyById = postQueryTransformer(db.Set<TPost>().AsTracking()).ToDictionary(postIdSelector);
 
         // clone before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
         var existingPostsBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();

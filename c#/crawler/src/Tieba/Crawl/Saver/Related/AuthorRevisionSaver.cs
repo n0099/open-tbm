@@ -1,14 +1,12 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
-// locks only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
-// this prevents inserting multiple entities with similar time and other fields with the same values
 public class AuthorRevisionSaver(
     ILogger<AuthorRevisionSaver> logger,
-    SaverLocks<(Fid Fid, Uid Uid)>.New saverLocksFactory,
+    SaverLocks<AuthorRevisionSaver.UniqueAuthorRevision>.New saverLocksFactory,
     PostType triggeredByPostType)
 {
-    private static readonly HashSet<(Fid Fid, Uid Uid)> GlobalLockedAuthorExpGradeKeys = [];
-    private readonly Lazy<SaverLocks<(Fid Fid, Uid Uid)>> _authorExpGradeLocksSaverLocks =
+    private static readonly HashSet<UniqueAuthorRevision> GlobalLockedAuthorExpGradeKeys = [];
+    private readonly Lazy<SaverLocks<UniqueAuthorRevision>> _authorExpGradeLocksSaverLocks =
         new(() => saverLocksFactory(GlobalLockedAuthorExpGradeKeys));
 
     public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
@@ -42,7 +40,7 @@ public class AuthorRevisionSaver(
     private void Save<TPost, TRevision, TValue>(
         CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
-        SaverLocks<(Fid Fid, Uid Uid)> locks,
+        SaverLocks<UniqueAuthorRevision> locks,
         IQueryable<TRevision> dbSet,
         Func<TPost, TValue?> postRevisioningFieldSelector,
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
@@ -85,11 +83,15 @@ public class AuthorRevisionSaver(
         var newRevisions = newRevisionOfNewUsers
             .Concat(newRevisionOfExistingUsers)
             .Select(revisionFactory)
-            .ToDictionary(revision => (revision.Fid, revision.Uid), revision => revision);
+            .ToDictionary(revision => new UniqueAuthorRevision(revision.Fid, revision.Uid), revision => revision);
         db.Set<TRevision>().AddRange(newRevisions
             .IntersectByKey(locks.Acquire(newRevisions.Keys))
             .Values());
     }
+
+    // locking key only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
+    // this prevents inserting multiple entities with similar time and other fields with the same values
+    public record UniqueAuthorRevision(Fid Fid, Uid Uid);
 
     private sealed class LatestAuthorRevisionProjection<TValue>
     {

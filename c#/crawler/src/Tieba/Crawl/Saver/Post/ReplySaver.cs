@@ -15,7 +15,7 @@ public partial class ReplySaver(
     {
         var changeSet = Save(db, r => r.Pid,
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
-            LinqKit.PredicateBuilder.New<ReplyPost>(r => Posts.Keys.Contains(r.Pid)));
+            posts => posts.Where(r => Posts.Keys.Contains(r.Pid)));
 
         db.ReplyContents.AddRange(changeSet.NewlyAdded // https://github.com/dotnet/efcore/issues/33945
             .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));

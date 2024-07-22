@@ -13,7 +13,7 @@ public partial class SubReplySaver(
     {
         var changeSet = Save(db, sr => sr.Spid,
             sr => new SubReplyRevision {TakenAt = sr.UpdatedAt ?? sr.CreatedAt, Spid = sr.Spid},
-            LinqKit.PredicateBuilder.New<SubReplyPost>(sr => Posts.Keys.Contains(sr.Spid)));
+            posts => posts.Where(sr => Posts.Keys.Contains(sr.Spid)));
 
         db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => // https://github.com/dotnet/efcore/issues/33945
             new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));

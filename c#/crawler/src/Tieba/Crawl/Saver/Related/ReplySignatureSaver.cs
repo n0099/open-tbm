@@ -21,7 +21,7 @@ public class ReplySignatureSaver(
             .DistinctBy(r => r.SignatureId)
             .Select(r => new ReplySignature
             {
-                UserId = r.AuthorUid,
+                Uid = r.AuthorUid,
                 SignatureId = (uint)r.SignatureId!,
                 XxHash3 = XxHash3.Hash(r.Signature!),
                 ProtoBufBytes = r.Signature!,

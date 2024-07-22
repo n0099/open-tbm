@@ -3,7 +3,7 @@ namespace tbm.Crawler.Db.Post;
 
 public class ReplySignature : RowVersionedEntity
 {
-    public long UserId { get; set; }
+    public long Uid { get; set; }
     public uint SignatureId { get; set; }
     public required byte[] XxHash3 { get; set; }
     public required byte[] ProtoBufBytes { get; set; }
