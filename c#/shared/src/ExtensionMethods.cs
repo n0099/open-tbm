@@ -39,13 +39,13 @@ public static partial class ExtensionMethods
         pairs.Select(i => i.Value);
 
     public static IEnumerable<KeyValuePair<TKey, TValue>> ExceptByKey<TKey, TValue>(
-        this IEnumerable<KeyValuePair<TKey, TValue>> first,
-        IEnumerable<TKey> second) =>
-        first.ExceptBy(second, pair => pair.Key);
+        this IEnumerable<KeyValuePair<TKey, TValue>> pairs,
+        IEnumerable<TKey> keys) =>
+        pairs.ExceptBy(keys, pair => pair.Key);
     public static IEnumerable<KeyValuePair<TKey, TValue>> IntersectByKey<TKey, TValue>(
-        this IEnumerable<KeyValuePair<TKey, TValue>> first,
-        IEnumerable<TKey> second) =>
-        first.IntersectBy(second, pair => pair.Key);
+        this IEnumerable<KeyValuePair<TKey, TValue>> pairs,
+        IEnumerable<TKey> keys) =>
+        pairs.IntersectBy(keys, pair => pair.Key);
 
     public static IEnumerable<T> Flatten2<T>(this IEnumerable<IEnumerable<T>> source) =>
         source.SelectMany(i => i);

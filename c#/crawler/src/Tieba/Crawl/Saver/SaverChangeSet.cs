@@ -21,9 +21,9 @@ public class SaverChangeSet<TPost>(
 
     // https://stackoverflow.com/questions/3404975/left-outer-join-in-linq/23558389#23558389
     public IReadOnlyCollection<TPost> AllAfter { get; } = (
-        from nonTracked in existingAfterAndNewlyAdded
+        from notTracked in existingAfterAndNewlyAdded
         join inTracking in existingAfterInTracking
-            on postIdSelector(nonTracked) equals postIdSelector(inTracking) into inTrackings
+            on postIdSelector(notTracked) equals postIdSelector(inTracking) into inTrackings
         from inTracking in inTrackings.DefaultIfEmpty()
-        select inTracking ?? nonTracked).ToList().AsReadOnly();
+        select inTracking ?? notTracked).ToList().AsReadOnly();
 }

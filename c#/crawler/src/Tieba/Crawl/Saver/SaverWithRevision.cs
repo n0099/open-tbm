@@ -62,13 +62,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 }
 public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 {
-    private static bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
-        or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
-
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
-
-    protected record ExistingAndNewEntity<TEntity>(TEntity Existing, TEntity New) where TEntity : RowVersionedEntity;
-    protected record MaybeExistingAndNewEntity<TEntity>(TEntity? Existing, TEntity New) where TEntity : RowVersionedEntity;
 
     protected IEnumerable<ExistingAndNewEntity<TEntity>> SaveNewEntities<TEntity>(
         CrawlerDbContext db,
@@ -103,7 +97,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 
             // rollback changes that overwrite original values with the default value 0 or null
             // for all fields of TimestampedEntity and BasePost.LastSeenAt
-            // this will also affect the entity instance which entityInTracking references to it
+            // this will also affect the entity instance which existingEntity references to it
             entityEntry.Properties
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
                 .ForEach(prop => prop.IsModified = false);
@@ -141,7 +135,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                         pName, p.OriginalValue, p.CurrentValue)))
                 {
                     p.IsModified = false;
-                    continue; // skip following revision check
+                    continue; // skip any further revision check
                 }
                 if (FieldRevisionIgnorance(
                         pName, p.OriginalValue, p.CurrentValue)
@@ -151,7 +145,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 
                 if (!IRevisionProperties.Cache[typeof(TRevision)].TryGetValue(pName, out var revisionProp))
                 {
-                    object? ToHexWhenByteArray(object? value) =>
+                    static object? ToHexWhenByteArray(object? value) =>
                         value is byte[] bytes ? bytes.ToHex() : value;
                     logger.LogWarning("Updating field {} is not existing in revision table, " +
                                        "newValue={}, oldValue={}, newObject={}, oldObject={}",
@@ -163,7 +157,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                 {
                     revision ??= revisionFactory(existingEntity);
 
-                    // quote from MSDN https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
+                    // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
                     // If the property type of this PropertyInfo object is a value type and value is null
                     // the property will be set to the default value for that type.
                     // https://stackoverflow.com/questions/3049477/propertyinfo-setvalue-and-nulls
@@ -195,4 +189,10 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
             .GroupBy(pair => pair.Key, pair => pair.Value)
             .ForEach(g => AddSplitRevisionsDelegatesKeyByEntityType.Value[g.Key](db, g));
     }
+
+    private static bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
+        or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
+
+    protected record ExistingAndNewEntity<TEntity>(TEntity Existing, TEntity New) where TEntity : RowVersionedEntity;
+    protected record MaybeExistingAndNewEntity<TEntity>(TEntity? Existing, TEntity New) where TEntity : RowVersionedEntity;
 }

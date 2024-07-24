@@ -1,5 +1,3 @@
-using LinqKit;
-
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
