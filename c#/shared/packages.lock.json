@@ -105,9 +105,18 @@
       },
       "SuperLinq": {
         "type": "Direct",
-        "requested": "[6.1.0, )",
-        "resolved": "6.1.0",
-        "contentHash": "dsjy753bedk+aUFroUcPYFNsiSHbnTSzf2ZAez5cnoDwFQIdi6POzBEsR6fWTcmlbA6k5XjxIrV3c5LefnSq9g=="
+        "requested": "[6.2.0, )",
+        "resolved": "6.2.0",
+        "contentHash": "msiuvwdo+bYqXXMu/MmUZBj8mkobPNVAgkT8uZSyg05mUgdawOS5FPARCnqd6Oe0hlzJ6hq9EAT5GQBkIVQv7Q==",
+        "dependencies": {
+          "Microsoft.Bcl.HashCode": "1.1.1",
+          "System.Memory": "4.5.5"
+        }
+      },
+      "Microsoft.Bcl.HashCode": {
+        "type": "Transitive",
+        "resolved": "1.1.1",
+        "contentHash": "MalY0Y/uM/LjXtHfX/26l2VtN4LDNZ2OE3aumNOHDLsT4fNYy2hiHXI4CXCqKpNUNm7iJ2brrc4J89UdaL56FA=="
       },
       "Microsoft.EntityFrameworkCore.Abstractions": {
         "type": "Transitive",
@@ -423,6 +432,11 @@
         "type": "Transitive",
         "resolved": "8.0.0",
         "contentHash": "fdYxcRjQqTTacKId/2IECojlDSFvp7LP5N78+0z/xH7v/Tuw5ZAxu23Y6PTCRinqyu2ePx+Gn1098NC6jM6d+A=="
+      },
+      "System.Memory": {
+        "type": "Transitive",
+        "resolved": "4.5.5",
+        "contentHash": "XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw=="
       },
       "System.Text.Encodings.Web": {
         "type": "Transitive",

@@ -91,9 +91,9 @@
       },
       "SixLabors.ImageSharp": {
         "type": "Direct",
-        "requested": "[3.1.4, )",
-        "resolved": "3.1.4",
-        "contentHash": "lFIdxgGDA5iYkUMRFOze7BGLcdpoLFbR+a20kc1W7NepvzU7ejtxtWOg9RvgG7kb9tBoJ3ONYOK6kLil/dgF1w=="
+        "requested": "[3.1.5, )",
+        "resolved": "3.1.5",
+        "contentHash": "lNtlq7dSI/QEbYey+A0xn48z5w4XHSffF8222cC4F4YwTXfEImuiBavQcWjr49LThT/pRmtWJRcqA/PlL+eJ6g=="
       },
       "System.IO.Hashing": {
         "type": "Direct",
@@ -149,6 +149,11 @@
         "type": "Transitive",
         "resolved": "7.0.0",
         "contentHash": "3aeMZ1N0lJoSyzqiP03hqemtb1BijhsJADdobn/4nsMJ8V1H+CrpuduUe4hlRdx+ikBQju1VGjMD1GJ3Sk05Eg=="
+      },
+      "Microsoft.Bcl.HashCode": {
+        "type": "Transitive",
+        "resolved": "1.1.1",
+        "contentHash": "MalY0Y/uM/LjXtHfX/26l2VtN4LDNZ2OE3aumNOHDLsT4fNYy2hiHXI4CXCqKpNUNm7iJ2brrc4J89UdaL56FA=="
       },
       "Microsoft.CSharp": {
         "type": "Transitive",
@@ -615,8 +620,12 @@
       },
       "SuperLinq": {
         "type": "Transitive",
-        "resolved": "6.1.0",
-        "contentHash": "dsjy753bedk+aUFroUcPYFNsiSHbnTSzf2ZAez5cnoDwFQIdi6POzBEsR6fWTcmlbA6k5XjxIrV3c5LefnSq9g=="
+        "resolved": "6.2.0",
+        "contentHash": "msiuvwdo+bYqXXMu/MmUZBj8mkobPNVAgkT8uZSyg05mUgdawOS5FPARCnqd6Oe0hlzJ6hq9EAT5GQBkIVQv7Q==",
+        "dependencies": {
+          "Microsoft.Bcl.HashCode": "1.1.1",
+          "System.Memory": "4.5.5"
+        }
       },
       "System.Collections": {
         "type": "Transitive",
@@ -907,7 +916,7 @@
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
           "NLog.Extensions.Logging": "[5.3.11, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[8.0.4, )",
-          "SuperLinq": "[6.1.0, )"
+          "SuperLinq": "[6.2.0, )"
         }
       }
     }
