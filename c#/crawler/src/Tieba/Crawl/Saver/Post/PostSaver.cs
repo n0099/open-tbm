@@ -28,7 +28,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
         Func<IQueryable<TPost>, IQueryable<TPost>> postQueryTransformer,
-        Action<IEnumerable<ExistingAndNewEntities<TPost>>>? onBeforeSaveRevision = null)
+        Action<IEnumerable<ExistingAndNewEntity<TPost>>>? onBeforeSaveRevision = null)
         where TRevision : TBaseRevision
     {
         var existingPosts = postQueryTransformer(db.Set<TPost>().AsTracking()).ToList();
@@ -39,15 +39,9 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
             join existingPost in existingPosts
                 on postIdSelector(newPost) equals postIdSelector(existingPost) into existingPostsWithSameId
             from existingPost in existingPostsWithSameId.DefaultIfEmpty()
-            select (existingPost, newPost)).ToList();
+            select new MaybeExistingAndNewEntity<TPost>(existingPost, newPost)).ToList();
 
-        db.Set<TPost>().AddRange(maybeExistingAndNewPosts
-            .Where(t => t.existingPost == null).Select(t => t.newPost));
-        var existingAndNewPosts = maybeExistingAndNewPosts
-            .Where(t => t.existingPost != null)
-            .Select(t => new ExistingAndNewEntities<TPost>(t.existingPost, t.newPost))
-            .ToList();
-
+        var existingAndNewPosts = SaveNewEntities(db, maybeExistingAndNewPosts).ToList();
         SaveExistingEntities(db, existingAndNewPosts);
         onBeforeSaveRevision?.Invoke(existingAndNewPosts);
         SaveExistingEntityRevisions(db, revisionFactory, existingAndNewPosts);

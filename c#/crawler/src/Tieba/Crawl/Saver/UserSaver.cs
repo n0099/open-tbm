@@ -32,19 +32,14 @@ public partial class UserSaver(
         var existingUsers = (from user in db.Users.AsTracking()
             where newlyLocked.Contains(user.Uid)
             select user).ToList();
-        var maybeExistingAndNewUsers = (from newUser in users.Values
+        var maybeExistingAndNewUsers = (
+            from newUser in users.IntersectByKey(newlyLocked).Values()
             join existingUser in existingUsers
                 on newUser.Uid equals existingUser.Uid into existingUsersWithSameId
             from existingUser in existingUsersWithSameId.DefaultIfEmpty()
-            select (existingUser, newUser)).ToList();
+            select new MaybeExistingAndNewEntity<User>(existingUser, newUser)).ToList();
 
-        db.Users.AddRange(maybeExistingAndNewUsers
-            .Where(t => t.existingUser == null).Select(t => t.newUser));
-        var existingAndNewUsers = maybeExistingAndNewUsers
-            .Where(t => t.existingUser != null)
-            .Select(t => new ExistingAndNewEntities<User>(t.existingUser, t.newUser))
-            .ToList();
-
+        var existingAndNewUsers = SaveNewEntities(db, maybeExistingAndNewUsers).ToList();
         SaveExistingEntities(db, existingAndNewUsers);
         SaveExistingEntityRevisions(db,
             u => new UserRevision

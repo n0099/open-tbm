@@ -67,12 +67,24 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
 
-    protected record ExistingAndNewEntities<TEntity>
-        (TEntity ExistingEntity, TEntity NewEntity) where TEntity : RowVersionedEntity;
+    protected record ExistingAndNewEntity<TEntity>(TEntity Existing, TEntity New) where TEntity : RowVersionedEntity;
+    protected record MaybeExistingAndNewEntity<TEntity>(TEntity? Existing, TEntity New) where TEntity : RowVersionedEntity;
+
+    protected IEnumerable<ExistingAndNewEntity<TEntity>> SaveNewEntities<TEntity>(
+        CrawlerDbContext db,
+        IReadOnlyCollection<MaybeExistingAndNewEntity<TEntity>> maybeEntities)
+        where TEntity : RowVersionedEntity
+    {
+        db.Set<TEntity>().AddRange(maybeEntities
+            .Where(entity => entity.Existing == null).Select(entity => entity.New));
+        return maybeEntities
+            .Where(entity => entity.Existing != null)
+            .Select(entity => new ExistingAndNewEntity<TEntity>(entity.Existing!, entity.New));
+    }
 
     protected void SaveExistingEntities<TEntity>(
         CrawlerDbContext db,
-        IEnumerable<ExistingAndNewEntities<TEntity>> existingAndNewEntities)
+        IEnumerable<ExistingAndNewEntity<TEntity>> existingAndNewEntities)
         where TEntity : RowVersionedEntity =>
         existingAndNewEntities.ForEach(existingAndNew =>
         {
@@ -100,7 +112,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
     protected void SaveExistingEntityRevisions<TEntity, TRevision>(
         CrawlerDbContext db,
         Func<TEntity, TRevision> revisionFactory,
-        IEnumerable<ExistingAndNewEntities<TEntity>> existingAndNewEntities,
+        IEnumerable<ExistingAndNewEntity<TEntity>> existingAndNewEntities,
         UserSaver.FieldChangeIgnorance? userFieldUpdateIgnorance = null,
         UserSaver.FieldChangeIgnorance? userFieldRevisionIgnorance = null)
         where TEntity : RowVersionedEntity

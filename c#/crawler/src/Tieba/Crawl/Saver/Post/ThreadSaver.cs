@@ -20,7 +20,7 @@ public partial class ThreadSaver(
             .Include(th => th.LatestReplier),
         existingAndNewPosts =>
             PostSaveHandlers += threadLatestReplierSaver.SaveFromThread(db,
-                existingAndNewPosts.Select(t => t.ExistingEntity).ToList()));
+                existingAndNewPosts.Select(t => t.Existing).ToList()));
 }
 public partial class ThreadSaver
 {
