@@ -27,17 +27,30 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         CrawlerDbContext db,
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
-        Func<IQueryable<TPost>, IQueryable<TPost>> postQueryTransformer)
+        Func<IQueryable<TPost>, IQueryable<TPost>> postQueryTransformer,
+        Action<IEnumerable<ExistingAndNewEntities<TPost>>>? onBeforeSaveRevision = null)
         where TRevision : TBaseRevision
     {
-        var existingPostsKeyById = postQueryTransformer(db.Set<TPost>().AsTracking()).ToDictionary(postIdSelector);
+        var existingPosts = postQueryTransformer(db.Set<TPost>().AsTracking()).ToList();
 
         // clone before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
-        var existingPostsBeforeMerge = existingPostsKeyById.Select(pair => (TPost)pair.Value.Clone()).ToList();
+        var existingPostsBeforeMerge = existingPosts.Select(post => (TPost)post.Clone()).ToList();
+        var maybeExistingAndNewPosts = (from newPost in Posts.Values
+            join existingPost in existingPosts
+                on postIdSelector(newPost) equals postIdSelector(existingPost) into existingPostsWithSameId
+            from existingPost in existingPostsWithSameId.DefaultIfEmpty()
+            select (existingPost, newPost)).ToList();
 
-        SaveEntitiesWithRevision(db, revisionFactory,
-            Posts.Values.ToLookup(p => existingPostsKeyById.ContainsKey(postIdSelector(p))),
-            p => existingPostsKeyById[postIdSelector(p)]);
-        return new(postIdSelector, existingPostsBeforeMerge, Posts.Values, existingPostsKeyById.Values);
+        db.Set<TPost>().AddRange(maybeExistingAndNewPosts
+            .Where(t => t.existingPost == null).Select(t => t.newPost));
+        var existingAndNewPosts = maybeExistingAndNewPosts
+            .Where(t => t.existingPost != null)
+            .Select(t => new ExistingAndNewEntities<TPost>(t.existingPost, t.newPost))
+            .ToList();
+
+        SaveExistingEntities(db, existingAndNewPosts);
+        onBeforeSaveRevision?.Invoke(existingAndNewPosts);
+        SaveExistingEntityRevisions(db, revisionFactory, existingAndNewPosts);
+        return new(postIdSelector, existingPostsBeforeMerge, Posts.Values, existingPosts);
     }
 }

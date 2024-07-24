@@ -62,23 +62,22 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 }
 public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 {
+    private static bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
+        or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
+
     protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
 
-    protected void SaveEntitiesWithRevision<TEntity, TRevision>(
+    protected record ExistingAndNewEntities<TEntity>
+        (TEntity ExistingEntity, TEntity NewEntity) where TEntity : RowVersionedEntity;
+
+    protected void SaveExistingEntities<TEntity>(
         CrawlerDbContext db,
-        Func<TEntity, TRevision> revisionFactory,
-        ILookup<bool, TEntity> isExistingEntityLookup,
-        Func<TEntity, TEntity> existingSelector,
-        UserSaver.FieldChangeIgnorance? userFieldUpdateIgnorance = null,
-        UserSaver.FieldChangeIgnorance? userFieldRevisionIgnorance = null)
-        where TEntity : RowVersionedEntity
-        where TRevision : class, TBaseRevision
-    {
-        db.Set<TEntity>().AddRange(isExistingEntityLookup[false]); // newly added
-        var newRevisions = isExistingEntityLookup[true].Select(newEntity =>
+        IEnumerable<ExistingAndNewEntities<TEntity>> existingAndNewEntities)
+        where TEntity : RowVersionedEntity =>
+        existingAndNewEntities.ForEach(existingAndNew =>
         {
-            var entityInTracking = existingSelector(newEntity);
-            var entityEntry = db.Entry(entityInTracking);
+            var (existingEntity, newEntity) = existingAndNew;
+            var entityEntry = db.Entry(existingEntity);
 
             entityEntry.CurrentValues.SetValues(newEntity); // mutate existingEntity that referenced by entry
             entityEntry.Property(e => e.Version).IsModified = false; // newEntity.Version will always be default 0
@@ -90,16 +89,27 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                     select (newNavigation, existingNavigation))
                 .ForEach(t => t.existingNavigation.CurrentValue = t.newNavigation.CurrentValue);
 
-            bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
-                or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
-
             // rollback changes that overwrite original values with the default value 0 or null
             // for all fields of TimestampedEntity and BasePost.LastSeenAt
             // this will also affect the entity instance which entityInTracking references to it
             entityEntry.Properties
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
                 .ForEach(prop => prop.IsModified = false);
+        });
 
+    protected void SaveExistingEntityRevisions<TEntity, TRevision>(
+        CrawlerDbContext db,
+        Func<TEntity, TRevision> revisionFactory,
+        IEnumerable<ExistingAndNewEntities<TEntity>> existingAndNewEntities,
+        UserSaver.FieldChangeIgnorance? userFieldUpdateIgnorance = null,
+        UserSaver.FieldChangeIgnorance? userFieldRevisionIgnorance = null)
+        where TEntity : RowVersionedEntity
+        where TRevision : class, TBaseRevision
+    {
+        var newRevisions = existingAndNewEntities.Select(existingAndNew =>
+        {
+            var (existingEntity, newEntity) = existingAndNew;
+            var entityEntry = db.Entry(existingEntity);
             var revision = default(TRevision);
             var revisionNullFieldsBitMask = 0;
             var entityIsUser = typeof(TEntity) == typeof(User);
@@ -108,7 +118,10 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                 var pName = p.Metadata.Name;
                 if (!p.IsModified || IsTimestampingFieldName(pName)) continue;
 
-                if (FieldUpdateIgnorance(
+                // foreign key might be marked as modified after its reference navigation
+                // gets replaced by another entity with the same PK in SaveExistingEntities()
+                if (Equals(p.OriginalValue, p.CurrentValue)
+                    || FieldUpdateIgnorance(
                         pName, p.OriginalValue, p.CurrentValue)
                     || GlobalFieldUpdateIgnorance(
                         pName, p.OriginalValue, p.CurrentValue)
@@ -136,7 +149,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                 }
                 else
                 {
-                    revision ??= revisionFactory(entityInTracking);
+                    revision ??= revisionFactory(existingEntity);
 
                     // quote from MSDN https://learn.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo.setvalue
                     // If the property type of this PropertyInfo object is a value type and value is null

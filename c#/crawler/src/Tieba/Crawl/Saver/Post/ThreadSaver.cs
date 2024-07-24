@@ -12,17 +12,15 @@ public partial class ThreadSaver(
 {
     public delegate ThreadSaver New(ConcurrentDictionary<Tid, ThreadPost> posts);
 
-    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db)
-    {
-        var changeSet = Save(db,
-            th => th.Tid,
-            th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
-            posts => posts.Where(th => Posts.Keys.Contains(th.Tid)));
-
-        PostSaveHandlers += threadLatestReplierSaver.SaveFromThread(db, changeSet.AllAfter);
-
-        return changeSet;
-    }
+    public override SaverChangeSet<ThreadPost> Save(CrawlerDbContext db) => Save(db,
+        th => th.Tid,
+        th => new ThreadRevision {TakenAt = th.UpdatedAt ?? th.CreatedAt, Tid = th.Tid},
+        posts => posts
+            .Where(th => Posts.Keys.Contains(th.Tid))
+            .Include(th => th.LatestReplier),
+        existingAndNewPosts =>
+            PostSaveHandlers += threadLatestReplierSaver.SaveFromThread(db,
+                existingAndNewPosts.Select(t => t.ExistingEntity).ToList()));
 }
 public partial class ThreadSaver
 {

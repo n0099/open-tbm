@@ -24,7 +24,10 @@ public class ThreadLatestReplierSaver(
                 join entityEntry in db.ChangeTracker.Entries<LatestReplier>()
                     on thread.LatestReplier equals entityEntry.Entity // Object.ReferenceEquals()
                 select (existing, thread, entityEntry))
-            .ForEach(t =>
+
+            // eager eval since detaching the temporary entity of a latest replier
+            // that shared by other threads will mutate their latest replier to null
+            .ToList().ForEach(t =>
             {
                 t.entityEntry.State = EntityState.Detached;
                 t.thread.LatestReplier = t.existing;

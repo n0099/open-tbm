@@ -29,19 +29,31 @@ public partial class UserSaver(
 
         // existingUsers may have new revisions to insert so excluding already locked users
         // to prevent inserting duplicate revision
-        var existingUsersKeyByUid = (from user in db.Users.AsTracking()
+        var existingUsers = (from user in db.Users.AsTracking()
             where newlyLocked.Contains(user.Uid)
-            select user).ToDictionary(u => u.Uid);
-        SaveEntitiesWithRevision(db,
+            select user).ToList();
+        var maybeExistingAndNewUsers = (from newUser in users.Values
+            join existingUser in existingUsers
+                on newUser.Uid equals existingUser.Uid into existingUsersWithSameId
+            from existingUser in existingUsersWithSameId.DefaultIfEmpty()
+            select (existingUser, newUser)).ToList();
+
+        db.Users.AddRange(maybeExistingAndNewUsers
+            .Where(t => t.existingUser == null).Select(t => t.newUser));
+        var existingAndNewUsers = maybeExistingAndNewUsers
+            .Where(t => t.existingUser != null)
+            .Select(t => new ExistingAndNewEntities<User>(t.existingUser, t.newUser))
+            .ToList();
+
+        SaveExistingEntities(db, existingAndNewUsers);
+        SaveExistingEntityRevisions(db,
             u => new UserRevision
             {
                 TakenAt = u.UpdatedAt ?? u.CreatedAt,
                 Uid = u.Uid,
                 TriggeredBy = postType
             },
-            users.IntersectByKey(newlyLocked).Values()
-                .ToLookup(u => existingUsersKeyByUid.ContainsKey(u.Uid)),
-            u => existingUsersKeyByUid[u.Uid],
+            existingAndNewUsers,
             userFieldUpdateIgnorance,
             userFieldRevisionIgnorance);
     }
