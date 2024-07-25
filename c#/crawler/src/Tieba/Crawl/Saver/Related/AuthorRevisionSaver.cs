@@ -11,10 +11,17 @@ public class AuthorRevisionSaver(
 
     public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
 
-    public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
+    public Action SaveAuthorExpGrade<TPostWithAuthorExpGrade>
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
         where TPostWithAuthorExpGrade : PostWithAuthorExpGrade =>
-        Save(db, posts, _authorExpGradeLocksSaverLocks.Value,
+        Save(db, posts.GroupBy(p => p.AuthorUid).SelectMany(g =>
+
+                    // possible randomly respond with 0 and the real value of AuthorExpGrade for the same uid
+                    g.Any(p => p.AuthorExpGrade != 0)
+                        ? g.Where(p => p.AuthorExpGrade != 0)
+                        : g)
+                .ToList(),
+            _authorExpGradeLocksSaverLocks.Value,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
