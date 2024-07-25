@@ -13,8 +13,7 @@ public class AuthorRevisionSaver(
 
     public Action SaveAuthorExpGradeRevisions<TPostWithAuthorExpGrade>
         (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
-        where TPostWithAuthorExpGrade : PostWithAuthorExpGrade
-    {
+        where TPostWithAuthorExpGrade : PostWithAuthorExpGrade =>
         Save(db, posts, _authorExpGradeLocksSaverLocks.Value,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
@@ -34,10 +33,8 @@ public class AuthorRevisionSaver(
                 TriggeredBy = triggeredByPostType,
                 AuthorExpGrade = t.Value
             });
-        return _authorExpGradeLocksSaverLocks.Value.Dispose;
-    }
 
-    private void Save<TPost, TRevision, TValue>(
+    private Action Save<TPost, TRevision, TValue>(
         CrawlerDbContext db,
         IReadOnlyCollection<TPost> posts,
         SaverLocks<UniqueAuthorRevision> locks,
@@ -87,14 +84,15 @@ public class AuthorRevisionSaver(
         db.Set<TRevision>().AddRange(newRevisions
             .IntersectByKey(locks.Acquire(newRevisions.Keys))
             .Values());
+        return locks.Dispose;
     }
 
     // locking key only using AuthorRevision.Fid and Uid, ignoring TriggeredBy
     // this prevents inserting multiple entities with similar time and other fields with the same values
     // ReSharper disable NotAccessedPositionalProperty.Global
     public record UniqueAuthorRevision(Fid Fid, Uid Uid);
-    // ReSharper restore NotAccessedPositionalProperty.Global
 
+    // ReSharper restore NotAccessedPositionalProperty.Global
     private sealed class LatestAuthorRevisionProjection<TValue>
     {
         public Time DiscoveredAt { get; init; }

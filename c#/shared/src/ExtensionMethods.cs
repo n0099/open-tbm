@@ -34,9 +34,9 @@ public static partial class ExtensionMethods
     }
 
     public static IEnumerable<TKey> Keys<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs) =>
-        pairs.Select(i => i.Key);
+        pairs.Select(pair => pair.Key);
     public static IEnumerable<TValue> Values<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> pairs) =>
-        pairs.Select(i => i.Value);
+        pairs.Select(pair => pair.Value);
 
     public static IEnumerable<KeyValuePair<TKey, TValue>> ExceptByKey<TKey, TValue>(
         this IEnumerable<KeyValuePair<TKey, TValue>> pairs,

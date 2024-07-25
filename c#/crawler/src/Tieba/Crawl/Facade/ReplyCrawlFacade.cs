@@ -37,12 +37,11 @@ public class ReplyCrawlFacade(
         userSaver.SaveParentThreadLatestReplierUid(db, tid);
 
         if (_parentThreadTitle == null) return;
-        var thread = db.Threads.AsTracking().SingleOrDefault(t => t.Tid == tid && t.Title != _parentThreadTitle);
-        if (thread == null
+        var thread = db.Threads.AsTracking().SingleOrDefault(th => th.Tid == tid && th.Title != _parentThreadTitle);
 
-            // thread title will be empty string as a fallback when the thread author haven't written title for this thread
-            // != null && Title != ""
-            || thread is {Title: not ""}) return;
+        // thread title will be empty string as a fallback when the thread author hasn't written title for this thread
+        // != null && Title != ""
+        if (thread is null or { Title: not "" }) return;
 
         // update the parent thread of reply with the new title extracted from the first-floor reply in the first page
         // when they are different, in history reply author may custom its title: https://z.n0099.net/#narrow/near/98236

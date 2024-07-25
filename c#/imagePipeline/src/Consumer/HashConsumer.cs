@@ -47,7 +47,7 @@ public sealed class HashConsumer : MatrixConsumer, IDisposable
                 imageKeyWithMatrix => imageKeyWithMatrix.ImageId,
                 GetThumbHashForImage(stoppingToken))
             .ToList();
-        thumbHashEithers.Rights().ForEach(t => hashesKeyByImageKey[t.Key].ThumbHash = t.Value);
+        thumbHashEithers.Rights().ForEach(pair => hashesKeyByImageKey[pair.Key].ThumbHash = pair.Value);
 
         var hashFailedImagesId = _imageHashSettersKeyByAlgorithm.SelectMany(hashPair =>
         {
