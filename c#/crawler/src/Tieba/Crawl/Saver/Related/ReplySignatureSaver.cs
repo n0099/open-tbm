@@ -45,17 +45,22 @@ public class ReplySignatureSaver(
                     existing.SignatureId == newOrExisting.SignatureId
                     && existing.XxHash3 == newOrExisting.XxHash3)
             .ToList();
-        (from existing in existingSignatures
+        var existingSignaturesToUpdate = (from existing in existingSignatures
                 join newInReply in signatures on existing.SignatureId equals newInReply.SignatureId
                 select (existing, newInReply))
+            .Where(t => t.existing.LastSeenAt != t.newInReply.LastSeenAt).ToList();
+        var newlyLockedExisting = _saverLocks.Value.Acquire(existingSignaturesToUpdate
+            .Select(t => new UniqueSignature(t.existing.SignatureId, t.existing.XxHash3)).ToList());
+        existingSignaturesToUpdate
+            .IntersectBy(newlyLockedExisting, t => new(t.existing.SignatureId, t.existing.XxHash3))
             .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
 
         var newSignatures = signatures
             .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId).ToList();
-        var newlyLocked = _saverLocks.Value.Acquire(
+        var newlyLockedNew = _saverLocks.Value.Acquire(
             newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList());
         db.ReplySignatures.AddRange(
-            newSignatures.IntersectBy(newlyLocked, s => new(s.SignatureId, s.XxHash3)));
+            newSignatures.IntersectBy(newlyLockedNew, s => new(s.SignatureId, s.XxHash3)));
         return _saverLocks.Value.Dispose;
     }
 

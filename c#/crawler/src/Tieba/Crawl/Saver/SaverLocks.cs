@@ -14,14 +14,17 @@ public sealed class SaverLocks<TKey>(ISet<TKey> globalLocked) : IDisposable
 
     public IReadOnlyCollection<TKey> Acquire(IReadOnlyCollection<TKey> pendingLocking)
     {
-        if (pendingLocking.Count == 0) return [];
-        var newlyLocked = new List<TKey>(pendingLocking.Count);
-        lock (globalLocked)
+        lock (pendingLocking)
         {
-            newlyLocked.AddRange(pendingLocking.Except(globalLocked));
-            globalLocked.UnionWith(newlyLocked);
+            if (pendingLocking.Count == 0) return [];
+            var newlyLocked = new List<TKey>(pendingLocking.Count);
+            lock (globalLocked)
+            {
+                newlyLocked.AddRange(pendingLocking.Except(globalLocked));
+                globalLocked.UnionWith(newlyLocked);
+            }
+            lock (_localLocked) _localLocked.AddRange(newlyLocked);
+            return newlyLocked;
         }
-        lock (_localLocked) _localLocked.AddRange(newlyLocked);
-        return newlyLocked;
     }
 }

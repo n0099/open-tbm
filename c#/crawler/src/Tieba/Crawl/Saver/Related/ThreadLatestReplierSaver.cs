@@ -41,9 +41,15 @@ public class ThreadLatestReplierSaver(
 
     public Action SaveFromUser(CrawlerDbContext db, Tid tid, IEnumerable<User> users)
     {
-        var threadLatestReplier = db.Threads.AsTracking()
+        var thread = db.Threads.AsTracking()
             .Include(th => th.LatestReplier)
-            .SingleOrDefault(th => th.Tid == tid)?.LatestReplier;
+            .SingleOrDefault(th => th.Tid == tid);
+        if (thread == null) return () => { };
+
+        // https://stackoverflow.com/questions/63094891/ef-core-tracking-child-objects-unnecessarily
+        // detach the unused thread entity to prevent CrawlerDbContext.TimestampingEntities() updating its BasePost.LastSeenAt
+        db.Entry(thread).State = EntityState.Detached;
+        var threadLatestReplier = thread.LatestReplier;
         if (threadLatestReplier == null) return () => { };
 
         // possible race: two user swapped their name or displayName
@@ -62,7 +68,10 @@ public class ThreadLatestReplierSaver(
                 u => u.Uid, u => (u.Name, u.DisplayName));
 
         var user = matchedUsers[0];
-        if (threadLatestReplier.Uid == user.Uid) return () => { };
+        var newlyLocked = _saverLocks.Value.Acquire(
+            [UniqueLatestReplier.FromLatestReplier(threadLatestReplier)]);
+        if (newlyLocked.Count == 0 || threadLatestReplier.Uid == user.Uid)
+            return () => { };
         if (threadLatestReplier.Uid != null)
             _ = db.LatestReplierRevisions.Add(new()
             {
@@ -74,7 +83,6 @@ public class ThreadLatestReplierSaver(
             });
 
         threadLatestReplier.Uid = user.Uid;
-        _ = _saverLocks.Value.Acquire([UniqueLatestReplier.FromLatestReplier(threadLatestReplier)]);
         return _saverLocks.Value.Dispose;
     }
 
