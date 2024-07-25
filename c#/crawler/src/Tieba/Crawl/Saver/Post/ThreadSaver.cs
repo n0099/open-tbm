@@ -16,9 +16,9 @@ public partial class ThreadSaver(
         posts => posts
             .Where(th => Posts.Keys.Contains(th.Tid))
             .Include(th => th.LatestReplier),
-        existingAndNewPosts =>
+        maybeEntities =>
             PostSaveHandlers += threadLatestReplierSaver.SaveFromThread(db,
-                existingAndNewPosts.Select(t => t.Existing).ToList()));
+                maybeEntities.Select(entity => entity.Existing ?? entity.New).ToList()));
 }
 public partial class ThreadSaver
 {

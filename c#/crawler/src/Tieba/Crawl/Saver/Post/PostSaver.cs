@@ -26,7 +26,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         Func<TPost, PostId> postIdSelector,
         Func<TPost, TRevision> revisionFactory,
         Func<IQueryable<TPost>, IQueryable<TPost>> postQueryTransformer,
-        Action<IEnumerable<ExistingAndNewEntity<TPost>>>? onBeforeSaveRevision = null)
+        Action<IEnumerable<MaybeExistingAndNewEntity<TPost>>>? onBeforeSaveRevision = null)
         where TRevision : TBaseRevision
     {
         var existingPosts = postQueryTransformer(db.Set<TPost>().AsTracking()).ToList();
@@ -41,7 +41,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
 
         var existingAndNewPosts = SaveNewEntities(db, maybeExistingAndNewPosts).ToList();
         SaveExistingEntities(db, existingAndNewPosts);
-        onBeforeSaveRevision?.Invoke(existingAndNewPosts);
+        onBeforeSaveRevision?.Invoke(maybeExistingAndNewPosts);
         SaveExistingEntityRevisions(db, revisionFactory, existingAndNewPosts);
         return new(postIdSelector, existingPostsBeforeMerge, Posts.Values, existingPosts);
     }
