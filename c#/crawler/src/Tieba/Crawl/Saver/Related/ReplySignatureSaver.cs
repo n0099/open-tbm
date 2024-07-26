@@ -50,7 +50,7 @@ public class ReplySignatureSaver(
                 select (existing, newInReply))
             .Where(t => t.existing.LastSeenAt != t.newInReply.LastSeenAt).ToList();
         var newlyLockedExisting = _saverLocks.Value.Acquire(existingSignaturesToUpdate
-            .Select(t => new UniqueSignature(t.existing.SignatureId, t.existing.XxHash3)).ToList());
+            .Select(t => new UniqueSignature(t.existing.SignatureId, t.existing.XxHash3)));
         existingSignaturesToUpdate
             .IntersectBy(newlyLockedExisting, t => new(t.existing.SignatureId, t.existing.XxHash3))
             .ForEach(t => t.existing.LastSeenAt = t.newInReply.LastSeenAt);
@@ -58,7 +58,7 @@ public class ReplySignatureSaver(
         var newSignatures = signatures
             .ExceptBy(existingSignatures.Select(s => s.SignatureId), s => s.SignatureId).ToList();
         var newlyLockedNew = _saverLocks.Value.Acquire(
-            newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)).ToList());
+            newSignatures.Select(s => new UniqueSignature(s.SignatureId, s.XxHash3)));
         db.ReplySignatures.AddRange(
             newSignatures.IntersectBy(newlyLockedNew, s => new(s.SignatureId, s.XxHash3)));
         return _saverLocks.Value.Dispose;

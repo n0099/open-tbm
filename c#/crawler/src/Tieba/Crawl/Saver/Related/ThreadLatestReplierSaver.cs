@@ -2,11 +2,16 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Related;
 
 public class ThreadLatestReplierSaver(
     ILogger<ThreadLatestReplierSaver> logger,
-    SaverLocks<ThreadLatestReplierSaver.UniqueLatestReplier>.New saverLocksFactory)
+    SaverLocks<ThreadLatestReplierSaver.UniqueLatestReplier>.New latestReplierSaverLocksFactory,
+    SaverLocks<Tid>.New tidSaverLocksFactory)
 {
     private static readonly HashSet<UniqueLatestReplier> GlobalLockedLatestRepliers = [];
-    private readonly Lazy<SaverLocks<UniqueLatestReplier>> _saverLocks =
-        new(() => saverLocksFactory(GlobalLockedLatestRepliers));
+    private static readonly HashSet<Tid> GlobalLockedTids = [];
+
+    private readonly Lazy<SaverLocks<UniqueLatestReplier>> _latestReplierSaverLocks =
+        new(() => latestReplierSaverLocksFactory(GlobalLockedLatestRepliers));
+    private readonly Lazy<SaverLocks<Tid>> _tidSaverLocks =
+        new(() => tidSaverLocksFactory(GlobalLockedTids));
 
     public Action SaveFromThread(CrawlerDbContext db, IReadOnlyCollection<ThreadPost> threads)
     {
@@ -18,25 +23,26 @@ public class ThreadLatestReplierSaver(
                     latestReplier.Name == uniqueLatestReplier.Name
                     && latestReplier.DisplayName == uniqueLatestReplier.DisplayName)
             .ToList();
-        (from existing in existingLatestRepliers
+
+        var threadsWithDuplicatedLatestReplier = (from existing in existingLatestRepliers
                 join thread in threads
                     on UniqueLatestReplier.FromLatestReplier(existing) equals UniqueLatestReplier.FromThread(thread)
                 join entityEntry in db.ChangeTracker.Entries<LatestReplier>()
                     on thread.LatestReplier equals entityEntry.Entity // Object.ReferenceEquals()
                 select (existing, thread, entityEntry))
 
-            // eager eval since detaching the temporary entity of a latest replier
-            // that shared by other threads will mutate their latest replier to null
-            .ToList().ForEach(t =>
-            {
-                t.entityEntry.State = EntityState.Detached;
-                t.thread.LatestReplier = t.existing;
-            });
+                // eager eval since detaching the temporary entity of a latest replier
+                // that shared by other threads will mutate their latest replier to null
+                .ToList();
+        var newlyLocked = _tidSaverLocks.Value.Acquire(
+            threadsWithDuplicatedLatestReplier.Select(t => t.thread.Tid));
+        threadsWithDuplicatedLatestReplier.IntersectBy(newlyLocked, t => t.thread.Tid).ForEach(t =>
+        {
+            t.entityEntry.State = EntityState.Detached;
+            t.thread.LatestReplier = t.existing;
+        });
 
-        _ = _saverLocks.Value.Acquire(uniqueLatestRepliers
-            .Except(existingLatestRepliers.Select(UniqueLatestReplier.FromLatestReplier))
-            .ToList());
-        return _saverLocks.Value.Dispose;
+        return _tidSaverLocks.Value.Dispose;
     }
 
     public Action SaveFromUser(CrawlerDbContext db, Tid tid, IEnumerable<User> users)
@@ -68,7 +74,7 @@ public class ThreadLatestReplierSaver(
                 u => u.Uid, u => (u.Name, u.DisplayName));
 
         var user = matchedUsers[0];
-        var newlyLocked = _saverLocks.Value.Acquire(
+        var newlyLocked = _latestReplierSaverLocks.Value.Acquire(
             [UniqueLatestReplier.FromLatestReplier(threadLatestReplier)]);
         if (newlyLocked.Count == 0 || threadLatestReplier.Uid == user.Uid)
             return () => { };
@@ -83,7 +89,7 @@ public class ThreadLatestReplierSaver(
             });
 
         threadLatestReplier.Uid = user.Uid;
-        return _saverLocks.Value.Dispose;
+        return _latestReplierSaverLocks.Value.Dispose;
     }
 
     public record UniqueLatestReplier(string? Name, string? DisplayName)

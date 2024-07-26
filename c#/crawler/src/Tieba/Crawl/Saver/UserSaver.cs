@@ -23,7 +23,7 @@ public partial class UserSaver(
         FieldChangeIgnorance userFieldRevisionIgnorance)
     {
         if (users.Count == 0) return;
-        var newlyLocked = _saverLocks.Value.Acquire(users.Keys().ToList());
+        var newlyLocked = _saverLocks.Value.Acquire(users.Keys());
         if (newlyLocked.Count == 0) return;
         PostSaveHandlers += _saverLocks.Value.Dispose;
 
