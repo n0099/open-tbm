@@ -5,9 +5,9 @@ public class AuthorRevisionSaver(
     SaverLocks<AuthorRevisionSaver.UniqueAuthorRevision>.New saverLocksFactory,
     PostType triggeredByPostType)
 {
-    private static readonly HashSet<UniqueAuthorRevision> GlobalLockedAuthorExpGradeKeys = [];
-    private readonly Lazy<SaverLocks<UniqueAuthorRevision>> _authorExpGradeLocksSaverLocks =
-        new(() => saverLocksFactory(GlobalLockedAuthorExpGradeKeys));
+    private static readonly HashSet<UniqueAuthorRevision> GlobalLockedAuthorExpGrades = [];
+    private readonly Lazy<SaverLocks<UniqueAuthorRevision>> _authorExpGradeSaverLocks =
+        new(() => saverLocksFactory(GlobalLockedAuthorExpGrades));
 
     public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
 
@@ -17,11 +17,11 @@ public class AuthorRevisionSaver(
         Save(db, posts.GroupBy(p => p.AuthorUid).SelectMany(g =>
 
                     // possible randomly respond with 0 and the real value of AuthorExpGrade for the same uid
-                    g.Any(p => p.AuthorExpGrade != 0)
+                    g.Any(p => p.AuthorExpGrade != 0) && g.Any(p => p.AuthorExpGrade == 0)
                         ? g.Where(p => p.AuthorExpGrade != 0)
                         : g)
                 .ToList(),
-            _authorExpGradeLocksSaverLocks.Value,
+            _authorExpGradeSaverLocks.Value,
             db.AuthorExpGradeRevisions,
             p => p.AuthorExpGrade,
             (a, b) => a != b,
@@ -87,7 +87,7 @@ public class AuthorRevisionSaver(
         var newRevisions = newRevisionOfNewUsers
             .Concat(newRevisionOfExistingUsers)
             .Select(revisionFactory)
-            .ToDictionary(revision => new UniqueAuthorRevision(revision.Fid, revision.Uid), revision => revision);
+            .ToDictionary(revision => new UniqueAuthorRevision(revision.Fid, revision.Uid), i => i);
         db.Set<TRevision>().AddRange(newRevisions
             .IntersectByKey(locks.Acquire(newRevisions.Keys))
             .Values());

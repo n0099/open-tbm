@@ -36,16 +36,6 @@
           "linq2db": "5.4.0"
         }
       },
-      "linq2db.PostgreSQL": {
-        "type": "Direct",
-        "requested": "[5.4.1, )",
-        "resolved": "5.4.1",
-        "contentHash": "UCZrvZJKkBw2I8Q28QCNlj3T0h1ck8wPdgHv+R8c21BJiMasBwuy81IIbC3ntz51lN8AH9o6Te6oePD/p7FkMQ==",
-        "dependencies": {
-          "Npgsql": "7.0.6",
-          "linq2db": "5.4.1"
-        }
-      },
       "LinqKit.Microsoft.EntityFrameworkCore": {
         "type": "Direct",
         "requested": "[8.1.5, )",
@@ -126,8 +116,8 @@
       },
       "linq2db": {
         "type": "Transitive",
-        "resolved": "5.4.1",
-        "contentHash": "qyH32MbFK6T55KsEcQYTbPFfkOa1Mo65lY/Zo8SFVMy0pwkQBCTnA/RUxyG5+l3D/mgfPz85PH3upDrtklSMrw=="
+        "resolved": "5.4.0",
+        "contentHash": "CiiGZatbGRQsIQ3hKHwujwL4R8OeQnuAx5CwHCP9GHb/+SkLe8RSTrJWHVHjw0832UV3ryQWc/M03z7/bwSvTQ=="
       },
       "LinqKit.Core": {
         "type": "Transitive",

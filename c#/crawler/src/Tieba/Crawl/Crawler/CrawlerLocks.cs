@@ -95,13 +95,13 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, C
     {
         lock (_failed)
         {
-            var deepCloneOfFailed = _failed.ToDictionary(pair => pair.Key, pair =>
+            var failedClone = _failed.ToDictionary(pair => pair.Key, pair =>
             {
                 lock (pair.Value)
                     return (IReadOnlyDictionary<Page, FailureCount>)new Dictionary<Page, FailureCount>(pair.Value);
             });
             _failed.Clear();
-            return deepCloneOfFailed;
+            return failedClone;
         }
     }
 
