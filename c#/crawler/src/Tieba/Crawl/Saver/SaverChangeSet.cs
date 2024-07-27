@@ -8,7 +8,7 @@ public class SaverChangeSet<TPostEntity, TParsedPost>(
     where TPostEntity : IPost
     where TParsedPost : TPostEntity, IPost.IParsed
 {
-    public IReadOnlyCollection<(TPostEntity Before, TPostEntity After)> Existing { get; } = existingBefore
+    public IReadOnlyCollection<(TPostEntity Before, TPostEntity After)> ExistingInTracking { get; } = existingBefore
         .OrderBy(postIdSelector)
         .EquiZip(existingAfter
                 .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)
@@ -21,7 +21,7 @@ public class SaverChangeSet<TPostEntity, TParsedPost>(
         .ToList().AsReadOnly();
 
     // https://stackoverflow.com/questions/3404975/left-outer-join-in-linq/23558389#23558389
-    public IReadOnlyCollection<TPostEntity> AllAfter { get; } = (
+    public IReadOnlyCollection<TPostEntity> AllAfterInTrackingOrParsed { get; } = (
         from notTracked in parsed
         join inTracking in existingAfter
             on postIdSelector(notTracked) equals postIdSelector(inTracking) into inTrackings

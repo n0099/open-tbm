@@ -1,5 +1,5 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
-namespace tbm.Crawler.Db.Post;
+namespace tbm.Crawler.Db.Post.Related;
 
 public class ThreadMissingFirstReply : RowVersionedEntity
 {

@@ -43,7 +43,7 @@ public class CrawlPost(
             if (currentPageChangeSet != null)
             {
                 savedThreads.Add(currentPageChangeSet);
-                var threadsLatestReplyPostedAt = currentPageChangeSet.AllAfter
+                var threadsLatestReplyPostedAt = currentPageChangeSet.AllParsed
                     .Select(th => th.LatestReplyPostedAt).ToList();
                 minLatestReplyPostedAt = threadsLatestReplyPostedAt.Min();
                 if (crawlingPage == 1)
@@ -76,7 +76,7 @@ public class CrawlPost(
             .Aggregate(new HashSet<Tid>(), (shouldCrawl, threads) =>
             {
                 shouldCrawl.UnionWith(threads.NewlyAdded.Select(th => th.Tid));
-                shouldCrawl.UnionWith(threads.Existing
+                shouldCrawl.UnionWith(threads.ExistingInTracking
                     .Where(t => t.Before.ReplyCount != t.After.ReplyCount
                         || t.Before.LatestReplyPostedAt != t.After.LatestReplyPostedAt
                         || t.Before.LatestReplierId != t.After.LatestReplierId)
@@ -108,7 +108,7 @@ public class CrawlPost(
                 var (tid, replies) = pair;
                 shouldCrawl.UnionWith(replies.NewlyAdded
                     .Where(r => r.SubReplyCount != null).Select(r => (tid, r.Pid)));
-                shouldCrawl.UnionWith(replies.Existing.Where(t =>
+                shouldCrawl.UnionWith(replies.ExistingInTracking.Where(t =>
                 {
                     var (before, after) = t;
                     return after.SubReplyCount != null && before.SubReplyCount != after.SubReplyCount;

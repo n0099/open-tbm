@@ -64,14 +64,14 @@ public class ArchiveCrawlWorker(
             if (cancellationToken.IsCancellationRequested) return;
             var savedThreads = await CrawlThreads((Page)page, _forumName, _fid, cancellationToken);
             if (savedThreads == null) return;
-            var savedThreadCount = savedThreads.AllAfter.Count;
+            var savedThreadCount = savedThreads.AllParsed.Count;
             logger.LogInformation("Archive for {} threads in the page {} of forum {} finished after {:F2}s",
                 savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
             _ = Interlocked.Add(ref totalSavedThreadCount, savedThreadCount);
 
             if (cancellationToken.IsCancellationRequested) return;
             var savedReplies = await CrawlReplies(savedThreads, _fid, cancellationToken);
-            var savedReplyCount = savedReplies.Sum(pair => pair.Value.AllAfter.Count);
+            var savedReplyCount = savedReplies.Sum(pair => pair.Value.AllParsed.Count);
             logger.LogInformation("Archive for {} replies within {} threads in the page {} of forum {} finished after {:F2}s",
                 savedReplyCount, savedThreadCount, page, _forumName, GetHumanizedElapsedTimeThenRestart());
             _ = Interlocked.Add(ref totalSavedReplyCount, savedReplyCount);
@@ -143,7 +143,7 @@ public class ArchiveCrawlWorker(
         // we choose TO crawl these rare thread's replies for archive since most thread will have replies
         // following sql can figure out existing replies that not matched with parent thread's subReplyNum in db:
         // SELECT COUNT(*) FROM tbmc_f{fid}_thread AS T INNER JOIN tbmc_f{fid}_reply AS R ON T.tid = R.tid AND T.replyNum IS NULL
-        await Task.WhenAll(savedThreads.AllAfter.Select(th => th.Tid).Distinct().Select(async tid =>
+        await Task.WhenAll(savedThreads.AllParsed.Select(th => th.Tid).Distinct().Select(async tid =>
         {
             if (stoppingToken.IsCancellationRequested) return;
             await using var facadeFactory = replyCrawlFacadeFactory();
@@ -165,7 +165,7 @@ public class ArchiveCrawlWorker(
             // we choose NOT TO crawl these rare reply's sub replies for archive since most reply won't have sub replies
             // following sql can figure out existing sub replies that not matched with parent reply's SubReplyCount in db:
             // SELECT COUNT(*) FROM tbmc_f{fid}_reply AS R INNER JOIN tbmc_f{fid}_subReply AS SR ON R.pid = SR.pid AND R.subReplyCount IS NULL
-            shouldCrawl.UnionWith(replies.AllAfter
+            shouldCrawl.UnionWith(replies.AllParsed
                 .Where(r => r.SubReplyCount != null).Select(r => (tid, r.Pid)));
             return shouldCrawl;
         });
@@ -178,7 +178,7 @@ public class ArchiveCrawlWorker(
             var saved = (await facadeFactory.Value(fid, tid, pid)
                 .CrawlPageRange(1, stoppingToken: stoppingToken)).SaveCrawled(stoppingToken);
             if (saved == null) return;
-            _ = Interlocked.Add(ref savedSubReplyCount, saved.AllAfter.Count);
+            _ = Interlocked.Add(ref savedSubReplyCount, saved.AllParsed.Count);
         }));
         return savedSubReplyCount;
     }
