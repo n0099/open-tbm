@@ -3,8 +3,8 @@ namespace tbm.Crawler.Tieba.Crawl;
 #pragma warning disable IDE0065 // Misplaced using directive
 #pragma warning disable SA1135 // Using directives should be qualified
 #pragma warning disable SA1200 // Using directives should be placed correctly
-using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
-using SavedThreadsList = IReadOnlyCollection<SaverChangeSet<ThreadPost>>;
+using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost, ReplyPost.Parsed>>;
+using SavedThreadsList = IReadOnlyCollection<SaverChangeSet<ThreadPost, ThreadPost.Parsed>>;
 
 public class CrawlPost(
     Func<Owned<CrawlerDbContext.New>> dbContextFactory,
@@ -20,7 +20,7 @@ public class CrawlPost(
         (string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
         stoppingToken.ThrowIfCancellationRequested();
-        var savedThreads = new List<SaverChangeSet<ThreadPost>>();
+        var savedThreads = new List<SaverChangeSet<ThreadPost, ThreadPost.Parsed>>();
         Time minLatestReplyPostedAt;
         Page crawlingPage = 0;
 
@@ -97,7 +97,7 @@ public class CrawlPost(
     }
 
     public async Task CrawlSubReplies(
-        IReadOnlyDictionary<Tid, SaverChangeSet<ReplyPost>> savedRepliesKeyByTid,
+        IReadOnlyDictionary<Tid, SaverChangeSet<ReplyPost, ReplyPost.Parsed>> savedRepliesKeyByTid,
         Fid fid,
         CancellationToken stoppingToken = default)
     {
@@ -133,7 +133,7 @@ public class CrawlPost(
     {
         if (ex is not EmptyPostListException) return;
         var thread = savedThreads
-            .SelectMany(c => c.AllAfter.Where(th => th.Tid == tid))
+            .SelectMany(c => c.AllParsed.Where(th => th.Tid == tid))
             .FirstOrDefault();
         if (thread == null) return;
 

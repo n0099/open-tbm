@@ -11,7 +11,7 @@ public class SubReplyCrawlFacade(
     UserParser.New userParserFactory,
     UserSaver.New userSaverFactory,
     SonicPusher sonicPusher)
-    : CrawlFacade<SubReplyPost, SubReplyResponse, SubReply>(
+    : CrawlFacade<SubReplyPost, SubReplyPost.Parsed, SubReplyResponse, SubReply>(
         crawlerFactory(tid, pid), fid, new(fid, tid, pid), locks[CrawlerLocks.Type.SubReply],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
@@ -24,7 +24,7 @@ public class SubReplyCrawlFacade(
     protected override void OnPostParse(
         SubReplyResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, SubReplyPost> parsedPosts)
+        IReadOnlyDictionary<PostId, SubReplyPost.Parsed> parsedPosts)
     {
         foreach (var sr in parsedPosts.Values)
         {
@@ -38,7 +38,7 @@ public class SubReplyCrawlFacade(
         userSaver.SaveParentThreadLatestReplierUid(db, tid);
 
     protected override void OnPostCommitSave(
-        SaverChangeSet<SubReplyPost> savedPosts,
+        SaverChangeSet<SubReplyPost, SubReplyPost.Parsed> savedPosts,
         CancellationToken stoppingToken = default) =>
         sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "subReplies",
             p => p.Spid, p => p.ContentsProtoBuf, stoppingToken);

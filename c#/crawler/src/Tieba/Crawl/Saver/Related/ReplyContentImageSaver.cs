@@ -27,7 +27,7 @@ public sealed class ReplyContentImageSaver(ILogger<ReplyContentImageSaver> logge
         }
     }
 
-    public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
+    public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost.Parsed> replies)
     {
         var replyContentImages = (
                 from r in replies

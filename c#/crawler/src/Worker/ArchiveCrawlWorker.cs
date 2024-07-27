@@ -3,7 +3,7 @@ namespace tbm.Crawler.Worker;
 #pragma warning disable IDE0065 // Misplaced using directive
 #pragma warning disable SA1135 // Using directives should be qualified
 #pragma warning disable SA1200 // Using directives should be placed correctly
-using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost>>;
+using SavedRepliesKeyByTid = ConcurrentDictionary<Tid, SaverChangeSet<ReplyPost, ReplyPost.Parsed>>;
 
 public class ArchiveCrawlWorker(
     ILogger<ArchiveCrawlWorker> logger,
@@ -114,7 +114,7 @@ public class ArchiveCrawlWorker(
             .Max(response => response.Result.Data.Page.TotalPage);
     }
 
-    private async Task<SaverChangeSet<ThreadPost>?> CrawlThreads
+    private async Task<SaverChangeSet<ThreadPost, ThreadPost.Parsed>?> CrawlThreads
         (Page page, string forumName, Fid fid, CancellationToken stoppingToken = default)
     {
         await using var facadeFactory = threadArchiveCrawlFacadeFactory();
@@ -134,7 +134,7 @@ public class ArchiveCrawlWorker(
     }
 
     private async Task<SavedRepliesKeyByTid> CrawlReplies
-        (SaverChangeSet<ThreadPost>? savedThreads, Fid fid, CancellationToken stoppingToken = default)
+        (SaverChangeSet<ThreadPost, ThreadPost.Parsed>? savedThreads, Fid fid, CancellationToken stoppingToken = default)
     {
         var savedRepliesKeyByTid = new SavedRepliesKeyByTid();
         if (savedThreads == null) return savedRepliesKeyByTid;

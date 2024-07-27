@@ -11,9 +11,9 @@ public class AuthorRevisionSaver(
 
     public delegate AuthorRevisionSaver New(PostType triggeredByPostType);
 
-    public Action SaveAuthorExpGrade<TPostWithAuthorExpGrade>
-        (CrawlerDbContext db, IReadOnlyCollection<TPostWithAuthorExpGrade> posts)
-        where TPostWithAuthorExpGrade : PostWithAuthorExpGrade =>
+    public Action SaveAuthorExpGrade<TPost>
+        (CrawlerDbContext db, IReadOnlyCollection<TPost> posts)
+        where TPost : IReplyOrSubReplyParsedPost =>
         Save(db, posts,
             _authorExpGradeSaverLocks.Value,
             db.AuthorExpGradeRevisions,

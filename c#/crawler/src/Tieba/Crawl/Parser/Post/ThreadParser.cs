@@ -1,18 +1,18 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
-public class ThreadParser : PostParser<ThreadPost, Thread>
+public class ThreadParser : PostParser<ThreadPost.Parsed, Thread>
 {
-    protected override PostId PostIdSelector(ThreadPost post) => post.Tid;
+    protected override PostId PostIdSelector(ThreadPost.Parsed post) => post.Tid;
 
     protected override bool ShouldSkipParse(CrawlRequestFlag requestFlag) =>
         requestFlag == CrawlRequestFlag.ThreadClientVersion602;
 
-    protected override IEnumerable<ThreadPost> ParseInternal
+    protected override IEnumerable<ThreadPost.Parsed> ParseInternal
         (IReadOnlyCollection<Thread> inPosts, ICollection<TbClient.User?> outUsers) => inPosts.Select(Convert);
 
-    protected override ThreadPost Convert(Thread inPost)
+    protected override ThreadPost.Parsed Convert(Thread inPost)
     {
-        var o = new ThreadPost {Title = ""};
+        var o = new ThreadPost.Parsed {Title = ""};
         try
         {
             o.Tid = (Tid)inPost.Tid;

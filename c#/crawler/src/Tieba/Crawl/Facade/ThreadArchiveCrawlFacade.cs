@@ -19,7 +19,7 @@ public class ThreadArchiveCrawlFacade(
     protected override void OnPostParse(
         ThreadResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, ThreadPost> parsedPosts)
+        IReadOnlyDictionary<PostId, ThreadPost.Parsed> parsedPosts)
     { // the second respond with flag is as same as the first one so just skip it
         if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
         var data = response.Data;

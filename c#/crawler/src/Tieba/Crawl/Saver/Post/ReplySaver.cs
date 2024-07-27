@@ -2,16 +2,16 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public partial class ReplySaver(
     ILogger<ReplySaver> logger,
-    ConcurrentDictionary<PostId, ReplyPost> posts,
+    ConcurrentDictionary<PostId, ReplyPost.Parsed> posts,
     ReplyContentImageSaver replyContentImageSaver,
     ReplySignatureSaver replySignatureSaver,
     AuthorRevisionSaver.New authorRevisionSaverFactory)
-    : PostSaver<ReplyPost, BaseReplyRevision, Pid>(
+    : PostSaver<ReplyPost, ReplyPost.Parsed, BaseReplyRevision, Pid>(
         logger, posts, authorRevisionSaverFactory, PostType.Reply)
 {
-    public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost> posts);
+    public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost.Parsed> posts);
 
-    public override SaverChangeSet<ReplyPost> Save(CrawlerDbContext db)
+    public override SaverChangeSet<ReplyPost, ReplyPost.Parsed> Save(CrawlerDbContext db)
     {
         var changeSet = Save(db, r => r.Pid,
             r => new ReplyRevision {TakenAt = r.UpdatedAt ?? r.CreatedAt, Pid = r.Pid},
@@ -20,8 +20,8 @@ public partial class ReplySaver(
         db.ReplyContents.AddRange(changeSet.NewlyAdded // https://github.com/dotnet/efcore/issues/33945
             .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
         PostSaveHandlers += replyContentImageSaver.Save(db, changeSet.NewlyAdded);
-        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGrade(db, changeSet.Parsed);
-        PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllAfter);
+        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGrade(db, changeSet.AllParsed);
+        PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllParsed);
 
         return changeSet;
     }

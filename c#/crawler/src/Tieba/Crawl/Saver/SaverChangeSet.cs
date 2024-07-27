@@ -1,13 +1,14 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver;
 
-public class SaverChangeSet<TPost>(
-    Func<TPost, PostId> postIdSelector,
-    ICollection<TPost> parsed,
-    IReadOnlyCollection<TPost> existingBefore,
-    IReadOnlyCollection<TPost> existingAfter)
-    where TPost : BasePost
+public class SaverChangeSet<TPostEntity, TParsedPost>(
+    Func<TPostEntity, PostId> postIdSelector,
+    ICollection<TParsedPost> parsed,
+    IReadOnlyCollection<TPostEntity> existingBefore,
+    IReadOnlyCollection<TPostEntity> existingAfter)
+    where TPostEntity : BasePost
+    where TParsedPost : TPostEntity, BasePost.IParsed
 {
-    public IReadOnlyCollection<(TPost Before, TPost After)> Existing { get; } = existingBefore
+    public IReadOnlyCollection<(TPostEntity Before, TPostEntity After)> Existing { get; } = existingBefore
         .OrderBy(postIdSelector)
         .EquiZip(existingAfter
                 .IntersectBy(existingBefore.Select(postIdSelector), postIdSelector)
@@ -15,17 +16,17 @@ public class SaverChangeSet<TPost>(
             (before, after) => (before, after))
         .ToList().AsReadOnly();
 
-    public IReadOnlyCollection<TPost> NewlyAdded { get; } = parsed
+    public IReadOnlyCollection<TParsedPost> NewlyAdded { get; } = parsed
         .ExceptBy(existingBefore.Select(postIdSelector), postIdSelector)
         .ToList().AsReadOnly();
 
     // https://stackoverflow.com/questions/3404975/left-outer-join-in-linq/23558389#23558389
-    public IReadOnlyCollection<TPost> AllAfter { get; } = (
+    public IReadOnlyCollection<TPostEntity> AllAfter { get; } = (
         from notTracked in parsed
         join inTracking in existingAfter
             on postIdSelector(notTracked) equals postIdSelector(inTracking) into inTrackings
         from inTracking in inTrackings.DefaultIfEmpty()
         select inTracking ?? notTracked).ToList().AsReadOnly();
 
-    public IReadOnlyCollection<TPost> Parsed { get; } = parsed.ToList().AsReadOnly();
+    public IReadOnlyCollection<TParsedPost> AllParsed { get; } = parsed.ToList().AsReadOnly();
 }

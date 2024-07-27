@@ -10,7 +10,7 @@ public class ReplyCrawlFacade(
     UserParser.New userParserFactory,
     UserSaver.New userSaverFactory,
     SonicPusher sonicPusher)
-    : CrawlFacade<ReplyPost, ReplyResponse, Reply>(
+    : CrawlFacade<ReplyPost, ReplyPost.Parsed, ReplyResponse, Reply>(
         crawlerFactory(fid, tid), fid, new(fid, tid), locks[CrawlerLocks.Type.Reply],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
@@ -22,7 +22,7 @@ public class ReplyCrawlFacade(
     protected override void OnPostParse(
         ReplyResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, ReplyPost> parsedPosts)
+        IReadOnlyDictionary<PostId, ReplyPost.Parsed> parsedPosts)
     {
         parsedPosts.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
@@ -49,13 +49,13 @@ public class ReplyCrawlFacade(
     }
 
     protected override void OnPostCommitSave(
-        SaverChangeSet<ReplyPost> savedPosts,
+        SaverChangeSet<ReplyPost, ReplyPost.Parsed> savedPosts,
         CancellationToken stoppingToken = default) =>
         sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
             p => p.Pid, p => p.ContentsProtoBuf, stoppingToken);
 
     // fill the values for some field of reply from user list which is out of post list
-    private static void FillAuthorInfoBackToReply(IEnumerable<TbClient.User> users, IEnumerable<ReplyPost> parsedReplies) =>
+    private static void FillAuthorInfoBackToReply(IEnumerable<TbClient.User> users, IEnumerable<ReplyPost.Parsed> parsedReplies) =>
         (from reply in parsedReplies
             join user in users on reply.AuthorUid equals user.Uid
             select (reply, user))

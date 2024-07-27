@@ -55,7 +55,7 @@ public class ProcessImagesInAllReplyContentsWorker(
                         p.IsModified = !ByteArrayEqualityComparer.Instance.Equals(p.OriginalValue, p.CurrentValue);
                     });
                     _ = replyContentImageSaver.Save(writingDb,
-                        replyContentsKeyByPid.Select(pair => new ReplyPost
+                        replyContentsKeyByPid.Select(pair => new ReplyPost.Parsed
                         {
                             Pid = pair.Key,
                             Content = null!,

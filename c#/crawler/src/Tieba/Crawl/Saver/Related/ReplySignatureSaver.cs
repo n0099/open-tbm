@@ -10,7 +10,7 @@ public class ReplySignatureSaver(
     private readonly Lazy<SaverLocks<UniqueSignature>> _saverLocks =
         new(() => saverLocksFactory(GlobalLockedSignatures));
 
-    public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost> replies)
+    public Action Save(CrawlerDbContext db, IEnumerable<ReplyPost.Parsed> replies)
     {
         SharedHelper.GetNowTimestamp(out var now);
         var repliesWithSignature = replies

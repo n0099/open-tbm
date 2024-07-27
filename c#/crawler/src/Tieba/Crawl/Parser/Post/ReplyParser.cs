@@ -1,20 +1,20 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
 public partial class ReplyParser(ILogger<ReplyParser> logger)
-    : PostParser<ReplyPost, Reply>
+    : PostParser<ReplyPost.Parsed, Reply>
 {
     // length with 24 char is only appeared in legacy replies
     [GeneratedRegex("^(?:[0-9a-f]{40}|[0-9a-f]{24})$", RegexOptions.Compiled, matchTimeoutMilliseconds: 100)]
     public static partial Regex ValidateContentImageFilenameRegex();
 
-    protected override PostId PostIdSelector(ReplyPost post) => post.Pid;
+    protected override PostId PostIdSelector(ReplyPost.Parsed post) => post.Pid;
 
-    protected override IEnumerable<ReplyPost> ParseInternal
+    protected override IEnumerable<ReplyPost.Parsed> ParseInternal
         (IReadOnlyCollection<Reply> inPosts, ICollection<TbClient.User?> outUsers) => inPosts.Select(Convert);
 
-    protected override ReplyPost Convert(Reply inPost)
+    protected override ReplyPost.Parsed Convert(Reply inPost)
     {
-        var o = new ReplyPost {ContentsProtoBuf = inPost.Content};
+        var o = new ReplyPost.Parsed {ContentsProtoBuf = inPost.Content};
         try
         {
             o.Pid = inPost.Pid;

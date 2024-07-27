@@ -1,19 +1,19 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
-public class SubReplyParser : PostParser<SubReplyPost, SubReply>
+public class SubReplyParser : PostParser<SubReplyPost.Parsed, SubReply>
 {
-    protected override PostId PostIdSelector(SubReplyPost post) => post.Spid;
+    protected override PostId PostIdSelector(SubReplyPost.Parsed post) => post.Spid;
 
-    protected override IEnumerable<SubReplyPost> ParseInternal
+    protected override IEnumerable<SubReplyPost.Parsed> ParseInternal
         (IReadOnlyCollection<SubReply> inPosts, ICollection<TbClient.User?> outUsers)
     {
         outUsers.AddRange(inPosts.Select(sr => sr.Author));
         return inPosts.Select(Convert);
     }
 
-    protected override SubReplyPost Convert(SubReply inPost)
+    protected override SubReplyPost.Parsed Convert(SubReply inPost)
     {
-        var o = new SubReplyPost {ContentsProtoBuf = inPost.Content};
+        var o = new SubReplyPost.Parsed {ContentsProtoBuf = inPost.Content};
         try
         {
             var author = inPost.Author;

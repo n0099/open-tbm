@@ -1,7 +1,7 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
 public interface IPostParser<TPost, in TPostProtoBuf>
-    where TPost : BasePost
+    where TPost : BasePost.IParsed
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     public void Parse(

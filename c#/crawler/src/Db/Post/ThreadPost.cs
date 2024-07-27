@@ -1,14 +1,11 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class ThreadPost : BasePost
+public class ThreadPost : TimestampedEntity, BasePost
 {
-    [Key] public new ulong Tid { get; set; }
-    [NotMapped] public ulong? FirstReplyPid { get; set; }
-
-    [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Abstract>))]
-    [NotMapped]
-    public RepeatedField<Abstract>? FirstReplyExcerpt { get; set; }
+    [Key] public ulong Tid { get; set; }
+    public long AuthorUid { get; set; }
+    public uint? LastSeenAt { get; set; }
     [Column(TypeName = "bigint")]
     public ulong ThreadType { get; set; }
     public string? StickyType { get; set; }
@@ -28,5 +25,13 @@ public class ThreadPost : BasePost
     public byte[]? Zan { get; set; }
     public byte[]? Geolocation { get; set; }
 
-    public override object Clone() => MemberwiseClone();
+    public object Clone() => MemberwiseClone();
+
+    public class Parsed : ThreadPost, BasePost.IParsed
+    {
+        public ulong? FirstReplyPid { get; set; }
+
+        [JsonConverter(typeof(ProtoBufRepeatedFieldJsonConverter<Abstract>))]
+        public RepeatedField<Abstract>? FirstReplyExcerpt { get; set; }
+    }
 }

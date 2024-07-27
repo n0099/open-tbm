@@ -1,8 +1,11 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class SubReplyPost : PostWithContentAndAuthorExpGrade
+public class SubReplyPost : TimestampedEntity, BasePost
 {
+    public ulong Tid { get; set; }
+    public long AuthorUid { get; set; }
+    public uint? LastSeenAt { get; set; }
     [Column(TypeName = "bigint")]
     public ulong Pid { get; set; }
     [Key] [Column(TypeName = "bigint")]
@@ -11,5 +14,12 @@ public class SubReplyPost : PostWithContentAndAuthorExpGrade
     public int? AgreeCount { get; set; }
     public int? DisagreeCount { get; set; }
 
-    public override object Clone() => MemberwiseClone();
+    public object Clone() => MemberwiseClone();
+
+    public class Parsed : SubReplyPost, IReplyOrSubReplyParsedPost
+    {
+        public byte AuthorExpGrade { get; set; }
+        public byte[]? Content { get; set; }
+        public required RepeatedField<Content> ContentsProtoBuf { get; set; }
+    }
 }

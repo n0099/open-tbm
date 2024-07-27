@@ -1,35 +1,36 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 #pragma warning disable S3881 // "IDisposable" should be implemented correctly
-public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
+public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProtoBuf>(
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
     BaseCrawler<TResponse, TPostProtoBuf> crawler,
     Fid fid,
     CrawlerLocks.LockId lockId,
     CrawlerLocks locks,
-    IPostParser<TPost, TPostProtoBuf> postParser,
-    Func<ConcurrentDictionary<PostId, TPost>, IPostSaver<TPost>> postSaverFactory,
+    IPostParser<TParsedPost, TPostProtoBuf> postParser,
+    Func<ConcurrentDictionary<PostId, TParsedPost>, IPostSaver<TPostEntity, TParsedPost>> postSaverFactory,
     Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
     Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory)
-    : ICrawlFacade<TPost>
-    where TPost : BasePost
+    : ICrawlFacade<TPostEntity, TParsedPost>
+    where TPostEntity : BasePost
+    where TParsedPost : TPostEntity, BasePost.IParsed
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     private readonly HashSet<Page> _lockingPages = [];
     private readonly ConcurrentDictionary<Uid, User> _users = new();
     private UserParser? _userParser;
-    private ICrawlFacade<TPost>.ExceptionHandler _exceptionHandler = _ => { };
+    private ICrawlFacade<TPostEntity, TParsedPost>.ExceptionHandler _exceptionHandler = _ => { };
 
     // ReSharper disable UnusedAutoPropertyAccessor.Global
-    public required ILogger<CrawlFacade<TPost, TResponse, TPostProtoBuf>>
+    public required ILogger<CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProtoBuf>>
         Logger { private get; init; }
     public required CrawlerDbContext.New DbContextFactory { private get; init; }
     public required ClientRequesterTcs RequesterTcs { private get; init; }
 
     // ReSharper restore UnusedAutoPropertyAccessor.Global
     protected Fid Fid { get; } = fid;
-    protected ConcurrentDictionary<PostId, TPost> Posts { get; } = new();
+    protected ConcurrentDictionary<PostId, TParsedPost> Posts { get; } = new();
     protected UserParser UserParser => _userParser ??= userParserFactory(_users);
 
     public virtual void Dispose()
@@ -38,7 +39,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
         locks.ReleaseRange(lockId, _lockingPages);
     }
 
-    public SaverChangeSet<TPost>? SaveCrawled(CancellationToken stoppingToken = default)
+    public SaverChangeSet<TPostEntity, TParsedPost>? SaveCrawled(CancellationToken stoppingToken = default)
     {
         var retryTimes = 0;
         while (true)
@@ -76,7 +77,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
         }
     }
 
-    public async Task<ICrawlFacade<TPost>> CrawlPageRange(
+    public async Task<ICrawlFacade<TPostEntity, TParsedPost>> CrawlPageRange(
         Page startPage,
         Page endPage = Page.MaxValue,
         CancellationToken stoppingToken = default)
@@ -112,7 +113,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
         return this;
     }
 
-    public async Task<SaverChangeSet<TPost>?> RetryThenSave
+    public async Task<SaverChangeSet<TPostEntity, TParsedPost>?> RetryThenSave
         (IReadOnlyList<Page> pages, Func<Page, FailureCount> failureCountSelector, CancellationToken stoppingToken = default)
     {
         if (_lockingPages.Count != 0) ThrowHelper.ThrowInvalidOperationException(
@@ -121,7 +122,8 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
         return SaveCrawled(stoppingToken);
     }
 
-    public ICrawlFacade<TPost> AddExceptionHandler(ICrawlFacade<TPost>.ExceptionHandler handler)
+    public ICrawlFacade<TPostEntity, TParsedPost> AddExceptionHandler(
+        ICrawlFacade<TPostEntity, TParsedPost>.ExceptionHandler handler)
     {
         _exceptionHandler += handler;
         return this;
@@ -131,10 +133,10 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
     protected virtual void OnPostParse(
         TResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, TPost> parsedPosts) { }
+        IReadOnlyDictionary<PostId, TParsedPost> parsedPosts) { }
     protected virtual void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver) { }
     protected virtual void OnPostCommitSave(
-        SaverChangeSet<TPost> savedPosts,
+        SaverChangeSet<TPostEntity, TParsedPost> savedPosts,
         CancellationToken stoppingToken = default) { }
 
     private void ValidateThenParse(BaseCrawler<TResponse, TPostProtoBuf>.Response responseTuple)

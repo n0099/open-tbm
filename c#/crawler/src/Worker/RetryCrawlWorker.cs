@@ -118,7 +118,7 @@ public class RetryCrawlWorker(
         var facade = facadeFactory.Value(fid, tid);
         var savedReplies = await facade.RetryThenSave(pages, failureCountSelector, stoppingToken);
         if (savedReplies == null) return;
-        var savedRepliesKeyByTid = new Dictionary<PostId, SaverChangeSet<ReplyPost>> {{tid, savedReplies}};
+        var savedRepliesKeyByTid = new Dictionary<PostId, SaverChangeSet<ReplyPost, ReplyPost.Parsed>> {{tid, savedReplies}};
         await crawlPost.CrawlSubReplies(savedRepliesKeyByTid, fid, stoppingToken);
     }
 

@@ -9,7 +9,7 @@ public class ThreadCrawlFacade(
     ThreadSaver.New postSaverFactory,
     UserParser.New userParserFactory,
     UserSaver.New userSaverFactory)
-    : CrawlFacade<ThreadPost, ThreadResponse, Thread>(
+    : CrawlFacade<ThreadPost, ThreadPost.Parsed, ThreadResponse, Thread>(
         crawlerFactory(forumName), fid, new(fid), locks[CrawlerLocks.Type.Thread],
         postParser, postSaverFactory.Invoke,
         userParserFactory.Invoke, userSaverFactory.Invoke)
@@ -21,7 +21,7 @@ public class ThreadCrawlFacade(
     protected override void OnPostParse(
         ThreadResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, ThreadPost> parsedPosts)
+        IReadOnlyDictionary<PostId, ThreadPost.Parsed> parsedPosts)
     {
         var data = response.Data;
         if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);
