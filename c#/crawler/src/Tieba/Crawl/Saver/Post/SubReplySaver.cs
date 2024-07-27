@@ -17,7 +17,7 @@ public partial class SubReplySaver(
 
         db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => // https://github.com/dotnet/efcore/issues/33945
             new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));
-        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGrade(db, changeSet.AllAfter);
+        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGrade(db, changeSet.Parsed);
 
         return changeSet;
     }

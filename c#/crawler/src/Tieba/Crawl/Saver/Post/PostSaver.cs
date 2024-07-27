@@ -32,7 +32,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         var existingPosts = postQueryTransformer(db.Set<TPost>().AsTracking()).ToList();
 
         // clone before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
-        var existingPostsBeforeMerge = existingPosts.Select(post => (TPost)post.Clone()).ToList();
+        var existingPostsBeforeSave = existingPosts.Select(post => (TPost)post.Clone()).ToList();
         var maybeExistingAndNewPosts = (from newPost in Posts.Values
             join existingPost in existingPosts
                 on postIdSelector(newPost) equals postIdSelector(existingPost) into existingPostsWithSameId
@@ -43,6 +43,7 @@ public abstract class PostSaver<TPost, TBaseRevision, TPostId>(
         SaveExistingEntities(db, existingAndNewPosts);
         onBeforeSaveRevision?.Invoke(maybeExistingAndNewPosts);
         SaveExistingEntityRevisions(db, revisionFactory, existingAndNewPosts);
-        return new(postIdSelector, existingPostsBeforeMerge, Posts.Values, existingPosts);
+
+        return new(postIdSelector, Posts.Values, existingPostsBeforeSave, existingPosts);
     }
 }
