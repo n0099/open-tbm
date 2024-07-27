@@ -19,7 +19,7 @@ public class ThreadArchiveCrawlFacade(
     protected override void OnPostParse(
         ThreadResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, ThreadPost> parsedPostsInResponse)
+        IReadOnlyDictionary<PostId, ThreadPost> parsedPosts)
     { // the second respond with flag is as same as the first one so just skip it
         if (flag == CrawlRequestFlag.ThreadClientVersion602) return;
         var data = response.Data;
@@ -27,7 +27,7 @@ public class ThreadArchiveCrawlFacade(
         FillFromRequestingWith602(data.ThreadList);
 
         // parsed author uid will be 0 when request with client version 6.0.2
-        (from parsed in parsedPostsInResponse.Values
+        (from parsed in parsedPosts.Values
                 join newInResponse in data.ThreadList on parsed.Tid equals (Tid)newInResponse.Tid
                 select (parsed, newInResponse))
             .ForEach(t => t.parsed.AuthorUid = t.newInResponse.Author.Uid);

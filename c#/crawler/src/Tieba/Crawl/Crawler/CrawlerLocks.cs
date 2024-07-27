@@ -26,8 +26,8 @@ public class CrawlerLocks(ILogger<CrawlerLocks> logger, IConfiguration config, C
             SharedHelper.GetNowTimestamp(out var now);
             if (!_crawling.ContainsKey(lockId))
             { // if no one is locking any page in lockId, just insert pages then return it as is
-                var pageTimeDict = acquiredPages.Select(page => KeyValuePair.Create(page, now));
-                var newPage = new ConcurrentDictionary<Page, Time>(pageTimeDict);
+                var newPage = new ConcurrentDictionary<Page, Time>(
+                    acquiredPages.Select(page => KeyValuePair.Create(page, now)));
                 if (_crawling.TryAdd(lockId, newPage)) return acquiredPages;
             }
             var pagesLock = _crawling[lockId];

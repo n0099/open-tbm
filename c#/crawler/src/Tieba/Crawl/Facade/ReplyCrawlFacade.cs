@@ -22,12 +22,12 @@ public class ReplyCrawlFacade(
     protected override void OnPostParse(
         ReplyResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, ReplyPost> parsedPostsInResponse)
+        IReadOnlyDictionary<PostId, ReplyPost> parsedPosts)
     {
-        parsedPostsInResponse.Values.ForEach(r => r.Tid = tid);
+        parsedPosts.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
         UserParser.Parse(data.UserList);
-        FillAuthorInfoBackToReply(data.UserList, parsedPostsInResponse.Values);
+        FillAuthorInfoBackToReply(data.UserList, parsedPosts.Values);
         if (data.Page.CurrentPage == 1)
             _parentThreadTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
     }

@@ -21,7 +21,7 @@ public class ThreadCrawlFacade(
     protected override void OnPostParse(
         ThreadResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, ThreadPost> parsedPostsInResponse)
+        IReadOnlyDictionary<PostId, ThreadPost> parsedPosts)
     {
         var data = response.Data;
         if (flag == CrawlRequestFlag.ThreadClientVersion602) FillFromRequestingWith602(data.ThreadList);

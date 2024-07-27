@@ -24,9 +24,9 @@ public class SubReplyCrawlFacade(
     protected override void OnPostParse(
         SubReplyResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, SubReplyPost> parsedPostsInResponse)
+        IReadOnlyDictionary<PostId, SubReplyPost> parsedPosts)
     {
-        foreach (var sr in parsedPostsInResponse.Values)
+        foreach (var sr in parsedPosts.Values)
         {
             sr.Tid = tid;
             sr.Pid = pid;

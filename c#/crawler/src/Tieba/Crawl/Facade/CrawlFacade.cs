@@ -131,7 +131,7 @@ public abstract class CrawlFacade<TPost, TResponse, TPostProtoBuf>(
     protected virtual void OnPostParse(
         TResponse response,
         CrawlRequestFlag flag,
-        IReadOnlyDictionary<PostId, TPost> parsedPostsInResponse) { }
+        IReadOnlyDictionary<PostId, TPost> parsedPosts) { }
     protected virtual void OnBeforeCommitSave(CrawlerDbContext db, UserSaver userSaver) { }
     protected virtual void OnPostCommitSave(
         SaverChangeSet<TPost> savedPosts,

@@ -19,9 +19,9 @@ public class ClientRequester(
     public async Task<JsonElement> RequestJson(
         string url,
         string clientVersion,
-        IReadOnlyDictionary<string, string> postParam,
+        IReadOnlyDictionary<string, string> postParamsKeyByName,
         CancellationToken stoppingToken = default) =>
-        await Request(() => PostJson(url, postParam, clientVersion, stoppingToken), stream =>
+        await Request(() => PostJson(url, postParamsKeyByName, clientVersion, stoppingToken), stream =>
         {
             stoppingToken.ThrowIfCancellationRequested();
             using var doc = JsonDocument.Parse(stream);
@@ -84,32 +84,32 @@ public class ClientRequester(
 
     private async Task<HttpResponseMessage> PostJson(
         string url,
-        IReadOnlyDictionary<string, string> postParam,
+        IReadOnlyDictionary<string, string> postParamsKeyByName,
         string clientVersion,
         CancellationToken stoppingToken = default)
     {
-        var postData = new Dictionary<string, string>
+        var postParamPairs = new Dictionary<string, string>
         {
             {"_client_id", $"wappc_{Rand.NextLong(1000000000000, 9999999999999)}_{Rand.Next(100, 999)}"},
             {"_client_type", "2"},
             {"_client_version", clientVersion}
-        }.Concat(postParam).ToList();
-        var sign = postData.Aggregate("", (acc, pair) =>
+        }.Concat(postParamsKeyByName).ToList();
+        var signature = postParamPairs.Aggregate("", (acc, pair) =>
         {
             acc += pair.Key + '=' + pair.Value;
             return acc;
         }) + "tiebaclient!!!";
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
-        var signMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(sign))).Replace("-", "");
+        var signatureMd5 = BitConverter.ToString(MD5.HashData(Encoding.UTF8.GetBytes(signature))).Replace("-", "");
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
-        postData.Add(KeyValuePair.Create("sign", signMd5));
+        postParamPairs.Add(KeyValuePair.Create("sign", signatureMd5));
 
         return await Post(async http =>
             {
-                using var content = new FormUrlEncodedContent(postData);
+                using var content = new FormUrlEncodedContent(postParamPairs);
                 return await http.PostAsync(url, content, stoppingToken);
             },
-            () => logger.LogTrace("POST {} {}", url, postParam), stoppingToken);
+            () => logger.LogTrace("POST {} {}", url, postParamsKeyByName), stoppingToken);
     }
 
     private async Task<HttpResponseMessage> PostProtoBuf<TRequest>(

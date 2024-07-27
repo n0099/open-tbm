@@ -14,7 +14,7 @@ public class CrawlPost(
     Func<Owned<SubReplyCrawlFacade.New>> subReplyCrawlFacadeFactory)
 {
     // store the max latestReplyPostedAt of threads appeared in the previous crawl worker, key by fid
-    private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpointCache = [];
+    private readonly Dictionary<Fid, Time> _latestReplyPostedAtCheckpoints = [];
 
     public async Task<SavedThreadsList> CrawlThreads
         (string forumName, Fid fid, CancellationToken stoppingToken = default)
@@ -24,7 +24,7 @@ public class CrawlPost(
         Time minLatestReplyPostedAt;
         Page crawlingPage = 0;
 
-        if (!_latestReplyPostedAtCheckpointCache.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
+        if (!_latestReplyPostedAtCheckpoints.TryGetValue(fid, out var maxLatestReplyPostedAtOccurInPreviousCrawl))
         { // get the largest value of field latestReplyPostedAt in all stored threads of this forum
             // this approach is not as accurate as extracting the last thread in the response list
             // and needs a full table scan on db
@@ -47,7 +47,7 @@ public class CrawlPost(
                     .Select(th => th.LatestReplyPostedAt).ToList();
                 minLatestReplyPostedAt = threadsLatestReplyPostedAt.Min();
                 if (crawlingPage == 1)
-                    _latestReplyPostedAtCheckpointCache[fid] = threadsLatestReplyPostedAt.Max();
+                    _latestReplyPostedAtCheckpoints[fid] = threadsLatestReplyPostedAt.Max();
             }
             else
             { // retry this page
