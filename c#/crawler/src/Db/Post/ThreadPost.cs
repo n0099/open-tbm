@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class ThreadPost : TimestampedEntity, BasePost
+public class ThreadPost : TimestampedEntity, IPost
 {
     [Key] public ulong Tid { get; set; }
     public long AuthorUid { get; set; }
@@ -27,7 +27,7 @@ public class ThreadPost : TimestampedEntity, BasePost
 
     public object Clone() => MemberwiseClone();
 
-    public class Parsed : ThreadPost, BasePost.IParsed
+    public class Parsed : ThreadPost, IPost.IParsed
     {
         public ulong? FirstReplyPid { get; set; }
 

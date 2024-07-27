@@ -6,8 +6,8 @@ public abstract class PostSaver<TPostEntity, TParsedPost, TBaseRevision, TPostId
     AuthorRevisionSaver.New authorRevisionSaverFactory,
     PostType currentPostType)
     : SaverWithRevision<TBaseRevision, TPostId>(logger), IPostSaver<TPostEntity, TParsedPost>
-    where TPostEntity : RowVersionedEntity, BasePost
-    where TParsedPost : TPostEntity, BasePost.IParsed
+    where TPostEntity : RowVersionedEntity, IPost
+    where TParsedPost : TPostEntity, IPost.IParsed
     where TBaseRevision : BaseRevisionWithSplitting
     where TPostId : struct
 {

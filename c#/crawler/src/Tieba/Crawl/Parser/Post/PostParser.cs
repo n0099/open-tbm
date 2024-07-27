@@ -2,7 +2,7 @@ namespace tbm.Crawler.Tieba.Crawl.Parser.Post;
 
 public abstract class PostParser<TPost, TPostProtoBuf>
     : IPostParser<TPost, TPostProtoBuf>
-    where TPost : BasePost.IParsed
+    where TPost : IPost.IParsed
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     public void Parse(
@@ -21,7 +21,7 @@ public abstract class PostParser<TPost, TPostProtoBuf>
         outPosts = ParseInternal(inPosts, nullableUsers).ToDictionary(PostIdSelector, post => post);
         if (outPosts.Values.Any(p => p.AuthorUid == 0))
             throw new TiebaException(shouldRetry: true,
-                "Value of BasePost.AuthorUid is the protoBuf default value 0.");
+                "Value of IPost.AuthorUid is the protoBuf default value 0.");
 
         var users = new List<TbClient.User>(30);
         users.AddRange(nullableUsers.OfType<TbClient.User>()

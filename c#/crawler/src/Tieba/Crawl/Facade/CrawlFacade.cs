@@ -12,8 +12,8 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
     Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
     Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory)
     : ICrawlFacade<TPostEntity, TParsedPost>
-    where TPostEntity : BasePost
-    where TParsedPost : TPostEntity, BasePost.IParsed
+    where TPostEntity : IPost
+    where TParsedPost : TPostEntity, IPost.IParsed
     where TResponse : class, IMessage<TResponse>
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {

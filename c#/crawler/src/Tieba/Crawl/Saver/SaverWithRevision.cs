@@ -56,7 +56,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
     protected virtual bool FieldRevisionIgnorance(string propName, object? oldValue, object? newValue) => false;
     private static bool GlobalFieldUpdateIgnorance(string propName, object? oldValue, object? newValue) => propName switch
     { // possible rarely respond with the protoBuf default value 0
-        nameof(BasePost.AuthorUid) when newValue is 0L && oldValue is not null => true,
+        nameof(IPost.AuthorUid) when newValue is 0L && oldValue is not null => true,
         _ => false
     };
 }
@@ -96,7 +96,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                 .ForEach(t => t.existingNavigation.CurrentValue = t.newNavigation.CurrentValue);
 
             // rollback changes that overwrite original values with the default value 0 or null
-            // for all fields of TimestampedEntity and BasePost.LastSeenAt
+            // for all fields of TimestampedEntity and IPost.LastSeenAt
             // this will also affect the entity instance which existingEntity references to it
             entityEntry.Properties
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
@@ -190,7 +190,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
             .ForEach(g => AddSplitRevisionsDelegatesKeyByEntityType.Value[g.Key](db, g));
     }
 
-    private static bool IsTimestampingFieldName(string name) => name is nameof(BasePost.LastSeenAt)
+    private static bool IsTimestampingFieldName(string name) => name is nameof(IPost.LastSeenAt)
         or nameof(TimestampedEntity.CreatedAt) or nameof(TimestampedEntity.UpdatedAt);
 
     protected record ExistingAndNewEntity<TEntity>(TEntity Existing, TEntity New) where TEntity : RowVersionedEntity;

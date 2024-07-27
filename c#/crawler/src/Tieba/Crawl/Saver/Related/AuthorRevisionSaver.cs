@@ -44,13 +44,13 @@ public class AuthorRevisionSaver(
         Func<TValue?, TValue?, bool> isValueChangedPredicate,
         Expression<Func<TRevision, LatestAuthorRevisionProjection<TValue>>> latestRevisionProjectionFactory,
         Func<(Uid Uid, TValue? Value, Time DiscoveredAt), TRevision> revisionFactory)
-        where TPost : BasePost
+        where TPost : IPost
         where TRevision : AuthorRevision
     { // only takes the first of multiple post from the same author
         var uniquePosts = posts.DistinctBy(p => p.AuthorUid).ToList();
         if (uniquePosts.Count != posts.Count)
             Helper.LogDifferentValuesSharingTheSameKeyInEntities(logger, posts,
-            $"{nameof(TPost)}.{nameof(BasePost.AuthorUid)}",
+            $"{nameof(TPost)}.{nameof(IPost.AuthorUid)}",
             p => p.AuthorUid,
             postRevisioningFieldSelector);
 

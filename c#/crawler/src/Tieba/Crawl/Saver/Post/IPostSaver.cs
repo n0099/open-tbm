@@ -1,8 +1,8 @@
 namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public interface IPostSaver<TPostEntity, TParsedPost>
-    where TPostEntity : BasePost
-    where TParsedPost : TPostEntity, BasePost.IParsed
+    where TPostEntity : IPost
+    where TParsedPost : TPostEntity, IPost.IParsed
 {
     public PostType CurrentPostType { get; }
     public bool UserFieldUpdateIgnorance(string propName, object? oldValue, object? newValue);

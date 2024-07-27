@@ -2,9 +2,9 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace tbm.Crawler.Db.Post;
 
-public interface BasePost : ICloneable
+public interface IPost : ICloneable
 {
-    public interface IParsed : BasePost;
+    public interface IParsed : IPost;
     [Column(TypeName = "bigint")]
     public ulong Tid { get; set; }
     public long AuthorUid { get; set; }

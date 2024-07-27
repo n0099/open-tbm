@@ -5,8 +5,8 @@ public class SaverChangeSet<TPostEntity, TParsedPost>(
     ICollection<TParsedPost> parsed,
     IReadOnlyCollection<TPostEntity> existingBefore,
     IReadOnlyCollection<TPostEntity> existingAfter)
-    where TPostEntity : BasePost
-    where TParsedPost : TPostEntity, BasePost.IParsed
+    where TPostEntity : IPost
+    where TParsedPost : TPostEntity, IPost.IParsed
 {
     public IReadOnlyCollection<(TPostEntity Before, TPostEntity After)> Existing { get; } = existingBefore
         .OrderBy(postIdSelector)

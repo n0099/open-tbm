@@ -1,8 +1,8 @@
 namespace tbm.Crawler.Tieba.Crawl.Facade;
 
 public interface ICrawlFacade<TPost, TParsedPost> : IDisposable
-    where TPost : BasePost
-    where TParsedPost : TPost, BasePost.IParsed
+    where TPost : IPost
+    where TParsedPost : TPost, IPost.IParsed
 {
     public delegate void ExceptionHandler(Exception ex);
 

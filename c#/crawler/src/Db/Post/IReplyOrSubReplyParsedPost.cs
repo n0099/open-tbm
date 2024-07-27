@@ -1,6 +1,6 @@
 namespace tbm.Crawler.Db.Post;
 
-public interface IReplyOrSubReplyParsedPost : BasePost.IParsed
+public interface IReplyOrSubReplyParsedPost : IPost.IParsed
 {
     public byte AuthorExpGrade { get; set; }
     public byte[]? Content { get; set; }

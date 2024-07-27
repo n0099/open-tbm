@@ -1,7 +1,7 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Post;
 
-public class SubReplyPost : TimestampedEntity, BasePost
+public class SubReplyPost : TimestampedEntity, IPost
 {
     public ulong Tid { get; set; }
     public long AuthorUid { get; set; }

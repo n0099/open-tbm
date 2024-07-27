@@ -36,7 +36,7 @@ public class CrawlerDbContext(ILogger<CrawlerDbContext> logger, Fid fid = 0)
             var originalEntityState = e.State; // copy e.State since it might change after any prop value updated
             var createdAtProp = e.Property(ie => ie.CreatedAt);
             var updatedAtProp = e.Property(ie => ie.UpdatedAt);
-            var lastSeenAtProp = e.Entity is BasePost ? e.Property(ie => ((BasePost)ie).LastSeenAt) : null;
+            var lastSeenAtProp = e.Entity is IPost ? e.Property(ie => ((IPost)ie).LastSeenAt) : null;
 
             // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
             switch (originalEntityState)

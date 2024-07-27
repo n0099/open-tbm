@@ -53,7 +53,7 @@ public class ThreadLatestReplierSaver(
         if (thread == null) return () => { };
 
         // https://stackoverflow.com/questions/63094891/ef-core-tracking-child-objects-unnecessarily
-        // detach the unused thread entity to prevent CrawlerDbContext.TimestampingEntities() updating its BasePost.LastSeenAt
+        // detach the unused thread entity to prevent CrawlerDbContext.TimestampingEntities() updating its IPost.LastSeenAt
         db.Entry(thread).State = EntityState.Detached;
         var threadLatestReplier = thread.LatestReplier;
         if (threadLatestReplier == null) return () => { };
