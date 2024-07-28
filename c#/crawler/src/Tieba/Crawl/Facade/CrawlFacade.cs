@@ -9,8 +9,8 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
     CrawlerLocks locks,
     IPostParser<TParsedPost, TPostProtoBuf> postParser,
     Func<ConcurrentDictionary<PostId, TParsedPost>, IPostSaver<TPostEntity, TParsedPost>> postSaverFactory,
-    Func<ConcurrentDictionary<Uid, User>, UserParser> userParserFactory,
-    Func<ConcurrentDictionary<Uid, User>, UserSaver> userSaverFactory)
+    Func<ConcurrentDictionary<Uid, User.Parsed>, UserParser> userParserFactory,
+    Func<ConcurrentDictionary<Uid, User.Parsed>, UserSaver> userSaverFactory)
     : ICrawlFacade<TPostEntity, TParsedPost>
     where TPostEntity : IPost
     where TParsedPost : TPostEntity, IPost.IParsed
@@ -18,7 +18,7 @@ public abstract class CrawlFacade<TPostEntity, TParsedPost, TResponse, TPostProt
     where TPostProtoBuf : class, IMessage<TPostProtoBuf>
 {
     private readonly HashSet<Page> _lockingPages = [];
-    private readonly ConcurrentDictionary<Uid, User> _users = new();
+    private readonly ConcurrentDictionary<Uid, User.Parsed> _users = new();
     private UserParser? _userParser;
     private ICrawlFacade<TPostEntity, TParsedPost>.ExceptionHandler _exceptionHandler = _ => { };
 

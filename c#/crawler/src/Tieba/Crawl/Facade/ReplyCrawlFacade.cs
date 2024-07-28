@@ -27,7 +27,6 @@ public class ReplyCrawlFacade(
         parsedPosts.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
         UserParser.Parse(data.UserList);
-        FillAuthorInfoBackToReply(data.UserList, parsedPosts.Values);
         if (data.Page.CurrentPage == 1)
             _parentThreadTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
     }
@@ -53,11 +52,4 @@ public class ReplyCrawlFacade(
         CancellationToken stoppingToken = default) =>
         sonicPusher.PushPostWithCancellationToken(savedPosts.NewlyAdded, Fid, "replies",
             p => p.Pid, p => p.ContentsProtoBuf, stoppingToken);
-
-    // fill the values for some field of reply from user list which is out of post list
-    private static void FillAuthorInfoBackToReply(IEnumerable<TbClient.User> users, IEnumerable<ReplyPost.Parsed> parsedReplies) =>
-        (from reply in parsedReplies
-            join user in users on reply.AuthorUid equals user.Uid
-            select (reply, user))
-        .ForEach(t => t.reply.AuthorExpGrade = (byte)t.user.LevelId);
 }

@@ -3,14 +3,15 @@ namespace tbm.Crawler.Tieba.Crawl.Saver;
 public partial class UserSaver(
     ILogger<UserSaver> logger,
     SaverLocks<Uid>.New saverLocksFactory,
-    IDictionary<Uid, User> users,
-    ThreadLatestReplierSaver threadLatestReplierSaver)
+    IDictionary<Uid, User.Parsed> users,
+    ThreadLatestReplierSaver threadLatestReplierSaver,
+    AuthorRevisionSaver.New authorRevisionSaverFactory)
     : SaverWithRevision<BaseUserRevision, Uid>(logger)
 {
     private static readonly HashSet<Uid> GlobalLockedUid = [];
     private readonly Lazy<SaverLocks<Uid>> _saverLocks = new(() => saverLocksFactory(GlobalLockedUid));
 
-    public delegate UserSaver New(IDictionary<Uid, User> users);
+    public delegate UserSaver New(IDictionary<Uid, User.Parsed> users);
     public delegate bool FieldChangeIgnorance(string propName, object? oldValue, object? newValue);
 
     private Action PostSaveHandlers { get; set; } = () => { };
@@ -51,6 +52,8 @@ public partial class UserSaver(
             existingAndNewUsers,
             userFieldUpdateIgnorance,
             userFieldRevisionIgnorance);
+
+        PostSaveHandlers += authorRevisionSaverFactory(postType).SaveAuthorExpGrade(db, users.Values.ToList());
     }
 
     public void SaveParentThreadLatestReplierUid(CrawlerDbContext db, Tid tid) =>

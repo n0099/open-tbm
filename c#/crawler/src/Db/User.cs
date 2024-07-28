@@ -9,4 +9,9 @@ public class User : BaseUser
     public string? FansNickname { get; set; }
     public byte[]? Icon { get; set; }
     public string? IpGeolocation { get; set; }
+
+    public class Parsed : User
+    {
+        public byte ExpGrade { get; set; }
+    }
 }

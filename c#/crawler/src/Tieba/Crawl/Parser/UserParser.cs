@@ -1,8 +1,8 @@
 namespace tbm.Crawler.Tieba.Crawl.Parser;
 
-public partial class UserParser(ConcurrentDictionary<Uid, User> users)
+public partial class UserParser(ConcurrentDictionary<Uid, User.Parsed> users)
 {
-    public delegate UserParser New(ConcurrentDictionary<Uid, User> users);
+    public delegate UserParser New(ConcurrentDictionary<Uid, User.Parsed> users);
 
     public void Parse(IEnumerable<TbClient.User> inUsers) =>
         inUsers.Select(el =>
@@ -29,7 +29,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
             // will be an empty string when the user hasn't set a username for their baidu account yet
             var name = el.Name.NullIfEmpty();
             var nameShow = el.NameShow.NullIfEmpty();
-            var u = new User {Portrait = ""};
+            var u = new User.Parsed {Portrait = ""};
             try
             {
                 u.Uid = uid;
@@ -42,6 +42,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
                 u.Icon = Helper.SerializedProtoBufWrapperOrNullIfEmpty(el.Iconinfo,
                     value => new UserIconWrapper {Value = {value}});
                 u.IpGeolocation = el.IpAddress.NullIfEmpty();
+                u.ExpGrade = (byte)el.LevelId;
                 return u;
             }
             catch (Exception e)
@@ -49,7 +50,7 @@ public partial class UserParser(ConcurrentDictionary<Uid, User> users)
                 e.Data["raw"] = SharedHelper.UnescapedJsonSerialize(el);
                 throw new InvalidDataException("User parse error.", e);
             }
-        }).OfType<User>().ForEach(u => users[u.Uid] = u);
+        }).OfType<User.Parsed>().ForEach(u => users[u.Uid] = u);
 
     public void ResetUsersIcon() => users.Values.ForEach(u => u.Icon = null);
 

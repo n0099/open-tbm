@@ -2,10 +2,9 @@ namespace tbm.Crawler.Tieba.Crawl.Saver.Post;
 
 public partial class SubReplySaver(
     ILogger<SubReplySaver> logger,
-    ConcurrentDictionary<PostId, SubReplyPost.Parsed> posts,
-    AuthorRevisionSaver.New authorRevisionSaverFactory)
+    ConcurrentDictionary<PostId, SubReplyPost.Parsed> posts)
     : PostSaver<SubReplyPost, SubReplyPost.Parsed, BaseSubReplyRevision, Spid>(
-        logger, posts, authorRevisionSaverFactory, PostType.SubReply)
+        logger, posts, PostType.SubReply)
 {
     public delegate SubReplySaver New(ConcurrentDictionary<PostId, SubReplyPost.Parsed> posts);
 
@@ -17,7 +16,6 @@ public partial class SubReplySaver(
 
         db.SubReplyContents.AddRange(changeSet.NewlyAdded.Select(sr => // https://github.com/dotnet/efcore/issues/33945
             new SubReplyContent {Spid = sr.Spid, ProtoBufBytes = sr.Content}));
-        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGrade(db, changeSet.AllParsed);
 
         return changeSet;
     }

@@ -4,10 +4,9 @@ public partial class ReplySaver(
     ILogger<ReplySaver> logger,
     ConcurrentDictionary<PostId, ReplyPost.Parsed> posts,
     ReplyContentImageSaver replyContentImageSaver,
-    ReplySignatureSaver replySignatureSaver,
-    AuthorRevisionSaver.New authorRevisionSaverFactory)
+    ReplySignatureSaver replySignatureSaver)
     : PostSaver<ReplyPost, ReplyPost.Parsed, BaseReplyRevision, Pid>(
-        logger, posts, authorRevisionSaverFactory, PostType.Reply)
+        logger, posts, PostType.Reply)
 {
     public delegate ReplySaver New(ConcurrentDictionary<PostId, ReplyPost.Parsed> posts);
 
@@ -20,7 +19,6 @@ public partial class ReplySaver(
         db.ReplyContents.AddRange(changeSet.NewlyAdded // https://github.com/dotnet/efcore/issues/33945
             .Select(r => new ReplyContent {Pid = r.Pid, ProtoBufBytes = r.Content}));
         PostSaveHandlers += replyContentImageSaver.Save(db, changeSet.NewlyAdded);
-        PostSaveHandlers += AuthorRevisionSaver.SaveAuthorExpGrade(db, changeSet.AllParsed);
         PostSaveHandlers += replySignatureSaver.Save(db, changeSet.AllParsed);
 
         return changeSet;

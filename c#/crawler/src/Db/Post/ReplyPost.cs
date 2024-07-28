@@ -19,9 +19,8 @@ public class ReplyPost : TimestampedEntity, IPost
 
     public object Clone() => MemberwiseClone();
 
-    public class Parsed : ReplyPost, IReplyOrSubReplyParsedPost
+    public class Parsed : ReplyPost, IPostWithContent
     {
-        public byte AuthorExpGrade { get; set; }
         public byte[]? Content { get; set; }
         public required RepeatedField<Content> ContentsProtoBuf { get; set; }
         public byte[]? Signature { get; set; }
