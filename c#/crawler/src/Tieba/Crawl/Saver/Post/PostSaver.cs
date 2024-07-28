@@ -24,12 +24,16 @@ public abstract class PostSaver<TPostEntity, TParsedPost, TBaseRevision, TPostId
     public abstract SaverChangeSet<TPostEntity, TParsedPost> Save(CrawlerDbContext db);
     protected SaverChangeSet<TPostEntity, TParsedPost> Save<TRevision>(
         CrawlerDbContext db,
-        Func<TPostEntity, PostId> postIdSelector,
+        Expression<Func<TPostEntity, PostId>> postIdSelectorExpression,
         Func<TPostEntity, TRevision> revisionFactory,
         Func<IQueryable<TPostEntity>, IQueryable<TPostEntity>> postQueryTransformer,
         Action<IEnumerable<MaybeExistingAndNewEntity<TPostEntity>>>? onBeforeSaveRevision = null)
         where TRevision : TBaseRevision
     {
+        var postIdSelector = postIdSelectorExpression.Compile();
+        var parsedPostIdSelector =
+            ((Expression<Func<TParsedPost, PostId>>)new ReplaceParameterTypeVisitor<TPostEntity, TParsedPost>()
+                .Visit(postIdSelectorExpression)).Compile();
         var existingPosts = postQueryTransformer(db.Set<TPostEntity>().AsTracking()).ToList();
 
         // clone before entities get mutated by SaverWithRevision.SaveEntitiesWithRevision()
@@ -45,6 +49,6 @@ public abstract class PostSaver<TPostEntity, TParsedPost, TBaseRevision, TPostId
         onBeforeSaveRevision?.Invoke(maybeExistingAndNewPosts);
         SaveExistingEntityRevisions(db, revisionFactory, existingAndNewPosts);
 
-        return new(postIdSelector, Posts.Values, existingPostsBeforeSave, existingPosts);
+        return new(postIdSelector, parsedPostIdSelector, Posts.Values, existingPostsBeforeSave, existingPosts);
     }
 }
