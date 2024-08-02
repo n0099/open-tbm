@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Eloquent\Model\LatestReplier;
 use App\Helper;
 use App\Http\PostsQuery\IndexQuery;
 use App\Http\PostsQuery\ParamsValidator;
@@ -11,6 +12,7 @@ use App\Eloquent\Model\User;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 class PostsQuery extends Controller
 {
@@ -53,17 +55,16 @@ class PostsQuery extends Controller
         Debugbar::stopMeasure('fillWithParentPost');
 
         Debugbar::startMeasure('queryUsers');
+        $latestRepliers = LatestReplier::whereIn('id', $result['threads']->pluck('latestReplierId'))
+            ->selectPublicFields()->get();
         $whereCurrentFid = static fn (HasOne $q) => $q->where('fid', $result['fid']);
         $users = User::whereIn(
             'uid',
-            $result['threads']
-                ->pluck('latestReplierUid')
-                ->concat(array_map(
-                    static fn (string $type) => $result[$type]->pluck('authorUid'),
-                    Helper::POST_TYPES_PLURAL
-                ))
-                ->flatten()->filter() // remove NULLs from column latestReplierUid
-                ->unique()->toArray()
+            collect($result)
+                ->only(Helper::POST_TYPES_PLURAL)
+                ->flatMap(static fn (Collection $posts) => $posts->pluck('authorUid'))
+                ->concat($latestRepliers->pluck('uid'))
+                ->filter()->unique()->toArray() // remove NULLs
         )->with(['currentForumModerator' => $whereCurrentFid, 'currentAuthorExpGrade' => $whereCurrentFid])
             ->selectPublicFields()->get()->toArray();
         Debugbar::stopMeasure('queryUsers');
@@ -76,7 +77,8 @@ class PostsQuery extends Controller
             ],
             'forum' => Forum::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
-            'users' => $users
+            'users' => $users,
+            'latestRepliers' => $latestRepliers
         ];
     }
 }

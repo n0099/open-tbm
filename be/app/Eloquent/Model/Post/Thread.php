@@ -39,7 +39,7 @@ class Thread extends Post
             'authorUid',
             'postedAt',
             'latestReplyPostedAt',
-            'latestReplierUid',
+            'latestReplierId',
             'replyCount',
             'viewCount',
             'shareCount',
