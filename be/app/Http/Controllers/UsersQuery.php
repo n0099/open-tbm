@@ -19,7 +19,7 @@ class UsersQuery extends Controller
         ]);
         Helper::abortAPIIf(40402, empty($queryParams));
 
-        $queryBuilder = (new User())->newQuery();
+        $queryBuilder = User::newQuery();
 
         $nullableParams = ['name', 'displayName', 'gender'];
         foreach ($nullableParams as $nullableParamName) {

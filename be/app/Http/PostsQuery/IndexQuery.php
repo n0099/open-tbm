@@ -41,15 +41,16 @@ class IndexQuery extends BaseQuery
                 ->only($postTypes)
                 ->transform(static fn (Post $model, string $type) => $model->selectCurrentAndParentPostID());
         $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
-            $fids = Forum::get('fid')->pluck('fid')->toArray();
-            $counts = collect($fids)
+            $counts = Forum::get('fid')
+                ->pluck('fid')
                 ->map(static fn (int $fid) =>
                     PostFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
                         ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
                 ->reduce(static fn (?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): BuilderContract =>
                     $acc === null ? $cur : $acc->union($cur))
-                ->get()->where('count', '!=', 0);
+                ->get()
+                ->where('count', '!=', 0);
             Helper::abortAPIIf(50001, $counts->count() > 1);
             Helper::abortAPIIf(40401, $counts->count() === 0);
             return $counts->pluck('fid')->first();
@@ -57,7 +58,7 @@ class IndexQuery extends BaseQuery
 
         if (\array_key_exists('fid', $flatParams)) {
             /** @var int $fid */ $fid = $flatParams['fid'];
-            if ((new Forum())->fid($fid)->exists()) {
+            if (Forum::fid($fid)->exists()) {
                 /** @var Collection<string, EloquentBuilder<Post>> $queries key by post type */
                 $queries = $getQueryBuilders($fid);
             } elseif ($hasPostIDParam) { // query by post ID and fid, but the provided fid is invalid

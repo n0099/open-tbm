@@ -64,9 +64,9 @@ class PostsQuery extends Controller
                 ->only(Helper::POST_TYPES_PLURAL)
                 ->flatMap(static fn (Collection $posts) => $posts->pluck('authorUid'))
                 ->concat($latestRepliers->pluck('uid'))
-                ->filter()->unique()->toArray() // remove NULLs
+                ->filter()->unique() // remove NULLs
         )->with(['currentForumModerator' => $whereCurrentFid, 'currentAuthorExpGrade' => $whereCurrentFid])
-            ->selectPublicFields()->get()->toArray();
+            ->selectPublicFields()->get();
         Debugbar::stopMeasure('queryUsers');
 
         return [
@@ -75,7 +75,7 @@ class PostsQuery extends Controller
                 ...$query->getResultPages(),
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL])
             ],
-            'forum' => Forum::fid($result['fid'])->selectPublicFields()->first()?->toArray(),
+            'forum' => Forum::fid($result['fid'])->selectPublicFields()->first(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
             'users' => $users,
             'latestRepliers' => $latestRepliers
