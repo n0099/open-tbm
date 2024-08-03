@@ -13,6 +13,12 @@ interface Agree {
     disagreeCount: Int
 }
 
+export type LatestReplierId = UInt;
+export interface LatestReplier extends TimestampFields {
+    id: LatestReplierId,
+    uid: BaiduUserID | null
+}
+
 export interface Thread extends Post {
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     threadType: UInt | 1024 | 1040 | null,
@@ -21,7 +27,7 @@ export interface Thread extends Post {
     isGood: BoolInt,
     title: string,
     latestReplyPostedAt: UnixTimestamp,
-    latestReplierUid: BaiduUserID | null,
+    latestReplierId: LatestReplierId | null,
     replyCount: UInt,
     viewCount: UInt,
     shareCount: UInt,

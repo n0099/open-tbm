@@ -37,7 +37,8 @@ export type ApiPosts = Api<CursorPagination & {
             subReplies: SubReply[]
         }>
     }>,
-    users: User[]
+    users: User[],
+    latestRepliers: LatestReplier[]
 }, { query: JsonString }>;
 export type ApiForumThreadsID = Api<CursorPagination & {
     tid: Tid[]

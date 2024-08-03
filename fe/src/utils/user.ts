@@ -29,6 +29,12 @@ export const baseGetUser = (users: User[]) => {
         currentAuthorExpGrade: null
     };
 };
+export const baseGetLatestReplier = (latestRepliers: LatestReplier[]) => {
+    const latestRepliersKeyById = _.mapKeys(latestRepliers, 'id');
+
+    return (id: LatestReplierId | null): LatestReplier | undefined =>
+        (id === null ? undefined : latestRepliersKeyById[id]);
+};
 export const baseRenderUsername = (getUser: ReturnType<typeof baseGetUser>) => (uid: BaiduUserID) => {
     const { name, displayName } = getUser(uid);
     if (name === null)
@@ -36,17 +42,22 @@ export const baseRenderUsername = (getUser: ReturnType<typeof baseGetUser>) => (
 
     return name + (displayName === null ? '' : ` ${displayName}`);
 };
+
 export interface UserProvision {
     getUser: ReturnType<typeof baseGetUser>,
-    renderUsername: ReturnType<typeof baseRenderUsername>
+    renderUsername: ReturnType<typeof baseRenderUsername>,
+    getLatestReplier: ReturnType<typeof baseGetLatestReplier>
 }
 export const useUserProvision = () => {
     const users = ref<User[]>([]);
     const getUser = computed(() => baseGetUser(users.value));
     const renderUsername = computed(() => baseRenderUsername(getUser.value));
-    const userProvision = { getUser, renderUsername };
-    const provideUsers = (inject: User[]) => {
-        users.value = inject;
+    const latestReplier = ref<LatestReplier[]>([]);
+    const getLatestReplier = computed(() => baseGetLatestReplier(latestReplier.value));
+    const userProvision = { getUser, renderUsername, getLatestReplier };
+    const provideUsers = (injectedUsers: User[], injectedLatestRepliers: LatestReplier[]) => {
+        users.value = injectedUsers;
+        latestReplier.value = injectedLatestRepliers;
         provide<typeof userProvision>('userProvision', userProvision);
     };
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

@@ -44,10 +44,12 @@
                     <!-- todo: unknown json struct -->
                 </span>
             </div>
-            <div class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
+            <div
+                v-for="latestReplierUid in [getLatestReplier(thread.latestReplierId)?.uid]"
+                :key="latestReplierUid ?? undefined" class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
                 <NuxtLink :to="toUserRoute(thread.authorUid)" noPrefetch class="fs-.75">
                     <span
-                        v-if="thread.latestReplierUid !== thread.authorUid"
+                        v-if="latestReplierUid !== thread.authorUid"
                         class="fw-normal link-success">楼主：</span>
                     <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
                     <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
@@ -55,20 +57,20 @@
                 <PostBadgeUser
                     v-if="getUser(thread.authorUid).currentForumModerator !== null"
                     :user="getUser(thread.authorUid)" class="fs-.75 ms-1" />
-                <template v-if="thread.latestReplierUid === null">
+                <template v-if="latestReplierUid === undefined || latestReplierUid === null">
                     <span class="fs-.75">
                         <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                         <span class="fw-bold link-dark">未知用户</span>
                     </span>
                 </template>
-                <template v-else-if="thread.latestReplierUid !== thread.authorUid">
-                    <NuxtLink :to="toUserRoute(thread.latestReplierUid)" noPrefetch class="fs-.75 ms-2">
+                <template v-else-if="latestReplierUid !== thread.authorUid">
+                    <NuxtLink :to="toUserRoute(latestReplierUid)" noPrefetch class="fs-.75 ms-2">
                         <span class="ms-2 fw-normal link-secondary">最后回复：</span>
-                        <span class="fw-bold link-dark">{{ renderUsername(thread.latestReplierUid) }}</span>
+                        <span class="fw-bold link-dark">{{ renderUsername(latestReplierUid) }}</span>
                     </NuxtLink>
                     <PostBadgeUser
-                        v-if="getUser(thread.latestReplierUid).currentForumModerator !== null"
-                        :user="getUser(thread.latestReplierUid)" class="fs-.75 ms-1" />
+                        v-if="getUser(latestReplierUid).currentForumModerator !== null"
+                        :user="getUser(latestReplierUid)" class="fs-.75 ms-1" />
                 </template>
                 <PostBadgeTime
                     postType="主题帖" currentPostIDKey="tid"
@@ -98,7 +100,7 @@ defineProps<{
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const relativeTimeStore = useRelativeTimeStore();
-const { getUser, renderUsername } = useUserProvision().inject();
+const { getUser, renderUsername, getLatestReplier } = useUserProvision().inject();
 
 // https://github.com/vuejs/core/issues/8034
 // https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
