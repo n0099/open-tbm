@@ -15,3 +15,10 @@ Route::get('/sitemaps/forums', static fn () => Cache::remember('/sitemaps/forums
                 ->pluck('tid')
         ])]))));
 Route::get('/sitemaps/forums/{fid}/threads', [Controllers\ThreadsSitemap::class, 'query']);
+
+Route::get('/assets/{filename}', static fn (string $filename) =>
+    response(preg_replace_callback_array([
+        '#/npm/(?<filename>\w+)@(\d+\.?){3}/\+esm#' => static fn (array $m) => url("assets/{$m['filename']}.js"),
+        '@^//# sourceMappingURL=.+$@m' => static fn () => ''
+    ], File::get(public_path("react-json-view/$filename"))))
+        ->header('Content-Type', 'text/javascript'));

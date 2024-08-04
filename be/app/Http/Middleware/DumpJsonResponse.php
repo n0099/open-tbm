@@ -9,7 +9,6 @@ class DumpJsonResponse
 {
     /**
      * @param \Closure(Request): (\Symfony\Component\HttpFoundation\Response) $next
-     * @source https://github.com/laravel/framework/issues/3929#issuecomment-935123918
      */
     public function handle(Request $request, \Closure $next): mixed
     {
@@ -18,13 +17,15 @@ class DumpJsonResponse
             if ($request->accepts('text/html')) {
                 $json = $response->content();
                 $jsonLength = mb_strlen($json);
+                $assetsUrl = collect(['react-json-view', 'react', 'react-dom'])
+                    ->mapWithKeys(fn ($asset) => [$asset => url("/assets/$asset.js")]);
                 return response(<<<HTML
                     <h4>$jsonLength bytes</h4>
                     <div id="root"></div>
                     <script type="module">
-                        import ReactJsonView from 'https://cdn.jsdelivr.net/npm/@microlink/react-json-view@1/+esm';
-                        import { createElement } from 'https://cdn.jsdelivr.net/npm/react@18/+esm';
-                        import { createRoot } from 'https://cdn.jsdelivr.net/npm/react-dom@18/+esm';
+                        import ReactJsonView from '{$assetsUrl['react-json-view']}';
+                        import { createElement } from '{$assetsUrl['react']}';
+                        import { createRoot } from '{$assetsUrl['react-dom']}';
 
                         const root = createRoot(document.getElementById('root'));
                         root.render(createElement(ReactJsonView.default, { src: $json, quotesOnKeys: false }));
@@ -36,6 +37,7 @@ class DumpJsonResponse
                     </style>
                     HTML);
             }
+            // https://github.com/laravel/framework/issues/3929#issuecomment-935123918
             $response->setEncodingOptions(JSON_PRETTY_PRINT);
         }
 
