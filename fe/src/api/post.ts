@@ -14,7 +14,7 @@ interface Agree {
 }
 
 export type LatestReplierId = UInt;
-export interface LatestReplier extends TimestampFields {
+export interface LatestReplier extends Pick<User, 'name' | 'displayName'>, TimestampFields {
     id: LatestReplierId,
     uid: BaiduUserID | null
 }

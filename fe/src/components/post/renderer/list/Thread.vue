@@ -46,7 +46,8 @@
             </div>
             <div
                 v-for="latestReplierUid in [getLatestReplier(thread.latestReplierId)?.uid]"
-                :key="latestReplierUid ?? undefined" class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
+                :key="latestReplierUid ?? getLatestReplier(thread.latestReplierId)?.id"
+                class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
                 <NuxtLink :to="toUserRoute(thread.authorUid)" noPrefetch class="fs-.75">
                     <span
                         v-if="latestReplierUid !== thread.authorUid"
@@ -57,11 +58,32 @@
                 <PostBadgeUser
                     v-if="getUser(thread.authorUid).currentForumModerator !== null"
                     :user="getUser(thread.authorUid)" class="fs-.75 ms-1" />
-                <template v-if="latestReplierUid === undefined || latestReplierUid === null">
+                <template v-if="latestReplierUid === undefined">
                     <span class="fs-.75">
                         <span class="ms-2 fw-normal link-secondary">最后回复：</span>
                         <span class="fw-bold link-dark">未知用户</span>
                     </span>
+                </template>
+                <template v-else-if="latestReplierUid === null">
+                    <template v-for="latestReplier in [getLatestReplier(thread.latestReplierId)]">
+                        <span
+                            :key="latestReplier.id"
+                            v-if="latestReplier !== undefined
+                                && !(latestReplier.name === null && latestReplier.displayName === null)"
+                            class="fs-.75">
+                            <span class="ms-2 fw-normal link-secondary">最后回复：</span>
+                            <NuxtLink
+                                v-if="latestReplier.name !== null"
+                                :to="{ name: 'users/name', params: _.pick(latestReplier, 'name') }"
+                                noPrefetch class="fw-bold link-dark">{{ latestReplier.name }}</NuxtLink>
+                            <template v-if="latestReplier.displayName !== null">
+                                <span>&nbsp;</span>
+                                <NuxtLink
+                                    :to="{ name: 'users/displayName', params: _.pick(latestReplier, 'displayName') }"
+                                    noPrefetch class="fw-bold link-dark">{{ latestReplier.displayName }}</NuxtLink>
+                            </template>
+                        </span>
+                    </template>
                 </template>
                 <template v-else-if="latestReplierUid !== thread.authorUid">
                     <NuxtLink :to="toUserRoute(latestReplierUid)" noPrefetch class="fs-.75 ms-2">
@@ -91,6 +113,7 @@
 import type { ThreadWithGroupedSubReplies } from './List.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
+import _ from 'lodash';
 
 defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,

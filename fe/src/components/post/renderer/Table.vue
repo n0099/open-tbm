@@ -29,8 +29,34 @@
         <template v-else-if="column === 'author'">
             <ReuseUser :user="getUser((record as Thread).authorUid)" />
         </template>
-        <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierUid !== null">
-            <ReuseUser :user="getUser(record.latestReplierUid)" />
+        <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierId !== null">
+            <span
+                v-for="latestReplierUid in [getLatestReplier((record as Thread).latestReplierId)?.uid]"
+                :key="latestReplierUid ?? getLatestReplier((record as Thread).latestReplierId)?.id">
+                <template v-if="latestReplierUid === null">
+                    <template v-for="latestReplier in [getLatestReplier((record as Thread).latestReplierId)]">
+                        <span
+                            :key="latestReplier.id"
+                            v-if="latestReplier !== undefined
+                                && !(latestReplier.name === null && latestReplier.displayName === null)">
+                            <NuxtLink
+                                v-if="latestReplier.name !== null"
+                                :to="{ name: 'users/name', params: _.pick(latestReplier, 'name') }"
+                                noPrefetch class="link-dark">{{ latestReplier.name }}</NuxtLink>
+                            <template v-if="latestReplier.displayName !== null">
+                                <span>&nbsp;</span>
+                                <NuxtLink
+                                    :to="{ name: 'users/displayName', params: _.pick(latestReplier, 'displayName') }"
+                                    noPrefetch class="link-dark">{{ latestReplier.displayName }}</NuxtLink>
+                            </template>
+                        </span>
+                    </template>
+                </template>
+                <ReuseUser v-else-if="latestReplierUid !== undefined" :user="getUser(latestReplierUid)" />
+            </span>
+        </template>
+        <template v-else-if="column === 'latestReplierUid' && (record as Thread).latestReplierId !== null">
+            {{ getLatestReplier((record as Thread).latestReplierId)?.uid }}
         </template>
     </template>
     <template #expandedRowRender="{ record: { authorUid: threadAuthorUid, replies } }">
@@ -78,7 +104,7 @@ import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts['response'] }>();
 const [DefineUser, ReuseUser] = createReusableTemplate<InstanceType<typeof User>['$props']>();
-const { getUser, renderUsername } = useUserProvision().inject();
+const { getUser, renderUsername, getLatestReplier } = useUserProvision().inject();
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },
     { title: '标题', dataIndex: 'title' },
