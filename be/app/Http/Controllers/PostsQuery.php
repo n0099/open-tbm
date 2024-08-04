@@ -55,10 +55,14 @@ class PostsQuery extends Controller
         Debugbar::stopMeasure('fillWithParentPost');
 
         Debugbar::startMeasure('queryUsers');
-        $latestRepliers = LatestReplier::whereIn('id', $result['threads']->pluck('latestReplierId'))
-            ->selectPublicFields()->get();
+        $latestRepliersId = $result['threads']->pluck('latestReplierId');
+        $latestRepliers = LatestReplier::query()->whereIn('id', $latestRepliersId)
+            ->whereNotNull('uid')->selectPublicFields()->get()
+            ->concat(LatestReplier::query()->whereIn('id', $latestRepliersId)
+                ->whereNull('uid')->selectPublicFields()
+                ->addSelect(['name', 'displayName'])->get());
         $whereCurrentFid = static fn (HasOne $q) => $q->where('fid', $result['fid']);
-        $users = User::whereIn(
+        $users = User::query()->whereIn(
             'uid',
             collect($result)
                 ->only(Helper::POST_TYPES_PLURAL)

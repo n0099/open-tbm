@@ -44,6 +44,11 @@ class User extends Model
         return ModelAttributeMaker::makeResourceAttribute();
     }
 
+    protected function icon(): Attribute
+    {
+        return ModelAttributeMaker::makeProtoBufAttribute(UserIconWrapper::class);
+    }
+
     /**
      * @param Builder<User> $query
      * @param Collection<array-key, int>|list<int>|int $uid
@@ -72,10 +77,5 @@ class User extends Model
         return $this // https://laracasts.com/discuss/channels/eloquent/eager-loading-constraints-with-limit-clauses
             ->hasOne(AuthorExpGrade::class, 'uid', 'uid')
             ->orderBy('discoveredAt', 'DESC')->selectPublicFields();
-    }
-
-    protected function icon(): Attribute
-    {
-        return ModelAttributeMaker::makeProtoBufAttribute(UserIconWrapper::class);
     }
 }
