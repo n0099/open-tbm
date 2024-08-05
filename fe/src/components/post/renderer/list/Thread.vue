@@ -45,7 +45,9 @@
                 </span>
             </div>
             <div class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
-                <PostBadgeThreadAuthorAndLatestReplier :thread="thread" />
+                <span class="fs-.75">
+                    <PostBadgeThreadAuthorAndLatestReplier :thread="thread" />
+                </span>
                 <PostBadgeTime
                     postType="主题帖" currentPostIDKey="tid"
                     postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
@@ -109,5 +111,9 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => `
     text-overflow: ellipsis;
     flex-basis: 100%;
     inline-size: 0;
+}
+
+:deep(.fs-\.75) {
+    font-size: .75rem;
 }
 </style>
