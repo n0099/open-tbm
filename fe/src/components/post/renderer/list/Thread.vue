@@ -44,56 +44,8 @@
                     <!-- todo: unknown json struct -->
                 </span>
             </div>
-            <div
-                v-for="latestReplierUid in [getLatestReplier(thread.latestReplierId)?.uid]"
-                :key="latestReplierUid ?? getLatestReplier(thread.latestReplierId)?.id"
-                class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
-                <NuxtLink :to="toUserRoute(thread.authorUid)" noPrefetch class="fs-.75">
-                    <span
-                        v-if="latestReplierUid !== thread.authorUid"
-                        class="fw-normal link-success">楼主：</span>
-                    <span v-else class="fw-normal link-info">楼主兼最后回复：</span>
-                    <span class="fw-bold link-dark">{{ renderUsername(thread.authorUid) }}</span>
-                </NuxtLink>
-                <PostBadgeUser
-                    v-if="getUser(thread.authorUid).currentForumModerator !== null"
-                    :user="getUser(thread.authorUid)" class="fs-.75 ms-1" />
-                <template v-if="latestReplierUid === undefined">
-                    <span class="fs-.75">
-                        <span class="ms-2 fw-normal link-secondary">最后回复：</span>
-                        <span class="fw-bold link-dark">未知用户</span>
-                    </span>
-                </template>
-                <template v-else-if="latestReplierUid === null">
-                    <template v-for="latestReplier in [getLatestReplier(thread.latestReplierId)]">
-                        <span
-                            :key="latestReplier.id"
-                            v-if="latestReplier !== undefined
-                                && !(latestReplier.name === null && latestReplier.displayName === null)"
-                            class="fs-.75">
-                            <span class="ms-2 fw-normal link-secondary">最后回复：</span>
-                            <NuxtLink
-                                v-if="latestReplier.name !== null"
-                                :to="{ name: 'users/name', params: _.pick(latestReplier, 'name') }"
-                                noPrefetch class="fw-bold link-dark">{{ latestReplier.name }}</NuxtLink>
-                            <template v-if="latestReplier.displayName !== null">
-                                <span>&nbsp;</span>
-                                <NuxtLink
-                                    :to="{ name: 'users/displayName', params: _.pick(latestReplier, 'displayName') }"
-                                    noPrefetch class="fw-bold link-dark">{{ latestReplier.displayName }}</NuxtLink>
-                            </template>
-                        </span>
-                    </template>
-                </template>
-                <template v-else-if="latestReplierUid !== thread.authorUid">
-                    <NuxtLink :to="toUserRoute(latestReplierUid)" noPrefetch class="fs-.75 ms-2">
-                        <span class="ms-2 fw-normal link-secondary">最后回复：</span>
-                        <span class="fw-bold link-dark">{{ renderUsername(latestReplierUid) }}</span>
-                    </NuxtLink>
-                    <PostBadgeUser
-                        v-if="getUser(latestReplierUid).currentForumModerator !== null"
-                        :user="getUser(latestReplierUid)" class="fs-.75 ms-1" />
-                </template>
+            <div class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
+                <PostBadgeThreadAuthorAndLatestReplier :thread="thread" />
                 <PostBadgeTime
                     postType="主题帖" currentPostIDKey="tid"
                     postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
@@ -113,7 +65,6 @@
 import type { ThreadWithGroupedSubReplies } from './List.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
-import _ from 'lodash';
 
 defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
@@ -123,7 +74,6 @@ defineProps<{
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const relativeTimeStore = useRelativeTimeStore();
-const { getUser, renderUsername, getLatestReplier } = useUserProvision().inject();
 
 // https://github.com/vuejs/core/issues/8034
 // https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
@@ -159,8 +109,5 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => `
     text-overflow: ellipsis;
     flex-basis: 100%;
     inline-size: 0;
-}
-.fs-\.75 {
-    font-size: .75rem;
 }
 </style>
