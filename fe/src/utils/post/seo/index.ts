@@ -1,5 +1,6 @@
 import type { QueryFormDeps } from '@/utils/post/queryForm';
 import type { InfiniteData } from '@tanstack/vue-query';
+import _ from 'lodash';
 
 export const usePostsSEO = (
     data: Ref<InfiniteData<ApiPosts['response']> | undefined>,
@@ -24,6 +25,6 @@ export const usePostsSEO = (
             }
         })
     });
-    defineOgImageComponent('Post', { routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType });
+    defineOgImageComponent('Post', _.map({ routePath: route.path, firstPostPage, firstPostPageForum, firstThread, currentQueryType }, unref));
     usePostsSchemaOrg(data);
 };

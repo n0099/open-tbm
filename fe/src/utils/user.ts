@@ -8,7 +8,7 @@ export const toUserProfileUrl = (user: Partial<Pick<User, 'name' | 'portrait'>>)
 export const toUserPortraitImageUrl = (portrait: string) =>
     `https://himg.bdimg.com/sys/portrait/item/${portrait}.jpg`; // use /sys/portraith for high-res image
 export const toUserRoute = (uid: BaiduUserID): LocationAsRelativeRaw =>
-    ({ name: 'users/uid', params: { uid: uid.toString() } });
+    ({ name: 'users/uid', params: { uid } });
 
 export const baseGetUser = (users: User[]) => {
     const usersKeyByUid = _.mapKeys(users, 'uid');

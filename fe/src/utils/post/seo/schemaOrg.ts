@@ -2,6 +2,8 @@ import type { Action, Comment, DiscussionForumPosting, InteractionCounter, Perso
 import type { InfiniteData } from '@tanstack/vue-query';
 import { DateTime } from 'luxon';
 
+type PartialUserProvision = Pick<UserProvision, 'getUser'>;
+
 // https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
 export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> | undefined>) => {
     const router = useRouter();
@@ -25,7 +27,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
         '@id': uid.toString(),
         url: baseUrlWithDomain + router.resolve(toUserRoute(uid)).fullPath
     });
-    const definePostAuthorPerson = (post: Post, { getUser }: UserProvision): Pick<Comment, 'author'> => {
+    const definePostAuthorPerson = (post: Post, { getUser }: PartialUserProvision): Pick<Comment, 'author'> => {
         const uid = post.authorUid;
         const user = getUser(uid);
 
@@ -65,7 +67,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
     ];
 
     const defineThreadDiscussionForumPosting = (
-        userProvision: UserProvision,
+        userProvision: PartialUserProvision,
         thread: Thread,
         firstReplyContent?: PostContent | null
     ): DiscussionForumPosting => ({
@@ -83,7 +85,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             defineInteractionCounter('ShareAction', thread.shareCount)
         ]
     });
-    const defineReplyComment = (reply: Reply, userProvision: UserProvision): Comment => ({
+    const defineReplyComment = (reply: Reply, userProvision: PartialUserProvision): Comment => ({
         ...definePostComment(reply, 'pid'),
         ...definePostAuthorPerson(reply, userProvision),
         ...definePostContentComment(reply.content),
@@ -95,7 +97,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             defineInteractionCounter('ReplyAction', reply.subReplyCount)
         ]
     });
-    const defineSubReplyComment = (userProvision: UserProvision) =>
+    const defineSubReplyComment = (userProvision: PartialUserProvision) =>
         (subReply: SubReply): Comment => ({
             ...definePostComment(subReply, 'spid'),
             ...definePostAuthorPerson(subReply, userProvision),
@@ -107,13 +109,12 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
         });
     useSchemaOrg(computed(() => data.value?.pages.flatMap(page => {
         const getUser = baseGetUser(page.users);
-        const renderUsername = baseRenderUsername(getUser);
 
         return page.threads.flatMap(thread => [
-            defineThreadDiscussionForumPosting({ getUser, renderUsername }, thread, thread.replies[0]?.content),
+            defineThreadDiscussionForumPosting({ getUser }, thread, thread.replies[0]?.content),
             ...thread.replies.flatMap(reply => [
-                defineReplyComment(reply, { getUser, renderUsername }),
-                ...reply.subReplies.map(defineSubReplyComment({ getUser, renderUsername }))
+                defineReplyComment(reply, { getUser }),
+                ...reply.subReplies.map(defineSubReplyComment({ getUser }))
             ])
         ]);
     }) ?? []));
