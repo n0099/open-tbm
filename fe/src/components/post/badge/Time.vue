@@ -66,7 +66,8 @@ const props = defineProps<{
 }>();
 const highlightPostStore = useHighlightPostStore();
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+// https://github.com/typescript-eslint/typescript-eslint/issues/9723
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-unnecessary-type-parameters
 const getPostTime = <T extends TPost | TParentPost>(post?: T) =>
     post?.[props.postTimeKey as keyof T] as TPostTimeValue | undefined;
 const previousTime = computed(() => getPostTime(props.previousPost));

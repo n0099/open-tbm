@@ -18,12 +18,12 @@ export class ApiResponseError extends Error {
 export const isApiError = (response: ApiError | unknown): response is ApiError => _.isObject(response)
     && 'errorCode' in response && _.isNumber(response.errorCode)
     && 'errorInfo' in response && (_.isObject(response.errorInfo) || _.isString(response.errorInfo));
-export const queryFunction = async <TResponse, TQueryParam extends ObjUnknown>
+export const queryFunction = async <TResponse>
 (
     config: PublicRuntimeConfig,
     requestHeaders: Record<string, string>,
     endpoint: string,
-    queryParam?: TQueryParam,
+    queryParam?: ObjUnknown,
     signal?: AbortSignal
 ): Promise<TResponse> => {
     if (import.meta.client) {
@@ -69,26 +69,29 @@ const checkReCAPTCHA = async (config: PublicRuntimeConfig, action = '') =>
             });
         }
     });
-const queryFunctionWithReCAPTCHA = async <TResponse, TQueryParam extends ObjUnknown>
+const queryFunctionWithReCAPTCHA = async <TResponse>
 (
     config: PublicRuntimeConfig,
     requestHeaders: Record<string, string>,
     endpoint: string,
-    queryParam?: TQueryParam,
+    queryParam?: ObjUnknown,
     signal?: AbortSignal,
     action = ''
 ): Promise<TResponse> =>
-    queryFunction<TResponse, TQueryParam & { reCAPTCHA?: string }>(
+    queryFunction<TResponse>(
         config,
         requestHeaders,
         endpoint,
-        { ...queryParam, ...await checkReCAPTCHA(config, action) } as TQueryParam,
+        { ...queryParam, ...await checkReCAPTCHA(config, action) },
         signal
     );
 
 export type ApiErrorClass = ApiResponseError | FetchError;
 type QueryFunctions = typeof queryFunction | typeof queryFunctionWithReCAPTCHA;
 const useApi = <
+
+    // https://github.com/typescript-eslint/typescript-eslint/issues/9706
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
@@ -101,7 +104,7 @@ const useApi = <
         const clientRequestHeaders = useRequestHeaders(['Authorization']);
         const ret = useQuery<TResponse, ApiErrorClass>({
             queryKey: [endpoint, queryParam],
-            queryFn: async () => queryFn<TResponse, TQueryParam>(
+            queryFn: async () => queryFn<TResponse>(
                 config,
                 clientRequestHeaders,
                 endpoint,
@@ -126,6 +129,9 @@ const useApi = <
         return ret;
     };
 const useApiWithCursor = <
+
+    // https://github.com/typescript-eslint/typescript-eslint/issues/9706
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     TApi extends Api<TResponse, TQueryParam>,
     TResponse extends CursorPagination = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
@@ -144,7 +150,7 @@ const useApiWithCursor = <
         const ret = useInfiniteQuery<TResponse, ApiErrorClass, Data, QueryKey, Cursor>({
             queryKey: [endpoint, queryParam] as QueryOptions['queryKey'],
             queryFn: async ({ pageParam }) =>
-                queryFn<TResponse, TQueryParamWithCursor>(
+                queryFn<TResponse>(
                     config,
                     clientRequestHeaders,
                     endpoint,

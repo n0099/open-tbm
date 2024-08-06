@@ -13,7 +13,7 @@
 </DefineUser>
 <ATable
     :dataSource="props.posts.threads" :columns="threadColumns" rowKey="tid"
-    defaultExpandAllRows expandRowByClick :pagination="false" size="middle">
+    defaultExpandAllRows expandRowByClick :pagination="false" size="middle" bordered>
     <template #bodyCell="{ column: { dataIndex: column }, record }">
         <template v-if="column === 'tid'">
             <template v-for="tid in [(record as Thread).tid]" :key="tid">
@@ -64,7 +64,7 @@
             v-if="!_.isEmpty(replies)"
             :dataSource="replies" :columns="replyColumns" rowKey="pid"
             defaultExpandAllRows expandRowByClick :pagination="false"
-            size="middle" class="renderer-table-reply">
+            size="middle" class="renderer-table-reply" bordered>
             <template #bodyCell="{ column: { dataIndex: column }, record }">
                 <template v-if="column === 'author'">
                     <ReuseUser
@@ -78,7 +78,7 @@
                     v-if="!_.isEmpty(subReplies)"
                     :dataSource="subReplies" :columns="subReplyColumns" rowKey="spid"
                     defaultExpandAllRows expandRowByClick :pagination="false"
-                    size="middle" class="renderer-table-sub-reply">
+                    size="middle" class="renderer-table-sub-reply" bordered>
                     <template #bodyCell="{ column: { dataIndex: column }, record }">
                         <template v-if="column === 'author'">
                             <ReuseUser
@@ -170,16 +170,23 @@ const subReplyColumns = ref<ColumnType[]>([
     padding: .5rem;
 }
 
+:deep(.ant-table thead > tr > th) {
+    padding-top: .5rem !important;
+    padding-bottom: .5rem !important;
+}
 :deep(.ant-table thead > tr) {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    line-height: 1.5rem;
+    z-index: 1022;
 }
 :deep(.renderer-table-reply thead > tr) {
+    top: 2.5rem;
     z-index: 1021;
 }
 :deep(.renderer-table-sub-reply thead > tr) {
-    z-index: 1022;
+    top: 5rem;
+    z-index: 1020;
 }
 
 :deep(.renderer-table-reply .ant-table table) {
