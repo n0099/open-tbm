@@ -16,7 +16,7 @@ public class AuthorRevisionSaver(
             _authorExpGradeSaverLocks.Value,
             db.AuthorExpGradeRevisions,
             e => e.ExpGrade,
-            (User.Parsed e) => e.Uid,
+            e => e.Uid,
             (a, b) => a != b,
             rev => new()
             {

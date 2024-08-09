@@ -28,5 +28,5 @@ public class FailedImageHandler(ILogger<FailedImageHandler> logger, Cancellation
         }
     };
 
-    public void SaveFailedImages(ImagePipelineDbContext db) => db.ImageFailed.AddRange(_failedImages);
+    public void Save(ImagePipelineDbContext db) => db.ImageFailed.AddRange(_failedImages);
 }

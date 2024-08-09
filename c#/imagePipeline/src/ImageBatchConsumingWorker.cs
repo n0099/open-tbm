@@ -134,7 +134,7 @@ public class ImageBatchConsumingWorker(
             imageKeysWithMatrix.ForEach(i => i.Matrix.Dispose());
         }
 
-        failedImageHandler.SaveFailedImages(db);
+        failedImageHandler.Save(db);
         _ = await db.SaveChangesAsync(stoppingToken); // https://github.com/dotnet/EntityFramework.Docs/pull/4358
         await transaction.CommitAsync(stoppingToken);
     }
