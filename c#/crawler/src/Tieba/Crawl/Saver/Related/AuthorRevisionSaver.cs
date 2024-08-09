@@ -55,9 +55,9 @@ public class AuthorRevisionSaver(
             revisioningFieldSelector);
 
         SharedHelper.GetNowTimestamp(out var now);
+        var usersId = uniqueEntities.Select(uidSelector);
         var existingRevisionOfExistingUsers = dbSet.AsNoTracking()
-            .Where(e => e.Fid == db.Fid
-                        && uniqueEntities.Select(uidSelector).Contains(e.Uid))
+            .Where(e => e.Fid == db.Fid && usersId.Contains(e.Uid))
             .Select(latestRevisionProjectionFactory)
             .AsCte() // https://stackoverflow.com/questions/49854322/usage-of-for-update-in-window-function-postgres#comment86726589_49854322
             .Where(e => e.Rank == 1)

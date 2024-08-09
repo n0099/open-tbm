@@ -6,12 +6,12 @@ public class ThreadLatestReplierSaver(
     SaverLocks<Tid>.New tidSaverLocksFactory)
 {
     private static readonly HashSet<UniqueLatestReplier> GlobalLockedLatestRepliers = [];
-    private static readonly HashSet<Tid> GlobalLockedTids = [];
+    private static readonly HashSet<Tid> GlobalLockedThreadsId = [];
 
     private readonly Lazy<SaverLocks<UniqueLatestReplier>> _latestReplierSaverLocks =
         new(() => latestReplierSaverLocksFactory(GlobalLockedLatestRepliers));
     private readonly Lazy<SaverLocks<Tid>> _tidSaverLocks =
-        new(() => tidSaverLocksFactory(GlobalLockedTids));
+        new(() => tidSaverLocksFactory(GlobalLockedThreadsId));
 
     public Action SaveFromThread(CrawlerDbContext db, IReadOnlyCollection<ThreadPost> threads)
     {
