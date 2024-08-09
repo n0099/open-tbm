@@ -32,7 +32,7 @@ public class ReplyCrawler(Fid fid, Tid tid) : BaseCrawler<ReplyResponse, Reply>
     protected override int GetResponseErrorCode(ReplyResponse response) => response.Error.Errorno;
     protected override IEnumerable<Request> GetRequestsForPage(Page page, CancellationToken stoppingToken = default) =>
     [
-        new(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.26.1.0",
+        new(Requester.RequestProtoBuf("c/f/pb/page?cmd=302001", "12.66.1.0",
             new ReplyRequest {Data = new()
             { // reverse order will be {"last", "1"}, {"r", "1"}
                 Kz = (long)tid,

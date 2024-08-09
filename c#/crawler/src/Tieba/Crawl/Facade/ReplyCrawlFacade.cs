@@ -26,7 +26,7 @@ public class ReplyCrawlFacade(
     {
         parsedPosts.Values.ForEach(r => r.Tid = tid);
         var data = response.Data;
-        UserParser.Parse(data.UserList);
+        UserParser.Parse(data.UserList.Where(u => !(u.LevelId == 0 && u.AlaInfo?.LiveStatus != 0)));
         if (data.Page.CurrentPage == 1)
             _parentThreadTitle = data.PostList.FirstOrDefault(r => r.Floor == 1)?.Title;
     }
