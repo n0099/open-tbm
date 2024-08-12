@@ -37,7 +37,7 @@ public class ThreadCrawler(string forumName) : BaseCrawler<ThreadResponse, Threa
         };
         return
         [
-            new(Requester.RequestProtoBuf(EndPointUrl, "12.66.1.0",
+            new(Requester.RequestProtoBuf(EndPointUrl, "12.64.1.1",
                 new ThreadRequest {Data = data},
                 (req, common) => req.Data.Common = common,
                 () => new ThreadResponse(), stoppingToken)),

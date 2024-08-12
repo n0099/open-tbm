@@ -7,10 +7,10 @@ use App\Http\Controllers;
 
 Route::get('/sitemaps/forums', static fn () => Cache::remember('/sitemaps/forums', 86400,
     static fn () => Helper::xmlResponse(view('sitemaps.forums', [
-        'tidsKeyByFid' => Forum::get('fid')->pluck('fid')->mapWithKeys(fn (int $fid) => [
+        'tidsKeyByFid' => Forum::orderBy('fid')->get('fid')->pluck('fid')->mapWithKeys(fn (int $fid) => [
             $fid => DB::query()
                 ->fromSub(PostFactory::newThread($fid)
-                    ->selectRaw('ROW_NUMBER() OVER (ORDER BY tid DESC) AS rn, tid'), 't')
+                    ->selectRaw('ROW_NUMBER() OVER (ORDER BY tid) AS rn, tid'), 't')
                 ->whereRaw('rn % ' . Controllers\ThreadsSitemap::$maxUrls . ' = 0')
                 ->pluck('tid')
         ])]))));
