@@ -4,7 +4,7 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     @foreach ($tids as $tid)
         <url>
-            <loc>{{ config('app.be_url') }}/posts/tid/{{ $tid }}</loc>
+            <loc>{{ config('app.fe_url') }}/posts/tid/{{ $tid }}</loc>
         </url>
     @endforeach
 </urlset>

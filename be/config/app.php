@@ -54,7 +54,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'be_url' => env('APP_BE_URL', 'http://localhost'),
+    'fe_url' => env('APP_FE_URL', 'http://localhost'),
 
     /*
     |--------------------------------------------------------------------------
