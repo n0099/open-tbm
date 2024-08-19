@@ -10,6 +10,5 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{ thread: Thread }>();
 </script>

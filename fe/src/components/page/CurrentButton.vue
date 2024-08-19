@@ -3,7 +3,8 @@
     <div class="col align-middle"><hr /></div>
     <div class="w-auto">
         <div class="p-2 badge bg-light text-dark">
-            <h4>{{ cursorTemplate(currentCursor) }}</h4>
+            <h4 v-if="currentCursor === ''">起始页</h4>
+            <h4 v-else>页游标 <code>{{ currentCursor }}</code></h4>
         </div>
     </div>
     <div class="col align-middle"><hr /></div>
@@ -11,7 +12,6 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{ currentCursor: Cursor }>();
 </script>
 

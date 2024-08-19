@@ -1,5 +1,7 @@
 <template>
-<code class="text-primary-emphasis">{{ postIDKey }}:{{ props.post[props.postIDKey] }}</code>
+<code class="text-primary-emphasis">
+    {{ postIDKey }}:<span class="user-select-all">{{ props.post[props.postIDKey] }}</span>
+</code>
 <NuxtLink
     v-if="postIDKey === 'tid' || postIDKey === 'pid'"
     v-tippy="`跳至本${postTypeText}链接`"

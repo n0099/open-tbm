@@ -9,7 +9,6 @@
 </template>
 
 <script setup lang="ts">
-
 const modelValue = defineModel<typeof numericParamSubParamRangeValues[number]>({ default: '=' });
 </script>
 

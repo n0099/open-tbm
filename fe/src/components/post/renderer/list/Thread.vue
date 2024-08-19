@@ -35,8 +35,7 @@
                 </span>
                 <span
                     :key="zanTippyContent(thread.zan).value" v-if="thread.zan !== null"
-                    v-tippy="zanTippyContent(thread.zan)" class="badge bg-info">
-                    <!-- todo: fetch users info in zan.user_id_list -->
+                    v-tippy="zanTippyContent(thread.zan).value" class="badge bg-info">
                     <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
                 </span>
                 <span v-if="thread.geolocation !== null" v-tippy="'发帖位置'" class="badge bg-info">
@@ -79,16 +78,17 @@ const relativeTimeStore = useRelativeTimeStore();
 
 // https://github.com/vuejs/core/issues/8034
 // https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
+// todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => `
 点赞量：${String(zan.num)}<br>
 最后点赞时间：${
     useHydrationStore().isHydratingOrSSR
-        ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(zan.last_time)))
+        ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(zan.lastTime)))
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-        : `${relativeTimeStore.registerRelative(DateTime.fromSeconds(Number(zan.last_time))).value
-        } ${DateTime.fromSeconds(Number(zan.last_time))
+        : `${relativeTimeStore.registerRelative(DateTime.fromSeconds(Number(zan.lastTime))).value
+        } ${DateTime.fromSeconds(Number(zan.lastTime))
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}<br>
-近期点赞用户：${JSON.stringify(zan.user_id_list)}<br>`);
+近期点赞用户：${JSON.stringify(zan.userIdList)}<br>`);
 </script>
 
 <style scoped>
