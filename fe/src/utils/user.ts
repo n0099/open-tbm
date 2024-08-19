@@ -42,26 +42,3 @@ export const baseRenderUsername = (getUser: ReturnType<typeof baseGetUser>) => (
 
     return name + (displayName === null ? '' : ` ${displayName}`);
 };
-
-export interface UserProvision {
-    getUser: ReturnType<typeof baseGetUser>,
-    renderUsername: ReturnType<typeof baseRenderUsername>,
-    getLatestReplier: ReturnType<typeof baseGetLatestReplier>
-}
-export const useUserProvision = () => {
-    const users = ref<User[]>([]);
-    const getUser = computed(() => baseGetUser(users.value));
-    const renderUsername = computed(() => baseRenderUsername(getUser.value));
-    const latestReplier = ref<LatestReplier[]>([]);
-    const getLatestReplier = computed(() => baseGetLatestReplier(latestReplier.value));
-    const userProvision = { getUser, renderUsername, getLatestReplier };
-    const provideUsers = (injectedUsers: User[], injectedLatestRepliers: LatestReplier[]) => {
-        users.value = injectedUsers;
-        latestReplier.value = injectedLatestRepliers;
-        provide<typeof userProvision>('userProvision', userProvision);
-    };
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const injectUsers = () => inject<typeof userProvision>('userProvision')!;
-
-    return { provide: provideUsers, inject: injectUsers };
-};

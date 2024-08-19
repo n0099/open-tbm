@@ -48,7 +48,7 @@ const props = defineProps<{
     nextSubReplyGroup?: SubReply[]
 }>();
 const highlightPostStore = useHighlightPostStore();
-const { getUser, renderUsername } = useUserProvision().inject();
+const { getUser, renderUsername } = usePostPageProvision().inject();
 const getSiblingSubReply = (index: number, direction: 'previous' | 'next') =>
     props.subReplyGroup[index + (direction === 'next' ? 1 : -1)] as SubReply | undefined
         ?? (direction === 'next' ? props.nextSubReplyGroup?.[0] : props.previousSubReplyGroup?.at(-1));

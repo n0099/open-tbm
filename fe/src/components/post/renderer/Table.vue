@@ -104,7 +104,7 @@ import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts['response'] }>();
 const [DefineUser, ReuseUser] = createReusableTemplate<InstanceType<typeof User>['$props']>();
-const { getUser, renderUsername, getLatestReplier } = useUserProvision().inject();
+const { getUser, renderUsername, getLatestReplier } = usePostPageProvision().inject();
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },
     { title: '标题', dataIndex: 'title' },

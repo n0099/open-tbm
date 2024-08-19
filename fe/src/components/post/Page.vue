@@ -28,7 +28,7 @@ const props = defineProps<{
     nextPageRoute: RouteLocationRaw
 }>();
 defineEmits<{ clickNextPage: [] }>();
-useUserProvision().provide(props.posts.users, props.posts.latestRepliers);
+usePostPageProvision().provide(props.posts.users, props.posts.latestRepliers);
 </script>
 
 <style scoped>

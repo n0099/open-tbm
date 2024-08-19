@@ -2,7 +2,7 @@ import type { Action, Comment, DiscussionForumPosting, InteractionCounter, Perso
 import type { InfiniteData } from '@tanstack/vue-query';
 import { DateTime } from 'luxon';
 
-type PartialUserProvision = Pick<UserProvision, 'getUser'>;
+type PartialPostPageProvision = Pick<PostPageProvision, 'getUser'>;
 
 // https://developers.google.com/search/docs/appearance/structured-data/discussion-forum
 export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> | undefined>) => {
@@ -27,7 +27,7 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
         '@id': uid.toString(),
         url: baseUrlWithDomain + router.resolve(toUserRoute(uid)).fullPath
     });
-    const definePostAuthorPerson = (post: Post, { getUser }: PartialUserProvision): Pick<Comment, 'author'> => {
+    const definePostAuthorPerson = (post: Post, { getUser }: PartialPostPageProvision): Pick<Comment, 'author'> => {
         const uid = post.authorUid;
         const user = getUser(uid);
 
@@ -67,12 +67,12 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
     ];
 
     const defineThreadDiscussionForumPosting = (
-        userProvision: PartialUserProvision,
+        postPageProvision: PartialPostPageProvision,
         thread: Thread,
         firstReplyContent?: PostContent | null
     ): DiscussionForumPosting => ({
         ...definePostComment(thread, 'tid'),
-        ...definePostAuthorPerson(thread, userProvision),
+        ...definePostAuthorPerson(thread, postPageProvision),
         ...definePostContentComment(firstReplyContent ?? null),
         '@type': 'DiscussionForumPosting',
         sameAs: tiebaPostLink(thread.tid),
@@ -85,9 +85,9 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             defineInteractionCounter('ShareAction', thread.shareCount)
         ]
     });
-    const defineReplyComment = (reply: Reply, userProvision: PartialUserProvision): Comment => ({
+    const defineReplyComment = (reply: Reply, postPageProvision: PartialPostPageProvision): Comment => ({
         ...definePostComment(reply, 'pid'),
-        ...definePostAuthorPerson(reply, userProvision),
+        ...definePostAuthorPerson(reply, postPageProvision),
         ...definePostContentComment(reply.content),
         sameAs: tiebaPostLink(reply.tid, reply.pid),
         parentItem: { '@type': 'Comment', '@id': reply.tid.toString() },
@@ -97,10 +97,10 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
             defineInteractionCounter('ReplyAction', reply.subReplyCount)
         ]
     });
-    const defineSubReplyComment = (userProvision: PartialUserProvision) =>
+    const defineSubReplyComment = (postPageProvision: PartialPostPageProvision) =>
         (subReply: SubReply): Comment => ({
             ...definePostComment(subReply, 'spid'),
-            ...definePostAuthorPerson(subReply, userProvision),
+            ...definePostAuthorPerson(subReply, postPageProvision),
             ...definePostContentComment(subReply.content),
             sameAs: tiebaPostLink(subReply.tid, subReply.pid, subReply.spid),
             parentItem: { '@type': 'Comment', '@id': subReply.pid.toString() },
