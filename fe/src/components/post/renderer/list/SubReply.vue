@@ -5,23 +5,25 @@
             v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
             :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
             class="sub-reply-item list-group-item" :id="`spid/${subReply.spid}`">
-            <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
-                <NuxtLink
-                    v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
-                    :to="toUserRoute(author.uid)" noPrefetch
-                    class="sub-reply-author text-wrap badge bg-light">
-                    <img
-                        :src="toUserPortraitImageUrl(author.portrait)"
-                        loading="lazy" class="tieba-user-portrait-small" />
-                    <span class="mx-2 align-middle link-dark">
-                        {{ renderUsername(subReply.authorUid) }}
-                    </span>
-                    <PostBadgeUser
-                        :user="getUser(subReply.authorUid)"
-                        :threadAuthorUid="thread.authorUid"
-                        :replyAuthorUid="reply.authorUid" />
-                </NuxtLink>
-                <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
+            <article>
+                <address v-for="author in [getUser(subReply.authorUid)]" :key="author.uid" class="d-inline">
+                    <NuxtLink
+                        v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
+                        :to="toUserRoute(author.uid)" noPrefetch
+                        class="sub-reply-author text-wrap badge bg-light">
+                        <img
+                            :src="toUserPortraitImageUrl(author.portrait)"
+                            loading="lazy" class="tieba-user-portrait-small" />
+                        <span class="mx-2 align-middle link-dark">
+                            {{ renderUsername(subReply.authorUid) }}
+                        </span>
+                        <PostBadgeUser
+                            :user="getUser(subReply.authorUid)"
+                            :threadAuthorUid="thread.authorUid"
+                            :replyAuthorUid="reply.authorUid" />
+                    </NuxtLink>
+                </address>
+                <aside class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
                     <PostBadgeCommon :post="subReply" postIDKey="spid" postTypeText="楼中楼" />
                     <PostBadgeTime
                         postType="楼中楼"
@@ -31,9 +33,9 @@
                         :nextPost="getSiblingSubReply(subReplyGroupIndex, 'next')"
                         postTimeKey="postedAt" timestampType="发帖时间"
                         class="bg-info" />
-                </div>
-            </template>
-            <PostRendererContent :content="subReply.content" class="sub-reply-content" />
+                </aside>
+                <PostRendererContent :content="subReply.content" class="sub-reply-content" />
+            </article>
         </li>
     </ul>
 </div>
@@ -63,7 +65,7 @@ const getSiblingSubReply = (index: number, direction: 'previous' | 'next') =>
 .sub-reply-item {
     padding: .125rem;
 }
-.sub-reply-item > * {
+.sub-reply-author, .sub-reply-content {
     padding: .25rem;
 }
 .sub-reply-author {

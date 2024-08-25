@@ -1,5 +1,5 @@
 <template>
-<div class="row align-items-center p-2">
+<nav class="row align-items-center p-2">
     <div class="col align-middle"><hr /></div>
     <div class="w-auto">
         <div class="p-2 badge bg-light text-dark">
@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="col align-middle"><hr /></div>
-</div>
+</nav>
 </template>
 
 <script setup lang="ts">

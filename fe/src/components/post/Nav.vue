@@ -1,32 +1,34 @@
 <template>
-<AMenu
-    v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
-    forceSubMenuRender :inlineIndent="16" mode="inline"
-    :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded"
-    class="post-nav col p-0 vh-100 sticky-top border-0">
-    <template v-for="posts in postPages">
-        <ASubMenu
-            v-for="cursor in [posts.pages.currentCursor]"
-            :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
-            <AMenuItem
-                v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
-                :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
-                :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
-                {{ thread.title }}
-                <div class="d-block btn-group p-1 text-wrap" role="group">
-                    <template v-for="reply in thread.replies" :key="reply.pid">
-                        <NuxtLink
-                            @click.prevent="_ => navigate(cursor, reply)"
-                            :data-pid="reply.pid" :to="routeHash(reply)"
-                            :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
-                            {{ reply.floor }}L
-                        </NuxtLink>
-                    </template>
-                </div>
-            </AMenuItem>
-        </ASubMenu>
-    </template>
-</AMenu>
+<nav
+    class="post-nav col p-0 vh-100 sticky-top border-0"
+    :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
+    <AMenu
+        v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
+        forceSubMenuRender :inlineIndent="16" mode="inline">
+        <template v-for="posts in postPages">
+            <ASubMenu
+                v-for="cursor in [posts.pages.currentCursor]"
+                :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
+                <AMenuItem
+                    v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
+                    :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
+                    :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
+                    {{ thread.title }}
+                    <div class="d-block btn-group p-1 text-wrap" role="group">
+                        <template v-for="reply in thread.replies" :key="reply.pid">
+                            <NuxtLink
+                                @click.prevent="_ => navigate(cursor, reply)"
+                                :data-pid="reply.pid" :to="routeHash(reply)"
+                                :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
+                                {{ reply.floor }}L
+                            </NuxtLink>
+                        </template>
+                    </div>
+                </AMenuItem>
+            </ASubMenu>
+        </template>
+    </AMenu>
+</nav>
 <div
     :class="{
         'border-start': isPostNavExpanded,
@@ -65,6 +67,9 @@ const noScriptStyle = `<style>
         .post-nav {
             display: none;
         }
+    }
+    .post-nav > .ant-menu-root {
+        padding-left: 0;
     }
 </style>`; // https://github.com/nuxt/nuxt/issues/13848
 useHead({ noscript: [{ innerHTML: noScriptStyle }] });

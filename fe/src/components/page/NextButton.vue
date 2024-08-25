@@ -1,5 +1,5 @@
 <template>
-<div class="row align-items-center p-4">
+<nav class="row align-items-center p-4">
     <div class="col align-middle"><hr /></div>
     <div class="w-auto">
         <NuxtLink
@@ -9,7 +9,7 @@
         </NuxtLink>
     </div>
     <div class="col align-middle"><hr /></div>
-</div>
+</nav>
 </template>
 
 <script setup lang="ts">

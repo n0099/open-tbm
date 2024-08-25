@@ -1,12 +1,12 @@
 <template>
 <div>
-    <div class="container">
+    <aside class="container">
         <LazyPostQueryForm :isLoading="isFetching" :queryFormDeps="queryFormDeps" />
         <AMenu v-if="!_.isEmpty(data?.pages)" v-model:selectedKeys="selectedRenderTypes" mode="horizontal">
             <AMenuItem key="list">列表视图</AMenuItem>
             <AMenuItem key="table">表格视图</AMenuItem>
         </AMenu>
-    </div>
+    </aside>
     <div v-if="!(data === undefined || _.isEmpty(data.pages) || _.isEmpty(route.params))" class="container-fluid">
         <div class="row flex-nowrap">
             <LazyPostNav v-if="renderType === 'list'" :postPages="data.pages" />

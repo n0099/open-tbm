@@ -1,7 +1,8 @@
 <template>
-<div :data-post-id="reply.pid" :id="`pid/${reply.pid}`">
-    <div
-        :ref="el => elementRefStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
+<article :data-post-id="reply.pid" :id="`pid/${reply.pid}`">
+    <header
+        :ref="el =>
+            elementRefStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
         <div class="d-inline-flex gap-1 fs-5">
@@ -25,20 +26,20 @@
                 :previousPost="previousReply" :currentPost="reply" :nextPost="nextReply"
                 class="bg-primary" />
         </div>
-    </div>
+    </header>
     <div
         :ref="el => el !== null && replyElements.push(el as HTMLElement)"
         class="reply row shadow-sm bs-callout bs-callout-info">
-        <div
+        <address
             v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
-            class="reply-author col-auto text-center sticky-top shadow-sm badge bg-light">
+            class="reply-author col-auto h-100 text-center sticky-top shadow-sm badge bg-light">
             <NuxtLink :to="toUserRoute(author.uid)" noPrefetch class="d-block">
                 <img :src="toUserPortraitImageUrl(author.portrait)" loading="lazy" class="tieba-user-portrait-large" />
                 <p v-if="author.name !== null" class="mb-0">{{ author.name }}</p>
                 <p v-if="author.displayName !== null">{{ author.displayName }}</p>
             </NuxtLink>
             <PostBadgeUser :user="getUser(reply.authorUid)" :threadAuthorUid="thread.authorUid" />
-        </div>
+        </address>
         <div class="col me-2 px-1 border-start overflow-auto">
             <PostRendererContent :content="reply.content" class="reply-content p-2" />
             <template v-if="reply.subReplies.length > 0">
@@ -49,7 +50,7 @@
             </template>
         </div>
     </div>
-</div>
+</article>
 </template>
 
 <script setup lang="ts">

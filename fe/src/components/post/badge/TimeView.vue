@@ -1,5 +1,5 @@
 <template>
-<span v-tippy="tippyContent" class="ms-1 fw-normal badge rounded-pill">
+<time v-tippy="tippyContent" :datetime="currentInChina.toISO() ?? undefined" class="ms-1 fw-normal badge rounded-pill">
     <component :is="$slots.default" />
     <template v-if="hydrationStore.isHydratingOrSSR">
         {{ currentInChina.toLocaleString({
@@ -12,7 +12,7 @@
             ? relativeTimeStore.registerRelative(current)
             : current.toRelative({ base: relativeTo, round: false }) }}
     </template>
-</span>
+</time>
 </template>
 
 <script setup lang="ts" generic="

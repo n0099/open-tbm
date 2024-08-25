@@ -1,6 +1,6 @@
 <template>
-<div :data-post-id="thread.tid" class="mt-3 card" :id="`tid/${thread.tid}`">
-    <div
+<article :data-post-id="thread.tid" class="mt-3 card" :id="`tid/${thread.tid}`">
+    <header
         :ref="el => elementRefStore.pushOrClear('<PostRendererList>.thread-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
         class="thread-title shadow-sm card-header sticky-top">
@@ -44,9 +44,9 @@
                 </span>
             </div>
             <div class="col-auto badge bg-light fs-6 p-1 pe-2" role="group">
-                <span class="fs-.75">
+                <address class="d-inline fs-.75">
                     <PostBadgeThreadAuthorAndLatestReplier :thread="thread" />
-                </span>
+                </address>
                 <PostBadgeTime
                     postType="主题帖" currentPostIDKey="tid"
                     postTimeKey="latestReplyPostedAt" timestampType="最后回复时间"
@@ -54,12 +54,12 @@
                     class="bg-secondary" />
             </div>
         </div>
-    </div>
+    </header>
     <PostRendererListReply
         v-for="(reply, index) in thread.replies" :key="reply.pid"
         :previousReply="thread.replies[index - 1]" :reply="reply"
         :nextReply="thread.replies[index + 1]" :thread="thread" />
-</div>
+</article>
 </template>
 
 <script setup lang="ts">

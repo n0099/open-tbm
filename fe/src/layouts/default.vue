@@ -1,11 +1,15 @@
 <template>
 <div class="d-flex flex-column" id="app-wrapper">
-    <GlobalNavBar />
-    <MinimumResolutionWarning />
+    <header>
+        <GlobalNavBar />
+        <MinimumResolutionWarning />
+    </header>
     <img :src="iconLoadingBlock" :class="{ 'd-none': !routeUpdatingStore.isUpdating }" id="loading-block" />
-    <AConfigProvider :locale="AntdZhCn">
-        <slot v-if="!routeUpdatingStore.isUpdating" />
-    </AConfigProvider>
+    <main>
+        <AConfigProvider :locale="AntdZhCn">
+            <slot v-if="!routeUpdatingStore.isUpdating" />
+        </AConfigProvider>
+    </main>
     <footer class="text-light pt-4 mt-auto" id="footer-upper">
         <div class="text-center">
             <p>

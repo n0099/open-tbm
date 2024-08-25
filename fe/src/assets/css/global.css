@@ -15,6 +15,10 @@ a {
     text-decoration: none !important; /* override browser underline */
 }
 
+address {
+    margin-bottom: 0 !important; /* https://getbootstrap.com/docs/5.3/content/reboot/#address */
+}
+
 * {
     font-weight: 300;
 }
