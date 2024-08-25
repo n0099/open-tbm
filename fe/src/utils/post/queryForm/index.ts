@@ -151,9 +151,9 @@ export const getQueryFormDeps = () => {
     };
     const parseRoute = (route: RouteLocationNormalized) => {
         assertRouteNameIsStr(route.name);
+        const routeName = routeNameWithoutCursor(route.name);
         uniqueParams.value = _.mapValues(uniqueParams.value, _.unary(fillParamDefaultValue)) as KnownUniqueParams;
         params.value = [];
-        const routeName = removeEnd(route.name, routeNameSuffix.cursor);
 
         // parse route path to params
         if (routeName === 'posts/param' && _.isArray(route.params.pathMatch)) {

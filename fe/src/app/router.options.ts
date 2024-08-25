@@ -72,13 +72,9 @@ export default {
 
         if (to.hash !== '')
             return { el: to.hash, top: 0 };
-        if (from.name !== undefined) { // when user refresh page
-            assertRouteNameIsStr(to.name);
-            assertRouteNameIsStr(from.name);
-
-            if (!isPathsFirstDirectorySame(to.path, from.path))
-                return { top: 0 };
-        }
+        if (from.name !== undefined // when user refresh page
+            && !isPathsFirstDirectorySame(to.path, from.path))
+            return { top: 0 };
 
         return false;
     }

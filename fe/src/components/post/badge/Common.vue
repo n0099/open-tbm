@@ -5,7 +5,11 @@
 <NuxtLink
     v-if="postIDKey === 'tid' || postIDKey === 'pid'"
     v-tippy="`跳至本${postTypeText}链接`"
-    :to="{ hash: `#${postIDKey === 'tid' ? 't' : ''}${props.post[props.postIDKey]}` }"
+    :to="{
+        hash: `#${postIDKey === 'tid' ? 't' : ''}${props.post[props.postIDKey]}`,
+        name: currentCursor === '' ? routeNameWithoutCursor(route.name) : routeNameWithCursor(route.name),
+        params: { cursor: undefinedWhenEmpty(currentCursor) }
+    }"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faHashtag" size="lg" class="align-bottom" />
 </NuxtLink>
@@ -46,6 +50,8 @@ const props = defineProps<{
     postIDKey: TPostIDKey,
     postTypeText: PostTypeTextOf<TPost>
 }>();
+const route = useRoute();
+const { currentCursor } = usePostPageProvision().inject();
 const relativeTimeStore = useRelativeTimeStore();
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
