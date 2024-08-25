@@ -21,7 +21,7 @@
         "@popperjs/core": "^2.11.8",
         "@tanstack/vue-query": "^5.52.0",
         "@vesp/nuxt-fontawesome": "^1.0.4",
-        "@vueuse/nuxt": "^11.0.1",
+        "@vueuse/nuxt": "^11.0.3",
         "ant-design-vue": "^4.2.3",
         "bootstrap": "^5.3.3",
         "dayjs": "^1.11.13",
@@ -41,7 +41,7 @@
     "devDependencies": {
         "@eslint/compat": "^1.1.1",
         "@eslint/eslintrc": "^3.1.0",
-        "@eslint/js": "^9.9.0",
+        "@eslint/js": "^9.9.1",
         "@nuxt/eslint": "^0.5.2",
         "@tanstack/eslint-plugin-query": "^5.52.0",
         "@tanstack/vue-query-devtools": "^5.52.0",
@@ -56,9 +56,10 @@
         "@typescript-eslint/parser": "^8.2.0",
         "@vue/eslint-config-typescript": "^13.0.0",
         "checkcss": "^2.0.9",
-        "eslint": "^9.9.0",
+        "eslint": "^9.9.1",
         "eslint-import-resolver-typescript": "^3.6.1",
-        "eslint-plugin-pinia": "^0.2.0",
+        "eslint-plugin-pinia": "^0.4.1",
+        "eslint-plugin-vue": "^9.27.0",
         "schema-dts": "^1.1.2",
         "stats.js": "^0.17.0",
         "type-coverage": "^2.29.1",
@@ -72,5 +73,5 @@
         "not ie 11",
         "not dead"
     ],
-    "packageManager": "yarn@4.4.0"
+    "packageManager": "yarn@4.4.1"
 }
