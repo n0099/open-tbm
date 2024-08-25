@@ -17,7 +17,7 @@
         <template v-if="users !== undefined">
             <NuxtLink
                 v-for="(user, index) in users" :key="user.name" :to="user.route"
-                :class="{ 'ms-1': users.length > 1 && index !== 1 }"
+                :class="{ 'ms-1': users.length > 1 && index !== 0 }"
                 noPrefetch class="fw-bold link-dark">
                 {{ user.name }}
             </NuxtLink>

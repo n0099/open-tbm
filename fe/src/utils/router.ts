@@ -6,8 +6,11 @@ export const assertRouteNameIsStr: (name: RouteLocationNormalized['name']) => as
         throw new Error('https://github.com/vuejs/vue-router-next/issues/1185');
 }; // https://github.com/microsoft/TypeScript/issues/34523#issuecomment-700491122
 export const routeNameSuffix = { cursor: '/cursor' } as const;
-export const routeNameWithCursor = (name: string) =>
-    (_.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`);
+export const routeNameWithCursor = (name: RouteLocationNormalized['name']) => {
+    assertRouteNameIsStr(name);
+
+    return _.endsWith(name, routeNameSuffix.cursor) ? name : `${name}${routeNameSuffix.cursor}`;
+};
 export const routeNameWithoutCursor = (name: RouteLocationNormalized['name']) => {
     assertRouteNameIsStr(name);
 
@@ -20,9 +23,8 @@ export const getRouteCursorParam = (route: RouteLocationNormalized): Cursor => r
 export const getNextCursorRoute = (route: RouteLocationNormalized, nextCursor?: Cursor | null): RouteLocationRaw => {
     assertRouteNameIsStr(route.name);
     const name = routeNameWithCursor(route.name);
-    const { query, params } = route;
 
-    return { query, name, params: { ...params, cursor: nextCursor } };
+    return { name, params: { cursor: nextCursor } };
 };
 
 export const compareRouteIsNewQuery = (to: RouteLocationNormalized, from: RouteLocationNormalized) =>

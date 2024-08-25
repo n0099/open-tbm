@@ -13,7 +13,7 @@
 </DefineUser>
 <ATable
     :dataSource="props.posts.threads" :columns="threadColumns" rowKey="tid"
-    defaultExpandAllRows expandRowByClick :pagination="false" size="middle" bordered>
+    defaultExpandAllRows :pagination="false" size="middle" bordered>
     <template #bodyCell="{ column: { dataIndex: column }, record }">
         <template v-if="column === 'tid'">
             <template v-for="tid in [(record as Thread).tid]" :key="tid">
@@ -63,7 +63,7 @@
         <ATable
             v-if="!_.isEmpty(replies)"
             :dataSource="replies" :columns="replyColumns" rowKey="pid"
-            defaultExpandAllRows expandRowByClick :pagination="false"
+            defaultExpandAllRows :pagination="false"
             size="middle" class="renderer-table-reply" bordered>
             <template #bodyCell="{ column: { dataIndex: column }, record }">
                 <template v-if="column === 'author'">
@@ -77,7 +77,7 @@
                 <ATable
                     v-if="!_.isEmpty(subReplies)"
                     :dataSource="subReplies" :columns="subReplyColumns" rowKey="spid"
-                    defaultExpandAllRows expandRowByClick :pagination="false"
+                    defaultExpandAllRows :pagination="false"
                     size="middle" class="renderer-table-sub-reply" bordered>
                     <template #bodyCell="{ column: { dataIndex: column }, record }">
                         <template v-if="column === 'author'">
