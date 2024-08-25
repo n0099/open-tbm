@@ -62,7 +62,7 @@ const checkReCAPTCHA = async (config: PublicRuntimeConfig, action = '') =>
                 grecaptcha.execute(config.recaptchaSiteKey, { action }).then(
                     reCAPTCHA => {
                         reslove({ reCAPTCHA });
-                    }, (...args) => {
+                    }, (...args: [unknown]) => {
                         reject(new Error(JSON.stringify(args)));
                     }
                 );

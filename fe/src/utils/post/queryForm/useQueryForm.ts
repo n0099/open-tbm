@@ -21,6 +21,7 @@ const useQueryForm = <
     const params = ref<Param[]>([]) as Ref<Param[]>;
     const invalidParamsIndex = ref<number[]>([]);
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     const fillParamDefaultValue = <T extends Param | UniqueParam>
     (param: Partial<UnknownParam> & { name: string }, resetToDefault = false): T => {
         // prevent defaultsDeep mutate origin paramsDefaultValue

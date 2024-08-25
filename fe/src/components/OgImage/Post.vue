@@ -1,6 +1,6 @@
 <template>
 <div class="flex flex-row justify-between size-screen">
-    <div class="m-6">
+    <div class="flex-1 flex-col basis-1/2 m-6">
         <p>{{ useSiteConfig().name }} {{ routePath }}</p>
         <h2>{{ firstPostPageForum?.name }}吧</h2>
         <template v-if="currentQueryType !== 'postID'">
@@ -18,10 +18,9 @@
             </div>
         </template>
     </div>
-    <img
-        v-if="firstImage !== undefined"
-        :src="imageUrl(firstImage?.originSrc)"
-        class="h-screen object-contain" />
+    <div v-if="firstImage !== undefined" class="flex-auto basis-1/4">
+        <img :src="imageUrl(firstImage?.originSrc)" class="h-screen object-contain" />
+    </div>
 </div>
 </template>
 
