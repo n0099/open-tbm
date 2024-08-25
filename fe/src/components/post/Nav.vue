@@ -16,8 +16,8 @@
                 <div class="d-block btn-group p-1 text-wrap" role="group">
                     <template v-for="reply in thread.replies" :key="reply.pid">
                         <NuxtLink
-                            @click.prevent="_ => navigate(cursor, null, reply.pid)"
-                            :data-pid="reply.pid" :to="routeHash(null, reply.pid)"
+                            @click.prevent="_ => navigate(cursor, reply)"
+                            :data-pid="reply.pid" :to="routeHash(reply)"
                             :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
                             {{ reply.floor }}L
                         </NuxtLink>
@@ -71,24 +71,34 @@ useHead({ noscript: [{ innerHTML: noScriptStyle }] });
 const postNavDisplay = ref('none'); // using media query in css instead of js before hydrate
 onMounted(() => { postNavDisplay.value = 'unset' });
 
-const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
-const routeHash = (tid: Tid | string | null, pid?: Pid | string) => `#${pid ?? (tid === null ? '' : `t${tid}`)}`;
-const navigate = async (cursor: Cursor, tid: string | null, pid?: Pid | string) =>
+type PostIdObj = { [P in PostID]?: string | number };
+const routeHash = (postIdObj: PostIdObj) => {
+    if (postIdObj.spid !== undefined)
+        return `#spid/${postIdObj.spid}`;
+    if (postIdObj.pid !== undefined)
+        return `#pid/${postIdObj.pid}`;
+    if (postIdObj.tid !== undefined)
+        return `#tid/${postIdObj.tid}`;
+
+    throw new Error(JSON.stringify(postIdObj));
+};
+const navigate = async (cursor: Cursor, postIdObj: PostIdObj) =>
     router.replace({
-        hash: routeHash(tid, pid),
+        hash: routeHash(postIdObj),
         params: { ...route.params, cursor }
     });
+const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if (!(domEvent.target as Element).classList.contains('post-nav-reply')) { // ignore clicks on reply link
         const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
-        await navigate(cursor, tid);
+        await navigate(cursor, { tid });
     }
 };
 
 const menuThreadClasses = (thread: Thread) => {
     if (hydrationStore.isHydrating)
         return 'border-only-bottom border-bottom';
-    const isRouteHash = route.hash === routeHash(thread.tid);
+    const isRouteHash = route.hash === routeHash(thread);
     const isHighlighting = highlightPostStore.isHighlightingPost(thread, 'tid');
 
     return { /* eslint-disable @typescript-eslint/naming-convention */
@@ -102,7 +112,7 @@ const menuThreadClasses = (thread: Thread) => {
 const menuReplyClasses = (reply: Reply) => {
     if (hydrationStore.isHydrating)
         return 'btn-light text-body-secondary';
-    const isRouteHash = route.hash === routeHash(null, reply.pid);
+    const isRouteHash = route.hash === routeHash(reply);
     const isHighlighting = highlightPostStore.isHighlightingPost(reply, 'pid');
     const isTopmost = reply.pid === viewportTopmostPost.value.pid;
 

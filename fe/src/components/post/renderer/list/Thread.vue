@@ -1,5 +1,5 @@
 <template>
-<div :data-post-id="thread.tid" class="mt-3 card" :id="`t${thread.tid}`">
+<div :data-post-id="thread.tid" class="mt-3 card" :id="`tid/${thread.tid}`">
     <div
         :ref="el => elementRefStore.pushOrClear('<PostRendererList>.thread-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"

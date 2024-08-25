@@ -1,5 +1,5 @@
 <template>
-<div :data-post-id="reply.pid" :id="reply.pid.toString()">
+<div :data-post-id="reply.pid" :id="`pid/${reply.pid}`">
     <div
         :ref="el => elementRefStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"

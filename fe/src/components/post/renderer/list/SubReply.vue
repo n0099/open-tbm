@@ -4,7 +4,7 @@
         <li
             v-for="(subReply, subReplyGroupIndex) in subReplyGroup" :key="subReply.spid"
             :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(subReply, 'spid') }"
-            class="sub-reply-item list-group-item">
+            class="sub-reply-item list-group-item" :id="`spid/${subReply.spid}`">
             <template v-for="author in [getUser(subReply.authorUid)]" :key="author.uid">
                 <NuxtLink
                     v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"

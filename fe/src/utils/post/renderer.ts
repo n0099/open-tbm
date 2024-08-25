@@ -11,7 +11,7 @@ export const postListItemScrollPosition = (route: RouteLocationNormalized)
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
         el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}'] [id='${hash}']`,
-        top: hash.startsWith('t') ? 0 : getReplyTitleTopOffset()
+        top: hash.startsWith('tid/') ? 0 : getReplyTitleTopOffset()
     };
 };
 const scrollToPostListItem = (el: Element) => {
