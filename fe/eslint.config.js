@@ -520,15 +520,15 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     },
 }];
 
-import withNuxt from './.nuxt/eslint.config.mjs';
+import { withNuxt } from './.nuxt/eslint.config.mjs';
 import * as vueESLintParser from 'vue-eslint-parser';
 // eslint-disable-next-line import-x/extensions
 import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
 import pluginVue from 'eslint-plugin-vue';
-import { fixupConfigRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslintJs from '@eslint/js';
 import pluginStylistic from '@stylistic/eslint-plugin';
+import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
 import * as typescriptESLintParser from '@typescript-eslint/parser';
 import pluginImportX from 'eslint-plugin-import-x';
 import pluginPinia from 'eslint-plugin-pinia';
@@ -543,18 +543,16 @@ const compat = new FlatCompat();
 export default withNuxt(
     eslintJs.configs.recommended,
     ...pluginVue.configs['flat/recommended'],
-    ...compat.config(vueESLintConfigTypescriptRecommendedExtends), // https://github.com/vuejs/eslint-config-typescript/issues/76#issuecomment-2051234597
+    ...compat.config(vueESLintConfigTypescriptRecommendedExtends), // https://github.com/vuejs/eslint-config-typescript/issues/76#issuecomment-2148720004
     ...compat.extends( // https://github.com/ota-meshi/typescript-eslint-parser-for-extra-files/issues/95#issuecomment-2148604881
         'plugin:@typescript-eslint/strict-type-checked',
         'plugin:@typescript-eslint/stylistic-type-checked',
     ),
-    ...compat.config(pluginImportX.configs.recommended), // https://github.com/un-ts/eslint-plugin-import-x/pull/85
-    pluginImportX.configs.typescript, // https://github.com/import-js/eslint-plugin-import/issues/2556#issuecomment-2119520339
-    ...fixupConfigRules(...compat.extends(
-        'plugin:@tanstack/eslint-plugin-query/recommended', // https://github.com/TanStack/query/pull/7253
-    )),
+    pluginImportX.flatConfigs.recommended,
+    pluginImportX.flatConfigs.typescript,
+    ...pluginTanstackQuery.configs['flat/recommended'],
     pluginUnicorn.configs['flat/recommended'],
-    ...compat.config(pluginPinia.configs.all),
+    pluginPinia.configs['all-flat'],
     { languageOptions: { ecmaVersion: 'latest' } },
     { ignores: ['node_modules/', '.nuxt/', '.yarn/', '.pnp.*'] },
     { linterOptions: { reportUnusedDisableDirectives: 'error' } },

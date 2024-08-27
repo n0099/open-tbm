@@ -37,7 +37,9 @@ const tippyCotentRelativeTo = computed(() => (props.relativeTo === undefined || 
     ? ''
     : `${props.relativeToText}：<br>
         ${props.relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-        相差 ${props.current.diff(props.relativeTo).rescale().toHuman()}`));
+        相差 ${props.current
+        .diff(props.relativeTo, undefined, { conversionAccuracy: 'longterm' })
+        .rescale().toHuman()}`));
 const tippyContent = computed(() => `本${props.postType}${props.timestampType}：<br>
 ${hydrationStore.isHydratingOrSSR
         ? currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)

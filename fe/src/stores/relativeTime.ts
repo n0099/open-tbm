@@ -13,7 +13,9 @@ export const useRelativeTimeStore = defineStore('relativeTime', () => {
         });
     }
     const registerRelative = (dateTime: DateTime, options?: ToRelativeOptions) => computed(() => {
-        const relativeDuration = dateTime.diff(DateTime.now()).shiftTo(...units);
+        const relativeDuration = dateTime
+            .diff(DateTime.now(), undefined, { conversionAccuracy: 'longterm' })
+            .shiftTo(...units);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { unit } = units
             .map(unit => ({ unit, value: relativeDuration.get(unit) }))
