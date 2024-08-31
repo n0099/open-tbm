@@ -4,7 +4,7 @@
         <GlobalNavBar />
         <MinimumResolutionWarning />
     </header>
-    <img :src="iconLoadingBlock" :class="{ 'd-none': !routeUpdatingStore.isUpdating }" id="loading-block" />
+    <img v-show="routeUpdatingStore.isUpdating" :src="iconLoadingBlock" id="global-loading-block" />
     <div
         v-show="globalLoadingStore.isLoading" class="spinner-border text-primary"
         role="status" id="global-loading-spinner">
@@ -76,6 +76,7 @@ if (import.meta.client) {
     min-height: 100vh;
     pointer-events: v-bind(appPointerEvents);
 }
+
 #footer-upper {
     background-color: #2196f3;
 }
@@ -88,7 +89,7 @@ if (import.meta.client) {
     right: 1rem;
     top: 1rem;
 }
-#loading-block {
+#global-loading-block {
     height: 200px;
     margin: auto;
 }

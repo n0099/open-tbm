@@ -1,5 +1,5 @@
 export default defineNuxtPlugin(() => {
-    const { start, end } = useRouteUpdatingStore();
+    const { start, stop } = useRouteUpdatingStore();
 
     const router = useRouter();
     router.beforeEach((to, from) => {
@@ -7,9 +7,9 @@ export default defineNuxtPlugin(() => {
             return;
         start();
     });
-    router.afterEach(end);
+    router.afterEach(stop);
     router.onError(error => {
-        end();
+        stop();
         notyShow('error', error instanceof Error
             ? `${error.name}<br>${error.message}`
             : JSON.stringify(error));
