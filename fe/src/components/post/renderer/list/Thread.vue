@@ -80,18 +80,23 @@ const relativeTimeStore = useRelativeTimeStore();
 // https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => {
-    const latestTime = DateTime.fromSeconds(Number(zan.lastTime));
-    const latestTimeRelative = relativeTimeStore.registerRelative(latestTime).value;
-    const latestTimeLocale = latestTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
-    const latestTimeText = useHydrationStore().isHydratingOrSSR
-        ? setDateTimeZoneAndLocale()(latestTime).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-        : `
-            <span class="user-select-all">${latestTimeRelative}</span>
-            <span class="user-select-all">${latestTimeLocale}</span>`;
+    const latestTimeText = () => {
+        const dateTime = DateTime.fromSeconds(Number(zan.lastTime));
+        if (useHydrationStore().isHydratingOrSSR) {
+            return setDateTimeZoneAndLocale()(dateTime)
+                .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+        }
+        const relative = relativeTimeStore.registerRelative(dateTime).value;
+        const locale = dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+
+        return `
+            <span class="user-select-all">${relative}</span>
+            <span class="user-select-all">${locale}</span>`;
+    };
 
     return `
         点赞量：<span class="user-select-all">${String(zan.num)}</span><br>
-        最后点赞时间：${latestTimeText}<br>
+        最后点赞时间：${latestTimeText()}<br>
         近期点赞用户：<span class="user-select-all">${JSON.stringify(zan.userIdList)}</span>`;
 });
 </script>

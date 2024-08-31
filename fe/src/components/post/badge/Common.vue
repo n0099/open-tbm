@@ -55,14 +55,14 @@ const relativeTimeStore = useRelativeTimeStore();
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
     const relative = import.meta.client ? relativeTimeStore.registerRelative(dateTime).value : '';
-    const full = import.meta.server
+    const locale = import.meta.server
         ? setDateTimeZoneAndLocale()(dateTime)
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
         : dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
     return `
         <span class="user-select-all">${relative}</span>
-        <span class="user-select-all">${full}</span>
+        <span class="user-select-all">${locale}</span>
         UNIX:<span class="user-select-all">${time}</span>`;
 };
 

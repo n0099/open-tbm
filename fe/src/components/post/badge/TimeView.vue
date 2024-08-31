@@ -35,11 +35,12 @@ const hydrationStore = useHydrationStore();
 const relativeTimeStore = useRelativeTimeStore();
 
 const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
-const tippyCotentRelativeTo = computed(() => {
+const tippyContentRelativeTo = computed(() => {
     if (props.relativeTo === undefined || props.relativeToText === undefined)
         return '';
 
-    const relativeToLocale = props.relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+    const relativeToLocale = props.relativeTo
+        .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
     const currentDiffRelativeHuman = props.current
         .diff(props.relativeTo, undefined, { conversionAccuracy: 'longterm' })
         .rescale().toHuman();
@@ -51,22 +52,24 @@ const tippyCotentRelativeTo = computed(() => {
         相差 <span class="user-select-all">${currentDiffRelativeHuman}</span>`;
 });
 const tippyContent = computed(() => {
-    const currentLocale = props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
-    const currentLocaleWithUnix = tippyCotentRelativeTo.value === ''
-        ? `
-            UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span><br>
-            <span class="user-select-all">${currentLocale}</span>`
-        : `
-            <span class="user-select-all">${currentLocale}</span>
-            UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span>`;
-    const currentText = hydrationStore.isHydratingOrSSR
-        ? currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-        : currentLocaleWithUnix;
+    const currentText = () => {
+        if (hydrationStore.isHydratingOrSSR)
+            return currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+        const currentLocale = props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+
+        return tippyContentRelativeTo.value === ''
+            ? `
+                UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span><br>
+                <span class="user-select-all">${currentLocale}</span>`
+            : `
+                <span class="user-select-all">${currentLocale}</span>
+                UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span>`;
+    };
 
     return `
         本${props.postType}${props.timestampType}：<br>
-        ${currentText}<br>
-        ${tippyCotentRelativeTo.value}`;
+        ${currentText()}<br>
+        ${tippyContentRelativeTo.value}`;
 });
 </script>
 
