@@ -665,7 +665,7 @@ const loadCharts = {
         });
         echartsInstances.top5CandidateCountGroupByTime?.setOption({
             axisPointer: { label: { formatter: filledTimeGranularityAxisPointerLabelFormatter[timeGranularity] } },
-            xAxis: Array.from({ length: 2 }).fill({ type: timeGranularityAxisType[timeGranularity] }),
+            xAxis: Array.from({ length: 2 }, () => ({ type: timeGranularityAxisType[timeGranularity] })),
             series
         } as echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>);
     },

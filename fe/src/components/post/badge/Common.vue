@@ -60,10 +60,12 @@ const formatTime = (time: UnixTimestamp) => {
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
         : dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
-    return `
-        <span class="user-select-all">${relative}</span>
-        <span class="user-select-all">${locale}</span>
-        UNIX:<span class="user-select-all">${time}</span>`;
+    return import.meta.server
+        ? `${locale} UNIX:${time}`
+        : `
+            <span class="user-select-all">${relative}</span>
+            <span class="user-select-all">${locale}</span>
+            UNIX:<span class="user-select-all">${time}</span>`;
 };
 
 // https://github.com/vuejs/core/issues/8034

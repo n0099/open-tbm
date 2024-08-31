@@ -57,7 +57,7 @@ const noScriptStyle = `<style>
         pointer-events: unset !important;
     }
     #global-loading-spinner {
-        visibility: hidden;
+        display: none;
     }
 </style>`; // https://github.com/nuxt/nuxt/issues/13848
 useHead({ noscript: [{ innerHTML: noScriptStyle }] });

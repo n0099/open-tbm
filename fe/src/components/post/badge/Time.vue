@@ -34,7 +34,8 @@
 </ClientOnly>
 <PostBadgeTimeView
     :current="currentDateTime" :postType="props.postType"
-    :timestampType="props.timestampType" v-bind="$attrs" />
+    :timestampType="props.timestampType" class="text-end"
+    :class="{ 'post-badge-time-current-full': hydrationStore.isHydratingOrSSR }" v-bind="$attrs" />
 </template>
 
 <script setup lang="ts" generic="
@@ -65,6 +66,14 @@ const props = defineProps<{
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
 const highlightPostStore = useHighlightPostStore();
+const hydrationStore = useHydrationStore();
+
+const noScriptStyle = `<style>
+    .post-badge-time-current-full {
+        width: auto !important;
+    }
+</style>`; // https://github.com/nuxt/nuxt/issues/13848
+useHead({ noscript: [{ innerHTML: noScriptStyle }] });
 
 // https://github.com/typescript-eslint/typescript-eslint/issues/9723
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-unnecessary-type-parameters
@@ -84,3 +93,9 @@ const parentDateTime = computed(() =>
     undefinedOr(parentTime.value, i => DateTime.fromSeconds(i)));
 const currentDateTime = computed(() => DateTime.fromSeconds(currentTime.value));
 </script>
+
+<style scoped>
+.post-badge-time-current-full {
+    width: 12rem;
+}
+</style>

@@ -1,5 +1,5 @@
 import type { Instance } from 'tippy.js';
-import tippy, { createSingleton } from 'tippy.js';
+import tippy from 'tippy.js';
 import 'tippy.js/animations/perspective.css';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
@@ -18,7 +18,7 @@ export default defineNuxtPlugin(nuxt => {
         mounted(el, binding) {
             el.dataset.tippyContent = binding.value;
             el.removeAttribute('title');
-            createSingleton(tippy([el]), { allowHTML: true, appendTo: document.body });
+            tippy([el], { allowHTML: true, appendTo: document.body });
         },
         updated(el, binding) {
             if (binding.value !== binding.oldValue)

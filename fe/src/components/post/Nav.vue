@@ -60,8 +60,6 @@ const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>({ cursor: '', tid: 0, pid: 0 });
 
-const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
-onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
 const noScriptStyle = `<style>
     @media (max-width: 900px) {
         .post-nav {
@@ -73,6 +71,8 @@ const noScriptStyle = `<style>
     }
 </style>`; // https://github.com/nuxt/nuxt/issues/13848
 useHead({ noscript: [{ innerHTML: noScriptStyle }] });
+const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
+onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
 const postNavDisplay = ref('none'); // using media query in css instead of js before hydrate
 onMounted(() => { postNavDisplay.value = 'unset' });
 

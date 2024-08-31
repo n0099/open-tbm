@@ -6,7 +6,9 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
     const stop = () => { isUpdating.value = false };
 
     watchEffect(() => {
-        if (isUpdating.value && import.meta.client) {
+        if (!import.meta.client)
+            return;
+        if (isUpdating.value) {
             timeoutId = window.setTimeout(() => { globalLoadingStore.start() }, 100);
             window.setTimeout(stop, 10000);
         } else {

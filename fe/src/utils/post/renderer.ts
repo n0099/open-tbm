@@ -99,7 +99,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
     type StringArrayTree = Array<string | StringArrayTree>;
     const elementTreeTextContentLines = (el: ChildNode): StringArrayTree =>
         // eslint-disable-next-line unicorn/no-array-reduce
-        _.toArray(el.childNodes).reduce<StringArrayTree>((acc, cur) => {
+        [...el.childNodes].reduce<StringArrayTree>((acc, cur) => {
             const getTextContent = () => (isElementNode(cur) && cur.tagName === 'BR' ? '\n' : cur.textContent ?? '');
             acc.push(cur.childNodes.length > 0 ? elementTreeTextContentLines(cur) : getTextContent());
 
@@ -128,7 +128,7 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         el.attributeStyleMap.set('--predicted-reply-content-height', `${replyContentHeight}px`);
 
         const subReplyContentHeight = _.sum(
-            _.toArray(el.querySelectorAll<HTMLElement>('.sub-reply-content'))
+            [...el.querySelectorAll<HTMLElement>('.sub-reply-content')]
                 .map(predictPostContentHeight(subReplyContentWidth))
         );
         el.attributeStyleMap.set('--predicted-sub-reply-content-height', `${subReplyContentHeight}px`);
