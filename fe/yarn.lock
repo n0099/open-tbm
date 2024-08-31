@@ -2733,13 +2733,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/nprogress@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@types/nprogress@npm:0.2.3"
-  checksum: 10c0/cac0fe73aca79bc1472a1556f56303df72026f2fcd8dbe311fe84b1f46e454b9040c1e69223d94e3bf156a5986382170c52ebda19aa70f555f1b6855d8f744a6
-  languageName: node
-  linkType: hard
-
 "@types/resolve@npm:1.20.2":
   version: 1.20.2
   resolution: "@types/resolve@npm:1.20.2"
@@ -8102,13 +8095,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nprogress@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "nprogress@npm:0.2.0"
-  checksum: 10c0/eab9a923a1ad1eed71a455ecfbc358442dd9bcd71b9fa3fa1c67eddf5159360b182c218f76fca320c97541a1b45e19ced04e6dcb044a662244c5419f8ae9e821
-  languageName: node
-  linkType: hard
-
 "nth-check@npm:^2.0.1, nth-check@npm:^2.1.1":
   version: 2.1.1
   resolution: "nth-check@npm:2.1.1"
@@ -10356,7 +10342,6 @@ __metadata:
     "@types/lodash": "npm:^4.17.7"
     "@types/luxon": "npm:^3.4.2"
     "@types/node": "npm:^22.5.0"
-    "@types/nprogress": "npm:^0.2.3"
     "@typescript-eslint/eslint-plugin": "npm:^8.3.0"
     "@typescript-eslint/parser": "npm:^8.3.0"
     "@vesp/nuxt-fontawesome": "npm:^1.1.0"
@@ -10374,7 +10359,6 @@ __metadata:
     lodash: "npm:^4.17.21"
     luxon: "npm:^3.5.0"
     noty: "npm:^3.2.0-beta-deprecated"
-    nprogress: "npm:^0.2.0"
     nuxt: "npm:^3.13.0"
     schema-dts: "npm:^1.1.2"
     scroll-into-view-if-needed: "npm:^3.1.0"

@@ -5,6 +5,11 @@
         <MinimumResolutionWarning />
     </header>
     <img :src="iconLoadingBlock" :class="{ 'd-none': !routeUpdatingStore.isUpdating }" id="loading-block" />
+    <div
+        v-show="globalLoadingStore.isLoading" class="spinner-border text-primary"
+        role="status" id="global-loading-spinner">
+        <span class="visually-hidden">Loading...</span>
+    </div>
     <main>
         <AConfigProvider :locale="AntdZhCn">
             <slot v-if="!routeUpdatingStore.isUpdating" />
@@ -40,10 +45,10 @@
 <script setup lang="ts">
 import iconLoadingBlock from 'assets/icon-loading-block.svg';
 import AntdZhCn from 'ant-design-vue/es/locale/zh_CN';
-import nProgress from 'nprogress';
 
-const routeUpdatingStore = useRouteUpdatingStore();
 const config = useRuntimeConfig().public;
+const routeUpdatingStore = useRouteUpdatingStore();
+const globalLoadingStore = useGlobalLoadingStore();
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementId !== '';
 
@@ -51,13 +56,16 @@ const noScriptStyle = `<style>
     #app-wrapper {
         pointer-events: unset !important;
     }
+    #global-loading-spinner {
+        visibility: hidden;
+    }
 </style>`; // https://github.com/nuxt/nuxt/issues/13848
 useHead({ noscript: [{ innerHTML: noScriptStyle }] });
 const appPointerEvents = ref('none');
 if (import.meta.client) {
-    nProgress.start();
+    globalLoadingStore.start();
     onNuxtReady(() => {
-        nProgress.done();
+        globalLoadingStore.stop();
         appPointerEvents.value = 'unset';
     });
 }
@@ -73,6 +81,12 @@ if (import.meta.client) {
 }
 #footer-lower {
     background-color: rgba(0,0,0,.2);
+}
+
+#global-loading-spinner {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
 }
 #loading-block {
     height: 200px;

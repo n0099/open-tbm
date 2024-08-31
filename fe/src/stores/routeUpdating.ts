@@ -1,6 +1,5 @@
-import nProgress from 'nprogress';
-
 export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
+    const globalLoadingStore = useGlobalLoadingStore();
     let timeoutId = 0;
     const isUpdating = ref(false);
     const start = () => { isUpdating.value = true };
@@ -10,11 +9,11 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
         if (!import.meta.client)
             return;
         if (isUpdating.value) {
-            timeoutId = window.setTimeout(() => { nProgress.start() }, 100);
+            timeoutId = window.setTimeout(() => { globalLoadingStore.start() }, 100);
             window.setTimeout(end, 10000);
         } else {
             clearTimeout(timeoutId);
-            nProgress.done();
+            globalLoadingStore.stop();
         }
     });
 
