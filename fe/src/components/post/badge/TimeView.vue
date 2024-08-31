@@ -1,5 +1,7 @@
 <template>
-<time v-tippy="tippyContent" :datetime="currentInChina.toISO() ?? undefined" class="ms-1 fw-normal badge rounded-pill">
+<time
+    v-tippy="tippyContent" :datetime="currentInChina.toISO() ?? undefined"
+    class="ms-1 fw-normal badge rounded-pill user-select-all">
     <component :is="$slots.default" />
     <template v-if="hydrationStore.isHydratingOrSSR">
         {{ currentInChina.toLocaleString({
@@ -33,19 +35,39 @@ const hydrationStore = useHydrationStore();
 const relativeTimeStore = useRelativeTimeStore();
 
 const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
-const tippyCotentRelativeTo = computed(() => (props.relativeTo === undefined || props.relativeToText === undefined
-    ? ''
-    : `${props.relativeToText}：<br>
-        ${props.relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-        相差 ${props.current
+const tippyCotentRelativeTo = computed(() => {
+    if (props.relativeTo === undefined || props.relativeToText === undefined)
+        return '';
+
+    const relativeToLocale = props.relativeTo.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+    const currentDiffRelativeHuman = props.current
         .diff(props.relativeTo, undefined, { conversionAccuracy: 'longterm' })
-        .rescale().toHuman()}`));
-const tippyContent = computed(() => `本${props.postType}${props.timestampType}：<br>
-${hydrationStore.isHydratingOrSSR
+        .rescale().toHuman();
+
+    return `
+        ${props.relativeToText}：<br>
+        <span class="user-select-all">${relativeToLocale}</span>
+        UNIX:<span class="user-select-all">${props.relativeTo.toUnixInteger()}</span><br>
+        相差 <span class="user-select-all">${currentDiffRelativeHuman}</span>`;
+});
+const tippyContent = computed(() => {
+    const currentLocale = props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+    const currentLocaleWithUnix = tippyCotentRelativeTo.value === ''
+        ? `
+            UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span><br>
+            <span class="user-select-all">${currentLocale}</span>`
+        : `
+            <span class="user-select-all">${currentLocale}</span>
+            UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span>`;
+    const currentText = hydrationStore.isHydratingOrSSR
         ? currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-        : `${props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}<br>
-        ${tippyCotentRelativeTo.value}`
-}`);
+        : currentLocaleWithUnix;
+
+    return `
+        本${props.postType}${props.timestampType}：<br>
+        ${currentText}<br>
+        ${tippyCotentRelativeTo.value}`;
+});
 </script>
 
 <style scoped>

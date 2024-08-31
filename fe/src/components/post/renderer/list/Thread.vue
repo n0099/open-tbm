@@ -20,25 +20,25 @@
         </div>
         <div class="row justify-content-between mt-2">
             <div class="col-auto d-flex gap-1 align-items-center">
-                <span v-tippy="'回复量'" class="badge bg-secondary">
+                <span v-tippy="'回复量'" class="badge bg-secondary user-select-all">
                     <FontAwesome :icon="faCommentAlt" class="me-1" />{{ thread.replyCount }}
                 </span>
-                <span v-tippy="'浏览量'" class="badge bg-info">
+                <span v-tippy="'浏览量'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faEye" class="me-1" />{{ thread.viewCount }}
                 </span>
-                <span v-if="thread.shareCount !== 0" v-tippy="'分享量'" class="badge bg-info">
+                <span v-if="thread.shareCount !== 0" v-tippy="'分享量'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faShareAlt" class="me-1" /> {{ thread.shareCount }}
                 </span>
-                <span v-tippy="'赞踩量'" class="badge bg-info">
+                <span v-tippy="'赞踩量'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faThumbsUp" class="me-1" /> {{ thread.agreeCount }}
                     <FontAwesome :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
                 </span>
                 <span
                     :key="zanTippyContent(thread.zan).value" v-if="thread.zan !== null"
-                    v-tippy="zanTippyContent(thread.zan).value" class="badge bg-info">
+                    v-tippy="zanTippyContent(thread.zan).value" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
                 </span>
-                <span v-if="thread.geolocation !== null" v-tippy="'发帖位置'" class="badge bg-info">
+                <span v-if="thread.geolocation !== null" v-tippy="'发帖位置'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faLocationArrow" class="me-1" /> {{ thread.geolocation }}
                     <!-- todo: unknown json struct -->
                 </span>
@@ -79,16 +79,21 @@ const relativeTimeStore = useRelativeTimeStore();
 // https://github.com/vuejs/core/issues/8034
 // https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
 // todo: fetch users info in zan.userIdList
-const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => `
-点赞量：${String(zan.num)}<br>
-最后点赞时间：${
-    useHydrationStore().isHydratingOrSSR
-        ? setDateTimeZoneAndLocale()(DateTime.fromSeconds(Number(zan.lastTime)))
-            .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
-        : `${relativeTimeStore.registerRelative(DateTime.fromSeconds(Number(zan.lastTime))).value
-        } ${DateTime.fromSeconds(Number(zan.lastTime))
-            .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}`}<br>
-近期点赞用户：${JSON.stringify(zan.userIdList)}<br>`);
+const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => {
+    const latestTime = DateTime.fromSeconds(Number(zan.lastTime));
+    const latestTimeRelative = relativeTimeStore.registerRelative(latestTime).value;
+    const latestTimeLocale = latestTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+    const latestTimeText = useHydrationStore().isHydratingOrSSR
+        ? setDateTimeZoneAndLocale()(latestTime).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
+        : `
+            <span class="user-select-all">${latestTimeRelative}</span>
+            <span class="user-select-all">${latestTimeLocale}</span>`;
+
+    return `
+        点赞量：<span class="user-select-all">${String(zan.num)}</span><br>
+        最后点赞时间：${latestTimeText}<br>
+        近期点赞用户：<span class="user-select-all">${JSON.stringify(zan.userIdList)}</span>`;
+});
 </script>
 
 <style scoped>

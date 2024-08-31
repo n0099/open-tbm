@@ -6,8 +6,8 @@
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
         <div class="d-inline-flex gap-1 fs-5">
-            <span class="badge bg-secondary">{{ reply.floor }}楼</span>
-            <span v-if="reply.subReplyCount > 0" class="badge bg-info">
+            <span class="badge bg-secondary user-select-all">{{ reply.floor }}楼</span>
+            <span v-if="reply.subReplyCount > 0" class="badge bg-info user-select-all">
                 {{ reply.subReplyCount }}条<FontAwesome :icon="faCommentDots" />
             </span>
             <!-- TODO: implement these reply's property
