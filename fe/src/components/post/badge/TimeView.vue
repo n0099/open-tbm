@@ -3,17 +3,7 @@
     v-tippy="tippyContent" :datetime="currentInChina.toISO() ?? undefined"
     class="ms-1 fw-normal badge rounded-pill user-select-all">
     <component :is="$slots.default" />
-    <template v-if="hydrationStore.isHydratingOrSSR">
-        {{ currentInChina.toLocaleString({
-            year: 'numeric',
-            ...keysWithSameValue(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
-        }) }}
-    </template>
-    <template v-else>
-        {{ relativeTo === undefined
-            ? relativeTimeStore.registerRelative(current)
-            : current.toRelative({ base: relativeTo, round: false }) }}
-    </template>
+    <RelativeTime :dateTime="current" :relativeTo="relativeTo" />
 </time>
 </template>
 
@@ -32,7 +22,6 @@ const props = defineProps<{
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
 const hydrationStore = useHydrationStore();
-const relativeTimeStore = useRelativeTimeStore();
 
 const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
 const tippyContentRelativeTo = computed(() => {
@@ -72,10 +61,3 @@ const tippyContent = () => {
         ${tippyContentRelativeTo.value}`;
 };
 </script>
-
-<style scoped>
-span {
-    padding-inline-start: .75rem;
-    padding-inline-end: .75rem;
-}
-</style>

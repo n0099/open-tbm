@@ -1,4 +1,4 @@
-import type { ToRelativeOptions, ToRelativeUnit } from 'luxon';
+import type { ToRelativeUnit } from 'luxon';
 import { DateTime, Duration } from 'luxon';
 
 export const useRelativeTimeStore = defineStore('relativeTime', () => {
@@ -12,18 +12,17 @@ export const useRelativeTimeStore = defineStore('relativeTime', () => {
             );
         });
     }
-    const registerRelative = (dateTime: DateTime, options?: ToRelativeOptions) => computed(() => {
+    const registerTimerDep = (dateTime: DateTime) => computed(() => {
         const relativeDuration = dateTime
             .diff(DateTime.now(), undefined, { conversionAccuracy: 'longterm' })
             .shiftTo(...units);
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { unit } = units
             .map(unit => ({ unit, value: relativeDuration.get(unit) }))
-            .find(unit => unit.value !== 0)!;
-        void timers[unit]; // track this computed ref as dependency of reactive timers[unit]
+            .find(unit => unit.value !== 0)
+            ?? { unit: 'years' };
 
-        return dateTime.toRelative({ ...options, round: false });
+        return timers[unit];
     });
 
-    return { timers, registerRelative };
+    return { timers, registerTimerDep };
 });
