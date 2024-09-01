@@ -11,6 +11,23 @@
         :threadAuthorUid="threadAuthorUid"
         :replyAuthorUid="replyAuthorUid" />
 </DefineUser>
+<DefineLatestReplier v-slot="{ latestReplier }">
+    <template v-if="latestReplier !== undefined">
+        <span v-if="!(latestReplier.name === null && latestReplier.displayName === null)">
+            <NuxtLink
+                v-if="latestReplier.name !== null"
+                :to="{ name: 'users/name', params: _.pick(latestReplier, 'name') }"
+                noPrefetch class="link-dark">{{ latestReplier.name }}</NuxtLink>
+            <template v-if="latestReplier.displayName !== null">
+                <span>&nbsp;</span>
+                <NuxtLink
+                    :to="{ name: 'users/displayName', params: _.pick(latestReplier, 'displayName') }"
+                    noPrefetch class="link-dark">{{ latestReplier.displayName }}</NuxtLink>
+            </template>
+        </span>
+        <ReuseUser v-else-if="latestReplier.uid !== null" :user="getUser(latestReplier.uid)" />
+    </template>
+</DefineLatestReplier>
 <ATable
     :dataSource="props.posts.threads" :columns="threadColumns" rowKey="tid"
     defaultExpandAllRows :pagination="false" size="middle" bordered>
@@ -30,30 +47,7 @@
             <ReuseUser :user="getUser((record as Thread).authorUid)" />
         </template>
         <template v-else-if="column === 'latestReplier' && (record as Thread).latestReplierId !== null">
-            <span
-                v-for="latestReplierUid in [getLatestReplier((record as Thread).latestReplierId)?.uid]"
-                :key="latestReplierUid ?? getLatestReplier((record as Thread).latestReplierId)?.id">
-                <template v-if="latestReplierUid === null">
-                    <template v-for="latestReplier in [getLatestReplier((record as Thread).latestReplierId)]">
-                        <span
-                            :key="latestReplier.id"
-                            v-if="latestReplier !== undefined
-                                && !(latestReplier.name === null && latestReplier.displayName === null)">
-                            <NuxtLink
-                                v-if="latestReplier.name !== null"
-                                :to="{ name: 'users/name', params: _.pick(latestReplier, 'name') }"
-                                noPrefetch class="link-dark">{{ latestReplier.name }}</NuxtLink>
-                            <template v-if="latestReplier.displayName !== null">
-                                <span>&nbsp;</span>
-                                <NuxtLink
-                                    :to="{ name: 'users/displayName', params: _.pick(latestReplier, 'displayName') }"
-                                    noPrefetch class="link-dark">{{ latestReplier.displayName }}</NuxtLink>
-                            </template>
-                        </span>
-                    </template>
-                </template>
-                <ReuseUser v-else-if="latestReplierUid !== undefined" :user="getUser(latestReplierUid)" />
-            </span>
+            <ReuseLatestReplier :latestReplier="getLatestReplier((record as Thread).latestReplierId)" />
         </template>
         <template v-else-if="column === 'latestReplierUid' && (record as Thread).latestReplierId !== null">
             {{ getLatestReplier((record as Thread).latestReplierId)?.uid }}
@@ -104,6 +98,7 @@ import _ from 'lodash';
 
 const props = defineProps<{ posts: ApiPosts['response'] }>();
 const [DefineUser, ReuseUser] = createReusableTemplate<InstanceType<typeof User>['$props']>();
+const [DefineLatestReplier, ReuseLatestReplier] = createReusableTemplate<{ latestReplier?: LatestReplier }>();
 const { getUser, renderUsername, getLatestReplier } = usePostPageProvision().inject();
 const threadColumns = ref<ColumnType[]>([
     { title: 'tid', dataIndex: 'tid' },

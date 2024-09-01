@@ -29,9 +29,7 @@
     class="badge bg-light rounded-pill link-dark" target="_blank">
     <FontAwesome :icon="faArrowUpRightFromSquare" size="lg" class="align-bottom" />
 </NuxtLink>
-<span
-    :key="tippyContent" v-tippy="tippyContent"
-    class="badge bg-light rounded-pill link-dark">
+<span v-tippy="tippyContent" class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faClock" size="lg" class="align-bottom" />
 </span>
 </template>
@@ -51,10 +49,9 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const { currentCursor } = usePostPageProvision().inject();
-const relativeTimeStore = useRelativeTimeStore();
 const formatTime = (time: UnixTimestamp) => {
     const dateTime = DateTime.fromSeconds(time);
-    const relative = import.meta.client ? relativeTimeStore.registerRelative(dateTime).value : '';
+    const relative = dateTime.toRelative({ round: false });
     const locale = import.meta.server
         ? setDateTimeZoneAndLocale()(dateTime)
             .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)
@@ -62,16 +59,13 @@ const formatTime = (time: UnixTimestamp) => {
 
     return import.meta.server
         ? `${locale} UNIX:${time}`
-        : `
-            <span class="user-select-all">${relative}</span>
+        : `<span class="user-select-all">${relative}</span>
             <span class="user-select-all">${locale}</span>
             UNIX:<span class="user-select-all">${time}</span>`;
 };
 
-// https://github.com/vuejs/core/issues/8034
-// https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
-const tippyContent = computed(() => `
+const tippyContent = () => `
 首次收录时间：${formatTime(props.post.createdAt)}<br>
 最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
-最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`);
+最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`;
 </script>

@@ -26,7 +26,9 @@
                 <span v-tippy="'浏览量'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faEye" class="me-1" />{{ thread.viewCount }}
                 </span>
-                <span v-if="thread.shareCount !== 0" v-tippy="'分享量'" class="badge bg-info user-select-all">
+                <span
+                    v-if="thread.shareCount !== 0"
+                    v-tippy="'分享量'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faShareAlt" class="me-1" /> {{ thread.shareCount }}
                 </span>
                 <span v-tippy="'赞踩量'" class="badge bg-info user-select-all">
@@ -34,11 +36,13 @@
                     <FontAwesome :icon="faThumbsDown" class="me-1" /> {{ thread.disagreeCount }}
                 </span>
                 <span
-                    :key="zanTippyContent(thread.zan).value" v-if="thread.zan !== null"
-                    v-tippy="zanTippyContent(thread.zan).value" class="badge bg-info user-select-all">
+                    v-if="thread.zan !== null"
+                    v-tippy="zanTippyContent(thread.zan)" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faThumbsUp" class="me-1" /> 旧版客户端赞
                 </span>
-                <span v-if="thread.geolocation !== null" v-tippy="'发帖位置'" class="badge bg-info user-select-all">
+                <span
+                    v-if="thread.geolocation !== null"
+                    v-tippy="'发帖位置'" class="badge bg-info user-select-all">
                     <FontAwesome :icon="faLocationArrow" class="me-1" /> {{ thread.geolocation }}
                     <!-- todo: unknown json struct -->
                 </span>
@@ -74,20 +78,19 @@ defineProps<{
 }>();
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
-const relativeTimeStore = useRelativeTimeStore();
 
-// https://github.com/vuejs/core/issues/8034
-// https://stackoverflow.com/questions/77913255/can-we-two-way-bind-in-custom-directives
 // todo: fetch users info in zan.userIdList
-const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => {
+const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
     const latestTimeText = () => {
         const dateTime = DateTime.fromSeconds(Number(zan.lastTime));
         if (useHydrationStore().isHydratingOrSSR) {
             return setDateTimeZoneAndLocale()(dateTime)
                 .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
         }
-        const relative = relativeTimeStore.registerRelative(dateTime).value;
         const locale = dateTime.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+        if (import.meta.server)
+            return locale;
+        const relative = dateTime.toRelative({ round: false });
 
         return `
             <span class="user-select-all">${relative}</span>
@@ -98,7 +101,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => computed(() => {
         点赞量：<span class="user-select-all">${String(zan.num)}</span><br>
         最后点赞时间：${latestTimeText()}<br>
         近期点赞用户：<span class="user-select-all">${JSON.stringify(zan.userIdList)}</span>`;
-});
+};
 </script>
 
 <style scoped>

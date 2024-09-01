@@ -51,7 +51,7 @@ const tippyContentRelativeTo = computed(() => {
         UNIX:<span class="user-select-all">${props.relativeTo.toUnixInteger()}</span><br>
         相差 <span class="user-select-all">${currentDiffRelativeHuman}</span>`;
 });
-const tippyContent = computed(() => {
+const tippyContent = () => {
     const currentText = () => {
         if (hydrationStore.isHydratingOrSSR)
             return currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
@@ -70,7 +70,7 @@ const tippyContent = computed(() => {
         本${props.postType}${props.timestampType}：<br>
         ${currentText()}<br>
         ${tippyContentRelativeTo.value}`;
-});
+};
 </script>
 
 <style scoped>

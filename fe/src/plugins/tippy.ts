@@ -3,6 +3,7 @@ import tippy from 'tippy.js';
 import 'tippy.js/animations/perspective.css';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
+import _ from 'lodash';
 
 if (import.meta.client) {
     tippy.setDefaultProps({
@@ -14,11 +15,22 @@ if (import.meta.client) {
 };
 
 export default defineNuxtPlugin(nuxt => {
-    nuxt.vueApp.directive<HTMLElement, string>('tippy', {
+    nuxt.vueApp.directive<HTMLElement, string | (() => string)>('tippy', {
         mounted(el, binding) {
-            el.dataset.tippyContent = binding.value;
             el.removeAttribute('title');
-            tippy([el], { allowHTML: true, appendTo: document.body });
+            tippy([el], {
+                allowHTML: true,
+                appendTo: document.body,
+                content: binding.value,
+                plugins: [{ // https://github.com/atomiks/tippyjs/issues/826
+                    fn: () => ({
+                        onShow(instance) {
+                            if (_.isFunction(binding.value))
+                                instance.setContent(binding.value());
+                        }
+                    })
+                }]
+            });
         },
         updated(el, binding) {
             if (binding.value !== binding.oldValue)
@@ -30,7 +42,7 @@ export default defineNuxtPlugin(nuxt => {
             (el as unknown as { _tippy: Instance })._tippy.destroy();
         },
         getSSRProps: binding => ({
-            title: binding.value.replaceAll('<br>', '').replaceAll(/^ +/gmu, '')
+            title: toValue(binding.value).replaceAll('<br>', '').replaceAll(/^ +/gmu, '')
         })
     });
 });
