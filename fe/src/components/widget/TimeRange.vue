@@ -1,7 +1,10 @@
 <template>
 <ARangePicker
     v-model="timeRange" :ranges="{
-        昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
+        昨天: [
+            dayjs().subtract(1, 'day').startOf('day'),
+            dayjs().subtract(1, 'day').endOf('day')
+        ],
         今天: [dayjs().startOf('day'), dayjs().endOf('day')],
         本周: [dayjs().startOf('week'), dayjs().endOf('week')],
         最近7天: [dayjs().subtract(7, 'days'), dayjs()],
@@ -19,7 +22,6 @@ import type { Dayjs } from 'dayjs';
 import dayjs, { unix } from 'dayjs';
 import type { DurationLike } from 'luxon';
 import { DateTime } from 'luxon';
-import _ from 'lodash';
 
 defineOptions({ inheritAttrs: true });
 const props = withDefaults(defineProps<{
@@ -30,11 +32,10 @@ const props = withDefaults(defineProps<{
     startTime: 0,
     endTime: 0
 });
-// eslint-disable-next-line vue/define-emits-declaration
-const emit = defineEmits({
-    'update:startTime': i => _.isNumber(i),
-    'update:endTime': i => _.isNumber(i)
-});
+const emit = defineEmits<{
+    'update:startTime': [i: number],
+    'update:endTime': [i: number]
+}>();
 
 const timeRange = ref<[Dayjs, Dayjs]>((now => [
     dayjs(now.minus(props.startBefore).startOf('minute').toISO()),

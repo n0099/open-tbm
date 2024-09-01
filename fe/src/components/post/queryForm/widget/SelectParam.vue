@@ -55,7 +55,9 @@ import _ from 'lodash';
 
 defineProps<{ currentParam: string }>();
 // eslint-disable-next-line vue/define-emits-declaration
-const emit = defineEmits({ paramChange: p => _.includes(_.flatMap(paramsGroup, Object.keys), p) });
+const emit = defineEmits({
+    paramChange: (p: string) => _.includes(_.flatMap(paramsGroup, Object.keys), p)
+});
 </script>
 
 <style scoped>

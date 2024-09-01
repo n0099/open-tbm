@@ -1,3 +1,19 @@
+import { withNuxt } from './.nuxt/eslint.config.mjs';
+import * as vueESLintParser from 'vue-eslint-parser';
+// eslint-disable-next-line import-x/extensions
+import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
+import pluginVue from 'eslint-plugin-vue';
+import { FlatCompat } from '@eslint/eslintrc';
+import eslintJs from '@eslint/js';
+import pluginStylistic from '@stylistic/eslint-plugin';
+import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
+import * as typescriptESLintParser from '@typescript-eslint/parser';
+import pluginImportX from 'eslint-plugin-import-x';
+import pluginPinia from 'eslint-plugin-pinia';
+import pluginUnicorn from 'eslint-plugin-unicorn';
+import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
+import _ from 'lodash';
+
 const rules = [{ // as of eslint-plugin-unicorn@50.0.1
     optout: {
         'unicorn/no-null': 'off',
@@ -166,6 +182,10 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         camelcase: 'off',
     },
     optin: {
+        'no-restricted-syntax': ['error', {
+            selector: 'Property > ArrowFunctionExpression > BlockStatement',
+            message: 'Use method instead of the arrow function expression with block statement as its body.',
+        }],
         'no-await-in-loop': 'error',
         'no-promise-executor-return': 'error',
         'no-template-curly-in-string': 'error',
@@ -316,9 +336,9 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
             selector: 'objectLiteralProperty',
             format: ['camelCase', 'PascalCase'], // vue component
         }, {
-            selector: ['objectLiteralProperty', 'objectLiteralMethod'],
+            selector: ['objectLiteralProperty', 'objectLiteralMethod', 'typeProperty'],
             format: null,
-            filter: { regex: '^\\w+:\\w+$', match: true }, // vue event names in component.emit
+            filter: { regex: '^update:\\w+$', match: true }, // vue event names in defineEmits<{...}>({...})
         }, {
             selector: ['function', 'variable', 'import'],
             format: ['camelCase', 'PascalCase'], // vue component
@@ -519,22 +539,6 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/no-ref-object-reactivity-loss': 'error',
     },
 }];
-
-import { withNuxt } from './.nuxt/eslint.config.mjs';
-import * as vueESLintParser from 'vue-eslint-parser';
-// eslint-disable-next-line import-x/extensions
-import vueESLintConfigTypescriptRecommendedExtends from '@vue/eslint-config-typescript/recommended.js';
-import pluginVue from 'eslint-plugin-vue';
-import { FlatCompat } from '@eslint/eslintrc';
-import eslintJs from '@eslint/js';
-import pluginStylistic from '@stylistic/eslint-plugin';
-import pluginTanstackQuery from '@tanstack/eslint-plugin-query';
-import * as typescriptESLintParser from '@typescript-eslint/parser';
-import pluginImportX from 'eslint-plugin-import-x';
-import pluginPinia from 'eslint-plugin-pinia';
-import pluginUnicorn from 'eslint-plugin-unicorn';
-import * as typescriptESLintParserForExtraFiles from 'typescript-eslint-parser-for-extra-files';
-import _ from 'lodash';
 
 // https://github.com/eslint/eslint/issues/18093
 // https://github.com/eslint/eslint/issues/18391

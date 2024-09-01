@@ -465,7 +465,7 @@ const formatCandidateName = (id: number) => `${id}号\n${json.candidateNames[id 
 const filledTimeGranularityAxisPointerLabelFormatter =
     timeGranularityAxisPointerLabelFormatter(setDateTimeZoneAndLocale('UTC+8', { keepLocalTime: true }));
 const loadCharts = {
-    top50CandidateCount: () => {
+    top50CandidateCount() {
         // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
         const dataset = _.chain(json.top50CandidatesVoteCount)
             .groupBy('voteFor')
@@ -513,7 +513,7 @@ const loadCharts = {
             }]
         } as echarts.ComposeOption<DatasetComponentOption | LineSeriesOption | MarkLineComponentOption>);
     },
-    top10CandidatesTimeline: () => {
+    top10CandidatesTimeline() {
         top10CandidatesTimelineVotes = {
             valid: _.filter(json.top10CandidatesTimeline, { isValid: 1 }),
             invalid: _.filter(json.top10CandidatesTimeline, { isValid: 0 })
@@ -636,7 +636,7 @@ const loadCharts = {
             });
         });
     },
-    top5CandidateCountGroupByTime: () => {
+    top5CandidateCountGroupByTime() {
         const timeGranularity = query.value.top5CandidateCountGroupByTimeGranularity;
         const top5CandidateCountGroupByTime = timeGranularity === 'minute'
             ? json.top5CandidatesVoteCountGroupByMinute
@@ -669,7 +669,7 @@ const loadCharts = {
             series
         } as echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>);
     },
-    allVoteCountGroupByTime: () => {
+    allVoteCountGroupByTime() {
         const timeGranularity = query.value.allVoteCountGroupByTimeGranularity;
         const allVoteCountGroupByTime = timeGranularity === 'minute'
             ? json.allVoteCountGroupByMinute
