@@ -1,5 +1,5 @@
 <template>
-<span :ref="el => rootEl = (el as HTMLElement)">
+<span ref="rootEl">
     <template v-if="hydrationStore.isHydratingOrSSR || !isAlreadySeen">
         <template v-if="relativeTo === undefined">
             {{ dateTimeInShanghai.toLocaleString({

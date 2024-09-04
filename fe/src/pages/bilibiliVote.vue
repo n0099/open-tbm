@@ -636,7 +636,7 @@ const loadCharts = {
             });
         });
     },
-    top5CandidateCountGroupByTime() {
+    top5CandidateCountGroupByTime(this: void) {
         const timeGranularity = query.value.top5CandidateCountGroupByTimeGranularity;
         const top5CandidateCountGroupByTime = timeGranularity === 'minute'
             ? json.top5CandidatesVoteCountGroupByMinute
@@ -669,7 +669,7 @@ const loadCharts = {
             series
         } as echarts.ComposeOption<AxisPointerComponentOption | GridComponentOption | LineSeriesOption>);
     },
-    allVoteCountGroupByTime() {
+    allVoteCountGroupByTime(this: void) {
         const timeGranularity = query.value.allVoteCountGroupByTimeGranularity;
         const allVoteCountGroupByTime = timeGranularity === 'minute'
             ? json.allVoteCountGroupByMinute

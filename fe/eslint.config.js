@@ -363,7 +363,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         '@typescript-eslint/no-confusing-void-expression': 'error',
         '@typescript-eslint/no-dynamic-delete': 'error',
         '@typescript-eslint/no-extraneous-class': 'error',
-        '@typescript-eslint/no-invalid-void-type': 'error',
+        '@typescript-eslint/no-invalid-void-type': ['error', { allowAsThisParameter: true }],
         '@typescript-eslint/no-require-imports': 'error',
         '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
         '@typescript-eslint/no-unnecessary-condition': 'error',

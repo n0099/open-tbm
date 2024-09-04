@@ -8,6 +8,7 @@
         :current="currentDateTime" :relativeTo="previousDateTime"
         :relativeToText="`相对于上一${postType}${timestampType}`"
         :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">
+        <!-- https://github.com/vuejs/language-tools/issues/4798 -->
         <FontAwesome :icon="faChevronUp" class="me-1 align-bottom" />
     </PostBadgeTimeView>
     <PostBadgeTimeView

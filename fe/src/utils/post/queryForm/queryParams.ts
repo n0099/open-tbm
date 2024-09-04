@@ -98,7 +98,7 @@ const paramsMetadataKeyByType: { [P in 'array' | 'dateTimeRange' | 'numeric' | '
     watcher?: ParamPreprocessorOrWatcher
 } } = { // mutating param object will sync changes
     array: {
-        preprocessor: param => {
+        preprocessor(param) {
             if (_.isString(param.value))
                 param.value = param.value.split(',');
         }
@@ -106,22 +106,22 @@ const paramsMetadataKeyByType: { [P in 'array' | 'dateTimeRange' | 'numeric' | '
     numeric: { default: { subParam: { range: '=' } } },
     textMatch: {
         default: { subParam: { matchBy: 'explicit', spaceSplit: false } },
-        preprocessor: param => {
+        preprocessor(param) {
             param.subParam.spaceSplit = boolStrToBool(param.subParam.spaceSplit);
         },
-        watcher: param => {
+        watcher(param) {
             if (param.subParam.matchBy === 'regex')
                 param.subParam.spaceSplit = false;
         }
     },
     dateTimeRange: {
         default: { subParam: { range: undefined } },
-        preprocessor: param => {
+        preprocessor(param) {
             if (!_.isString(param.value))
                 return;
             param.subParam.range = param.value.split(',');
         },
-        watcher: param => {
+        watcher(param) {
             // combine datetime range into root param's value
             param.value = _.isArray(param.subParam.range) ? param.subParam.range.join(',') : '';
         }

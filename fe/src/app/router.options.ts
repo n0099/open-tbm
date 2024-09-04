@@ -22,7 +22,7 @@ const redirectRoute = (before: string, after: string): RouteRecordRedirect[] => 
 }, { path: before, redirect: after }];
 
 export default {
-    routes: _routes => {
+    routes(_routes) {
         const postCursorRoute = withCursorRoute(async () => import('@/pages/posts.vue'));
         const postChildren = [
             postCursorRoute('fid/:fid(\\d+)', 'posts/fid'),
