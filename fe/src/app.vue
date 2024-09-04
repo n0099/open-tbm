@@ -24,7 +24,6 @@ if (import.meta.client) {
     if (import.meta.dev) {
         await import('@/stats');
         await import('@/checkCSS');
-        useNuxtApp().vueApp.config.performance = true;
     }
 
     const config = useRuntimeConfig().public;

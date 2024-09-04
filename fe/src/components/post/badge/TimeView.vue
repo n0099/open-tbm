@@ -61,3 +61,9 @@ const tippyContent = () => {
         ${tippyContentRelativeTo.value}`;
 };
 </script>
+
+<style scoped>
+:deep(.relative-time-placeholder) {
+    width: 2.5rem;
+}
+</style>

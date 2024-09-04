@@ -1,6 +1,6 @@
 export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
     const globalLoadingStore = useGlobalLoadingStore();
-    let timeoutId = 0;
+    let debounceId = 0;
     const isUpdating = ref(false);
     const start = () => { isUpdating.value = true };
     const stop = () => { isUpdating.value = false };
@@ -9,10 +9,10 @@ export const useRouteUpdatingStore = defineStore('isRouteUpdating', () => {
         if (!import.meta.client)
             return;
         if (isUpdating.value) {
-            timeoutId = window.setTimeout(() => { globalLoadingStore.start() }, 100);
+            debounceId = window.setTimeout(() => { globalLoadingStore.start() }, 100);
             window.setTimeout(stop, 10000);
         } else {
-            clearTimeout(timeoutId);
+            clearTimeout(debounceId);
             globalLoadingStore.stop();
         }
     });
