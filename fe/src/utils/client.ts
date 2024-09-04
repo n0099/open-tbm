@@ -37,3 +37,7 @@ export const scrollBarWidth = computed(() => {
 
     return `${w1 - w2}px`;
 });
+
+export const dateTimeLocale = computed(() => (useHydrationStore().isHydratingOrSSR
+    ? '' // https://github.com/moment/luxon/blob/a7f126ac09233d62c37ce79badeae38f952fb55a/docs/intl.md?plain=1#L72
+    : new Intl.DateTimeFormat().resolvedOptions().locale));

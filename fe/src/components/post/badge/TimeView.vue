@@ -1,6 +1,6 @@
 <template>
 <time
-    v-tippy="tippyContent" :datetime="currentInChina.toISO() ?? undefined"
+    v-tippy="tippyContent" :datetime="currentInShanghai.toISO() ?? undefined"
     class="ms-1 fw-normal badge rounded-pill user-select-all">
     <component :is="$slots.default" />
     <RelativeTime :dateTime="current" :relativeTo="relativeTo" />
@@ -22,8 +22,9 @@ const props = defineProps<{
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
 const hydrationStore = useHydrationStore();
+const currentInShanghai = computed(() => setDateTimeZoneAndLocale()(props.current));
+const placeholderWidth = computed(() => (dateTimeLocale.value.startsWith('zh') ? '' : '2.5rem'));
 
-const currentInChina = computed(() => setDateTimeZoneAndLocale()(props.current));
 const tippyContentRelativeTo = computed(() => {
     if (props.relativeTo === undefined || props.relativeToText === undefined)
         return '';
@@ -43,7 +44,7 @@ const tippyContentRelativeTo = computed(() => {
 const tippyContent = () => {
     const currentText = () => {
         if (hydrationStore.isHydratingOrSSR)
-            return currentInChina.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+            return currentInShanghai.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
         const currentLocale = props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
         return tippyContentRelativeTo.value === ''
@@ -64,6 +65,6 @@ const tippyContent = () => {
 
 <style scoped>
 :deep(.relative-time-placeholder) {
-    width: 2.5rem;
+    width: v-bind(placeholderWidth);
 }
 </style>

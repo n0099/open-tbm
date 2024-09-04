@@ -2,7 +2,7 @@
 <span :ref="el => rootEl = (el as HTMLElement)">
     <template v-if="hydrationStore.isHydratingOrSSR || !isAlreadySeen">
         <template v-if="relativeTo === undefined">
-            {{ dateTimeInChina.toLocaleString({
+            {{ dateTimeInShanghai.toLocaleString({
                 year: 'numeric',
                 ...keysWithSameValue(['month', 'day', 'hour', 'minute', 'second'], '2-digit')
             }) }}
@@ -24,7 +24,7 @@ const props = defineProps<{
 }>();
 const hydrationStore = useHydrationStore();
 const relativeTimeStore = useRelativeTimeStore();
-const dateTimeInChina = computed(() => setDateTimeZoneAndLocale()(props.dateTime));
+const dateTimeInShanghai = computed(() => setDateTimeZoneAndLocale()(props.dateTime));
 const updateTimerDep = computed(() =>
     (props.relativeTo === undefined ? relativeTimeStore.registerTimerDep(props.dateTime).value : undefined));
 const updatedTimes = ref(0);

@@ -1,11 +1,11 @@
 <template>
 <code class="text-primary-emphasis">
-    {{ postIDKey }}:<span class="user-select-all">{{ props.post[props.postIDKey] }}</span>
+    {{ postIDKey }}:<span class="user-select-all">{{ post[postIDKey] }}</span>
 </code>
 <NuxtLink
     v-tippy="`跳至本${postTypeText}链接`"
     :to="{
-        hash: `#${postIDKey}/${props.post[props.postIDKey]}`,
+        hash: `#${postIDKey}/${post[postIDKey]}`,
         name: currentCursor === '' ? routeNameWithoutCursor(route.name) : routeNameWithCursor(route.name),
         params: { cursor: undefinedWhenEmpty(currentCursor) }
     }"
@@ -16,16 +16,16 @@
     v-tippy="`固定链接/只看此${postTypeText}`"
     :to="{
         name: `posts/${postIDKey}`,
-        params: { [props.postIDKey]: props.post[props.postIDKey] as Tid | Pid | Spid }
+        params: { [postIDKey]: post[postIDKey] as Tid | Pid | Spid }
     }"
     class="badge bg-light rounded-pill link-dark">
     <FontAwesome :icon="faLink" size="lg" class="align-bottom" />
 </NuxtLink>
 <NuxtLink
     v-tippy="'在贴吧中查看'"
-    :to="tiebaPostLink(props.post.tid,
-                       (props.post as Reply | SubReply).pid,
-                       (props.post as SubReply).spid)"
+    :to="tiebaPostLink(post.tid,
+                       (post as Reply | SubReply).pid,
+                       (post as SubReply).spid)"
     class="badge bg-light rounded-pill link-dark" target="_blank">
     <FontAwesome :icon="faArrowUpRightFromSquare" size="lg" class="align-bottom" />
 </NuxtLink>

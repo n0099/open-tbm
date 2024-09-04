@@ -29,7 +29,7 @@
     </template>
 </DefineLatestReplier>
 <ATable
-    :dataSource="props.posts.threads" :columns="threadColumns" rowKey="tid"
+    :dataSource="posts.threads" :columns="threadColumns" rowKey="tid"
     defaultExpandAllRows :pagination="false" size="middle" bordered>
     <template #bodyCell="{ column: { dataIndex: column }, record }">
         <template v-if="column === 'tid'">
@@ -96,7 +96,7 @@ import type User from '@/components/post/badge/User.vue';
 import type { ColumnType } from 'ant-design-vue/es/table/interface';
 import _ from 'lodash';
 
-const props = defineProps<{ posts: ApiPosts['response'] }>();
+defineProps<{ posts: ApiPosts['response'] }>();
 const [DefineUser, ReuseUser] = createReusableTemplate<InstanceType<typeof User>['$props']>();
 const [DefineLatestReplier, ReuseLatestReplier] = createReusableTemplate<{ latestReplier?: LatestReplier }>();
 const { getUser, renderUsername, getLatestReplier } = usePostPageProvision().inject();
