@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import type { DateTime } from 'luxon';
+import _ from 'lodash';
 
 const props = defineProps<{
     dateTime: DateTime<true>,
@@ -33,16 +34,14 @@ const isVisible = ref(false);
 let isVisibleDeounceId = 0;
 const isAlreadySeen = ref(false);
 
-useIntersectionObserver(
-    rootEl,
-    ([{ isIntersecting }]) => {
+useIntersectionObserver(rootEl, entries => {
+    _.orderBy(entries, 'time').forEach(({ isIntersecting }) => { // https://github.com/vueuse/vueuse/issues/4197
         clearTimeout(isVisibleDeounceId);
         isVisibleDeounceId = window.setTimeout(() => {
             isVisible.value = isIntersecting;
         }, isIntersecting ? 500 : 0);
-    },
-    { threshold: 1 }
-);
+    });
+}, { threshold: 1, rootMargin: '100%' });
 watchEffect(() => {
     if (isVisible.value // is in viewport
         && isAlreadySeen.value) { // is not the initial render to prevent immediately re-render

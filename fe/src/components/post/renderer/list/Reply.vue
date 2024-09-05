@@ -80,11 +80,11 @@ onMounted(async () => {
 <style scoped>
 .reply-title {
     z-index: 1019;
-    inset-block-start: 5rem;
-    margin-block-start: .625rem;
+    inset-block-start: v-bind('replyTitleStyle().insetBlockStart');
+    margin-block-start: v-bind('replyTitleStyle().marginBlockStart');
     border-block-start: 1px solid #ededed;
     border-block-end: 0;
-    background: linear-gradient(rgba(237,237,237,1), rgba(237,237,237,.1));
+    background: linear-gradient(rgba(237, 237, 237, 1), rgba(237, 237, 237, .1));
 }
 .reply-title.highlight-post {
     background-image: none !important;

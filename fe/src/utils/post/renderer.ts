@@ -1,8 +1,11 @@
 import type { RouteLocationNormalized } from 'vue-router';
 import _ from 'lodash';
 
-export const getReplyTitleTopOffset = () =>
-    convertRemToPixels(5) - convertRemToPixels(0.625); // inset-block-start and margin-block-start
+export const replyTitleStyle = () => ({
+    insetBlockStart: '5rem',
+    marginBlockStart: '0.625rem',
+    top: () => convertRemToPixels(5) - convertRemToPixels(0.625)
+});
 export const postListItemScrollPosition = (route: RouteLocationNormalized)
     : (ScrollToOptions & { el: string }) | false => {
     const hash = route.hash.slice(1);
@@ -11,7 +14,7 @@ export const postListItemScrollPosition = (route: RouteLocationNormalized)
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
         el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}'] [id='${hash}']`,
-        top: hash.startsWith('tid/') ? 0 : getReplyTitleTopOffset()
+        top: hash.startsWith('tid/') ? 0 : replyTitleStyle().top
     };
 };
 const scrollToPostListItem = (el: Element) => {
@@ -31,7 +34,7 @@ const scrollToPostListItem = (el: Element) => {
         // 1% of a very high element is still a big number that may not emit when scrolling ends
         // and the element reached the top of viewport
         const elTop = el.getBoundingClientRect().top;
-        const replyTitleTopOffset = getReplyTitleTopOffset();
+        const replyTitleTopOffset = replyTitleStyle().top;
         if (!el.isConnected // dangling reference to element that already removed from the document
             || window.innerHeight + window.scrollY + (window.innerHeight * 0.01) // at most 1dvh tolerance
                 >= document.documentElement.scrollHeight // https://stackoverflow.com/questions/3962558/javascript-detect-scroll-end/4638434#comment137130726_4638434
