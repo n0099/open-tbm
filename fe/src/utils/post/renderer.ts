@@ -4,7 +4,8 @@ import _ from 'lodash';
 export const replyTitleStyle = () => ({
     insetBlockStart: '5rem',
     marginBlockStart: '0.625rem',
-    top: () => convertRemToPixels(5) - convertRemToPixels(0.625)
+    top: () => convertRemToPixels(5),
+    topWithoutMargin: () => convertRemToPixels(5) - convertRemToPixels(0.625)
 });
 export const postListItemScrollPosition = (route: RouteLocationNormalized)
     : (ScrollToOptions & { el: string }) | false => {
@@ -14,7 +15,7 @@ export const postListItemScrollPosition = (route: RouteLocationNormalized)
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
         el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}'] [id='${hash}']`,
-        top: hash.startsWith('tid/') ? 0 : replyTitleStyle().top
+        top: hash.startsWith('tid/') ? 0 : replyTitleStyle().topWithoutMargin()
     };
 };
 const scrollToPostListItem = (el: Element) => {
@@ -34,7 +35,7 @@ const scrollToPostListItem = (el: Element) => {
         // 1% of a very high element is still a big number that may not emit when scrolling ends
         // and the element reached the top of viewport
         const elTop = el.getBoundingClientRect().top;
-        const replyTitleTopOffset = replyTitleStyle().top;
+        const replyTitleTopOffset = replyTitleStyle().topWithoutMargin();
         if (!el.isConnected // dangling reference to element that already removed from the document
             || window.innerHeight + window.scrollY + (window.innerHeight * 0.01) // at most 1dvh tolerance
                 >= document.documentElement.scrollHeight // https://stackoverflow.com/questions/3962558/javascript-detect-scroll-end/4638434#comment137130726_4638434
@@ -203,3 +204,5 @@ export const emoticonUrl = (text?: string) => {
     return `https://tb2.bdstatic.com/tb/editor/images/${filledEmoticon.class}`
         + `/${filledEmoticon.prefix}${filledEmoticon.ordinal}.${filledEmoticon.ext}`;
 };
+export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
+    Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };

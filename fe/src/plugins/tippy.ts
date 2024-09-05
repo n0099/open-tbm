@@ -35,11 +35,11 @@ export default defineNuxtPlugin(nuxt => {
         updated(el, binding) {
             if (binding.value !== binding.oldValue)
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                (el as unknown as { _tippy: Instance })._tippy.setContent(binding.value);
+                (el as unknown as { _tippy?: Instance })._tippy?.setContent(binding.value);
         },
         unmounted(el) {
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            (el as unknown as { _tippy: Instance })._tippy.destroy();
+            (el as unknown as { _tippy?: Instance })._tippy?.destroy();
         },
         getSSRProps: binding => ({
             title: toValue(binding.value).replaceAll('<br>', '').replaceAll(/^ +/gmu, '')

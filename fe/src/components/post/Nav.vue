@@ -17,8 +17,7 @@
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <NuxtLink
-                                @click.prevent="_ => navigate(cursor, reply)"
-                                :data-pid="reply.pid" :to="routeHash(reply)"
+                                @click.prevent="_ => navigate(cursor, reply)" :to="routeHash(reply)"
                                 :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
                                 {{ reply.floor }}L
                             </NuxtLink>

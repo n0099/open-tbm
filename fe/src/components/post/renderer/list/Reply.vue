@@ -27,7 +27,8 @@
         </div>
     </header>
     <div
-        :ref="el => el !== null && replyElements.push(el as HTMLElement)"
+        :ref="el => el !== null
+            && elementRefStore.pushOrClear('<PostRendererListReply>.reply', el as HTMLElement)"
         class="reply row shadow-sm bs-callout bs-callout-info">
         <address
             v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
@@ -53,7 +54,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies } from './List.vue';
 import 'assets/css/bootstrapCallout.css';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
@@ -67,16 +67,10 @@ const props = defineProps<{
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
-const replyElements = ref<HTMLElement[]>([]);
 const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     { cursor: currentCursor.value, tid: props.reply.tid, pid: props.reply.pid },
     replyTitleStyle().top()
 );
-
-onMounted(async () => {
-    await nextTick();
-    guessReplyContainIntrinsicBlockSize(replyElements.value);
-});
 </script>
 
 <style scoped>

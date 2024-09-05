@@ -67,7 +67,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ThreadWithGroupedSubReplies } from './List.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 

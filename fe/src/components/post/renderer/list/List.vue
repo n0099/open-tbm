@@ -11,9 +11,6 @@
 import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
-export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
-    Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
-
 const props = defineProps<{ posts: ApiPosts['response'] }>();
 const nestedPosts = computed(() => {
     // https://github.com/TanStack/query/pull/6657
@@ -59,4 +56,9 @@ if (import.meta.client) {
         return undefined;
     });
 }
+
+onMounted(async () => {
+    await nextTick();
+    guessReplyContainIntrinsicBlockSize(useElementRefStore().get('<PostRendererListReply>.reply'));
+});
 </script>
