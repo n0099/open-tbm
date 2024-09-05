@@ -11,7 +11,7 @@
                 :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
                 <AMenuItem
                     v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
-                    :data-key="threadMenuKey(cursor, thread.tid)" :title="thread.title"
+                    ref="threadMenuItemRefs" :title="thread.title"
                     :class="menuThreadClasses(thread)" class="post-nav-thread border ps-2 ps-lg-3 pe-1">
                     {{ thread.title }}
                     <div class="d-block btn-group p-1 text-wrap" role="group">
@@ -57,6 +57,7 @@ const { viewportTopmostPost } = storeToRefs(useViewportTopmostPostStore());
 const hydrationStore = useHydrationStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
+const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
 
 const noScriptStyle = `<style>
     @media (max-width: 900px) {
@@ -142,7 +143,8 @@ watch(viewportTopmostPost, (to, from) => {
 
     if (!import.meta.client)
         return;
-    const threadEl = document.querySelector(`.post-nav-thread[data-key='${menuKey}']`);
+    const threadEl = (threadMenuItemRefs.value.find(i => i.$.vnode.key === menuKey)
+        ?.$el as Element | null)?.previousElementSibling ?? null;
     if (threadEl !== null)
         scrollIntoView(threadEl, { scrollMode: 'if-needed', boundary: document.querySelector('.post-nav') });
 });

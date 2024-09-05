@@ -62,18 +62,20 @@
     <PostRendererListReply
         v-for="(reply, index) in thread.replies" :key="reply.pid"
         :previousReply="thread.replies[index - 1]" :reply="reply"
-        :nextReply="thread.replies[index + 1]" :thread="thread" />
+        :nextReply="thread.replies[index + 1]" :thread="thread" :replyElementRefs="replyElementRefs" />
 </article>
 </template>
 
 <script setup lang="ts">
+import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 
 const props = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
-    nextThread?: ThreadWithGroupedSubReplies
+    nextThread?: ThreadWithGroupedSubReplies,
+    replyElementRefs: TemplateRefsList<HTMLElement>
 }>();
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();

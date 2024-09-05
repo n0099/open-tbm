@@ -3,7 +3,7 @@
     <PostRendererListThread
         v-for="(thread, index) in nestedPosts.threads" :key="thread.tid"
         :previousThread="nestedPosts.threads[index - 1]" :thread="thread"
-        :nextThread="nestedPosts.threads[index + 1]" />
+        :nextThread="nestedPosts.threads[index + 1]" :replyElementRefs="replyElementRefs" />
 </div>
 </template>
 
@@ -57,8 +57,9 @@ if (import.meta.client) {
     });
 }
 
+const replyElementRefs = useTemplateRefsList<HTMLElement>();
 onMounted(async () => {
     await nextTick();
-    guessReplyContainIntrinsicBlockSize(useElementRefStore().get('<PostRendererListReply>.reply'));
+    guessReplyContainIntrinsicBlockSize(replyElementRefs.value);
 });
 </script>

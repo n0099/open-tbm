@@ -27,8 +27,7 @@
         </div>
     </header>
     <div
-        :ref="el => el !== null
-            && elementRefStore.pushOrClear('<PostRendererListReply>.reply', el as HTMLElement)"
+        :ref="replyElementRefs.set"
         class="reply row shadow-sm bs-callout bs-callout-info">
         <address
             v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
@@ -55,6 +54,7 @@
 
 <script setup lang="ts">
 import 'assets/css/bootstrapCallout.css';
+import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
 type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];
@@ -62,9 +62,9 @@ const props = defineProps<{
     thread: ThreadWithGroupedSubReplies,
     previousReply?: ReplyWithGroupedSubReplies,
     reply: ReplyWithGroupedSubReplies,
-    nextReply?: ReplyWithGroupedSubReplies
+    nextReply?: ReplyWithGroupedSubReplies,
+    replyElementRefs: TemplateRefsList<HTMLElement>
 }>();
-const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
 const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(

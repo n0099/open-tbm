@@ -1,3 +1,4 @@
+// eslint-disable-next-line import-x/extensions
 import { withNuxt } from './.nuxt/eslint.config.mjs';
 import * as vueESLintParser from 'vue-eslint-parser';
 // eslint-disable-next-line import-x/extensions
