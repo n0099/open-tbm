@@ -1,8 +1,7 @@
 <template>
-<article :data-post-id="reply.pid" :id="`pid/${reply.pid}`">
+<article :id="`pid/${reply.pid}`">
     <header
-        :ref="el =>
-            elementRefStore.pushOrClear('<PostRendererList>.reply-title', el as Element | null)"
+        ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(reply, 'pid') }"
         class="reply-title sticky-top card-header">
         <div class="d-inline-flex gap-1 fs-5">
@@ -59,17 +58,20 @@ import 'assets/css/bootstrapCallout.css';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
 type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];
-defineProps<{
+const props = defineProps<{
     thread: ThreadWithGroupedSubReplies,
     previousReply?: ReplyWithGroupedSubReplies,
     reply: ReplyWithGroupedSubReplies,
     nextReply?: ReplyWithGroupedSubReplies
 }>();
-
 const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
-const { getUser } = usePostPageProvision().inject();
+const { getUser, currentCursor } = usePostPageProvision().inject();
 const replyElements = ref<HTMLElement[]>([]);
+const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
+    { cursor: currentCursor.value, tid: props.reply.tid, pid: props.reply.pid },
+    replyTitleStyle().top()
+);
 
 onMounted(async () => {
     await nextTick();

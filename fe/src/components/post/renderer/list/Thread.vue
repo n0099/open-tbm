@@ -1,7 +1,7 @@
 <template>
-<article :data-post-id="thread.tid" class="mt-3 card" :id="`tid/${thread.tid}`">
+<article class="mt-3 card" :id="`tid/${thread.tid}`">
     <header
-        :ref="el => elementRefStore.pushOrClear('<PostRendererList>.thread-title', el as Element | null)"
+        ref="stickyTitleEl"
         :class="{ 'highlight-post': highlightPostStore.isHighlightingPost(thread, 'tid') }"
         class="thread-title shadow-sm card-header sticky-top">
         <div class="thread-title-inline-start row flex-nowrap">
@@ -71,13 +71,15 @@ import type { ThreadWithGroupedSubReplies } from './List.vue';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 
-defineProps<{
+const props = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies
 }>();
-const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
+const { currentCursor } = usePostPageProvision().inject();
+const { stickyTitleEl } = useViewportTopmostPostStore()
+    .intersectionObserver({ cursor: currentCursor.value, tid: props.thread.tid });
 
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {

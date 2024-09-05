@@ -53,12 +53,11 @@ import _ from 'lodash';
 const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
 const route = useRoute();
 const router = useRouter();
-const elementRefStore = useElementRefStore();
 const highlightPostStore = useHighlightPostStore();
+const { viewportTopmostPost } = storeToRefs(useViewportTopmostPostStore());
 const hydrationStore = useHydrationStore();
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
-const viewportTopmostPost = ref<{ cursor: Cursor, tid: Tid, pid: Pid }>({ cursor: '', tid: 0, pid: 0 });
 
 const noScriptStyle = `<style>
     @media (max-width: 900px) {
@@ -119,7 +118,7 @@ const menuReplyClasses = (reply: Reply) => {
         return 'btn-light text-body-secondary';
     const isRouteHash = route.hash === routeHash(reply);
     const isHighlighting = highlightPostStore.isHighlightingPost(reply, 'pid');
-    const isTopmost = reply.pid === viewportTopmostPost.value.pid;
+    const isTopmost = reply.pid === viewportTopmostPost.value?.pid;
 
     return { /* eslint-disable @typescript-eslint/naming-convention */
         ...keysWithSameValue(['rounded-3', 'btn-info', 'text-white'], isTopmost),
@@ -130,67 +129,15 @@ const menuReplyClasses = (reply: Reply) => {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
-const scrollStop = _.debounce(() => {
-    // eslint-disable-next-line unicorn/no-array-reduce
-    const findTopmostElement = (elements: Element[], topOffset = 0): Element => elements.reduce(
-        (acc: { top: number, el: Element }, el: Element) => {
-            const elTop = el.getBoundingClientRect().top - topOffset;
-
-            // ignore element which its y coord is ahead of the top of viewport
-            if (elTop >= 0 && acc.top > elTop)
-                return { top: elTop, el };
-
-            return acc;
-        },
-        { top: Infinity, el: document.createElement('null') }
-    ).el;
-
-    const viewportTopmostPostElement = {
-        thread: findTopmostElement(elementRefStore.get('<PostRendererList>.thread-title')),
-        reply: findTopmostElement(elementRefStore.get('<PostRendererList>.reply-title'), getReplyTitleTopOffset())
-    };
-    const viewportTopmostPostID = _.mapValues(viewportTopmostPostElement, i =>
-        Number(i.parentElement?.getAttribute('data-post-id')));
-
-    const viewportTopmostPostCursor = _.mapValues(viewportTopmostPostElement,
-        i => i.closest('.post-render-list')?.getAttribute('data-cursor') ?? '');
-
-    viewportTopmostPost.value = {
-        tid: viewportTopmostPostID.thread,
-
-        // is the topmost reply belonged to the topmost thread, true when the topmost thread has no reply,
-        // the topmost reply will belong to another thread that comes after the topmost thread in view
-        ..._.chain(props.postPages)
-            .map(i => i.threads)
-            .flatten()
-            .filter({ tid: viewportTopmostPostID.thread })
-            .map(i => i.replies)
-            .flatten()
-            .filter({ pid: viewportTopmostPostID.reply })
-            .isEmpty()
-            .value()
-            ? { pid: 0, cursor: viewportTopmostPostCursor.thread }
-            : { pid: viewportTopmostPostID.reply, cursor: viewportTopmostPostCursor.reply }
-    };
-}, 200);
-const removeScrollEventListener = () => { document.removeEventListener('scroll', scrollStop) };
-onUnmounted(removeScrollEventListener);
-
 watchEffect(() => {
     expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
-    if (!import.meta.client)
-        return;
-    if (!isPostNavExpanded.value || _.isEmpty(props.postPages))
-        removeScrollEventListener();
-    else
-        document.addEventListener('scroll', scrollStop, { passive: true });
-    if (isPostNavExpanded.value)
-        scrollStop();
 });
 watch(viewportTopmostPost, (to, from) => {
-    if (_.isEqual(_.omit(to, 'pid'), _.omit(from, 'pid')))
+    if (to === undefined)
         return;
     const { cursor, tid } = to;
+    if (_.isEqual(_.omit(to, 'pid'), _.omit(from, 'pid')))
+        return;
     const menuKey = threadMenuKey(cursor, tid);
     selectedThreads.value = [menuKey];
 
