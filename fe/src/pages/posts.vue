@@ -12,7 +12,8 @@
             <LazyPostNav v-if="renderType === 'list'" :postPages="data.pages" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage
-                    v-for="(page, pageIndex) in data.pages" :key="page.pages.currentCursor"
+                    v-for="(page, pageIndex) in data.pages"
+                    :key="`${queryParam?.query}/cursor/${page.pages.currentCursor}`"
                     @clickNextPage="async () => await fetchNextPage()"
                     :posts="page" :renderType="renderType"
                     :isFetching="isFetching" :hasNextPage="hasNextPage"

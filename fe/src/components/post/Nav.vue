@@ -8,7 +8,7 @@
         <template v-for="posts in postPages">
             <ASubMenu
                 v-for="cursor in [posts.pages.currentCursor]"
-                :key="`c${cursor}`" :eventKey="`c${cursor}`" :title="cursorTemplate(cursor)">
+                :key="cursorKey(cursor)" :eventKey="cursorKey(cursor)" :title="cursorTemplate(cursor)">
                 <AMenuItem
                     v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
                     ref="threadMenuItemRefs" :title="thread.title"
@@ -91,7 +91,8 @@ const navigate = async (cursor: Cursor, postIdObj: PostIdObj) =>
         hash: routeHash(postIdObj),
         params: { ...route.params, cursor }
     });
-const threadMenuKey = (cursor: Cursor, tid: Tid) => `c${cursor}-t${tid}`;
+const cursorKey = (cursor: Cursor) => `cursor/${cursor}`;
+const threadMenuKey = (cursor: Cursor, tid: Tid) => `${cursorKey(cursor)}/tid/${tid}`;
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if (!(domEvent.target as Element).classList.contains('post-nav-reply')) { // ignore clicks on reply link
         const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
@@ -130,7 +131,7 @@ const menuReplyClasses = (reply: Reply) => {
 };
 
 watchEffect(() => {
-    expandedPages.value = postPages.map(i => `c${i.pages.currentCursor}`);
+    expandedPages.value = postPages.map(i => cursorKey(i.pages.currentCursor));
 });
 watch(viewportTopmostPost, (to, from) => {
     if (to === undefined)
