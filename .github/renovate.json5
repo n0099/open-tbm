@@ -1,6 +1,26 @@
-{
+{ // https://docs.renovatebot.com/configuration-options/
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "rangeStrategy": "bump",
+  "separateMajorMinor": false,
+  "lockFileMaintenance": { "enabled": true },
+  "packageRules": [
+    {
+      "matchFileNames": ["c#/**"],
+      "groupName": "c#",
+      "commitMessagePrefix": "deps(c#): "
+    },
+    {
+      "matchFileNames": ["be/**"],
+      "groupName": "be",
+      "commitMessagePrefix": "deps(be): "
+    },
+    {
+      "matchFileNames": ["fe/**"],
+      "groupName": "fe",
+      "commitMessagePrefix": "deps(fe): "
+    }
   ]
 }
