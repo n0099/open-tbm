@@ -3,7 +3,7 @@
     "license": "AGPL-3.0-or-later",
     "type": "project",
     "require": {
-        "php": "^8.3",
+        "php": "^8.3.11",
         "guzzlehttp/guzzle": "^7.9.2",
         "laravel/framework": "^11.22.0",
         "laravel/tinker": "^2.9.0",
@@ -17,7 +17,7 @@
         "laravel/pint": "^1.17.3",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/collision": "^8.4.0",
-        "phpunit/phpunit": "^10.5.32",
+        "phpunit/phpunit": "^11.3.3",
         "spatie/laravel-ignition": "^2.8.0",
         "barryvdh/laravel-debugbar": "^3.13.5",
         "barryvdh/laravel-ide-helper": "^3.1.0",
