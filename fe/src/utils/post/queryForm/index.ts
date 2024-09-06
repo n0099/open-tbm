@@ -6,7 +6,7 @@ export const isDateTimeParam = (param: Param): param is KnownDateTimeParams =>
     (paramsNameKeyByType.dateTime as Writable<typeof paramsNameKeyByType.dateTime> as string[]).includes(param.name);
 export const isTextParam = (param: Param): param is KnownTextParams =>
     (paramsNameKeyByType.text as Writable<typeof paramsNameKeyByType.text> as string[]).includes(param.name);
-export const isPostIDParam = (param: Param): param is AddNameToParam<PostID, NamelessParamNumeric> =>
+export const isPostIDParam = (param: Param): param is AddNameToParam<PostIDStr, NamelessParamNumeric> =>
     (postID as Writable<typeof postID> as string[]).includes(param.name);
 export type QueryFormDeps = ReturnType<typeof getQueryFormDeps>;
 

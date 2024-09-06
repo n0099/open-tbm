@@ -11,10 +11,10 @@ export const usePostsSchemaOrg = (data: Ref<InfiniteData<ApiPosts['response']> |
     const definePostComment = <T extends Post>(post: T, postIDKey: keyof T & PostIDOf<T>): Comment => ({
         /* eslint-disable @typescript-eslint/naming-convention */
         '@type': 'Comment',
-        '@id': (post[postIDKey] as Tid | Pid | Spid).toString(),
+        '@id': (post[postIDKey] as PostID).toString(),
         url: baseUrlWithDomain + router.resolve({
             name: `posts/${postIDKey}`,
-            params: { [postIDKey]: post[postIDKey] as Tid | Pid | Spid }
+            params: { [postIDKey]: post[postIDKey] as PostID }
         }).fullPath,
         dateCreated: DateTime.fromSeconds(post.createdAt).toISO(),
         datePublished: DateTime.fromSeconds(post.postedAt).toISO(),

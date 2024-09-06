@@ -1,14 +1,14 @@
-import type { RouteLocationNormalized } from 'vue-router';
+import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
 export const postListItemScrollPosition = (route: RouteLocationNormalized)
-    : (ScrollToOptions & { selector: string }) | false => {
+: Extract<ReturnType<RouterScrollBehavior>, { el: string | Element }> & { el: string } | false => {
     const hash = route.hash.slice(1);
     if (_.isEmpty(hash))
         return false;
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
-        selector: `.post-render-list[data-cursor='${getRouteCursorParam(route)}'] [id='${hash}']`,
+        el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}'] [id='${hash}']`,
         top: hash.startsWith('tid/') ? 0 : replyTitleStyle().topWithoutMargin()
     };
 };
@@ -46,7 +46,7 @@ export const scrollToPostListItemByRoute = (route: RouteLocationNormalized) => {
     const scrollPosition = postListItemScrollPosition(route);
     if (scrollPosition === false)
         return;
-    const el = document.querySelector(scrollPosition.selector);
+    const el = document.querySelector(scrollPosition.el);
     if (el === null)
         return;
     requestIdleCallback(function retry(deadline) {

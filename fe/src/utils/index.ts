@@ -31,12 +31,13 @@ export type PostTypeTextOf<T> = T extends Thread ? '主题帖'
     : T extends Reply ? '回复贴'
         : T extends SubReply ? '楼中楼' : never;
 export const postID = ['tid', 'pid', 'spid'] as const;
-export type PostID = typeof postID[number];
+export type PostIDStr = typeof postID[number];
 export type PostIDOf<T> = T extends Thread ? 'tid' : T extends Reply ? 'pid' : T extends SubReply ? 'spid' : never;
 export type Fid = UInt;
 export type Tid = UInt;
 export type Pid = UInt;
 export type Spid = UInt;
+export type PostID = Tid | Pid | Spid;
 
 export const cursorTemplate = (cursor: Cursor) => (cursor === '' ? '起始页' : `页游标 ${cursor}`);
 export const tiebaPostLink = (tid: Tid, pid?: Pid, spid?: Spid) => {

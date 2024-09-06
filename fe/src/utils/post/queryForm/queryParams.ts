@@ -87,7 +87,7 @@ export interface KnownUniqueParams extends Record<string, UnknownParam> {
     postTypes: { name: 'postTypes', value: PostType[], subParam: ObjEmpty },
     orderBy: {
         name: 'orderBy',
-        value: PostID | 'default' | 'postedAt',
+        value: PostIDStr | 'default' | 'postedAt',
         subParam: { direction: 'ASC' | 'default' | 'DESC' }
     }
 }
