@@ -58,7 +58,7 @@ import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
 type ReplyWithGroupedSubReplies = ThreadWithGroupedSubReplies['replies'][number];
-const props = defineProps<{
+const { reply } = defineProps<{
     thread: ThreadWithGroupedSubReplies,
     previousReply?: ReplyWithGroupedSubReplies,
     reply: ReplyWithGroupedSubReplies,
@@ -68,7 +68,7 @@ const props = defineProps<{
 const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
 const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
-    { cursor: currentCursor.value, tid: props.reply.tid, pid: props.reply.pid },
+    { cursor: currentCursor.value, tid: reply.tid, pid: reply.pid },
     replyTitleStyle().top()
 );
 </script>

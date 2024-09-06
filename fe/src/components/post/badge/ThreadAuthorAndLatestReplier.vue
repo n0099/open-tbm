@@ -43,12 +43,12 @@
 import type { LocationAsRelativeRaw } from 'vue-router';
 import _ from 'lodash';
 
-const props = defineProps<{ thread: Thread }>();
+const { thread } = defineProps<{ thread: Thread }>();
 const { getUser, renderUsername, getLatestReplier } = usePostPageProvision().inject();
 
-const authorUid = computed(() => props.thread.authorUid);
+const authorUid = computed(() => thread.authorUid);
 const authorUser = computed(() => getUser.value(authorUid.value));
-const latestReplier = computed(() => getLatestReplier.value(props.thread.latestReplierId));
+const latestReplier = computed(() => getLatestReplier.value(thread.latestReplierId));
 const latestReplierUser = computed(() => (
     _.isNil(latestReplier.value?.uid) ? undefined : getUser.value(latestReplier.value.uid)));
 

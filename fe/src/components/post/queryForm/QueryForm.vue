@@ -193,7 +193,7 @@ import { inputTextMatchParamPlaceholder } from './widget/InputTextMatchParam.vue
 import { faFilter, faPlus, faSortAmountDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
-const props = defineProps<{
+const { queryFormDeps } = defineProps<{
     isLoading: boolean,
     queryFormDeps: QueryFormDeps
 }>();
@@ -208,7 +208,7 @@ const {
     addParam,
     changeParam,
     deleteParam
-} = props.queryFormDeps;
+} = queryFormDeps;
 
 const getPostIDParamPlaceholders = (p: Param) => ({
     IN: p.name === 'tid' ? '5000000000,5000000001,5000000002,...' : '15000000000,15000000001,15000000002,...',

@@ -24,26 +24,23 @@ import type { DurationLike } from 'luxon';
 import { DateTime } from 'luxon';
 
 defineOptions({ inheritAttrs: true });
-const props = withDefaults(defineProps<{
+const { startTime = 0, endTime = 0, startBefore } = defineProps<{
     startTime?: number,
     endTime?: number,
     startBefore: DurationLike
-}>(), {
-    startTime: 0,
-    endTime: 0
-});
+}>();
 const emit = defineEmits<{
     'update:startTime': [i: number],
     'update:endTime': [i: number]
 }>();
 
 const timeRange = ref<[Dayjs, Dayjs]>((now => [
-    dayjs(now.minus(props.startBefore).startOf('minute').toISO()),
+    dayjs(now.minus(startBefore).startOf('minute').toISO()),
     dayjs(now.startOf('minute').toISO())
 ])(DateTime.now()));
 
 watchEffect(() => {
-    timeRange.value = [unix(props.startTime), unix(props.endTime)];
+    timeRange.value = [unix(startTime), unix(endTime)];
 });
 watchEffect(() => {
     emit('update:startTime', timeRange.value[0].unix());

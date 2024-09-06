@@ -22,12 +22,12 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-const props = defineProps<{
+const { users } = defineProps<{
     users: ApiUsers['response'],
     isLoadingNewPage: boolean,
     isLastPageInPages: boolean
 }>();
-const nextCursorRoute = useNextCursorRoute(props.users.pages.nextCursor);
+const nextCursorRoute = useNextCursorRoute(users.pages.nextCursor);
 
 const userGender = (gender: UserGender) => {
     const genderDescription = {

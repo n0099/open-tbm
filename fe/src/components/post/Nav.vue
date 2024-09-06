@@ -49,7 +49,7 @@ import scrollIntoView from 'scroll-into-view-if-needed';
 import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
-const props = defineProps<{ postPages: Array<ApiPosts['response']> }>();
+const { postPages } = defineProps<{ postPages: Array<ApiPosts['response']> }>();
 const route = useRoute();
 const router = useRouter();
 const highlightPostStore = useHighlightPostStore();
@@ -130,7 +130,7 @@ const menuReplyClasses = (reply: Reply) => {
 };
 
 watchEffect(() => {
-    expandedPages.value = props.postPages.map(i => `c${i.pages.currentCursor}`);
+    expandedPages.value = postPages.map(i => `c${i.pages.currentCursor}`);
 });
 watch(viewportTopmostPost, (to, from) => {
     if (to === undefined)

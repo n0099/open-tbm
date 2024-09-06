@@ -12,7 +12,7 @@
 import _ from 'lodash';
 
 defineOptions({ inheritAttrs: true });
-const props = defineProps<{ granularities: string[] }>();
+const { granularities } = defineProps<{ granularities: string[] }>();
 const modelValue = defineModel<string>();
 
 const granularitiesDefaultOption: TimeGranularityStringMap = {
@@ -24,5 +24,5 @@ const granularitiesDefaultOption: TimeGranularityStringMap = {
     year: '年'
 };
 const options = ref<TimeGranularityStringMap>(_.pick(granularitiesDefaultOption,
-    _.intersection(props.granularities, Object.keys(granularitiesDefaultOption))));
+    _.intersection(granularities, Object.keys(granularitiesDefaultOption))));
 </script>

@@ -29,6 +29,7 @@
   "typescript.inlayHints.parameterNames.enabled": "literals",
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "vue.inlayHints.missingProps": true,
+  "vue.inlayHints.destructuredProps": true,
   "vue.inlayHints.inlineHandlerLeading": true,
   "vue.inlayHints.optionsWrapper": true,
   "vue.inlayHints.vBindShorthand": true,

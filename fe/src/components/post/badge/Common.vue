@@ -42,7 +42,7 @@ import { faArrowUpRightFromSquare, faHashtag, faLink } from '@fortawesome/free-s
 import { DateTime } from 'luxon';
 
 // https://github.com/vuejs/language-tools/issues/3267
-const props = defineProps<{
+const { post } = defineProps<{
     post: TPost,
     postIDKey: TPostIDKey,
     postTypeText: PostTypeTextOf<TPost>
@@ -65,7 +65,7 @@ const formatTime = (time: UnixTimestamp) => {
 };
 
 const tippyContent = () => `
-首次收录时间：${formatTime(props.post.createdAt)}<br>
-最后更新时间：${formatTime(props.post.updatedAt ?? props.post.createdAt)}<br>
-最后发现时间：${formatTime(props.post.lastSeenAt ?? props.post.updatedAt ?? props.post.createdAt)}`;
+首次收录时间：${formatTime(post.createdAt)}<br>
+最后更新时间：${formatTime(post.updatedAt ?? post.createdAt)}<br>
+最后发现时间：${formatTime(post.lastSeenAt ?? post.updatedAt ?? post.createdAt)}`;
 </script>

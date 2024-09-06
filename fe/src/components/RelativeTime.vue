@@ -19,15 +19,15 @@
 import type { DateTime } from 'luxon';
 import _ from 'lodash';
 
-const props = defineProps<{
+const { dateTime, relativeTo } = defineProps<{
     dateTime: DateTime<true>,
     relativeTo?: DateTime<true>
 }>();
 const hydrationStore = useHydrationStore();
 const relativeTimeStore = useRelativeTimeStore();
-const dateTimeInShanghai = computed(() => setDateTimeZoneAndLocale()(props.dateTime));
+const dateTimeInShanghai = computed(() => setDateTimeZoneAndLocale()(dateTime));
 const updateTimerDep = computed(() =>
-    (props.relativeTo === undefined ? relativeTimeStore.registerTimerDep(props.dateTime).value : undefined));
+    (relativeTo === undefined ? relativeTimeStore.registerTimerDep(dateTime).value : undefined));
 const updatedTimes = ref(0);
 const rootEl = ref<HTMLElement>();
 const isVisible = ref(false);

@@ -18,7 +18,7 @@
 import type { RouteLocationNormalized, RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
-const props = defineProps<{
+const { uid } = defineProps<{
     page: string,
     uid: string,
     name: string,
@@ -72,7 +72,7 @@ watchEffect(() => {
         route.name?.toString() ?? '',
         routeNameSuffix.page
     ), 'users/') as SelectUserBy;
-    params.value = { ..._.omit(props, 'cursor'), uid: Number(props.uid) };
+    params.value = { ..._.omit(props, 'cursor'), uid: Number(uid) };
 });
 onBeforeRouteUpdate(async (to, from) => {
     const isNewQuery = compareRouteIsNewQuery(to, from);

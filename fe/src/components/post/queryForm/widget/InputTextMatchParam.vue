@@ -48,7 +48,7 @@ export const inputTextMatchParamPlaceholder = (p: KnownTextParams) =>
 <script setup lang="ts">
 import _ from 'lodash';
 
-const props = defineProps<{ paramIndex: number }>();
+const { paramIndex } = defineProps<{ paramIndex: number }>();
 // eslint-disable-next-line vue/define-emits-declaration
 defineEmits({
     'update:modelValue': (p: KnownTextParams) =>
@@ -68,9 +68,9 @@ const emitModelChange = (
     } as KnownTextParams;
 };
 const inputID = (type: 'Explicit' | 'Implicit' | 'Regex' | 'SpaceSplit') =>
-    `param${_.upperFirst(modelValue.value.name)}${type}-${props.paramIndex}`;
+    `param${_.upperFirst(modelValue.value.name)}${type}-${paramIndex}`;
 const inputName = computed(() =>
-    `param${_.upperFirst(modelValue.value.name)}-${props.paramIndex}`);
+    `param${_.upperFirst(modelValue.value.name)}-${paramIndex}`);
 </script>
 
 <style scoped>

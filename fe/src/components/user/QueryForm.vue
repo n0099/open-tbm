@@ -23,7 +23,7 @@ import _ from 'lodash';
 type RouteQueryString = Omit<SelectUserParams, Exclude<SelectUserBy, ''>>
     & { gender?: UserGenderQueryParam };
 
-const props = defineProps<{
+const { query, params, selectUserBy } = defineProps<{
     query: RouteQueryString,
     params: {
         uid?: BaiduUserID,
@@ -62,10 +62,10 @@ const submitQueryForm = async () => {
 };
 
 watchEffect(() => {
-    gender.value = props.query.gender ?? paramsDefaultValue.gender;
+    gender.value = query.gender ?? paramsDefaultValue.gender;
     selectUser.value = {
-        selectBy: props.selectUserBy,
-        params: { ...props.params, ...boolStrPropToBool(props.query) }
+        selectBy: selectUserBy,
+        params: { ...params, ...boolStrPropToBool(query) }
     };
 });
 </script>

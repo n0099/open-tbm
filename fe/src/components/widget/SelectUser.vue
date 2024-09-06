@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import _ from 'lodash';
 
-const props = defineProps<{
+const { modelValue, paramsNameMap } = defineProps<{
     modelValue: SelectUserModel,
     paramsNameMap?: Record<keyof SelectUserParams, string>
 }>();
@@ -63,20 +63,20 @@ const selectBy = ref<SelectUserBy | 'displayNameNULL' | 'nameNULL'>('');
 const params = ref<SelectUserParams>({});
 
 const emitModelChange = () => {
-    if (props.paramsNameMap !== undefined) {
+    if (paramsNameMap !== undefined) {
         params.value = _.mapKeys(params, (_v, oldParamName) =>
-            (props.paramsNameMap as Record<string, string>)[oldParamName]);
+            (paramsNameMap as Record<string, string>)[oldParamName]);
     }
     emit('update:modelValue', { selectBy: selectBy.value, params: params.value });
 };
 
 watch(params, emitModelChange, { deep: true });
-watch(() => props.modelValue, () => {
+watch(() => modelValue, () => {
     // emit with default params value when parent haven't passing modelValue
-    if (_.isEmpty(props.modelValue))
+    if (_.isEmpty(modelValue))
         emitModelChange();
     else
-        ({ selectBy: selectBy.value, params: params.value } = props.modelValue);
+        ({ selectBy: selectBy.value, params: params.value } = modelValue);
 
     // filter out unnecessary and undefined params
     // eslint-disable-next-line @typescript-eslint/unbound-method

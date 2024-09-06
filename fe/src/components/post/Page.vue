@@ -21,7 +21,7 @@
 import type { PostRenderer } from '@/pages/posts.vue';
 import type { RouteLocationRaw } from 'vue-router';
 
-const props = defineProps<{
+const { posts } = defineProps<{
     posts: ApiPosts['response'],
     renderType: PostRenderer,
     isFetching: boolean,
@@ -30,7 +30,7 @@ const props = defineProps<{
     nextPageRoute: RouteLocationRaw
 }>();
 defineEmits<{ clickNextPage: [] }>();
-usePostPageProvision().provide({ ...props.posts, currentCursor: props.posts.pages.currentCursor });
+usePostPageProvision().provide({ ...posts, currentCursor: posts.pages.currentCursor });
 </script>
 
 <style scoped>

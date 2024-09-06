@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import _ from 'lodash';
 
-const props = defineProps<{
+const { user } = defineProps<{
     user: User,
     threadAuthorUid?: BaiduUserID,
     replyAuthorUid?: BaiduUserID
@@ -48,5 +48,5 @@ const knownModeratorTypes: { [P in ForumModeratorType]: [string, BootstrapColor]
     ...keysWithSameValue(['publication_editor', 'publication'], ['吧刊小编', 'secondary'])
 };
 const moderators = computed(() => _.pick(knownModeratorTypes,
-    props.user.currentForumModerator?.moderatorTypes.split(',') ?? []));
+    user.currentForumModerator?.moderatorTypes.split(',') ?? []));
 </script>

@@ -27,23 +27,23 @@
 <script setup lang="ts">
 import type { UnwrapRef } from 'vue';
 
-const props = defineProps<{
+const { firstThread, firstPostPage } = defineProps<{
     routePath: string,
     firstPostPage?: ApiPosts['response'],
     firstPostPageForum?: ApiPosts['response']['forum'],
     firstThread?: ApiPosts['response']['threads'][number],
     currentQueryType: UnwrapRef<QueryFormDeps['currentQueryType']>
 }>();
-const firstReplyContent = computed(() => props.firstThread?.replies[0]);
+const firstReplyContent = computed(() => firstThread?.replies[0]);
 const firstSubReplyContent = computed(() => firstReplyContent.value?.subReplies[0]);
 const firstPostContentTexts = computed(() =>
     extractContentTexts((firstSubReplyContent.value ?? firstReplyContent.value)?.content));
-const getUser = computed(() => baseGetUser(props.firstPostPage?.users ?? []));
+const getUser = computed(() => baseGetUser(firstPostPage?.users ?? []));
 const firstPostAuthor = computed(() => undefinedOr(
     (firstSubReplyContent.value ?? firstReplyContent.value)?.authorUid,
     uid => getUser.value(uid)
 ));
-const firstImage = computed(() => props.firstPostPage
+const firstImage = computed(() => firstPostPage
     ?.threads.flatMap(thread =>
         thread.replies.flatMap(reply =>
             reply.content?.find(i => i.type === 3)))

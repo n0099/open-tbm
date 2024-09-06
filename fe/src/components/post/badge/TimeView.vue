@@ -13,7 +13,7 @@
         & ('postedAt' | (TPost extends Thread ? 'latestReplyPostedAt' : never))">
 import { DateTime } from 'luxon';
 
-const props = defineProps<{
+const { current, relativeTo, relativeToText, postType, timestampType } = defineProps<{
     current: DateTime<true>,
     relativeTo?: DateTime<true>,
     relativeToText?: string,
@@ -22,42 +22,42 @@ const props = defineProps<{
         : 'postedAt' extends TPostTimeKey ? '发帖时间' : never
 }>();
 const hydrationStore = useHydrationStore();
-const currentInShanghai = computed(() => setDateTimeZoneAndLocale()(props.current));
+const currentInShanghai = computed(() => setDateTimeZoneAndLocale()(current));
 const placeholderWidth = computed(() => (dateTimeLocale.value.startsWith('zh') ? '' : '2.5rem'));
 
 const tippyContentRelativeTo = computed(() => {
-    if (props.relativeTo === undefined || props.relativeToText === undefined)
+    if (relativeTo === undefined || relativeToText === undefined)
         return '';
 
-    const relativeToLocale = props.relativeTo
+    const relativeToLocale = relativeTo
         .toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
-    const currentDiffRelativeHuman = props.current
-        .diff(props.relativeTo, undefined, { conversionAccuracy: 'longterm' })
+    const currentDiffRelativeHuman = current
+        .diff(relativeTo, undefined, { conversionAccuracy: 'longterm' })
         .rescale().toHuman();
 
     return `
-        ${props.relativeToText}：<br>
+        ${relativeToText}：<br>
         <span class="user-select-all">${relativeToLocale}</span>
-        UNIX:<span class="user-select-all">${props.relativeTo.toUnixInteger()}</span><br>
+        UNIX:<span class="user-select-all">${relativeTo.toUnixInteger()}</span><br>
         相差 <span class="user-select-all">${currentDiffRelativeHuman}</span>`;
 });
 const tippyContent = () => {
     const currentText = () => {
         if (hydrationStore.isHydratingOrSSR)
             return currentInShanghai.value.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
-        const currentLocale = props.current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+        const currentLocale = current.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
 
         return tippyContentRelativeTo.value === ''
             ? `
-                UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span><br>
+                UNIX:<span class="user-select-all">${current.toUnixInteger()}</span><br>
                 <span class="user-select-all">${currentLocale}</span>`
             : `
                 <span class="user-select-all">${currentLocale}</span>
-                UNIX:<span class="user-select-all">${props.current.toUnixInteger()}</span>`;
+                UNIX:<span class="user-select-all">${current.toUnixInteger()}</span>`;
     };
 
     return `
-        本${props.postType}${props.timestampType}：<br>
+        本${postType}${timestampType}：<br>
         ${currentText()}<br>
         ${tippyContentRelativeTo.value}`;
 };

@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+const { previousSubReplyGroup, subReplyGroup, nextSubReplyGroup } = defineProps<{
     thread: Thread,
     reply: Reply,
     previousSubReplyGroup?: SubReply[],
@@ -52,8 +52,8 @@ const props = defineProps<{
 const highlightPostStore = useHighlightPostStore();
 const { getUser, renderUsername } = usePostPageProvision().inject();
 const getSiblingSubReply = (index: number, direction: 'previous' | 'next') =>
-    props.subReplyGroup[index + (direction === 'next' ? 1 : -1)] as SubReply | undefined
-        ?? (direction === 'next' ? props.nextSubReplyGroup?.[0] : props.previousSubReplyGroup?.at(-1));
+    subReplyGroup[index + (direction === 'next' ? 1 : -1)] as SubReply | undefined
+        ?? (direction === 'next' ? nextSubReplyGroup?.[0] : previousSubReplyGroup?.at(-1));
 </script>
 
 <style scoped>

@@ -29,8 +29,8 @@
 import { FetchError } from 'ofetch';
 import _ from 'lodash';
 
-const props = defineProps<{ error: ApiErrorClass | null }>();
-responseWithError(props.error);
+const { error } = defineProps<{ error: ApiErrorClass | null }>();
+responseWithError(error);
 </script>
 
 <style scoped>

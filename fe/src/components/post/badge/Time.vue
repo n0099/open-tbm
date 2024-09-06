@@ -7,7 +7,7 @@
         @mouseleave="() => highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="previousDateTime"
         :relativeToText="`相对于上一${postType}${timestampType}`"
-        :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">
+        :postType="postType" :timestampType="timestampType" v-bind="$attrs">
         <!-- https://github.com/vuejs/language-tools/issues/4798 -->
         <FontAwesome :icon="faChevronUp" class="me-1 align-bottom" />
     </PostBadgeTimeView>
@@ -18,7 +18,7 @@
         @mouseleave="() => highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="nextDateTime"
         :relativeToText="`相对于下一${postType}${timestampType}`"
-        :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">
+        :postType="postType" :timestampType="timestampType" v-bind="$attrs">
         <FontAwesome :icon="faChevronDown" class="me-1 align-bottom" />
     </PostBadgeTimeView>
     <PostBadgeTimeView
@@ -29,12 +29,12 @@
         @mouseleave="() => highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="parentDateTime"
         :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(postType) - 1]}${timestampType}`"
-        :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">
+        :postType="postType" :timestampType="timestampType" v-bind="$attrs">
         <FontAwesome :icon="faAnglesUp" class="me-1 align-bottom" />
     </PostBadgeTimeView>
 </ClientOnly>
 <PostBadgeTimeView
-    :current="currentDateTime" :postType="props.postType"
+    :current="currentDateTime" :postType="postType"
     :timestampType="timestampType" class="text-end"
     :class="{ 'post-badge-time-current-full': hydrationStore.isHydratingOrSSR }" v-bind="$attrs" />
 </template>
@@ -54,7 +54,7 @@ import { faAnglesUp, faChevronDown, faChevronUp } from '@fortawesome/free-solid-
 import { DateTime } from 'luxon';
 
 defineOptions({ inheritAttrs: false });
-const props = defineProps<{
+const { previousPost, nextPost, currentPost, parentPost, postTimeKey } = defineProps<{
     previousPost?: TPost,
     nextPost?: TPost,
     currentPost: TPost,
@@ -79,12 +79,12 @@ useHead({ noscript: [{ innerHTML: noScriptStyle }] });
 // https://github.com/typescript-eslint/typescript-eslint/issues/9723
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-unnecessary-type-parameters
 const getPostTime = <T extends TPost | TParentPost>(post?: T) =>
-    post?.[props.postTimeKey as keyof T] as TPostTimeValue | undefined;
-const previousTime = computed(() => getPostTime(props.previousPost));
-const nextTime = computed(() => getPostTime(props.nextPost));
-const parentTime = computed(() => getPostTime(props.parentPost));
+    post?.[postTimeKey as keyof T] as TPostTimeValue | undefined;
+const previousTime = computed(() => getPostTime(previousPost));
+const nextTime = computed(() => getPostTime(nextPost));
+const parentTime = computed(() => getPostTime(parentPost));
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const currentTime = computed(() => getPostTime(props.currentPost)!);
+const currentTime = computed(() => getPostTime(currentPost)!);
 
 const previousDateTime = computed(() =>
     undefinedOr(previousTime.value, i => DateTime.fromSeconds(i)));

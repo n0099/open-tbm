@@ -11,11 +11,11 @@
 import type { RouterScrollBehavior } from 'vue-router';
 import _ from 'lodash';
 
-const props = defineProps<{ posts: ApiPosts['response'] }>();
+const { posts } = defineProps<{ posts: ApiPosts['response'] }>();
 const nestedPosts = computed(() => {
     // https://github.com/TanStack/query/pull/6657
     // eslint-disable-next-line unicorn/prefer-structured-clone
-    const newPosts = _.cloneDeep(props.posts) as // https://github.com/microsoft/TypeScript/issues/33591
+    const newPosts = _.cloneDeep(posts) as // https://github.com/microsoft/TypeScript/issues/33591
         Modify<ApiPosts['response'], { threads: Array<ThreadWithGroupedSubReplies<SubReply>> }>;
     newPosts.threads = newPosts.threads.map(thread => {
         thread.replies = thread.replies.map(reply => {

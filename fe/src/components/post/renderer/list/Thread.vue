@@ -71,7 +71,7 @@ import type { TemplateRefsList } from '@vueuse/core';
 import { faCommentAlt, faEye, faLocationArrow, faShareAlt, faThumbsDown, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { DateTime } from 'luxon';
 
-const props = defineProps<{
+const { thread } = defineProps<{
     previousThread?: ThreadWithGroupedSubReplies,
     thread: ThreadWithGroupedSubReplies,
     nextThread?: ThreadWithGroupedSubReplies,
@@ -80,7 +80,7 @@ const props = defineProps<{
 const highlightPostStore = useHighlightPostStore();
 const { currentCursor } = usePostPageProvision().inject();
 const { stickyTitleEl } = useViewportTopmostPostStore()
-    .intersectionObserver({ cursor: currentCursor.value, tid: props.thread.tid });
+    .intersectionObserver({ cursor: currentCursor.value, tid: thread.tid });
 
 // todo: fetch users info in zan.userIdList
 const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
