@@ -9,7 +9,7 @@
     </aside>
     <div v-if="!(data === undefined || _.isEmpty(data.pages) || _.isEmpty(route.params))" class="container-fluid">
         <div class="row flex-nowrap">
-            <LazyPostNav v-if="renderType === 'list'" :postPages="data.pages" />
+            <LazyPostNav v-if="renderType === 'list'" :queryParam="queryParam" />
             <div class="post-page col mx-auto ps-0" :class="{ 'renderer-list': renderType === 'list' }">
                 <PostPage
                     v-for="(page, pageIndex) in data.pages"

@@ -5,10 +5,10 @@
     <AMenu
         v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
         forceSubMenuRender :inlineIndent="16" mode="inline">
-        <template v-for="posts in postPages">
+        <template v-for="posts in data?.pages ?? []">
             <ASubMenu
                 v-for="cursor in [posts.pages.currentCursor]"
-                :key="cursorKey(cursor)" :eventKey="cursorKey(cursor)" :title="cursorTemplate(cursor)">
+                :key="pageMenuKey(cursor)" :eventKey="pageMenuKey(cursor)" :title="cursorTemplate(cursor)">
                 <AMenuItem
                     v-for="thread in posts.threads" :key="threadMenuKey(cursor, thread.tid)"
                     ref="threadMenuItemRefs" :title="thread.title"
@@ -49,12 +49,13 @@ import scrollIntoView from 'scroll-into-view-if-needed';
 import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
-const { postPages } = defineProps<{ postPages: Array<ApiPosts['response']> }>();
+const { queryParam } = defineProps<{ queryParam?: ApiPosts['queryParam'] }>();
 const route = useRoute();
 const router = useRouter();
 const highlightPostStore = useHighlightPostStore();
 const { viewportTopmostPost } = storeToRefs(useViewportTopmostPostStore());
 const hydrationStore = useHydrationStore();
+const { data } = useApiPosts(computed(() => queryParam));
 const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
@@ -91,6 +92,7 @@ const navigate = async (cursor: Cursor, postIdObj: PostIdObj) =>
         params: { ...route.params, cursor }
     });
 const cursorKey = (cursor: Cursor) => `cursor/${cursor}`;
+const pageMenuKey = (cursor: Cursor) => `${queryParam?.query}/${cursorKey(cursor)}`;
 const threadMenuKey = (cursor: Cursor, tid: Tid) => `${cursorKey(cursor)}/tid/${tid}`;
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if (!(domEvent.target as Element).classList.contains('post-nav-reply')) { // ignore clicks on reply link
@@ -129,8 +131,13 @@ const menuReplyClasses = (reply: Reply) => {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
-watchEffect(() => {
-    expandedPages.value = postPages.map(i => cursorKey(i.pages.currentCursor));
+watchImmediate(() => data.value?.pages, () => {
+    if (data.value === undefined)
+        return;
+    const currentCursor = getRouteCursorParam(route);
+    const previousCursor = data.value.pages[
+        data.value.pages.findIndex(i => i.pages.currentCursor === currentCursor) - 1]?.pages.currentCursor;
+    expandedPages.value = [pageMenuKey(previousCursor), pageMenuKey(currentCursor)];
 });
 watch(viewportTopmostPost, (to, from) => {
     if (to === undefined)
