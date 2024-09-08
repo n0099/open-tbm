@@ -52,15 +52,14 @@ const globalLoadingStore = useGlobalLoadingStore();
 const isReCAPTCHAEnabled = config.recaptchaSiteKey !== '';
 const isGoogleAnalyticsEnabled = config.gaMeasurementId !== '';
 
-const noScriptStyle = `<style>
+useNoScript(`<style>
     #app-wrapper {
         pointer-events: unset !important;
     }
     #global-loading-spinner {
         display: none;
     }
-</style>`; // https://github.com/nuxt/nuxt/issues/13848
-useHead({ noscript: [{ innerHTML: noScriptStyle }] });
+</style>`);
 const appPointerEvents = ref('none');
 if (import.meta.client) {
     globalLoadingStore.start();

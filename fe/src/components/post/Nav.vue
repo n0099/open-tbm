@@ -59,7 +59,7 @@ const expandedPages = ref<string[]>([]);
 const selectedThreads = ref<string[]>([]);
 const threadMenuItemRefs = ref<ComponentPublicInstance[]>([]);
 
-const noScriptStyle = `<style>
+useNoScript(`<style>
     @media (max-width: 900px) {
         .post-nav {
             display: none;
@@ -68,8 +68,7 @@ const noScriptStyle = `<style>
     .post-nav > .ant-menu-root {
         padding-left: 0;
     }
-</style>`; // https://github.com/nuxt/nuxt/issues/13848
-useHead({ noscript: [{ innerHTML: noScriptStyle }] });
+</style>`);
 const [isPostNavExpanded, togglePostNavExpanded] = useToggle(true);
 onMounted(() => togglePostNavExpanded(matchMedia('(min-width: 900px)').matches));
 const postNavDisplay = ref('none'); // using media query in css instead of js before hydrate

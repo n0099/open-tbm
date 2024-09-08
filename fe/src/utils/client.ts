@@ -41,3 +41,13 @@ export const scrollBarWidth = computed(() => {
 export const dateTimeLocale = computed(() => (useHydrationStore().isHydratingOrSSR
     ? '' // https://github.com/moment/luxon/blob/a7f126ac09233d62c37ce79badeae38f952fb55a/docs/intl.md?plain=1#L72
     : new Intl.DateTimeFormat().resolvedOptions().locale));
+
+// https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683
+// https://gist.github.com/paulirish/5d52fb081b3570c81e3a#calling-getcomputedstyle
+export const convertRemToPixels = (rem: number) =>
+    rem * (import.meta.client ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 16); // assumed default 1rem=16px
+
+export const useNoScript = (innerHTML: string) => {
+    // https://github.com/nuxt/nuxt/issues/13848
+    useHead({ noscript: [{ innerHTML }] });
+};

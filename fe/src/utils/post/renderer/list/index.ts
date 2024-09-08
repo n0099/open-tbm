@@ -3,10 +3,6 @@ import _ from 'lodash';
 export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
 
-// https://stackoverflow.com/questions/36532307/rem-px-in-javascript/42769683#42769683
-// https://gist.github.com/paulirish/5d52fb081b3570c81e3a#calling-getcomputedstyle
-export const convertRemToPixels = (rem: number) =>
-    rem * (import.meta.client ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 16); // assumed default 1rem=16px
 export const replyTitleStyle = () => ({
     insetBlockStart: '5rem',
     marginBlockStart: '0.625rem',

@@ -69,12 +69,11 @@ const props = defineProps<{
 const highlightPostStore = useHighlightPostStore();
 const hydrationStore = useHydrationStore();
 
-const noScriptStyle = `<style>
+useNoScript(`<style>
     .post-badge-time-current-full {
         width: auto !important;
     }
-</style>`; // https://github.com/nuxt/nuxt/issues/13848
-useHead({ noscript: [{ innerHTML: noScriptStyle }] });
+</style>`);
 
 // https://github.com/typescript-eslint/typescript-eslint/issues/9723
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-unnecessary-type-parameters

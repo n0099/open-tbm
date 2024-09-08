@@ -17,9 +17,9 @@
             -->
         </div>
         <div class="float-end badge bg-light fs-6 p-1 pe-2" role="group">
-            <PostBadgeCommon :post="reply" postIDKey="pid" postTypeText="回复贴" />
+            <PostBadgeCommon :post="reply" postIDKey="pid" postTypeText="回复帖" />
             <PostBadgeTime
-                postType="回复贴"
+                postType="回复帖"
                 currentPostIDKey="pid" parentPostIDKey="tid" :parentPost="thread"
                 postTimeKey="postedAt" timestampType="发帖时间"
                 :previousPost="previousReply" :currentPost="reply" :nextPost="nextReply"

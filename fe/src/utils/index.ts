@@ -25,10 +25,10 @@ export type ToPromise<T> = T extends (...args: infer A) => infer R ? (...args: A
 export type Post = Reply | SubReply | Thread;
 export const postType = ['thread', 'reply', 'subReply'] as const;
 export type PostType = typeof postType[number];
-export const postTypeText = ['主题帖', '回复贴', '楼中楼'] as const;
+export const postTypeText = ['主题帖', '回复帖', '楼中楼'] as const;
 export type PostTypeText = typeof postTypeText[number];
 export type PostTypeTextOf<T> = T extends Thread ? '主题帖'
-    : T extends Reply ? '回复贴'
+    : T extends Reply ? '回复帖'
         : T extends SubReply ? '楼中楼' : never;
 export const postID = ['tid', 'pid', 'spid'] as const;
 export type PostIDStr = typeof postID[number];

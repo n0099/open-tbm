@@ -75,9 +75,12 @@ watch([dataUpdatedAt, errorUpdatedAt], async (updatedAt: UnixTimestamp[]) => {
         i.pages.currentCursor === getRouteCursorParam(route));
     const postCount = _.sum(Object.values(fetchedPage?.pages.matchQueryPostCount ?? {}));
     notyShow('success', `已加载${postCount}条记录
+        ${isQueryCached
+        ? '使用前端本地缓存'
+        : `
         前端耗时${_.round(renderDuration / 1000, 2)}s
         ${isQueriedBySSR ? '使用服务端渲染预请求' : ''}
-        ${isQueryCached ? '使用前端本地缓存' : `后端+网络耗时${_.round(networkDuration / 1000, 2)}s`}`);
+        后端+网络耗时${_.round(networkDuration / 1000, 2)}s`}`);
 });
 watch(isFetched, async () => {
     if (isFetched.value && renderType.value === 'list') {
