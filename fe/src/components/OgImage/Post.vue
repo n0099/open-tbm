@@ -11,7 +11,7 @@
         <h3 class="h-auto">{{ firstPostContentTexts }}</h3>
         <template v-for="author in [firstPostAuthor]">
             <div :key="author.uid" v-if="author !== undefined" class="m-auto">
-                <img :src="toUserPortraitImageUrl(author.portrait)" class="size-24" />
+                <UserPortrait :user="author" class="size-24" />
                 <span v-if="author.name !== null">{{ author.name }}</span>
                 <span v-if="author.displayName !== null">{{ author.displayName }}</span>
                 <span v-if="author.name === null && author.displayName === null">{{ author.uid }}</span>

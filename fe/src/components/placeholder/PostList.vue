@@ -5,14 +5,14 @@
         <div class="w-auto">
             <picture>
                 <source :srcset="iconHuajiLoadingSpinnerAvifs" type="image/avif" />
-                <img :src="iconHuajiLoadingSpinnerGif" />
+                <img :src="iconHuajiLoadingSpinnerGif" alt="loading" />
             </picture>
         </div>
     </template>
     <div class="col"><hr /></div>
     <div class="w-100" />
     <div class="col">
-        <img :class="{ animate: isLoading }" :src="placeholderPostList" />
+        <img :class="{ animate: isLoading }" :src="placeholderPostList" alt="placeholder" />
     </div>
 </div>
 </template>

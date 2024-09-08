@@ -1,9 +1,7 @@
 <template>
 <DefineUser v-slot="{ user, threadAuthorUid, replyAuthorUid }">
     <NuxtLink :to="toUserProfileUrl(user)" noPrefetch>
-        <img
-            :src="toUserPortraitImageUrl(user.portrait)" loading="lazy"
-            class="tieba-user-portrait-small" />
+        <UserPortrait :user="user" size="small" />
         {{ renderUsername(user.uid) }}
     </NuxtLink>
     <PostBadgeUser

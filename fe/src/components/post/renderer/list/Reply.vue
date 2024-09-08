@@ -33,7 +33,7 @@
             v-for="author in [getUser(reply.authorUid)]" :key="author.uid"
             class="reply-author col-auto h-100 text-center sticky-top shadow-sm badge bg-light">
             <NuxtLink :to="toUserRoute(author.uid)" noPrefetch class="d-block">
-                <img :src="toUserPortraitImageUrl(author.portrait)" loading="lazy" class="tieba-user-portrait-large" />
+                <UserPortrait :user="author" size="large" />
                 <p v-if="author.name !== null" class="mb-0">{{ author.name }}</p>
                 <p v-if="author.displayName !== null">{{ author.displayName }}</p>
             </NuxtLink>

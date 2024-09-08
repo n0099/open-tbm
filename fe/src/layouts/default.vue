@@ -4,7 +4,9 @@
         <GlobalNavBar />
         <MinimumResolutionWarning />
     </header>
-    <img v-show="routeUpdatingStore.isUpdating" :src="iconLoadingBlock" id="global-loading-block" />
+    <img
+        v-show="routeUpdatingStore.isUpdating" :src="iconLoadingBlock"
+        alt="loading" id="global-loading-block" />
     <div
         v-show="globalLoadingStore.isLoading" class="spinner-border text-primary"
         role="status" id="global-loading-spinner">

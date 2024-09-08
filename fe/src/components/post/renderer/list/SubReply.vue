@@ -11,9 +11,7 @@
                         v-if="subReplyGroup[subReplyGroupIndex - 1] === undefined"
                         :to="toUserRoute(author.uid)" noPrefetch
                         class="sub-reply-author text-wrap badge bg-light">
-                        <img
-                            :src="toUserPortraitImageUrl(author.portrait)"
-                            loading="lazy" class="tieba-user-portrait-small" />
+                        <UserPortrait :user="author" size="small" />
                         <span class="mx-2 align-middle link-dark">
                             {{ renderUsername(subReply.authorUid) }}
                         </span>
