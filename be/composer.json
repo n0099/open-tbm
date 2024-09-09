@@ -17,7 +17,7 @@
         "laravel/pint": "^1.17.3",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/collision": "^8.4.0",
-        "phpunit/phpunit": "^10.5.32",
+        "phpunit/phpunit": "^10.5.33",
         "spatie/laravel-ignition": "^2.8.0",
         "barryvdh/laravel-debugbar": "^3.13.5",
         "barryvdh/laravel-ide-helper": "^3.1.0",
@@ -29,7 +29,7 @@
         "phpstan/extension-installer": "^1.4.3",
         "phpstan/phpstan-deprecation-rules": "^1.2.0",
         "phpstan/phpstan-strict-rules": "^1.6.0",
-        "vimeo/psalm": "^5.25.0",
+        "vimeo/psalm": "^5.26.0",
         "psalm/plugin-laravel": "^2.11.0",
         "roave/security-advisories": "dev-latest"
     },
