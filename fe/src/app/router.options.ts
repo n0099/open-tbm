@@ -8,8 +8,10 @@ const withCursorRoute = (component: () => Promise<Component>) =>
             path,
             name,
             component,
-            children: [{ // see `App\Http\Controllers\PostsQuery->query()` in be
-                // non capture group (?:) and escaping `)` is required for regex in vue route
+            children: [{ // merge cursor child route into parent: https://github.com/vuejs/router/issues/2181
+                // sync with regex for cursor in `App\Http\Controllers\PostsQuery->query()` @ be
+                // using non capture group `(?:)` as captured groups will become string[] like repeated route param
+                // escaping `)` by `\\)` is required for regex in vue route
                 path: 'cursor/:cursor((?:(?:[A-Za-z0-9-_]{4}\\)*(?:[A-Za-z0-9-_]{2,3}\\)(?:,|$\\)|,\\){5,6})',
                 name: `${name}${routeNameSuffix.cursor}`,
                 component

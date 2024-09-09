@@ -10,7 +10,7 @@
 <script setup lang="ts">
 const { user } = defineProps<{
     user: User,
-    size: 'small' | 'large'
+    size?: 'small' | 'large'
 }>();
 const alt = computed(() =>
     `百度用户UID${user.uid} ${user.name} ${user.displayName} 的头像`);
