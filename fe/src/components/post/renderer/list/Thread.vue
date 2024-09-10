@@ -113,7 +113,7 @@ const zanTippyContent = (zan: NonNullable<Thread['zan']>) => () => {
 }
 
 .thread-title {
-    block-size: v-bind('replyTitleStyle().insetBlockStart');
+    block-size: v-bind('replyTitleStyle.insetBlockStart.remString');
     padding: .75rem 1rem .5rem 1rem;
     background-color: #f2f2f2;
 }

@@ -9,7 +9,7 @@ export const postListItemScrollPosition = (route: RouteLocationNormalized)
 
     return { // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
         el: `.post-render-list[data-cursor='${getRouteCursorParam(route)}'] [id='${hash}']`,
-        top: hash.startsWith('tid/') ? 0 : replyTitleStyle().topWithoutMargin()
+        top: hash.startsWith('tid/') ? 0 : replyTitleStyle.topWithoutMargin.px
     };
 };
 const scrollToPostListItem = (el: Element) => {
@@ -29,7 +29,7 @@ const scrollToPostListItem = (el: Element) => {
         // 1% of a very high element is still a big number that may not emit when scrolling ends
         // and the element reached the top of viewport
         const elTop = el.getBoundingClientRect().top;
-        const replyTitleTopOffset = replyTitleStyle().topWithoutMargin();
+        const replyTitleTopOffset = replyTitleStyle.topWithoutMargin.px;
         if (!el.isConnected // dangling reference to element that already removed from the document
             || window.innerHeight + window.scrollY + (window.innerHeight * 0.01) // at most 1dvh tolerance
                 >= document.documentElement.scrollHeight // https://stackoverflow.com/questions/3962558/javascript-detect-scroll-end/4638434#comment137130726_4638434

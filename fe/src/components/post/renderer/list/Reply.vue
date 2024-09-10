@@ -69,15 +69,15 @@ const highlightPostStore = useHighlightPostStore();
 const { getUser, currentCursor } = usePostPageProvision().inject();
 const { stickyTitleEl } = useViewportTopmostPostStore().intersectionObserver(
     { cursor: currentCursor.value, tid: reply.tid, pid: reply.pid },
-    replyTitleStyle().top()
+    replyTitleStyle.insetBlockStart.px
 );
 </script>
 
 <style scoped>
 .reply-title {
     z-index: 1019;
-    inset-block-start: v-bind('replyTitleStyle().insetBlockStart');
-    margin-block-start: v-bind('replyTitleStyle().marginBlockStart');
+    inset-block-start: v-bind('replyTitleStyle.insetBlockStart.remString');
+    margin-block-start: v-bind('replyTitleStyle.marginBlockStart.remString');
     border-block-start: 1px solid #ededed;
     border-block-end: 0;
     background: linear-gradient(rgba(237, 237, 237, 1), rgba(237, 237, 237, .1));

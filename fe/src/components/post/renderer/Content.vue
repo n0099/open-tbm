@@ -65,8 +65,8 @@ useViewerStore().enable();
 
 <style scoped>
 img.tieba-ugc-image {
-    max-inline-size: 18.75rem;
-    max-block-size: 18.75rem;
+    max-inline-size: v-bind('tiebaUGCImageMaxSize.remString');
+    max-block-size: v-bind('tiebaUGCImageMaxSize.remString');
     object-fit: contain;
     margin: .25rem;
     cursor: zoom-in;

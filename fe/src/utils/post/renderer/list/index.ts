@@ -3,34 +3,41 @@ import _ from 'lodash';
 export type ThreadWithGroupedSubReplies<AdditionalSubReply extends SubReply = never> =
     Thread & { replies: Array<Reply & { subReplies: Array<AdditionalSubReply | SubReply[]> }> };
 
-export const replyTitleStyle = () => ({
-    insetBlockStart: '5rem',
-    marginBlockStart: '0.625rem',
-    top: () => convertRemToPixels(5),
-    topWithoutMargin: () => convertRemToPixels(5) - convertRemToPixels(0.625)
+const remWithPixels = (rem: number) => ({
+    rem,
+    get remString() { return `${this.rem}rem` },
+    get px() { return convertRemToPixels(this.rem) }
 });
-
+export const replyTitleStyle = {
+    insetBlockStart: remWithPixels(5),
+    marginBlockStart: remWithPixels(0.625),
+    get topWithoutMargin() {
+        return remWithPixels(this.insetBlockStart.rem - this.marginBlockStart.rem);
+    }
+};
+export const tiebaUGCImageMaxSize = remWithPixels(18.75);
 export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]) => {
-    const imageWidth = convertRemToPixels(18.75); // match with .tieba-ugc-image:max-inline-size in <PostRendererContent>
-
     // block-size of .reply-content should be similar when author usernames are also similar, so only takes the first element
     const contentEl = document.querySelector<HTMLElement>('.reply-content');
     if (contentEl === null)
         return;
+    const contentStyles = ((el: HTMLElement) => {
+        const getCSSPropertyInPixels = (el: HTMLElement, property: string) =>
+            (el.computedStyleMap().get(property) as CSSNumericValue).to('px').value;
+        const getInnerWidth = (el: HTMLElement | null) => (el === null
+            ? 0
+            : el.clientWidth - getCSSPropertyInPixels(el, 'padding-left')
+                - getCSSPropertyInPixels(el, 'padding-right'));
+        const contentLineHeightUnitValue = el.computedStyleMap().get('line-height') as CSSUnitValue;
 
-    const getCSSPropertyInPixels = (el: HTMLElement, property: string) =>
-        (el.computedStyleMap().get(property) as CSSNumericValue).to('px').value;
-    const getInnerWidth = (el: HTMLElement | null) => (el === null
-        ? 0
-        : el.clientWidth - getCSSPropertyInPixels(el, 'padding-left')
-            - getCSSPropertyInPixels(el, 'padding-right'));
-    const contentWidth = getInnerWidth(contentEl);
-    const subReplyContentWidth = getInnerWidth(document.querySelector('.sub-reply-content'));
-
-    const contentLineHeightUnitValue = contentEl.computedStyleMap().get('line-height') as CSSUnitValue;
-    const contentLineHeight = contentLineHeightUnitValue.unit === 'number'
-        ? convertRemToPixels(contentLineHeightUnitValue.value)
-        : contentLineHeightUnitValue.to('px').value;
+        return {
+            width: getInnerWidth(el),
+            subReply: { width: getInnerWidth(document.querySelector('.sub-reply-content')) },
+            lineHeight: contentLineHeightUnitValue.unit === 'number'
+                ? convertRemToPixels(contentLineHeightUnitValue.value)
+                : contentLineHeightUnitValue.to('px').value
+        };
+    })(contentEl);
 
     // regex based wcwidth(3)
     // https://en.wikipedia.org/wiki/Duospaced_font also try https://github.com/sindresorhus/get-east-asian-width
@@ -46,13 +53,15 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         CJK: [1, /([\u3000-\u303F]|[\uFF01-\uFF60]|[\uFFE0-\uFFE6]|\p{Script=Hani}|\p{Script=Hang}|\p{Script=Hira}|\p{Script=Kana})+/gu]
     };
     const calcColumnWidth = (source: string, column: number, regex: RegExp) =>
-        _.sumBy([...source.matchAll(regex)].map(matches => matches[0]), 'length') * convertRemToPixels(column);
+        _.sumBy([...source.matchAll(regex)]
+            .map(matches => matches[0]), 'length') * convertRemToPixels(column);
 
     type StringArrayTree = Array<string | StringArrayTree>;
     const elementTreeTextContentLines = (el: ChildNode): StringArrayTree =>
         // eslint-disable-next-line unicorn/no-array-reduce
         [...el.childNodes].reduce<StringArrayTree>((acc, cur) => {
-            const getTextContent = () => (isElementNode(cur) && cur.tagName === 'BR' ? '\n' : cur.textContent ?? '');
+            const getTextContent = () =>
+                (isElementNode(cur) && cur.tagName === 'BR' ? '\n' : cur.textContent ?? '');
             acc.push(cur.childNodes.length > 0 ? elementTreeTextContentLines(cur) : getTextContent());
 
             return acc;
@@ -68,20 +77,21 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
                 + calcColumnWidth(line, ...scriptRegex.CJK)) / containerWidth))
             .value();
 
-        return Math.round(Math.ceil(lineCount) * contentLineHeight);
+        return Math.round(Math.ceil(lineCount) * contentStyles.lineHeight);
     };
     replyElements.forEach(el => {
         el.attributeStyleMap.set('--sub-reply-group-count', el.querySelectorAll('.sub-reply-group').length);
 
-        const imageLineCount = (el.querySelectorAll('.tieba-ugc-image').length * imageWidth) / contentWidth;
-        el.attributeStyleMap.set('--predicted-image-height', `${Math.ceil(imageLineCount) * imageWidth}px`);
+        const imageLineCount = (el.querySelectorAll('.tieba-ugc-image').length * tiebaUGCImageMaxSize.px) / contentStyles.width;
+        el.attributeStyleMap.set('--predicted-image-height',
+            `${Math.ceil(imageLineCount) * tiebaUGCImageMaxSize.px}px`);
 
-        const replyContentHeight = predictPostContentHeight(contentWidth)(el.querySelector('.reply-content'));
+        const replyContentHeight = predictPostContentHeight(contentStyles.width)(el.querySelector('.reply-content'));
         el.attributeStyleMap.set('--predicted-reply-content-height', `${replyContentHeight}px`);
 
         const subReplyContentHeight = _.sum(
             [...el.querySelectorAll<HTMLElement>('.sub-reply-content')]
-                .map(predictPostContentHeight(subReplyContentWidth))
+                .map(predictPostContentHeight(contentStyles.subReply.width))
         );
         el.attributeStyleMap.set('--predicted-sub-reply-content-height', `${subReplyContentHeight}px`);
     });
