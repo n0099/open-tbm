@@ -49,6 +49,7 @@ export default defineNuxtConfig({
             brotliSize: true
         } as PluginVisualizerOptions
     },
+    vue: { propsDestructure: true },
     vite: {
         plugins: [
             analyzer({ analyzerMode: 'static', fileName: 'vite-bundle-analyzer' })

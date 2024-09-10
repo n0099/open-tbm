@@ -3,7 +3,7 @@
 <Meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
 <VueQueryDevtools />
 <NuxtLayout>
-    <NuxtPage />
+    <NuxtPage :pageKey="route => route.path.split('/')[1]" />
 </NuxtLayout>
 </template>
 
