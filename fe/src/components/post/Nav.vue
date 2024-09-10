@@ -3,7 +3,7 @@
     class="post-nav col p-0 vh-100 sticky-top border-0"
     :class="{ 'd-none': !isPostNavExpanded }" :aria-expanded="isPostNavExpanded">
     <AMenu
-        v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="e => selectThread(e)"
+        v-model:selectedKeys="selectedThreads" v-model:openKeys="expandedPages" @click="selectThread($event)"
         forceSubMenuRender :inlineIndent="16" mode="inline">
         <template v-for="posts in data?.pages ?? []">
             <ASubMenu
@@ -17,7 +17,7 @@
                     <div class="d-block btn-group p-1 text-wrap" role="group">
                         <template v-for="reply in thread.replies" :key="reply.pid">
                             <NuxtLink
-                                @click.prevent="_ => navigate(cursor, reply)" :to="routeHash(reply)"
+                                @click.prevent="navigate(cursor, reply)" :to="routeHash(reply)"
                                 :class="menuReplyClasses(reply)" class="post-nav-reply btn ms-0 px-2">
                                 {{ reply.floor }}L
                             </NuxtLink>
@@ -36,7 +36,7 @@
     class="post-nav-expand col-auto align-items-center d-flex vh-100 sticky-top border-light-subtle">
     <a
         v-if="!hydrationStore.isHydratingOrSSR"
-        @click="_ => togglePostNavExpanded()" class="text-primary">
+        @click="togglePostNavExpanded()" class="text-primary">
         <FontAwesome v-show="isPostNavExpanded" :icon="faAngleLeft" />
         <FontAwesome v-show="!isPostNavExpanded" :icon="faAngleRight" />
     </a>

@@ -14,7 +14,7 @@
                 <PostPage
                     v-for="(page, pageIndex) in data.pages"
                     :key="`${queryParam?.query}/cursor/${page.pages.currentCursor}`"
-                    @clickNextPage="async () => await fetchNextPage()"
+                    @clickNextPage="fetchNextPage()"
                     :posts="page" :renderType="renderType"
                     :isFetching="isFetching" :hasNextPage="hasNextPage"
                     :isLastPageInPages="pageIndex === data.pages.length - 1"

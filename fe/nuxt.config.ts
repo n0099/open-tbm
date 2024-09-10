@@ -5,7 +5,7 @@ import { analyzer } from 'vite-bundle-analyzer';
 export default defineNuxtConfig({
     compatibilityDate: '2024-07-04',
     devServer: { https: true },
-    devtools: { enabled: true },
+    devtools: { enabled: false },
     srcDir: 'src',
     imports: { dirs: ['api/**', 'utils/**'] },
     modules: [
@@ -59,7 +59,8 @@ export default defineNuxtConfig({
     experimental: {
         viewTransition: true,
         respectNoSSRHeader: true,
-        componentIslands: true
+        componentIslands: true,
+        asyncContext: true
     },
     runtimeConfig: {
         public: keysWithSameValue([

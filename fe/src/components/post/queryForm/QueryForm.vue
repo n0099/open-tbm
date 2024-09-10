@@ -1,5 +1,5 @@
 <template>
-<form @submit.prevent="_ => queryFormSubmit()" class="mt-3">
+<form @submit.prevent="queryFormSubmit()" class="mt-3">
     <div class="row">
         <label class="col-1 col-form-label" for="paramFid">贴吧</label>
         <div class="col-3">
@@ -67,11 +67,11 @@
     </div>
     <div class="query-params">
         <div v-for="(p, pI) in params" :key="pI" class="input-group">
-            <button @click="_ => deleteParam(pI)" class="btn btn-link" type="button">
+            <button @click="deleteParam(pI)" class="btn btn-link" type="button">
                 <FontAwesome :icon="faTimes" />
             </button>
             <PostQueryFormWidgetSelectParam
-                @paramChange="e => changeParam(pI, e)" :currentParam="p.name"
+                @paramChange="changeParam(pI)" :currentParam="p.name"
                 class="select-param" :class="{
                     'is-invalid': invalidParamsIndex.includes(pI)
                 }" />
@@ -88,7 +88,7 @@
             <template v-if="isPostIDParam(p)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="e => { params[pI] = e }"
+                    @update:modelValue="onParamUpdate(pI)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="getPostIDParamPlaceholders(p)" />
             </template>
@@ -102,14 +102,14 @@
                     v-model="p.value" :placeholder="inputTextMatchParamPlaceholder(p)"
                     type="text" class="form-control" required />
                 <PostQueryFormWidgetInputTextMatchParam
-                    @update:modelValue="e => { params[pI] = e }"
+                    @update:modelValue="onParamUpdate(pI)"
                     :modelValue="params[pI] as KnownTextParams"
                     :paramIndex="pI" />
             </template>
             <template v-if="['threadViewCount', 'threadShareCount', 'threadReplyCount', 'replySubReplyCount'].includes(p.name)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="e => { params[pI] = e }"
+                    @update:modelValue="onParamUpdate(pI)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :paramIndex="pI"
                     :placeholders="{ IN: '100,101,102,...', BETWEEN: '100,200', equals: '100' }" />
@@ -139,7 +139,7 @@
             <template v-if="['authorUid', 'latestReplierUid'].includes(p.name)">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="e => { params[pI] = e }"
+                    @update:modelValue="onParamUpdate(pI)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="uidParamsPlaceholder" />
             </template>
@@ -161,7 +161,7 @@
             <template v-if="p.name === 'authorExpGrade'">
                 <LazyPostQueryFormWidgetSelectRange v-model="p.subParam.range" />
                 <LazyPostQueryFormWidgetInputNumericParam
-                    @update:modelValue="e => { params[pI] = e }"
+                    @update:modelValue="onParamUpdate(pI)"
                     :modelValue="params[pI] as KnownNumericParams"
                     :placeholders="{ IN: '9,10,11,...', BETWEEN: '9,18', equals: '18' }" />
             </template>
@@ -171,7 +171,7 @@
         <button class="add-param-button col-auto btn btn-link disabled" type="button">
             <FontAwesome :icon="faPlus" />
         </button>
-        <PostQueryFormWidgetSelectParam :key="params.length" @paramChange="e => addParam(e)" currentParam="add" />
+        <PostQueryFormWidgetSelectParam :key="params.length" @paramChange="addParam($event)" currentParam="add" />
     </div>
     <div class="row mt-3">
         <button :disabled="isLoading" class="col-auto btn btn-primary" type="submit">
@@ -215,6 +215,8 @@ const getPostIDParamPlaceholders = (p: Param) => ({
     BETWEEN: p.name === 'tid' ? '5000000000,6000000000' : '15000000000,16000000000',
     equals: p.name === 'tid' ? '5000000000' : '15000000000'
 });
+const onParamUpdate = (index: number) =>
+    (e: KnownTextParams | KnownNumericParams) => { params.value[index] = e };
 const uidParamsPlaceholder = {
     IN: '4000000000,4000000001,4000000002,...',
     BETWEEN: '4000000000,5000000000',

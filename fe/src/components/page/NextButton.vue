@@ -3,7 +3,7 @@
     <div class="col align-middle"><hr /></div>
     <div class="w-auto">
         <NuxtLink
-            @click="() => $emit('click')"
+            @click="$emit('click')"
             :to="nextPageRoute" class="btn btn-secondary fs-5">
             下一页
         </NuxtLink>

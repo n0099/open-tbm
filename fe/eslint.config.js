@@ -526,7 +526,7 @@ const rules = [{ // as of eslint-plugin-unicorn@50.0.1
         'vue/define-props-declaration': 'error',
         'vue/define-emits-declaration': ['error', 'type-literal'],
         'vue/no-required-prop-with-default': 'error',
-        'vue/v-on-handler-style': ['error', 'inline-function'],
+        'vue/v-on-handler-style': ['error', 'inline'],
         'vue/multiline-ternary': ['error', 'always-multiline'],
         'vue/array-element-newline': ['error', 'consistent'],
         'vue/prefer-define-options': 'error',

@@ -135,21 +135,28 @@ const paramsDefaultValue = {
     authorManagerType: { value: 'NULL' },
     authorGender: { value: '0' },
     latestReplierGender: { value: '0' },
-    ..._.mapValues(_.keyBy(paramsNameKeyByType.numeric), () => paramsMetadataKeyByType.numeric.default),
-    ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () => paramsMetadataKeyByType.textMatch.default),
-    ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () => paramsMetadataKeyByType.dateTimeRange.default)
+    ..._.mapValues(_.keyBy(paramsNameKeyByType.numeric), () =>
+        paramsMetadataKeyByType.numeric.default),
+    ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () =>
+        paramsMetadataKeyByType.textMatch.default),
+    ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () =>
+        paramsMetadataKeyByType.dateTimeRange.default)
 } as const;
 const useQueryFormDependency: Parameters<typeof useQueryForm>[0] = {
     paramsDefaultValue,
     paramsPreprocessor: {
         postTypes: paramsMetadataKeyByType.array.preprocessor,
         threadProperties: paramsMetadataKeyByType.array.preprocessor,
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () => paramsMetadataKeyByType.textMatch.preprocessor),
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () => paramsMetadataKeyByType.dateTimeRange.preprocessor)
+        ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () =>
+            paramsMetadataKeyByType.textMatch.preprocessor),
+        ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () =>
+            paramsMetadataKeyByType.dateTimeRange.preprocessor)
     },
     paramsWatcher: {
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () => paramsMetadataKeyByType.textMatch.watcher),
-        ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () => paramsMetadataKeyByType.dateTimeRange.watcher),
+        ..._.mapValues(_.keyBy(paramsNameKeyByType.text), () =>
+            paramsMetadataKeyByType.textMatch.watcher),
+        ..._.mapValues(_.keyBy(paramsNameKeyByType.dateTime), () =>
+            paramsMetadataKeyByType.dateTimeRange.watcher),
         orderBy(param) {
             if (param.value === 'default' && param.subParam.direction !== 'default') { // reset to default
                 param.subParam = { ...param.subParam, direction: 'default' };

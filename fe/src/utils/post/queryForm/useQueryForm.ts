@@ -40,7 +40,7 @@ const useQueryForm = <
     const addParam = (name: string) => {
         params.value.push(fillParamDefaultValue({ name }));
     };
-    const changeParam = (beforeParamIndex: number, afterParamName: string) => {
+    const changeParam = (beforeParamIndex: number) => (afterParamName: string) => {
         _.pull(invalidParamsIndex.value, beforeParamIndex);
         params.value[beforeParamIndex] = fillParamDefaultValue({ name: afterParamName });
     };

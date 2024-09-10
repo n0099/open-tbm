@@ -2,9 +2,9 @@
 <ClientOnly>
     <PostBadgeTimeView
         v-if="previousTime !== undefined && previousTime < currentTime"
-        @mouseenter="() => previousPost !== undefined
+        @mouseenter="previousPost !== undefined
             && highlightPostStore.set(previousPost, currentPostIDKey)"
-        @mouseleave="() => highlightPostStore.unset()"
+        @mouseleave="highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="previousDateTime"
         :relativeToText="`相对于上一${postType}${timestampType}`"
         :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">
@@ -13,9 +13,9 @@
     </PostBadgeTimeView>
     <PostBadgeTimeView
         v-else-if="nextTime !== undefined && nextTime < currentTime"
-        @mouseenter="() => nextPost !== undefined
+        @mouseenter="nextPost !== undefined
             && highlightPostStore.set(nextPost, currentPostIDKey)"
-        @mouseleave="() => highlightPostStore.unset()"
+        @mouseleave="highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="nextDateTime"
         :relativeToText="`相对于下一${postType}${timestampType}`"
         :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">
@@ -23,10 +23,10 @@
     </PostBadgeTimeView>
     <PostBadgeTimeView
         v-else-if="parentTime !== undefined && parentTime !== currentTime"
-        @mouseenter="() => parentPost !== undefined
+        @mouseenter="parentPost !== undefined
             && parentPostIDKey !== undefined
             && highlightPostStore.set(parentPost, parentPostIDKey)"
-        @mouseleave="() => highlightPostStore.unset()"
+        @mouseleave="highlightPostStore.unset()"
         :current="currentDateTime" :relativeTo="parentDateTime"
         :relativeToText="`相对于所属${postTypeText[postTypeText.indexOf(postType) - 1]}${timestampType}`"
         :postType="props.postType" :timestampType="timestampType" v-bind="$attrs">

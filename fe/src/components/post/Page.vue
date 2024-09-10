@@ -13,7 +13,7 @@
     </Suspense>
     <PageNextButton
         v-if="isLastPageInPages && !isFetching && hasNextPage"
-        @click="() => $emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
+        @click="$emit('clickNextPage')" :nextPageRoute="nextPageRoute" />
 </article>
 </template>
 
