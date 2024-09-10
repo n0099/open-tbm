@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import type { RouteLocationNormalized } from 'vue-router';
+import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import _ from 'lodash';
 
 export type PostRenderer = 'list' | 'table';
@@ -95,7 +95,7 @@ if (import.meta.server) {
     }, { flush: 'sync' });
 }
 
-const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
+const parseRouteThenFetch = async (newRoute: RouteLocationNormalizedLoaded) => {
     const setQueryParam = (newQueryParam?: ApiPosts['queryParam']) => {
         // prevent fetch with queryParam that's empty or parsed from invalid route
         shouldFetch.value = newQueryParam !== undefined;
@@ -122,16 +122,19 @@ const parseRouteThenFetch = async (newRoute: RouteLocationNormalized) => {
 /** ignoring string {@link route.name} or {@link route.path} since switching root level route */
 // will unmounted the component of current page route and unwatch this watcher
 watchDeep(() => [route.query, route.params], async (_discard, oldQueryAndParams) => {
-    const [to, from] = [route, { query: oldQueryAndParams[0], params: oldQueryAndParams[1] } as RouteLocationNormalized];
+    const to = route;
+    const from = { query: oldQueryAndParams[0], params: oldQueryAndParams[1] } as RouteLocationNormalizedLoaded;
     const isTriggeredByQueryForm = useTriggerRouteUpdateStore()
         .isTriggeredBy('<PostQueryForm>@submit', _.merge(to, { force: true }));
-    if (to.hash === '' && (isTriggeredByQueryForm || compareRouteIsNewQuery(to, from)))
+    const isNewQuery = compareRouteIsNewQuery(to, from);
+    if (to.hash === '' && (isTriggeredByQueryForm || isNewQuery))
         void nextTick(() => { window.scrollTo({ top: 0 }) });
-    await parseRouteThenFetch(to);
+    if (isNewQuery || !_.isEqual(to.params, from.params))
+        await parseRouteThenFetch(to);
 
     /** must invoke {@link parseRouteThenFetch()} before {@link queryClient.resetQueries()} */
     /** to prevent refetch the old route when navigating to different route aka {@link compareRouteIsNewQuery()} is true */
-    if (isTriggeredByQueryForm && !compareRouteIsNewQuery(to, from))
+    if (isTriggeredByQueryForm && !isNewQuery)
         await queryClient.resetQueries({ queryKey: ['posts'] });
 });
 await parseRouteThenFetch(route);

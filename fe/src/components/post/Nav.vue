@@ -131,15 +131,12 @@ const menuReplyClasses = (reply: Reply) => {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
-watchImmediate(() => data.value?.pages, () => {
-    if (data.value === undefined)
+watchImmediate(() => [route.params.cursor, data.value?.pages], () => {
+    if (!_.isString(route.params.cursor))
         return;
-    const currentCursor = getRouteCursorParam(route);
-    const previousCursor = data.value.pages[
-        data.value.pages.findIndex(i => i.pages.currentCursor === currentCursor) - 1]?.pages.currentCursor;
-    expandedPages.value = [pageMenuKey(previousCursor), pageMenuKey(currentCursor)];
+    expandedPages.value = [pageMenuKey(route.params.cursor)];
 });
-watch(viewportTopmostPost, (to, from) => {
+watch(viewportTopmostPost, async (to, from) => {
     if (to === undefined)
         return;
     const { cursor, tid } = to;
@@ -150,6 +147,8 @@ watch(viewportTopmostPost, (to, from) => {
 
     if (!import.meta.client)
         return;
+    expandedPages.value = [pageMenuKey(cursor)];
+    await nextTick(); // wait for expand
     const threadEl = (threadMenuItemRefs.value.find(i => i.$.vnode.key === menuKey)
         ?.$el as Element | null)?.previousElementSibling ?? null;
     if (threadEl !== null)
