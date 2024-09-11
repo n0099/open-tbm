@@ -18,9 +18,15 @@
     <p><NuxtLink to="https://web.archive.org/web/0/https://tieba.baidu.com/p/6063625612" target="_blank">bilibili吧 吧主候选人支持率Top20（非官方数据，仅供参考）</NuxtLink></p>
     <p><NuxtLink to="https://www.bilibili.com/video/av46507371" target="_blank">【数据可视化】一分钟看完bilibili吧吧主公投</NuxtLink></p>
     <hr />
-    <div ref="top50CandidateCountRef" class="echarts" id="top50CandidateCount" />
+    <div
+        ref="top50CandidateCountRef"
+        :class="{ loading: isChartLoading.top50CandidateCount }"
+        class="echarts" id="top50CandidateCount" />
     <hr />
-    <div ref="top10CandidatesTimelineRef" class="echarts" id="top10CandidatesTimeline" />
+    <div
+        ref="top10CandidatesTimelineRef"
+        :class="{ loading: isChartLoading.top10CandidatesTimeline }"
+        class="echarts" id="top10CandidatesTimeline" />
     <hr />
     <div class="row justify-content-end">
         <label class="col-2 col-form-label text-end" for="top5CandidateCountGroupByTimeGranularity">时间粒度</label>
@@ -34,7 +40,10 @@
             </div>
         </div>
     </div>
-    <div ref="top5CandidateCountGroupByTimeRef" class="echarts" id="top5CandidateCountGroupByTime" />
+    <div
+        ref="top5CandidateCountGroupByTimeRef"
+        :class="{ loading: isChartLoading.top5CandidateCountGroupByTime }"
+        class="echarts" id="top5CandidateCountGroupByTime" />
     <hr />
     <div class="row justify-content-end">
         <label class="col-2 col-form-label text-end" for="allVoteCountGroupByTimeGranularity">时间粒度</label>
@@ -48,7 +57,10 @@
             </div>
         </div>
     </div>
-    <div ref="allVoteCountGroupByTimeRef" class="echarts" id="allVoteCountGroupByTime" />
+    <div
+        ref="allVoteCountGroupByTimeRef"
+        :class="{ loading: isChartLoading.allVoteCountGroupByTime }"
+        class="echarts" id="allVoteCountGroupByTime" />
     <hr />
     <LazyATable
         v-if="isMounted" rowKey="candidateIndex"
@@ -134,6 +146,7 @@ const chartElementRefs = {
 };
 useResizeableEcharts(Object.values(chartElementRefs));
 type ChartName = keyof typeof chartElementRefs;
+const chartNames = Object.keys(chartElementRefs) as ChartName[];
 const {
     top50CandidateCount: top50CandidateCountRef,
     top10CandidatesTimeline: top10CandidatesTimelineRef,
@@ -464,7 +477,8 @@ const formatCandidateName = (id: number) => `${id}号\n${json.candidateNames[id 
 // Etc/GMT-8 in IANA tzdb is UTC+8 https://stackoverflow.com/questions/53076575/time-zones-etc-gmt-why-it-is-other-way-round
 const filledTimeGranularityAxisPointerLabelFormatter =
     timeGranularityAxisPointerLabelFormatter(setDateTimeZoneAndLocale('UTC+8', { keepLocalTime: true }));
-const loadCharts = {
+
+const chartLoadder = {
     top50CandidateCount() {
         // [{ voteFor: '1号', validVotes: 1, validAvgGrade: 18, invalidVotes: 1, invalidAvgGrade: 18 }, ... ]
         const dataset = _.chain(json.top50CandidatesVoteCount)
@@ -691,6 +705,12 @@ const loadCharts = {
         } as echarts.ComposeOption<DatasetComponentOption | GridComponentOption>);
     }
 };
+const isChartLoading = reactive<{ [P in ChartName]: boolean }>(keysWithSameValue(chartNames, true));
+const loadChart = (chartName: ChartName) => () => {
+    isChartLoading[chartName] = true;
+    chartLoadder[chartName]();
+    isChartLoading[chartName] = false;
+};
 
 // add candidate index as keys then deep merge will combine same keys values, finally remove keys
 candidatesDetailData.value = Object.values(_.merge(
@@ -713,23 +733,17 @@ candidatesDetailData.value = Object.values(_.merge(
 ));
 
 watch(() => query.value.top5CandidateCountGroupByTimeGranularity,
-    loadCharts.top5CandidateCountGroupByTime);
+    loadChart('top5CandidateCountGroupByTime'));
 watch(() => query.value.allVoteCountGroupByTimeGranularity,
-    loadCharts.allVoteCountGroupByTime);
+    loadChart('allVoteCountGroupByTime'));
 onMounted(() => {
     _.map(chartElementRefs, (elRef: Ref<HTMLElement | undefined>, chartName: ChartName) => {
         if (elRef.value === undefined)
             return;
-        elRef.value.classList.add('loading');
         const chart = echarts.init(elRef.value, echarts4ColorTheme);
         chart.setOption(chartsInitialOption[chartName]);
         echartsInstances[chartName] = chart;
-    });
-    _.map(echartsInstances, (chart: echarts.ECharts | null, chartName: ChartName) => {
-        if (chart === null)
-            return;
-        loadCharts[chartName]();
-        chartElementRefs[chartName].value?.classList.remove('loading');
+        loadChart(chartName)();
     });
 });
 </script>

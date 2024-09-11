@@ -159,7 +159,7 @@ export const getQueryFormDeps = () => {
         if (routeName === 'posts/param' && _.isArray(route.params.pathMatch)) {
             parseParamRoute(route.params.pathMatch); // omit the cursor param from route full path
         } else if (routeName === 'posts/fid' && !_.isArray(route.params.fid)) {
-            uniqueParams.value.fid.value = parseInt(route.params.fid);
+            uniqueParams.value.fid.value = Number(route.params.fid);
         } else { // post id routes
             uniqueParams.value = _.mapValues(uniqueParams.value, param =>
                 fillParamDefaultValue(param, true)) as KnownUniqueParams; // reset to default

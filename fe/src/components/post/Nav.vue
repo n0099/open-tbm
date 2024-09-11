@@ -91,9 +91,9 @@ const navigate = async (cursor: Cursor, postIdObj: PostIdObj) =>
         hash: routeHash(postIdObj),
         params: { ...route.params, cursor }
     });
-const cursorKey = (cursor: Cursor) => `cursor/${cursor}`;
-const pageMenuKey = (cursor: Cursor) => `${queryParam?.query}/${cursorKey(cursor)}`;
-const threadMenuKey = (cursor: Cursor, tid: Tid) => `${cursorKey(cursor)}/tid/${tid}`;
+const cursorKey = (cursor?: Cursor) => `cursor/${cursor ?? ''}`;
+const pageMenuKey = (cursor?: Cursor) => `${queryParam?.query}/${cursorKey(cursor)}`;
+const threadMenuKey = (cursor: Cursor | undefined, tid: Tid) => `${cursorKey(cursor)}/tid/${tid}`;
 const selectThread: ToPromise<MenuClickEventHandler> = async ({ domEvent, key }) => {
     if (!(domEvent.target as Element).classList.contains('post-nav-reply')) { // ignore clicks on reply link
         const [, cursor, tid] = /c(.*)-t(\d+)/u.exec(key.toString()) ?? [];
@@ -132,7 +132,8 @@ const menuReplyClasses = (reply: Reply) => {
 };
 
 watchImmediate(() => [route.params.cursor, data.value?.pages], () => {
-    if (!_.isString(route.params.cursor))
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!(route.params.cursor === undefined || _.isString(route.params.cursor)))
         return;
     expandedPages.value = [pageMenuKey(route.params.cursor)];
 });
