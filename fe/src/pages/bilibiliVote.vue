@@ -132,6 +132,7 @@ const chartElementRefs = {
     top5CandidateCountGroupByTime: ref<HTMLElement>(),
     allVoteCountGroupByTime: ref<HTMLElement>()
 };
+useResizeableEcharts(Object.values(chartElementRefs));
 type ChartName = keyof typeof chartElementRefs;
 const {
     top50CandidateCount: top50CandidateCountRef,

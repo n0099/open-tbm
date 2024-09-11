@@ -22,20 +22,37 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
     if (contentEl === null)
         return;
     const contentStyles = ((el: HTMLElement) => {
-        const getCSSPropertyInPixels = (el: HTMLElement, property: string) =>
-            (el.computedStyleMap().get(property) as CSSNumericValue).to('px').value;
+        // https://caniuse.com/mdn-api_element_computedstylemap
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1857849
+        // https://github.com/surma/ishoudinireadyyet.com
+        // https://github.com/tylergaw/css-typed-om/
+        const isCSMSupported = 'computedStyleMap' in el;
+        const pixelStringToNumber = (s: string) => {
+            if (!s.endsWith('px'))
+                throw new Error(`Unit of '${s}' is not in pixels`);
+
+            return Number(removeEnd(s, 'px')); // parseInt() will also remove any suffix
+        };
+
+        const getCSSPropertyInPixels = (el: HTMLElement, property: string) => (isCSMSupported
+            ? (el.computedStyleMap().get(property) as CSSNumericValue).to('px').value
+            : pixelStringToNumber(getComputedStyle(el).getPropertyValue(property)));
         const getInnerWidth = (el: HTMLElement | null) => (el === null
             ? 0
             : el.clientWidth - getCSSPropertyInPixels(el, 'padding-left')
                 - getCSSPropertyInPixels(el, 'padding-right'));
-        const contentLineHeightUnitValue = el.computedStyleMap().get('line-height') as CSSUnitValue;
+
+        const convertRemUnitValueToPixels = (unitValue: CSSUnitValue) => (unitValue.unit === 'number'
+            ? convertRemToPixels(unitValue.value)
+            : unitValue.to('px').value);
+        const lineHeight = isCSMSupported
+            ? convertRemUnitValueToPixels(el.computedStyleMap().get('line-height') as CSSUnitValue)
+            : convertRemToPixels(pixelStringToNumber(getComputedStyle(el).lineHeight));
 
         return {
             width: getInnerWidth(el),
             subReply: { width: getInnerWidth(document.querySelector('.sub-reply-content')) },
-            lineHeight: contentLineHeightUnitValue.unit === 'number'
-                ? convertRemToPixels(contentLineHeightUnitValue.value)
-                : contentLineHeightUnitValue.to('px').value
+            lineHeight
         };
     })(contentEl);
 
@@ -80,20 +97,23 @@ export const guessReplyContainIntrinsicBlockSize = (replyElements: HTMLElement[]
         return Math.round(Math.ceil(lineCount) * contentStyles.lineHeight);
     };
     replyElements.forEach(el => {
-        el.attributeStyleMap.set('--sub-reply-group-count', el.querySelectorAll('.sub-reply-group').length);
+        // https://caniuse.com/mdn-api_htmlelement_attributestylemap
+        el.style.setProperty('--sub-reply-group-count',
+            el.querySelectorAll('.sub-reply-group').length.toString());
 
-        const imageLineCount = (el.querySelectorAll('.tieba-ugc-image').length * tiebaUGCImageMaxSize.px) / contentStyles.width;
-        el.attributeStyleMap.set('--predicted-image-height',
+        const imageLineCount = (el.querySelectorAll('.tieba-ugc-image')
+            .length * tiebaUGCImageMaxSize.px) / contentStyles.width;
+        el.style.setProperty('--predicted-image-height',
             `${Math.ceil(imageLineCount) * tiebaUGCImageMaxSize.px}px`);
 
         const replyContentHeight = predictPostContentHeight(contentStyles.width)(el.querySelector('.reply-content'));
-        el.attributeStyleMap.set('--predicted-reply-content-height', `${replyContentHeight}px`);
+        el.style.setProperty('--predicted-reply-content-height', `${replyContentHeight}px`);
 
         const subReplyContentHeight = _.sum(
             [...el.querySelectorAll<HTMLElement>('.sub-reply-content')]
                 .map(predictPostContentHeight(contentStyles.subReply.width))
         );
-        el.attributeStyleMap.set('--predicted-sub-reply-content-height', `${subReplyContentHeight}px`);
+        el.style.setProperty('--predicted-sub-reply-content-height', `${subReplyContentHeight}px`);
     });
 
     // show diff between predicted height and actual height of each `.reply` after complete scroll over whole page

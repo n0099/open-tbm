@@ -4,12 +4,12 @@ import * as echarts from 'echarts/core';
 // eslint-disable-next-line import-x/extensions
 import type { ColorPaletteOptionMixin } from 'echarts/types/src/util/types.d.ts';
 
-if (import.meta.client) {
-    addEventListener('resize', _.throttle(() => {
-        document.querySelectorAll<HTMLElement>('.echarts')
-            .forEach(el => { echarts.getInstanceByDom(el)?.resize() });
-    }, 200, { leading: false }));
-}
+export const useResizeableEcharts = (el: Parameters<typeof useResizeObserver>[0]) =>
+    useResizeObserver(el, _.debounce((entries: Parameters<Parameters<typeof useResizeObserver>[1]>[0]) => { // https://github.com/vueuse/vueuse/issues/4216
+        entries.forEach(entry => {
+            echarts.getInstanceByDom(entry.target as HTMLElement)?.resize();
+        });
+    }, 1000));
 
 export const echarts4ColorTheme: ColorPaletteOptionMixin = {
     color: [
