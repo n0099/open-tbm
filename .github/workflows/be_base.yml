@@ -14,14 +14,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
-      - run: ./vendor/bin/phpstan analyse --error-format=github
+        # https://github.com/staabm/annotate-pull-request-from-checkstyle
+      - run: >
+          ./vendor/bin/phpstan analyse --error-format=checkstyle
+          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+        shell: bash
 
   psalm:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
-      - run: ./vendor/bin/psalm --output-format=github
+      - run: >
+          ./vendor/bin/psalm --output-format=checkstyle
+          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+        shell: bash
 
   phpcs:
     runs-on: ${{ inputs.runs-on }}
@@ -31,25 +38,27 @@ jobs:
       - id: run
         run: ./vendor/bin/phpcs --report-full --report-checkstyle=./phpcs-report.xml .
       - if: always() && steps.run.outcome == 'failure'
-        run: cs2pr ./phpcs-report.xml
+        run: cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source ./phpcs-report.xml
 
-  # https://github.com/staabm/annotate-pull-request-from-checkstyle
   pint:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
-      - id: run
-        run: ./vendor/bin/pint --test
-      - if: failure() && steps.run.outcome != 'success'
-        run: ./vendor/bin/pint --test --format=checkstyle | cs2pr
+      - run: >
+          ./vendor/bin/pint --test --format=checkstyle
+          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+        shell: bash
 
   php-cs-fixer:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
-      - run: ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle . | cs2pr
+      - run: >
+          ./vendor/bin/php-cs-fixer fix --dry-run --format=checkstyle
+          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+        shell: bash
 
   phpmd:
     runs-on: ${{ inputs.runs-on }}
