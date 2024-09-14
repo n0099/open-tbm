@@ -16,7 +16,7 @@ class NullableBooleanAttributeCast implements CastsAttributes
      */
     public function set($model, string $key, $value, array $attributes): int
     {
-        \is_bool($value) || $value = (bool)$value;
+        \is_bool($value) || $value = (bool) $value;
         return $value === true ? 1 : 0;
     }
 }

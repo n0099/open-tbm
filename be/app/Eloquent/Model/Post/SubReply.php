@@ -16,7 +16,7 @@ class SubReply extends Post
 
     protected $casts = [
         'agreeCount' => NullableNumericAttributeCast::class,
-        'disagreeCount' => NullableNumericAttributeCast::class
+        'disagreeCount' => NullableNumericAttributeCast::class,
     ];
 
     public function __construct(array $attributes = [])
@@ -28,7 +28,7 @@ class SubReply extends Post
             'postedAt',
             'agreeCount',
             'disagreeCount',
-            ...parent::TIMESTAMP_FIELDS
+            ...parent::TIMESTAMP_FIELDS,
         ];
     }
 
@@ -53,7 +53,7 @@ class SubReply extends Post
         return $this->scopeIDType($query, 'pid', $pid);
     }
 
-    public function contentProtoBuf() : HasOne
+    public function contentProtoBuf(): HasOne
     {
         return $this->hasOne(SubReplyContent::class, 'spid', 'spid')->selectPublicFields();
     }

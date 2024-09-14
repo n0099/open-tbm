@@ -22,7 +22,7 @@ class LatestReplier extends Model
             'id',
             'uid',
             'createdAt',
-            'updatedAt'
+            'updatedAt',
         ];
     }
 

@@ -16,31 +16,31 @@ class Helper
     public const POST_TYPE_TO_PLURAL = [
         'thread' => 'threads',
         'reply' => 'replies',
-        'subReply' => 'subReplies'
+        'subReply' => 'subReplies',
     ];
 
     public const POST_TYPE_PLURAL_TO_TYPE = [
         'threads' => 'thread',
         'replies' => 'reply',
-        'subReplies' => 'subReply'
+        'subReplies' => 'subReply',
     ];
 
     public const POST_ID_TO_TYPE_PLURAL = [
         'tid' => 'threads',
         'pid' => 'replies',
-        'spid' => 'subReplies'
+        'spid' => 'subReplies',
     ];
 
     public const POST_ID_TO_TYPE = [
         'tid' => 'thread',
         'pid' => 'reply',
-        'spid' => 'subReply'
+        'spid' => 'subReply',
     ];
 
     public const POST_TYPE_TO_ID = [
         'thread' => 'tid',
         'reply' => 'pid',
-        'subReply' => 'spid'
+        'subReply' => 'spid',
     ];
 
     public static function abortAPIIf(int $errorCode, bool $condition): void
@@ -80,7 +80,7 @@ class Helper
             ],
             500 => [
                 50001 => '数据库中存在多个贴吧表存储了该 ID 的帖子',
-            ]
+            ],
         ];
 
         $statusCode = 0;
@@ -115,7 +115,7 @@ class Helper
      */
     #[Pure] public static function rawSqlGroupByTimeGranularity(
         string $fieldName,
-        array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year']
+        array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year'],
     ): array {
         return Arr::only([
             'minute' => "DATE_FORMAT($fieldName, \"%Y-%m-%d %H:%i\") AS time",
@@ -123,7 +123,7 @@ class Helper
             'day' => "DATE($fieldName) AS time",
             'week' => "DATE_FORMAT($fieldName, \"%Y年第%u周\") AS time",
             'month' => "DATE_FORMAT($fieldName, \"%Y-%m\") AS time",
-            'year' => "DATE_FORMAT($fieldName, \"%Y年\") AS time"
+            'year' => "DATE_FORMAT($fieldName, \"%Y年\") AS time",
         ], $timeGranularity);
     }
 

@@ -18,7 +18,7 @@ class DumpJsonResponse
                 $json = $response->content();
                 $jsonLength = mb_strlen($json);
                 $assetsUrl = collect(['react-json-view', 'react', 'react-dom'])
-                    ->mapWithKeys(fn ($asset) => [$asset => url("/assets/$asset.js")]);
+                    ->mapWithKeys(fn($asset) => [$asset => url("/assets/$asset.js")]);
                 return response(<<<HTML
                     <h4>$jsonLength bytes</h4>
                     <div id="root"></div>

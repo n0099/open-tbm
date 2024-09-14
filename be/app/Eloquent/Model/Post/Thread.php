@@ -23,7 +23,7 @@ class Thread extends Post
         'viewCount' => NullableNumericAttributeCast::class,
         'shareCount' => NullableNumericAttributeCast::class,
         'agreeCount' => NullableNumericAttributeCast::class,
-        'disagreeCount' => NullableNumericAttributeCast::class
+        'disagreeCount' => NullableNumericAttributeCast::class,
     ];
 
     public function __construct(array $attributes = [])
@@ -48,7 +48,7 @@ class Thread extends Post
             'zan',
             'geolocation',
             'authorPhoneType',
-            ...parent::TIMESTAMP_FIELDS
+            ...parent::TIMESTAMP_FIELDS,
         ];
     }
 

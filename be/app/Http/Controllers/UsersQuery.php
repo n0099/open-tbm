@@ -15,7 +15,7 @@ class UsersQuery extends Controller
             'uid' => 'integer',
             'name' => 'string',
             'displayName' => 'string',
-            'gender' => 'string|in:0,1,2,NULL'
+            'gender' => 'string|in:0,1,2,NULL',
         ]);
         Helper::abortAPIIf(40402, empty($queryParams));
 
@@ -40,9 +40,9 @@ class UsersQuery extends Controller
             'pages' => [
                 'firstItem' => $queriedInfo->firstItem(),
                 'itemCount' => $queriedInfo->count(),
-                'currentPage' => $queriedInfo->currentPage()
+                'currentPage' => $queriedInfo->currentPage(),
             ],
-            'users' => $queriedInfo->toArray()['data']
+            'users' => $queriedInfo->toArray()['data'],
         ];
     }
 }

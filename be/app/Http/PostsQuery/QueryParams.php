@@ -16,7 +16,7 @@ class QueryParams
      */
     public function __construct(array $params)
     {
-        $this->params = array_map(static fn ($p) => new Param($p), $params);
+        $this->params = array_map(static fn($p) => new Param($p), $params);
     }
 
     /**
@@ -36,7 +36,7 @@ class QueryParams
         // array_values() will reset keys
         return array_values(array_filter(
             $this->params,
-            static fn ($p): bool => \in_array($p->name, $names, true)
+            static fn($p): bool => \in_array($p->name, $names, true),
         ));
     }
 
@@ -48,7 +48,7 @@ class QueryParams
     {
         return array_values(array_filter(
             $this->params,
-            static fn ($p): bool => !\in_array($p->name, $names, true)
+            static fn($p): bool => !\in_array($p->name, $names, true),
         ));
     }
 
@@ -67,20 +67,20 @@ class QueryParams
      */
     protected function getParamsIndexByName(string $name): array
     {
-        return array_keys(array_filter($this->params, static fn ($p) => $p->name === $name));
+        return array_keys(array_filter($this->params, static fn($p) => $p->name === $name));
     }
 
     public function addDefaultValueOnUniqueParams(): void
     {
         $uniqueParamsDefaultValue = [
             'postTypes' => ['value' => Helper::POST_TYPES],
-            'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'ASC']]
+            'orderBy' => ['value' => 'default', 'subParam' => ['direction' => 'ASC']],
         ];
         foreach ($uniqueParamsDefaultValue as $name => $value) {
             // add unique params with default value when it's not presented in $this->params
             $paramFilledWithDefaults = new Param([
                 $name => $this->getUniqueParamValue($name) ?? $value['value'],
-                ...($this->pick($name)[0]->subParam ?? $value['subParam'] ?? [])
+                ...($this->pick($name)[0]->subParam ?? $value['subParam'] ?? []),
             ]);
             $paramsIndex = $this->getParamsIndexByName($name);
             if ($paramsIndex === []) {
@@ -95,7 +95,7 @@ class QueryParams
     {
         $paramDefaultValueByType = [
             'numeric' => ['range' => '='],
-            'text' => ['matchBy' => 'explicit', 'spaceSplit' => false]
+            'text' => ['matchBy' => 'explicit', 'spaceSplit' => false],
         ];
         $paramsNameByType = [
             'numeric' => [
@@ -108,7 +108,7 @@ class QueryParams
                 'replySubReplyCount',
                 'authorUid',
                 'authorExpGrade',
-                'latestReplierUid'
+                'latestReplierUid',
             ],
             'text' => [
                 'threadTitle',
@@ -116,11 +116,11 @@ class QueryParams
                 'authorName',
                 'authorDisplayName',
                 'latestReplierName',
-                'latestReplierDisplayName'
-            ]
+                'latestReplierDisplayName',
+            ],
         ];
         $subParamsDefaultValue = collect($paramsNameByType)
-            ->mapWithKeys(static fn (array $names, string $type) =>
+            ->mapWithKeys(static fn(array $names, string $type) =>
                 array_fill_keys($names, $paramDefaultValueByType[$type]));
         foreach ($this->params as $param) { // set sub params with default value
             foreach ($subParamsDefaultValue->get($param->name, []) as $name => $value) {

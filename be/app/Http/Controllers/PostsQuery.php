@@ -22,9 +22,9 @@ class PostsQuery extends Controller
             $request->validate([
                 'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                     // (,|$)|,){5,6} means allow at most five or six components of base64 segment or empty string to exist
-                    'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/'
+                    'regex:/^(([A-Za-z0-9-_]{4})*([A-Za-z0-9-_]{2,3})(,|$)|,){5,6}$/',
                 ],
-                'query' => 'json|required'
+                'query' => 'json|required',
             ])['query'],
         ));
         $params = $validator->params;
@@ -36,7 +36,7 @@ class PostsQuery extends Controller
             // is there only one post ID param
             && \count($postIDParams) === 1
             // is all post ID params doesn't own any sub param
-            && array_filter($postIDParams, static fn ($p) => $p->getAllSub() !== []) === [];
+            && array_filter($postIDParams, static fn($p) => $p->getAllSub() !== []) === [];
         $isFidParamNull = $params->getUniqueParamValue('fid') === null;
         // is the fid param exists and there's no other params except unique params
         $isQueryByFid = !$isFidParamNull && \count($params->omit(...ParamsValidator::UNIQUE_PARAMS_NAME)) === 0;
@@ -61,14 +61,14 @@ class PostsQuery extends Controller
             ->concat(LatestReplier::query()->whereIn('id', $latestRepliersId)
                 ->whereNull('uid')->selectPublicFields()
                 ->addSelect(['name', 'displayName'])->get());
-        $whereCurrentFid = static fn (HasOne $q) => $q->where('fid', $result['fid']);
+        $whereCurrentFid = static fn(HasOne $q) => $q->where('fid', $result['fid']);
         $users = User::query()->whereIn(
             'uid',
             collect($result)
                 ->only(Helper::POST_TYPES_PLURAL)
-                ->flatMap(static fn (Collection $posts) => $posts->pluck('authorUid'))
+                ->flatMap(static fn(Collection $posts) => $posts->pluck('authorUid'))
                 ->concat($latestRepliers->pluck('uid'))
-                ->filter()->unique() // remove NULLs
+                ->filter()->unique(), // remove NULLs
         )->with(['currentForumModerator' => $whereCurrentFid, 'currentAuthorExpGrade' => $whereCurrentFid])
             ->selectPublicFields()->get();
         Debugbar::stopMeasure('queryUsers');
@@ -77,12 +77,12 @@ class PostsQuery extends Controller
             'type' => $isIndexQuery ? 'index' : 'search',
             'pages' => [
                 ...$query->getResultPages(),
-                ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL])
+                ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
             ],
             'forum' => Forum::fid($result['fid'])->selectPublicFields()->first(),
             'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
             'users' => $users,
-            'latestRepliers' => $latestRepliers
+            'latestRepliers' => $latestRepliers,
         ];
     }
 }

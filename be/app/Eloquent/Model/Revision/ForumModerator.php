@@ -19,7 +19,7 @@ class ForumModerator extends Model
         $this->publicFields = [
             'discoveredAt',
             'portrait',
-            'moderatorTypes'
+            'moderatorTypes',
         ];
     }
 }

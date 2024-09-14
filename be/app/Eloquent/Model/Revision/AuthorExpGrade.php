@@ -20,7 +20,7 @@ class AuthorExpGrade extends Model
             'discoveredAt',
             'fid',
             'uid',
-            'authorExpGrade'
+            'authorExpGrade',
         ];
     }
 }

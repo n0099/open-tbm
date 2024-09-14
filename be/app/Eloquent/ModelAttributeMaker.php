@@ -12,7 +12,7 @@ class ModelAttributeMaker
      * @param class-string $protoBufClass
      * @return Attribute<\stdClass, void>
      */
-    public static function makeProtoBufAttribute(string $protoBufClass) : Attribute
+    public static function makeProtoBufAttribute(string $protoBufClass): Attribute
     {
         return Attribute::make(/**
              * @param resource|null $value
@@ -27,7 +27,7 @@ class ModelAttributeMaker
                 $proto = new $protoBufClass();
                 $proto->mergeFromString(stream_get_contents($value));
                 return Helper::jsonDecode($proto->serializeToJsonString(), false);
-            }
+            },
         )->shouldCache();
     }
 
@@ -40,7 +40,7 @@ class ModelAttributeMaker
              * @param resource|null $value
              * @return string
              */
-            get: static fn ($value) => $value === null ? null : stream_get_contents($value)
+            get: static fn($value) => $value === null ? null : stream_get_contents($value),
         )->shouldCache();
     }
 }

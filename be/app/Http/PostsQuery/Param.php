@@ -12,7 +12,7 @@ class Param
 
     public function __construct(array $param)
     {
-        $this->name = (string)array_keys($param)[0];
+        $this->name = (string) array_keys($param)[0];
         $this->value = $param[$this->name];
         array_shift($param);
         $this->subParams = $param;

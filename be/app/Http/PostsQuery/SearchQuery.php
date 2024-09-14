@@ -29,7 +29,7 @@ class SearchQuery extends BaseQuery
                     $postQuery = self::applyQueryParamsOnQuery(
                         $postQuery,
                         $param,
-                        $cachedUserQuery[$param->name]
+                        $cachedUserQuery[$param->name],
                     );
                 }
                 return $postQuery->selectCurrentAndParentPostID();
@@ -53,7 +53,7 @@ class SearchQuery extends BaseQuery
     private static function applyQueryParamsOnQuery(
         Builder $query,
         Param $param,
-        ?Collection &$outCachedUserQueryResult
+        ?Collection &$outCachedUserQueryResult,
     ): Builder {
         $name = $param->name;
         $value = $param->value;
@@ -66,22 +66,22 @@ class SearchQuery extends BaseQuery
             'threadViewCount' => 'viewCount',
             'threadShareCount' => 'shareCount',
             'threadReplyCount' => 'replyCount',
-            'replySubReplyCount' => 'subReplyCount'
+            'replySubReplyCount' => 'subReplyCount',
         ][$name] ?? $name;
         $inverseRangeOfNumericParams = [
             '<' => '>=',
             '=' => '!=',
-            '>' => '<='
+            '>' => '<=',
         ][$sub['range'] ?? null] ?? null;
 
         $userTypeOfUserParams = str_starts_with($name, 'author') ? 'author' : 'latestReplier';
         $fieldNameOfUserNameParams = str_ends_with($name, 'DisplayName') ? 'displayName' : 'name';
         $getAndCacheUserQuery =
             static function (BuilderContract $newQueryWhenCacheMiss) use (&$outCachedUserQueryResult): Collection {
-            // $outCachedUserQueryResult === null means it's the first call
-            $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->get();
-            return $outCachedUserQueryResult;
-        };
+                // $outCachedUserQueryResult === null means it's the first call
+                $outCachedUserQueryResult ??= $newQueryWhenCacheMiss->get();
+                return $outCachedUserQueryResult;
+            };
 
         return match ($name) {
             // numeric
@@ -93,7 +93,7 @@ class SearchQuery extends BaseQuery
                     : $query->where(
                         $fieldNameOfNumericParams,
                         $sub['not'] ? $inverseRangeOfNumericParams : $sub['range'],
-                        $value
+                        $value,
                     ),
             // textMatch
             'threadTitle', 'postContent' =>
@@ -106,7 +106,7 @@ class SearchQuery extends BaseQuery
                 foreach ($value as $threadProperty) {
                     match ($threadProperty) {
                         'good' => $query->where('isGood', !$sub['not']),
-                        'sticky' => $query->{"where{$inverseNot}null"}('stickyType')
+                        'sticky' => $query->{"where{$inverseNot}null"}('stickyType'),
                     };
                 }
                 return $query;
@@ -118,7 +118,7 @@ class SearchQuery extends BaseQuery
                         User::select('uid'),
                         $fieldNameOfUserNameParams,
                         $value,
-                        $sub
+                        $sub,
                     ))
                 ),
             'authorGender', 'latestReplierGender' =>
@@ -130,7 +130,7 @@ class SearchQuery extends BaseQuery
                 $value === 'NULL'
                     ? $query->{"where{$not}null"}('authorManagerType')
                     : $query->where('authorManagerType', $sub['not'] ? '!=' : '=', $value),
-            default => $query
+            default => $query,
         };
     }
 
@@ -141,7 +141,7 @@ class SearchQuery extends BaseQuery
         BuilderContract $query,
         string $field,
         string $value,
-        array $subParams
+        array $subParams,
     ): BuilderContract {
         $not = $subParams['not'] === true ? 'Not' : '';
         if ($subParams['matchBy'] === 'regex') {
@@ -150,7 +150,7 @@ class SearchQuery extends BaseQuery
         return $query->where(static function (Builder $subQuery) use ($subParams, $field, $not, $value) {
             // not (A or B) <=> not A and not B, following https://en.wikipedia.org/wiki/De_Morgan%27s_laws
             $isOrWhere = $not === 'Not' ? '' : 'or';
-            $addMatchKeyword = static fn (string $keyword) =>
+            $addMatchKeyword = static fn(string $keyword) =>
                 $subQuery->{"{$isOrWhere}Where"}(
                     $field,
                     trim("$not LIKE"),

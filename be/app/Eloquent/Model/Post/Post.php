@@ -17,7 +17,7 @@ abstract class Post extends ModelWithTableNameSplitByFid
     protected const TIMESTAMP_FIELDS = [
         'createdAt',
         'updatedAt',
-        'lastSeenAt'
+        'lastSeenAt',
     ];
 
     private const MODEL_CLASS_TO_TABLE_NAME_SUFFIX = [
@@ -25,7 +25,7 @@ abstract class Post extends ModelWithTableNameSplitByFid
         Reply::class => 'reply',
         ReplyContent::class => 'reply_content',
         SubReply::class => 'subReply',
-        SubReplyContent::class => 'subReply_content'
+        SubReplyContent::class => 'subReply_content',
     ];
 
     protected function getTableNameSuffix(): string
@@ -45,7 +45,7 @@ abstract class Post extends ModelWithTableNameSplitByFid
         return $query->addSelect(array_values(\array_slice(
             Helper::POST_TYPE_TO_ID,
             0,
-            array_search($this->getTableNameSuffix(), Helper::POST_TYPES, true) + 1
+            array_search($this->getTableNameSuffix(), Helper::POST_TYPES, true) + 1,
         )));
     }
 

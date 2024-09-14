@@ -40,14 +40,14 @@ class GenerateBilibiliVote extends Command
                     $voterUid = $voteReply['authorUid'];
                     $voteRegex = Regex::match(
                         '/"text":"(.*?)投(.*?)号候选人/',
-                        Helper::jsonEncode($voteReply['content']) ?? ''
+                        Helper::jsonEncode($voteReply['content']) ?? '',
                     );
                     $voteBy = $voteRegex->groupOr(1, '');
                     $voteFor = trim($voteRegex->groupOr(2, ''));
                     $isVoteValid = $voteRegex->hasMatch()
                         && $voteReply['authorExpGrade'] >= 4
                         // && $voteBy === ($votersUsername->where('uid', $voterUid)->first()['name'] ?? null)
-                        && \in_array((int)$voteFor, $candidateIDRange, true)
+                        && \in_array((int) $voteFor, $candidateIDRange, true)
                         && $votersPreviousValidVoteCount->where('authorUid', $voterUid)->first() === null;
                     $voteResults[] = [
                         'pid' => $voteReply['pid'],
@@ -57,7 +57,7 @@ class GenerateBilibiliVote extends Command
                         'voteBy' => Helper::nullableValidate($voteBy),
                         'voteFor' => Helper::nullableValidate($voteFor),
                         'replyContent' => $voteReply['content'],
-                        'postTime' => $voteReply['postTime']
+                        'postTime' => $voteReply['postTime'],
                     ];
                 }
                 // never update isValid field to prevent covering wrong value

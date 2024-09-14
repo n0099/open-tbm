@@ -20,7 +20,7 @@ class Reply extends Post
     protected $casts = [
         'subReplyCount' => NullableNumericAttributeCast::class,
         'agreeCount' => NullableNumericAttributeCast::class,
-        'disagreeCount' => NullableNumericAttributeCast::class
+        'disagreeCount' => NullableNumericAttributeCast::class,
     ];
 
     public function __construct(array $attributes = [])
@@ -38,7 +38,7 @@ class Reply extends Post
             'disagreeCount',
             'geolocation',
             'signatureId',
-            ...parent::TIMESTAMP_FIELDS
+            ...parent::TIMESTAMP_FIELDS,
         ];
     }
 
@@ -63,7 +63,7 @@ class Reply extends Post
         return $this->hasMany(SubReply::class, 'pid', 'pid');
     }
 
-    public function contentProtoBuf() : HasOne
+    public function contentProtoBuf(): HasOne
     {
         return $this->hasOne(ReplyContent::class, 'pid', 'pid')->selectPublicFields();
     }

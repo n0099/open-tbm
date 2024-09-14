@@ -27,7 +27,7 @@ class BilibiliVoteQuery
                 ->groupBy('voteFor')
                 ->orderBy('count', 'DESC')
                 ->limit($candidateCount),
-            'T'
+            'T',
         );
     }
 
@@ -60,7 +60,7 @@ class BilibiliVoteQuery
     {
         $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeGranularity' => ['required', Rule::in(array_keys($groupByTimeGranularity))]
+            'timeGranularity' => ['required', Rule::in(array_keys($groupByTimeGranularity))],
         ]);
         return BilibiliVoteModel::selectRaw($groupByTimeGranularity[$request->query()['timeGranularity']])
             ->selectRaw('isValid, COUNT(*) AS count')
@@ -85,7 +85,7 @@ class BilibiliVoteQuery
             ->orderBy('voteFor', 'ASC')
             ->get())
             ->map(static function ($i) {
-                $i['voterAvgGrade'] = (float)$i['voterAvgGrade'];
+                $i['voterAvgGrade'] = (float) $i['voterAvgGrade'];
                 return $i;
             })
             ->toJson();
@@ -102,10 +102,10 @@ class BilibiliVoteQuery
     {
         $groupBytimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
-            'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))]
+            'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))],
         ]);
         return self::sanitizeVoteForField(BilibiliVoteModel::selectRaw(
-            $groupBytimeGranularity[$request->query()['timeGranularity']]
+            $groupBytimeGranularity[$request->query()['timeGranularity']],
         )
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
@@ -151,24 +151,24 @@ class BilibiliVoteQuery
                 \DB::raw("($timeGranularityRawSQL) AS timeGranularityRawSQL"),
                 'timeGroups.endTime',
                 '<',
-                'timeGranularityRawSQL.endTime'
+                'timeGranularityRawSQL.endTime',
             ) // cumulative
             ->groupBy('endTime', 'isValid', 'voteFor')
             ->orderBy('endTime', 'ASC')
             ->orderBy('voteFor', 'ASC')
             ->get()
-            ->map(static fn ($i) => (array)$i))
+            ->map(static fn($i) => (array) $i))
             ->toJson();
     }
 
     private static function sanitizeVoteForField(Collection $collection): Collection
     {
         return $collection
-            ->filter(static fn ($i) => Regex::match('/^(0|[1-9][0-9]*)$/', $i['voteFor'] ?? '')->hasMatch())
+            ->filter(static fn($i) => Regex::match('/^(0|[1-9][0-9]*)$/', $i['voteFor'] ?? '')->hasMatch())
             ->map(static function ($i) {
-                $i['voteFor'] = (int)$i['voteFor'];
+                $i['voteFor'] = (int) $i['voteFor'];
                 return $i;
             })
-            ->filter(static fn ($i) => $i['voteFor'] >= 1 && $i['voteFor'] <= 1056);
+            ->filter(static fn($i) => $i['voteFor'] >= 1 && $i['voteFor'] <= 1056);
     }
 }

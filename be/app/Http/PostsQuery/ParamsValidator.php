@@ -31,7 +31,7 @@ class ParamsValidator
         $this->params->addDefaultValueOnUniqueParams();
         // sort here to prevent further sort while validating
         $this->params->setUniqueParamValue('postTypes', Arr::sort($this->params->getUniqueParamValue('postTypes')));
-        $this->currentPostTypes = (array)$this->params->getUniqueParamValue('postTypes');
+        $this->currentPostTypes = (array) $this->params->getUniqueParamValue('postTypes');
         if (!$shouldSkip40003) {
             $this->validate40003();
         }
@@ -42,12 +42,12 @@ class ParamsValidator
     {
         $paramsPossibleValue = [
             'userGender' => [0, 1, 2],
-            'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin']
+            'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin'],
         ];
         $dateRangeValidator = static function ($_, string $value): void {
             \Validator::make(
                 explode(',', $value),
-                ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0']
+                ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0'],
             )->validate();
         };
         // note here we haven't validated that is every sub param have a corresponding main param yet
@@ -82,7 +82,7 @@ class ParamsValidator
             // authorName, authorDisplayName
             // latestReplierName, latestReplierDisplayName
             '*.matchBy' => 'in:implicit,explicit,regex',
-            '*.spaceSplit' => 'boolean'
+            '*.spaceSplit' => 'boolean',
         ])->validate();
     }
 
@@ -124,7 +124,7 @@ class ParamsValidator
             'latestReplierUid' => ['ALL', ['thread']],
             'latestReplierName' => ['ALL', ['thread']],
             'latestReplierDisplayName' => ['ALL', ['thread']],
-            'latestReplierGender' => ['ALL', ['thread']]
+            'latestReplierGender' => ['ALL', ['thread']],
         ];
         foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
             if ($this->params->pick($paramName) !== []) {
@@ -137,13 +137,13 @@ class ParamsValidator
     {
         $orderByRequiredPostTypes = [
             'pid' => ['SUB', ['reply', 'subReply']],
-            'spid' => ['SUB', ['subReply']]
+            'spid' => ['SUB', ['subReply']],
         ];
-        $currentOrderBy = (string)$this->params->getUniqueParamValue('orderBy');
+        $currentOrderBy = (string) $this->params->getUniqueParamValue('orderBy');
         if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
             Helper::abortAPIIfNot(
                 40004,
-                self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy])
+                self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]),
             );
         }
     }

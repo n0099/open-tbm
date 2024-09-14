@@ -18,9 +18,9 @@ class IndexQuery extends BaseQuery
         /** @var array<string, mixed> $flatParams key by param name */
         $flatParams = array_reduce(
             $params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID),
-            static fn (array $accParams, Param $param) =>
+            static fn(array $accParams, Param $param) =>
                 [...$accParams, $param->name => $param->value, ...$param->getAllSub()],
-            []
+            [],
         ); // flatten unique query params
         /** @var Collection<string, int> $postIDParam key by post ID name, should contains only one param */
         $postIDParam = collect($flatParams)->only(Helper::POST_ID);
@@ -36,18 +36,18 @@ class IndexQuery extends BaseQuery
          * @param int $fid
          * @return Collection<string, Post> key by post type
          */
-        $getQueryBuilders = static fn (int $fid): Collection =>
+        $getQueryBuilders = static fn(int $fid): Collection =>
             collect(PostFactory::getPostModelsByFid($fid))
                 ->only($postTypes)
-                ->transform(static fn (Post $model, string $type) => $model->selectCurrentAndParentPostID());
+                ->transform(static fn(Post $model, string $type) => $model->selectCurrentAndParentPostID());
         $getFidByPostIDParam = static function (string $postIDName, int $postID): int {
             $counts = Forum::get('fid')
                 ->pluck('fid')
-                ->map(static fn (int $fid) =>
+                ->map(static fn(int $fid) =>
                     PostFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
                         ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
-                ->reduce(static fn (?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): BuilderContract =>
+                ->reduce(static fn(?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): BuilderContract =>
                     $acc === null ? $cur : $acc->union($cur))
                 ->get()
                 ->where('count', '!=', 0);
@@ -78,9 +78,9 @@ class IndexQuery extends BaseQuery
             $queries = $queries
                 ->only(\array_slice(
                     Helper::POST_TYPES, // only query post types that own the querying post ID param
-                    array_search($postIDParamName, Helper::POST_ID, true)
+                    array_search($postIDParamName, Helper::POST_ID, true),
                 ))
-                ->map(static fn (EloquentBuilder $qb, string $type) =>
+                ->map(static fn(EloquentBuilder $qb, string $type) =>
                     $qb->where($postIDParamName, $postIDParamValue));
         }
 

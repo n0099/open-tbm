@@ -13,7 +13,7 @@ class NullableNumericAttributeCast implements CastsAttributes
 
     public function set($model, string $key, $value, array $attributes): ?int
     {
-        \is_int($value) || $value = (int)$value;
+        \is_int($value) || $value = (int) $value;
         return $value === 0 ? null : $value;
     }
 }

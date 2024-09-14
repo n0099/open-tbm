@@ -34,9 +34,7 @@ abstract class BaseQuery
 
     abstract public function query(QueryParams $params, ?string $cursor): self;
 
-    public function __construct(protected int $perPageItems = 50)
-    {
-    }
+    public function __construct(protected int $perPageItems = 50) {}
 
     public function getResultPages(): array
     {
@@ -54,11 +52,11 @@ abstract class BaseQuery
         int $fid,
         Collection $queries,
         ?string $cursorParamValue,
-        ?string $queryByPostIDParamName = null
+        ?string $queryByPostIDParamName = null,
     ): void {
         Debugbar::startMeasure('setResult');
 
-        $addOrderByForBuilder = fn (Builder $qb, string $postType): Builder => $qb
+        $addOrderByForBuilder = fn(Builder $qb, string $postType): Builder => $qb
             // we don't have to select the post ID
             // since it's already selected by invokes of Post::scopeSelectCurrentAndParentPostID()
             ->addSelect($this->orderByField)
@@ -80,23 +78,23 @@ abstract class BaseQuery
         }
         Debugbar::startMeasure('initPaginators');
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
-        $paginators = $queriesWithOrderBy->map(fn (Builder $qb, string $type) =>
+        $paginators = $queriesWithOrderBy->map(fn(Builder $qb, string $type) =>
             $qb->cursorPaginate($this->perPageItems, cursor: $cursorsKeyByPostType[$type] ?? null));
         Debugbar::stopMeasure('initPaginators');
 
         /** @var Collection<string, Collection> $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $paginators
             // cast paginator with queried posts to Collection<int, Post>
-            ->map(static fn (CursorPaginator $paginator) => $paginator->collect())
-            ->mapWithKeys(static fn (Collection $posts, string $type) =>
+            ->map(static fn(CursorPaginator $paginator) => $paginator->collect())
+            ->mapWithKeys(static fn(Collection $posts, string $type) =>
                 [Helper::POST_TYPE_TO_PLURAL[$type] => $posts]);
-        Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn (Collection $i) => $i->isEmpty()));
+        Helper::abortAPIIf(40401, $postsKeyByTypePluralName->every(static fn(Collection $i) => $i->isEmpty()));
         $this->queryResult = ['fid' => $fid, ...$postsKeyByTypePluralName];
 
         $hasMore = self::unionPageStats(
             $paginators,
             'hasMorePages',
-            static fn (Collection $v) => $v->filter()->count() !== 0 // Collection->filter() will remove false values
+            static fn(Collection $v) => $v->filter()->count() !== 0, // Collection->filter() will remove false values
         );
         $this->queryResultPages = [
             'currentCursor' => $cursorParamValue ?? '',
@@ -104,7 +102,7 @@ abstract class BaseQuery
                 ? $this->encodeNextCursor($queryByPostIDParamName === null
                     ? $postsKeyByTypePluralName
                     : $postsKeyByTypePluralName->except([Helper::POST_ID_TO_TYPE_PLURAL[$queryByPostIDParamName]]))
-                : null
+                : null,
         ];
 
         Debugbar::stopMeasure('setResult');
@@ -122,15 +120,15 @@ abstract class BaseQuery
     private function encodeNextCursor(Collection $postsKeyByTypePluralName): string
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
-            ->mapWithKeys(static fn (Collection $posts, string $type) => [
-                Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last() // null when no posts
+            ->mapWithKeys(static fn(Collection $posts, string $type) => [
+                Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last(), // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
             ->filter() // remove post types that have no posts
-            ->map(fn (Post $post, string $typePluralName) => [ // [postID, orderByField]
+            ->map(fn(Post $post, string $typePluralName) => [ // [postID, orderByField]
                 $post->getAttribute(Helper::POST_TYPE_TO_ID[$typePluralName]),
-                $post->getAttribute($this->orderByField)
+                $post->getAttribute($this->orderByField),
             ])
-            ->map(static fn (array $cursors) => collect($cursors)
+            ->map(static fn(array $cursors) => collect($cursors)
                 ->map(static function (int|string $cursor): string {
                     if (\is_int($cursor) && $cursor === 0) {
                         // quick exit to keep 0 as is
@@ -139,12 +137,12 @@ abstract class BaseQuery
                         return '0';
                     }
 
-                    $firstKeyFromTableFilterByTrue = static fn (array $table, string $default): string =>
-                        array_keys(array_filter($table, static fn (bool $f) => $f === true))[0] ?? $default;
+                    $firstKeyFromTableFilterByTrue = static fn(array $table, string $default): string =>
+                        array_keys(array_filter($table, static fn(bool $f) => $f === true))[0] ?? $default;
                     $prefix = $firstKeyFromTableFilterByTrue([
                         '-' => \is_int($cursor) && $cursor < 0,
                         '' => \is_int($cursor),
-                        'S' => \is_string($cursor)
+                        'S' => \is_string($cursor),
                     ], '');
 
                     $value = \is_int($cursor)
@@ -169,7 +167,7 @@ abstract class BaseQuery
             // if the flipped value is a default int key there's no posts of this type
             // (type key not exists in $postsKeyByTypePluralName)
             // so we just return an empty ',' as placeholder
-            ->map(static fn (string|int $cursor) => \is_int($cursor) ? ',' : $cursor)
+            ->map(static fn(string|int $cursor) => \is_int($cursor) ? ',' : $cursor)
             ->join(',');
     }
 
@@ -191,32 +189,32 @@ abstract class BaseQuery
                         null => null, // original encoded cursor is an empty string
                         '0' => 0, // keep 0 as is
                         'S' => $cursor, // string literal is not base64 encoded
-                        default => ((array)(
+                        default => ((array) (
                             unpack(
                                 'P',
                                 str_pad( // re-add removed trailing 0x00 or 0xFF
                                     base64_decode(
                                         // https://en.wikipedia.org/wiki/Base64#URL_applications
-                                        str_replace(['-', '_'], ['+', '/'], $cursor)
+                                        str_replace(['-', '_'], ['+', '/'], $cursor),
                                     ),
                                     8,
-                                    $prefix === '-' ? "\xFF" : "\x00"
-                                )
+                                    $prefix === '-' ? "\xFF" : "\x00",
+                                ),
                             )
-                        ))[1] // the returned array of unpack() will starts index from 1
+                        ))[1], // the returned array of unpack() will starts index from 1
                     };
                 })
                 ->chunk(2) // split six values into three post type pairs
-                ->map(static fn (Collection $i) => $i->values())) // reorder keys after chunk
-            ->mapWithKeys(fn (Collection $cursors, string $postType) =>
+                ->map(static fn(Collection $i) => $i->values())) // reorder keys after chunk
+            ->mapWithKeys(fn(Collection $cursors, string $postType) =>
                 [$postType =>
-                    $cursors->mapWithKeys(fn (int|string|null $cursor, int $index) =>
-                        [$index === 0 ? Helper::POST_TYPE_TO_ID[$postType] : $this->orderByField => $cursor])
+                    $cursors->mapWithKeys(fn(int|string|null $cursor, int $index) =>
+                        [$index === 0 ? Helper::POST_TYPE_TO_ID[$postType] : $this->orderByField => $cursor]),
                 ])
             // filter out cursors with all fields value being null, their encoded cursor is ',,'
-            ->reject(static fn (Collection $cursors) =>
-                $cursors->every(static fn (int|string|null $cursor) => $cursor === null))
-            ->map(static fn (Collection $cursors) => new Cursor($cursors->toArray()));
+            ->reject(static fn(Collection $cursors) =>
+                $cursors->every(static fn(int|string|null $cursor) => $cursor === null))
+            ->map(static fn(Collection $cursors) => new Cursor($cursors->toArray()));
     }
 
     /**
@@ -231,10 +229,10 @@ abstract class BaseQuery
     private static function unionPageStats(
         Collection $paginators,
         string $unionMethodName,
-        Closure $unionCallback
+        Closure $unionCallback,
     ): mixed {
         // Collection::filter() will remove falsy values
-        $unionValues = $paginators->map(static fn (CursorPaginator $p) => $p->$unionMethodName());
+        $unionValues = $paginators->map(static fn(CursorPaginator $p) => $p->$unionMethodName());
         return $unionCallback($unionValues->isEmpty() ? collect(0) : $unionValues); // prevent empty array
     }
 
@@ -244,7 +242,7 @@ abstract class BaseQuery
         'notMatchQueryParentPostCount' => 'array{thread: int, reply: int}',
         'threads' => 'Collection<int, Thread>',
         'replies' => 'Collection<int, Reply>',
-        'subReplies' => 'Collection<int, SubReply>'
+        'subReplies' => 'Collection<int, SubReply>',
     ])] public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
@@ -264,7 +262,7 @@ abstract class BaseQuery
                     ? [$result[$postTypePluralName], $result[$postTypePluralName]->pluck($postIDName)]
                     : [collect(), collect()];
             },
-            Helper::POST_ID
+            Helper::POST_ID,
         );
 
         /** @var int $fid */
@@ -279,7 +277,7 @@ abstract class BaseQuery
             // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
             ->tid($parentThreadsID->concat($tids))
             ->selectPublicFields()->get()
-            ->map(static fn (Thread $thread) => // mark threads that exists in the original $this->queryResult
+            ->map(static fn(Thread $thread) => // mark threads that exists in the original $this->queryResult
                 $thread->setAttribute('isMatchQuery', $tids->contains($thread->tid)));
         Debugbar::stopMeasure('fillWithThreadsFields');
 
@@ -290,7 +288,7 @@ abstract class BaseQuery
             // from the original $this->queryResult, see Post::scopeSelectCurrentAndParentPostID()
             ->pid($parentRepliesID->concat($pids))
             ->selectPublicFields()->with('contentProtoBuf')->get()
-            ->map(static fn (Reply $r) => // mark replies that exists in the original $this->queryResult
+            ->map(static fn(Reply $r) => // mark replies that exists in the original $this->queryResult
                 $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
         Debugbar::stopMeasure('fillWithRepliesFields');
 
@@ -310,12 +308,12 @@ abstract class BaseQuery
             'fid' => $fid,
             'matchQueryPostCount' => collect(Helper::POST_TYPES)
                 ->combine([$tids, $pids, $spids])
-                ->map(static fn (Collection $ids, string $type) => $ids->count()),
+                ->map(static fn(Collection $ids, string $type) => $ids->count()),
             'notMatchQueryParentPostCount' => [
                 'thread' => $parentThreadsID->diff($tids)->count(),
                 'reply' => $parentRepliesID->diff($pids)->count(),
             ],
-            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies])
+            ...array_combine(Helper::POST_TYPES_PLURAL, [$threads, $replies, $subReplies]),
         ];
     }
 
@@ -330,20 +328,20 @@ abstract class BaseQuery
         Collection $threads,
         Collection $replies,
         Collection $subReplies,
-        ...$_
+        ...$_,
     ): Collection {
         Debugbar::startMeasure('nestPostsWithParent');
 
         $replies = $replies->groupBy('tid');
         $subReplies = $subReplies->groupBy('pid');
-        $ret = $threads->map(fn (Thread $thread) => collect([
+        $ret = $threads->map(fn(Thread $thread) => collect([
             ...$thread->toArray(),
             'replies' => $replies->get($thread->tid, collect())
-                ->map(fn (Reply $reply) => collect([
+                ->map(fn(Reply $reply) => collect([
                     ...$reply->toArray(),
                     'subReplies' => $subReplies->get($reply->pid, collect())
-                        ->map(static fn (SubReply $subReply) => collect($subReply->toArray()))
-                ]))
+                        ->map(static fn(SubReply $subReply) => collect($subReply->toArray())),
+                ])),
         ]));
 
         Debugbar::stopMeasure('nestPostsWithParent');
@@ -375,14 +373,14 @@ abstract class BaseQuery
                 // value of orderBy field in the first sorted child post that isMatchQuery after previous sorting
                 $childPosts
                     // sub replies won't have isMatchQuery
-                    ->filter(static fn (Collection $p) => ($p['isMatchQuery'] ?? true) === true)
+                    ->filter(static fn(Collection $p) => ($p['isMatchQuery'] ?? true) === true)
                     // if no child posts matching the query, use null as the sorting key
                     ->first()[$this->orderByField] ?? null,
                 // sorting key from the first sorted child posts
                 // not requiring isMatchQuery since a child post without isMatchQuery
                 // might have its own child posts with isMatchQuery
                 // and its sortingKey would be selected from its own child posts
-                $childPosts->first()['sortingKey'] ?? null
+                $childPosts->first()['sortingKey'] ?? null,
             ]);
             if ($curPost['isMatchQuery'] === true) {
                 // also try to use the value of orderBy field in current post
@@ -397,10 +395,10 @@ abstract class BaseQuery
 
             return $curPost;
         };
-        $sortBySortingKey = fn (Collection $posts) => $posts
-            ->sortBy(fn (Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
-        $removeSortingKey = static fn (Collection $posts) => $posts
-            ->map(fn (Collection $i) => $i->except('sortingKey'));
+        $sortBySortingKey = fn(Collection $posts) => $posts
+            ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
+        $removeSortingKey = static fn(Collection $posts) => $posts
+            ->map(fn(Collection $i) => $i->except('sortingKey'));
         $ret = $removeSortingKey($sortBySortingKey(
             $nestedPosts->map(
                 /**
@@ -419,17 +417,17 @@ abstract class BaseQuery
                          */
                         function (Collection $reply) use ($setSortingKeyFromCurrentAndChildPosts) {
                             $reply['subReplies'] = $reply['subReplies']->sortBy(
-                                fn (Collection $subReplies) => $subReplies[$this->orderByField],
-                                descending: $this->orderByDesc
+                                fn(Collection $subReplies) => $subReplies[$this->orderByField],
+                                descending: $this->orderByDesc,
                             );
                             return $setSortingKeyFromCurrentAndChildPosts($reply, 'subReplies');
-                        }
+                        },
                     ));
                     $setSortingKeyFromCurrentAndChildPosts($thread, 'replies');
                     $thread['replies'] = $removeSortingKey($thread['replies']);
                     return $thread;
-                }
-            )
+                },
+            ),
         ))->values()->toArray();
 
         Debugbar::stopMeasure('reOrderNestedPosts');

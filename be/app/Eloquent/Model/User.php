@@ -35,7 +35,7 @@ class User extends Model
             'icon',
             'ipGeolocation',
             'createdAt',
-            'updatedAt'
+            'updatedAt',
         ];
     }
 

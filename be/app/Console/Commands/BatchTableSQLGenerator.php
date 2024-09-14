@@ -28,7 +28,7 @@ class BatchTableSQLGenerator extends Command
             '{fid}' => '{fid}',
             '{t_thread}' => 'tbmc_f{fid}_thread',
             '{t_reply}' => 'tbmc_f{fid}_reply',
-            '{t_subReply}' => 'tbmc_f{fid}_subReply'
+            '{t_subReply}' => 'tbmc_f{fid}_subReply',
         ];
         $outputSQLs = [];
         foreach (Forum::select('fid')->get() as $forum) {

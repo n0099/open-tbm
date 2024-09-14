@@ -41,12 +41,12 @@ class PostFactory
     #[ArrayShape([
         'thread' => Thread::class,
         'reply' => Reply::class,
-        'subReply' => SubReply::class
+        'subReply' => SubReply::class,
     ])] public static function getPostModelsByFid(int $fid): array
     {
         return array_combine(
             Helper::POST_TYPES,
-            [self::newThread($fid), self::newReply($fid), self::newSubReply($fid)]
+            [self::newThread($fid), self::newReply($fid), self::newSubReply($fid)],
         );
     }
 }
