@@ -24,9 +24,7 @@ class IndexQuery extends BaseQuery
         ); // flatten unique query params
         /** @var Collection<string, int> $postIDParam key by post ID name, should contains only one param */
         $postIDParam = collect($flatParams)->only(Helper::POST_ID);
-        /** @var ?string $postIDParamName */
         $postIDParamName = $postIDParam->keys()->first();
-        /** @var ?int $postIDParamValue */
         $postIDParamValue = $postIDParam->first();
         $hasPostIDParam = $postIDParam->count() === 1;
         /** @var array<string> $postTypes */
@@ -47,8 +45,14 @@ class IndexQuery extends BaseQuery
                     PostFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
                         ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
-                ->reduce(static fn(?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): BuilderContract =>
-                    $acc === null ? $cur : $acc->union($cur))
+                ->reduce(/**
+                 * @return \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder
+                 *
+                 * @psalm-return \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>|\Illuminate\Database\Query\Builder
+                 */
+                    static fn(?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder|\Illuminate\Contracts\Database\Query\Builder =>
+                        $acc === null ? $cur : $acc->union($cur),
+                )
                 ->get()
                 ->where('count', '!=', 0);
             Helper::abortAPIIf(50001, $counts->count() > 1);

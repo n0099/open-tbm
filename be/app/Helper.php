@@ -135,7 +135,7 @@ class Helper
     /**
      * @throws \JsonException
      */
-    public static function jsonEncode($value): string
+    public static function jsonEncode(string $value): string
     {
         return json_encode($value, JSON_THROW_ON_ERROR);
     }

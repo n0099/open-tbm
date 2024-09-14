@@ -250,7 +250,6 @@ abstract class BaseQuery
         /** @var Collection<int, int> $pids */
         /** @var Collection<int, int> $spids */
         /** @var Collection<int, Reply> $replies */
-        /** @var Collection<int, SubReply> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
             /**
              * @param string $postIDName
@@ -363,7 +362,7 @@ abstract class BaseQuery
          * @param string $childPostTypePluralName
          * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>
          */
-        $setSortingKeyFromCurrentAndChildPosts = function (Collection $curPost, string $childPostTypePluralName) {
+        $setSortingKeyFromCurrentAndChildPosts = function (Collection $curPost, string $childPostTypePluralName): \Illuminate\Support\Collection {
             /** @var Collection<int, Collection<string, mixed>> $childPosts sorted child posts */
             $childPosts = $curPost[$childPostTypePluralName];
             $curPost[$childPostTypePluralName] = $childPosts->values(); // reset keys
@@ -395,9 +394,12 @@ abstract class BaseQuery
 
             return $curPost;
         };
-        $sortBySortingKey = fn(Collection $posts) => $posts
+        $sortBySortingKey = fn(Collection $posts): \Illuminate\Support\Collection => $posts
             ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
-        $removeSortingKey = static fn(Collection $posts) => $posts
+        $removeSortingKey = /**
+         * @psalm-return \Illuminate\Support\Collection<array-key, \Illuminate\Support\Collection>
+         */
+        static fn(Collection $posts): \Illuminate\Support\Collection => $posts
             ->map(fn(Collection $i) => $i->except('sortingKey'));
         $ret = $removeSortingKey($sortBySortingKey(
             $nestedPosts->map(
