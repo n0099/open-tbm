@@ -362,7 +362,7 @@ abstract class BaseQuery
          * @param string $childPostTypePluralName
          * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>
          */
-        $setSortingKeyFromCurrentAndChildPosts = function (Collection $curPost, string $childPostTypePluralName): \Illuminate\Support\Collection {
+        $setSortingKeyFromCurrentAndChildPosts = function (Collection $curPost, string $childPostTypePluralName): Collection {
             /** @var Collection<int, Collection<string, mixed>> $childPosts sorted child posts */
             $childPosts = $curPost[$childPostTypePluralName];
             $curPost[$childPostTypePluralName] = $childPosts->values(); // reset keys
@@ -394,12 +394,12 @@ abstract class BaseQuery
 
             return $curPost;
         };
-        $sortBySortingKey = fn(Collection $posts): \Illuminate\Support\Collection => $posts
+        $sortBySortingKey = fn(Collection $posts): Collection => $posts
             ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
         $removeSortingKey = /**
-         * @psalm-return \Illuminate\Support\Collection<array-key, \Illuminate\Support\Collection>
+         * @psalm-return Collection<array-key, Collection>
          */
-        static fn(Collection $posts): \Illuminate\Support\Collection => $posts
+        static fn(Collection $posts): Collection => $posts
             ->map(fn(Collection $i) => $i->except('sortingKey'));
         $ret = $removeSortingKey($sortBySortingKey(
             $nestedPosts->map(

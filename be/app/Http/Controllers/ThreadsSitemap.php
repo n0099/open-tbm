@@ -13,7 +13,8 @@ class ThreadsSitemap extends Controller
     public static int $maxUrls = 50000;
 
     public function query(Http\Request $request, int $fid): Http\Response
-    { // https://stackoverflow.com/questions/59554777/laravel-how-to-set-default-value-in-validator-at-post-registeration/78707950#78707950
+    {
+        // https://stackoverflow.com/questions/59554777/laravel-how-to-set-default-value-in-validator-at-post-registeration/78707950#78707950
         ['cursor' => $cursor] = $request->validate([
             'cursor' => 'integer',
         ]) + ['cursor' => 0];

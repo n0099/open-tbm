@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ruleset>
+    <rule ref="PSR12" />
+    <arg name="extensions" value="php" />
+    <exclude-pattern>*.blade.php</exclude-pattern>
+    <exclude-pattern>_ide_helper*.php</exclude-pattern>
+    <!-- https://github.com/squizlabs/PHP_CodeSniffer/issues/2242 -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>bootstrap/cache/*</exclude-pattern>
+</ruleset>

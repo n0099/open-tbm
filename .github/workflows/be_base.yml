@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
-        # https://github.com/staabm/annotate-pull-request-from-checkstyle
       - run: >
           ./vendor/bin/phpstan analyse --error-format=checkstyle
           | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+        # https://github.com/staabm/annotate-pull-request-from-checkstyle
         shell: bash
 
   psalm:
@@ -65,4 +65,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/be
-      - run: ./vendor/bin/phpmd . github cleancode,codesize,controversial,design,naming,unusedcode --exclude vendor # https://github.com/phpmd/phpmd/issues/506
+      # https://github.com/phpmd/phpmd/issues/506
+      - run: ./vendor/bin/phpmd . github cleancode,codesize,controversial,design,naming,unusedcode --exclude vendor
