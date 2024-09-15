@@ -61,10 +61,7 @@ class PostsQuery extends Controller
             ->concat(LatestReplier::query()->whereIn('id', $latestRepliersId)
                 ->whereNull('uid')->selectPublicFields()
                 ->addSelect(['name', 'displayName'])->get());
-        $whereCurrentFid = /**
-         * @psalm-return \Illuminate\Database\Eloquent\Builder<TRelatedModel>
-         */
-        static fn(HasOne $q): \Illuminate\Database\Eloquent\Builder => $q->where('fid', $result['fid']);
+        $whereCurrentFid = static fn(HasOne $q): HasOne => $q->where('fid', $result['fid']);
         $users = User::query()->whereIn(
             'uid',
             collect($result)

@@ -1,4 +1,4 @@
-﻿// ReSharper disable PropertyCanBeMadeInitOnly.Global
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
 namespace tbm.Crawler.Db.Revision;
 
 public class LatestReplierRevision

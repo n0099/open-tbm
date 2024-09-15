@@ -1,4 +1,4 @@
-﻿namespace tbm.Crawler.Db;
+namespace tbm.Crawler.Db;
 
 public abstract class BaseUser : TimestampedEntity
 {
