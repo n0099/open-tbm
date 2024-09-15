@@ -23,9 +23,9 @@
       },
       "CommunityToolkit.Diagnostics": {
         "type": "Direct",
-        "requested": "[8.3.0, )",
-        "resolved": "8.3.0",
-        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA=="
+        "requested": "[8.3.1, )",
+        "resolved": "8.3.1",
+        "contentHash": "7S76LyBFVUhXhLwRsZK24BXqiNOrfo91ALTiQiUBh797gyLQBtsUB0xxM7LKhLIfX6o5RC8fdB3AxKzomSsDGA=="
       },
       "EFCore.NamingConventions": {
         "type": "Direct",
@@ -82,13 +82,13 @@
       },
       "NLog.Extensions.Logging": {
         "type": "Direct",
-        "requested": "[5.3.12, )",
-        "resolved": "5.3.12",
-        "contentHash": "L6bOT5O5/pDZFAz4Oief/xtEi8zsVoGfjHqgtvA5ZI/cSBwpNwAKRBQsMYNadmmgj3OdJuQRfkasn6+qppVmuQ==",
+        "requested": "[5.3.13, )",
+        "resolved": "5.3.13",
+        "contentHash": "i1n5+ZB6Hd5na2eWj7zjeIH4SS3qzmSgoSIGpxp3B0lJ8p/Cmg59NrDE9GReAAmKbQVbP0d/+e3S/6j79Tnaww==",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Logging": "8.0.0",
-          "NLog": "5.3.3"
+          "NLog": "5.3.4"
         }
       },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
@@ -412,8 +412,8 @@
       },
       "NLog": {
         "type": "Transitive",
-        "resolved": "5.3.3",
-        "contentHash": "cy0+hlrUbYu+6mgUsILqCcqlJ2Csqyt2lm8y9T9kE8nhgwl8SvR+LM21QX4nmzFCPiowbrTFYxNF8+gWpy7/HQ=="
+        "resolved": "5.3.4",
+        "contentHash": "gLy7+O1hEYJXIlcTr1/VWjGXrZTQFZzYNO18IWasD64pNwz0BreV+nHLxWKXWZzERRzoKnsk2XYtwLkTVk7J1A=="
       },
       "Npgsql": {
         "type": "Transitive",
