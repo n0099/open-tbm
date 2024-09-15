@@ -34,6 +34,7 @@ abstract class BaseQuery
 
     abstract public function query(QueryParams $params, ?string $cursor): self;
 
+    // @phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine, Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore -- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291
     public function __construct(protected int $perPageItems = 50) {}
 
     public function getResultPages(): array
@@ -320,7 +321,7 @@ abstract class BaseQuery
      * @param Collection<int, Thread> $threads
      * @param Collection<int, Reply> $replies
      * @param Collection<int, SubReply> $subReplies
-     * @param mixed ...$_
+     * @phpcs:ignore Generic.Files.LineLength.TooLong
      * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>>
      */
     public static function nestPostsWithParent(
@@ -348,6 +349,7 @@ abstract class BaseQuery
     }
 
     /**
+     * @phpcs:ignore Generic.Files.LineLength.TooLong
      * @param Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>> $nestedPosts
      * @return list<array<string, mixed|list<array<string, mixed|list<array<string, mixed>>>>>>
      * @test-input [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}]},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}]},{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":5},{"postedAt":60}]}]},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[]}]}]
@@ -362,7 +364,10 @@ abstract class BaseQuery
          * @param string $childPostTypePluralName
          * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>
          */
-        $setSortingKeyFromCurrentAndChildPosts = function (Collection $curPost, string $childPostTypePluralName): Collection {
+        $setSortingKeyFromCurrentAndChildPosts = function (
+            Collection $curPost,
+            string $childPostTypePluralName,
+        ): Collection {
             /** @var Collection<int, Collection<string, mixed>> $childPosts sorted child posts */
             $childPosts = $curPost[$childPostTypePluralName];
             $curPost[$childPostTypePluralName] = $childPosts->values(); // reset keys

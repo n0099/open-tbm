@@ -46,10 +46,13 @@ class IndexQuery extends BaseQuery
                         ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
                 ->reduce(/**
-                 * @return BuilderContract|EloquentBuilder|QueryBuilder
-                 * @psalm-return BuilderContract|EloquentBuilder<\Illuminate\Database\Eloquent\Model>|QueryBuilder
+                 * @return BuilderContract|EloquentBuilder<\Illuminate\Database\Eloquent\Model>|QueryBuilder
                  */
-                    static fn(?BuilderContract $acc, EloquentBuilder|QueryBuilder $cur): EloquentBuilder|QueryBuilder|BuilderContract => $acc === null ? $cur : $acc->union($cur),
+                    static fn(
+                        ?BuilderContract $acc,
+                        EloquentBuilder|QueryBuilder $cur,
+                    ): EloquentBuilder|QueryBuilder|BuilderContract =>
+                        $acc === null ? $cur : $acc->union($cur),
                 )
                 ->get()
                 ->where('count', '!=', 0);

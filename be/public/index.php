@@ -1,5 +1,6 @@
 <?php
 
+// phpcs:disable PSR1.Files.SideEffects.FoundWithSymbols
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
