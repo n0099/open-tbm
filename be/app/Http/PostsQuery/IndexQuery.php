@@ -13,6 +13,9 @@ use Illuminate\Support\Collection;
 
 class IndexQuery extends BaseQuery
 {
+    /**
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
     public function query(QueryParams $params, ?string $cursor): self
     {
         /** @var array<string, mixed> $flatParams key by param name */

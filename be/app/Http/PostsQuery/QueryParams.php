@@ -70,6 +70,9 @@ class QueryParams
         return array_keys(array_filter($this->params, static fn($p) => $p->name === $name));
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
     public function addDefaultValueOnUniqueParams(): void
     {
         $uniqueParamsDefaultValue = [

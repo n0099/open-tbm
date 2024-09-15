@@ -323,6 +323,7 @@ abstract class BaseQuery
      * @param Collection<int, SubReply> $subReplies
      * @phpcs:ignore Generic.Files.LineLength.TooLong
      * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>>
+     * @SuppressWarnings(PHPMD.CamelCaseParameterName)
      */
     public static function nestPostsWithParent(
         Collection $threads,

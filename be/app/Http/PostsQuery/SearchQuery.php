@@ -156,12 +156,9 @@ class SearchQuery extends BaseQuery
                     trim("$not LIKE"),
                     $subParams['matchBy'] === 'implicit' ? "%$keyword%" : $keyword
                 );
-            if ($subParams['spaceSplit']) { // split multiple search keyword by space char
-                foreach (explode(' ', $value) as $splitedKeyword) {
-                    $addMatchKeyword($splitedKeyword);
-                }
-            } else {
-                $addMatchKeyword($value);
+            // split multiple search keyword by space char when $subParams['spaceSplit'] == true
+            foreach ($subParams['spaceSplit'] ? explode(' ', $value) : [$value] as $keyword) {
+                $addMatchKeyword($keyword);
             }
         });
     }

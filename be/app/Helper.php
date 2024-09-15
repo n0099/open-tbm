@@ -95,7 +95,6 @@ class Helper
             throw new \InvalidArgumentException('Given error code doesn\'t existed');
         }
         response()->json(compact('errorCode', 'errorInfo'), $statusCode)->throwResponse();
-        exit;
     }
 
     /**
