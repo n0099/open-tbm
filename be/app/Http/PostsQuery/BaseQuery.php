@@ -36,7 +36,7 @@ abstract class BaseQuery
 
     public function __construct(
         protected LaravelDebugbar $debugbar,
-        protected int $perPageItems = 50
+        protected int $perPageItems = 50,
         // @phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine, Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore -- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291
     ) {}
 
@@ -404,7 +404,7 @@ abstract class BaseQuery
         $sortBySortingKey = fn(Collection $posts): Collection => $posts
             ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
         $removeSortingKey = $shouldRemoveSortingKey
-            ?   /**
+            ? /**
                  * @psalm-return Collection<array-key, Collection>
                  */
                 static fn(Collection $posts): Collection => $posts
