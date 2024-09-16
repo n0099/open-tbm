@@ -91,8 +91,8 @@
       },
       "CommunityToolkit.Diagnostics": {
         "type": "Transitive",
-        "resolved": "8.3.0",
-        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA=="
+        "resolved": "8.3.1",
+        "contentHash": "7S76LyBFVUhXhLwRsZK24BXqiNOrfo91ALTiQiUBh797gyLQBtsUB0xxM7LKhLIfX6o5RC8fdB3AxKzomSsDGA=="
       },
       "EFCore.NamingConventions": {
         "type": "Transitive",
@@ -106,8 +106,8 @@
       },
       "Google.Protobuf": {
         "type": "Transitive",
-        "resolved": "3.28.0",
-        "contentHash": "lVsLcLIHpkOABswgydr0sjkIhSN5XE9C6AgLXxvMsa6pSSJIpmAIPvK/NZpuF+HTB6xp1R8T5nhLausWVOrU/w=="
+        "resolved": "3.28.1",
+        "contentHash": "i4EN7Z+OUdoRBNiVMIG6CfMh6UowXiUx+BKgE+GHLbAX5ArSmpUTFUDwgRNwNfYdosl6GXuBlDiHCcXSHw43+A=="
       },
       "Humanizer.Core": {
         "type": "Transitive",
@@ -463,17 +463,17 @@
       },
       "NLog": {
         "type": "Transitive",
-        "resolved": "5.3.3",
-        "contentHash": "cy0+hlrUbYu+6mgUsILqCcqlJ2Csqyt2lm8y9T9kE8nhgwl8SvR+LM21QX4nmzFCPiowbrTFYxNF8+gWpy7/HQ=="
+        "resolved": "5.3.4",
+        "contentHash": "gLy7+O1hEYJXIlcTr1/VWjGXrZTQFZzYNO18IWasD64pNwz0BreV+nHLxWKXWZzERRzoKnsk2XYtwLkTVk7J1A=="
       },
       "NLog.Extensions.Logging": {
         "type": "Transitive",
-        "resolved": "5.3.12",
-        "contentHash": "L6bOT5O5/pDZFAz4Oief/xtEi8zsVoGfjHqgtvA5ZI/cSBwpNwAKRBQsMYNadmmgj3OdJuQRfkasn6+qppVmuQ==",
+        "resolved": "5.3.13",
+        "contentHash": "i1n5+ZB6Hd5na2eWj7zjeIH4SS3qzmSgoSIGpxp3B0lJ8p/Cmg59NrDE9GReAAmKbQVbP0d/+e3S/6j79Tnaww==",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Logging": "8.0.0",
-          "NLog": "5.3.3"
+          "NLog": "5.3.4"
         }
       },
       "Npgsql": {
@@ -540,7 +540,7 @@
       "tbclient": {
         "type": "Project",
         "dependencies": {
-          "Google.Protobuf": "[3.28.0, )"
+          "Google.Protobuf": "[3.28.1, )"
         }
       },
       "tbm.shared": {
@@ -548,11 +548,11 @@
         "dependencies": {
           "Autofac": "[8.1.0, )",
           "Autofac.Extensions.DependencyInjection": "[10.0.0, )",
-          "CommunityToolkit.Diagnostics": "[8.3.0, )",
+          "CommunityToolkit.Diagnostics": "[8.3.1, )",
           "EFCore.NamingConventions": "[8.0.3, )",
           "Microsoft.EntityFrameworkCore": "[8.0.8, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
-          "NLog.Extensions.Logging": "[5.3.12, )",
+          "NLog.Extensions.Logging": "[5.3.13, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[8.0.4, )",
           "SuperLinq": "[6.2.0, )"
         }
