@@ -80,7 +80,7 @@ class PostsQuery extends Controller
                 ...Arr::except($result, ['fid', ...Helper::POST_TYPES_PLURAL]),
             ],
             'forum' => Forum::fid($result['fid'])->selectPublicFields()->first(),
-            'threads' => $query->reOrderNestedPosts($query::nestPostsWithParent(...$result)),
+            'threads' => $query->reOrderNestedPosts($query->nestPostsWithParent(...$result)),
             'users' => $users,
             'latestRepliers' => $latestRepliers,
         ];

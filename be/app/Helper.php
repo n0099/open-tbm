@@ -97,9 +97,6 @@ class Helper
         response()->json(compact('errorCode', 'errorInfo'), $statusCode)->throwResponse();
     }
 
-    /**
-     * @throws \JsonException
-     */
     public static function nullableValidate(string $value, bool $isJson = false): ?string
     {
         if ($value === '""' || $value === '[]' || blank($value)) {
@@ -131,17 +128,11 @@ class Helper
         return date("Y-m-d\TH:i:s", $timestamp);
     }
 
-    /**
-     * @throws \JsonException
-     */
     public static function jsonEncode(string $value): string
     {
         return json_encode($value, JSON_THROW_ON_ERROR);
     }
 
-    /**
-     * @throws \JsonException
-     */
     public static function jsonDecode(string $json, bool $assoc = true)
     {
         return json_decode($json, $assoc, flags: JSON_THROW_ON_ERROR);

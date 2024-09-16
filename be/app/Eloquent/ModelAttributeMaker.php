@@ -16,8 +16,6 @@ class ModelAttributeMaker
     {
         return Attribute::make(/**
              * @param resource|null $value
-             * @return \stdClass|null
-             * @throws \JsonException
              */
             get: static function ($value) use ($protoBufClass): ?\stdClass {
                 if ($value === null) {

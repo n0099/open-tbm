@@ -8,8 +8,8 @@ use App\Eloquent\Model\Post\Reply;
 use App\Eloquent\Model\Post\SubReply;
 use App\Eloquent\Model\Post\Thread;
 use App\Helper;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Closure;
+use Barryvdh\Debugbar\LaravelDebugbar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
@@ -34,8 +34,11 @@ abstract class BaseQuery
 
     abstract public function query(QueryParams $params, ?string $cursor): self;
 
-    // @phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine, Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore -- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291
-    public function __construct(protected int $perPageItems = 50) {}
+    public function __construct(
+        protected LaravelDebugbar $debugbar,
+        protected int $perPageItems = 50
+        // @phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine, Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore -- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291
+    ) {}
 
     public function getResultPages(): array
     {
@@ -55,7 +58,7 @@ abstract class BaseQuery
         ?string $cursorParamValue,
         ?string $queryByPostIDParamName = null,
     ): void {
-        Debugbar::startMeasure('setResult');
+        $this->debugbar->startMeasure('setResult');
 
         $addOrderByForBuilder = fn(Builder $qb, string $postType): Builder => $qb
             // we don't have to select the post ID
@@ -77,11 +80,11 @@ abstract class BaseQuery
             // remove queries for post types with encoded cursor ',,'
             $queriesWithOrderBy = $queriesWithOrderBy->intersectByKeys($cursorsKeyByPostType);
         }
-        Debugbar::startMeasure('initPaginators');
+        $this->debugbar->startMeasure('initPaginators');
         /** @var Collection<string, CursorPaginator> $paginators key by post type */
         $paginators = $queriesWithOrderBy->map(fn(Builder $qb, string $type) =>
             $qb->cursorPaginate($this->perPageItems, cursor: $cursorsKeyByPostType[$type] ?? null));
-        Debugbar::stopMeasure('initPaginators');
+        $this->debugbar->stopMeasure('initPaginators');
 
         /** @var Collection<string, Collection> $postsKeyByTypePluralName */
         $postsKeyByTypePluralName = $paginators
@@ -106,7 +109,7 @@ abstract class BaseQuery
                 : null,
         ];
 
-        Debugbar::stopMeasure('setResult');
+        $this->debugbar->stopMeasure('setResult');
     }
 
     /**
@@ -269,7 +272,7 @@ abstract class BaseQuery
         $fid = $result['fid'];
         $postModels = PostFactory::getPostModelsByFid($fid);
 
-        Debugbar::startMeasure('fillWithThreadsFields');
+        $this->debugbar->startMeasure('fillWithThreadsFields');
         /** @var Collection<int, int> $parentThreadsID parent tid of all replies and their sub replies */
         $parentThreadsID = $replies->pluck('tid')->concat($subReplies->pluck('tid'))->unique();
         /** @var Collection<int, Thread> $threads */
@@ -279,9 +282,9 @@ abstract class BaseQuery
             ->selectPublicFields()->get()
             ->map(static fn(Thread $thread) => // mark threads that exists in the original $this->queryResult
                 $thread->setAttribute('isMatchQuery', $tids->contains($thread->tid)));
-        Debugbar::stopMeasure('fillWithThreadsFields');
+        $this->debugbar->stopMeasure('fillWithThreadsFields');
 
-        Debugbar::startMeasure('fillWithRepliesFields');
+        $this->debugbar->startMeasure('fillWithRepliesFields');
         /** @var Collection<int, int> $parentRepliesID parent pid of all sub replies */
         $parentRepliesID = $subReplies->pluck('pid')->unique();
         $replies = $postModels['reply']
@@ -290,19 +293,19 @@ abstract class BaseQuery
             ->selectPublicFields()->with('contentProtoBuf')->get()
             ->map(static fn(Reply $r) => // mark replies that exists in the original $this->queryResult
                 $r->setAttribute('isMatchQuery', $pids->contains($r->pid)));
-        Debugbar::stopMeasure('fillWithRepliesFields');
+        $this->debugbar->stopMeasure('fillWithRepliesFields');
 
-        Debugbar::startMeasure('fillWithSubRepliesFields');
+        $this->debugbar->startMeasure('fillWithSubRepliesFields');
         $subReplies = $postModels['subReply']->spid($spids)
             ->selectPublicFields()->with('contentProtoBuf')->get();
-        Debugbar::stopMeasure('fillWithSubRepliesFields');
+        $this->debugbar->stopMeasure('fillWithSubRepliesFields');
 
-        Debugbar::startMeasure('parsePostContentProtoBufBytes');
+        $this->debugbar->startMeasure('parsePostContentProtoBufBytes');
         $replies->concat($subReplies)->each(function ($post) {
             $post->content = $post->contentProtoBuf?->protoBufBytes?->value;
             unset($post->contentProtoBuf);
         });
-        Debugbar::stopMeasure('parsePostContentProtoBufBytes');
+        $this->debugbar->stopMeasure('parsePostContentProtoBufBytes');
 
         return [
             'fid' => $fid,
@@ -325,13 +328,13 @@ abstract class BaseQuery
      * @return Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>>
      * @SuppressWarnings(PHPMD.CamelCaseParameterName)
      */
-    public static function nestPostsWithParent(
+    public function nestPostsWithParent(
         Collection $threads,
         Collection $replies,
         Collection $subReplies,
         ...$_,
     ): Collection {
-        Debugbar::startMeasure('nestPostsWithParent');
+        $this->debugbar->startMeasure('nestPostsWithParent');
 
         $replies = $replies->groupBy('tid');
         $subReplies = $subReplies->groupBy('pid');
@@ -345,7 +348,7 @@ abstract class BaseQuery
                 ])),
         ]));
 
-        Debugbar::stopMeasure('nestPostsWithParent');
+        $this->debugbar->stopMeasure('nestPostsWithParent');
         return $ret;
     }
 
@@ -353,12 +356,10 @@ abstract class BaseQuery
      * @phpcs:ignore Generic.Files.LineLength.TooLong
      * @param Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>>>> $nestedPosts
      * @return list<array<string, mixed|list<array<string, mixed|list<array<string, mixed>>>>>>
-     * @test-input [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}]},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}]},{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":5},{"postedAt":60}]}]},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[]}]}]
-     * @test-output [{"postedAt":1,"isMatchQuery":true,"replies":[{"postedAt":4,"isMatchQuery":false,"subReplies":[{"postedAt":60},{"postedAt":5}],"sortingKey":60},{"postedAt":2,"isMatchQuery":true,"subReplies":[{"postedAt":30}],"sortingKey":30},{"postedAt":20,"isMatchQuery":false,"subReplies":[{"postedAt":3}],"sortingKey":3}],"sortingKey":60},{"postedAt":7,"isMatchQuery":false,"replies":[{"postedAt":31,"isMatchQuery":true,"subReplies":[],"sortingKey":31}],"sortingKey":31}]
      */
-    public function reOrderNestedPosts(Collection $nestedPosts): array
+    public function reOrderNestedPosts(Collection $nestedPosts, bool $shouldRemoveSortingKey = true): array
     {
-        Debugbar::startMeasure('reOrderNestedPosts');
+        $this->debugbar->startMeasure('reOrderNestedPosts');
 
         /**
          * @param Collection<int, Collection<string, mixed|Collection<int, Collection<string, mixed>>>> $curPost
@@ -402,11 +403,13 @@ abstract class BaseQuery
         };
         $sortBySortingKey = fn(Collection $posts): Collection => $posts
             ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
-        $removeSortingKey = /**
-         * @psalm-return Collection<array-key, Collection>
-         */
-        static fn(Collection $posts): Collection => $posts
-            ->map(fn(Collection $i) => $i->except('sortingKey'));
+        $removeSortingKey = $shouldRemoveSortingKey
+            ?   /**
+                 * @psalm-return Collection<array-key, Collection>
+                 */
+                static fn(Collection $posts): Collection => $posts
+                    ->map(fn(Collection $i) => $i->except('sortingKey'))
+            : static fn($i) => $i;
         $ret = $removeSortingKey($sortBySortingKey(
             $nestedPosts->map(
                 /**
@@ -438,7 +441,7 @@ abstract class BaseQuery
             ),
         ))->values()->toArray();
 
-        Debugbar::stopMeasure('reOrderNestedPosts');
+        $this->debugbar->stopMeasure('reOrderNestedPosts');
         return $ret;
     }
 }
