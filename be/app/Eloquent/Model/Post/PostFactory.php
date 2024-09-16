@@ -5,7 +5,6 @@ namespace App\Eloquent\Model\Post;
 use App\Eloquent\Model\Post\Content\ReplyContent;
 use App\Eloquent\Model\Post\Content\SubReplyContent;
 use App\Helper;
-use JetBrains\PhpStorm\ArrayShape;
 
 class PostFactory
 {
@@ -35,14 +34,9 @@ class PostFactory
     }
 
     /**
-     * @return (Reply|SubReply|Thread)[]
-     * @plasm-return array{thread: Thread, reply: Reply, subReply: SubReply}
+     * @return array{thread: Thread, reply: Reply, subReply: SubReply}
      */
-    #[ArrayShape([
-        'thread' => Thread::class,
-        'reply' => Reply::class,
-        'subReply' => SubReply::class,
-    ])] public static function getPostModelsByFid(int $fid): array
+    public static function getPostModelsByFid(int $fid): array
     {
         return array_combine(
             Helper::POST_TYPES,

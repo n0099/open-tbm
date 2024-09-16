@@ -15,16 +15,17 @@ use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use JetBrains\PhpStorm\ArrayShape;
 
 abstract class BaseQuery
 {
-    #[ArrayShape([
-        'fid' => 'int',
-        'threads' => '?Collection<int, Thread>',
-        'replies' => '?Collection<int, Reply>',
-        'subReplies' => '?Collection<int, SubReply>',
-    ])] protected array $queryResult;
+    /** @type array{
+     *     fid: int,
+     *     threads: ?Collection<int, Thread>,
+     *     replies: ?Collection<int, Reply>,
+     *     subReplies: ?Collection<int, SubReply>
+     *  }
+     */
+    protected array $queryResult;
 
     private array $queryResultPages;
 
@@ -229,14 +230,17 @@ abstract class BaseQuery
         return $unionCallback($unionValues->isEmpty() ? collect(0) : $unionValues); // prevent empty array
     }
 
-    #[ArrayShape([
-        'fid' => 'int',
-        'matchQueryPostCount' => 'array{thread: int, reply: int, subReply: int}',
-        'notMatchQueryParentPostCount' => 'array{thread: int, reply: int}',
-        'threads' => 'Collection<int, Thread>',
-        'replies' => 'Collection<int, Reply>',
-        'subReplies' => 'Collection<int, SubReply>',
-    ])] public function fillWithParentPost(): array
+    /**
+     * @return array{
+     *     fid: int,
+     *     threads: Collection<int, Thread>,
+     *     replies: Collection<int, Reply>,
+     *     subReplies: Collection<int, SubReply>,
+     *     matchQueryPostCount: array{thread: int, reply: int, subReply: int},
+     *     notMatchQueryParentPostCount: array{thread: int, reply: int},
+     * }
+     */
+    public function fillWithParentPost(): array
     {
         $result = $this->queryResult;
         /** @var Collection<int, int> $tids */
