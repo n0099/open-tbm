@@ -13,9 +13,7 @@ use Illuminate\Support\Collection;
 
 class IndexQuery extends BaseQuery
 {
-    /**
-     * @SuppressWarnings(PHPMD.ElseExpression)
-     */
+    /** @SuppressWarnings(PHPMD.ElseExpression) */
     public function query(QueryParams $params, ?string $cursor): self
     {
         /** @var array<string, mixed> $flatParams key by param name */
@@ -48,9 +46,7 @@ class IndexQuery extends BaseQuery
                     PostFactory::getPostModelsByFid($fid)[Helper::POST_ID_TO_TYPE[$postIDName]]
                         ->selectRaw("{$fid} AS fid, COUNT(*) AS count")
                         ->where($postIDName, $postID))
-                ->reduce(/**
-                 * @return BuilderContract|EloquentBuilder<\Illuminate\Database\Eloquent\Model>|QueryBuilder
-                 */
+                ->reduce(/** @return BuilderContract|EloquentBuilder<Post>|QueryBuilder */
                     static fn(
                         ?BuilderContract $acc,
                         EloquentBuilder|QueryBuilder $cur,

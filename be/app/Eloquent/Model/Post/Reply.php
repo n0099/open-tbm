@@ -47,17 +47,13 @@ class Reply extends Post
         return ModelAttributeMaker::makeProtoBufAttribute(Lbs::class);
     }
 
-    /**
-     * @psalm-return BelongsTo<Thread>
-     */
+    /** @psalm-return BelongsTo<Thread> */
     public function thread(): BelongsTo
     {
         return $this->belongsTo(Thread::class, 'tid', 'tid');
     }
 
-    /**
-     * @psalm-return HasMany<SubReply>
-     */
+    /** @psalm-return HasMany<SubReply> */
     public function subReplies(): HasMany
     {
         return $this->hasMany(SubReply::class, 'pid', 'pid');

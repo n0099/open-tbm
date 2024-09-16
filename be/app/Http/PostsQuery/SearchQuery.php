@@ -134,9 +134,7 @@ class SearchQuery extends BaseQuery
         };
     }
 
-    /**
-     * @psalm-param array<string, mixed> $subParams
-     */
+    /** @psalm-param array<string, mixed> $subParams */
     private static function applyTextMatchParamOnQuery(
         BuilderContract $query,
         string $field,

@@ -7,9 +7,7 @@ use Illuminate\Http\Request;
 
 class DumpJsonResponse
 {
-    /**
-     * @param \Closure(Request): (\Symfony\Component\HttpFoundation\Response) $next
-     */
+    /** @param \Closure(Request): (\Symfony\Component\HttpFoundation\Response) $next */
     public function handle(Request $request, \Closure $next): mixed
     {
         $response = $next($request);

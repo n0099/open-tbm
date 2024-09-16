@@ -62,9 +62,7 @@ class Thread extends Post
         return ModelAttributeMaker::makeProtoBufAttribute(Lbs::class);
     }
 
-    /**
-     * @psalm-return HasMany<Reply>
-     */
+    /** @psalm-return HasMany<Reply> */
     public function replies(): HasMany
     {
         return $this->hasMany(Reply::class, 'tid', 'tid');

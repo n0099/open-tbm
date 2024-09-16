@@ -4,19 +4,13 @@ namespace App\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * @template TModel
- */
+/** @template TModel */
 trait ModelHasPublicField
 {
-    /**
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected array $publicFields = [];
 
-    /**
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected array $hiddenFields = [];
 
     /**

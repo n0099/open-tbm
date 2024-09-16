@@ -32,17 +32,13 @@ class SubReply extends Post
         ];
     }
 
-    /**
-     * @psalm-return BelongsTo<Thread>
-     */
+    /** @psalm-return BelongsTo<Thread> */
     public function thread(): BelongsTo
     {
         return $this->belongsTo(Thread::class, 'tid', 'tid');
     }
 
-    /**
-     * @psalm-return BelongsTo<Reply>
-     */
+    /** @psalm-return BelongsTo<Reply> */
     public function reply(): BelongsTo
     {
         return $this->belongsTo(Reply::class, 'pid', 'pid');

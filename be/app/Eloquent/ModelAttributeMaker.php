@@ -14,9 +14,7 @@ class ModelAttributeMaker
      */
     public static function makeProtoBufAttribute(string $protoBufClass): Attribute
     {
-        return Attribute::make(/**
-             * @param resource|null $value
-             */
+        return Attribute::make(/** @param resource|null $value */
             get: static function ($value) use ($protoBufClass): ?\stdClass {
                 if ($value === null) {
                     return null;
@@ -29,9 +27,7 @@ class ModelAttributeMaker
         )->shouldCache();
     }
 
-    /**
-     * @return Attribute<string, void>
-     */
+    /** @return Attribute<string, void> */
     public static function makeResourceAttribute(): Attribute
     {
         return Attribute::make(/**

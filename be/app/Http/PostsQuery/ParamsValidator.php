@@ -14,9 +14,7 @@ class ParamsValidator
 
     protected array $currentPostTypes;
 
-    /**
-     * @param array[] $params
-     */
+    /** @param array[] $params */
     public function __construct(array $params)
     {
         self::validateParamsValue($params);

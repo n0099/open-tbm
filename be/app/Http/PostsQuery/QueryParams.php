@@ -6,22 +6,16 @@ use App\Helper;
 
 class QueryParams
 {
-    /**
-     * @var Param[]
-     */
+    /** @var Param[] */
     protected array $params;
 
-    /**
-     * @param array[] $params
-     */
+    /** @param array[] $params */
     public function __construct(array $params)
     {
         $this->params = array_map(static fn($p) => new Param($p), $params);
     }
 
-    /**
-     * @psalm-return int<0, max>
-     */
+    /** @psalm-return int<0, max> */
     public function count(): int
     {
         return count($this->params);
@@ -62,17 +56,13 @@ class QueryParams
         $this->params[$this->getParamsIndexByName($name)[0]]->value = $value;
     }
 
-    /**
-     * @return int[]
-     */
+    /** @return int[] */
     protected function getParamsIndexByName(string $name): array
     {
         return array_keys(array_filter($this->params, static fn($p) => $p->name === $name));
     }
 
-    /**
-     * @SuppressWarnings(PHPMD.ElseExpression)
-     */
+    /** @SuppressWarnings(PHPMD.ElseExpression) */
     public function addDefaultValueOnUniqueParams(): void
     {
         $uniqueParamsDefaultValue = [

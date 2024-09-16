@@ -112,9 +112,7 @@ abstract class BaseQuery
         $this->debugbar->stopMeasure('setResult');
     }
 
-    /**
-     * @param Collection<string, Post> $postsKeyByTypePluralName
-     */
+    /** @param Collection<string, Post> $postsKeyByTypePluralName */
     public function encodeNextCursor(Collection $postsKeyByTypePluralName): string
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
@@ -169,9 +167,7 @@ abstract class BaseQuery
             ->join(',');
     }
 
-    /**
-     * @psalm-return Collection<'reply'|'subReply'|'thread', Cursor>
-     */
+    /** @psalm-return Collection<'reply'|'subReply'|'thread', Cursor> */
     private function decodeCursor(string $encodedCursors): Collection
     {
         return collect(Helper::POST_TYPES)
@@ -398,9 +394,7 @@ abstract class BaseQuery
         $sortBySortingKey = fn(Collection $posts): Collection => $posts
             ->sortBy(fn(Collection $i) => $i['sortingKey'], descending: $this->orderByDesc);
         $removeSortingKey = $shouldRemoveSortingKey
-            ? /**
-                 * @psalm-return Collection<array-key, Collection>
-                 */
+            ? /** @psalm-return Collection<array-key, Collection> */
                 static fn(Collection $posts): Collection => $posts
                     ->map(fn(Collection $i) => $i->except('sortingKey'))
             : static fn($i) => $i;
