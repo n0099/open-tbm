@@ -8,6 +8,7 @@ use App\Eloquent\Model\Post\SubReply;
 use App\Eloquent\Model\Post\Thread;
 use App\Http\PostsQuery\BaseQuery;
 use Barryvdh\Debugbar\LaravelDebugbar;
+use Illuminate\Pagination\Cursor;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -200,10 +201,42 @@ class BaseQueryTest extends TestCase
     {
         (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', true);
         $input = collect([
-            'threads' => collect([new Thread(['tid' => 1, 'postedAt' => 0])]),
-            'replies' => collect([new Reply(['pid' => 2, 'postedAt' => -2147483649])]),
-            'subReplies' => collect([new SubReply(['spid' => 3, 'postedAt' => 'test'])]),
-        ]);
+            'threads' => [new Thread(['tid' => 1, 'postedAt' => 0])],
+            'replies' => [new Reply(['pid' => 2, 'postedAt' => -2147483649])],
+            'subReplies' => [new SubReply(['spid' => 3, 'postedAt' => 'test'])],
+        ])->recursive(maxDepth: 0);
         self::assertEquals('AQ,0,Ag,-:____fw,Aw,S:test', $this->sut->encodeNextCursor($input));
+    }
+
+    #[Test]
+    public function decodeCursor(): void
+    {
+        $expected = collect([
+            'thread' => new Cursor(['tid' => 1, 'postedAt' => 0]),
+            'reply' => new Cursor(['pid' => 2, 'postedAt' => -2147483649]),
+            'subReply' => new Cursor(['spid' => 3, 'postedAt' => 'test']),
+        ]);
+        self::assertEquals($expected, $this->sut->decodeCursor('AQ,0,Ag,-:____fw,Aw,S:test'));
+    }
+
+    #[Test]
+    /** @backupStaticAttributes enabled */
+    public function nestPostsWithParent(): void
+    {
+        (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', true);
+        $input = array_map('collect', [
+            'threads' => [new Thread(['tid' => 1])],
+            'replies' => [new Reply(['tid' => 1, 'pid' => 2])],
+            'subReplies' => [new SubReply(['tid' => 1, 'pid' => 2, 'spid' => 3])],
+        ]);
+        $expected = collect([[
+            'tid' => 1,
+            'replies' => [[
+                'tid' => 1,
+                'pid' => 2,
+                'subReplies' => [['tid' => 1, 'pid' => 2, 'spid' => 3]],
+            ]],
+        ]])->recursive();
+        self::assertEquals($expected, $this->sut->nestPostsWithParent(...$input));
     }
 }

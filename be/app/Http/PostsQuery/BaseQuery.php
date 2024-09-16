@@ -168,7 +168,7 @@ abstract class BaseQuery
     }
 
     /** @psalm-return Collection<'reply'|'subReply'|'thread', Cursor> */
-    private function decodeCursor(string $encodedCursors): Collection
+    public function decodeCursor(string $encodedCursors): Collection
     {
         return collect(Helper::POST_TYPES)
             ->combine(Str::of($encodedCursors)
@@ -328,15 +328,17 @@ abstract class BaseQuery
 
         $replies = $replies->groupBy('tid');
         $subReplies = $subReplies->groupBy('pid');
-        $ret = $threads->map(fn(Thread $thread) => collect([
-            ...$thread->toArray(),
-            'replies' => $replies->get($thread->tid, collect())
-                ->map(fn(Reply $reply) => collect([
-                    ...$reply->toArray(),
-                    'subReplies' => $subReplies->get($reply->pid, collect())
-                        ->map(static fn(SubReply $subReply) => collect($subReply->toArray())),
-                ])),
-        ]));
+        $ret = $threads
+            ->map(fn(Thread $thread) => [
+                ...$thread->toArray(),
+                'replies' => $replies
+                    ->get($thread->tid, collect())
+                    ->map(fn(Reply $reply) => [
+                        ...$reply->toArray(),
+                        'subReplies' => $subReplies->get($reply->pid, collect()),
+                    ]),
+            ])
+            ->recursive();
 
         $this->debugbar->stopMeasure('nestPostsWithParent');
         return $ret;
