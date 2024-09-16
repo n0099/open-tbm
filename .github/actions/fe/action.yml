@@ -13,7 +13,7 @@ runs:
         # cache: yarn
         # # https://github.com/actions/setup-node/issues/624#issuecomment-1328681525
         # cache-dependency-path: ${{ github.workspace }}/fe/yarn.lock
-        # in favor of https://github.com/actions/cache/blob/a2ed59d39b352305bdd2f628719a53b2cc4f9613/examples.md#node---yarn-2
+        # in favor of https://github.com/actions/cache/blob/v4.0.2/examples.md#node---yarn-2
         # to allow saving cache even jobs failed
 
     # https://github.com/actions/setup-node/issues/1027

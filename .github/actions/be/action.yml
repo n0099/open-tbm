@@ -11,20 +11,22 @@ runs:
       with:
         php-version: '8.3'
         tools: cs2pr
-        # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#jit-configuration
-        coverage: none
-        ini-values: opcache.enable_cli=1
+        coverage: none # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#disable-coverage
+        # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#jit-configuration
+        ini-values: >
+          opcache.enable_cli=1, opcache.memory_consumption=256,
+          opcache.jit=tracing, opcache.jit_buffer_size=64M
         # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
         extensions: fileinfo # league/flysystem-local@3.28.0 requires ext-fileinfo but it's not enabled by default on windows
-      env: # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#force-update-setup
-        update: 'true'
-    # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#problem-matchers
+      env:
+        update: 'true' # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#force-update-setup
+    # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
     - run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
       working-directory: be
       shell: bash
 
-    # https://github.com/shivammathur/setup-php/blob/6d7209f44a25a59e904b1ee9f3b0c33ab2cd888d/README.md#cache-composer-dependencies
-    # https://github.com/actions/cache/blob/a2ed59d39b352305bdd2f628719a53b2cc4f9613/examples.md#php---composer
+    # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#cache-composer-dependencies
+    # https://github.com/actions/cache/blob/v4.0.2/examples.md#php---composer
     - id: get-composer-cache-dir
       run: echo "path=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
       working-directory: be

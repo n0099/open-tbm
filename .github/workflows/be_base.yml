@@ -9,6 +9,26 @@ defaults:
   run:
     working-directory: be
 jobs:
+  phpunit:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/be
+      - uses: shivammathur/setup-php@v2
+        with:
+          # https://bugs.php.net/bug.php?id=80608 https://github.com/swoole/swoole-src/issues/3986 https://github.com/php/php-src/pull/6640
+          # PHP Warning:  JIT is incompatible with third party extensions that override zend_execute_ex(). JIT disabled.
+          ini-values: opcache.jit_buffer_size=0
+          coverage: xdebug
+      # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
+      - run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      - run: ./vendor/bin/phpunit --coverage-clover clover.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ inputs.runs-on }}-clover.xml
+          path: be/clover.xml
+          compression-level: 9
+
   phpstan:
     runs-on: ${{ inputs.runs-on }}
     steps:
