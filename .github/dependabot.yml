@@ -1,0 +1,27 @@
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: daily
+    labels:
+      - nuget
+      - dependencies
+    open-pull-requests-limit: 0 # https://stackoverflow.com/questions/64047526/how-to-get-dependabot-to-trigger-for-security-updates-only#comment123070708_68254421
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: daily
+    labels:
+      - composer
+      - dependencies
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    labels:
+      - yarn
+      - dependencies
+    open-pull-requests-limit: 0

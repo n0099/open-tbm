@@ -6,7 +6,20 @@
   "rangeStrategy": "bump",
   "separateMajorMinor": false,
   "lockFileMaintenance": { "enabled": true },
+  "labels": ["dependencies"],
   "packageRules": [
+    {
+      "matchCategories": ["dotnet"],
+      "addLabels": ["nuget"]
+    },
+    {
+      "matchCategories": ["php"],
+      "addLabels": ["composer"]
+    },
+    {
+      "matchCategories": ["js"],
+      "addLabels": ["yarn"]
+    },
     {
       "matchFileNames": ["c#/**"],
       "groupName": "c#",
