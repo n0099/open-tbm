@@ -9,13 +9,15 @@ use App\Http\PostsQuery\ParamsValidator;
 use App\Http\PostsQuery\SearchQuery;
 use App\Eloquent\Model\Forum;
 use App\Eloquent\Model\User;
-use Barryvdh\Debugbar\Facades\Debugbar;
+use Barryvdh\Debugbar\LaravelDebugbar;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class PostsQuery extends Controller
 {
+    public function __construct(private readonly LaravelDebugbar $debugbar) {}
+
     public function query(\Illuminate\Http\Request $request): array
     {
         $validator = new ParamsValidator(Helper::jsonDecode(
@@ -47,14 +49,14 @@ class PostsQuery extends Controller
         $validator->addDefaultParamsThenValidate($isIndexQuery);
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
-        Debugbar::startMeasure('$queryClass->query()');
+        $this->debugbar->startMeasure('$queryClass->query()');
         $query = (new $queryClass())->query($params, $request->get('cursor'));
-        Debugbar::stopMeasure('$queryClass->query()');
-        Debugbar::startMeasure('fillWithParentPost');
+        $this->debugbar->stopMeasure('$queryClass->query()');
+        $this->debugbar->startMeasure('fillWithParentPost');
         $result = $query->fillWithParentPost();
-        Debugbar::stopMeasure('fillWithParentPost');
+        $this->debugbar->stopMeasure('fillWithParentPost');
 
-        Debugbar::startMeasure('queryUsers');
+        $this->debugbar->startMeasure('queryUsers');
         $latestRepliersId = $result['threads']->pluck('latestReplierId');
         $latestRepliers = LatestReplier::query()->whereIn('id', $latestRepliersId)
             ->whereNotNull('uid')->selectPublicFields()->get()
@@ -71,7 +73,7 @@ class PostsQuery extends Controller
                 ->filter()->unique(), // remove NULLs
         )->with(['currentForumModerator' => $whereCurrentFid, 'currentAuthorExpGrade' => $whereCurrentFid])
             ->selectPublicFields()->get();
-        Debugbar::stopMeasure('queryUsers');
+        $this->debugbar->stopMeasure('queryUsers');
 
         return [
             'type' => $isIndexQuery ? 'index' : 'search',

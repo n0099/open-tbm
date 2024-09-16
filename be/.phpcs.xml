@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <ruleset>
-    <rule ref="PSR12" />
+    <rule ref="PSR12">
+        <!-- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291 -->
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
+        <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore"/>
+    </rule>
     <arg name="extensions" value="php" />
     <exclude-pattern>*.blade.php</exclude-pattern>
     <exclude-pattern>_ide_helper*.php</exclude-pattern>

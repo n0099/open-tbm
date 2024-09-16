@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Eloquent\Model\Forum;
 use App\Eloquent\Model\Post\PostFactory;
 use App\Helper;
+use Illuminate\Cache\Repository;
 use Illuminate\Http;
-use Illuminate\Support\Facades\Cache;
 
 class ThreadsSitemap extends Controller
 {
     public static int $maxUrls = 50000;
+
+    public function __construct(private readonly Repository $cache) {}
 
     public function query(Http\Request $request, int $fid): Http\Response
     {
@@ -20,7 +22,7 @@ class ThreadsSitemap extends Controller
         ]) + ['cursor' => 0];
         Helper::abortAPIIfNot(40406, Forum::fid($fid)->exists());
 
-        return Cache::remember(
+        return $this->cache->remember(
             "/sitemaps/forums/$fid/threads?cursor=$cursor",
             86400,
             static fn() => Helper::xmlResponse(view('sitemaps.threads', [

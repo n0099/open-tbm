@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Eloquent\Model\Forum;
 use Illuminate\Console\Command;
+use Illuminate\Database\DatabaseManager;
 
 class BatchTableSQLGenerator extends Command
 {
@@ -11,7 +12,7 @@ class BatchTableSQLGenerator extends Command
 
     protected $description = '基于所有吧帖子表占位生成SQL';
 
-    public function __construct()
+    public function __construct(private readonly DatabaseManager $db)
     {
         parent::__construct();
     }
@@ -41,7 +42,7 @@ class BatchTableSQLGenerator extends Command
         if ($this->confirm('是否执行上述SQL？')) {
             foreach ($outputSQLs as $outputSQL) {
                 try {
-                    $affectedRows = \DB::statement($outputSQL);
+                    $affectedRows = $this->db->statement($outputSQL);
                     $this->info($outputSQL . '  影响行数：' . $affectedRows ?? 0);
                 } catch (\Exception $e) {
                     $this->error($e->getMessage());

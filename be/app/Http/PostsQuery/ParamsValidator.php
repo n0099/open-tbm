@@ -4,6 +4,7 @@ namespace App\Http\PostsQuery;
 
 use App\Helper;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\Factory;
 use Illuminate\Validation\Rule;
 
 class ParamsValidator
@@ -15,9 +16,9 @@ class ParamsValidator
     protected array $currentPostTypes;
 
     /** @param array[] $params */
-    public function __construct(array $params)
+    public function __construct(private readonly Factory $validator, array $params)
     {
-        self::validateParamsValue($params);
+        $this->validateParamsValue($params);
         $this->params = new QueryParams($params);
         $this->validate40001();
         $this->validate40005();
@@ -36,20 +37,20 @@ class ParamsValidator
         $this->validate40004();
     }
 
-    private static function validateParamsValue(array $params): void
+    private function validateParamsValue(array $params): void
     {
         $paramsPossibleValue = [
             'userGender' => [0, 1, 2],
             'userManagerType' => ['NULL', 'manager', 'assist', 'voiceadmin'],
         ];
-        $dateRangeValidator = static function ($_, string $value): void {
-            \Validator::make(
+        $dateRangeValidator = function ($_, string $value): void {
+            $this->validator->make(
                 explode(',', $value),
                 ['0' => 'date|before_or_equal:1', '1' => 'date|after_or_equal:0'],
             )->validate();
         };
         // note here we haven't validated that is every sub param have a corresponding main param yet
-        \Validator::make($params, [
+        $this->validator->make($params, [
             '*.fid' => 'integer',
             '*.postTypes' => 'array|in:thread,reply,subReply',
             '*.orderBy' => 'string|in:postedAt,tid,pid,spid',

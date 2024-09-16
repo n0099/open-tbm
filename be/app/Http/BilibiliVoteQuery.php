@@ -2,8 +2,9 @@
 
 namespace App\Http;
 
-use App\Eloquent\Model\BilibiliVote as BilibiliVoteModel;
+use App\Eloquent\Model\BilibiliVote;
 use App\Helper;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -11,10 +12,12 @@ use Spatie\Regex\Regex;
 
 class BilibiliVoteQuery
 {
+    public function __construct(private readonly DatabaseManager $db) {}
+
     /**
      * Generate a query builder, which returns top $candidateCount candidates based on valid votes
      */
-    private static function getCandidatesWithMostVotes(int $candidateCount): \Illuminate\Database\Query\Builder
+    private function getCandidatesWithMostVotes(int $candidateCount): \Illuminate\Database\Query\Builder
     {
         /*
          * select `voteFor` from (
@@ -26,8 +29,8 @@ class BilibiliVoteQuery
          *     limit $candidateCount
          * ) as `T`
          */
-        return \DB::query()->select('voteFor')->fromSub(
-            BilibiliVoteModel::select('voteFor')
+        return $this->db->query()->select('voteFor')->fromSub(
+            BilibiliVote::select('voteFor')
                 ->selectRaw('COUNT(*) AS count')
                 ->where('isValid', true)
                 ->groupBy('voteFor')
@@ -48,7 +51,7 @@ class BilibiliVoteQuery
          * group by `isValid`, `voteFor`
          * order by `voteFor` asc
          */
-        return self::normalizeVoteFor(BilibiliVoteModel::select(['isValid', 'voteFor'])
+        return self::normalizeVoteFor(BilibiliVote::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
@@ -72,7 +75,7 @@ class BilibiliVoteQuery
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupByTimeGranularity))],
         ]);
-        return BilibiliVoteModel::selectRaw($groupByTimeGranularity[$request->query()['timeGranularity']])
+        return BilibiliVote::selectRaw($groupByTimeGranularity[$request->query()['timeGranularity']])
             ->selectRaw('isValid, COUNT(*) AS count')
             ->groupBy('time', 'isValid')
             ->orderBy('time', 'ASC')
@@ -82,7 +85,7 @@ class BilibiliVoteQuery
     /**
      * Return votes count and average voters' exp grade of top 50 candidates
      */
-    public static function top50CandidatesVoteCount(Request $request): string
+    public function top50CandidatesVoteCount(Request $request): string
     {
         /*
          * select `isValid`, `voteFor`, COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade
@@ -91,9 +94,9 @@ class BilibiliVoteQuery
          * group by `isValid`, `voteFor`
          * order by `voteFor` asc
          */
-        return self::normalizeVoteFor(BilibiliVoteModel::select(['isValid', 'voteFor'])
+        return self::normalizeVoteFor(BilibiliVote::select(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count, AVG(authorExpGrade) AS voterAvgGrade')
-            ->whereIn('voteFor', self::getCandidatesWithMostVotes(50))
+            ->whereIn('voteFor', $this->getCandidatesWithMostVotes(50))
             ->groupBy('isValid', 'voteFor')
             ->orderBy('voteFor', 'ASC')
             ->get())
@@ -107,7 +110,7 @@ class BilibiliVoteQuery
     /**
      * Return votes count of top 5 candidates, group by given time range
      */
-    public static function top5CandidatesVoteCountGroupByTime(Request $request): string
+    public function top5CandidatesVoteCountGroupByTime(Request $request): string
     {
         /*
          * select DATE_FORMAT(postTime, "%Y-%m-%d %H:%i|00") AS time, `isValid`, `voteFor`, COUNT(*) AS count
@@ -120,12 +123,12 @@ class BilibiliVoteQuery
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))],
         ]);
-        return self::normalizeVoteFor(BilibiliVoteModel::selectRaw(
+        return self::normalizeVoteFor(BilibiliVote::selectRaw(
             $groupBytimeGranularity[$request->query()['timeGranularity']],
         )
             ->addSelect(['isValid', 'voteFor'])
             ->selectRaw('COUNT(*) AS count')
-            ->whereIn('voteFor', self::getCandidatesWithMostVotes(5))
+            ->whereIn('voteFor', $this->getCandidatesWithMostVotes(5))
             ->groupBy('time', 'isValid', 'voteFor')
             ->orderBy('time', 'ASC')
             ->get())
@@ -135,7 +138,7 @@ class BilibiliVoteQuery
     /**
      * Return every 5-min sum of cumulative votes count, group by candidates and validate
      */
-    public static function top10CandidatesTimeline(Request $request): string
+    public function top10CandidatesTimeline(Request $request): string
     {
         /*
          * select CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime,
@@ -164,17 +167,17 @@ class BilibiliVoteQuery
             $timeGranularityRawSQL[] = "SELECT '$time' AS endTime";
         }
         $timeGranularityRawSQL = implode(' UNION ', $timeGranularityRawSQL);
-        return self::normalizeVoteFor(\DB::query()
+        return self::normalizeVoteFor($this->db->query()
             ->selectRaw('CAST(timeGranularityRawSQL.endTime AS UNSIGNED) AS endTime,
                 isValid, voteFor, CAST(SUM(timeGroups.count) AS UNSIGNED) AS count')
-            ->fromSub(BilibiliVoteModel::selectRaw(
+            ->fromSub(BilibiliVote::selectRaw(
                 "FLOOR(UNIX_TIMESTAMP(postTime)/$timeGranularity)*$timeGranularity as endTime,
                 isValid, voteFor, COUNT(*) as count",
             )
-                ->whereIn('voteFor', self::getCandidatesWithMostVotes(10))
+                ->whereIn('voteFor', $this->getCandidatesWithMostVotes(10))
                 ->groupBy('endTime', 'isValid', 'voteFor'), 'timeGroups')
             ->join(
-                \DB::raw("($timeGranularityRawSQL) AS timeGranularityRawSQL"),
+                $this->db->raw("($timeGranularityRawSQL) AS timeGranularityRawSQL"),
                 'timeGroups.endTime',
                 '<',
                 'timeGranularityRawSQL.endTime',

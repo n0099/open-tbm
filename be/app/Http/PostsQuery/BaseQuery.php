@@ -35,9 +35,8 @@ abstract class BaseQuery
     abstract public function query(QueryParams $params, ?string $cursor): self;
 
     public function __construct(
-        protected LaravelDebugbar $debugbar,
-        protected int $perPageItems = 50,
-        // @phpcs:ignore Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine, Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore -- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291
+        private readonly LaravelDebugbar $debugbar,
+        private readonly int $perPageItems = 50,
     ) {}
 
     public function getResultPages(): array
