@@ -114,14 +114,8 @@ abstract class BaseQuery
 
     /**
      * @param Collection<string, Post> $postsKeyByTypePluralName
-     * @return string
-     * @test-input collect([
-     *     'threads' => collect([new Thread(['tid' => 1,'postedAt' => 0])]),
-     *     'replies' => collect([new Reply(['pid' => 2,'postedAt' => -2147483649])]),
-     *     'subReplies' => collect([new SubReply(['spid' => 3,'postedAt' => 'test'])])
-     * ])
      */
-    private function encodeNextCursor(Collection $postsKeyByTypePluralName): string
+    public function encodeNextCursor(Collection $postsKeyByTypePluralName): string
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
             ->mapWithKeys(static fn(Collection $posts, string $type) => [

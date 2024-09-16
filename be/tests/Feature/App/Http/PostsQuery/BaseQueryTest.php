@@ -2,6 +2,10 @@
 
 namespace Tests\Feature\App\Http\PostsQuery;
 
+use App\Eloquent\Model\Post\Post;
+use App\Eloquent\Model\Post\Reply;
+use App\Eloquent\Model\Post\SubReply;
+use App\Eloquent\Model\Post\Thread;
 use App\Http\PostsQuery\BaseQuery;
 use Barryvdh\Debugbar\LaravelDebugbar;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -10,8 +14,21 @@ use Tests\TestCase;
 
 class BaseQueryTest extends TestCase
 {
+    private BaseQuery $sut;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->sut = $this->getMockBuilder(BaseQuery::class)
+            ->setConstructorArgs([app(LaravelDebugbar::class)])
+            ->getMockForAbstractClass();
+        (new \ReflectionProperty(BaseQuery::class, 'orderByField'))
+            ->setValue($this->sut, 'postedAt');
+    }
+
     #[Test]
     #[DataProvider('reOrderNestedPostsDataProvider')]
+    /** @backupStaticAttributes enabled */
     public function reOrderNestedPosts(
         array $input,
         bool $orderByDesc,
@@ -19,14 +36,9 @@ class BaseQueryTest extends TestCase
         bool $shouldRemoveSortingKey,
     ): void {
         $input = collect($input)->recursive();
-        $baseQuery = $this->getMockBuilder(BaseQuery::class)
-            ->setConstructorArgs([app(LaravelDebugbar::class)])
-            ->getMockForAbstractClass();
-        $orderByDescProp = new \ReflectionProperty(BaseQuery::class, 'orderByDesc');
-        $orderByDescProp->setValue($baseQuery, $orderByDesc);
-        $orderByFieldProp = new \ReflectionProperty(BaseQuery::class, 'orderByField');
-        $orderByFieldProp->setValue($baseQuery, 'postedAt');
-        self::assertEquals($expected, $baseQuery->reOrderNestedPosts($input, $shouldRemoveSortingKey));
+        (new \ReflectionProperty(BaseQuery::class, 'orderByDesc'))
+            ->setValue($this->sut, $orderByDesc);
+        self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, $shouldRemoveSortingKey));
     }
 
     public static function reOrderNestedPostsDataProvider(): array
@@ -180,5 +192,18 @@ class BaseQueryTest extends TestCase
             [$input, true, $expectedWhenOrderByDesc, false],
             [$input, false, $expectedWhenOrderByAscRemoveSortingKey, true],
         ];
+    }
+
+    #[Test]
+    /** @backupStaticAttributes enabled */
+    public function encodeNextCursor(): void
+    {
+        (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', true);
+        $input = collect([
+            'threads' => collect([new Thread(['tid' => 1, 'postedAt' => 0])]),
+            'replies' => collect([new Reply(['pid' => 2, 'postedAt' => -2147483649])]),
+            'subReplies' => collect([new SubReply(['spid' => 3, 'postedAt' => 'test'])]),
+        ]);
+        self::assertEquals('AQ,0,Ag,-:____fw,Aw,S:test', $this->sut->encodeNextCursor($input));
     }
 }
