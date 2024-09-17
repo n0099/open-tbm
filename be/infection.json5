@@ -1,0 +1,10 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["."],
+        "excludes": ["vendor", "tests", ".phpstorm.meta.php", "/_ide_helper.*.php/", "bootstrap/cache/*"]
+    },
+    "mutators": {
+        "@default": true
+    }
+}

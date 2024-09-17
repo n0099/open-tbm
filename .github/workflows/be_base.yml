@@ -9,7 +9,7 @@ defaults:
   run:
     working-directory: be
 jobs:
-  phpunit:
+  phpunit-infection:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +22,18 @@ jobs:
           coverage: xdebug
       # https://github.com/shivammathur/setup-php/blob/2.31.1/README.md#problem-matchers
       - run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-      - run: ./vendor/bin/phpunit --coverage-clover clover.xml
+      - run: >
+          ./vendor/bin/phpunit
+          --coverage-clover=coverage/clover.xml
+          --coverage-xml=coverage/coverage-xml
+          --log-junit=coverage/junit.xml
+        # https://infection.github.io/guide/command-line-options.html#coverage
       - uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ inputs.runs-on }}-clover.xml
-          path: be/clover.xml
+          name: coverage-${{ inputs.runs-on }}
+          path: be/coverage/clover.xml
           compression-level: 9
+      - run: ./vendor/bin/infection --coverage=coverage --skip-initial-tests
 
   phpstan:
     runs-on: ${{ inputs.runs-on }}

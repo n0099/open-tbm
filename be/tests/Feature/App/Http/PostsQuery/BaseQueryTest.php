@@ -9,10 +9,12 @@ use App\Eloquent\Model\Post\Thread;
 use App\Http\PostsQuery\BaseQuery;
 use Barryvdh\Debugbar\LaravelDebugbar;
 use Illuminate\Pagination\Cursor;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
+#[CoversClass(BaseQuery::class)]
 class BaseQueryTest extends TestCase
 {
     private BaseQuery $sut;
