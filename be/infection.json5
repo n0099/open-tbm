@@ -5,6 +5,9 @@
         "excludes": ["vendor", "tests", ".phpstorm.meta.php", "/_ide_helper.*.php/", "bootstrap/cache/*"]
     },
     "mutators": {
-        "@default": true
+        "@default": true,
+        "MethodCallRemoval": {
+            "ignoreSourceCodeByRegex": ['\\$this->debugbar.*']
+        }
     }
 }

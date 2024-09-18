@@ -23,10 +23,16 @@ class BaseQueryTest extends TestCase
     {
         parent::setUp();
         $this->sut = $this->getMockBuilder(BaseQuery::class)
-            ->setConstructorArgs([app(LaravelDebugbar::class)])
+            ->setConstructorArgs([$this->createMock(LaravelDebugbar::class)])
             ->getMockForAbstractClass();
         (new \ReflectionProperty(BaseQuery::class, 'orderByField'))
             ->setValue($this->sut, 'postedAt');
+    }
+
+    public function testPerPageItemsDefaultValue(): void
+    {
+        $prop = new \ReflectionProperty(BaseQuery::class, 'perPageItems');
+        self::assertEquals(50, $prop->getValue($this->sut));
     }
 
     #[Test]
@@ -41,7 +47,11 @@ class BaseQueryTest extends TestCase
         $input = collect($input)->recursive();
         (new \ReflectionProperty(BaseQuery::class, 'orderByDesc'))
             ->setValue($this->sut, $orderByDesc);
-        self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, $shouldRemoveSortingKey));
+        if ($shouldRemoveSortingKey) { // make https://infection.github.io/guide/mutators.html#TrueValue happy
+            self::assertEquals($expected, $this->sut->reOrderNestedPosts($input));
+        } else {
+            self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, false));
+        }
     }
 
     public static function reOrderNestedPostsDataProvider(): array
@@ -64,7 +74,11 @@ class BaseQueryTest extends TestCase
                     [
                         'postedAt' => 4,
                         'isMatchQuery' => false,
-                        'subReplies' => [['postedAt' => 5], ['postedAt' => 60]],
+                        'subReplies' => [
+                            ['postedAt' => 5],
+                            ['postedAt' => 33, 'isMatchQuery' => false],
+                            ['postedAt' => 60],
+                        ],
                     ],
                 ],
             ],
@@ -96,7 +110,11 @@ class BaseQueryTest extends TestCase
                     [
                         'postedAt' => 4,
                         'isMatchQuery' => false,
-                        'subReplies' => [['postedAt' => 5], ['postedAt' => 60]],
+                        'subReplies' => [
+                            ['postedAt' => 5],
+                            ['postedAt' => 33, 'isMatchQuery' => false],
+                            ['postedAt' => 60],
+                        ],
                         'sortingKey' => 5,
                     ],
                 ],
@@ -134,7 +152,11 @@ class BaseQueryTest extends TestCase
                     [
                         'postedAt' => 4,
                         'isMatchQuery' => false,
-                        'subReplies' => [['postedAt' => 5], ['postedAt' => 60]],
+                        'subReplies' => [
+                            ['postedAt' => 5],
+                            ['postedAt' => 33, 'isMatchQuery' => false],
+                            ['postedAt' => 60],
+                        ],
                     ],
                 ],
             ],
@@ -158,7 +180,11 @@ class BaseQueryTest extends TestCase
                     [
                         'postedAt' => 4,
                         'isMatchQuery' => false,
-                        'subReplies' => [['postedAt' => 60], ['postedAt' => 5]],
+                        'subReplies' => [
+                            ['postedAt' => 60],
+                            ['postedAt' => 33, 'isMatchQuery' => false],
+                            ['postedAt' => 5],
+                        ],
                         'sortingKey' => 60,
                     ],
                     [
@@ -219,6 +245,13 @@ class BaseQueryTest extends TestCase
             'subReply' => new Cursor(['spid' => 3, 'postedAt' => 'test']),
         ]);
         self::assertEquals($expected, $this->sut->decodeCursor('AQ,0,Ag,-:____fw,Aw,S:test'));
+
+        $expected = collect([
+            'thread' => new Cursor(['tid' => 0, 'postedAt' => 0]),
+            'reply' => new Cursor(['pid' => 0, 'postedAt' => 0]),
+            'subReply' => new Cursor(['spid' => 0, 'postedAt' => 0]),
+        ]);
+        self::assertEquals($expected, $this->sut->decodeCursor(',,,,0,0'));
     }
 
     #[Test]

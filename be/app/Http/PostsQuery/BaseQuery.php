@@ -126,20 +126,16 @@ abstract class BaseQuery
             ])
             ->map(static fn(array $cursors) => collect($cursors)
                 ->map(static function (int|string $cursor): string {
-                    if (\is_int($cursor) && $cursor === 0) {
-                        // quick exit to keep 0 as is
+                    if ($cursor === 0) { // quick exit to keep 0 as is
                         // to prevent packed 0 with the default format 'P' after 0x00 trimming is an empty string
                         // that will be confused with post types without a cursor that is a blank encoded cursor ',,'
                         return '0';
                     }
-
-                    $firstKeyFromTableFilterByTrue = static fn(array $table, string $default): string =>
-                        array_keys(array_filter($table, static fn(bool $f) => $f === true))[0] ?? $default;
-                    $prefix = $firstKeyFromTableFilterByTrue([
-                        '-' => \is_int($cursor) && $cursor < 0,
-                        '' => \is_int($cursor),
-                        'S' => \is_string($cursor),
-                    ], '');
+                    $prefix = match (true) {
+                        \is_int($cursor) && $cursor < 0 => '-',
+                        \is_string($cursor) => 'S',
+                        default => '',
+                    };
 
                     $value = \is_int($cursor)
                         // remove trailing 0x00 for an unsigned int or 0xFF for a signed negative int
@@ -174,25 +170,27 @@ abstract class BaseQuery
             ->combine(Str::of($encodedCursors)
                 ->explode(',')
                 ->map(static function (string $encodedCursor): int|string|null {
+                    /**
+                     * @var string $cursor
+                     * @var string $prefix
+                     */
                     [$prefix, $cursor] = array_pad(explode(':', $encodedCursor), 2, null);
                     if ($cursor === null) { // no prefix being provided means the value of cursor is a positive int
                         $cursor = $prefix;
                         $prefix = '';
                     }
-                    return match ($prefix) {
-                        null => null, // original encoded cursor is an empty string
-                        '0' => 0, // keep 0 as is
+                    return $cursor === '0' ? 0 : match ($prefix) { // keep 0 as is
                         'S' => $cursor, // string literal is not base64 encoded
                         default => ((array) (
                             unpack(
-                                'P',
-                                str_pad( // re-add removed trailing 0x00 or 0xFF
+                                format: 'P',
+                                string: str_pad( // re-add removed trailing 0x00 or 0xFF
                                     base64_decode(
                                         // https://en.wikipedia.org/wiki/Base64#URL_applications
                                         str_replace(['-', '_'], ['+', '/'], $cursor),
                                     ),
-                                    8,
-                                    $prefix === '-' ? "\xFF" : "\x00",
+                                    length: 8,
+                                    pad_string: $prefix === '-' ? "\xFF" : "\x00",
                                 ),
                             )
                         ))[1], // the returned array of unpack() will starts index from 1
