@@ -144,6 +144,9 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
     public DbSet<ImageInReply> ImageInReplies => Set<ImageInReply>();
     public DbSet<ReplyContentImage> ReplyContentImages => Set<ReplyContentImage>();
 
+    protected static void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
+        b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
+
     [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration")]
     [SuppressMessage("Critical Code Smell", "S927:Parameter names should match base declaration and other partial definitions")]
     [SuppressMessage("Style", "IDE0058:Expression value is never used")]
@@ -175,9 +178,6 @@ public class TbmDbContext<TModelCacheKeyFactory>(ILogger<TbmDbContext<TModelCach
         b.Entity<ReplyContentImage>().HasKey(e => new {e.Pid, e.ImageId});
         b.Entity<ReplyContentImage>().HasOne(e => e.ImageInReply).WithMany();
     }
-
-    protected void OnModelCreatingWithFid(ModelBuilder b, uint fid) =>
-        b.Entity<ReplyContentImage>().ToTable($"tbmc_f{fid}_reply_content_image");
 
     protected virtual void OnConfiguringNpgsql(NpgsqlDbContextOptionsBuilder builder) { }
     protected virtual void OnBuildingNpgsqlDataSource(NpgsqlDataSourceBuilder builder) { }

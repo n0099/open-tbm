@@ -88,9 +88,6 @@ const queryFunctionWithReCAPTCHA = async <TResponse>
 export type ApiErrorClass = ApiResponseError | FetchError;
 type QueryFunctions = typeof queryFunction | typeof queryFunctionWithReCAPTCHA;
 const useApi = <
-
-    // https://github.com/typescript-eslint/typescript-eslint/issues/9706
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     TApi extends Api<TResponse, TQueryParam>,
     TResponse = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>
@@ -128,9 +125,6 @@ const useApi = <
         return ret;
     };
 const useApiWithCursor = <
-
-    // https://github.com/typescript-eslint/typescript-eslint/issues/9706
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
     TApi extends Api<TResponse, TQueryParam>,
     TResponse extends CursorPagination = TApi['response'],
     TQueryParam extends ObjUnknown = TApi['queryParam']>

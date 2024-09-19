@@ -62,9 +62,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 }
 public partial class SaverWithRevision<TBaseRevision, TRevisionId>
 {
-    protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
-
-    protected IEnumerable<ExistingAndNewEntity<TEntity>> SaveNewEntities<TEntity>(
+    protected static IEnumerable<ExistingAndNewEntity<TEntity>> SaveNewEntities<TEntity>(
         CrawlerDbContext db,
         IReadOnlyCollection<MaybeExistingAndNewEntity<TEntity>> maybeEntities)
         where TEntity : RowVersionedEntity
@@ -76,7 +74,7 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
             .Select(entity => new ExistingAndNewEntity<TEntity>(entity.Existing!, entity.New));
     }
 
-    protected void SaveExistingEntities<TEntity>(
+    protected static void SaveExistingEntities<TEntity>(
         CrawlerDbContext db,
         IEnumerable<ExistingAndNewEntity<TEntity>> existingAndNewEntities)
         where TEntity : RowVersionedEntity =>
@@ -102,6 +100,8 @@ public partial class SaverWithRevision<TBaseRevision, TRevisionId>
                 .Where(prop => prop.IsModified && IsTimestampingFieldName(prop.Metadata.Name))
                 .ForEach(prop => prop.IsModified = false);
         });
+
+    protected abstract NullFieldsBitMask GetRevisionNullFieldBitMask(string fieldName);
 
     protected void SaveExistingEntityRevisions<TEntity, TRevision>(
         CrawlerDbContext db,
