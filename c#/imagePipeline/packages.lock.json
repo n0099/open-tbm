@@ -132,8 +132,8 @@
       },
       "CommunityToolkit.Diagnostics": {
         "type": "Transitive",
-        "resolved": "8.3.1",
-        "contentHash": "7S76LyBFVUhXhLwRsZK24BXqiNOrfo91ALTiQiUBh797gyLQBtsUB0xxM7LKhLIfX6o5RC8fdB3AxKzomSsDGA=="
+        "resolved": "8.3.2",
+        "contentHash": "YyMsBE9lT0pJg2bEDzlfEWdlk6xHExW6jr1dxC7+YUqqVmOGL5nZROpxbXQRTe5TrfIs7BvkVsGULv/hq6tGIA=="
       },
       "EFCore.NamingConventions": {
         "type": "Transitive",
@@ -910,7 +910,7 @@
         "dependencies": {
           "Autofac": "[8.1.0, )",
           "Autofac.Extensions.DependencyInjection": "[10.0.0, )",
-          "CommunityToolkit.Diagnostics": "[8.3.1, )",
+          "CommunityToolkit.Diagnostics": "[8.3.2, )",
           "EFCore.NamingConventions": "[8.0.3, )",
           "Microsoft.EntityFrameworkCore": "[8.0.8, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",

@@ -91,8 +91,8 @@
       },
       "CommunityToolkit.Diagnostics": {
         "type": "Transitive",
-        "resolved": "8.3.1",
-        "contentHash": "7S76LyBFVUhXhLwRsZK24BXqiNOrfo91ALTiQiUBh797gyLQBtsUB0xxM7LKhLIfX6o5RC8fdB3AxKzomSsDGA=="
+        "resolved": "8.3.2",
+        "contentHash": "YyMsBE9lT0pJg2bEDzlfEWdlk6xHExW6jr1dxC7+YUqqVmOGL5nZROpxbXQRTe5TrfIs7BvkVsGULv/hq6tGIA=="
       },
       "EFCore.NamingConventions": {
         "type": "Transitive",
@@ -106,8 +106,8 @@
       },
       "Google.Protobuf": {
         "type": "Transitive",
-        "resolved": "3.28.1",
-        "contentHash": "i4EN7Z+OUdoRBNiVMIG6CfMh6UowXiUx+BKgE+GHLbAX5ArSmpUTFUDwgRNwNfYdosl6GXuBlDiHCcXSHw43+A=="
+        "resolved": "3.28.2",
+        "contentHash": "Z86ZKAB+v1B/m0LTM+EVamvZlYw/g3VND3/Gs4M/+aDIxa2JE9YPKjDxTpf0gv2sh26hrve3eI03brxBmzn92g=="
       },
       "Humanizer.Core": {
         "type": "Transitive",
@@ -540,7 +540,7 @@
       "tbclient": {
         "type": "Project",
         "dependencies": {
-          "Google.Protobuf": "[3.28.1, )"
+          "Google.Protobuf": "[3.28.2, )"
         }
       },
       "tbm.shared": {
@@ -548,7 +548,7 @@
         "dependencies": {
           "Autofac": "[8.1.0, )",
           "Autofac.Extensions.DependencyInjection": "[10.0.0, )",
-          "CommunityToolkit.Diagnostics": "[8.3.1, )",
+          "CommunityToolkit.Diagnostics": "[8.3.2, )",
           "EFCore.NamingConventions": "[8.0.3, )",
           "Microsoft.EntityFrameworkCore": "[8.0.8, )",
           "Microsoft.Extensions.Hosting": "[8.0.0, )",
