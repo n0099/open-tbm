@@ -10,17 +10,21 @@ use App\Http\PostsQuery\SearchQuery;
 use App\Eloquent\Model\Forum;
 use App\Eloquent\Model\User;
 use Barryvdh\Debugbar\LaravelDebugbar;
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class PostsQuery extends Controller
 {
-    public function __construct(private readonly LaravelDebugbar $debugbar) {}
+    public function __construct(
+        private readonly LaravelDebugbar $debugbar,
+        protected Container $app,
+    ) {}
 
     public function query(\Illuminate\Http\Request $request): array
     {
-        $validator = new ParamsValidator(Helper::jsonDecode(
+        $validator = $this->app->makeWith(ParamsValidator::class, ['params' => Helper::jsonDecode(
             $request->validate([
                 'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                     // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
@@ -28,7 +32,7 @@ class PostsQuery extends Controller
                 ],
                 'query' => 'json|required',
             ])['query'],
-        ));
+        )]);
         $params = $validator->params;
 
         $postIDParams = $params->pick(...Helper::POST_ID);

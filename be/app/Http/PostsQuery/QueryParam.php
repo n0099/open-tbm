@@ -2,7 +2,7 @@
 
 namespace App\Http\PostsQuery;
 
-class Param
+class QueryParam
 {
     public string $name;
 

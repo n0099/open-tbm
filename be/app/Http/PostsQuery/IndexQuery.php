@@ -19,7 +19,7 @@ class IndexQuery extends BaseQuery
         /** @var array<string, mixed> $flatParams key by param name */
         $flatParams = array_reduce(
             $params->pick(...ParamsValidator::UNIQUE_PARAMS_NAME, ...Helper::POST_ID),
-            static fn(array $accParams, Param $param) =>
+            static fn(array $accParams, QueryParam $param) =>
                 [...$accParams, $param->name => $param->value, ...$param->getAllSub()],
             [],
         ); // flatten unique query params

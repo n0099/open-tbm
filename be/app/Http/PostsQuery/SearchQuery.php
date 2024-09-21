@@ -52,7 +52,7 @@ class SearchQuery extends BaseQuery
      */
     private static function applyQueryParamsOnQuery(
         Builder $query,
-        Param $param,
+        QueryParam $param,
         ?Collection &$outCachedUserQueryResult,
     ): Builder {
         $name = $param->name;

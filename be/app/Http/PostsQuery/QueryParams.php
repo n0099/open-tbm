@@ -6,13 +6,13 @@ use App\Helper;
 
 class QueryParams
 {
-    /** @var Param[] */
+    /** @var QueryParam[] */
     protected array $params;
 
     /** @param array[] $params */
     public function __construct(array $params)
     {
-        $this->params = array_map(static fn($p) => new Param($p), $params);
+        $this->params = array_map(static fn($p) => new QueryParam($p), $params);
     }
 
     /** @psalm-return int<0, max> */
@@ -22,8 +22,8 @@ class QueryParams
     }
 
     /**
-     * @return Param[]
-     * @psalm-return list<Param>
+     * @return QueryParam[]
+     * @psalm-return list<QueryParam>
      */
     public function pick(string ...$names): array
     {
@@ -35,8 +35,8 @@ class QueryParams
     }
 
     /**
-     * @return Param[]
-     * @psalm-return list<Param>
+     * @return QueryParam[]
+     * @psalm-return list<QueryParam>
      */
     public function omit(string ...$names): array
     {
@@ -71,7 +71,7 @@ class QueryParams
         ];
         foreach ($uniqueParamsDefaultValue as $name => $value) {
             // add unique params with default value when it's not presented in $this->params
-            $paramFilledWithDefaults = new Param([
+            $paramFilledWithDefaults = new QueryParam([
                 $name => $this->getUniqueParamValue($name) ?? $value['value'],
                 ...($this->pick($name)[0]->subParam ?? $value['subParam'] ?? []),
             ]);

@@ -7,8 +7,8 @@ use App\Eloquent\Model\Post\Reply;
 use App\Eloquent\Model\Post\SubReply;
 use App\Eloquent\Model\Post\Thread;
 use App\Http\PostsQuery\BaseQuery;
+use App\Http\PostsQuery\CursorCodec;
 use Barryvdh\Debugbar\LaravelDebugbar;
-use Illuminate\Pagination\Cursor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -23,7 +23,7 @@ class BaseQueryTest extends TestCase
     {
         parent::setUp();
         $this->sut = $this->getMockBuilder(BaseQuery::class)
-            ->setConstructorArgs([$this->createMock(LaravelDebugbar::class)])
+            ->setConstructorArgs([$this->createMock(LaravelDebugbar::class), new CursorCodec()])
             ->getMockForAbstractClass();
         (new \ReflectionProperty(BaseQuery::class, 'orderByField'))
             ->setValue($this->sut, 'postedAt');
@@ -221,37 +221,6 @@ class BaseQueryTest extends TestCase
             [$input, true, $expectedWhenOrderByDesc, false],
             [$input, false, $expectedWhenOrderByAscRemoveSortingKey, true],
         ];
-    }
-
-    #[Test]
-    /** @backupStaticAttributes enabled */
-    public function encodeNextCursor(): void
-    {
-        (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', true);
-        $input = collect([
-            'threads' => [new Thread(['tid' => 1, 'postedAt' => 0])],
-            'replies' => [new Reply(['pid' => 2, 'postedAt' => -2147483649])],
-            'subReplies' => [new SubReply(['spid' => 3, 'postedAt' => 'test'])],
-        ])->recursive(maxDepth: 0);
-        self::assertEquals('AQ,0,Ag,-:____fw,Aw,S:test', $this->sut->encodeNextCursor($input));
-    }
-
-    #[Test]
-    public function decodeCursor(): void
-    {
-        $expected = collect([
-            'thread' => new Cursor(['tid' => 1, 'postedAt' => 0]),
-            'reply' => new Cursor(['pid' => 2, 'postedAt' => -2147483649]),
-            'subReply' => new Cursor(['spid' => 3, 'postedAt' => 'test']),
-        ]);
-        self::assertEquals($expected, $this->sut->decodeCursor('AQ,0,Ag,-:____fw,Aw,S:test'));
-
-        $expected = collect([
-            'thread' => new Cursor(['tid' => 0, 'postedAt' => 0]),
-            'reply' => new Cursor(['pid' => 0, 'postedAt' => 0]),
-            'subReply' => new Cursor(['spid' => 0, 'postedAt' => 0]),
-        ]);
-        self::assertEquals($expected, $this->sut->decodeCursor(',,,,0,0'));
     }
 
     #[Test]
