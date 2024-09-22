@@ -150,6 +150,7 @@ abstract class BaseQuery
         /** @var Collection<int, int> $pids */
         /** @var Collection<int, int> $spids */
         /** @var Collection<int, Reply> $replies */
+        /** @var Collection<int, SubReply> $subReplies */
         [[, $tids], [$replies, $pids], [$subReplies, $spids]] = array_map(
             /**
              * @param string $postIDName

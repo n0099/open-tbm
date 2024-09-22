@@ -14,13 +14,13 @@ abstract class Post extends ModelWithTableNameSplitByFid
 {
     use ModelHasPublicField;
 
-    protected const TIMESTAMP_FIELDS = [
+    protected const array TIMESTAMP_FIELDS = [
         'createdAt',
         'updatedAt',
         'lastSeenAt',
     ];
 
-    private const MODEL_CLASS_TO_TABLE_NAME_SUFFIX = [
+    private const array MODEL_CLASS_TO_TABLE_NAME_SUFFIX = [
         Thread::class => 'thread',
         Reply::class => 'reply',
         ReplyContent::class => 'reply_content',

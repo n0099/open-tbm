@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 class ParamsValidator
 {
-    public const UNIQUE_PARAMS_NAME = ['fid', 'postTypes', 'orderBy'];
+    public const array UNIQUE_PARAMS_NAME = ['fid', 'postTypes', 'orderBy'];
 
     public QueryParams $params;
 

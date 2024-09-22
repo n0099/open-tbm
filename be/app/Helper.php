@@ -7,37 +7,37 @@ use JetBrains\PhpStorm\Pure;
 
 class Helper
 {
-    public const POST_ID = ['tid', 'pid', 'spid'];
+    public const array POST_ID = ['tid', 'pid', 'spid'];
 
-    public const POST_TYPES = ['thread', 'reply', 'subReply'];
+    public const array POST_TYPES = ['thread', 'reply', 'subReply'];
 
-    public const POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
+    public const array POST_TYPES_PLURAL = ['threads', 'replies', 'subReplies'];
 
-    public const POST_TYPE_TO_PLURAL = [
+    public const array POST_TYPE_TO_PLURAL = [
         'thread' => 'threads',
         'reply' => 'replies',
         'subReply' => 'subReplies',
     ];
 
-    public const POST_TYPE_PLURAL_TO_TYPE = [
+    public const array POST_TYPE_PLURAL_TO_TYPE = [
         'threads' => 'thread',
         'replies' => 'reply',
         'subReplies' => 'subReply',
     ];
 
-    public const POST_ID_TO_TYPE_PLURAL = [
+    public const array POST_ID_TO_TYPE_PLURAL = [
         'tid' => 'threads',
         'pid' => 'replies',
         'spid' => 'subReplies',
     ];
 
-    public const POST_ID_TO_TYPE = [
+    public const array POST_ID_TO_TYPE = [
         'tid' => 'thread',
         'pid' => 'reply',
         'spid' => 'subReply',
     ];
 
-    public const POST_TYPE_TO_ID = [
+    public const array POST_TYPE_TO_ID = [
         'thread' => 'tid',
         'reply' => 'pid',
         'subReply' => 'spid',
