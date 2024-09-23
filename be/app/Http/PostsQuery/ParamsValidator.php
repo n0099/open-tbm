@@ -13,7 +13,6 @@ class ParamsValidator
 
     public QueryParams $params;
 
-    protected array $currentPostTypes;
 
     /** @param array[] $params */
     public function __construct(private readonly Factory $validator, array $params)
@@ -29,12 +28,13 @@ class ParamsValidator
         $this->params->addDefaultValueOnParams();
         $this->params->addDefaultValueOnUniqueParams();
         // sort here to prevent further sort while validating
-        $this->params->setUniqueParamValue('postTypes', Arr::sort($this->params->getUniqueParamValue('postTypes')));
-        $this->currentPostTypes = (array) $this->params->getUniqueParamValue('postTypes');
+        $sortedPostTypes = collect($this->params->getUniqueParamValue('postTypes'))->sort()->values()->all();
+        $this->params->setUniqueParamValue('postTypes', $sortedPostTypes);
+        $currentPostTypes = (array) $this->params->getUniqueParamValue('postTypes');
         if (!$shouldSkip40003) {
-            $this->validate40003();
+            $this->validate40003($currentPostTypes);
         }
-        $this->validate40004();
+        $this->validate40004($currentPostTypes);
     }
 
     private function validateParamsValue(array $params): void
@@ -106,7 +106,7 @@ class ParamsValidator
             : $current === $required[1];
     }
 
-    private function validate40003(): void
+    private function validate40003(array $currentPostTypes): void
     {
         $paramsRequiredPostTypes = [
             'pid' => ['SUB', ['reply', 'subReply']],
@@ -127,12 +127,12 @@ class ParamsValidator
         ];
         foreach ($paramsRequiredPostTypes as $paramName => $requiredPostTypes) {
             if ($this->params->pick($paramName) !== []) {
-                Helper::abortAPIIfNot(40003, self::isRequiredPostTypes($this->currentPostTypes, $requiredPostTypes));
+                Helper::abortAPIIfNot(40003, self::isRequiredPostTypes($currentPostTypes, $requiredPostTypes));
             }
         }
     }
 
-    private function validate40004(): void
+    private function validate40004(array $currentPostTypes): void
     {
         $orderByRequiredPostTypes = [
             'pid' => ['SUB', ['reply', 'subReply']],
@@ -142,7 +142,7 @@ class ParamsValidator
         if (\array_key_exists($currentOrderBy, $orderByRequiredPostTypes)) {
             Helper::abortAPIIfNot(
                 40004,
-                self::isRequiredPostTypes($this->currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]),
+                self::isRequiredPostTypes($currentPostTypes, $orderByRequiredPostTypes[$currentOrderBy]),
             );
         }
     }

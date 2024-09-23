@@ -7,12 +7,12 @@ use App\Helper;
 class QueryParams
 {
     /** @var QueryParam[] */
-    protected array $params;
+    private array $params;
 
     /** @param array[] $params */
     public function __construct(array $params)
     {
-        $this->params = array_map(static fn($p) => new QueryParam($p), $params);
+        $this->params = array_map(static fn(array $p) => new QueryParam($p), $params);
     }
 
     /** @psalm-return int<0, max> */

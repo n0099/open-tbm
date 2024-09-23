@@ -50,7 +50,7 @@ class PostsQuery extends Controller
         $isSearchQuery = !$isIndexQuery;
         Helper::abortAPIIf(40002, $isSearchQuery && $isFidParamNull);
 
-        $validator->addDefaultParamsThenValidate($isIndexQuery);
+        $validator->addDefaultParamsThenValidate(shouldSkip40003: $isIndexQuery);
 
         $queryClass = $isIndexQuery ? IndexQuery::class : SearchQuery::class;
         $this->debugbar->startMeasure('$queryClass->query()');

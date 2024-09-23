@@ -11,7 +11,6 @@ use App\Http\PostsQuery\CursorCodec;
 use Barryvdh\Debugbar\LaravelDebugbar;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 #[CoversClass(BaseQuery::class)]
@@ -35,10 +34,9 @@ class BaseQueryTest extends TestCase
         self::assertEquals(50, $prop->getValue($this->sut));
     }
 
-    #[Test]
-    #[DataProvider('reOrderNestedPostsDataProvider')]
+    #[DataProvider('provideReOrderNestedPostsData')]
     /** @backupStaticAttributes enabled */
-    public function reOrderNestedPosts(
+    public function testReOrderNestedPosts(
         array $input,
         bool $orderByDesc,
         array $expected,
@@ -50,11 +48,11 @@ class BaseQueryTest extends TestCase
         if ($shouldRemoveSortingKey) { // make https://infection.github.io/guide/mutators.html#TrueValue happy
             self::assertEquals($expected, $this->sut->reOrderNestedPosts($input));
         } else {
-            self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, false));
+            self::assertEquals($expected, $this->sut->reOrderNestedPosts($input, shouldRemoveSortingKey: false));
         }
     }
 
-    public static function reOrderNestedPostsDataProvider(): array
+    public static function provideReOrderNestedPostsData(): array
     {
         $input = [
             [
@@ -223,24 +221,36 @@ class BaseQueryTest extends TestCase
         ];
     }
 
-    #[Test]
+    #[DataProvider('provideNestPostsWithParent')]
     /** @backupStaticAttributes enabled */
-    public function nestPostsWithParent(): void
+    public function testNestPostsWithParent(array $input, array $expected): void
+    {
+        self::assertEquals(
+            collect($expected)->recursive(),
+            $this->sut->nestPostsWithParent(...array_map('collect', $input)),
+        );
+    }
+
+    public static function provideNestPostsWithParent(): array
     {
         (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', true);
-        $input = array_map('collect', [
-            'threads' => [new Thread(['tid' => 1])],
-            'replies' => [new Reply(['tid' => 1, 'pid' => 2])],
-            'subReplies' => [new SubReply(['tid' => 1, 'pid' => 2, 'spid' => 3])],
-        ]);
-        $expected = collect([[
-            'tid' => 1,
-            'replies' => [[
+        $ret = [[
+            [
+                'threads' => [new Thread(['tid' => 1])],
+                'replies' => [new Reply(['tid' => 1, 'pid' => 2])],
+                'subReplies' => [new SubReply(['tid' => 1, 'pid' => 2, 'spid' => 3])],
+            ],
+            [[
                 'tid' => 1,
-                'pid' => 2,
-                'subReplies' => [['tid' => 1, 'pid' => 2, 'spid' => 3]],
+                'replies' => [[
+                    'tid' => 1,
+                    'pid' => 2,
+                    'subReplies' => [['tid' => 1, 'pid' => 2, 'spid' => 3]],
+                ]],
             ]],
-        ]])->recursive();
-        self::assertEquals($expected, $this->sut->nestPostsWithParent(...$input));
+        ]];
+        // https://github.com/sebastianbergmann/phpunit/issues/5103
+        (new \ReflectionClass(Post::class))->setStaticPropertyValue('unguarded', false);
+        return $ret;
     }
 }

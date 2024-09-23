@@ -4,7 +4,7 @@ namespace App\Http\PostsQuery;
 
 class QueryParam
 {
-    public string $name;
+    public readonly string $name;
 
     public array|string|int $value;
 
@@ -13,6 +13,9 @@ class QueryParam
     public function __construct(array $param)
     {
         $this->name = (string) array_keys($param)[0];
+        if (is_numeric($this->name)) {
+            throw new \InvalidArgumentException();
+        }
         $this->value = $param[$this->name];
         array_shift($param);
         $this->subParams = $param;
