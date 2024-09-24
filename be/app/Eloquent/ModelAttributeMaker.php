@@ -21,7 +21,7 @@ class ModelAttributeMaker
                 /** @var Message $proto */
                 $proto = new $protoBufClass();
                 $proto->mergeFromString(stream_get_contents($value));
-                return \Safe\json_decode($proto->serializeToJsonString(), false);
+                return \Safe\json_decode($proto->serializeToJsonString());
             },
         )->shouldCache();
     }

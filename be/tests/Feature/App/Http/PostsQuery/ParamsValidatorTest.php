@@ -31,7 +31,7 @@ class ParamsValidatorTest extends TestCase
             $sut = self::newParamsValidator($params);
             $sut->addDefaultParamsThenValidate(shouldSkip40003: false);
         } catch (HttpResponseException $e) {
-            self::assertEquals($errorCode, \Safe\json_decode($e->getResponse()->getContent())['errorCode']);
+            self::assertEquals($errorCode, \Safe\json_decode($e->getResponse()->getContent())->errorCode);
         }
     }
 

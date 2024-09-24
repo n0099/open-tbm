@@ -35,6 +35,21 @@ jobs:
           compression-level: 9
       - run: ./vendor/bin/infection --coverage=coverage --skip-initial-tests
 
+  phan:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/be
+      - if: runner.os == 'Windows'
+        uses: shivammathur/setup-php@v2
+        with: # https://github.com/shivammathur/setup-php/wiki/Php-extensions-loaded-on-windows-2022/aee619eb6d77e86b17a76d458316b41e58a3b677
+          extensions: ast # phan/phan requires https://github.com/nikic/php-ast but it's not enabled by default on windows
+      - run: >
+          ./vendor/bin/phan --output-mode checkstyle --config-file phan.php --analyze-twice --no-progress-bar
+          | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
+        # https://github.com/staabm/annotate-pull-request-from-checkstyle
+        shell: bash
+
   phpstan:
     runs-on: ${{ inputs.runs-on }}
     steps:
@@ -43,7 +58,6 @@ jobs:
       - run: >
           ./vendor/bin/phpstan analyse --error-format=checkstyle
           | tee >(cs2pr --notices-as-warnings --graceful-warnings --prepend-filename --prepend-source)
-        # https://github.com/staabm/annotate-pull-request-from-checkstyle
         shell: bash
 
   psalm:

@@ -3,5 +3,3 @@ parameters:
         - app/
     level: 9
     ignoreErrors:
-includes:
-    - vendor/thecodingmachine/phpstan-safe-rule/phpstan-safe-rule.neon

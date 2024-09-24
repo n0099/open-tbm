@@ -32,6 +32,7 @@ class PostsQuery extends Controller
                 ],
                 'query' => 'json|required',
             ])['query'],
+            assoc: true,
         )]);
         $params = $validator->params;
 
