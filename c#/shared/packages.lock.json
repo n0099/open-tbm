@@ -82,9 +82,9 @@
       },
       "NLog.Extensions.Logging": {
         "type": "Direct",
-        "requested": "[5.3.13, )",
-        "resolved": "5.3.13",
-        "contentHash": "i1n5+ZB6Hd5na2eWj7zjeIH4SS3qzmSgoSIGpxp3B0lJ8p/Cmg59NrDE9GReAAmKbQVbP0d/+e3S/6j79Tnaww==",
+        "requested": "[5.3.14, )",
+        "resolved": "5.3.14",
+        "contentHash": "ZFcdwdIYcGvWY268QMw2lIqnE8ziJTaS4iLm2ajRMUdgy9MFxJl+Y5s0zQxfgjTxbownGrAkJfoTkquAayKG6A==",
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
           "Microsoft.Extensions.Logging": "8.0.0",
