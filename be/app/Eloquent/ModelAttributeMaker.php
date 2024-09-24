@@ -2,7 +2,6 @@
 
 namespace App\Eloquent;
 
-use App\Helper;
 use Google\Protobuf\Internal\Message;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
@@ -22,7 +21,7 @@ class ModelAttributeMaker
                 /** @var Message $proto */
                 $proto = new $protoBufClass();
                 $proto->mergeFromString(stream_get_contents($value));
-                return Helper::jsonDecode($proto->serializeToJsonString(), false);
+                return \Safe\json_decode($proto->serializeToJsonString(), false);
             },
         )->shouldCache();
     }

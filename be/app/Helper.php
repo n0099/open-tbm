@@ -2,9 +2,6 @@
 
 namespace App;
 
-use Illuminate\Support\Arr;
-use JetBrains\PhpStorm\Pure;
-
 class Helper
 {
     public const array POST_ID = ['tid', 'pid', 'spid'];
@@ -19,7 +16,7 @@ class Helper
         'subReply' => 'subReplies',
     ];
 
-    public const array POST_TYPE_PLURAL_TO_TYPE = [
+    public const array POST_TYPE_PLURAL_TO_SINGULAR = [
         'threads' => 'thread',
         'replies' => 'reply',
         'subReplies' => 'subReply',
@@ -95,47 +92,6 @@ class Helper
             throw new \InvalidArgumentException('Given error code doesn\'t existed');
         }
         response()->json(compact('errorCode', 'errorInfo'), $statusCode)->throwResponse();
-    }
-
-    public static function nullableValidate(string $value, bool $isJson = false): ?string
-    {
-        if ($value === '""' || $value === '[]' || blank($value)) {
-            return null;
-        }
-        return $isJson ? self::jsonEncode($value) : $value;
-    }
-
-    /**
-     * @return string[]
-     * @psalm-return array{minute: string, hour: string, day: string, week: string, month: string, year: string}
-     */
-    #[Pure] public static function rawSqlGroupByTimeGranularity(
-        string $fieldName,
-        array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year'],
-    ): array {
-        return Arr::only([
-            'minute' => "DATE_FORMAT($fieldName, \"%Y-%m-%d %H:%i\") AS time",
-            'hour' => "DATE_FORMAT($fieldName, \"%Y-%m-%d %H:00\") AS time",
-            'day' => "DATE($fieldName) AS time",
-            'week' => "DATE_FORMAT($fieldName, \"%Y年第%u周\") AS time",
-            'month' => "DATE_FORMAT($fieldName, \"%Y-%m\") AS time",
-            'year' => "DATE_FORMAT($fieldName, \"%Y年\") AS time",
-        ], $timeGranularity);
-    }
-
-    public static function timestampToLocalDateTime(int $timestamp): string
-    {
-        return date("Y-m-d\TH:i:s", $timestamp);
-    }
-
-    public static function jsonEncode(string $value): string
-    {
-        return json_encode($value, JSON_THROW_ON_ERROR);
-    }
-
-    public static function jsonDecode(string $json, bool $assoc = true)
-    {
-        return json_decode($json, $assoc, flags: JSON_THROW_ON_ERROR);
     }
 
     public static function xmlResponse(string|\Stringable $xml): \Illuminate\Http\Response

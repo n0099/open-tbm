@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Eloquent\Model\BilibiliVote;
 use App\Eloquent\Model\Post\PostFactory;
-use App\Helper;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Spatie\Regex\Regex;
@@ -40,7 +39,7 @@ class GenerateBilibiliVote extends Command
                     $voterUid = $voteReply['authorUid'];
                     $voteRegex = Regex::match(
                         '/"text":"(.*?)投(.*?)号候选人/',
-                        Helper::jsonEncode($voteReply['content']) ?? '',
+                        \Safe\json_encode($voteReply['content']) ?? '',
                     );
                     $voteBy = $voteRegex->groupOr(1, '');
                     $voteFor = trim($voteRegex->groupOr(2, ''));
@@ -54,8 +53,8 @@ class GenerateBilibiliVote extends Command
                         'authorUid' => $voteReply['authorUid'],
                         'authorExpGrade' => $voteReply['authorExpGrade'],
                         'isValid' => $isVoteValid,
-                        'voteBy' => Helper::nullableValidate($voteBy),
-                        'voteFor' => Helper::nullableValidate($voteFor),
+                        'voteBy' => self::nullableValidate($voteBy),
+                        'voteFor' => self::nullableValidate($voteFor),
                         'replyContent' => $voteReply['content'],
                         'postTime' => $voteReply['postTime'],
                     ];
@@ -63,5 +62,13 @@ class GenerateBilibiliVote extends Command
                 // never update isValid field to prevent covering wrong value
                 $voteResult->chunkInsertOnDuplicate($voteResults, ['authorExpGrade'], 2000);
             });
+    }
+
+    public static function nullableValidate(string $value, bool $isJson = false): ?string
+    {
+        if ($value === '""' || $value === '[]' || blank($value)) {
+            return null;
+        }
+        return $isJson ? \Safe\json_encode($value) : $value;
     }
 }

@@ -15,7 +15,7 @@ class CursorCodec
     {
         $encodedCursorsKeyByPostType = $postsKeyByTypePluralName
             ->mapWithKeys(static fn(Collection $posts, string $type) => [
-                Helper::POST_TYPE_PLURAL_TO_TYPE[$type] => $posts->last(), // null when no posts
+                Helper::POST_TYPE_PLURAL_TO_SINGULAR[$type] => $posts->last(), // null when no posts
             ]) // [singularPostTypeName => lastPostInResult]
             ->filter() // remove post types that have no posts
             ->map(fn(Post $post, string $typePluralName) => [ // [postID, orderByField]

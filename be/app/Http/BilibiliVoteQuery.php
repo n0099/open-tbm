@@ -3,9 +3,9 @@
 namespace App\Http;
 
 use App\Eloquent\Model\BilibiliVote;
-use App\Helper;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Spatie\Regex\Regex;
@@ -61,6 +61,24 @@ class BilibiliVoteQuery
     }
 
     /**
+     * @return string[]
+     * @psalm-return array{minute: string, hour: string, day: string, week: string, month: string, year: string}
+     */
+    public static function rawSqlGroupByTimeGranularity(
+        string $fieldName,
+        array $timeGranularity = ['minute', 'hour', 'day', 'week', 'month', 'year'],
+    ): array {
+        return Arr::only([
+            'minute' => "DATE_FORMAT($fieldName, \"%Y-%m-%d %H:%i\") AS time",
+            'hour' => "DATE_FORMAT($fieldName, \"%Y-%m-%d %H:00\") AS time",
+            'day' => "DATE($fieldName) AS time",
+            'week' => "DATE_FORMAT($fieldName, \"%Y年第%u周\") AS time",
+            'month' => "DATE_FORMAT($fieldName, \"%Y-%m\") AS time",
+            'year' => "DATE_FORMAT($fieldName, \"%Y年\") AS time",
+        ], $timeGranularity);
+    }
+
+    /**
      * Return all valid and invalid votes count, group by given time range
      */
     public static function allVoteCountsGroupByTime(Request $request): string
@@ -71,7 +89,7 @@ class BilibiliVoteQuery
          * group by `time`, `isValid`
          * order by `time` asc
          */
-        $groupByTimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
+        $groupByTimeGranularity = self::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupByTimeGranularity))],
         ]);
@@ -119,7 +137,7 @@ class BilibiliVoteQuery
          * group by `time`, `isValid`, `voteFor`
          * order by `time` asc
          */
-        $groupBytimeGranularity = Helper::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
+        $groupBytimeGranularity = self::rawSqlGroupByTimeGranularity('postTime', ['minute', 'hour']);
         $request->validate([
             'timeGranularity' => ['required', Rule::in(array_keys($groupBytimeGranularity))],
         ]);

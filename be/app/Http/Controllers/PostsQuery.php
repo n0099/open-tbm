@@ -24,7 +24,7 @@ class PostsQuery extends Controller
 
     public function query(\Illuminate\Http\Request $request): array
     {
-        $validator = $this->app->makeWith(ParamsValidator::class, ['params' => Helper::jsonDecode(
+        $validator = $this->app->makeWith(ParamsValidator::class, ['params' => \Safe\json_decode(
             $request->validate([
                 'cursor' => [ // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
                     // (,|$)|,){5,6} means allow at most 5~6 parts of base64 segment or empty string to exist
