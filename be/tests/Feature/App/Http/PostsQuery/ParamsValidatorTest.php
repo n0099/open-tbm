@@ -23,41 +23,38 @@ class ParamsValidatorTest extends TestCase
 
     #[DataProvider('provideValidate40001')]
     #[DataProvider('provideValidate40005')]
-    public function testValidate(array $params): void
+    #[DataProvider('provideValidate40003')]
+    #[DataProvider('provideValidate40004')]
+    public function testValidate(int $errorCode, array $params): void
     {
-        $this->assertThrows(fn() => self::newParamsValidator($params), HttpResponseException::class);
+        try {
+            $sut = self::newParamsValidator($params);
+            $sut->addDefaultParamsThenValidate(shouldSkip40003: false);
+        } catch (HttpResponseException $e) {
+            self::assertEquals($errorCode, \Safe\json_decode($e->getResponse()->getContent())['errorCode']);
+        }
     }
 
     public static function provideValidate40001(): array
     {
         $uniqueParams = [['postTypes' => ['thread']], ['orderBy' => 'postedAt']];
-        return [[[$uniqueParams[0]]], [[$uniqueParams[1]]], [$uniqueParams]];
+        return array_map(static fn(array $i) => [40001, $i], [[$uniqueParams[0]], [$uniqueParams[1]], $uniqueParams]);
     }
 
     public static function provideValidate40005(): array
     {
         $uniqueParams = [['fid' => 0], ['postTypes' => ['thread']], ['orderBy' => 'postedAt']];
-        return array_map(static fn(array $p) => [[$p, $p]], $uniqueParams);
+        return array_map(static fn(array $p) => [40005, [['tid' => 0], $p, $p]], $uniqueParams);
     }
 
-    #[DataProvider('validate40003Provider')]
-    #[DataProvider('validate40004Provider')]
-    public function testAddDefaultParamsThenValidate(array $params): void
+    public static function provideValidate40003(): array
     {
-        $this->assertThrows(function () use ($params) {
-            $sut = self::newParamsValidator($params);
-            $sut->addDefaultParamsThenValidate(shouldSkip40003: false);
-        }, HttpResponseException::class);
+        return [[40003, [['postTypes' => ['thread']], ['spid' => '0']]]];
     }
 
-    public static function validate40003Provider(): array
+    public static function provideValidate40004(): array
     {
-        return [[[['postTypes' => ['thread']], ['spid' => '0']]]];
-    }
-
-    public static function validate40004Provider(): array
-    {
-        return [[[['postTypes' => ['thread']], ['orderBy' => 'spid']]]];
+        return [[40004, [['postTypes' => ['thread']], ['tid' => '0'], ['orderBy' => 'spid']]]];
     }
 
     #[DataProvider('providerDateRangeParamValueOrder')]
